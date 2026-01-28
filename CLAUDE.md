@@ -45,9 +45,10 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 
 ### Git Protocol
 - **Commit Frequency**: Create a new Git commit after EVERY successful sub-task (e.g., after each failing test is made passing).
-- **Commit Messages**: Use conventional commit format: `feat:`, `test:`, `fix:`, `refactor:`, `docs:`, `chore:`.
-- **Auto-Commit**: Do not wait for full task completion; prioritize small, incremental saves.
+- **Commit Messages**: Use conventional commit format: `feat:`, `test:`, `fix:`, `refactor:`, `docs:`, `chore:`, `style:`.
+- **Auto-Commit**: Do not wait for full task completion; prioritize small, incremental saves. Proceed autonomously.
 - **TDD Commits**: Commit failing tests separately (`test: add failing tests...`) before committing implementation (`feat: implement...`).
+- **Styling Commits**: For CSS/styling work, commit after EVERY individual property group (e.g., `style: add typography`, `style: add sepia filters`, `style: add border treatments`). Ultra-granular.
 
 ### Session Hygiene
 - **Context Quality**: Run `/compact` every 20-30 minutes of active coding to maintain context quality.
