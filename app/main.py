@@ -35,64 +35,44 @@ def get():
     cards = []
     for filename, quality in faces:
         card = Div(
-            Img(src=f"/crops/{filename}", alt=filename, cls="face-img"),
-            P(f"Quality: {quality:.2f}", cls="quality-score"),
-            Textarea(placeholder="Research notes...", disabled=True, cls="notes"),
-            cls="face-card"
+            Img(
+                src=f"/crops/{filename}",
+                alt=filename,
+                cls="w-full h-auto border border-stone-200"
+            ),
+            P(
+                f"Quality: {quality:.2f}",
+                cls="mt-2 text-sm text-stone-600"
+            ),
+            Textarea(
+                placeholder="Research notes...",
+                disabled=True,
+                cls="w-full mt-2 p-2 text-sm bg-stone-50 border border-stone-300 resize-y h-16"
+            ),
+            cls="bg-stone-50 border border-stone-300 p-3 shadow-sm"
         )
         cards.append(card)
 
-    gallery = Div(*cards, cls="gallery")
+    gallery = Div(
+        *cards,
+        cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-7xl mx-auto"
+    )
 
+    # Minimal CSS for body background (Tailwind handles the rest)
     style = Style("""
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background: #f5f5f5;
+            background-color: #f5f5f4;
             margin: 0;
-            padding: 1rem;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .face-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .face-img {
-            width: 100%;
-            height: auto;
-            border-radius: 4px;
-        }
-        .quality-score {
-            margin: 0.5rem 0;
-            font-weight: bold;
-            color: #666;
-        }
-        .notes {
-            width: 100%;
-            height: 60px;
-            resize: vertical;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 0.5rem;
-            font-size: 0.875rem;
-            box-sizing: border-box;
         }
     """)
 
     return Title("Leon Capeluto Gallery"), style, Main(
-        H1("Leon Capeluto - Face Gallery"),
-        gallery
+        H1(
+            "Leon Capeluto - Face Gallery",
+            cls="text-center text-3xl text-stone-800 mb-6"
+        ),
+        gallery,
+        cls="p-4 md:p-8"
     )
 
 
