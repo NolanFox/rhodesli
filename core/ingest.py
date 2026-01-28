@@ -1,12 +1,18 @@
 """
 Rhodesli Ingestion Pipeline
 
-Extracts face embeddings from photos using InsightFace.
-Stores embedding, quality score (embedding norm), and bounding box.
+Extracts Probabilistic Face Embeddings (PFE) from photos using InsightFace.
+Stores μ (mean embedding), σ² (uncertainty), and metadata.
 
-Note: Standard ArcFace models normalize embeddings, so the norm is not a
-true quality indicator (unlike MagFace/AdaFace). We store it anyway for
-potential future use with quality-aware models.
+Output format per face:
+  - mu: 512-D mean embedding vector
+  - sigma_sq: 512-D uncertainty vector (derived from detection quality)
+  - det_score: Face detection confidence
+  - bbox: Bounding box [x1, y1, x2, y2]
+  - quality: Raw embedding norm (for backward compatibility)
+  - filename, filepath: Source image metadata
+
+See docs/adr_001_mls_math.md for the mathematical foundation.
 """
 
 import argparse
@@ -27,12 +33,15 @@ def get_image_files(input_path: Path) -> list[Path]:
 
 
 def process_image(app: FaceAnalysis, image_path: Path) -> list[dict]:
-    """Extract faces from a single image."""
+    """Extract Probabilistic Face Embeddings from a single image."""
+    from core.pfe import create_pfe
+
     img = cv2.imread(str(image_path))
     if img is None:
         print(f"Warning: Could not read {image_path}", file=sys.stderr)
         return []
 
+    image_shape = img.shape[:2]  # (height, width)
     faces = app.get(img)
     results = []
 
@@ -42,14 +51,19 @@ def process_image(app: FaceAnalysis, image_path: Path) -> list[dict]:
         det_score = float(face.det_score)  # Detection confidence
         bbox = face.bbox.tolist()  # [x1, y1, x2, y2]
 
-        results.append({
+        # Build intermediate face data
+        face_data = {
             "filename": image_path.name,
             "filepath": str(image_path),
             "embedding": embedding,
-            "quality": raw_norm,  # Note: Not a true quality metric for ArcFace
+            "quality": raw_norm,
             "det_score": det_score,
             "bbox": bbox,
-        })
+        }
+
+        # Convert to Probabilistic Face Embedding (adds mu, sigma_sq)
+        pfe = create_pfe(face_data, image_shape)
+        results.append(pfe)
 
     return results
 
