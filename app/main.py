@@ -4,7 +4,13 @@ from pathlib import Path
 from fasthtml.common import *
 
 static_path = Path(__file__).resolve().parent / "static"
-app, rt = fast_app(static_path=str(static_path))
+app, rt = fast_app(
+    pico=False,
+    hdrs=(
+        Script(src="https://cdn.tailwindcss.com"),
+    ),
+    static_path=str(static_path),
+)
 
 
 def parse_quality_from_filename(filename: str) -> float:
@@ -29,7 +35,7 @@ def get():
     cards = []
     for filename, quality in faces:
         card = Div(
-            Img(src=f"/static/crops/{filename}", alt=filename, cls="face-img"),
+            Img(src=f"/crops/{filename}", alt=filename, cls="face-img"),
             P(f"Quality: {quality:.2f}", cls="quality-score"),
             Textarea(placeholder="Research notes...", disabled=True, cls="notes"),
             cls="face-card"
