@@ -146,8 +146,9 @@ class TestComputeSigmaSq:
         sigma_worst = compute_sigma_sq(det_score=0.0, face_area=0,
                                         min_sigma_sq=min_sigma, max_sigma_sq=max_sigma)
 
-        assert sigma_best.min() >= min_sigma
-        assert sigma_worst.max() <= max_sigma
+        # Use np.isclose due to float32 precision
+        assert sigma_best.min() >= min_sigma - 1e-6
+        assert sigma_worst.max() <= max_sigma + 1e-6
 
     def test_det_score_affects_sigma(self):
         """Detection score should inversely affect σ²."""
