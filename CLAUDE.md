@@ -37,23 +37,49 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 **Pathing**: Always use `Path(__file__).resolve().parent` for file paths.
 
 ## Workflow Rules
-- **Planning Mode**: Before starting any feature, enter Plan Mode (Shift+Tab twice) to create a `tasks.md`.
+
+### Planning
+- **Plan-then-Execute**: Use Plan Mode (Shift+Tab twice) for all non-trivial tasks. Research and design before writing code.
 - **Task Orchestration**: Use the `/task` system to manage complex builds. Break work into steps smaller than 100 lines of code.
-- **Git Protocol**: Commit after every successful task completion. Use semantic messages (e.g., "feat: implement face cropping script").
-- **Memory Hygiene**: After completing a major feature, run `/compact` to preserve token space.
-- **Verification**: Always run `python core/ingest.py` (with a dry run if possible) to verify data integrity before building UI components.
+- **Parallel Sessions**: Use multiple Claude sessions—one for research/exploration, another for building/implementation.
+
+### Git Protocol
+- **Commit Frequency**: Create a new Git commit after EVERY successful sub-task (e.g., after each failing test is made passing).
+- **Commit Messages**: Use conventional commit format: `feat:`, `test:`, `fix:`, `refactor:`, `docs:`, `chore:`.
+- **Auto-Commit**: Do not wait for full task completion; prioritize small, incremental saves.
+- **TDD Commits**: Commit failing tests separately (`test: add failing tests...`) before committing implementation (`feat: implement...`).
+
+### Session Hygiene
+- **Context Quality**: Run `/compact` every 20-30 minutes of active coding to maintain context quality.
+- **Virtual Environment**: Always run `source venv/bin/activate` when opening a new terminal tab.
+- **Verification**: Run `python core/ingest.py` (with a dry run if possible) to verify data integrity before building UI components.
 
 ## Testing & TDD Rules
 
-- **Red-Green-Refactor**: Always write a failing test before implementation
-- **Green Before Commit**: All tests must pass before committing
-- **Test Framework**: Use pytest and httpx for testing
-- **Run Tests**: `pytest tests/` from project root
+- **Red-Green-Refactor**: Always write a failing test before implementation. No exceptions.
+- **Green Before Commit**: All tests must pass before committing implementation code.
+- **Test Framework**: Use pytest and httpx for testing.
+- **Test Location**: Tests mirror source files: `core/crop_faces.py` → `tests/test_crop.py`.
+- **Run Tests**: `pytest tests/` from project root.
 
-## Development Workflow
+## Code Patterns
 
-- **Plan-then-Execute**: Use Plan Mode for all non-trivial tasks. Research and design before writing code.
-- **Strict TDD**: Always write a failing test in `tests/` before any implementation. No exceptions.
-- **Parallel Sessions**: Use multiple Claude sessions—one for research/exploration, another for building/implementation.
-- **Context Hygiene**: Run `/compact` every 20-30 minutes of active coding to maintain context quality.
-- **Virtual Environment**: Always run `source venv/bin/activate` when opening a new terminal tab.
+### Import Hygiene (Critical for Testability)
+In `core/` modules, **defer heavy imports** (cv2, numpy, torch, insightface) inside functions that use them. This allows pure helper functions to be unit tested without ML dependencies installed.
+
+```python
+# GOOD: Pure functions can be tested without cv2
+def add_padding(bbox, image_shape, padding=0.10):
+    ...
+
+def main():
+    import cv2  # Deferred import
+    import numpy as np
+    ...
+
+# BAD: Module-level import breaks tests
+import cv2  # Tests fail if cv2 not installed
+```
+
+### Path Resolution
+Always use `Path(__file__).resolve().parent` for file paths to ensure portability.
