@@ -59,3 +59,5 @@ data/*.db
 
 # Generated face crops (regenerate with: python core/crop_faces.py)
 app/static/crops/*.jpg.sesskey
+app/static/crops/
+.sesskey

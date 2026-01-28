@@ -1,9 +1,9 @@
 # Tasks
 
-## Task 1: Add Image Padding
-- [ ] Add 10% padding to crop images in `app/main.py`
-- [ ] Use Tailwind's `p-[10%]` or wrapper div approach
-- [ ] Commit: `style: add 10% padding to crop images`
+## Task 1: Add Image Padding (COMPLETE)
+- [x] Add 10% padding to crop images in `app/main.py`
+- [x] Use wrapper div with `p-[10%]` class
+- [x] Commit: `style: add 10% padding to crop images`
 
 ## Task 2: Verify Responsive Grid (COMPLETE)
 - [x] CSS Grid with breakpoints: 1 col mobile, 2 col sm, 3 col md, 4 col lg

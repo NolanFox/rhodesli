@@ -47,10 +47,16 @@ def get():
                 f"Quality: {quality:.2f}",
                 cls="mt-2 text-sm font-serif italic text-stone-600"
             ),
+            Label(
+                "Research Notes",
+                cls="sr-only",
+                **{"for": f"notes-{filename}"}
+            ),
             Textarea(
                 placeholder="Research notes...",
-                disabled=True,
-                cls="w-full mt-2 p-2 text-sm font-serif bg-amber-50 border border-stone-300 resize-y h-16 placeholder:italic placeholder:text-stone-400"
+                name="notes",
+                id=f"notes-{filename}",
+                cls="w-full mt-2 p-2 text-sm font-serif bg-amber-50 border border-stone-300 resize-y h-16 placeholder:italic placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-amber-600"
             ),
             cls="bg-stone-50 border border-stone-300 p-3 shadow-sm hover:shadow-md hover:border-stone-400 transition-all duration-200"
         )
