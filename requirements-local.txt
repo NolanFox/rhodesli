@@ -7,3 +7,5 @@ scikit-learn
 cython
 insightface
 onnxruntime
+transformers
+open-clip-torch
