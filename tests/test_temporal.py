@@ -75,8 +75,8 @@ class TestTemporalPenalty:
 
         penalty = compute_temporal_penalty(era1, era2)
 
-        # Adjacent eras get -2.0 penalty
-        assert penalty == -2.0
+        # Adjacent eras get -50.0 penalty
+        assert penalty == -50.0
 
     def test_non_adjacent_eras_severe_penalty(self):
         """Non-adjacent eras should have severe penalty."""
@@ -95,8 +95,8 @@ class TestTemporalPenalty:
 
         penalty = compute_temporal_penalty(era1, era2)
 
-        # Non-adjacent eras get -10.0 penalty
-        assert penalty == -10.0
+        # Non-adjacent eras get -200.0 penalty
+        assert penalty == -200.0
 
     def test_uncertain_era_smooths_penalty(self):
         """Uncertain era estimates should produce smoothed penalties."""
@@ -189,7 +189,7 @@ class TestMLSWithTemporal:
         )
 
         assert score_same_era > score_adjacent
-        assert np.isclose(score_same_era - score_adjacent, 2.0)
+        assert np.isclose(score_same_era - score_adjacent, 50.0)
 
     def test_temporal_eliminates_cross_era_false_positives(self):
         """
@@ -229,8 +229,8 @@ class TestMLSWithTemporal:
         )
 
         # Cross-era penalty should dominate
-        # The -10.0 penalty should make cross_era_mls much lower
-        assert cross_era_mls < base_mls - 8.0, (
+        # The -200.0 penalty should make cross_era_mls much lower
+        assert cross_era_mls < base_mls - 150.0, (
             f"Cross-era penalty should dominate. "
             f"Base MLS: {base_mls:.2f}, Cross-era MLS: {cross_era_mls:.2f}"
         )

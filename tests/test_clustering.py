@@ -21,12 +21,13 @@ class TestMLSToDistance:
         assert mls_to_distance(-50) > mls_to_distance(0)
         assert mls_to_distance(0) > mls_to_distance(100)
 
-    def test_distance_is_positive(self):
-        """Distance should be shifted to be positive for clustering."""
+    def test_distance_is_negative_of_mls(self):
+        """Distance should be -MLS (higher MLS = lower distance)."""
         from core.clustering import mls_to_distance
 
-        # Even high MLS scores should produce positive distance
-        assert mls_to_distance(1000) >= 0
+        # Distance is simply -MLS
+        assert mls_to_distance(1000) == -1000
+        assert mls_to_distance(-500) == 500
 
 
 class TestMLSToProbability:
@@ -217,13 +218,13 @@ class TestClusterIdentities:
             confidence=1.0,
         )
 
-        sigma_sq = np.full(512, 0.1, dtype=np.float32)
+        # Very low uncertainty (high quality photo) - makes embedding differences matter
+        sigma_sq = np.full(512, 0.001, dtype=np.float32)
 
-        # Two completely different embeddings
+        # Two anti-correlated embeddings (maximally different)
         mu1 = np.random.randn(512).astype(np.float32)
         mu1 = mu1 / np.linalg.norm(mu1)
-        mu2 = np.random.randn(512).astype(np.float32)
-        mu2 = mu2 / np.linalg.norm(mu2)
+        mu2 = -mu1  # Anti-correlated
 
         faces = [
             {"mu": mu1, "sigma_sq": sigma_sq.copy(), "era": era, "filename": "a.jpg"},

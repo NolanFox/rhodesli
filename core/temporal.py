@@ -21,11 +21,12 @@ from core.pfe import mutual_likelihood_score
 ERAS = ["1890-1910", "1910-1930", "1930-1950"]
 
 # Penalty matrix (log-space): penalty[era1][era2]
-# Same era: 0.0, Adjacent: -2.0, Non-adjacent: -10.0
+# Calibrated against MLS scale where random-face Mahalanobis term ≈ -10
+# Same era: 0.0, Adjacent: -50 (5x), Non-adjacent: -200 (20x)
 PENALTY_MATRIX = {
-    "1890-1910": {"1890-1910": 0.0, "1910-1930": -2.0, "1930-1950": -10.0},
-    "1910-1930": {"1890-1910": -2.0, "1910-1930": 0.0, "1930-1950": -2.0},
-    "1930-1950": {"1890-1910": -10.0, "1910-1930": -2.0, "1930-1950": 0.0},
+    "1890-1910": {"1890-1910": 0.0, "1910-1930": -50.0, "1930-1950": -200.0},
+    "1910-1930": {"1890-1910": -50.0, "1910-1930": 0.0, "1930-1950": -50.0},
+    "1930-1950": {"1890-1910": -200.0, "1910-1930": -50.0, "1930-1950": 0.0},
 }
 
 # Text prompts for CLIP era classification

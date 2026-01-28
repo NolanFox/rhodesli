@@ -81,16 +81,16 @@ Since MLS is a log-likelihood, we add the log of the temporal prior.
 
 | era₁ \ era₂ | 1890-1910 | 1910-1930 | 1930-1950 |
 |-------------|-----------|-----------|-----------|
-| 1890-1910   | 0.0       | -2.0      | -10.0     |
-| 1910-1930   | -2.0      | 0.0       | -2.0      |
-| 1930-1950   | -10.0     | -2.0      | 0.0       |
+| 1890-1910   | 0.0       | -50.0     | -200.0    |
+| 1910-1930   | -50.0     | 0.0       | -50.0     |
+| 1930-1950   | -200.0    | -50.0     | 0.0       |
 
 **Interpretation:**
 - **Same era (0.0):** No penalty—normal MLS applies
-- **Adjacent eras (-2.0):** Mild penalty—possible if person spans eras (e.g., photo at age 20 and age 40)
-- **Non-adjacent eras (-10.0):** Severe penalty—60+ year span is extremely unlikely
+- **Adjacent eras (-50.0):** Moderate penalty—possible if person spans eras (e.g., photo at age 20 and age 40)
+- **Non-adjacent eras (-200.0):** Severe penalty—60+ year span is extremely unlikely
 
-The log-space penalty of -10.0 corresponds to a probability multiplier of ~0.00005, effectively eliminating matches.
+**Calibration Note:** The penalty values are calibrated against the MLS scale where the natural Mahalanobis term for random faces is approximately -10. Using -200 for non-adjacent eras ensures the temporal constraint dominates over embedding similarity.
 
 ### Uncertainty-Aware Era Matching
 
