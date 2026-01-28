@@ -46,3 +46,16 @@ Thumbs.db
 
 # Logs
 *.log
+
+# --- AI & Genealogy Project Specifics ---
+# Ignore all raw photos to prevent "RPC failed" errors
+raw_photos/*
+# Keep the folder structure on GitHub, but not the images
+!raw_photos/.gitkeep
+
+# Ignore large ML data files
+data/*.npy
+data/*.db
+
+# Generated face crops (regenerate with: python core/crop_faces.py)
+app/static/crops/*.jpg
