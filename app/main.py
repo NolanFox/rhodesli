@@ -49,7 +49,7 @@ def get():
                 disabled=True,
                 cls="w-full mt-2 p-2 text-sm font-serif bg-amber-50 border border-stone-300 resize-y h-16 placeholder:italic placeholder:text-stone-400"
             ),
-            cls="bg-stone-50 border border-stone-300 p-3 shadow-sm"
+            cls="bg-stone-50 border border-stone-300 p-3 shadow-sm hover:shadow-md hover:border-stone-400 transition-all duration-200"
         )
         cards.append(card)
 
@@ -67,9 +67,12 @@ def get():
     """)
 
     return Title("Leon Capeluto Gallery"), style, Main(
-        H1(
-            "Leon Capeluto - Face Gallery",
-            cls="text-center text-3xl md:text-4xl font-serif font-bold text-stone-800 tracking-wide mb-6"
+        Header(
+            H1(
+                "Leon Capeluto - Face Gallery",
+                cls="text-3xl md:text-4xl font-serif font-bold text-stone-800 tracking-wide"
+            ),
+            cls="text-center border-b-2 border-stone-800 pb-4 mb-8"
         ),
         gallery,
         cls="p-4 md:p-8"
