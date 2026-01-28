@@ -38,7 +38,7 @@ def get():
             Img(
                 src=f"/crops/{filename}",
                 alt=filename,
-                cls="w-full h-auto border border-stone-200"
+                cls="w-full h-auto border border-stone-200 sepia hover:sepia-0 transition-all duration-500"
             ),
             P(
                 f"Quality: {quality:.2f}",
