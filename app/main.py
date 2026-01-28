@@ -35,10 +35,13 @@ def get():
     cards = []
     for filename, quality in faces:
         card = Div(
-            Img(
-                src=f"/crops/{filename}",
-                alt=filename,
-                cls="w-full h-auto border border-stone-200 sepia hover:sepia-0 transition-all duration-500"
+            Div(
+                Img(
+                    src=f"/crops/{filename}",
+                    alt=filename,
+                    cls="w-full h-auto sepia hover:sepia-0 transition-all duration-500"
+                ),
+                cls="p-[10%] border border-stone-200 bg-white"
             ),
             P(
                 f"Quality: {quality:.2f}",
