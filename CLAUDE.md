@@ -35,3 +35,10 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 **"Clean Vercel" Constraint**: `app/` must stay separate from `core/`. Heavy libs (torch, insightface, opencv) go in `requirements-local.txt`, NEVER in `requirements.txt`.
 
 **Pathing**: Always use `Path(__file__).resolve().parent` for file paths.
+
+## Workflow Rules
+- **Planning Mode**: Before starting any feature, enter Plan Mode (Shift+Tab twice) to create a `tasks.md`.
+- **Task Orchestration**: Use the `/task` system to manage complex builds. Break work into steps smaller than 100 lines of code.
+- **Git Protocol**: Commit after every successful task completion. Use semantic messages (e.g., "feat: implement face cropping script").
+- **Memory Hygiene**: After completing a major feature, run `/compact` to preserve token space.
+- **Verification**: Always run `python core/ingest.py` (with a dry run if possible) to verify data integrity before building UI components.

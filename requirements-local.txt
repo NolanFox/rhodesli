@@ -1,6 +1,9 @@
-torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+torch
+torchvision
+torchaudio
 opencv-python
 numpy
 scikit-learn
+cython
 insightface
 onnxruntime
