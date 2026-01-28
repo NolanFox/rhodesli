@@ -49,3 +49,11 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 - **Green Before Commit**: All tests must pass before committing
 - **Test Framework**: Use pytest and httpx for testing
 - **Run Tests**: `pytest tests/` from project root
+
+## Development Workflow
+
+- **Plan-then-Execute**: Use Plan Mode for all non-trivial tasks. Research and design before writing code.
+- **Strict TDD**: Always write a failing test in `tests/` before any implementation. No exceptions.
+- **Parallel Sessions**: Use multiple Claude sessions—one for research/exploration, another for building/implementation.
+- **Context Hygiene**: Run `/compact` every 20-30 minutes of active coding to maintain context quality.
+- **Virtual Environment**: Always run `source venv/bin/activate` when opening a new terminal tab.
