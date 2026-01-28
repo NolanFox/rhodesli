@@ -42,3 +42,10 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 - **Git Protocol**: Commit after every successful task completion. Use semantic messages (e.g., "feat: implement face cropping script").
 - **Memory Hygiene**: After completing a major feature, run `/compact` to preserve token space.
 - **Verification**: Always run `python core/ingest.py` (with a dry run if possible) to verify data integrity before building UI components.
+
+## Testing & TDD Rules
+
+- **Red-Green-Refactor**: Always write a failing test before implementation
+- **Green Before Commit**: All tests must pass before committing
+- **Test Framework**: Use pytest and httpx for testing
+- **Run Tests**: `pytest tests/` from project root
