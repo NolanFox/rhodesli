@@ -1,7 +1,7 @@
 """Integration tests for app/main.py - FastHTML gallery."""
 
 import pytest
-import httpx
+from starlette.testclient import TestClient
 
 from app.main import app, parse_quality_from_filename
 
@@ -33,8 +33,7 @@ class TestGalleryRoute:
     @pytest.fixture
     def client(self):
         """Create test client for the FastHTML app."""
-        transport = httpx.ASGITransport(app=app)
-        return httpx.Client(transport=transport, base_url="http://test")
+        return TestClient(app)
 
     def test_gallery_returns_200(self, client):
         """GET / returns 200 OK."""
