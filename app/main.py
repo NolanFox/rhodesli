@@ -42,12 +42,12 @@ def get():
             ),
             P(
                 f"Quality: {quality:.2f}",
-                cls="mt-2 text-sm text-stone-600"
+                cls="mt-2 text-sm font-serif italic text-stone-600"
             ),
             Textarea(
                 placeholder="Research notes...",
                 disabled=True,
-                cls="w-full mt-2 p-2 text-sm bg-stone-50 border border-stone-300 resize-y h-16"
+                cls="w-full mt-2 p-2 text-sm font-serif bg-amber-50 border border-stone-300 resize-y h-16 placeholder:italic placeholder:text-stone-400"
             ),
             cls="bg-stone-50 border border-stone-300 p-3 shadow-sm"
         )
@@ -69,7 +69,7 @@ def get():
     return Title("Leon Capeluto Gallery"), style, Main(
         H1(
             "Leon Capeluto - Face Gallery",
-            cls="text-center text-3xl text-stone-800 mb-6"
+            cls="text-center text-3xl md:text-4xl font-serif font-bold text-stone-800 tracking-wide mb-6"
         ),
         gallery,
         cls="p-4 md:p-8"
