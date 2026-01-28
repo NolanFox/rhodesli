@@ -6,9 +6,6 @@ Extracts face crops from source images using bounding boxes from embeddings.
 import re
 from pathlib import Path
 
-import cv2
-import numpy as np
-
 
 def add_padding(bbox: list, image_shape: tuple, padding: float = 0.10) -> tuple:
     """
@@ -58,6 +55,9 @@ def sanitize_filename(original_name: str) -> str:
 
 def main():
     """Main function to crop faces from embeddings."""
+    import cv2
+    import numpy as np
+
     project_root = Path(__file__).resolve().parent.parent
     embeddings_path = project_root / "data" / "embeddings.npy"
     output_dir = project_root / "app" / "static" / "crops"
