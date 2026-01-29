@@ -277,8 +277,24 @@ class IdentityRegistry:
             metadata={"undone_action": last_event["action"]},
         )
 
-    def save(self, path: Path) -> None:
-        """Save registry to JSON file."""
+    def save(self, path: Path, backup_dir: Path = None) -> None:
+        """
+        Save registry to JSON file with atomic write and file locking.
+
+        Guarantees:
+        - Atomic: writes to temp file, fsyncs, then renames
+        - Locked: exclusive lock prevents concurrent writes
+        - Backed up: creates timestamped backup before overwrite
+
+        Args:
+            path: Target file path
+            backup_dir: Optional directory for backups (default: path.parent/backups)
+        """
+        import os
+        import tempfile
+
+        import portalocker
+
         data = {
             "schema_version": SCHEMA_VERSION,
             "identities": self._identities,
@@ -288,8 +304,66 @@ class IdentityRegistry:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path, "w") as f:
-            json.dump(data, f, indent=2)
+        # Create backup if file exists
+        if path.exists():
+            self._create_backup(path, backup_dir)
+
+        # Atomic write with file locking
+        self._atomic_write(path, data)
+
+    def _create_backup(self, path: Path, backup_dir: Path = None) -> None:
+        """Create timestamped backup of existing file."""
+        import shutil
+
+        if backup_dir is None:
+            backup_dir = path.parent / "backups"
+
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        backup_path = backup_dir / f"{path.name}.{timestamp}"
+
+        shutil.copy2(path, backup_path)
+
+    def _atomic_write(self, path: Path, data: dict) -> None:
+        """
+        Atomically write data to file.
+
+        Single Writer Boundary: ALL writes flow through this method.
+
+        Steps:
+        1. Acquire exclusive lock on lock file
+        2. Write to temp file
+        3. fsync to ensure data is on disk
+        4. Atomic rename to target path
+        """
+        import os
+        import tempfile
+
+        import portalocker
+
+        lock_path = path.with_suffix(".lock")
+        temp_path = path.with_suffix(".tmp")
+
+        # Ensure lock file exists
+        lock_path.touch(exist_ok=True)
+
+        # Acquire exclusive lock
+        with open(lock_path, "r+") as lock_file:
+            portalocker.lock(lock_file, portalocker.LOCK_EX)
+
+            try:
+                # Write to temp file
+                with open(temp_path, "w") as f:
+                    json.dump(data, f, indent=2)
+                    f.flush()
+                    os.fsync(f.fileno())
+
+                # Atomic rename
+                os.rename(temp_path, path)
+
+            finally:
+                portalocker.unlock(lock_file)
 
     @classmethod
     def load(cls, path: Path) -> "IdentityRegistry":
