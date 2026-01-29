@@ -33,20 +33,26 @@ from core.temporal import mls_with_temporal
 MLS_DROP_THRESHOLD = 30
 
 
-def mls_to_distance(mls: float) -> float:
+def mls_to_distance(mls: float, max_mls: float) -> float:
     """
     Convert MLS score to distance metric for clustering.
 
     Higher MLS (more similar) → lower distance.
-    We use negative MLS directly (distance = -mls).
+    Uses shifted distance: distance = max_mls - mls
+
+    This guarantees:
+    - distance >= 0 (required by scipy.cluster.hierarchy.linkage)
+    - Best possible match has distance == 0
+    - Ordering preserved: if MLS_A > MLS_B then distance_A < distance_B
 
     Args:
         mls: Mutual Likelihood Score
+        max_mls: Maximum MLS in the current batch (shift value)
 
     Returns:
-        Distance (can be negative for very similar faces)
+        Non-negative distance
     """
-    return -mls
+    return max_mls - mls
 
 
 def mls_to_probability(mls: float) -> float:
@@ -198,9 +204,9 @@ def cluster_identities(faces: list[dict]) -> list[dict]:
     ref_mls = _compute_reference_mls(faces)
     mls_threshold = ref_mls - MLS_DROP_THRESHOLD
 
-    # Compute pairwise distance matrix and collect MLS values for stats
+    # Compute pairwise MLS matrix first, then convert to distances
     n = len(faces)
-    distances = np.zeros((n, n))
+    mls_matrix = np.zeros((n, n))
     mls_values = []  # For observability
 
     for i in range(n):
@@ -210,13 +216,36 @@ def cluster_identities(faces: list[dict]) -> list[dict]:
                 faces[j]["mu"], faces[j]["sigma_sq"], faces[j]["era"]
             )
             mls_values.append(mls)  # Collect for stats
-            dist = mls_to_distance(mls)
-            distances[i, j] = dist
-            distances[j, i] = dist
+            mls_matrix[i, j] = mls
+            mls_matrix[j, i] = mls
 
     # Print MLS distribution for observability
     _print_mls_stats(mls_values)
-    print(f"Clustering with: ref_mls={ref_mls:.1f}, threshold={mls_threshold:.1f}")
+
+    # Compute max MLS for shifted distance metric
+    # This ensures distance >= 0 (required by scipy linkage)
+    max_mls = max(mls_values)
+
+    # Convert MLS to distances using shifted metric: distance = max_mls - mls
+    distances = np.zeros((n, n))
+    for i in range(n):
+        for j in range(i + 1, n):
+            dist = mls_to_distance(mls_matrix[i, j], max_mls)
+            distances[i, j] = dist
+            distances[j, i] = dist
+
+    # Defensive logging: verify distances are non-negative
+    min_distance = distances[distances > 0].min() if np.any(distances > 0) else 0.0
+    max_distance = distances.max()
+    print(f"\nDistance stats: min={min_distance:.3f}, max={max_distance:.3f}")
+    assert min_distance >= 0, f"Negative distance detected: {min_distance}"
+
+    # Convert threshold to distance space using same transform
+    # MLS threshold becomes: distance_threshold = max_mls - mls_threshold
+    distance_threshold = max_mls - mls_threshold
+
+    print(f"Clustering with: ref_mls={ref_mls:.1f}, mls_threshold={mls_threshold:.1f}")
+    print(f"Shifted distance: max_mls={max_mls:.1f}, distance_threshold={distance_threshold:.1f}")
 
     # Convert to condensed form for scipy
     condensed = squareform(distances)
@@ -224,8 +253,8 @@ def cluster_identities(faces: list[dict]) -> list[dict]:
     # Hierarchical clustering with complete linkage
     Z = linkage(condensed, method="complete")
 
-    # Cut tree at adaptive threshold (distance = -MLS)
-    labels = fcluster(Z, t=-mls_threshold, criterion="distance")
+    # Cut tree at shifted threshold
+    labels = fcluster(Z, t=distance_threshold, criterion="distance")
 
     # Group faces by cluster label
     clusters_dict = {}

@@ -16,18 +16,30 @@ class TestMLSToDistance:
         """Higher MLS (more similar) should produce lower distance."""
         from core.clustering import mls_to_distance
 
-        # MLS is negated to convert to distance
-        assert mls_to_distance(-100) > mls_to_distance(-50)
-        assert mls_to_distance(-50) > mls_to_distance(0)
-        assert mls_to_distance(0) > mls_to_distance(100)
+        # With shifted distance (max_mls - mls), higher MLS = lower distance
+        max_mls = 1000
+        assert mls_to_distance(-100, max_mls) > mls_to_distance(-50, max_mls)
+        assert mls_to_distance(-50, max_mls) > mls_to_distance(0, max_mls)
+        assert mls_to_distance(0, max_mls) > mls_to_distance(100, max_mls)
 
-    def test_distance_is_negative_of_mls(self):
-        """Distance should be -MLS (higher MLS = lower distance)."""
+    def test_distance_is_shifted_from_max(self):
+        """Distance should be max_mls - MLS (non-negative, best match = 0)."""
         from core.clustering import mls_to_distance
 
-        # Distance is simply -MLS
-        assert mls_to_distance(1000) == -1000
-        assert mls_to_distance(-500) == 500
+        # Distance = max_mls - mls
+        max_mls = 1000
+        assert mls_to_distance(1000, max_mls) == 0  # Best match has distance 0
+        assert mls_to_distance(500, max_mls) == 500
+        assert mls_to_distance(0, max_mls) == 1000
+
+    def test_distance_is_non_negative(self):
+        """Distance must be non-negative for scipy linkage."""
+        from core.clustering import mls_to_distance
+
+        max_mls = 750
+        # All MLS values <= max_mls produce non-negative distances
+        for mls in [750, 500, 0, -500]:
+            assert mls_to_distance(mls, max_mls) >= 0
 
 
 class TestMLSToProbability:
