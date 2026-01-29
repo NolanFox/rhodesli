@@ -161,7 +161,7 @@ class TestAnchorManagement:
         )
 
         identity = registry.get_identity(identity_id)
-        assert "face_002" in identity["anchor_ids"]
+        assert "face_002" in registry.get_anchor_face_ids(identity_id)
         assert "face_002" not in identity["candidate_ids"]
 
     def test_promote_increments_version(self):
@@ -249,7 +249,7 @@ class TestNegativeEvidence:
         )
 
         identity = registry.get_identity(identity_id)
-        assert identity["anchor_ids"] == ["face_001"]
+        assert registry.get_anchor_face_ids(identity_id) == ["face_001"]
 
 
 class TestUndo:
@@ -276,7 +276,7 @@ class TestUndo:
         registry.undo(identity_id, user_source="manual")
 
         identity = registry.get_identity(identity_id)
-        assert "face_002" not in identity["anchor_ids"]
+        assert "face_002" not in registry.get_anchor_face_ids(identity_id)
         assert "face_002" in identity["candidate_ids"]
 
     def test_undo_reject_restores_candidate(self):
@@ -426,7 +426,7 @@ class TestReplay:
             registry2 = IdentityRegistry.load(path)
             identity = registry2.get_identity(identity_id)
 
-            assert identity["anchor_ids"] == ["face_001", "face_002"]
+            assert registry2.get_anchor_face_ids(identity_id) == ["face_001", "face_002"]
             assert identity["candidate_ids"] == []
             assert identity["negative_ids"] == ["face_003"]
             assert identity["state"] == "CONFIRMED"

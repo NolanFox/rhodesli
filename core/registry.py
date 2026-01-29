@@ -106,6 +106,38 @@ class IdentityRegistry:
             raise KeyError(f"Identity not found: {identity_id}")
         return self._identities[identity_id].copy()
 
+    def get_anchor_face_ids(self, identity_id: str) -> list[str]:
+        """
+        Extract face IDs from anchors (handles both legacy and structured formats).
+
+        Args:
+            identity_id: Identity ID
+
+        Returns:
+            List of face ID strings
+        """
+        identity = self.get_identity(identity_id)
+        face_ids = []
+        for anchor in identity["anchor_ids"]:
+            if isinstance(anchor, str):
+                face_ids.append(anchor)
+            elif isinstance(anchor, dict):
+                face_ids.append(anchor["face_id"])
+        return face_ids
+
+    def _remove_anchor_by_face_id(self, identity: dict, face_id: str) -> None:
+        """Remove anchor entry by face_id (handles both string and dict formats)."""
+        to_remove = None
+        for anchor in identity["anchor_ids"]:
+            if isinstance(anchor, str) and anchor == face_id:
+                to_remove = anchor
+                break
+            elif isinstance(anchor, dict) and anchor.get("face_id") == face_id:
+                to_remove = anchor
+                break
+        if to_remove is not None:
+            identity["anchor_ids"].remove(to_remove)
+
     def get_history(self, identity_id: str) -> list[dict]:
         """Get event history for an identity."""
         return [e for e in self._history if e["identity_id"] == identity_id]
@@ -164,11 +196,19 @@ class IdentityRegistry:
         face_id: str,
         user_source: str,
         confidence_weight: float = 1.0,
+        era_bin: str = None,
     ) -> None:
         """
         Move a candidate to anchor_ids.
 
         This is a human-confirmed action that affects fusion math.
+
+        Args:
+            identity_id: Identity ID
+            face_id: Face ID to promote
+            user_source: Who initiated this
+            confidence_weight: Weight for fusion (default 1.0)
+            era_bin: Optional era classification (e.g., "1910-1930")
         """
         identity = self._identities[identity_id]
         previous_version = identity["version_id"]
@@ -177,7 +217,16 @@ class IdentityRegistry:
             raise ValueError(f"Face {face_id} is not a candidate for {identity_id}")
 
         identity["candidate_ids"].remove(face_id)
-        identity["anchor_ids"].append(face_id)
+
+        # Create structured anchor entry
+        anchor_entry = {
+            "face_id": face_id,
+            "weight": confidence_weight,
+        }
+        if era_bin:
+            anchor_entry["era_bin"] = era_bin
+
+        identity["anchor_ids"].append(anchor_entry)
         identity["version_id"] += 1
         identity["updated_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -264,8 +313,8 @@ class IdentityRegistry:
         # Reverse the action
         if target_event["action"] == ActionType.PROMOTE.value:
             face_id = target_event["face_ids"][0]
-            if face_id in identity["anchor_ids"]:
-                identity["anchor_ids"].remove(face_id)
+            # Remove from anchors (handles both string and dict formats)
+            self._remove_anchor_by_face_id(identity, face_id)
             if face_id not in identity["candidate_ids"]:
                 identity["candidate_ids"].append(face_id)
 

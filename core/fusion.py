@@ -154,6 +154,24 @@ def check_variance_explosion(
     }
 
 
+def _extract_face_id(anchor) -> str:
+    """Extract face_id from anchor (handles legacy string and structured dict)."""
+    if isinstance(anchor, str):
+        return anchor
+    elif isinstance(anchor, dict):
+        return anchor["face_id"]
+    raise ValueError(f"Invalid anchor format: {anchor}")
+
+
+def _extract_weight(anchor) -> float:
+    """Extract weight from anchor (handles legacy string and structured dict)."""
+    if isinstance(anchor, str):
+        return 1.0
+    elif isinstance(anchor, dict):
+        return anchor.get("weight", 1.0)
+    return 1.0
+
+
 def compute_identity_fusion(
     registry: IdentityRegistry,
     identity_id: str,
@@ -171,19 +189,24 @@ def compute_identity_fusion(
         (fused_mu, fused_sigma_sq)
 
     Note: Candidates and negative_ids are explicitly IGNORED.
+    Note: Handles both legacy (string) and structured (dict) anchor formats.
     """
     identity = registry.get_identity(identity_id)
 
     # Only use anchor_ids - ignore candidates and negatives
     anchors = []
-    for face_id in identity["anchor_ids"]:
+    for anchor in identity["anchor_ids"]:
+        face_id = _extract_face_id(anchor)
+        weight = _extract_weight(anchor)
+
         if face_id not in face_data:
             continue
+
         face = face_data[face_id]
         anchors.append({
             "mu": face["mu"],
             "sigma_sq": face["sigma_sq"],
-            "confidence_weight": 1.0,  # Could look up from events
+            "confidence_weight": weight,
         })
 
     if not anchors:

@@ -316,7 +316,7 @@ class TestSafePromote:
         )
 
         assert result["success"] is True
-        assert "face_002" in registry.get_identity(identity_id)["anchor_ids"]
+        assert "face_002" in registry.get_anchor_face_ids(identity_id)
 
     def test_safe_promote_rejects_dissimilar(self):
         """Promoting a dissimilar face should fail and mark CONTESTED."""
