@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from core.photo_registry import PhotoRegistry
     from core.registry import IdentityRegistry
 
-from core.fusion import compute_identity_fusion
+from core.fusion import compute_identity_fusion, fuse_anchors
 from core.pfe import mutual_likelihood_score
 
 logger = logging.getLogger(__name__)
@@ -32,19 +32,65 @@ def compute_identity_centroid(
     """
     Compute centroid (fused mu, sigma_sq) for an identity.
 
+    For discovery purposes (outlier sorting, neighbor finding), falls back to
+    using candidates if no anchors exist. This allows PROPOSED identities
+    to participate in discovery without requiring human confirmation first.
+
+    NOTE: This is for UI/discovery only - authoritative fusion for MLS
+    comparisons should use compute_identity_fusion() directly.
+
     Args:
         registry: Identity registry
         identity_id: ID of identity to compute centroid for
         face_data: Dict mapping face_id to {'mu', 'sigma_sq'}
 
     Returns:
-        (fused_mu, fused_sigma_sq) tuple, or None if identity has no valid anchors.
+        (fused_mu, fused_sigma_sq) tuple, or None if identity has no valid faces.
     """
     try:
         return compute_identity_fusion(registry, identity_id, face_data)
     except ValueError:
-        logger.debug(f"No valid anchors for identity {identity_id}")
+        # No valid anchors - fall back to candidates for discovery
+        logger.debug(f"No anchors for identity {identity_id}, using candidates")
+        return _compute_centroid_from_candidates(registry, identity_id, face_data)
+
+
+def _compute_centroid_from_candidates(
+    registry: "IdentityRegistry",
+    identity_id: str,
+    face_data: dict[str, dict],
+) -> tuple[np.ndarray, np.ndarray] | None:
+    """
+    Compute centroid from candidate faces (fallback for PROPOSED identities).
+
+    Uses simple averaging with uniform weights since candidates are unconfirmed.
+    """
+    identity = registry.get_identity(identity_id)
+    candidate_ids = identity.get("candidate_ids", [])
+
+    if not candidate_ids:
+        logger.debug(f"No candidates for identity {identity_id}")
         return None
+
+    # Build anchor-like entries from candidates
+    anchors = []
+    for cid in candidate_ids:
+        # Handle both string and dict formats
+        face_id = cid if isinstance(cid, str) else cid.get("face_id")
+        if face_id not in face_data:
+            continue
+        face = face_data[face_id]
+        anchors.append({
+            "mu": face["mu"],
+            "sigma_sq": face["sigma_sq"],
+            "confidence_weight": 1.0,  # Uniform weight for candidates
+        })
+
+    if not anchors:
+        logger.debug(f"No valid candidate faces found for identity {identity_id}")
+        return None
+
+    return fuse_anchors(anchors)
 
 
 def find_nearest_neighbors(
