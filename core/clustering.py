@@ -19,8 +19,18 @@ from core.temporal import mls_with_temporal
 
 # MLS drop required to consider faces as different identities
 # This is subtracted from the reference MLS (identical faces with same σ²)
-# Cross-era penalty is ~180, so drop of 150 separates cross-era matches
-MLS_DROP_THRESHOLD = 150
+#
+# IMPORTANT: Lower values = stricter clustering = more separate identities
+# Higher values = looser clustering = more merging (risks "super-clusters")
+#
+# Empirical guidance:
+#   - 150: Too permissive, causes pathological over-clustering
+#   - 30: Conservative, biases toward precision over recall
+#         (Better to have false negatives than false merges)
+#
+# The merge condition: faces cluster together if MLS > (ref_mls - threshold)
+# So a threshold of 30 means faces must have MLS within 30 of identical-face MLS
+MLS_DROP_THRESHOLD = 30
 
 
 def mls_to_distance(mls: float) -> float:
@@ -117,6 +127,47 @@ def _compute_reference_mls(faces: list[dict]) -> float:
     return -512 * np.log(2 * avg_sigma_sq)
 
 
+def _print_mls_stats(mls_values: list[float]) -> None:
+    """
+    Print MLS distribution statistics for observability.
+
+    Empirical guidance on MLS values:
+    - MLS > 0: Strong match (same person, high confidence)
+    - MLS -200 to 0: Moderate match (possibly same person)
+    - MLS -500 to -200: Weak/uncertain match
+    - MLS < -500: Different identities (should NOT cluster together)
+
+    If you see most pairwise MLS values near 0 or positive, clustering is
+    too permissive. Good separation shows a bimodal distribution with
+    same-identity pairs having high MLS and different-identity pairs having
+    low (negative) MLS.
+    """
+    arr = np.array(mls_values)
+    print("\n" + "=" * 60)
+    print("MLS DISTRIBUTION STATS (higher = more similar)")
+    print("=" * 60)
+    print(f"  Count: {len(arr)}")
+    print(f"  Min:   {arr.min():.1f}")
+    print(f"  Max:   {arr.max():.1f}")
+    print(f"  Mean:  {arr.mean():.1f}")
+    print(f"  Std:   {arr.std():.1f}")
+
+    # Simple histogram with fixed buckets
+    buckets = [
+        (-np.inf, -1000, "< -1000 (very different)"),
+        (-1000, -500, "-1000 to -500 (different)"),
+        (-500, -200, "-500 to -200 (weak match)"),
+        (-200, 0, "-200 to 0 (moderate match)"),
+        (0, np.inf, "> 0 (strong match)"),
+    ]
+    print("\n  Histogram:")
+    for low, high, label in buckets:
+        count = np.sum((arr > low) & (arr <= high))
+        bar = "#" * min(count, 40)
+        print(f"    {label:30s}: {count:4d} {bar}")
+    print("=" * 60 + "\n")
+
+
 def cluster_identities(faces: list[dict]) -> list[dict]:
     """
     Cluster faces into identity groups using MLS + temporal priors.
@@ -147,9 +198,10 @@ def cluster_identities(faces: list[dict]) -> list[dict]:
     ref_mls = _compute_reference_mls(faces)
     mls_threshold = ref_mls - MLS_DROP_THRESHOLD
 
-    # Compute pairwise distance matrix
+    # Compute pairwise distance matrix and collect MLS values for stats
     n = len(faces)
     distances = np.zeros((n, n))
+    mls_values = []  # For observability
 
     for i in range(n):
         for j in range(i + 1, n):
@@ -157,9 +209,14 @@ def cluster_identities(faces: list[dict]) -> list[dict]:
                 faces[i]["mu"], faces[i]["sigma_sq"], faces[i]["era"],
                 faces[j]["mu"], faces[j]["sigma_sq"], faces[j]["era"]
             )
+            mls_values.append(mls)  # Collect for stats
             dist = mls_to_distance(mls)
             distances[i, j] = dist
             distances[j, i] = dist
+
+    # Print MLS distribution for observability
+    _print_mls_stats(mls_values)
+    print(f"Clustering with: ref_mls={ref_mls:.1f}, threshold={mls_threshold:.1f}")
 
     # Convert to condensed form for scipy
     condensed = squareform(distances)

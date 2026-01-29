@@ -92,10 +92,15 @@ def convert_to_pfe(face: dict) -> dict:
     distances in the linkage matrix).
     """
     # Minimum sigma_sq for bootstrap clustering
-    # Value of 0.5 ensures MLS produces non-negative distances
-    # (required by scipy's fcluster). This represents high uncertainty
-    # which is appropriate for unverified bootstrap clustering.
-    MIN_BOOTSTRAP_SIGMA_SQ = 0.5
+    #
+    # IMPORTANT: Large sigma_sq destroys identity discrimination!
+    # sigma_sq appears in MLS denominator: higher sigma = flatter likelihood surface
+    # = less penalty for embedding differences = everything clusters together.
+    #
+    # Previous value 0.5 caused pathological over-clustering (super-cluster bug).
+    # Value of 0.05 preserves embedding-based discrimination while ensuring
+    # numeric stability. This is conservative: may under-cluster (prefer precision).
+    MIN_BOOTSTRAP_SIGMA_SQ = 0.05
 
     face_copy = face.copy()
 
@@ -169,9 +174,11 @@ def seed_registry(
     # Safety check: abort if registry exists
     if registry_path.exists():
         raise FileExistsError(
-            f"Registry already exists: {registry_path}\n"
-            "This is a one-time bootstrap script. "
-            "Delete the registry manually if you want to re-seed."
+            f"Registry already exists: {registry_path}\n\n"
+            "To apply new clustering parameters, delete the registry and rerun:\n"
+            f"    rm {registry_path}\n"
+            "    python scripts/seed_registry.py\n\n"
+            "WARNING: This will discard all manual identity edits!"
         )
 
     # Load existing embeddings
