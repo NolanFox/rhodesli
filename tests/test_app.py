@@ -43,7 +43,7 @@ class TestGalleryRoute:
     def test_gallery_contains_title(self, client):
         """Gallery page contains the title."""
         response = client.get("/")
-        assert "Leon Capeluto" in response.text
+        assert "Rhodesli" in response.text
 
     def test_gallery_has_css_grid(self, client):
         """Gallery uses CSS grid layout."""
@@ -60,7 +60,7 @@ class TestGalleryRoute:
         response = client.get("/")
         assert "/crops/" in response.text and "<img" in response.text
 
-    def test_gallery_has_research_notes_field(self, client):
-        """Gallery has research notes textarea."""
+    def test_gallery_has_workstation_subtitle(self, client):
+        """Gallery has workstation subtitle."""
         response = client.get("/")
-        assert "Research notes" in response.text or "placeholder" in response.text
+        assert "Forensic Identity Workstation" in response.text
