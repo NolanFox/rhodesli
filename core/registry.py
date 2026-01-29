@@ -224,7 +224,8 @@ class IdentityRegistry:
         """
         Undo the most recent reversible action.
 
-        Replays events up to (but not including) the last action.
+        Skips over undo events and already-undone actions to find the
+        last action that can be reversed.
         """
         identity = self._identities[identity_id]
         history = self.get_history(identity_id)
@@ -232,30 +233,58 @@ class IdentityRegistry:
         if len(history) < 2:
             raise ValueError("Nothing to undo")
 
-        # Get the last action to undo
-        last_event = history[-1]
+        # Find the last undoable action (skip undos and already-undone actions)
+        undone_event_ids = set()
+        for evt in history:
+            if evt["action"] == ActionType.UNDO.value:
+                # Track which event was undone by this undo
+                undone_ref = evt["metadata"].get("undone_event_id")
+                if undone_ref:
+                    undone_event_ids.add(undone_ref)
+
+        # Find last undoable event (not an undo, not already undone)
+        target_event = None
+        for i in range(len(history) - 1, -1, -1):
+            evt = history[i]
+            if evt["action"] == ActionType.UNDO.value:
+                continue
+            if evt["event_id"] in undone_event_ids:
+                continue
+            if evt["action"] == ActionType.CREATE.value:
+                # Can't undo create
+                continue
+            target_event = evt
+            break
+
+        if target_event is None:
+            raise ValueError("Nothing to undo")
+
         previous_version = identity["version_id"]
 
         # Reverse the action
-        if last_event["action"] == ActionType.PROMOTE.value:
-            face_id = last_event["face_ids"][0]
+        if target_event["action"] == ActionType.PROMOTE.value:
+            face_id = target_event["face_ids"][0]
             if face_id in identity["anchor_ids"]:
                 identity["anchor_ids"].remove(face_id)
             if face_id not in identity["candidate_ids"]:
                 identity["candidate_ids"].append(face_id)
 
-        elif last_event["action"] == ActionType.REJECT.value:
-            face_id = last_event["face_ids"][0]
+        elif target_event["action"] == ActionType.REJECT.value:
+            face_id = target_event["face_ids"][0]
             if face_id in identity["negative_ids"]:
                 identity["negative_ids"].remove(face_id)
             if face_id not in identity["candidate_ids"]:
                 identity["candidate_ids"].append(face_id)
 
-        elif last_event["action"] == ActionType.STATE_CHANGE.value:
+        elif target_event["action"] == ActionType.STATE_CHANGE.value:
             # Restore previous state by finding the state before this change
             prev_state = None
-            for i in range(len(history) - 2, -1, -1):
+            for i in range(len(history) - 1, -1, -1):
                 evt = history[i]
+                if evt["event_id"] == target_event["event_id"]:
+                    continue
+                if evt["event_id"] in undone_event_ids:
+                    continue
                 if evt["action"] == ActionType.STATE_CHANGE.value:
                     prev_state = evt["metadata"].get("new_state")
                     break
@@ -271,10 +300,13 @@ class IdentityRegistry:
         self._record_event(
             identity_id=identity_id,
             action=ActionType.UNDO.value,
-            face_ids=last_event.get("face_ids", []),
+            face_ids=target_event.get("face_ids", []),
             user_source=user_source,
             previous_version_id=previous_version,
-            metadata={"undone_action": last_event["action"]},
+            metadata={
+                "undone_action": target_event["action"],
+                "undone_event_id": target_event["event_id"],
+            },
         )
 
     def save(self, path: Path, backup_dir: Path = None) -> None:
