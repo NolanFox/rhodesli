@@ -48,7 +48,7 @@ class TestGalleryRoute:
     def test_gallery_has_css_grid(self, client):
         """Gallery uses CSS grid layout."""
         response = client.get("/")
-        assert "display: grid" in response.text or 'class="gallery"' in response.text
+        assert "grid" in response.text  # Tailwind grid classes
 
     def test_gallery_has_quality_scores(self, client):
         """Gallery displays quality scores."""
@@ -56,9 +56,9 @@ class TestGalleryRoute:
         assert "Quality:" in response.text
 
     def test_gallery_has_face_cards(self, client):
-        """Gallery has face-card elements."""
+        """Gallery has face card elements with images."""
         response = client.get("/")
-        assert "face-card" in response.text
+        assert "/crops/" in response.text and "<img" in response.text
 
     def test_gallery_has_research_notes_field(self, client):
         """Gallery has research notes textarea."""
