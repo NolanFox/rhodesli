@@ -1296,10 +1296,10 @@ def get(identity_id: str, limit: int = 5):
         registry = load_registry()
         registry.get_identity(identity_id)
     except KeyError:
-        return Response(
-            toast("Identity not found.", "error"),
-            status_code=404,
-            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        # Return empty neighbors sidebar with error message
+        return Div(
+            P("Identity not found.", cls="text-red-600 text-center py-4"),
+            cls="neighbors-sidebar"
         )
 
     # Load required data
