@@ -189,7 +189,9 @@ class TestVarianceExplosionGuardrail:
         from core.fusion import check_variance_explosion
 
         mu1 = np.random.randn(512).astype(np.float32)
+        mu1 = mu1 / np.linalg.norm(mu1)  # Normalize like other tests
         mu2 = np.random.randn(512).astype(np.float32)
+        mu2 = mu2 / np.linalg.norm(mu2)  # Normalize like other tests
         sigma_sq = np.full(512, 0.1, dtype=np.float32)
 
         anchors = [
