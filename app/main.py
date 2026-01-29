@@ -175,14 +175,31 @@ def get_identity_for_face(registry, face_id: str) -> dict:
 
 # Photo metadata cache (rebuilt on each request for simplicity)
 _photo_cache = None
+_face_to_photo_cache = None
+
+
+def _build_caches():
+    """Build photo and face-to-photo caches."""
+    global _photo_cache, _face_to_photo_cache
+    if _photo_cache is None:
+        _photo_cache = load_embeddings_for_photos()
+        # Build reverse mapping: face_id -> photo_id
+        _face_to_photo_cache = {}
+        for photo_id, photo_data in _photo_cache.items():
+            for face in photo_data["faces"]:
+                _face_to_photo_cache[face["face_id"]] = photo_id
 
 
 def get_photo_metadata(photo_id: str) -> dict:
     """Get photo metadata including face bboxes."""
-    global _photo_cache
-    if _photo_cache is None:
-        _photo_cache = load_embeddings_for_photos()
+    _build_caches()
     return _photo_cache.get(photo_id)
+
+
+def get_photo_id_for_face(face_id: str) -> str:
+    """Get the photo_id containing a face."""
+    _build_caches()
+    return _face_to_photo_cache.get(face_id)
 
 
 def parse_quality_from_filename(filename: str) -> float:
@@ -381,6 +398,7 @@ def face_card(
     quality: float = None,
     era: str = None,
     identity_id: str = None,
+    photo_id: str = None,
     show_actions: bool = False,
 ) -> Div:
     """
@@ -393,11 +411,26 @@ def face_card(
         quality: Quality score (extracted from URL if not provided)
         era: Era classification for badge display
         identity_id: Parent identity ID
+        photo_id: Photo ID for "View Photo" button
         show_actions: Whether to show action buttons
     """
     if quality is None:
         # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
         quality = parse_quality_from_filename(crop_url)
+
+    # View Photo button (only if photo_id is available)
+    view_photo_btn = None
+    if photo_id:
+        view_photo_btn = Button(
+            "View Photo",
+            cls="text-xs text-stone-500 hover:text-stone-700 underline mt-1",
+            hx_get=f"/photo/{photo_id}/partial?face={face_id}",
+            hx_target="#photo-modal-content",
+            hx_swap="innerHTML",
+            # Show the modal when clicked
+            **{"_": "on click remove .hidden from #photo-modal"},
+            type="button",
+        )
 
     return Div(
         # Image container with era badge
@@ -410,10 +443,14 @@ def face_card(
             era_badge(era) if era else None,
             cls="relative border border-stone-200 bg-white"
         ),
-        # Metadata
-        P(
-            f"Quality: {quality:.2f}",
-            cls="mt-2 text-xs font-mono text-stone-500"
+        # Metadata and actions
+        Div(
+            P(
+                f"Quality: {quality:.2f}",
+                cls="text-xs font-mono text-stone-500"
+            ),
+            view_photo_btn,
+            cls="mt-2"
         ),
         cls="bg-white border border-stone-200 p-2 rounded shadow-sm hover:shadow-md transition-shadow"
     )
@@ -448,11 +485,14 @@ def identity_card(
 
         crop_url = resolve_face_image_url(face_id, crop_files)
         if crop_url:
+            # Look up photo_id for "View Photo" button
+            photo_id = get_photo_id_for_face(face_id)
             face_cards.append(face_card(
                 face_id=face_id,
                 crop_url=crop_url,
                 era=era,
                 identity_id=identity_id,
+                photo_id=photo_id,
             ))
 
     if not face_cards:
@@ -484,6 +524,43 @@ def identity_card(
         action_buttons(identity_id) if show_actions and state == "PROPOSED" else None,
         cls=f"identity-card bg-stone-50 border border-stone-200 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-sm mb-4",
         id=f"identity-{identity_id}"
+    )
+
+
+def photo_modal() -> Div:
+    """
+    Modal container for photo context viewer.
+    Hidden by default, shown via HTMX when "View Photo" is clicked.
+    """
+    return Div(
+        # Backdrop
+        Div(
+            cls="fixed inset-0 bg-black/50 z-40",
+            **{"_": "on click add .hidden to #photo-modal"},
+        ),
+        # Modal content
+        Div(
+            # Header with close button
+            Div(
+                H2("Photo Context", cls="text-xl font-serif font-bold text-stone-800"),
+                Button(
+                    "X",
+                    cls="text-stone-500 hover:text-stone-700 text-xl font-bold",
+                    **{"_": "on click add .hidden to #photo-modal"},
+                    type="button",
+                    aria_label="Close modal",
+                ),
+                cls="flex justify-between items-center mb-4 pb-2 border-b border-stone-200"
+            ),
+            # Content area (populated by HTMX)
+            Div(
+                P("Loading...", cls="text-stone-400 text-center py-8"),
+                id="photo-modal-content",
+            ),
+            cls="bg-white rounded-lg shadow-xl max-w-5xl max-h-[90vh] overflow-auto p-6 relative z-50"
+        ),
+        id="photo-modal",
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-50"
     )
 
 
@@ -647,6 +724,8 @@ def get():
             cls="text-center border-b-2 border-stone-800 pb-4 mb-6"
         ),
         content,
+        # Photo context modal (hidden by default)
+        photo_modal(),
         cls="p-4 md:p-8"
     )
 

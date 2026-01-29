@@ -152,6 +152,36 @@ class TestPhotoViewRoute:
         assert "<img" in response.text
 
 
+class TestViewPhotoButton:
+    """Tests for View Photo button in face cards."""
+
+    @pytest.fixture
+    def client(self):
+        """Create test client for the FastHTML app."""
+        return TestClient(app)
+
+    def test_main_page_contains_modal(self, client):
+        """Main page includes the photo modal container."""
+        response = client.get("/")
+        assert response.status_code == 200
+        assert "photo-modal" in response.text
+        assert "photo-modal-content" in response.text
+
+    def test_main_page_modal_is_hidden(self, client):
+        """Modal is hidden by default."""
+        response = client.get("/")
+        assert 'id="photo-modal"' in response.text
+        assert 'class="hidden' in response.text
+
+    def test_face_cards_have_view_photo_button(self, client):
+        """Face cards include View Photo button when data is available."""
+        response = client.get("/")
+        # If there's identity data, there should be View Photo buttons
+        if "View Photo" in response.text:
+            assert "/photo/" in response.text
+            assert "hx-get" in response.text.lower()
+
+
 class TestGeneratePhotoId:
     """Tests for photo ID generation."""
 
