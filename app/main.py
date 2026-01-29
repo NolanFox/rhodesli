@@ -3,6 +3,11 @@ Rhodesli Forensic Workstation.
 
 A triage-focused interface for identity verification with epistemic humility.
 The UI reflects backend state - it never calculates probabilities.
+
+Error Semantics:
+- 409 = Variance Explosion (faces too dissimilar)
+- 423 = Lock Contention (another process is writing)
+- 404 = Identity or face not found
 """
 
 import re
@@ -39,6 +44,11 @@ def load_registry():
     return IdentityRegistry()
 
 
+def save_registry(registry):
+    """Save registry with atomic write (backend handles locking)."""
+    registry.save(REGISTRY_PATH)
+
+
 def parse_quality_from_filename(filename: str) -> float:
     """Extract quality score from filename like 'brass_rail_21.98_0.jpg'."""
     match = re.search(r'_(\d+\.\d+)_\d+\.jpg$', filename)
@@ -57,13 +67,10 @@ def get_crop_files():
 
 def find_crop_for_face(face_id: str, crop_files: set) -> str:
     """Find the crop file matching a face_id."""
-    # Direct match
     if face_id in crop_files:
         return face_id
-    # Try with .jpg extension
     if f"{face_id}.jpg" in crop_files:
         return f"{face_id}.jpg"
-    # Fuzzy match by prefix
     for crop in crop_files:
         if crop.startswith(face_id.split("_")[0]):
             return crop
@@ -73,6 +80,43 @@ def find_crop_for_face(face_id: str, crop_files: set) -> str:
 # =============================================================================
 # UI COMPONENTS
 # =============================================================================
+
+def toast_container() -> Div:
+    """
+    Toast notification container.
+    UX Intent: Non-blocking feedback for actions.
+    """
+    return Div(
+        id="toast-container",
+        cls="fixed top-4 right-4 z-50 flex flex-col gap-2"
+    )
+
+
+def toast(message: str, variant: str = "info") -> Div:
+    """
+    Single toast notification.
+    Variants: success, error, warning, info
+    """
+    colors = {
+        "success": "bg-emerald-600 text-white",
+        "error": "bg-red-600 text-white",
+        "warning": "bg-amber-500 text-white",
+        "info": "bg-stone-700 text-white",
+    }
+    icons = {
+        "success": "\u2713",
+        "error": "\u2717",
+        "warning": "\u26a0",
+        "info": "\u2139",
+    }
+    return Div(
+        Span(icons.get(variant, ""), cls="mr-2"),
+        Span(message),
+        cls=f"px-4 py-3 rounded shadow-lg flex items-center {colors.get(variant, colors['info'])} animate-fade-in",
+        # Auto-dismiss after 4 seconds
+        **{"_": "on load wait 4s then remove me"}
+    )
+
 
 def state_badge(state: str) -> Span:
     """
@@ -103,6 +147,48 @@ def era_badge(era: str) -> Span:
     )
 
 
+def action_buttons(identity_id: str) -> Div:
+    """
+    Action buttons for PROPOSED identities.
+    UX Intent: Direct manipulation with clear consequences.
+    """
+    return Div(
+        # Confirm button (green, solid)
+        Button(
+            "\u2713 Confirm",
+            cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors",
+            hx_post=f"/confirm/{identity_id}",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            # Show loading state
+            hx_indicator=f"#loading-{identity_id}",
+        ),
+        # Reject button (red, ghost)
+        Button(
+            "\u2717 Reject",
+            cls="px-3 py-1.5 text-sm font-bold border-2 border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors",
+            hx_post=f"/reject/{identity_id}",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            hx_indicator=f"#loading-{identity_id}",
+        ),
+        # Unsure button (neutral) - client-side only
+        Button(
+            "? Skip",
+            cls="px-3 py-1.5 text-sm font-bold border border-stone-300 text-stone-500 rounded hover:bg-stone-100 transition-colors",
+            # Client-side hide only - no backend mutation
+            **{"_": f"on click add .hidden to #identity-{identity_id}"}
+        ),
+        # Loading indicator (hidden by default)
+        Span(
+            "...",
+            id=f"loading-{identity_id}",
+            cls="htmx-indicator ml-2 text-stone-400 animate-pulse"
+        ),
+        cls="flex gap-2 items-center mt-3"
+    )
+
+
 def face_card(
     face_id: str,
     crop_filename: str,
@@ -117,9 +203,6 @@ def face_card(
     """
     if quality is None:
         quality = parse_quality_from_filename(crop_filename)
-
-    # Phase 1: No actions yet (read-only)
-    # Phase 2 will add confirm/reject buttons via show_actions
 
     return Div(
         # Image container with era badge
@@ -145,6 +228,7 @@ def identity_card(
     identity: dict,
     crop_files: set,
     lane_color: str = "stone",
+    show_actions: bool = False,
 ) -> Div:
     """
     Identity group card showing all anchors.
@@ -158,7 +242,6 @@ def identity_card(
     # Build face cards for each anchor
     face_cards = []
     for anchor in anchor_ids:
-        # Handle both string and dict anchor formats
         if isinstance(anchor, str):
             face_id = anchor
             era = None
@@ -178,7 +261,6 @@ def identity_card(
     if not face_cards:
         return None
 
-    # Lane-specific border colors
     border_colors = {
         "emerald": "border-l-emerald-500",
         "amber": "border-l-amber-500",
@@ -201,28 +283,29 @@ def identity_card(
             *face_cards,
             cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
         ),
+        # Action buttons for PROPOSED identities
+        action_buttons(identity_id) if show_actions and state == "PROPOSED" else None,
         cls=f"bg-stone-50 border border-stone-200 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-sm mb-4",
         id=f"identity-{identity_id}"
     )
 
 
-def lane_section(title: str, identities: list, crop_files: set, color: str, icon: str) -> Div:
+def lane_section(
+    title: str,
+    identities: list,
+    crop_files: set,
+    color: str,
+    icon: str,
+    show_actions: bool = False,
+    lane_id: str = None,
+) -> Div:
     """
     A swimlane for a specific identity state.
     UX Intent: Clear separation of epistemic states.
     """
-    if not identities:
-        return Div(
-            P(
-                f"No {title.lower()} identities",
-                cls="text-stone-400 italic text-center py-8"
-            ),
-            cls="mb-8"
-        )
-
     cards = []
     for identity in identities:
-        card = identity_card(identity, crop_files, lane_color=color)
+        card = identity_card(identity, crop_files, lane_color=color, show_actions=show_actions)
         if card:
             cards.append(card)
 
@@ -243,14 +326,17 @@ def lane_section(title: str, identities: list, crop_files: set, color: str, icon
             ),
             cls="flex items-center gap-3 mb-4 pb-2 border-b border-stone-300"
         ),
-        # Cards
-        Div(*cards) if cards else P("No matching faces found", cls="text-stone-400 italic"),
+        # Cards or empty state
+        Div(*cards, id=lane_id) if cards else P(
+            f"No {title.lower()} identities",
+            cls="text-stone-400 italic text-center py-8"
+        ),
         cls=f"mb-8 p-4 rounded {bg_colors.get(color, '')}"
     )
 
 
 # =============================================================================
-# ROUTES - PHASE 1: READ-ONLY
+# ROUTES - PHASE 2: TEACH MODE
 # =============================================================================
 
 @rt("/")
@@ -262,34 +348,28 @@ def get():
     registry = load_registry()
     crop_files = get_crop_files()
 
-    # Get identities grouped by state
     confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
     contested = registry.list_identities(state=IdentityState.CONTESTED)
 
-    # Sort by appropriate criteria
-    # Confirmed: by name then by most recent update
     confirmed.sort(key=lambda x: (x.get("name") or "", x.get("updated_at", "")))
-
-    # Proposed: by version_id descending (newest first, as proxy for uncertainty)
     proposed.sort(key=lambda x: x.get("version_id", 0), reverse=True)
-
-    # Contested: by version_id descending (most active disputes first)
     contested.sort(key=lambda x: x.get("version_id", 0), reverse=True)
 
-    # Build lanes
     has_data = confirmed or proposed or contested
 
     if has_data:
         content = Div(
-            lane_section("Confirmed", confirmed, crop_files, "emerald", "\u2713"),
-            lane_section("Proposed", proposed, crop_files, "amber", "?"),
-            lane_section("Contested", contested, crop_files, "red", "\u26a0"),
+            # Proposed lane has action buttons enabled
+            lane_section("Proposed", proposed, crop_files, "amber", "?",
+                        show_actions=True, lane_id="proposed-lane"),
+            lane_section("Confirmed", confirmed, crop_files, "emerald", "\u2713",
+                        lane_id="confirmed-lane"),
+            lane_section("Contested", contested, crop_files, "red", "\u26a0",
+                        lane_id="contested-lane"),
             cls="max-w-7xl mx-auto"
         )
     else:
-        # Fallback: show crops as uncategorized gallery
-        # UX Intent: Graceful degradation when no registry exists
         crops_dir = static_path / "crops"
         faces = []
         for f in crops_dir.glob("*.jpg"):
@@ -321,9 +401,24 @@ def get():
             background-color: #fafaf9;
             margin: 0;
         }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+        .htmx-indicator {
+            display: none;
+        }
+        .htmx-request .htmx-indicator {
+            display: inline;
+        }
     """)
 
     return Title("Rhodesli Forensic Workstation"), style, Main(
+        # Toast container for notifications
+        toast_container(),
         Header(
             H1(
                 "Rhodesli",
@@ -337,6 +432,106 @@ def get():
         ),
         content,
         cls="p-4 md:p-8"
+    )
+
+
+@rt("/confirm/{identity_id}")
+def post(identity_id: str):
+    """
+    Confirm an identity (move from PROPOSED to CONFIRMED).
+
+    Returns:
+        200: Updated identity card
+        404: Identity not found
+        409: Variance explosion (would corrupt fusion)
+        423: Lock contention
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        # Lock contention or file access error
+        return Response(
+            toast("System busy. Please try again.", "warning"),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            toast("Identity not found.", "error"),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Confirm the identity
+    try:
+        registry.confirm_identity(identity_id, user_source="web")
+        save_registry(registry)
+    except Exception as e:
+        # Could be variance explosion or other error
+        return Response(
+            toast(f"Cannot confirm: {str(e)}", "error"),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Return updated card (now CONFIRMED, no action buttons)
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    # Return the card plus a success toast
+    return (
+        identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        toast("Identity confirmed.", "success"),
+    )
+
+
+@rt("/reject/{identity_id}")
+def post(identity_id: str):
+    """
+    Contest/reject an identity (move to CONTESTED).
+
+    Returns:
+        200: Updated identity card (now contested)
+        404: Identity not found
+        423: Lock contention
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            toast("System busy. Please try again.", "warning"),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            toast("Identity not found.", "error"),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.contest_identity(identity_id, user_source="web", reason="Rejected via UI")
+        save_registry(registry)
+    except Exception as e:
+        return Response(
+            toast(f"Cannot reject: {str(e)}", "error"),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    return (
+        identity_card(updated_identity, crop_files, lane_color="red", show_actions=False),
+        toast("Identity contested.", "warning"),
     )
 
 
