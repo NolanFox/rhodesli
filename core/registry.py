@@ -149,12 +149,146 @@ class IdentityRegistry:
         """Get event history for an identity."""
         return [e for e in self._history if e["identity_id"] == identity_id]
 
-    def list_identities(self, state: IdentityState = None) -> list[dict]:
-        """List all identities, optionally filtered by state."""
+    def list_identities(
+        self,
+        state: IdentityState = None,
+        include_merged: bool = False,
+    ) -> list[dict]:
+        """
+        List all identities, optionally filtered by state.
+
+        Args:
+            state: Optional state filter (PROPOSED, CONFIRMED, CONTESTED)
+            include_merged: If False (default), exclude merged identities
+
+        Returns:
+            List of identity dicts (copies, not references)
+        """
         identities = list(self._identities.values())
+
+        # Exclude merged identities by default
+        if not include_merged:
+            identities = [i for i in identities if not i.get("merged_into")]
+
         if state:
             identities = [i for i in identities if i["state"] == state.value]
+
         return [i.copy() for i in identities]
+
+    def merge_identities(
+        self,
+        source_id: str,
+        target_id: str,
+        user_source: str,
+        photo_registry: "PhotoRegistry",
+    ) -> dict:
+        """
+        Merge source identity INTO target identity.
+
+        Safety Foundation: Calls validate_merge() first - merge is blocked if
+        the two identities have faces appearing in the same photo.
+
+        Process:
+        1. Validate merge via validate_merge() (non-negotiable)
+        2. Move all faces from source to target (anchors + candidates)
+        3. Mark source as merged (soft delete via merged_into field)
+        4. Record MERGE event in history
+
+        Args:
+            source_id: Identity to be absorbed
+            target_id: Identity to absorb source
+            user_source: Who initiated this action
+            photo_registry: For co-occurrence validation
+
+        Returns:
+            Dict with:
+            - success: bool
+            - reason: str (on failure)
+            - source_id, target_id, faces_merged: (on success)
+
+        Raises:
+            KeyError: If either identity not found
+        """
+        # Validate (Safety Foundation - non-negotiable)
+        can_merge, reason = validate_merge(
+            source_id, target_id, self, photo_registry
+        )
+
+        if not can_merge:
+            logger.warning(
+                f"Merge blocked ({reason}): {source_id} -> {target_id}"
+            )
+            return {
+                "success": False,
+                "reason": reason,
+                "message": f"Merge blocked: {reason}",
+            }
+
+        source = self._identities[source_id]
+        target = self._identities[target_id]
+
+        # Check if source is already merged
+        if source.get("merged_into"):
+            return {
+                "success": False,
+                "reason": "already_merged",
+                "message": f"Source identity already merged into {source['merged_into']}",
+            }
+
+        previous_version = target["version_id"]
+        faces_merged = 0
+
+        # Move anchors from source to target
+        for anchor in source["anchor_ids"]:
+            if anchor not in target["anchor_ids"]:
+                target["anchor_ids"].append(anchor)
+                faces_merged += 1
+
+        # Move candidates from source to target
+        for candidate in source["candidate_ids"]:
+            if candidate not in target["candidate_ids"]:
+                target["candidate_ids"].append(candidate)
+                faces_merged += 1
+
+        # Preserve negative evidence
+        for negative in source.get("negative_ids", []):
+            if negative not in target.get("negative_ids", []):
+                target.setdefault("negative_ids", []).append(negative)
+
+        # Mark source as merged (soft delete)
+        now = datetime.now(timezone.utc).isoformat()
+        source["merged_into"] = target_id
+        source["updated_at"] = now
+
+        # Update target version
+        target["version_id"] += 1
+        target["updated_at"] = now
+
+        # Record merge event
+        self._record_event(
+            identity_id=target_id,
+            action=ActionType.MERGE.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "source_identity_id": source_id,
+                "faces_merged": faces_merged,
+            },
+        )
+
+        logger.info(
+            f"Merged identity {source_id} into {target_id} "
+            f"({faces_merged} faces transferred)"
+        )
+
+        return {
+            "success": True,
+            "reason": "ok",
+            "source_id": source_id,
+            "target_id": target_id,
+            "faces_merged": faces_merged,
+        }
 
     def confirm_identity(self, identity_id: str, user_source: str) -> None:
         """Transition identity to CONFIRMED state."""
