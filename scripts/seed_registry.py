@@ -15,6 +15,7 @@ Safety:
 """
 
 import argparse
+import hashlib
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -28,12 +29,36 @@ sys.path.insert(0, str(project_root))
 
 from core.clustering import MLS_DROP_THRESHOLD, cluster_identities
 from core.pfe import compute_sigma_sq, mutual_likelihood_score
+from core.photo_registry import PhotoRegistry
 from core.registry import IdentityRegistry
 from core.temporal import ERAS, EraEstimate
 
 # Default paths
 DEFAULT_EMBEDDINGS_PATH = project_root / "data" / "embeddings.npy"
 DEFAULT_REGISTRY_PATH = project_root / "data" / "identities.json"
+DEFAULT_PHOTO_INDEX_PATH = project_root / "data" / "photo_index.json"
+
+
+def generate_photo_id(filename: str) -> str:
+    """
+    Generate a stable, deterministic photo_id from filename.
+
+    Uses SHA256 hash of the filename (not path) to ensure:
+    - Deterministic for the same image
+    - Extremely unlikely to collide for different images
+    - Portable across different directory structures
+
+    Args:
+        filename: Image filename (basename or full path)
+
+    Returns:
+        Short hash prefix (16 chars) for human-readability
+    """
+    # Use basename only for portability
+    basename = Path(filename).name
+    hash_bytes = hashlib.sha256(basename.encode("utf-8")).hexdigest()
+    # Use first 16 chars for readability while maintaining collision resistance
+    return hash_bytes[:16]
 
 
 def create_neutral_era() -> EraEstimate:
@@ -129,9 +154,10 @@ def convert_to_pfe(face: dict) -> dict:
 
 def prepare_faces_for_clustering(faces: list[dict]) -> list[dict]:
     """
-    Add face_id, neutral era, and convert to PFE format for clustering.
+    Add face_id, photo_id, neutral era, and convert to PFE format for clustering.
 
     Groups faces by filename to assign sequential indices per image.
+    Also generates stable photo_id for PhotoRegistry integration.
     """
     # Group by filename to assign face indices
     faces_by_file = defaultdict(list)
@@ -139,15 +165,19 @@ def prepare_faces_for_clustering(faces: list[dict]) -> list[dict]:
         filename = face.get("filename", f"unknown_{i}")
         faces_by_file[filename].append((i, face))
 
-    # Assign face IDs and era, convert to PFE
+    # Assign face IDs, photo_ids, and era, convert to PFE
     neutral_era = create_neutral_era()
     prepared = []
 
     for filename, indexed_faces in faces_by_file.items():
+        # Generate stable photo_id for this image
+        photo_id = generate_photo_id(filename)
+
         for face_idx, (original_idx, face) in enumerate(indexed_faces):
             # Convert to PFE format if needed
             face_copy = convert_to_pfe(face)
             face_copy["face_id"] = generate_face_id(face, face_idx)
+            face_copy["photo_id"] = photo_id
             face_copy["era"] = neutral_era
             face_copy["_original_index"] = original_idx
             prepared.append(face_copy)
@@ -158,19 +188,24 @@ def prepare_faces_for_clustering(faces: list[dict]) -> list[dict]:
 def seed_registry(
     embeddings_path: Path,
     registry_path: Path,
+    photo_index_path: Path = None,
     dry_run: bool = False,
 ) -> dict:
     """
-    Bootstrap identity registry from clustering output.
+    Bootstrap identity registry and photo index from clustering output.
 
     Args:
         embeddings_path: Path to embeddings.npy
         registry_path: Path to identities.json (must not exist)
+        photo_index_path: Path to photo_index.json (default: data/photo_index.json)
         dry_run: If True, print actions without writing
 
     Returns:
         Summary dict with counts
     """
+    if photo_index_path is None:
+        photo_index_path = registry_path.parent / "photo_index.json"
+
     # Safety check: abort if registry exists
     if registry_path.exists():
         raise FileExistsError(
@@ -189,6 +224,18 @@ def seed_registry(
     # Prepare faces for clustering
     prepared_faces = prepare_faces_for_clustering(faces)
     print(f"Prepared {len(prepared_faces)} faces for clustering")
+
+    # Initialize PhotoRegistry and register all faces
+    photo_registry = PhotoRegistry()
+    for face in prepared_faces:
+        face_id = face["face_id"]
+        photo_id = face["photo_id"]
+        filename = face.get("filename", "unknown")
+        photo_registry.register_face(photo_id, filename, face_id)
+
+    # Count unique photos
+    unique_photos = len(set(f["photo_id"] for f in prepared_faces))
+    print(f"Registered {len(prepared_faces)} faces across {unique_photos} photos")
 
     # DEBUG: Print MLS scores for first pairs to verify fix
     if len(prepared_faces) >= 2:
@@ -272,15 +319,19 @@ def seed_registry(
         identities_created += 1
         faces_assigned += len(face_ids)
 
-    # Save registry
+    # Save registry and photo index
     if not dry_run:
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         registry.save(registry_path)
         print(f"\nRegistry saved to: {registry_path}")
 
+        photo_registry.save(photo_index_path)
+        print(f"Photo index saved to: {photo_index_path}")
+
     return {
         "identities_created": identities_created,
         "faces_assigned": faces_assigned,
+        "photos_indexed": unique_photos,
         "dry_run": dry_run,
     }
 
@@ -323,6 +374,7 @@ def main():
         print(f"Mode:               {'DRY-RUN' if summary['dry_run'] else 'WRITE'}")
         print(f"Identities created: {summary['identities_created']}")
         print(f"Faces assigned:     {summary['faces_assigned']}")
+        print(f"Photos indexed:     {summary['photos_indexed']}")
 
         if summary["dry_run"]:
             print("\nNo files were written. Run without --dry-run to persist.")
