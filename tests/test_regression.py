@@ -366,3 +366,50 @@ class TestNeighborsGracefulDegradation:
         # Should return error response, not 500
         assert resp.status_code in (404, 200), \
             f"Expected graceful handling, got {resp.status_code}"
+
+
+class TestModalAndScriptInclusion:
+    """
+    Regression tests for UI interaction requirements.
+
+    Verifies that required JavaScript libraries are included and
+    modal structure is correct for visibility.
+    """
+
+    def test_hyperscript_is_included(self, test_client):
+        """Hyperscript library must be included for modal interactions."""
+        resp = test_client.get("/")
+        assert resp.status_code == 200
+
+        # Hyperscript is required for _="on click..." modal interactions
+        assert "hyperscript" in resp.text.lower(), \
+            "Hyperscript library not included - modal interactions will fail"
+
+    def test_htmx_is_included(self, test_client):
+        """HTMX library must be included for dynamic content loading."""
+        resp = test_client.get("/")
+        assert resp.status_code == 200
+
+        assert "htmx" in resp.text.lower(), \
+            "HTMX library not included - dynamic content will not load"
+
+    def test_photo_modal_has_high_z_index(self, test_client):
+        """Photo modal must have z-index above other UI elements."""
+        resp = test_client.get("/")
+        assert resp.status_code == 200
+
+        # Modal should have very high z-index to be above toasts (z-50)
+        assert 'id="photo-modal"' in resp.text, "Photo modal not found in page"
+        # Check for z-[9999] or similar high value
+        assert "z-[9999]" in resp.text or "z-9999" in resp.text, \
+            "Photo modal needs high z-index (z-[9999]) to display above other elements"
+
+    def test_modal_backdrop_uses_absolute_positioning(self, test_client):
+        """Modal backdrop should use absolute (not fixed) positioning."""
+        resp = test_client.get("/")
+        assert resp.status_code == 200
+
+        # The backdrop should be absolute within the fixed modal container
+        # Look for the backdrop class pattern
+        assert "absolute inset-0 bg-black" in resp.text, \
+            "Modal backdrop should use 'absolute inset-0' not 'fixed'"

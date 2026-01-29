@@ -35,6 +35,8 @@ app, rt = fast_app(
     pico=False,
     hdrs=(
         Script(src="https://cdn.tailwindcss.com"),
+        # Hyperscript required for _="on click..." modal interactions
+        Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
     ),
     static_path=str(static_path),
 )
@@ -765,14 +767,19 @@ def photo_modal() -> Div:
     """
     Modal container for photo context viewer.
     Hidden by default, shown via HTMX when "View Photo" is clicked.
+
+    Z-index hierarchy:
+    - Modal container: z-[9999] (above everything including toasts at z-50)
+    - Backdrop: absolute, no z-index (first child, renders behind content)
+    - Content: relative, no z-index (second child, renders above backdrop)
     """
     return Div(
-        # Backdrop
+        # Backdrop - absolute within the fixed parent, click to close
         Div(
-            cls="fixed inset-0 bg-black/50 z-40",
+            cls="absolute inset-0 bg-black/50",
             **{"_": "on click add .hidden to #photo-modal"},
         ),
-        # Modal content
+        # Modal content - relative positioning to sit above backdrop
         Div(
             # Header with close button
             Div(
@@ -791,10 +798,10 @@ def photo_modal() -> Div:
                 P("Loading...", cls="text-stone-400 text-center py-8"),
                 id="photo-modal-content",
             ),
-            cls="bg-white rounded-lg shadow-xl max-w-5xl max-h-[90vh] overflow-auto p-6 relative z-50"
+            cls="bg-white rounded-lg shadow-xl max-w-5xl max-h-[90vh] overflow-auto p-6 relative"
         ),
         id="photo-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-50"
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9999]"
     )
 
 
