@@ -9,14 +9,21 @@ Key principles:
 - Append-only event log for full provenance
 - Human-gated learning (only explicit confirmation updates anchors)
 - State machine controls fusion behavior
+- Safety Foundation: No merge may occur without validate_merge
 """
 
 import json
+import logging
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from core.photo_registry import PhotoRegistry
+
+logger = logging.getLogger(__name__)
 
 
 SCHEMA_VERSION = 1
@@ -489,3 +496,79 @@ class IdentityRegistry:
             "metadata": metadata or {},
         }
         self._history.append(event)
+
+    def get_all_face_ids(self, identity_id: str) -> list[str]:
+        """
+        Get ALL face IDs associated with an identity (anchors + candidates).
+
+        This is used for merge validation - we must check ALL faces,
+        not just anchors, to prevent co-occurrence violations.
+
+        Args:
+            identity_id: Identity ID
+
+        Returns:
+            List of all face ID strings (anchors + candidates)
+        """
+        identity = self.get_identity(identity_id)
+        face_ids = []
+
+        # Get anchor face IDs (handles both string and dict formats)
+        for anchor in identity["anchor_ids"]:
+            if isinstance(anchor, str):
+                face_ids.append(anchor)
+            elif isinstance(anchor, dict):
+                face_ids.append(anchor["face_id"])
+
+        # Add candidate face IDs
+        face_ids.extend(identity["candidate_ids"])
+
+        return face_ids
+
+
+def validate_merge(
+    id_a: str,
+    id_b: str,
+    identity_registry: "IdentityRegistry",
+    photo_registry: "PhotoRegistry",
+) -> tuple[bool, str]:
+    """
+    Validate whether two identities can be safely merged.
+
+    CORE INVARIANT: A face appearing in the same photo as another face
+    may NEVER belong to the same identity (they are physically distinct
+    people in that moment).
+
+    This function MUST be called by ALL merge entry points.
+    No merge may proceed without explicit validation.
+
+    Args:
+        id_a: First identity ID
+        id_b: Second identity ID
+        identity_registry: IdentityRegistry instance
+        photo_registry: PhotoRegistry instance
+
+    Returns:
+        (can_merge: bool, reason: str)
+        - (False, "co_occurrence") if identities share ANY photo_id
+        - (True, "ok") otherwise
+    """
+    # Get ALL face IDs for both identities (anchors + candidates)
+    faces_a = identity_registry.get_all_face_ids(id_a)
+    faces_b = identity_registry.get_all_face_ids(id_b)
+
+    # Get photo_ids for each identity's faces
+    photos_a = photo_registry.get_photos_for_faces(faces_a)
+    photos_b = photo_registry.get_photos_for_faces(faces_b)
+
+    # Check for any photo overlap (co-occurrence)
+    shared_photos = photos_a & photos_b
+
+    if shared_photos:
+        logger.warning(
+            f"Merge blocked (co_occurrence): identities {id_a} and {id_b} "
+            f"share photo(s): {shared_photos}"
+        )
+        return (False, "co_occurrence")
+
+    return (True, "ok")
