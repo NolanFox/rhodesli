@@ -151,6 +151,7 @@ def action_buttons(identity_id: str) -> Div:
     """
     Action buttons for PROPOSED identities.
     UX Intent: Direct manipulation with clear consequences.
+    Keyboard accessible: Tab to navigate, Enter/Space to activate.
     """
     return Div(
         # Confirm button (green, solid)
@@ -160,8 +161,9 @@ def action_buttons(identity_id: str) -> Div:
             hx_post=f"/confirm/{identity_id}",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
-            # Show loading state
             hx_indicator=f"#loading-{identity_id}",
+            aria_label="Confirm this identity match",
+            type="button",
         ),
         # Reject button (red, ghost)
         Button(
@@ -171,21 +173,27 @@ def action_buttons(identity_id: str) -> Div:
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
             hx_indicator=f"#loading-{identity_id}",
+            aria_label="Reject this identity match",
+            type="button",
         ),
-        # Unsure button (neutral) - client-side only
+        # Skip button (neutral) - client-side only
         Button(
             "? Skip",
             cls="px-3 py-1.5 text-sm font-bold border border-stone-300 text-stone-500 rounded hover:bg-stone-100 transition-colors",
-            # Client-side hide only - no backend mutation
+            aria_label="Skip this identity for now",
+            type="button",
             **{"_": f"on click add .hidden to #identity-{identity_id}"}
         ),
         # Loading indicator (hidden by default)
         Span(
             "...",
             id=f"loading-{identity_id}",
-            cls="htmx-indicator ml-2 text-stone-400 animate-pulse"
+            cls="htmx-indicator ml-2 text-stone-400 animate-pulse",
+            aria_hidden="true",
         ),
-        cls="flex gap-2 items-center mt-3"
+        cls="flex gap-2 items-center mt-3",
+        role="group",
+        aria_label="Identity actions",
     )
 
 
@@ -285,7 +293,7 @@ def identity_card(
         ),
         # Action buttons for PROPOSED identities
         action_buttons(identity_id) if show_actions and state == "PROPOSED" else None,
-        cls=f"bg-stone-50 border border-stone-200 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-sm mb-4",
+        cls=f"identity-card bg-stone-50 border border-stone-200 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-sm mb-4",
         id=f"identity-{identity_id}"
     )
 
@@ -405,14 +413,33 @@ def get():
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slide-out-right {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(100px); }
+        }
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
+        }
+        .animate-slide-out {
+            animation: slide-out-right 0.3s ease-in forwards;
         }
         .htmx-indicator {
             display: none;
         }
         .htmx-request .htmx-indicator {
             display: inline;
+        }
+        /* Keyboard focus states */
+        button:focus-visible {
+            outline: 2px solid #0ea5e9;
+            outline-offset: 2px;
+        }
+        /* Card state transitions */
+        .identity-card {
+            transition: all 0.2s ease-out;
+        }
+        .identity-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
     """)
 
