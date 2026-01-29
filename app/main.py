@@ -10,11 +10,15 @@ Error Semantics:
 - 404 = Identity or face not found
 """
 
+import hashlib
+import json
 import re
 import sys
 from pathlib import Path
 
+import numpy as np
 from fasthtml.common import *
+from PIL import Image
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
@@ -24,6 +28,7 @@ from core.registry import IdentityRegistry, IdentityState
 
 static_path = Path(__file__).resolve().parent / "static"
 data_path = Path(__file__).resolve().parent.parent / "data"
+photos_path = Path(__file__).resolve().parent.parent / "raw_photos"
 
 app, rt = fast_app(
     pico=False,
@@ -32,6 +37,10 @@ app, rt = fast_app(
     ),
     static_path=str(static_path),
 )
+
+# Mount raw_photos as /photos/ static route
+from starlette.staticfiles import StaticFiles
+app.mount("/photos", StaticFiles(directory=str(photos_path)), name="photos")
 
 # Registry path - single source of truth
 REGISTRY_PATH = data_path / "identities.json"
@@ -47,6 +56,133 @@ def load_registry():
 def save_registry(registry):
     """Save registry with atomic write (backend handles locking)."""
     registry.save(REGISTRY_PATH)
+
+
+# =============================================================================
+# PHOTO CONTEXT HELPERS
+# =============================================================================
+
+def generate_photo_id(filename: str) -> str:
+    """
+    Generate a stable, deterministic photo_id from filename.
+    Must match the logic in scripts/seed_registry.py.
+    """
+    basename = Path(filename).name
+    hash_bytes = hashlib.sha256(basename.encode("utf-8")).hexdigest()
+    return hash_bytes[:16]
+
+
+def generate_face_id(filename: str, face_index: int) -> str:
+    """
+    Generate a stable face ID from filename and index.
+    Format: {filename_stem}:face{index}
+    """
+    stem = Path(filename).stem
+    return f"{stem}:face{face_index}"
+
+
+def load_embeddings_for_photos():
+    """
+    Load embeddings and build photo metadata cache.
+
+    Returns:
+        dict mapping photo_id -> {
+            "filename": str,
+            "filepath": str,
+            "faces": list of {face_id, bbox, face_index}
+        }
+    """
+    embeddings_path = data_path / "embeddings.npy"
+    if not embeddings_path.exists():
+        return {}
+
+    embeddings = np.load(embeddings_path, allow_pickle=True)
+
+    # Group faces by photo_id
+    photos = {}
+    filename_face_counts = {}
+
+    for entry in embeddings:
+        filename = entry["filename"]
+
+        # Track face index per filename
+        if filename not in filename_face_counts:
+            filename_face_counts[filename] = 0
+        face_index = filename_face_counts[filename]
+        filename_face_counts[filename] += 1
+
+        photo_id = generate_photo_id(filename)
+        face_id = generate_face_id(filename, face_index)
+
+        # Parse bbox - it might be a string or list
+        bbox = entry["bbox"]
+        if isinstance(bbox, str):
+            bbox = json.loads(bbox)
+        elif hasattr(bbox, "tolist"):
+            bbox = bbox.tolist()
+
+        if photo_id not in photos:
+            photos[photo_id] = {
+                "filename": filename,
+                "filepath": entry.get("filepath", f"raw_photos/{filename}"),
+                "faces": [],
+            }
+
+        photos[photo_id]["faces"].append({
+            "face_id": face_id,
+            "bbox": bbox,  # [x1, y1, x2, y2]
+            "face_index": face_index,
+            "det_score": float(entry.get("det_score", 0)),
+            "quality": float(entry.get("quality", 0)),
+        })
+
+    return photos
+
+
+def get_photo_dimensions(filename: str) -> tuple:
+    """
+    Get image dimensions for a photo.
+
+    Returns:
+        (width, height) tuple or (0, 0) if file not found
+    """
+    filepath = photos_path / filename
+    if not filepath.exists():
+        return (0, 0)
+
+    try:
+        with Image.open(filepath) as img:
+            return img.size  # (width, height)
+    except Exception:
+        return (0, 0)
+
+
+def get_identity_for_face(registry, face_id: str) -> dict:
+    """
+    Find the identity containing a face.
+
+    Returns:
+        Identity dict or None if not found
+    """
+    for identity in registry.list_identities():
+        all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+        for entry in all_face_ids:
+            fid = entry if isinstance(entry, str) else entry.get("face_id")
+            if fid == face_id:
+                return identity
+    return None
+
+
+# Photo metadata cache (rebuilt on each request for simplicity)
+_photo_cache = None
+
+
+def get_photo_metadata(photo_id: str) -> dict:
+    """Get photo metadata including face bboxes."""
+    global _photo_cache
+    if _photo_cache is None:
+        _photo_cache = load_embeddings_for_photos()
+    return _photo_cache.get(photo_id)
 
 
 def parse_quality_from_filename(filename: str) -> float:
@@ -613,6 +749,223 @@ def post(identity_id: str):
         identity_card(updated_identity, crop_files, lane_color="red", show_actions=False),
         toast("Identity contested.", "warning"),
     )
+
+
+# =============================================================================
+# ROUTES - PHOTO CONTEXT NAVIGATOR (LIGHT TABLE)
+# =============================================================================
+
+@rt("/api/photo/{photo_id}")
+def get(photo_id: str):
+    """
+    Get photo metadata with face bounding boxes.
+
+    Returns JSON with:
+    - photo_url: Static path to the photo
+    - image_width, image_height: Original dimensions
+    - faces: List of face objects with bbox, face_id, display_name, identity_id
+    """
+    photo = get_photo_metadata(photo_id)
+    if not photo:
+        return JSONResponse(
+            {"error": "Photo not found", "photo_id": photo_id},
+            status_code=404,
+        )
+
+    # Get image dimensions
+    width, height = get_photo_dimensions(photo["filename"])
+    if width == 0 or height == 0:
+        return JSONResponse(
+            {"error": "Could not read photo dimensions", "photo_id": photo_id},
+            status_code=404,
+        )
+
+    # Build face list with identity information
+    registry = load_registry()
+    faces = []
+
+    for face_data in photo["faces"]:
+        face_id = face_data["face_id"]
+        bbox = face_data["bbox"]  # [x1, y1, x2, y2]
+
+        # Find identity for this face
+        identity = get_identity_for_face(registry, face_id)
+
+        # Convert bbox from [x1, y1, x2, y2] to {x, y, w, h}
+        x1, y1, x2, y2 = bbox
+        face_obj = {
+            "face_id": face_id,
+            "bbox": {
+                "x": x1,
+                "y": y1,
+                "w": x2 - x1,
+                "h": y2 - y1,
+            },
+            "display_name": identity.get("name", "Unidentified") if identity else "Unidentified",
+            "identity_id": identity["identity_id"] if identity else None,
+            "is_selected": False,
+        }
+        faces.append(face_obj)
+
+    return JSONResponse({
+        "photo_url": f"/photos/{photo['filename']}",
+        "image_width": width,
+        "image_height": height,
+        "faces": faces,
+    })
+
+
+def photo_view_content(
+    photo_id: str,
+    selected_face_id: str = None,
+    is_partial: bool = False,
+) -> tuple:
+    """
+    Build the photo view content with face overlays.
+
+    Returns FastHTML elements for the photo viewer.
+    """
+    photo = get_photo_metadata(photo_id)
+    if not photo:
+        error_content = Div(
+            P("Photo not found", cls="text-red-600 font-bold"),
+            P(f"ID: {photo_id}", cls="text-stone-500 text-sm font-mono"),
+            cls="text-center p-8"
+        )
+        return (error_content,) if is_partial else (Title("Photo Not Found"), error_content)
+
+    width, height = get_photo_dimensions(photo["filename"])
+    if width == 0:
+        error_content = Div(
+            P("Could not load photo", cls="text-red-600 font-bold"),
+            cls="text-center p-8"
+        )
+        return (error_content,) if is_partial else (Title("Photo Error"), error_content)
+
+    registry = load_registry()
+
+    # Build face overlays with CSS percentages for responsive scaling
+    face_overlays = []
+    for face_data in photo["faces"]:
+        face_id = face_data["face_id"]
+        bbox = face_data["bbox"]  # [x1, y1, x2, y2]
+        x1, y1, x2, y2 = bbox
+
+        # Convert to percentages for responsive positioning
+        left_pct = (x1 / width) * 100
+        top_pct = (y1 / height) * 100
+        width_pct = ((x2 - x1) / width) * 100
+        height_pct = ((y2 - y1) / height) * 100
+
+        # Get identity info
+        identity = get_identity_for_face(registry, face_id)
+        display_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+        identity_id = identity["identity_id"] if identity else None
+
+        # Determine if this face is selected
+        is_selected = face_id == selected_face_id
+
+        # Build the overlay div
+        overlay_classes = "face-overlay absolute border-2 cursor-pointer transition-all hover:border-amber-400"
+        if is_selected:
+            overlay_classes += " border-amber-500 bg-amber-500/20"
+        else:
+            overlay_classes += " border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
+
+        overlay = Div(
+            # Tooltip on hover
+            Span(
+                display_name,
+                cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
+            ),
+            cls=f"{overlay_classes} group",
+            style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+            title=display_name,
+            # Click navigates to identity (if assigned)
+            hx_get=f"/" if identity_id else None,
+            hx_push_url="true" if identity_id else None,
+            data_face_id=face_id,
+            data_identity_id=identity_id or "",
+        )
+        face_overlays.append(overlay)
+
+    # Main content
+    content = Div(
+        # Photo container with overlays
+        Div(
+            Img(
+                src=f"/photos/{photo['filename']}",
+                alt=photo["filename"],
+                cls="max-w-full h-auto"
+            ),
+            *face_overlays,
+            cls="relative inline-block"
+        ),
+        # Photo info
+        Div(
+            P(
+                f"{len(photo['faces'])} face{'s' if len(photo['faces']) != 1 else ''} detected",
+                cls="text-stone-500 text-sm"
+            ),
+            P(
+                f"{width} x {height} px",
+                cls="text-stone-400 text-xs font-mono"
+            ),
+            cls="mt-4"
+        ),
+        cls="photo-viewer p-4"
+    )
+
+    if is_partial:
+        return (content,)
+
+    # Full page with styling
+    style = Style("""
+        .face-overlay {
+            box-sizing: border-box;
+        }
+        .face-overlay:hover {
+            z-index: 10;
+        }
+    """)
+
+    return (
+        Title(f"Photo - {photo['filename']}"),
+        style,
+        Main(
+            # Back button
+            A(
+                "< Back to Workstation",
+                href="/",
+                cls="text-stone-600 hover:text-stone-800 mb-4 inline-block"
+            ),
+            H1(
+                "Photo Context",
+                cls="text-2xl font-serif font-bold text-stone-800 mb-4"
+            ),
+            content,
+            cls="p-4 md:p-8 max-w-6xl mx-auto"
+        ),
+    )
+
+
+@rt("/photo/{photo_id}")
+def get(photo_id: str, face: str = None):
+    """
+    Render photo view with face overlays.
+
+    Query params:
+    - face: Optional face_id to highlight
+    """
+    return photo_view_content(photo_id, selected_face_id=face)
+
+
+@rt("/photo/{photo_id}/partial")
+def get(photo_id: str, face: str = None):
+    """
+    Render photo view partial for HTMX modal injection.
+    """
+    return photo_view_content(photo_id, selected_face_id=face, is_partial=True)
 
 
 if __name__ == "__main__":
