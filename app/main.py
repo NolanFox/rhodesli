@@ -40,8 +40,12 @@ app, rt = fast_app(
 )
 
 # Mount raw_photos as /photos/ static route
+# IMPORTANT: Insert at position 0 so it takes precedence over FastHTML's
+# catch-all static route (/{fname:path}.{ext:static})
 from starlette.staticfiles import StaticFiles
-app.mount("/photos", StaticFiles(directory=str(photos_path)), name="photos")
+from starlette.routing import Mount
+photos_mount = Mount("/photos", StaticFiles(directory=str(photos_path)), name="photos")
+app.routes.insert(0, photos_mount)
 
 # Registry path - single source of truth
 REGISTRY_PATH = data_path / "identities.json"
