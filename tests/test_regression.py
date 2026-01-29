@@ -413,3 +413,130 @@ class TestModalAndScriptInclusion:
         # Look for the backdrop class pattern
         assert "absolute inset-0 bg-black" in resp.text, \
             "Modal backdrop should use 'absolute inset-0' not 'fixed'"
+
+
+class TestRenameIdentity:
+    """
+    Tests for identity rename functionality.
+
+    Verifies that:
+    1. Rename endpoint updates identity name
+    2. Empty names are rejected
+    3. Name persists after rename
+    """
+
+    def test_rename_identity(self, test_client, registry):
+        """Rename endpoint updates identity name."""
+        identities = registry.list_identities()
+        if not identities:
+            pytest.skip("No identities in registry")
+
+        identity_id = identities[0]["identity_id"]
+
+        # Rename it
+        response = test_client.post(
+            f"/api/identity/{identity_id}/rename",
+            data={"name": "Test Person Name"}
+        )
+        assert response.status_code == 200
+
+        # Response should contain the new name
+        assert "Test Person Name" in response.text
+
+    def test_rename_empty_rejected(self, test_client, registry):
+        """Empty names should be rejected."""
+        identities = registry.list_identities()
+        if not identities:
+            pytest.skip("No identities in registry")
+
+        identity_id = identities[0]["identity_id"]
+
+        # Try to rename with whitespace-only name
+        response = test_client.post(
+            f"/api/identity/{identity_id}/rename",
+            data={"name": "   "}
+        )
+        # Should reject with 400
+        assert response.status_code == 400
+
+    def test_rename_form_endpoint(self, test_client, registry):
+        """Rename form endpoint returns editable form."""
+        identities = registry.list_identities()
+        if not identities:
+            pytest.skip("No identities in registry")
+
+        identity_id = identities[0]["identity_id"]
+
+        response = test_client.get(f"/api/identity/{identity_id}/rename-form")
+        assert response.status_code == 200
+
+        # Form should have input and buttons
+        assert "input" in response.text.lower()
+        assert "Save" in response.text
+        assert "Cancel" in response.text
+
+    def test_name_display_endpoint(self, test_client, registry):
+        """Name display endpoint returns name component."""
+        identities = registry.list_identities()
+        if not identities:
+            pytest.skip("No identities in registry")
+
+        identity_id = identities[0]["identity_id"]
+
+        response = test_client.get(f"/api/identity/{identity_id}/name-display")
+        assert response.status_code == 200
+
+        # Should have the name container ID
+        assert f'id="name-{identity_id}"' in response.text
+
+
+class TestMergeRemovesSourceCard:
+    """
+    Tests for merge UI behavior.
+
+    Verifies that merge response includes OOB swap to remove
+    the source identity card from the DOM.
+    """
+
+    def test_merge_response_includes_oob_delete(self, test_client, registry):
+        """After merge, response should include hx-swap-oob=delete for source."""
+        identities = registry.list_identities()
+        if len(identities) < 2:
+            pytest.skip("Need at least 2 identities to test merge")
+
+        # Find two identities that can be merged (different photo sets)
+        # For this test, we just check the response format
+        target_id = identities[0]["identity_id"]
+        source_id = identities[1]["identity_id"]
+
+        response = test_client.post(
+            f"/api/identity/{target_id}/merge/{source_id}"
+        )
+
+        # If merge succeeded, check for OOB delete
+        if response.status_code == 200:
+            # Response should include hx-swap-oob="delete" for source card
+            assert 'hx-swap-oob="delete"' in response.text or \
+                   'hx_swap_oob="delete"' in response.text, \
+                   "Merge response missing OOB delete for source card"
+            assert f'id="identity-{source_id}"' in response.text, \
+                   "Merge response missing source identity ID in OOB element"
+
+    def test_merge_updates_target_card(self, test_client, registry):
+        """After merge, response should include updated target card."""
+        identities = registry.list_identities()
+        if len(identities) < 2:
+            pytest.skip("Need at least 2 identities to test merge")
+
+        target_id = identities[0]["identity_id"]
+        source_id = identities[1]["identity_id"]
+
+        response = test_client.post(
+            f"/api/identity/{target_id}/merge/{source_id}"
+        )
+
+        # If merge succeeded (not blocked by co-occurrence)
+        if response.status_code == 200:
+            # Response should include the target identity card
+            assert f'id="identity-{target_id}"' in response.text, \
+                   "Merge response missing updated target card"

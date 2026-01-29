@@ -96,6 +96,12 @@ def main():
         default=640,
         help="Detection size (default: 640)",
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Max number of photos to process (default: all)",
+    )
     args = parser.parse_args()
 
     # Validate input
@@ -109,7 +115,12 @@ def main():
         print(f"Error: No image files found in {args.input}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Found {len(image_files)} image(s)")
+    # Apply limit if specified
+    if args.limit is not None and args.limit > 0:
+        image_files = image_files[:args.limit]
+        print(f"Limited to {len(image_files)} image(s)")
+    else:
+        print(f"Found {len(image_files)} image(s)")
 
     # Initialize InsightFace
     print(f"Loading InsightFace model: {args.model}")

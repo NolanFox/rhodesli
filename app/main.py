@@ -647,6 +647,27 @@ def neighbors_sidebar(
     )
 
 
+def name_display(identity_id: str, name: str) -> Div:
+    """
+    Identity name display with edit button.
+    Returns the name header component that can be swapped for inline editing.
+    """
+    display_name = name or f"Identity {identity_id[:8]}..."
+    return Div(
+        H3(display_name, cls="text-lg font-serif font-bold text-stone-800"),
+        Button(
+            "Edit",
+            hx_get=f"/api/identity/{identity_id}/rename-form",
+            hx_target=f"#name-{identity_id}",
+            hx_swap="outerHTML",
+            cls="ml-2 text-xs text-stone-400 hover:text-stone-600 underline",
+            type="button",
+        ),
+        id=f"name-{identity_id}",
+        cls="flex items-center"
+    )
+
+
 def identity_card(
     identity: dict,
     crop_files: set,
@@ -733,7 +754,7 @@ def identity_card(
         # Header with name, state, and controls
         Div(
             Div(
-                H3(name, cls="text-lg font-serif font-bold text-stone-800"),
+                name_display(identity_id, identity.get("name")),
                 state_badge(state),
                 Span(
                     f"{len(face_cards)} face{'s' if len(face_cards) != 1 else ''}",
@@ -987,7 +1008,7 @@ def post(identity_id: str):
     except Exception:
         # Lock contention or file access error
         return Response(
-            toast("System busy. Please try again.", "warning"),
+            to_xml(toast("System busy. Please try again.", "warning")),
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -996,7 +1017,7 @@ def post(identity_id: str):
         identity = registry.get_identity(identity_id)
     except KeyError:
         return Response(
-            toast("Identity not found.", "error"),
+            to_xml(toast("Identity not found.", "error")),
             status_code=404,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1008,7 +1029,7 @@ def post(identity_id: str):
     except Exception as e:
         # Could be variance explosion or other error
         return Response(
-            toast(f"Cannot confirm: {str(e)}", "error"),
+            to_xml(toast(f"Cannot confirm: {str(e)}", "error")),
             status_code=409,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1038,7 +1059,7 @@ def post(identity_id: str):
         registry = load_registry()
     except Exception:
         return Response(
-            toast("System busy. Please try again.", "warning"),
+            to_xml(toast("System busy. Please try again.", "warning")),
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1047,7 +1068,7 @@ def post(identity_id: str):
         identity = registry.get_identity(identity_id)
     except KeyError:
         return Response(
-            toast("Identity not found.", "error"),
+            to_xml(toast("Identity not found.", "error")),
             status_code=404,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1057,7 +1078,7 @@ def post(identity_id: str):
         save_registry(registry)
     except Exception as e:
         return Response(
-            toast(f"Cannot reject: {str(e)}", "error"),
+            to_xml(toast(f"Cannot reject: {str(e)}", "error")),
             status_code=409,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1338,7 +1359,7 @@ def post(target_id: str, source_id: str):
         registry = load_registry()
     except Exception:
         return Response(
-            toast("System busy. Please try again.", "warning"),
+            to_xml(toast("System busy. Please try again.", "warning")),
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1349,7 +1370,7 @@ def post(target_id: str, source_id: str):
         registry.get_identity(source_id)
     except KeyError:
         return Response(
-            toast("Identity not found.", "error"),
+            to_xml(toast("Identity not found.", "error")),
             status_code=404,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1373,7 +1394,7 @@ def post(target_id: str, source_id: str):
         message = error_messages.get(result["reason"], f"Merge failed: {result['reason']}")
 
         return Response(
-            toast(message, "error"),
+            to_xml(toast(message, "error")),
             status_code=409,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
@@ -1384,8 +1405,11 @@ def post(target_id: str, source_id: str):
     crop_files = get_crop_files()
     updated_identity = registry.get_identity(target_id)
 
+    # Return updated target card + OOB removal of source card
     return (
         identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        # OOB: Remove source card from DOM (it's been absorbed)
+        Div(id=f"identity-{source_id}", hx_swap_oob="delete"),
         toast(f"Merged {result['faces_merged']} face(s) successfully.", "success"),
     )
 
@@ -1440,6 +1464,131 @@ def get(identity_id: str, sort: str = "date"):
         *cards,
         cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
         id=f"faces-{identity_id}",
+    )
+
+
+# =============================================================================
+# ROUTES - RENAME IDENTITY
+# =============================================================================
+
+@rt("/api/identity/{identity_id}/rename-form")
+def get(identity_id: str):
+    """
+    Return inline edit form for renaming an identity.
+    Replaces the name display via HTMX.
+    """
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    current_name = identity.get("name") or ""
+
+    return Form(
+        Input(
+            name="name",
+            value=current_name,
+            placeholder="Enter name...",
+            cls="border border-stone-300 rounded px-2 py-1 text-sm w-48",
+            autofocus=True,
+        ),
+        Button(
+            "Save",
+            type="submit",
+            cls="ml-2 bg-emerald-600 text-white px-2 py-1 rounded text-sm hover:bg-emerald-700",
+        ),
+        Button(
+            "Cancel",
+            type="button",
+            hx_get=f"/api/identity/{identity_id}/name-display",
+            hx_target=f"#name-{identity_id}",
+            hx_swap="outerHTML",
+            cls="ml-1 text-stone-500 hover:text-stone-700 text-sm underline",
+        ),
+        hx_post=f"/api/identity/{identity_id}/rename",
+        hx_target=f"#name-{identity_id}",
+        hx_swap="outerHTML",
+        id=f"name-{identity_id}",
+        cls="flex items-center",
+    )
+
+
+@rt("/api/identity/{identity_id}/name-display")
+def get(identity_id: str):
+    """
+    Return the name display component (for cancel button).
+    """
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    return name_display(identity_id, identity.get("name"))
+
+
+@rt("/api/identity/{identity_id}/rename")
+def post(identity_id: str, name: str = ""):
+    """
+    Rename an identity.
+
+    Form fields:
+    - name: New name (required, max 100 chars)
+
+    Returns:
+        200: Updated name display component
+        400: Empty name after stripping
+        404: Identity not found
+        423: Lock contention
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Validate name
+    name = name.strip() if name else ""
+    if not name:
+        return Response(
+            to_xml(toast("Name cannot be empty.", "warning")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        previous_name = registry.rename_identity(identity_id, name, user_source="web")
+        save_registry(registry)
+    except ValueError as e:
+        return Response(
+            to_xml(toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+    except Exception as e:
+        return Response(
+            to_xml(toast(f"Rename failed: {str(e)}", "error")),
+            status_code=500,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Return updated name display + success toast
+    return (
+        name_display(identity_id, name),
+        toast(f"Renamed to '{name}'", "success"),
     )
 
 

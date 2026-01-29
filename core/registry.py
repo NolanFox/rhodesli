@@ -46,6 +46,7 @@ class ActionType(Enum):
     STATE_CHANGE = "state_change"
     UNDO = "undo"
     MERGE = "merge"
+    RENAME = "rename"
 
 
 class IdentityRegistry:
@@ -307,6 +308,55 @@ class IdentityRegistry:
             previous_version_id=previous_version,
             metadata={"new_state": IdentityState.CONFIRMED.value},
         )
+
+    def rename_identity(
+        self,
+        identity_id: str,
+        new_name: str,
+        user_source: str,
+    ) -> str:
+        """
+        Rename an identity.
+
+        Args:
+            identity_id: Identity ID
+            new_name: New name (will be stripped, max 100 chars)
+            user_source: Who initiated this action
+
+        Returns:
+            The previous name (for audit trail)
+
+        Raises:
+            KeyError: If identity not found
+            ValueError: If new_name is empty after stripping
+        """
+        identity = self._identities[identity_id]
+
+        # Validate and sanitize
+        new_name = new_name.strip()[:100] if new_name else ""
+        if not new_name:
+            raise ValueError("Name cannot be empty")
+
+        previous_name = identity.get("name")
+        previous_version = identity["version_id"]
+
+        identity["name"] = new_name
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.RENAME.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "previous_name": previous_name,
+                "new_name": new_name,
+            },
+        )
+
+        return previous_name
 
     def contest_identity(
         self,
