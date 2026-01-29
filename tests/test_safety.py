@@ -273,3 +273,167 @@ class TestValidateMergeLogging:
         assert "co_occurrence" in caplog.text
         assert id_a in caplog.text
         assert id_b in caplog.text
+
+
+class TestMergeIdentities:
+    """Tests for merge_identities() method."""
+
+    def test_merge_blocked_by_validate_merge(self):
+        """Merge should fail if validate_merge returns False (co-occurrence)."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/images/photo1.jpg", "face_a")
+        photo_registry.register_face("photo_1", "/images/photo1.jpg", "face_b")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(anchor_ids=["face_a"], user_source="test")
+        id_b = identity_registry.create_identity(anchor_ids=["face_b"], user_source="test")
+
+        result = identity_registry.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_registry,
+        )
+
+        assert result["success"] is False
+        assert result["reason"] == "co_occurrence"
+
+    def test_successful_merge_transfers_faces(self):
+        """Successful merge should move all faces from source to target."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_a")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_b")
+        photo_registry.register_face("photo_3", "/path/3.jpg", "face_c")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+        )
+        id_b = identity_registry.create_identity(
+            anchor_ids=["face_b"],
+            candidate_ids=["face_c"],
+            user_source="test",
+        )
+
+        result = identity_registry.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_registry,
+        )
+
+        assert result["success"] is True
+        assert result["faces_merged"] == 2
+
+        # Check faces transferred to target
+        target = identity_registry.get_identity(id_a)
+        assert "face_a" in target["anchor_ids"]
+        assert "face_b" in target["anchor_ids"]
+        assert "face_c" in target["candidate_ids"]
+
+    def test_merge_marks_source_as_merged(self):
+        """Source identity should have merged_into field set after merge."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_a")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_b")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(anchor_ids=["face_a"], user_source="test")
+        id_b = identity_registry.create_identity(anchor_ids=["face_b"], user_source="test")
+
+        identity_registry.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_registry,
+        )
+
+        # Source should be marked as merged
+        source = identity_registry.get_identity(id_b)
+        assert source["merged_into"] == id_a
+
+    def test_merged_identity_excluded_from_list(self):
+        """Merged identities should not appear in list_identities by default."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_a")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_b")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(anchor_ids=["face_a"], user_source="test")
+        id_b = identity_registry.create_identity(anchor_ids=["face_b"], user_source="test")
+
+        # Before merge: 2 identities
+        assert len(identity_registry.list_identities()) == 2
+
+        identity_registry.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test",
+            photo_registry=photo_registry,
+        )
+
+        # After merge: 1 identity (merged excluded)
+        assert len(identity_registry.list_identities()) == 1
+        assert len(identity_registry.list_identities(include_merged=True)) == 2
+
+    def test_merge_records_event(self):
+        """Merge should record MERGE event in history."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_a")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_b")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(anchor_ids=["face_a"], user_source="test")
+        id_b = identity_registry.create_identity(anchor_ids=["face_b"], user_source="test")
+
+        identity_registry.merge_identities(
+            source_id=id_b,
+            target_id=id_a,
+            user_source="test_user",
+            photo_registry=photo_registry,
+        )
+
+        # Check history for MERGE event on target
+        history = identity_registry.get_history(id_a)
+        merge_events = [e for e in history if e["action"] == "merge"]
+        assert len(merge_events) == 1
+        assert merge_events[0]["metadata"]["source_identity_id"] == id_b
+
+    def test_already_merged_identity_cannot_merge_again(self):
+        """Cannot merge an identity that's already been merged."""
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_a")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_b")
+        photo_registry.register_face("photo_3", "/path/3.jpg", "face_c")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(anchor_ids=["face_a"], user_source="test")
+        id_b = identity_registry.create_identity(anchor_ids=["face_b"], user_source="test")
+        id_c = identity_registry.create_identity(anchor_ids=["face_c"], user_source="test")
+
+        # First merge succeeds
+        identity_registry.merge_identities(id_b, id_a, "test", photo_registry)
+
+        # Second merge of same source should fail
+        result = identity_registry.merge_identities(id_b, id_c, "test", photo_registry)
+        assert result["success"] is False
+        assert result["reason"] == "already_merged"
