@@ -65,15 +65,57 @@ def get_crop_files():
     return set()
 
 
-def find_crop_for_face(face_id: str, crop_files: set) -> str:
-    """Find the crop file matching a face_id."""
-    if face_id in crop_files:
-        return face_id
-    if f"{face_id}.jpg" in crop_files:
-        return f"{face_id}.jpg"
+def sanitize_stem(stem: str) -> str:
+    """
+    Sanitize a filename stem to match crop file naming convention.
+    Mirrors the logic in core/crop_faces.py:sanitize_filename().
+    """
+    sanitized = stem.lower()
+    sanitized = re.sub(r'[^a-z0-9]+', '_', sanitized)
+    sanitized = sanitized.strip('_')
+    return sanitized
+
+
+def resolve_face_image_url(face_id: str, crop_files: set) -> str:
+    """
+    Resolve a canonical face ID to its crop image URL.
+
+    Face IDs use the format: {filename_stem}:face{index}
+    Crop files use the format: {sanitized_stem}_{quality}_{index}.jpg
+
+    This function bridges the gap by sanitizing the stem and matching the index.
+
+    Args:
+        face_id: Canonical face identifier (e.g., "Image 992_compress:face0")
+        crop_files: Set of available crop filenames
+
+    Returns:
+        URL path to the crop image (e.g., "/crops/image_992_compress_22.17_0.jpg")
+        or None if no matching crop file is found.
+    """
+    # Parse face_id: extract stem and face index
+    if ":face" not in face_id:
+        return None
+
+    stem, face_suffix = face_id.rsplit(":face", 1)
+    try:
+        face_index = int(face_suffix)
+    except ValueError:
+        return None
+
+    # Sanitize the stem to match crop file naming
+    sanitized = sanitize_stem(stem)
+
+    # Find matching crop file: {sanitized}_{quality}_{index}.jpg
+    # Quality is a float like 22.17, index matches face_index
+    pattern = re.compile(
+        rf'^{re.escape(sanitized)}_[\d.]+_{face_index}\.jpg$'
+    )
+
     for crop in crop_files:
-        if crop.startswith(face_id.split("_")[0]):
-            return crop
+        if pattern.match(crop):
+            return f"/crops/{crop}"
+
     return None
 
 
@@ -199,7 +241,7 @@ def action_buttons(identity_id: str) -> Div:
 
 def face_card(
     face_id: str,
-    crop_filename: str,
+    crop_url: str,
     quality: float = None,
     era: str = None,
     identity_id: str = None,
@@ -208,15 +250,24 @@ def face_card(
     """
     Single face card with optional action buttons.
     UX Intent: Face-first display with metadata secondary.
+
+    Args:
+        face_id: Canonical face identifier (for alt text)
+        crop_url: Resolved URL path to the crop image (from backend)
+        quality: Quality score (extracted from URL if not provided)
+        era: Era classification for badge display
+        identity_id: Parent identity ID
+        show_actions: Whether to show action buttons
     """
     if quality is None:
-        quality = parse_quality_from_filename(crop_filename)
+        # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
+        quality = parse_quality_from_filename(crop_url)
 
     return Div(
         # Image container with era badge
         Div(
             Img(
-                src=f"/crops/{crop_filename}",
+                src=crop_url,
                 alt=face_id,
                 cls="w-full h-auto sepia-[.3] hover:sepia-0 transition-all duration-300"
             ),
@@ -239,29 +290,31 @@ def identity_card(
     show_actions: bool = False,
 ) -> Div:
     """
-    Identity group card showing all anchors.
+    Identity group card showing all faces (anchors + candidates).
     UX Intent: Group context with individual face visibility.
     """
     identity_id = identity["identity_id"]
     name = identity.get("name") or f"Identity {identity_id[:8]}..."
     state = identity["state"]
-    anchor_ids = identity["anchor_ids"]
 
-    # Build face cards for each anchor
+    # Combine anchors (confirmed) and candidates (proposed) for display
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+
+    # Build face cards for each face
     face_cards = []
-    for anchor in anchor_ids:
-        if isinstance(anchor, str):
-            face_id = anchor
+    for face_entry in all_face_ids:
+        if isinstance(face_entry, str):
+            face_id = face_entry
             era = None
         else:
-            face_id = anchor.get("face_id", "")
-            era = anchor.get("era_bin")
+            face_id = face_entry.get("face_id", "")
+            era = face_entry.get("era_bin")
 
-        crop = find_crop_for_face(face_id, crop_files)
-        if crop:
+        crop_url = resolve_face_image_url(face_id, crop_files)
+        if crop_url:
             face_cards.append(face_card(
                 face_id=face_id,
-                crop_filename=crop,
+                crop_url=crop_url,
                 era=era,
                 identity_id=identity_id,
             ))
@@ -386,7 +439,7 @@ def get():
         faces.sort(key=lambda x: x[1], reverse=True)
 
         cards = [
-            face_card(face_id=fn, crop_filename=fn, quality=q)
+            face_card(face_id=fn, crop_url=f"/crops/{fn}", quality=q)
             for fn, q in faces
         ]
 
