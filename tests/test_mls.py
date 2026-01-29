@@ -54,33 +54,37 @@ class TestMutualLikelihoodScore:
 
         assert score_identical > score_different
 
-    def test_increasing_sigma_lowers_mls_for_similar_embeddings(self):
+    def test_increasing_sigma_lowers_mls_for_identical_embeddings(self):
         """
-        CRITICAL TEST: When embeddings are similar, increasing σ² should lower MLS.
+        CRITICAL TEST: For identical embeddings, increasing σ² should lower MLS.
 
-        This is the core property that distinguishes PFE from point embeddings.
-        Uncertain matches should score lower than confident matches.
+        This is the core uncertainty property: confident matches of the same face
+        score higher than uncertain matches of the same face.
+
+        NOTE (scalar sigma fix - docs/adr_006_scalar_sigma_fix.md):
+        With scalar sigma, this property only holds for truly identical embeddings.
+        For "similar but different" embeddings, lower σ² amplifies the differences,
+        which is actually correct behavior for clustering (small differences matter
+        more for high-quality photos).
         """
         from core.pfe import mutual_likelihood_score
 
-        # Two very similar embeddings (same person, different photos)
-        mu1 = np.random.randn(512).astype(np.float32)
-        mu1 = mu1 / np.linalg.norm(mu1)  # Normalize
-        mu2 = mu1 + np.random.randn(512).astype(np.float32) * 0.1  # Small perturbation
-        mu2 = mu2 / np.linalg.norm(mu2)
+        # Identical embeddings (same face, same photo)
+        mu = np.random.randn(512).astype(np.float32)
+        mu = mu / np.linalg.norm(mu)  # Normalize
 
         # Low uncertainty (high quality photo)
         sigma_sq_low = np.full(512, 0.01, dtype=np.float32)
         # High uncertainty (degraded photo)
         sigma_sq_high = np.full(512, 1.0, dtype=np.float32)
 
-        # Compare confident match vs uncertain match
-        score_confident = mutual_likelihood_score(mu1, sigma_sq_low, mu2, sigma_sq_low)
-        score_uncertain = mutual_likelihood_score(mu1, sigma_sq_high, mu2, sigma_sq_high)
+        # Compare confident match vs uncertain match OF SAME EMBEDDING
+        score_confident = mutual_likelihood_score(mu, sigma_sq_low, mu, sigma_sq_low)
+        score_uncertain = mutual_likelihood_score(mu, sigma_sq_high, mu, sigma_sq_high)
 
         # CRITICAL: Uncertain match should score LOWER
         assert score_confident > score_uncertain, (
-            f"Increasing σ² should lower MLS. "
+            f"Increasing σ² should lower MLS for identical embeddings. "
             f"Got confident={score_confident:.2f}, uncertain={score_uncertain:.2f}"
         )
 

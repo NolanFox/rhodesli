@@ -27,7 +27,7 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 from core.clustering import MLS_DROP_THRESHOLD, cluster_identities
-from core.pfe import compute_sigma_sq
+from core.pfe import compute_sigma_sq, mutual_likelihood_score
 from core.registry import IdentityRegistry
 from core.temporal import ERAS, EraEstimate
 
@@ -189,6 +189,23 @@ def seed_registry(
     # Prepare faces for clustering
     prepared_faces = prepare_faces_for_clustering(faces)
     print(f"Prepared {len(prepared_faces)} faces for clustering")
+
+    # DEBUG: Print MLS scores for first pairs to verify fix
+    if len(prepared_faces) >= 2:
+        print("\n[DEBUG] MLS scores for first pairs (verifying scalar sigma fix):")
+        debug_pairs = []
+        for i in range(min(3, len(prepared_faces))):
+            for j in range(i + 1, min(4, len(prepared_faces))):
+                f1, f2 = prepared_faces[i], prepared_faces[j]
+                mls = mutual_likelihood_score(
+                    f1["mu"], f1["sigma_sq"],
+                    f2["mu"], f2["sigma_sq"]
+                )
+                pair_name = f"{f1.get('face_id', i)}-{f2.get('face_id', j)}"
+                debug_pairs.append(f"{pair_name}={mls:.1f}")
+        print(f"  {', '.join(debug_pairs)}")
+        print(f"  sigma_sq[0] sample: {prepared_faces[0]['sigma_sq'][0]:.4f}")
+        print()
 
     # Run clustering
     print(f"Running clustering with MLS_DROP_THRESHOLD={MLS_DROP_THRESHOLD}")

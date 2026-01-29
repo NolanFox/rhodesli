@@ -74,6 +74,10 @@ def compute_temporal_penalty(era1: EraEstimate, era2: EraEstimate) -> float:
     Uses marginalization over era probabilities to handle uncertainty:
     penalty = Σ_e1 Σ_e2 P(e1) * P(e2) * PENALTY_MATRIX[e1][e2]
 
+    Special case: When BOTH faces have confidence=0 (no temporal information),
+    return 0 penalty. This allows clustering without temporal constraints when
+    era data is unavailable (e.g., bootstrap seeding).
+
     Args:
         era1: Era estimate for first face
         era2: Era estimate for second face
@@ -81,6 +85,11 @@ def compute_temporal_penalty(era1: EraEstimate, era2: EraEstimate) -> float:
     Returns:
         Temporal penalty (log-space, negative or zero)
     """
+    # No temporal information = no penalty
+    # This prevents uniform priors from adding constant -66.67 offset
+    if era1.confidence == 0.0 and era2.confidence == 0.0:
+        return 0.0
+
     penalty = 0.0
     for e1, p1 in era1.probabilities.items():
         for e2, p2 in era2.probabilities.items():

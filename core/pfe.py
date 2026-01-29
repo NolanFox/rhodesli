@@ -7,11 +7,24 @@ derivation and rationale.
 
 Key concepts:
 - μ (mu): Mean embedding vector, shape (512,)
-- σ² (sigma_sq): Variance vector representing uncertainty, shape (512,)
+- σ² (sigma_sq): Variance - either scalar (float) or per-dimension array (512,)
 - MLS: Mutual Likelihood Score for comparing two PFEs
+
+IMPORTANT: Scalar sigma fix (docs/adr_006_scalar_sigma_fix.md)
+When sigma_sq is a uniform value across all dimensions (as produced by
+compute_sigma_sq), the MLS formula must NOT sum 512 log terms. Instead,
+we compute a single-term MLS to prevent the log penalty from drowning
+the discriminative embedding distance signal.
 """
 
 import numpy as np
+
+
+def _is_scalar_sigma(sigma_sq: np.ndarray, rtol: float = 1e-5) -> bool:
+    """Check if sigma_sq is effectively a scalar (all elements same)."""
+    if sigma_sq.size == 0:
+        return True
+    return np.allclose(sigma_sq, sigma_sq[0], rtol=rtol)
 
 
 def mutual_likelihood_score(
@@ -23,28 +36,52 @@ def mutual_likelihood_score(
     """
     Compute Mutual Likelihood Score between two probabilistic face embeddings.
 
-    MLS(f₁, f₂) = -Σ[(μ₁ - μ₂)² / (σ₁² + σ₂²)] - Σ[log(σ₁² + σ₂²)]
+    For per-dimension σ² (true PFE):
+        MLS(f₁, f₂) = -Σ[(μ₁ - μ₂)² / (σ₁² + σ₂²)] - Σ[log(σ₁² + σ₂²)]
 
-    Term 1 (Mahalanobis-like): Penalizes mean differences weighted by uncertainty
-    Term 2 (Uncertainty penalty): Penalizes high uncertainty
+    For scalar σ² (uniform across dimensions):
+        MLS(f₁, f₂) = -Σ[(μ₁ - μ₂)²] / (σ₁² + σ₂²) - log(σ₁² + σ₂²)
+
+    The scalar case uses a SINGLE log term instead of 512, preventing the
+    uncertainty penalty from drowning the discriminative embedding distance.
+    See docs/adr_006_scalar_sigma_fix.md for rationale.
 
     Args:
         mu1: Mean embedding of face 1, shape (512,)
-        sigma_sq1: Variance of face 1, shape (512,)
+        sigma_sq1: Variance of face 1, shape (512,) - may be uniform scalar
         mu2: Mean embedding of face 2, shape (512,)
-        sigma_sq2: Variance of face 2, shape (512,)
+        sigma_sq2: Variance of face 2, shape (512,) - may be uniform scalar
 
     Returns:
         MLS score (float). Higher = more likely same person.
         Score is in (-∞, 0] as it's a log-likelihood.
     """
+    # Squared differences between embeddings
+    diff_sq = (mu1 - mu2) ** 2
+    squared_distance = np.sum(diff_sq)
+
+    # Scalar sigma fix: When sigma is a single value (not per-dimension),
+    # we compute MLS as a single term, not summed over 512 dimensions.
+    # See docs/adr_006_scalar_sigma_fix.md
+    if _is_scalar_sigma(sigma_sq1) and _is_scalar_sigma(sigma_sq2):
+        # Both sigmas are scalars - use single-term formula
+        combined_sigma_sq = float(sigma_sq1[0] + sigma_sq2[0])
+
+        # Single Mahalanobis-like term (normalized by scalar variance)
+        mahalanobis_term = -squared_distance / combined_sigma_sq
+
+        # Single log penalty (NOT multiplied by 512!)
+        uncertainty_penalty = -np.log(combined_sigma_sq)
+
+        return float(mahalanobis_term + uncertainty_penalty)
+
+    # Per-dimension case: original formula with element-wise operations
     combined_var = sigma_sq1 + sigma_sq2
 
-    # Term 1: Mahalanobis-like weighted difference
-    diff_sq = (mu1 - mu2) ** 2
+    # Term 1: Mahalanobis-like weighted difference (element-wise)
     mahalanobis_term = -np.sum(diff_sq / combined_var)
 
-    # Term 2: Uncertainty penalty (prevents σ² → ∞ trivial solution)
+    # Term 2: Uncertainty penalty per dimension
     uncertainty_penalty = -np.sum(np.log(combined_var))
 
     return float(mahalanobis_term + uncertainty_penalty)

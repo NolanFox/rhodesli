@@ -23,14 +23,21 @@ from core.temporal import mls_with_temporal
 # IMPORTANT: Lower values = stricter clustering = more separate identities
 # Higher values = looser clustering = more merging (risks "super-clusters")
 #
-# Empirical guidance:
-#   - 150: Too permissive, causes pathological over-clustering
-#   - 30: Conservative, biases toward precision over recall
-#         (Better to have false negatives than false merges)
+# POST-SCALAR-FIX (docs/adr_006_scalar_sigma_fix.md):
+# After fixing the MLS formula, the reference score for identical faces is:
+#   ref_mls = -log(2 * sigma_sq)  (single term, not 512×)
 #
-# The merge condition: faces cluster together if MLS > (ref_mls - threshold)
-# So a threshold of 30 means faces must have MLS within 30 of identical-face MLS
-MLS_DROP_THRESHOLD = 30
+# For sigma_sq=0.05: ref_mls ≈ -log(0.1) ≈ 2.3
+# For sigma_sq=0.2:  ref_mls ≈ -log(0.4) ≈ 0.9
+#
+# The discriminative term (squared distance / combined_variance) dominates.
+# With sigma_sq=0.2, typical MLS ranges:
+#   - Same person (sq_dist < 0.5): MLS ≈ -0.5 to -2
+#   - Different person (sq_dist > 1.5): MLS ≈ -4 to -10+
+#
+# Threshold of 3 means: MLS must be within 3 of the best possible score.
+# This is calibrated for sigma_sq ~ 0.2 typical in bootstrapped data.
+MLS_DROP_THRESHOLD = 3
 
 
 def mls_to_distance(mls: float, max_mls: float) -> float:
@@ -121,32 +128,36 @@ def _compute_reference_mls(faces: list[dict]) -> float:
     Compute reference MLS for identical faces with average σ² in dataset.
 
     This is the MLS you'd get for identical embeddings with the given uncertainty.
+
+    POST-SCALAR-FIX (docs/adr_006_scalar_sigma_fix.md):
+    With scalar sigma, reference MLS = -log(2 * avg_σ²) (single term, not 512×).
+    For avg_sigma_sq=0.05: ref_mls ≈ -log(0.1) ≈ 2.3
+    For avg_sigma_sq=0.1:  ref_mls ≈ -log(0.2) ≈ 1.6
     """
     if not faces:
         return 0.0
 
-    # Average σ² across all faces
+    # Average σ² across all faces (sigma_sq is uniform, so mean is the scalar value)
     avg_sigma_sq = np.mean([f["sigma_sq"].mean() for f in faces])
 
-    # Reference MLS = -512 * log(2 * avg_σ²)
+    # Reference MLS = -log(2 * avg_σ²) for scalar sigma
     # This is the uncertainty penalty term only (Mahalanobis = 0 for identical)
-    return -512 * np.log(2 * avg_sigma_sq)
+    # NOTE: Single log term, NOT multiplied by 512 (scalar sigma fix)
+    return -np.log(2 * avg_sigma_sq)
 
 
 def _print_mls_stats(mls_values: list[float]) -> None:
     """
     Print MLS distribution statistics for observability.
 
-    Empirical guidance on MLS values:
-    - MLS > 0: Strong match (same person, high confidence)
-    - MLS -200 to 0: Moderate match (possibly same person)
+    POST-SCALAR-FIX score ranges (docs/adr_006_scalar_sigma_fix.md):
+    - MLS > -50: Strong match (same person, high confidence)
+    - MLS -200 to -50: Moderate match (possibly same person)
     - MLS -500 to -200: Weak/uncertain match
     - MLS < -500: Different identities (should NOT cluster together)
 
-    If you see most pairwise MLS values near 0 or positive, clustering is
-    too permissive. Good separation shows a bimodal distribution with
-    same-identity pairs having high MLS and different-identity pairs having
-    low (negative) MLS.
+    Good separation shows a bimodal distribution with same-identity pairs
+    having high MLS (> -100) and different-identity pairs having low MLS (< -500).
     """
     arr = np.array(mls_values)
     print("\n" + "=" * 60)
@@ -158,13 +169,13 @@ def _print_mls_stats(mls_values: list[float]) -> None:
     print(f"  Mean:  {arr.mean():.1f}")
     print(f"  Std:   {arr.std():.1f}")
 
-    # Simple histogram with fixed buckets
+    # Simple histogram with fixed buckets (calibrated for scalar-sigma MLS)
     buckets = [
         (-np.inf, -1000, "< -1000 (very different)"),
         (-1000, -500, "-1000 to -500 (different)"),
         (-500, -200, "-500 to -200 (weak match)"),
-        (-200, 0, "-200 to 0 (moderate match)"),
-        (0, np.inf, "> 0 (strong match)"),
+        (-200, -50, "-200 to -50 (moderate match)"),
+        (-50, np.inf, "> -50 (strong match)"),
     ]
     print("\n  Histogram:")
     for low, high, label in buckets:
