@@ -61,3 +61,5 @@ data/*.db
 app/static/crops/*.jpg.sesskey
 app/static/crops/
 .sesskey
+data/*.json
+data/*.lock
