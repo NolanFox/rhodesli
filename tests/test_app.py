@@ -151,3 +151,71 @@ class TestNeighborCardThumbnail:
 
         # Should show placeholder
         assert 'class="w-12 h-12 bg-stone-200' in html
+
+    def test_falls_back_to_candidate_when_no_anchor_crops(self):
+        """When no anchors have crops, falls back to candidate faces (B2-REPAIR)."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 2,
+            "anchor_face_ids": ["missing_anchor:face0"],
+            "candidate_face_ids": ["candidate_image:face0"],
+        }
+        # Only candidate has a crop
+        crop_files = {"candidate_image_21.50_0.jpg"}
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should use candidate's crop
+        assert "/crops/candidate_image_21.50_0.jpg" in html
+        # Should NOT show placeholder
+        assert 'class="w-12 h-12 bg-stone-200' not in html
+
+    def test_falls_back_to_candidate_when_no_anchors(self):
+        """PROPOSED identities with only candidates should show candidate thumbnail."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 1,
+            "anchor_face_ids": [],  # No anchors (PROPOSED singleton)
+            "candidate_face_ids": ["solo_candidate:face0"],
+        }
+        crop_files = {"solo_candidate_21.50_0.jpg"}
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should use candidate's crop
+        assert "/crops/solo_candidate_21.50_0.jpg" in html
+        # Should NOT show placeholder
+        assert 'class="w-12 h-12 bg-stone-200' not in html
+
+    def test_shows_placeholder_when_neither_anchor_nor_candidate_has_crop(self):
+        """When neither anchors nor candidates have crops, shows placeholder."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 2,
+            "anchor_face_ids": ["missing_anchor:face0"],
+            "candidate_face_ids": ["missing_candidate:face0"],
+        }
+        crop_files = set()  # No crops available
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should show placeholder
+        assert 'class="w-12 h-12 bg-stone-200' in html

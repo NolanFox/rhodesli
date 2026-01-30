@@ -699,8 +699,10 @@ def neighbor_card(
             type="button",
         )
 
-    # Thumbnail image - try each anchor until one has a valid crop (B2)
+    # Thumbnail image - try anchors first, then candidates (B2-REPAIR)
     thumbnail = None
+
+    # First try anchor face IDs
     anchor_face_ids = neighbor.get("anchor_face_ids", [])
     for anchor_face_id in anchor_face_ids:
         crop_url = resolve_face_image_url(anchor_face_id, crop_files)
@@ -712,7 +714,20 @@ def neighbor_card(
             )
             break
 
-    # Fallback placeholder if no thumbnail found
+    # Fallback to candidate face IDs if no anchor crop found
+    if thumbnail is None:
+        candidate_face_ids = neighbor.get("candidate_face_ids", [])
+        for candidate_face_id in candidate_face_ids:
+            crop_url = resolve_face_image_url(candidate_face_id, crop_files)
+            if crop_url:
+                thumbnail = Img(
+                    src=crop_url,
+                    alt=name,
+                    cls="w-12 h-12 object-cover rounded border border-stone-200 flex-shrink-0"
+                )
+                break
+
+    # Final fallback: gray placeholder if no crop found
     if thumbnail is None:
         thumbnail = Div(
             cls="w-12 h-12 bg-stone-200 rounded flex-shrink-0"
@@ -1548,8 +1563,10 @@ def get(identity_id: str, limit: int = 5, offset: int = 0):
     # Enhance neighbor data with additional info for UI
     crop_files = get_crop_files()
     for n in neighbors:
-        # Add all anchor face IDs for thumbnail fallback (B2)
+        # Add face IDs for thumbnail resolution (B2-REPAIR)
+        # First try anchors, then fallback to candidates for PROPOSED identities
         n["anchor_face_ids"] = registry.get_anchor_face_ids(n["identity_id"])
+        n["candidate_face_ids"] = registry.get_candidate_face_ids(n["identity_id"])
 
         # Enhance blocked merge reason with photo filename
         if not n["can_merge"] and n["merge_blocked_reason"] == "co_occurrence":
