@@ -551,6 +551,86 @@ class IdentityRegistry:
             previous_version_id=previous_version,
         )
 
+    def reject_identity_pair(
+        self,
+        source_id: str,
+        target_id: str,
+        user_source: str,
+    ) -> None:
+        """
+        Record that two identities are NOT the same person.
+
+        This is a strong negative signal from "Not Same Person" action (D2).
+        Stored bidirectionally: A rejects B means B also rejects A.
+        Rejected pairs will not appear in find_nearest_neighbors.
+
+        Uses "identity:" prefix to distinguish from face_id rejections.
+
+        Args:
+            source_id: Identity making the rejection (user was viewing this)
+            target_id: Identity being rejected as "not same person"
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If either identity not found
+        """
+        # Validate both identities exist (will raise KeyError if not)
+        source = self._identities[source_id]
+        target = self._identities[target_id]
+
+        now = datetime.now(timezone.utc).isoformat()
+        previous_version_source = source["version_id"]
+        previous_version_target = target["version_id"]
+
+        # Add to negative_ids with identity: prefix (idempotent)
+        source_negative = f"identity:{target_id}"
+        target_negative = f"identity:{source_id}"
+
+        if source_negative not in source["negative_ids"]:
+            source["negative_ids"].append(source_negative)
+            source["version_id"] += 1
+            source["updated_at"] = now
+
+            self._record_event(
+                identity_id=source_id,
+                action=ActionType.REJECT.value,
+                face_ids=[],
+                user_source=user_source,
+                previous_version_id=previous_version_source,
+                metadata={"rejected_identity_id": target_id, "type": "identity_pair"},
+            )
+
+        if target_negative not in target["negative_ids"]:
+            target["negative_ids"].append(target_negative)
+            target["version_id"] += 1
+            target["updated_at"] = now
+
+            self._record_event(
+                identity_id=target_id,
+                action=ActionType.REJECT.value,
+                face_ids=[],
+                user_source=user_source,
+                previous_version_id=previous_version_target,
+                metadata={"rejected_identity_id": source_id, "type": "identity_pair"},
+            )
+
+    def is_identity_rejected(self, id_a: str, id_b: str) -> bool:
+        """
+        Check if two identities have been rejected as "not same person".
+
+        Args:
+            id_a: First identity ID
+            id_b: Second identity ID
+
+        Returns:
+            True if pair has been rejected, False otherwise.
+        """
+        try:
+            identity_a = self.get_identity(id_a)
+            return f"identity:{id_b}" in identity_a.get("negative_ids", [])
+        except KeyError:
+            return False
+
     def undo(self, identity_id: str, user_source: str) -> None:
         """
         Undo the most recent reversible action.
