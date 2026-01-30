@@ -488,6 +488,47 @@ def toast(message: str, variant: str = "info") -> Div:
     )
 
 
+def toast_with_undo(
+    message: str,
+    source_id: str,
+    target_id: str,
+    variant: str = "info",
+) -> Div:
+    """
+    Toast notification with inline Undo button (D5).
+
+    Used for "Not Same Person" rejection - allows immediate reversal.
+    Auto-dismisses after 8 seconds (longer than standard toast to allow undo).
+    """
+    colors = {
+        "success": "bg-emerald-600 text-white",
+        "error": "bg-red-600 text-white",
+        "warning": "bg-amber-500 text-white",
+        "info": "bg-stone-700 text-white",
+    }
+    icons = {
+        "success": "\u2713",
+        "error": "\u2717",
+        "warning": "\u26a0",
+        "info": "\u2139",
+    }
+    return Div(
+        Span(icons.get(variant, ""), cls="mr-2"),
+        Span(message, cls="flex-1"),
+        Button(
+            "Undo",
+            cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            hx_post=f"/api/identity/{source_id}/unreject/{target_id}",
+            hx_swap="outerHTML",
+            hx_target="closest div",  # Replace the toast itself
+            type="button",
+        ),
+        cls=f"px-4 py-3 rounded shadow-lg flex items-center {colors.get(variant, colors['info'])} animate-fade-in",
+        # Longer dismiss time to allow undo
+        **{"_": "on load wait 8s then remove me"}
+    )
+
+
 def state_badge(state: str) -> Span:
     """
     Render state as a colored badge.
@@ -1646,11 +1687,11 @@ def post(source_id: str, target_id: str):
         target_identity_id=target_id,
     )
 
-    # Return empty div to replace the neighbor card + toast
+    # Return empty div to replace the neighbor card + toast with undo (D5)
     # The neighbor card will be removed via hx-swap="outerHTML"
     return (
         Div(),  # Empty replacement - card disappears
-        toast("Marked as 'Not Same Person'", "info"),
+        toast_with_undo("Marked as 'Not Same Person'", source_id, target_id, "info"),
     )
 
 
