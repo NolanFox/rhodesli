@@ -47,6 +47,7 @@ class ActionType(Enum):
     UNDO = "undo"
     MERGE = "merge"
     RENAME = "rename"
+    DETACH = "detach"
 
 
 class IdentityRegistry:
@@ -357,6 +358,96 @@ class IdentityRegistry:
         )
 
         return previous_name
+
+    def detach_face(
+        self,
+        identity_id: str,
+        face_id: str,
+        user_source: str,
+    ) -> dict:
+        """
+        Detach a face from an identity into a new identity.
+
+        This is the reverse of merge - useful for correcting grouping errors.
+        The detached face becomes the sole anchor of a new identity.
+
+        Args:
+            identity_id: Source identity ID
+            face_id: Face ID to detach
+            user_source: Who initiated this action
+
+        Returns:
+            Dict with:
+            - success: bool
+            - reason: str (on failure: "only_face", "face_not_found")
+            - from_identity_id, to_identity_id, face_id: (on success)
+
+        Raises:
+            KeyError: If identity not found
+        """
+        identity = self._identities[identity_id]
+
+        # Get all face IDs in this identity (anchors + candidates)
+        all_face_ids = self.get_all_face_ids(identity_id)
+
+        # Check if face exists in identity
+        if face_id not in all_face_ids:
+            return {
+                "success": False,
+                "reason": "face_not_found",
+                "message": f"Face {face_id} not found in identity {identity_id}",
+            }
+
+        # Cannot detach the only face
+        if len(all_face_ids) <= 1:
+            return {
+                "success": False,
+                "reason": "only_face",
+                "message": "Cannot detach the only face from an identity",
+            }
+
+        previous_version = identity["version_id"]
+
+        # Remove face from source identity (handles both string and dict formats)
+        self._remove_anchor_by_face_id(identity, face_id)
+
+        # Also check candidates
+        if face_id in identity["candidate_ids"]:
+            identity["candidate_ids"].remove(face_id)
+
+        # Create new identity with the detached face
+        new_identity_id = self.create_identity(
+            anchor_ids=[face_id],
+            user_source=user_source,
+        )
+
+        # Update source identity version
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        # Record detach event on source identity
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.DETACH.value,
+            face_ids=[face_id],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "to_identity_id": new_identity_id,
+            },
+        )
+
+        logger.info(
+            f"Detached face {face_id} from {identity_id} into new identity {new_identity_id}"
+        )
+
+        return {
+            "success": True,
+            "reason": "ok",
+            "from_identity_id": identity_id,
+            "to_identity_id": new_identity_id,
+            "face_id": face_id,
+        }
 
     def contest_identity(
         self,
