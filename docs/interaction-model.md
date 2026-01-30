@@ -30,6 +30,10 @@ Describes user states, transitions, and navigation patterns.
 
 **Available actions:**
 - Merge neighbor into current identity
+- **Not Same Person** (D2): Mark neighbor as definitively NOT the same person
+  - Adds bidirectional rejection to `negative_ids` with "identity:" prefix
+  - Neighbor immediately removed from sidebar
+  - Rejected pairs never reappear in Find Similar
 - Load More neighbors (D3)
 - Close sidebar (return to Identity Review)
 
