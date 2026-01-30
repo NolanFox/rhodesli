@@ -665,7 +665,6 @@ def neighbor_card(
     mls = neighbor["mls_score"]
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
-    first_anchor_face_id = neighbor.get("first_anchor_face_id")
 
     # MLS similarity indicator (visual hint)
     if mls > -50:
@@ -700,18 +699,20 @@ def neighbor_card(
             type="button",
         )
 
-    # Thumbnail image (if available)
+    # Thumbnail image - try each anchor until one has a valid crop (B2)
     thumbnail = None
-    if first_anchor_face_id:
-        crop_url = resolve_face_image_url(first_anchor_face_id, crop_files)
+    anchor_face_ids = neighbor.get("anchor_face_ids", [])
+    for anchor_face_id in anchor_face_ids:
+        crop_url = resolve_face_image_url(anchor_face_id, crop_files)
         if crop_url:
             thumbnail = Img(
                 src=crop_url,
                 alt=name,
                 cls="w-12 h-12 object-cover rounded border border-stone-200 flex-shrink-0"
             )
+            break
 
-    # Fallback placeholder if no thumbnail
+    # Fallback placeholder if no thumbnail found
     if thumbnail is None:
         thumbnail = Div(
             cls="w-12 h-12 bg-stone-200 rounded flex-shrink-0"
@@ -1534,8 +1535,8 @@ def get(identity_id: str, limit: int = 5, offset: int = 0):
     # Enhance neighbor data with additional info for UI
     crop_files = get_crop_files()
     for n in neighbors:
-        # Add thumbnail face ID for neighbor cards
-        n["first_anchor_face_id"] = get_first_anchor_face_id(n["identity_id"], registry)
+        # Add all anchor face IDs for thumbnail fallback (B2)
+        n["anchor_face_ids"] = registry.get_anchor_face_ids(n["identity_id"])
 
         # Enhance blocked merge reason with photo filename
         if not n["can_merge"] and n["merge_blocked_reason"] == "co_occurrence":
