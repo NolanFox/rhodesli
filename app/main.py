@@ -1654,6 +1654,54 @@ def post(source_id: str, target_id: str):
     )
 
 
+@rt("/api/identity/{source_id}/unreject/{target_id}")
+def post(source_id: str, target_id: str):
+    """
+    Undo "Not Same Person" rejection (D5).
+
+    This reverses a previous reject_identity_pair, allowing the target
+    identity to reappear in Find Similar results.
+
+    Returns:
+        200: Success toast
+        404: Identity not found
+        423: Lock contention
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Validate both identities exist
+    try:
+        registry.get_identity(source_id)
+        registry.get_identity(target_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Remove rejection
+    registry.unreject_identity_pair(source_id, target_id, user_source="web")
+    save_registry(registry)
+
+    # Log the action
+    log_user_action(
+        "UNREJECT_IDENTITY",
+        source_identity_id=source_id,
+        target_identity_id=target_id,
+    )
+
+    # Return success toast
+    return toast("Rejection undone. Identity will reappear in Find Similar.", "success")
+
+
 @rt("/api/identity/{target_id}/merge/{source_id}")
 def post(target_id: str, source_id: str):
     """
