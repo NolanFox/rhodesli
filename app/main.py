@@ -256,6 +256,57 @@ def get_identity_for_face(registry, face_id: str) -> dict:
     return None
 
 
+def find_shared_photo_filename(
+    target_id: str,
+    neighbor_id: str,
+    registry,
+    photo_registry,
+) -> str:
+    """
+    Find the filename of a shared photo between two identities.
+
+    Used to show users why a merge is blocked (co-occurrence).
+
+    Returns:
+        Filename of shared photo, or empty string if none found.
+    """
+    # Get all face IDs for both identities
+    faces_a = registry.get_all_face_ids(target_id)
+    faces_b = registry.get_all_face_ids(neighbor_id)
+
+    # Get photo_ids for each identity's faces
+    photos_a = photo_registry.get_photos_for_faces(faces_a)
+    photos_b = photo_registry.get_photos_for_faces(faces_b)
+
+    # Find intersection
+    shared_photos = photos_a & photos_b
+
+    if shared_photos:
+        # Get filename for first shared photo
+        first_photo_id = next(iter(shared_photos))
+        photo_path = photo_registry.get_photo_path(first_photo_id)
+        if photo_path:
+            return Path(photo_path).name
+
+    return ""
+
+
+def get_first_anchor_face_id(identity_id: str, registry) -> str | None:
+    """
+    Get the first anchor face ID for an identity.
+
+    Used for showing thumbnails in neighbor cards.
+
+    Returns:
+        First anchor face ID, or None if identity has no anchors.
+    """
+    try:
+        anchor_ids = registry.get_anchor_face_ids(identity_id)
+        return anchor_ids[0] if anchor_ids else None
+    except KeyError:
+        return None
+
+
 # Photo metadata cache (rebuilt on each request for simplicity)
 _photo_cache = None
 _face_to_photo_cache = None
@@ -557,13 +608,14 @@ def neighbor_card(
 ) -> Div:
     """
     Single neighbor card with merge button.
-    Shows similarity indicator and merge eligibility.
+    Shows similarity indicator, face thumbnail, and merge eligibility.
     """
     neighbor_id = neighbor["identity_id"]
     name = neighbor["name"]
     mls = neighbor["mls_score"]
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
+    first_anchor_face_id = neighbor.get("first_anchor_face_id")
 
     # MLS similarity indicator (visual hint)
     if mls > -50:
@@ -588,34 +640,63 @@ def neighbor_card(
             type="button",
         )
     else:
+        # Use enhanced reason if available, otherwise fall back to raw reason
+        blocked_reason = neighbor.get("merge_blocked_reason_display") or neighbor["merge_blocked_reason"]
         merge_btn = Button(
             "Blocked",
             cls="px-3 py-1 text-sm font-bold bg-stone-300 text-stone-500 rounded cursor-not-allowed",
             disabled=True,
-            title=f"Cannot merge: {neighbor['merge_blocked_reason']}",
+            title=blocked_reason,
             type="button",
         )
 
+    # Thumbnail image (if available)
+    thumbnail = None
+    if first_anchor_face_id:
+        crop_url = resolve_face_image_url(first_anchor_face_id, crop_files)
+        if crop_url:
+            thumbnail = Img(
+                src=crop_url,
+                alt=name,
+                cls="w-12 h-12 object-cover rounded border border-stone-200 flex-shrink-0"
+            )
+
+    # Fallback placeholder if no thumbnail
+    if thumbnail is None:
+        thumbnail = Div(
+            cls="w-12 h-12 bg-stone-200 rounded flex-shrink-0"
+        )
+
     return Div(
-        # Name and similarity badge
+        # Row layout: thumbnail | info | action
         Div(
-            Span(name, cls="font-medium text-stone-700 truncate flex-1"),
-            Span(
-                similarity_label,
-                cls=f"text-xs px-2 py-0.5 rounded {similarity_class}",
+            # Thumbnail
+            thumbnail,
+            # Info column
+            Div(
+                # Name and similarity badge
+                Div(
+                    Span(name, cls="font-medium text-stone-700 truncate"),
+                    Span(
+                        similarity_label,
+                        cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
+                    ),
+                    cls="flex items-center"
+                ),
+                # Stats
+                Div(
+                    Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-500"),
+                    Span(f"MLS: {mls:.0f}", cls="text-xs font-mono text-stone-400 ml-2"),
+                    cls="flex items-center"
+                ),
+                cls="flex-1 min-w-0 ml-3"
             ),
-            cls="flex items-center justify-between gap-2 mb-2"
-        ),
-        # Stats
-        Div(
-            Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-500"),
-            Span(f"MLS: {mls:.0f}", cls="text-xs font-mono text-stone-400"),
-            cls="flex justify-between mb-2"
-        ),
-        # Actions
-        Div(
-            merge_btn,
-            cls="flex items-center justify-end"
+            # Action button
+            Div(
+                merge_btn,
+                cls="flex-shrink-0 ml-2"
+            ),
+            cls="flex items-center"
         ),
         cls="p-3 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md transition-shadow"
     )
@@ -1339,7 +1420,21 @@ def get(identity_id: str, limit: int = 5):
         identity_id, registry, photo_registry, face_data, limit=limit
     )
 
+    # Enhance neighbor data with additional info for UI
     crop_files = get_crop_files()
+    for n in neighbors:
+        # Add thumbnail face ID for neighbor cards
+        n["first_anchor_face_id"] = get_first_anchor_face_id(n["identity_id"], registry)
+
+        # Enhance blocked merge reason with photo filename
+        if not n["can_merge"] and n["merge_blocked_reason"] == "co_occurrence":
+            filename = find_shared_photo_filename(
+                identity_id, n["identity_id"], registry, photo_registry
+            )
+            if filename:
+                n["merge_blocked_reason_display"] = f"Appear together in {filename}"
+            else:
+                n["merge_blocked_reason_display"] = "Appear together in a photo"
 
     return neighbors_sidebar(identity_id, neighbors, crop_files)
 

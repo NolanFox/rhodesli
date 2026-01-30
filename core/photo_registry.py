@@ -96,6 +96,20 @@ class PhotoRegistry:
                 photo_ids.add(photo_id)
         return photo_ids
 
+    def get_photo_path(self, photo_id: str) -> str | None:
+        """
+        Get the file path for a photo.
+
+        Args:
+            photo_id: Photo identifier
+
+        Returns:
+            File path string, or None if photo unknown
+        """
+        if photo_id not in self._photos:
+            return None
+        return self._photos[photo_id]["path"]
+
     def save(self, path: Path = None) -> None:
         """
         Save registry to JSON file.
