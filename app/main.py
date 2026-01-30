@@ -881,6 +881,7 @@ def neighbors_sidebar(
     crop_files: set,
     offset: int = 0,
     has_more: bool = False,
+    rejected_count: int = 0,
 ) -> Div:
     """
     Sidebar showing nearest neighbor identities for merge candidates.
@@ -930,6 +931,30 @@ def neighbors_sidebar(
             type="button",
         )
 
+    # Rejected matches indicator (contextual recovery awareness)
+    rejected_indicator = None
+    if rejected_count > 0:
+        match_word = "match" if rejected_count == 1 else "matches"
+        rejected_indicator = Div(
+            Div(
+                Span(
+                    f"{rejected_count} {match_word} hidden by 'Not Same Person'",
+                    cls="text-xs text-stone-400 italic",
+                ),
+                Button(
+                    "Review",
+                    cls="text-xs text-blue-500 hover:text-blue-700 ml-2",
+                    hx_get=f"/api/identity/{identity_id}/rejected",
+                    hx_target=f"#rejected-list-{identity_id}",
+                    hx_swap="innerHTML",
+                    type="button",
+                ),
+                cls="flex items-center justify-between",
+            ),
+            Div(id=f"rejected-list-{identity_id}"),
+            cls="mt-4 pt-3 border-t border-stone-200",
+        )
+
     return Div(
         # Header with title and close button
         Div(
@@ -941,6 +966,8 @@ def neighbors_sidebar(
         Div(*cards),
         # Load More button if more available
         Div(load_more_btn, cls="mt-3") if load_more_btn else None,
+        # Rejected matches indicator
+        rejected_indicator,
         cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200"
     )
 
@@ -1705,10 +1732,18 @@ def get(identity_id: str, limit: int = 5, offset: int = 0):
             else:
                 n["merge_blocked_reason_display"] = "Appear together in a photo"
 
+    # Count rejected identities for contextual recovery indicator
+    identity = registry.get_identity(identity_id)
+    rejected_count = sum(
+        1 for neg in identity.get("negative_ids", [])
+        if neg.startswith("identity:")
+    )
+
     return neighbors_sidebar(
         identity_id, neighbors, crop_files,
         offset=offset + limit,  # Next offset for Load More
-        has_more=has_more
+        has_more=has_more,
+        rejected_count=rejected_count,
     )
 
 
