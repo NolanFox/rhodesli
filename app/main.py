@@ -756,14 +756,37 @@ def neighbors_sidebar(
     identity_id: str,
     neighbors: list[dict],
     crop_files: set,
+    offset: int = 0,
+    has_more: bool = False,
 ) -> Div:
     """
     Sidebar showing nearest neighbor identities for merge candidates.
+
+    Args:
+        identity_id: The identity we're finding neighbors for
+        neighbors: List of neighbor dicts with identity info
+        crop_files: Set of available crop filenames
+        offset: Current pagination offset (for Load More)
+        has_more: Whether more neighbors are available
     """
+    # Close button (B1: explicit exit from Find Similar mode)
+    close_btn = Button(
+        "Close",
+        cls="text-sm text-stone-500 hover:text-stone-700",
+        hx_get=f"/api/identity/{identity_id}/neighbors/close",
+        hx_target=f"#neighbors-{identity_id}",
+        hx_swap="innerHTML",
+        type="button",
+    )
+
     if not neighbors:
         return Div(
-            P("No similar identities found.", cls="text-stone-400 italic text-center py-4"),
-            cls="neighbors-sidebar"
+            Div(
+                P("No similar identities found.", cls="text-stone-400 italic"),
+                close_btn,
+                cls="flex items-center justify-between"
+            ),
+            cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200"
         )
 
     cards = [
@@ -771,9 +794,30 @@ def neighbors_sidebar(
         for n in neighbors
     ]
 
+    # Load More button (B3: pagination per D3)
+    load_more_btn = None
+    if has_more:
+        next_offset = offset + len(neighbors)
+        load_more_btn = Button(
+            "Load More",
+            cls="w-full text-sm text-blue-600 hover:text-blue-800 py-2 border border-blue-200 rounded hover:bg-blue-50 transition-colors",
+            hx_get=f"/api/identity/{identity_id}/neighbors?offset={next_offset}",
+            hx_target=f"#neighbors-{identity_id}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+
     return Div(
-        H4("Similar Identities", cls="text-lg font-serif font-bold text-stone-700 mb-3"),
+        # Header with title and close button
+        Div(
+            H4("Similar Identities", cls="text-lg font-serif font-bold text-stone-700"),
+            close_btn,
+            cls="flex items-center justify-between mb-3"
+        ),
+        # Neighbor cards
         Div(*cards),
+        # Load More button if more available
+        Div(load_more_btn, cls="mt-3") if load_more_btn else None,
         cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200"
     )
 
@@ -1449,17 +1493,22 @@ def get(photo_id: str, face: str = None):
 # =============================================================================
 
 @rt("/api/identity/{identity_id}/neighbors")
-def get(identity_id: str, limit: int = 5):
+def get(identity_id: str, limit: int = 5, offset: int = 0):
     """
     Get nearest neighbor identities for potential merge.
 
+    Args:
+        identity_id: Identity to find neighbors for
+        limit: Number of neighbors per page (default 5)
+        offset: Number of neighbors already shown (for Load More)
+
     Returns HTML partial with neighbor cards and merge buttons.
+    Implements D3 (Load More pagination).
     """
     try:
         registry = load_registry()
         registry.get_identity(identity_id)
     except KeyError:
-        # Return empty neighbors sidebar with error message
         return Div(
             P("Identity not found.", cls="text-red-600 text-center py-4"),
             cls="neighbors-sidebar"
@@ -1469,10 +1518,18 @@ def get(identity_id: str, limit: int = 5):
     face_data = get_face_data()
     photo_registry = load_photo_registry()
 
+    # Request one extra to determine if more exist (B3: pagination)
     from core.neighbors import find_nearest_neighbors
-    neighbors = find_nearest_neighbors(
-        identity_id, registry, photo_registry, face_data, limit=limit
+    total_to_fetch = offset + limit + 1
+    all_neighbors = find_nearest_neighbors(
+        identity_id, registry, photo_registry, face_data, limit=total_to_fetch
     )
+
+    # Determine if more neighbors exist beyond current page
+    has_more = len(all_neighbors) > offset + limit
+
+    # Return only neighbors up to current offset + limit
+    neighbors = all_neighbors[:offset + limit]
 
     # Enhance neighbor data with additional info for UI
     crop_files = get_crop_files()
@@ -1490,7 +1547,28 @@ def get(identity_id: str, limit: int = 5):
             else:
                 n["merge_blocked_reason_display"] = "Appear together in a photo"
 
-    return neighbors_sidebar(identity_id, neighbors, crop_files)
+    return neighbors_sidebar(
+        identity_id, neighbors, crop_files,
+        offset=offset + limit,  # Next offset for Load More
+        has_more=has_more
+    )
+
+
+@rt("/api/identity/{identity_id}/neighbors/close")
+def get(identity_id: str):
+    """
+    Close the neighbors sidebar (B1: explicit exit from Find Similar mode).
+
+    Returns empty content to clear the sidebar.
+    """
+    return Div(
+        # Return just the loading indicator (hidden by default)
+        Span(
+            "Loading...",
+            id=f"neighbors-loading-{identity_id}",
+            cls="htmx-indicator text-stone-400 text-sm",
+        ),
+    )
 
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
