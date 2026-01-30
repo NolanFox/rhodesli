@@ -64,3 +64,90 @@ class TestGalleryRoute:
         """Gallery has workstation subtitle."""
         response = client.get("/")
         assert "Forensic Identity Workstation" in response.text
+
+
+class TestNeighborCardThumbnail:
+    """Tests for neighbor_card thumbnail rendering (B2)."""
+
+    def test_uses_first_anchor_with_valid_crop(self):
+        """When first anchor has crop file, uses it for thumbnail."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 2,
+            "anchor_face_ids": ["image_001:face0", "image_002:face0"],
+        }
+        crop_files = {"image_001_21.50_0.jpg", "image_002_22.00_0.jpg"}
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should use first anchor's crop
+        assert "/crops/image_001_21.50_0.jpg" in html
+
+    def test_falls_back_to_second_anchor_when_first_has_no_crop(self):
+        """When first anchor has no crop, tries subsequent anchors (B2 fix)."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 2,
+            "anchor_face_ids": ["missing_image:face0", "image_002:face0"],
+        }
+        # Only second anchor has a crop file
+        crop_files = {"image_002_22.00_0.jpg"}
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should fall back to second anchor's crop
+        assert "/crops/image_002_22.00_0.jpg" in html
+        # Should NOT show placeholder
+        assert 'class="w-12 h-12 bg-stone-200' not in html
+
+    def test_shows_placeholder_when_no_anchors_have_crops(self):
+        """When no anchors have crop files, shows placeholder."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 2,
+            "anchor_face_ids": ["missing_a:face0", "missing_b:face0"],
+        }
+        crop_files = set()  # No crops available
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should show placeholder div
+        assert 'class="w-12 h-12 bg-stone-200' in html
+
+    def test_shows_placeholder_when_no_anchors(self):
+        """When identity has no anchors, shows placeholder."""
+        from app.main import neighbor_card, to_xml
+
+        neighbor = {
+            "identity_id": "test-id",
+            "name": "Test Identity",
+            "mls_score": -50,
+            "can_merge": True,
+            "face_count": 0,
+            "anchor_face_ids": [],
+        }
+        crop_files = {"some_crop_21.50_0.jpg"}
+
+        card = neighbor_card(neighbor, "target-id", crop_files)
+        html = to_xml(card)
+
+        # Should show placeholder
+        assert 'class="w-12 h-12 bg-stone-200' in html
