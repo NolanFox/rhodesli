@@ -41,6 +41,7 @@ class ActionType(Enum):
     CREATE = "create"
     PROMOTE = "promote"
     REJECT = "reject"
+    UNREJECT = "unreject"
     CONFIRM = "confirm"
     CONTEST = "contest"
     STATE_CHANGE = "state_change"
@@ -630,6 +631,68 @@ class IdentityRegistry:
                 user_source=user_source,
                 previous_version_id=previous_version_target,
                 metadata={"rejected_identity_id": source_id, "type": "identity_pair"},
+            )
+
+    def unreject_identity_pair(
+        self,
+        source_id: str,
+        target_id: str,
+        user_source: str,
+    ) -> None:
+        """
+        Remove the bidirectional identity rejection between two identities.
+
+        This is the "Undo" action for "Not Same Person" (D5).
+        After unreject, the pair will appear in find_nearest_neighbors again.
+
+        Idempotent: does nothing if pair was not rejected.
+
+        Args:
+            source_id: Identity making the unreject (user was viewing this)
+            target_id: Identity being unrejected
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If either identity not found
+        """
+        # Validate both identities exist (will raise KeyError if not)
+        source = self._identities[source_id]
+        target = self._identities[target_id]
+
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Remove from negative_ids with identity: prefix (idempotent)
+        source_negative = f"identity:{target_id}"
+        target_negative = f"identity:{source_id}"
+
+        if source_negative in source["negative_ids"]:
+            previous_version_source = source["version_id"]
+            source["negative_ids"].remove(source_negative)
+            source["version_id"] += 1
+            source["updated_at"] = now
+
+            self._record_event(
+                identity_id=source_id,
+                action=ActionType.UNREJECT.value,
+                face_ids=[],
+                user_source=user_source,
+                previous_version_id=previous_version_source,
+                metadata={"unrejected_identity_id": target_id, "type": "identity_pair"},
+            )
+
+        if target_negative in target["negative_ids"]:
+            previous_version_target = target["version_id"]
+            target["negative_ids"].remove(target_negative)
+            target["version_id"] += 1
+            target["updated_at"] = now
+
+            self._record_event(
+                identity_id=target_id,
+                action=ActionType.UNREJECT.value,
+                face_ids=[],
+                user_source=user_source,
+                previous_version_id=previous_version_target,
+                metadata={"unrejected_identity_id": source_id, "type": "identity_pair"},
             )
 
     def is_identity_rejected(self, id_a: str, id_b: str) -> bool:
