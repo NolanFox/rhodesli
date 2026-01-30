@@ -718,6 +718,17 @@ def neighbor_card(
             cls="w-12 h-12 bg-stone-200 rounded flex-shrink-0"
         )
 
+    # "Not Same Person" button (D2, D4)
+    not_same_btn = Button(
+        "Not Same",
+        cls="px-2 py-1 text-xs font-bold border border-red-300 text-red-500 rounded hover:bg-red-50 transition-colors",
+        hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}",
+        hx_target=f"#neighbor-{neighbor_id}",
+        hx_swap="outerHTML",
+        hx_confirm="Mark as NOT the same person? This cannot be undone.",
+        type="button",
+    )
+
     return Div(
         # Row layout: thumbnail | info | action
         Div(
@@ -742,13 +753,15 @@ def neighbor_card(
                 ),
                 cls="flex-1 min-w-0 ml-3"
             ),
-            # Action button
+            # Action buttons
             Div(
                 merge_btn,
-                cls="flex-shrink-0 ml-2"
+                not_same_btn,
+                cls="flex items-center gap-2 flex-shrink-0 ml-2"
             ),
             cls="flex items-center"
         ),
+        id=f"neighbor-{neighbor_id}",  # ID for HTMX targeting
         cls="p-3 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md transition-shadow"
     )
 
@@ -1569,6 +1582,58 @@ def get(identity_id: str):
             id=f"neighbors-loading-{identity_id}",
             cls="htmx-indicator text-stone-400 text-sm",
         ),
+    )
+
+
+@rt("/api/identity/{source_id}/reject/{target_id}")
+def post(source_id: str, target_id: str):
+    """
+    Record that two identities are NOT the same person (D2, D4).
+
+    This is the "Not Same Person" action from Find Similar mode.
+    The rejected identity will no longer appear in Find Similar results.
+
+    Returns:
+        200: Success with empty div (triggers HTMX removal) + toast
+        404: Identity not found
+        423: Lock contention
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Validate both identities exist
+    try:
+        registry.get_identity(source_id)
+        registry.get_identity(target_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Record rejection
+    registry.reject_identity_pair(source_id, target_id, user_source="web")
+    save_registry(registry)
+
+    # Log the action
+    log_user_action(
+        "REJECT_IDENTITY",
+        source_identity_id=source_id,
+        target_identity_id=target_id,
+    )
+
+    # Return empty div to replace the neighbor card + toast
+    # The neighbor card will be removed via hx-swap="outerHTML"
+    return (
+        Div(),  # Empty replacement - card disappears
+        toast("Marked as 'Not Same Person'", "info"),
     )
 
 
