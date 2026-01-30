@@ -63,3 +63,4 @@ app/static/crops/
 .sesskey
 data/*.json
 data/*.lock
+data/backups/
