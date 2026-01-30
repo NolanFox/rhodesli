@@ -572,10 +572,10 @@ def action_buttons(identity_id: str) -> Div:
         set container to #skipped-container
         set details to #skipped-details
         remove .hidden from details
+        add .hidden to #skipped-empty-msg
         put card at the end of container
         add .hidden to #skip-btn-{identity_id}
-        remove .hidden from #restore-btn-{identity_id}
-        remove .hidden from #skipped-empty-msg"""
+        remove .hidden from #restore-btn-{identity_id}"""
 
     # Script to restore card from skipped container
     restore_script = f"""on click
@@ -585,7 +585,9 @@ def action_buttons(identity_id: str) -> Div:
         add .hidden to #restore-btn-{identity_id}
         remove .hidden from #skip-btn-{identity_id}
         set count to #skipped-container's children's length
-        if count == 0 add .hidden to #skipped-details"""
+        if count == 0 then
+            add .hidden to #skipped-details
+        end"""
 
     return Div(
         # Confirm button (green, solid)
