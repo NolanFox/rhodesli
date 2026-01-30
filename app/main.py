@@ -12,8 +12,10 @@ Error Semantics:
 
 import hashlib
 import json
+import logging
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -63,6 +65,34 @@ def load_registry():
 def save_registry(registry):
     """Save registry with atomic write (backend handles locking)."""
     registry.save(REGISTRY_PATH)
+
+
+# =============================================================================
+# USER ACTION LOGGING
+# =============================================================================
+
+logs_path = Path(__file__).resolve().parent.parent / "logs"
+
+
+def log_user_action(action: str, **kwargs) -> None:
+    """
+    Log a user action to the append-only user_actions.log.
+
+    Format: ISO_TIMESTAMP | ACTION | key=value key=value ...
+
+    Args:
+        action: Action name (e.g., "DETACH", "MERGE", "RENAME")
+        **kwargs: Key-value pairs to log
+    """
+    logs_path.mkdir(parents=True, exist_ok=True)
+    log_file = logs_path / "user_actions.log"
+
+    timestamp = datetime.now(timezone.utc).isoformat()
+    kvs = " ".join(f"{k}={v}" for k, v in kwargs.items())
+    line = f"{timestamp} | {action} | {kvs}\n"
+
+    with open(log_file, "a") as f:
+        f.write(line)
 
 
 # =============================================================================
@@ -545,6 +575,7 @@ def face_card(
     identity_id: str = None,
     photo_id: str = None,
     show_actions: bool = False,
+    show_detach: bool = False,
 ) -> Div:
     """
     Single face card with optional action buttons.
@@ -558,6 +589,7 @@ def face_card(
         identity_id: Parent identity ID
         photo_id: Photo ID for "View Photo" button
         show_actions: Whether to show action buttons
+        show_detach: Whether to show "Detach" button (only when identity has > 1 face)
     """
     if quality is None:
         # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
@@ -574,6 +606,19 @@ def face_card(
             hx_swap="innerHTML",
             # Show the modal when clicked
             **{"_": "on click remove .hidden from #photo-modal"},
+            type="button",
+        )
+
+    # Detach button (only if show_detach is True)
+    detach_btn = None
+    if show_detach:
+        detach_btn = Button(
+            "Detach",
+            cls="text-xs text-red-500 hover:text-red-700 underline mt-1 ml-2",
+            hx_post=f"/api/face/{face_id}/detach",
+            hx_target=f"#face-card-{face_id.replace(':', '-')}",
+            hx_swap="outerHTML",
+            hx_confirm="Detach this face into a new identity?",
             type="button",
         )
 
@@ -594,10 +639,15 @@ def face_card(
                 f"Quality: {quality:.2f}",
                 cls="text-xs font-mono text-stone-500"
             ),
-            view_photo_btn,
+            Div(
+                view_photo_btn,
+                detach_btn,
+                cls="flex items-center"
+            ) if view_photo_btn or detach_btn else None,
             cls="mt-2"
         ),
-        cls="bg-white border border-stone-200 p-2 rounded shadow-sm hover:shadow-md transition-shadow"
+        cls="bg-white border border-stone-200 p-2 rounded shadow-sm hover:shadow-md transition-shadow",
+        id=f"face-card-{face_id.replace(':', '-')}"
     )
 
 
@@ -766,6 +816,9 @@ def identity_card(
     # Combine anchors (confirmed) and candidates (proposed) for display
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
 
+    # Show detach button only if identity has more than one face
+    can_detach = len(all_face_ids) > 1
+
     # Build face cards for each face
     face_cards = []
     for face_entry in all_face_ids:
@@ -786,6 +839,7 @@ def identity_card(
                 era=era,
                 identity_id=identity_id,
                 photo_id=photo_id,
+                show_detach=can_detach,
             ))
 
     if not face_cards:
@@ -1684,6 +1738,83 @@ def post(identity_id: str, name: str = ""):
     return (
         name_display(identity_id, name),
         toast(f"Renamed to '{name}'", "success"),
+    )
+
+
+# =============================================================================
+# ROUTES - DETACH FACE
+# =============================================================================
+
+@rt("/api/face/{face_id:path}/detach")
+def post(face_id: str):
+    """
+    Detach a face from its identity into a new identity.
+
+    Returns:
+        200: OOB delete of face card + success toast
+        404: Face or identity not found
+        409: Cannot detach (only face in identity)
+        423: Lock contention
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Find identity containing this face
+    identity = get_identity_for_face(registry, face_id)
+    if not identity:
+        return Response(
+            to_xml(toast("Face not found in any identity.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    identity_id = identity["identity_id"]
+
+    # Attempt detach
+    result = registry.detach_face(
+        identity_id=identity_id,
+        face_id=face_id,
+        user_source="web",
+    )
+
+    if not result["success"]:
+        error_messages = {
+            "only_face": "Cannot detach: this is the only face in the identity.",
+            "face_not_found": "Face not found in identity.",
+        }
+        message = error_messages.get(result["reason"], f"Detach failed: {result['reason']}")
+
+        return Response(
+            to_xml(toast(message, "error")),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Save registry
+    save_registry(registry)
+
+    # Log the action
+    log_user_action(
+        "DETACH",
+        face_id=face_id,
+        from_identity_id=identity_id,
+        to_identity_id=result["to_identity_id"],
+    )
+
+    # Return OOB delete of face card + toast
+    # The face card ID uses - instead of : for HTML ID compatibility
+    face_card_id = f"face-card-{face_id.replace(':', '-')}"
+
+    return (
+        # Delete the face card from the DOM
+        Div(id=face_card_id, hx_swap_oob="delete"),
+        toast(f"Face detached into new identity.", "success"),
     )
 
 
