@@ -142,6 +142,14 @@ def find_nearest_neighbors(
 
     target_mu, target_sigma_sq = target_centroid
 
+    # Get rejected identity IDs for filtering (D3: "Not Same Person")
+    target_identity = registry.get_identity(identity_id)
+    rejected_ids = {
+        neg.replace("identity:", "")
+        for neg in target_identity.get("negative_ids", [])
+        if neg.startswith("identity:")
+    }
+
     # Get all other active identities (exclude merged by default)
     all_identities = registry.list_identities(include_merged=False)
 
@@ -151,6 +159,10 @@ def find_nearest_neighbors(
 
         # Skip self
         if other_id == identity_id:
+            continue
+
+        # Skip rejected identities (D3: "Not Same Person")
+        if other_id in rejected_ids:
             continue
 
         # Compute other centroid
