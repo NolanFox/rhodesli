@@ -222,6 +222,78 @@ class TestFindNearestNeighbors:
 
         assert neighbors == []
 
+    def test_excludes_rejected_identity_pairs(self):
+        """Rejected identities should not appear in neighbors (D3)."""
+        from core.neighbors import find_nearest_neighbors
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        photo_registry.register_face("photo_1", "/path/1.jpg", "face_a")
+        photo_registry.register_face("photo_2", "/path/2.jpg", "face_b")
+        photo_registry.register_face("photo_3", "/path/3.jpg", "face_c")
+
+        identity_registry = IdentityRegistry()
+        id_a = identity_registry.create_identity(anchor_ids=["face_a"], user_source="test")
+        id_b = identity_registry.create_identity(anchor_ids=["face_b"], user_source="test")
+        id_c = identity_registry.create_identity(anchor_ids=["face_c"], user_source="test")
+
+        # Reject id_b from id_a's perspective
+        identity_registry.reject_identity_pair(id_a, id_b, user_source="test")
+
+        # Create similar embeddings (all would be neighbors without rejection)
+        base_mu = np.random.randn(512).astype(np.float32)
+        base_mu = base_mu / np.linalg.norm(base_mu)
+        face_data = {
+            "face_a": {"mu": base_mu.copy(), "sigma_sq": np.full(512, 0.1, dtype=np.float32)},
+            "face_b": {"mu": base_mu.copy(), "sigma_sq": np.full(512, 0.1, dtype=np.float32)},
+            "face_c": {"mu": base_mu.copy(), "sigma_sq": np.full(512, 0.1, dtype=np.float32)},
+        }
+
+        neighbors = find_nearest_neighbors(
+            id_a, identity_registry, photo_registry, face_data, limit=10
+        )
+
+        neighbor_ids = [n["identity_id"] for n in neighbors]
+        assert id_b not in neighbor_ids  # Rejected - should be excluded
+        assert id_c in neighbor_ids  # Not rejected - should be included
+
+    def test_rejection_filtering_applied_before_limit(self):
+        """Rejected pairs should be filtered BEFORE limit is applied (D3)."""
+        from core.neighbors import find_nearest_neighbors
+        from core.photo_registry import PhotoRegistry
+        from core.registry import IdentityRegistry
+
+        photo_registry = PhotoRegistry()
+        identity_registry = IdentityRegistry()
+        face_data = {}
+
+        # Create 5 identities
+        ids = []
+        for i in range(5):
+            face_id = f"face_{i}"
+            photo_registry.register_face(f"photo_{i}", f"/path/{i}.jpg", face_id)
+            id_ = identity_registry.create_identity(anchor_ids=[face_id], user_source="test")
+            ids.append(id_)
+
+            mu = np.random.randn(512).astype(np.float32)
+            mu = mu / np.linalg.norm(mu)
+            face_data[face_id] = {"mu": mu, "sigma_sq": np.full(512, 0.1, dtype=np.float32)}
+
+        # Reject id_1 from id_0's perspective
+        identity_registry.reject_identity_pair(ids[0], ids[1], user_source="test")
+
+        # Get neighbors with limit=3
+        # Without filtering, would return ids[1], ids[2], ids[3]
+        # With filtering, should return ids[2], ids[3], ids[4] (skip rejected ids[1])
+        neighbors = find_nearest_neighbors(
+            ids[0], identity_registry, photo_registry, face_data, limit=3
+        )
+
+        neighbor_ids = [n["identity_id"] for n in neighbors]
+        assert ids[1] not in neighbor_ids  # Rejected
+        assert len(neighbors) == 3  # Still get 3 results (ids[2], ids[3], ids[4])
+
 
 class TestSortFacesByOutlierScore:
     """Tests for sort_faces_by_outlier_score() function."""
