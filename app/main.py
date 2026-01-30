@@ -1764,6 +1764,118 @@ def get(identity_id: str):
     )
 
 
+@rt("/api/identity/{identity_id}/rejected")
+def get(identity_id: str):
+    """
+    Get list of rejected identities for contextual recovery.
+
+    Returns a lightweight list within the sidebar showing blocked identities
+    with thumbnail, name, and Unblock button.
+    """
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Div(
+            P("Identity not found.", cls="text-red-600 text-sm"),
+        )
+
+    # Extract rejected identity IDs
+    rejected_ids = [
+        neg.replace("identity:", "")
+        for neg in identity.get("negative_ids", [])
+        if neg.startswith("identity:")
+    ]
+
+    if not rejected_ids:
+        return Div(
+            P("No hidden matches.", cls="text-stone-400 text-xs italic"),
+        )
+
+    crop_files = get_crop_files()
+    items = []
+
+    for rejected_id in rejected_ids:
+        try:
+            rejected_identity = registry.get_identity(rejected_id)
+        except KeyError:
+            continue
+
+        name = rejected_identity.get("name") or f"Identity {rejected_id[:8]}..."
+
+        # Resolve thumbnail using anchor faces, then candidates
+        thumbnail_img = None
+        anchor_face_ids = registry.get_anchor_face_ids(rejected_id)
+        for face_id in anchor_face_ids:
+            crop_url = resolve_face_image_url(face_id, crop_files)
+            if crop_url:
+                thumbnail_img = Img(
+                    src=crop_url,
+                    alt=name,
+                    cls="w-8 h-8 object-cover rounded border border-stone-200"
+                )
+                break
+
+        if thumbnail_img is None:
+            candidate_face_ids = registry.get_candidate_face_ids(rejected_id)
+            for face_id in candidate_face_ids:
+                crop_url = resolve_face_image_url(face_id, crop_files)
+                if crop_url:
+                    thumbnail_img = Img(
+                        src=crop_url,
+                        alt=name,
+                        cls="w-8 h-8 object-cover rounded border border-stone-200"
+                    )
+                    break
+
+        if thumbnail_img is None:
+            thumbnail_img = Div(cls="w-8 h-8 bg-stone-200 rounded")
+
+        unblock_btn = Button(
+            "Unblock",
+            cls="px-2 py-0.5 text-xs text-blue-600 hover:text-blue-800 border border-blue-200 rounded hover:bg-blue-50",
+            hx_post=f"/api/identity/{identity_id}/unreject/{rejected_id}",
+            hx_target=f"#rejected-item-{rejected_id}",
+            hx_swap="outerHTML",
+            type="button",
+        )
+
+        items.append(
+            Div(
+                thumbnail_img,
+                Span(name, cls="text-xs text-stone-600 truncate flex-1 mx-2"),
+                unblock_btn,
+                id=f"rejected-item-{rejected_id}",
+                cls="flex items-center py-1.5 border-b border-stone-100 last:border-0",
+            )
+        )
+
+    close_list_btn = Button(
+        "Hide",
+        cls="text-xs text-stone-400 hover:text-stone-600",
+        hx_get=f"/api/identity/{identity_id}/rejected/close",
+        hx_target=f"#rejected-list-{identity_id}",
+        hx_swap="innerHTML",
+        type="button",
+    )
+
+    return Div(
+        Div(
+            Span("Hidden Matches", cls="text-xs font-medium text-stone-500"),
+            close_list_btn,
+            cls="flex items-center justify-between mb-2",
+        ),
+        Div(*items),
+        cls="mt-2 bg-white rounded border border-stone-200 p-2",
+    )
+
+
+@rt("/api/identity/{identity_id}/rejected/close")
+def get(identity_id: str):
+    """Close the rejected identities list."""
+    return ""
+
+
 @rt("/api/identity/{source_id}/reject/{target_id}")
 def post(source_id: str, target_id: str):
     """
@@ -1860,8 +1972,13 @@ def post(source_id: str, target_id: str):
         target_identity_id=target_id,
     )
 
-    # Return success toast
-    return toast("Rejection undone. Identity will reappear in Find Similar.", "success")
+    # Return empty div to replace target + OOB toast
+    # This handles both: undo from toast (replaces toast) and unblock from list (removes item)
+    oob_toast = Div(
+        toast("Rejection undone. Identity will reappear in Find Similar.", "success"),
+        hx_swap_oob="beforeend:#toast-container",
+    )
+    return (Div(), oob_toast)
 
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
