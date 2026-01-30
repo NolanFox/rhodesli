@@ -535,3 +535,43 @@ class TestListOperations:
         assert len(confirmed) == 1
         assert proposed[0]["identity_id"] == id2
         assert confirmed[0]["identity_id"] == id1
+
+
+class TestGetCandidateFaceIds:
+    """Tests for get_candidate_face_ids() method (B2 thumbnail support)."""
+
+    def test_returns_candidate_ids_as_strings(self):
+        """Should return list of face ID strings from candidate_ids."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            candidate_ids=["face_002", "face_003"],
+            user_source="test",
+        )
+
+        candidates = registry.get_candidate_face_ids(identity_id)
+        assert candidates == ["face_002", "face_003"]
+
+    def test_returns_empty_list_when_no_candidates(self):
+        """Should return empty list when identity has no candidates."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="test",
+        )
+
+        candidates = registry.get_candidate_face_ids(identity_id)
+        assert candidates == []
+
+    def test_raises_keyerror_for_unknown_identity(self):
+        """Should raise KeyError for unknown identity."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        with pytest.raises(KeyError):
+            registry.get_candidate_face_ids("unknown-id")

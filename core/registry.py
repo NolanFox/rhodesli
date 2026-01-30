@@ -134,6 +134,24 @@ class IdentityRegistry:
                 face_ids.append(anchor["face_id"])
         return face_ids
 
+    def get_candidate_face_ids(self, identity_id: str) -> list[str]:
+        """
+        Extract face IDs from candidates.
+
+        Used for B2 thumbnail fallback when identity has no anchors.
+
+        Args:
+            identity_id: Identity ID
+
+        Returns:
+            List of face ID strings
+
+        Raises:
+            KeyError: If identity not found
+        """
+        identity = self.get_identity(identity_id)
+        return list(identity.get("candidate_ids", []))
+
     def _remove_anchor_by_face_id(self, identity: dict, face_id: str) -> None:
         """Remove anchor entry by face_id (handles both string and dict formats)."""
         to_remove = None
