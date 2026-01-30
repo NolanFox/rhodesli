@@ -563,7 +563,30 @@ def action_buttons(identity_id: str) -> Div:
     Action buttons for PROPOSED identities.
     UX Intent: Direct manipulation with clear consequences.
     Keyboard accessible: Tab to navigate, Enter/Space to activate.
+
+    Both Skip and Restore buttons are rendered; visibility is toggled via CSS classes.
     """
+    # Script to move card to skipped container and show restore button
+    skip_script = f"""on click
+        set card to #identity-{identity_id}
+        set container to #skipped-container
+        set details to #skipped-details
+        remove .hidden from details
+        put card at the end of container
+        add .hidden to #skip-btn-{identity_id}
+        remove .hidden from #restore-btn-{identity_id}
+        remove .hidden from #skipped-empty-msg"""
+
+    # Script to restore card from skipped container
+    restore_script = f"""on click
+        set card to #identity-{identity_id}
+        set lane to #proposed-lane
+        put card at the start of lane
+        add .hidden to #restore-btn-{identity_id}
+        remove .hidden from #skip-btn-{identity_id}
+        set count to #skipped-container's children's length
+        if count == 0 add .hidden to #skipped-details"""
+
     return Div(
         # Confirm button (green, solid)
         Button(
@@ -587,13 +610,23 @@ def action_buttons(identity_id: str) -> Div:
             aria_label="Reject this identity match",
             type="button",
         ),
-        # Skip button (neutral) - client-side only
+        # Skip button (neutral) - moves to skipped container
         Button(
             "? Skip",
+            id=f"skip-btn-{identity_id}",
             cls="px-3 py-1.5 text-sm font-bold border border-stone-300 text-stone-500 rounded hover:bg-stone-100 transition-colors",
             aria_label="Skip this identity for now",
             type="button",
-            **{"_": f"on click add .hidden to #identity-{identity_id}"}
+            **{"_": skip_script}
+        ),
+        # Restore button (hidden by default) - restores from skipped container
+        Button(
+            "\u21a9 Restore",
+            id=f"restore-btn-{identity_id}",
+            cls="hidden px-3 py-1.5 text-sm font-bold border border-blue-500 text-blue-600 rounded hover:bg-blue-50 transition-colors",
+            aria_label="Restore this identity to review",
+            type="button",
+            **{"_": restore_script}
         ),
         # Loading indicator (hidden by default)
         Span(
@@ -741,38 +774,50 @@ def neighbor_card(
         )
 
     # Thumbnail image - try anchors first, then candidates (B2-REPAIR)
-    thumbnail = None
+    thumbnail_img = None
 
     # First try anchor face IDs
     anchor_face_ids = neighbor.get("anchor_face_ids", [])
     for anchor_face_id in anchor_face_ids:
         crop_url = resolve_face_image_url(anchor_face_id, crop_files)
         if crop_url:
-            thumbnail = Img(
+            thumbnail_img = Img(
                 src=crop_url,
                 alt=name,
-                cls="w-12 h-12 object-cover rounded border border-stone-200 flex-shrink-0"
+                cls="w-12 h-12 object-cover rounded border border-stone-200"
             )
             break
 
     # Fallback to candidate face IDs if no anchor crop found
-    if thumbnail is None:
+    if thumbnail_img is None:
         candidate_face_ids = neighbor.get("candidate_face_ids", [])
         for candidate_face_id in candidate_face_ids:
             crop_url = resolve_face_image_url(candidate_face_id, crop_files)
             if crop_url:
-                thumbnail = Img(
+                thumbnail_img = Img(
                     src=crop_url,
                     alt=name,
-                    cls="w-12 h-12 object-cover rounded border border-stone-200 flex-shrink-0"
+                    cls="w-12 h-12 object-cover rounded border border-stone-200"
                 )
                 break
 
     # Final fallback: gray placeholder if no crop found
-    if thumbnail is None:
-        thumbnail = Div(
-            cls="w-12 h-12 bg-stone-200 rounded flex-shrink-0"
+    if thumbnail_img is None:
+        thumbnail_img = Div(
+            cls="w-12 h-12 bg-stone-200 rounded"
         )
+
+    # Hyperscript for in-page navigation to identity card
+    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target"
+
+    # Wrap thumbnail in clickable container
+    thumbnail = A(
+        thumbnail_img,
+        href=f"#identity-{neighbor_id}",
+        cls="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity",
+        title=f"Jump to {name}",
+        **{"_": nav_script}
+    )
 
     # "Not Same Person" button (D2, D4)
     not_same_btn = Button(
@@ -794,7 +839,13 @@ def neighbor_card(
             Div(
                 # Name and similarity badge
                 Div(
-                    Span(name, cls="font-medium text-stone-700 truncate"),
+                    A(
+                        name,
+                        href=f"#identity-{neighbor_id}",
+                        cls="font-medium text-stone-700 truncate hover:text-blue-600 hover:underline cursor-pointer",
+                        title=f"Jump to {name}",
+                        **{"_": nav_script}
+                    ),
                     Span(
                         similarity_label,
                         cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
@@ -1120,6 +1171,37 @@ def lane_section(
     )
 
 
+def skipped_section() -> Div:
+    """
+    Collapsible section for skipped identities.
+    Hidden by default, becomes visible when cards are skipped.
+    UI-only state - not persisted.
+    """
+    return Details(
+        Summary(
+            Span("\u23f8", cls="text-xl"),
+            Span("Skipped / Review Later", cls="text-lg font-serif font-bold text-stone-600 ml-2"),
+            Span(
+                "(0)",
+                id="skipped-count",
+                cls="text-sm text-stone-400 ml-2"
+            ),
+            cls="flex items-center cursor-pointer hover:bg-stone-100 p-2 rounded transition-colors"
+        ),
+        Div(
+            P(
+                "Cards skipped during this session will appear here.",
+                cls="text-stone-400 italic text-center py-4",
+                id="skipped-empty-msg"
+            ),
+            id="skipped-container",
+            cls="mt-4"
+        ),
+        id="skipped-details",
+        cls="hidden mb-8 p-4 rounded bg-stone-100/50 border border-stone-200"
+    )
+
+
 # =============================================================================
 # ROUTES - PHASE 2: TEACH MODE
 # =============================================================================
@@ -1152,6 +1234,8 @@ def get():
                         lane_id="confirmed-lane"),
             lane_section("Contested", contested, crop_files, "red", "\u26a0",
                         lane_id="contested-lane"),
+            # Skipped section (UI-only, hidden until cards are skipped)
+            skipped_section(),
             cls="max-w-7xl mx-auto"
         )
     else:
