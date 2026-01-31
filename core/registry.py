@@ -20,6 +20,9 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+# --- INSTRUMENTATION IMPORT ---
+from core.event_recorder import get_event_recorder
+
 if TYPE_CHECKING:
     from core.photo_registry import PhotoRegistry
 
@@ -230,6 +233,14 @@ class IdentityRegistry:
         Raises:
             KeyError: If either identity not found
         """
+        # --- INSTRUMENTATION HOOK ---
+        get_event_recorder().record("MERGE", {
+            "source_id": source_id,
+            "target_id": target_id,
+            "user_source": user_source
+        })
+        # ----------------------------
+
         # Validate (Safety Foundation - non-negotiable)
         can_merge, reason = validate_merge(
             source_id, target_id, self, photo_registry
@@ -313,6 +324,14 @@ class IdentityRegistry:
 
     def confirm_identity(self, identity_id: str, user_source: str) -> None:
         """Transition identity to CONFIRMED state."""
+        
+        # --- INSTRUMENTATION HOOK ---
+        get_event_recorder().record("CONFIRM", {
+            "identity_id": identity_id,
+            "user_source": user_source
+        })
+        # ----------------------------
+
         identity = self._identities[identity_id]
         previous_version = identity["version_id"]
 
@@ -593,6 +612,15 @@ class IdentityRegistry:
         Raises:
             KeyError: If either identity not found
         """
+        
+        # --- INSTRUMENTATION HOOK ---
+        get_event_recorder().record("REJECT", {
+            "source_id": source_id,
+            "target_id": target_id,
+            "user_source": user_source
+        })
+        # ----------------------------
+
         # Validate both identities exist (will raise KeyError if not)
         source = self._identities[source_id]
         target = self._identities[target_id]
@@ -655,6 +683,14 @@ class IdentityRegistry:
         Raises:
             KeyError: If either identity not found
         """
+        # --- INSTRUMENTATION HOOK ---
+        get_event_recorder().record("UNREJECT", {
+            "source_id": source_id,
+            "target_id": target_id,
+            "user_source": user_source
+        })
+        # ----------------------------
+
         # Validate both identities exist (will raise KeyError if not)
         source = self._identities[source_id]
         target = self._identities[target_id]

@@ -29,6 +29,9 @@ sys.path.insert(0, str(project_root))
 
 from core.registry import IdentityRegistry, IdentityState
 
+# --- INSTRUMENTATION IMPORT ---
+from core.event_recorder import get_event_recorder
+
 static_path = Path(__file__).resolve().parent / "static"
 data_path = Path(__file__).resolve().parent.parent / "data"
 photos_path = Path(__file__).resolve().parent.parent / "raw_photos"
@@ -42,6 +45,24 @@ app, rt = fast_app(
     ),
     static_path=str(static_path),
 )
+
+# --- INSTRUMENTATION LIFECYCLE HOOKS ---
+@app.on_event("startup")
+async def startup_event():
+    """Log the start of a session/run."""
+    get_event_recorder().record("RUN_START", {
+        "action": "server_start",
+        "timestamp_utc": datetime.utcnow().isoformat()
+    }, actor="system")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Log the end of a session/run."""
+    get_event_recorder().record("RUN_END", {
+        "action": "server_shutdown",
+        "timestamp_utc": datetime.utcnow().isoformat()
+    }, actor="system")
+# ---------------------------------------
 
 # Mount raw_photos as /photos/ static route
 # IMPORTANT: Insert at position 0 so it takes precedence over FastHTML's
@@ -68,8 +89,9 @@ def save_registry(registry):
 
 
 # =============================================================================
-# USER ACTION LOGGING
+# USER ACTION LOGGING (LEGACY - REPLACED BY EVENT RECORDER)
 # =============================================================================
+# We keep this for backward compatibility if needed, but EventRecorder is primary now.
 
 logs_path = Path(__file__).resolve().parent.parent / "logs"
 
@@ -1261,11 +1283,11 @@ def get():
         content = Div(
             # Proposed lane has action buttons enabled
             lane_section("Proposed", proposed, crop_files, "amber", "?",
-                        show_actions=True, lane_id="proposed-lane"),
+                         show_actions=True, lane_id="proposed-lane"),
             lane_section("Confirmed", confirmed, crop_files, "emerald", "\u2713",
-                        lane_id="confirmed-lane"),
+                         lane_id="confirmed-lane"),
             lane_section("Contested", contested, crop_files, "red", "\u26a0",
-                        lane_id="contested-lane"),
+                         lane_id="contested-lane"),
             # Skipped section (UI-only, hidden until cards are skipped)
             skipped_section(),
             cls="max-w-7xl mx-auto"
@@ -2308,6 +2330,18 @@ def post(face_id: str):
         toast(f"Face detached into new identity.", "success"),
     )
 
+
+# --- INSTRUMENTATION SKIP ENDPOINT ---
+@rt("/api/identity/{id}/skip")
+def post(id: str):
+    """
+    Log the skip action (which is otherwise UI-only).
+    """
+    get_event_recorder().record("SKIP", {"identity_id": id})
+    # No return needed as this is fire-and-forget for logging
+    # The UI handles the DOM move client-side
+    return Response(status_code=200)
+# -------------------------------------
 
 if __name__ == "__main__":
     # Startup diagnostics: log raw_photos directory info
