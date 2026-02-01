@@ -104,7 +104,7 @@ def log_user_action(action: str, **kwargs) -> None:
 
     Args:
         action: Action name (e.g., "DETACH", "MERGE", "RENAME")
-        **kwargs: Key-value pairs to log
+        kwargs: Key-value pairs to log
     """
     logs_path.mkdir(parents=True, exist_ok=True)
     log_file = logs_path / "user_actions.log"
