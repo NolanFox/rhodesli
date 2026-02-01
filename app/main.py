@@ -782,22 +782,27 @@ def neighbor_card(
     """
     neighbor_id = neighbor["identity_id"]
     name = neighbor["name"]
-    mls = neighbor["mls_score"] # This is now actually a negative distance score
+    mls = neighbor["mls_score"] # This is now actually a negative distance score * 100 (e.g., -45.0)
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # Distance based visual hint (Lower distance is better)
-    # Since we negated distance for compatibility, closer to 0 is better (e.g. -0.4 is better than -0.8)
-    # Thresholds are guesses based on euclidean distance of 128d embeddings
-    if mls > -0.6:
+    # --- CALIBRATION FIX ---
+    # Thresholds for Euclidean Distance (0.0 is exact, 1.0 is different)
+    # The backend sends (-dist * 100). 
+    # Example: Dist 0.45 -> Score -45.0.
+    
+    # High Similarity: Distance < 0.6 (Score > -60)
+    if mls > -60:
         similarity_class = "bg-emerald-100 text-emerald-700"
         similarity_label = "High"
-    elif mls > -0.8:
+    # Medium Similarity: Distance < 0.8 (Score > -80)
+    elif mls > -80:
         similarity_class = "bg-amber-100 text-amber-700"
         similarity_label = "Medium"
     else:
         similarity_class = "bg-stone-100 text-stone-500"
         similarity_label = "Low"
+    # -----------------------
 
     # Merge button (disabled if blocked)
     if can_merge:
@@ -903,8 +908,8 @@ def neighbor_card(
                 # Stats
                 Div(
                     Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-500"),
-                    # EXPLAINABILITY: Show actual distance score
-                    Span(f"Dist: {-mls:.2f}", cls="text-xs font-mono text-stone-400 ml-2"),
+                    # EXPLAINABILITY: Show actual distance score (divide by 100 to get 0.0-1.0 range)
+                    Span(f"Dist: {-mls/100:.2f}", cls="text-xs font-mono text-stone-400 ml-2"),
                     cls="flex items-center"
                 ),
                 cls="flex-1 min-w-0 ml-3"
@@ -920,7 +925,7 @@ def neighbor_card(
         id=f"neighbor-{neighbor_id}",  # ID for HTMX targeting
         cls="p-3 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md transition-shadow"
     )
-
+    
 
 def neighbors_sidebar(
     identity_id: str,
