@@ -781,21 +781,22 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # --- CALIBRATION FIX: ABSOLUTE DISTANCE ---
-    # We use raw distance for truth. Percentile is just for context.
-    # 0.0 = Identical
-    # 0.75 = Strong Match (Based on your "Leon" observation)
-    # 0.95 = Plausible Match
+    # --- CALIBRATION UPDATE (THE LEON STANDARD) ---
+    # 0.94 - 0.98 = The core "Leon" cluster (Same person, vintage quality)
+    # 1.04 - 1.09 = The fringe "Leon" matches (Different angles/ages)
     
-    if distance < 0.75:
+    # High: < 1.0 (Captures the solid matches like 0.94)
+    if distance < 1.0:
         similarity_class = "bg-emerald-100 text-emerald-700"
         similarity_label = "High"
-    elif distance < 0.95:
+    # Medium: < 1.15 (Captures the looser matches up to 1.14)
+    elif distance < 1.15:
         similarity_class = "bg-amber-100 text-amber-700"
         similarity_label = "Medium"
     else:
         similarity_class = "bg-stone-100 text-stone-500"
         similarity_label = "Low"
+    # -----------------------------------------------
 
     # Merge button
     merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-700",
