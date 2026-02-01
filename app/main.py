@@ -774,32 +774,36 @@ def face_card(
 def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> Div:
     neighbor_id = neighbor["identity_id"]
     name = neighbor["name"]
-    # NEW: Distance and Percentile from backend
+    # Get values directly (no more negative scaling)
     distance = neighbor["distance"]
     percentile = neighbor.get("percentile", 1.0)
     
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # --- PERCENTILE-BASED CALIBRATION ---
-    # Top 5% = High (Green)
-    # Top 20% = Medium (Yellow)
-    # Rest = Low (Gray)
-    if percentile <= 0.05:
+    # --- CALIBRATION FIX: ABSOLUTE DISTANCE ---
+    # We use raw distance for truth. Percentile is just for context.
+    # 0.0 = Identical
+    # 0.75 = Strong Match (Based on your "Leon" observation)
+    # 0.95 = Plausible Match
+    
+    if distance < 0.75:
         similarity_class = "bg-emerald-100 text-emerald-700"
         similarity_label = "High"
-    elif percentile <= 0.20:
+    elif distance < 0.95:
         similarity_class = "bg-amber-100 text-amber-700"
         similarity_label = "Medium"
     else:
         similarity_class = "bg-stone-100 text-stone-500"
         similarity_label = "Low"
 
+    # Merge button
     merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-700",
                        hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_identity_id}",
                        hx_swap="outerHTML", hx_confirm=f"Merge '{name}'? This cannot be undone.") if can_merge else \
                 Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-stone-300 text-stone-500 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
 
+    # Thumbnail logic
     thumbnail_img = Div(cls="w-12 h-12 bg-stone-200 rounded")
     anchor_face_ids = neighbor.get("anchor_face_ids", []) + neighbor.get("candidate_face_ids", [])
     for fid in anchor_face_ids:
@@ -814,7 +818,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
         Div(A(thumbnail_img, href=f"#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
             Div(Div(A(name, href=f"#identity-{neighbor_id}", cls="font-medium text-stone-700 truncate hover:text-blue-600 hover:underline cursor-pointer", **{"_": nav_script}),
                     Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
-                # EXPLAINABILITY: Show Distance AND Percentile
+                # EXPLAINABILITY: We show both. Distance tells you "Is it him?", Percentile tells you "Is it the best we have?"
                 Div(Span(f"Dist: {distance:.2f} (p={percentile:.2f})", cls="text-xs font-mono text-stone-400 ml-2 bg-stone-100 px-1 rounded"), cls="flex items-center"),
                 cls="flex-1 min-w-0 ml-3"),
             Div(merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-300 text-red-500 rounded hover:bg-red-50",
