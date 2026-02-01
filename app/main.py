@@ -216,6 +216,19 @@ def generate_face_id(filename: str, face_index: int) -> str:
     return f"{stem}:face{face_index}"
 
 
+def make_css_id(raw_id: str) -> str:
+    """
+    Create a safe CSS identifier from a face_id.
+    Replaces colons, spaces, and special chars with hyphens.
+    Example: "John Doe:face0" -> "face-card-John-Doe-face0"
+    """
+    # Replace non-alphanumeric characters with hyphens
+    safe = re.sub(r'[^a-zA-Z0-9\-_]', '-', raw_id)
+    # Collapse multiple hyphens to look cleaner
+    safe = re.sub(r'-+', '-', safe)
+    return f"face-card-{safe}"
+
+
 def load_embeddings_for_photos():
     """
     Load embeddings and build photo metadata cache.
@@ -713,11 +726,16 @@ def face_card(
     # Detach button (only if show_detach is True)
     detach_btn = None
     if show_detach:
+        # Generate safe DOM ID for targeting
+        safe_dom_id = make_css_id(face_id)
+        
         detach_btn = Button(
             "Detach",
             cls="text-xs text-red-500 hover:text-red-700 underline mt-1 ml-2",
-            hx_post=f"/api/face/{face_id}/detach",
-            hx_target=f"#face-card-{face_id.replace(':', '-')}",
+            # Fix: URL Encode the face_id so spaces don't break the path
+            hx_post=f"/api/face/{quote(face_id)}/detach",
+            # Fix: Use the safe CSS ID selector
+            hx_target=f"#{safe_dom_id}",
             hx_swap="outerHTML",
             hx_confirm="Detach this face into a new identity?",
             type="button",
@@ -748,7 +766,8 @@ def face_card(
             cls="mt-2"
         ),
         cls="bg-white border border-stone-200 p-2 rounded shadow-sm hover:shadow-md transition-shadow",
-        id=f"face-card-{face_id.replace(':', '-')}"
+        # Fix: Apply the safe ID to the container
+        id=make_css_id(face_id)
     )
 
 
@@ -2321,8 +2340,8 @@ def post(face_id: str):
     )
 
     # Return OOB delete of face card + toast
-    # The face card ID uses - instead of : for HTML ID compatibility
-    face_card_id = f"face-card-{face_id.replace(':', '-')}"
+    # Use make_css_id to generate the exact same ID used in the template
+    face_card_id = make_css_id(face_id)
 
     return (
         # Delete the face card from the DOM
