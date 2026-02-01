@@ -771,257 +771,73 @@ def face_card(
     )
 
 
-def neighbor_card(
-    neighbor: dict,
-    target_identity_id: str,
-    crop_files: set,
-) -> Div:
-    """
-    Single neighbor card with merge button.
-    Shows similarity indicator, face thumbnail, and merge eligibility.
-    """
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> Div:
     neighbor_id = neighbor["identity_id"]
     name = neighbor["name"]
-    mls = neighbor["mls_score"] # This is now actually a negative distance score * 100 (e.g., -45.0)
+    # NEW: Distance and Percentile from backend
+    distance = neighbor["distance"]
+    percentile = neighbor.get("percentile", 1.0)
+    
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # --- CALIBRATION FIX ---
-    # Thresholds for Euclidean Distance (0.0 is exact, 1.0 is different)
-    # The backend sends (-dist * 100). 
-    # Example: Dist 0.45 -> Score -45.0.
-    
-    # High Similarity: Distance < 0.6 (Score > -60)
-    if mls > -60:
+    # --- PERCENTILE-BASED CALIBRATION ---
+    # Top 5% = High (Green)
+    # Top 20% = Medium (Yellow)
+    # Rest = Low (Gray)
+    if percentile <= 0.05:
         similarity_class = "bg-emerald-100 text-emerald-700"
         similarity_label = "High"
-    # Medium Similarity: Distance < 0.8 (Score > -80)
-    elif mls > -80:
+    elif percentile <= 0.20:
         similarity_class = "bg-amber-100 text-amber-700"
         similarity_label = "Medium"
     else:
         similarity_class = "bg-stone-100 text-stone-500"
         similarity_label = "Low"
-    # -----------------------
 
-    # Merge button (disabled if blocked)
-    if can_merge:
-        merge_btn = Button(
-            "Merge",
-            cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors",
-            hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}",
-            hx_target=f"#identity-{target_identity_id}",
-            hx_swap="outerHTML",
-            hx_confirm=f"Merge '{name}' into this identity? This cannot be undone.",
-            type="button",
-        )
-    else:
-        # Use enhanced reason if available, otherwise fall back to raw reason
-        blocked_reason = neighbor.get("merge_blocked_reason_display") or neighbor["merge_blocked_reason"]
-        merge_btn = Button(
-            "Blocked",
-            cls="px-3 py-1 text-sm font-bold bg-stone-300 text-stone-500 rounded cursor-not-allowed",
-            disabled=True,
-            title=blocked_reason,
-            type="button",
-        )
+    merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-700",
+                       hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_identity_id}",
+                       hx_swap="outerHTML", hx_confirm=f"Merge '{name}'? This cannot be undone.") if can_merge else \
+                Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-stone-300 text-stone-500 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
 
-    # Thumbnail image - try anchors first, then candidates (B2-REPAIR)
-    thumbnail_img = None
-
-    # First try anchor face IDs
-    anchor_face_ids = neighbor.get("anchor_face_ids", [])
-    for anchor_face_id in anchor_face_ids:
-        crop_url = resolve_face_image_url(anchor_face_id, crop_files)
+    thumbnail_img = Div(cls="w-12 h-12 bg-stone-200 rounded")
+    anchor_face_ids = neighbor.get("anchor_face_ids", []) + neighbor.get("candidate_face_ids", [])
+    for fid in anchor_face_ids:
+        crop_url = resolve_face_image_url(fid, crop_files)
         if crop_url:
-            thumbnail_img = Img(
-                src=crop_url,
-                alt=name,
-                cls="w-12 h-12 object-cover rounded border border-stone-200"
-            )
+            thumbnail_img = Img(src=crop_url, alt=name, cls="w-12 h-12 object-cover rounded border border-stone-200")
             break
 
-    # Fallback to candidate face IDs if no anchor crop found
-    if thumbnail_img is None:
-        candidate_face_ids = neighbor.get("candidate_face_ids", [])
-        for candidate_face_id in candidate_face_ids:
-            crop_url = resolve_face_image_url(candidate_face_id, crop_files)
-            if crop_url:
-                thumbnail_img = Img(
-                    src=crop_url,
-                    alt=name,
-                    cls="w-12 h-12 object-cover rounded border border-stone-200"
-                )
-                break
-
-    # Final fallback: gray placeholder if no crop found
-    if thumbnail_img is None:
-        thumbnail_img = Div(
-            cls="w-12 h-12 bg-stone-200 rounded"
-        )
-
-    # Hyperscript for in-page navigation to identity card
     nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target"
 
-    # Wrap thumbnail in clickable container
-    thumbnail = A(
-        thumbnail_img,
-        href=f"#identity-{neighbor_id}",
-        cls="flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity",
-        title=f"Jump to {name}",
-        **{"_": nav_script}
-    )
-
-    # "Not Same Person" button (D2, D4)
-    not_same_btn = Button(
-        "Not Same",
-        cls="px-2 py-1 text-xs font-bold border border-red-300 text-red-500 rounded hover:bg-red-50 transition-colors",
-        hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}",
-        hx_target=f"#neighbor-{neighbor_id}",
-        hx_swap="outerHTML",
-        hx_confirm="Mark as NOT the same person? This cannot be undone.",
-        type="button",
-    )
-
     return Div(
-        # Row layout: thumbnail | info | action
-        Div(
-            # Thumbnail
-            thumbnail,
-            # Info column
-            Div(
-                # Name and similarity badge
-                Div(
-                    A(
-                        name,
-                        href=f"#identity-{neighbor_id}",
-                        cls="font-medium text-stone-700 truncate hover:text-blue-600 hover:underline cursor-pointer",
-                        title=f"Jump to {name}",
-                        **{"_": nav_script}
-                    ),
-                    Span(
-                        similarity_label,
-                        cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}",
-                    ),
-                    cls="flex items-center"
-                ),
-                # Stats
-                Div(
-                    Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-500"),
-                    # EXPLAINABILITY: Show actual distance score (divide by 100 to get 0.0-1.0 range)
-                    Span(f"Dist: {-mls/100:.2f}", cls="text-xs font-mono text-stone-400 ml-2"),
-                    cls="flex items-center"
-                ),
-                cls="flex-1 min-w-0 ml-3"
-            ),
-            # Action buttons
-            Div(
-                merge_btn,
-                not_same_btn,
-                cls="flex items-center gap-2 flex-shrink-0 ml-2"
-            ),
-            cls="flex items-center"
-        ),
-        id=f"neighbor-{neighbor_id}",  # ID for HTMX targeting
-        cls="p-3 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md transition-shadow"
+        Div(A(thumbnail_img, href=f"#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
+            Div(Div(A(name, href=f"#identity-{neighbor_id}", cls="font-medium text-stone-700 truncate hover:text-blue-600 hover:underline cursor-pointer", **{"_": nav_script}),
+                    Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
+                # EXPLAINABILITY: Show Distance AND Percentile
+                Div(Span(f"Dist: {distance:.2f} (p={percentile:.2f})", cls="text-xs font-mono text-stone-400 ml-2 bg-stone-100 px-1 rounded"), cls="flex items-center"),
+                cls="flex-1 min-w-0 ml-3"),
+            Div(merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-300 text-red-500 rounded hover:bg-red-50",
+                                  hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML"),
+                cls="flex items-center gap-2 flex-shrink-0 ml-2"),
+            cls="flex items-center"),
+        id=f"neighbor-{neighbor_id}", cls="p-3 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md"
     )
+
+def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0) -> Div:
+    close_btn = Button("Close", cls="text-sm text-stone-500 hover:text-stone-700", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
+    if not neighbors: return Div(Div(P("No similar identities.", cls="text-stone-400 italic"), close_btn, cls="flex items-center justify-between"), cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200")
     
+    cards = [neighbor_card(n, identity_id, crop_files) for n in neighbors]
+    load_more = Button("Load More", cls="w-full text-sm text-blue-600 hover:text-blue-800 py-2 border border-blue-200 rounded hover:bg-blue-50",
+                       hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
+    
+    rejected = Div(Div(Span(f"{rejected_count} hidden matches", cls="text-xs text-stone-400 italic"),
+                       Button("Review", cls="text-xs text-blue-500 hover:text-blue-700 ml-2", hx_get=f"/api/identity/{identity_id}/rejected", hx_target=f"#rejected-list-{identity_id}", hx_swap="innerHTML"),
+                       cls="flex items-center justify-between"), Div(id=f"rejected-list-{identity_id}"), cls="mt-4 pt-3 border-t border-stone-200") if rejected_count > 0 else None
 
-def neighbors_sidebar(
-    identity_id: str,
-    neighbors: list[dict],
-    crop_files: set,
-    offset: int = 0,
-    has_more: bool = False,
-    rejected_count: int = 0,
-) -> Div:
-    """
-    Sidebar showing nearest neighbor identities for merge candidates.
-
-    Args:
-        identity_id: The identity we're finding neighbors for
-        neighbors: List of neighbor dicts with identity info
-        crop_files: Set of available crop filenames
-        offset: Current pagination offset (for Load More)
-        has_more: Whether more neighbors are available
-    """
-    # Close button (B1: explicit exit from Find Similar mode)
-    close_btn = Button(
-        "Close",
-        cls="text-sm text-stone-500 hover:text-stone-700",
-        hx_get=f"/api/identity/{identity_id}/neighbors/close",
-        hx_target=f"#neighbors-{identity_id}",
-        hx_swap="innerHTML",
-        type="button",
-    )
-
-    if not neighbors:
-        return Div(
-            Div(
-                P("No similar identities found.", cls="text-stone-400 italic"),
-                close_btn,
-                cls="flex items-center justify-between"
-            ),
-            cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200"
-        )
-
-    cards = [
-        neighbor_card(n, identity_id, crop_files)
-        for n in neighbors
-    ]
-
-    # Load More button (B3: pagination per D3)
-    load_more_btn = None
-    if has_more:
-        next_offset = offset + len(neighbors)
-        load_more_btn = Button(
-            "Load More",
-            cls="w-full text-sm text-blue-600 hover:text-blue-800 py-2 border border-blue-200 rounded hover:bg-blue-50 transition-colors",
-            hx_get=f"/api/identity/{identity_id}/neighbors?offset={next_offset}",
-            hx_target=f"#neighbors-{identity_id}",
-            hx_swap="innerHTML",
-            type="button",
-        )
-
-    # Rejected matches indicator (contextual recovery awareness)
-    rejected_indicator = None
-    if rejected_count > 0:
-        match_word = "match" if rejected_count == 1 else "matches"
-        rejected_indicator = Div(
-            Div(
-                Span(
-                    f"{rejected_count} {match_word} hidden by 'Not Same Person'",
-                    cls="text-xs text-stone-400 italic",
-                ),
-                Button(
-                    "Review",
-                    cls="text-xs text-blue-500 hover:text-blue-700 ml-2",
-                    hx_get=f"/api/identity/{identity_id}/rejected",
-                    hx_target=f"#rejected-list-{identity_id}",
-                    hx_swap="innerHTML",
-                    type="button",
-                ),
-                cls="flex items-center justify-between",
-            ),
-            Div(id=f"rejected-list-{identity_id}"),
-            cls="mt-4 pt-3 border-t border-stone-200",
-        )
-
-    return Div(
-        # Header with title and close button
-        Div(
-            H4("Similar Identities", cls="text-lg font-serif font-bold text-stone-700"),
-            close_btn,
-            cls="flex items-center justify-between mb-3"
-        ),
-        # Neighbor cards
-        Div(*cards),
-        # Load More button if more available
-        Div(load_more_btn, cls="mt-3") if load_more_btn else None,
-        # Rejected matches indicator
-        rejected_indicator,
-        cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200"
-    )
+    return Div(Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-stone-700"), close_btn, cls="flex items-center justify-between mb-3"),
+               Div(*cards), Div(load_more, cls="mt-3") if load_more else None, rejected, cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200")
 
 
 def name_display(identity_id: str, name: str) -> Div:

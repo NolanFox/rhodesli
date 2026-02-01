@@ -9,10 +9,12 @@ Design goals:
 - Avoid centroid poisoning (averaging faces destroys distinct features)
 - Preserve explainability (match A->B, not Mean(A)->Mean(B))
 - Favor recall during discovery (if one face matches, show it)
+- Provide statistical context (rank/percentile) not just raw distance
 """
 
 import numpy as np
 from scipy.spatial.distance import cdist
+from core.event_recorder import get_event_recorder
 
 def get_identity_embeddings(identity_id, registry, face_data):
     """
@@ -43,14 +45,7 @@ def find_nearest_neighbors(target_id, registry, photo_registry, face_data, limit
     """
     Find nearest neighbors using 'Single Linkage' (Best-Linkage) strategy.
     
-    Instead of comparing centroids (averages), we find the closest PAIR of faces
-    between the target and the candidate. 
-    
-    Algorithm:
-    1. Get all embeddings for Target Identity (Set A)
-    2. Get all embeddings for Candidate Identity (Set B)
-    3. Calculate distances between ALL pairs (A x B)
-    4. The score is the MINIMUM distance found (Best single match)
+    Returns raw distances and statistical rank, NOT UI-scaled scores.
     """
     # 1. Get Target Data
     target_fids, target_embs = get_identity_embeddings(target_id, registry, face_data)
@@ -58,77 +53,79 @@ def find_nearest_neighbors(target_id, registry, photo_registry, face_data, limit
         return []
 
     target_identity = registry.get_identity(target_id)
-    # Get set of rejected IDs to exclude
     negative_ids = set(target_identity.get("negative_ids", []))
     
-    # Pre-calculate photo sets for co-occurrence check
     target_photos = photo_registry.get_photos_for_faces(target_fids)
 
-    # 2. Candidate Filtering
+    # 2. Candidate Filtering & Scoring
     candidates = []
     all_identities = registry.list_identities()
 
     for cand in all_identities:
         cand_id = cand["identity_id"]
         
-        # Skip self
-        if cand_id == target_id:
-            continue
-            
-        # Skip if explicitly rejected (Not Same Person)
-        if f"identity:{cand_id}" in negative_ids:
-            continue
+        if cand_id == target_id: continue
+        if f"identity:{cand_id}" in negative_ids: continue
 
-        # Get Candidate Data
         cand_fids, cand_embs = get_identity_embeddings(cand_id, registry, face_data)
-        if cand_embs.size == 0:
-            continue
+        if cand_embs.size == 0: continue
 
-        # 3. Compute Distance (Single Linkage / Min-Dist)
-        # cdist computes distance between every row in A and every row in B
+        # Best-Linkage Math: Min dist between any pair
         dists = cdist(target_embs, cand_embs, metric='euclidean')
-        
-        # Find the absolute best match between any face in A and any face in B
-        min_dist = np.min(dists)
+        min_dist = float(np.min(dists))
 
-        # 4. Check Co-occurrence (Blocking constraint)
+        # Check Co-occurrence
         cand_photos = photo_registry.get_photos_for_faces(cand_fids)
         co_occurrence = not target_photos.isdisjoint(cand_photos)
 
         candidates.append({
             "identity_id": cand_id,
             "name": cand.get("name", f"Identity {cand_id[:8]}..."),
-            "mls_score": -min_dist * 100,  # Negative distance for compatibility
-            "dist": min_dist,              # Raw distance for sorting
+            "distance": min_dist,          # Raw Euclidean distance
             "face_count": len(cand_fids),
             "can_merge": not co_occurrence,
             "merge_blocked_reason": "co_occurrence" if co_occurrence else None
         })
 
-    # 5. Sort by raw distance (smallest distance = best match)
-    candidates.sort(key=lambda x: x["dist"])
+    # 3. Sort & Rank
+    candidates.sort(key=lambda x: x["distance"])
+    
+    total = len(candidates)
+    for idx, c in enumerate(candidates):
+        c["rank"] = idx + 1
+        c["percentile"] = (idx + 1) / total if total > 0 else 1.0
 
-    return candidates[:limit]
+    results = candidates[:limit]
+
+    # 4. Instrumentation
+    get_event_recorder().record("FIND_SIMILAR", {
+        "target_id": target_id,
+        "total_candidates": total,
+        "top_k": [
+            {
+                "identity_id": r["identity_id"],
+                "distance": round(r["distance"], 4),
+                "rank": r["rank"],
+                "percentile": round(r["percentile"], 4)
+            }
+            for r in results
+        ]
+    })
+
+    return results
 
 def sort_faces_by_outlier_score(identity_id, registry, face_data):
     """
-    Sort faces in an identity by how far they are from the identity's centroid.
-    Useful for finding 'impostors' in a cluster.
+    Sort faces by distance from the identity's ad-hoc centroid.
     """
     fids, embs = get_identity_embeddings(identity_id, registry, face_data)
     if embs.size == 0:
         return []
 
-    # Calculate centroid (simple mean)
     centroid = np.mean(embs, axis=0)
-    
-    # Calculate distance of each face to centroid
     dists = cdist([centroid], embs, metric='euclidean').flatten()
     
-    # Pair FIDs with distances
     scored_faces = list(zip(fids, dists))
-    
-    # Sort descending (furthest first)
     scored_faces.sort(key=lambda x: x[1], reverse=True)
     
     return scored_faces
