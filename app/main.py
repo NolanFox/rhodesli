@@ -782,15 +782,17 @@ def neighbor_card(
     """
     neighbor_id = neighbor["identity_id"]
     name = neighbor["name"]
-    mls = neighbor["mls_score"]
+    mls = neighbor["mls_score"] # This is now actually a negative distance score
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # MLS similarity indicator (visual hint)
-    if mls > -50:
+    # Distance based visual hint (Lower distance is better)
+    # Since we negated distance for compatibility, closer to 0 is better (e.g. -0.4 is better than -0.8)
+    # Thresholds are guesses based on euclidean distance of 128d embeddings
+    if mls > -0.6:
         similarity_class = "bg-emerald-100 text-emerald-700"
         similarity_label = "High"
-    elif mls > -200:
+    elif mls > -0.8:
         similarity_class = "bg-amber-100 text-amber-700"
         similarity_label = "Medium"
     else:
@@ -901,7 +903,8 @@ def neighbor_card(
                 # Stats
                 Div(
                     Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-500"),
-                    Span(f"MLS: {mls:.0f}", cls="text-xs font-mono text-stone-400 ml-2"),
+                    # EXPLAINABILITY: Show actual distance score
+                    Span(f"Dist: {-mls:.2f}", cls="text-xs font-mono text-stone-400 ml-2"),
                     cls="flex items-center"
                 ),
                 cls="flex-1 min-w-0 ml-3"
@@ -1223,6 +1226,16 @@ def lane_section(
         "amber": "bg-amber-50/50",
         "red": "bg-red-50/50",
     }
+    
+    # Fix: Always render the container ID even if empty, so OOB swaps have a target.
+    content_area = Div(*cards, id=lane_id, cls="min-h-[50px]") if cards else Div(
+        P(
+            f"No {title.lower()} identities",
+            cls="text-stone-400 italic text-center py-8"
+        ),
+        id=lane_id,
+        cls="min-h-[50px]"
+    )
 
     return Div(
         # Lane header
@@ -1236,10 +1249,7 @@ def lane_section(
             cls="flex items-center gap-3 mb-4 pb-2 border-b border-stone-300"
         ),
         # Cards or empty state
-        Div(*cards, id=lane_id) if cards else P(
-            f"No {title.lower()} identities",
-            cls="text-stone-400 italic text-center py-8"
-        ),
+        content_area,
         cls=f"mb-8 p-4 rounded {bg_colors.get(color, '')}"
     )
 
@@ -2339,13 +2349,27 @@ def post(face_id: str):
         to_identity_id=result["to_identity_id"],
     )
 
-    # Return OOB delete of face card + toast
-    # Use make_css_id to generate the exact same ID used in the template
+    # 1. Prepare safe ID for removing the OLD face card
     face_card_id = make_css_id(face_id)
+    
+    # 2. Render the NEW identity card
+    new_identity = registry.get_identity(result["to_identity_id"])
+    crop_files = get_crop_files()
+    new_card_html = identity_card(
+        new_identity, 
+        crop_files, 
+        lane_color="amber", # New identities are PROPOSED
+        show_actions=True
+    )
 
     return (
-        # Delete the face card from the DOM
+        # A. Delete the old face card from its current container
         Div(id=face_card_id, hx_swap_oob="delete"),
+        
+        # B. Insert the new identity card at the top of the Proposed lane
+        Div(new_card_html, hx_swap_oob="afterbegin:#proposed-lane"),
+        
+        # C. Success toast
         toast(f"Face detached into new identity.", "success"),
     )
 

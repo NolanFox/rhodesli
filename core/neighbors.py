@@ -1,281 +1,134 @@
 """
-Nearest Neighbor Discovery for Identity Matching.
+Nearest Neighbor Discovery (Instance-First).
 
-Finds similar identities based on centroid distance for merge candidates.
-Uses MLS (Mutual Likelihood Score) as the similarity metric - higher values
-indicate more similar identities.
+This module is intentionally pessimistic and stateless.
+It performs face-to-face matching and only *projects*
+results up to the identity level for UI display.
 
-Safety Foundation: All neighbor results include merge eligibility via
-validate_merge() - no merge may proceed without explicit validation.
+Design goals:
+- Avoid centroid poisoning (averaging faces destroys distinct features)
+- Preserve explainability (match A->B, not Mean(A)->Mean(B))
+- Favor recall during discovery (if one face matches, show it)
 """
 
-import logging
-from typing import TYPE_CHECKING, List, Dict, Any, Tuple, Optional
-
 import numpy as np
+from scipy.spatial.distance import cdist
 
-if TYPE_CHECKING:
-    from core.photo_registry import PhotoRegistry
-    from core.registry import IdentityRegistry
-
-from core.fusion import compute_identity_fusion, fuse_anchors
-from core.pfe import mutual_likelihood_score
-# --- INSTRUMENTATION IMPORT ---
-from core.event_recorder import get_event_recorder
-
-logger = logging.getLogger(__name__)
-
-
-def compute_identity_centroid(
-    registry: "IdentityRegistry",
-    identity_id: str,
-    face_data: dict[str, dict],
-) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+def get_identity_embeddings(identity_id, registry, face_data):
     """
-    Compute centroid (fused mu, sigma_sq) for an identity.
-
-    For discovery purposes (outlier sorting, neighbor finding), falls back to
-    using candidates if no anchors exist.
-    This allows PROPOSED identities to participate in discovery without requiring
-    human confirmation first.
-
-    NOTE: This is for UI/discovery only - authoritative fusion for MLS
-    comparisons should use compute_identity_fusion() directly.
-
-    Args:
-        registry: Identity registry
-        identity_id: ID of identity to compute centroid for
-        face_data: Dict mapping face_id to {'mu', 'sigma_sq'}
-
-    Returns:
-        (fused_mu, fused_sigma_sq) tuple, or None if identity has no valid faces.
-    """
-    try:
-        return compute_identity_fusion(registry, identity_id, face_data)
-    except ValueError:
-        # No valid anchors - fall back to candidates for discovery
-        logger.debug(f"No anchors for identity {identity_id}, using candidates")
-        return _compute_centroid_from_candidates(registry, identity_id, face_data)
-
-
-def _compute_centroid_from_candidates(
-    registry: "IdentityRegistry",
-    identity_id: str,
-    face_data: dict[str, dict],
-) -> Optional[Tuple[np.ndarray, np.ndarray]]:
-    """
-    Compute centroid from candidate faces (fallback for PROPOSED identities).
-
-    Uses simple averaging with uniform weights since candidates are unconfirmed.
+    Get all embeddings for an identity (anchors + candidates).
+    Returns: (face_ids, matrix_of_embeddings)
     """
     identity = registry.get_identity(identity_id)
-    candidate_ids = identity.get("candidate_ids", [])
+    if not identity:
+        return [], np.array([])
 
-    if not candidate_ids:
-        logger.debug(f"No candidates for identity {identity_id}")
-        return None
-
-    # Build anchor-like entries from candidates
-    anchors = []
-    for cid in candidate_ids:
-        # Handle both string and dict formats
-        face_id = cid if isinstance(cid, str) else cid.get("face_id")
-        if face_id not in face_data:
-            continue
-        face = face_data[face_id]
-        anchors.append({
-            "mu": face["mu"],
-            "sigma_sq": face["sigma_sq"],
-            "confidence_weight": 1.0,  # Uniform weight for candidates
-        })
-
-    if not anchors:
-        logger.debug(f"No valid candidate faces found for identity {identity_id}")
-        return None
-
-    return fuse_anchors(anchors)
-
-
-def find_nearest_neighbors(
-    identity_id: str,
-    registry: "IdentityRegistry",
-    photo_registry: "PhotoRegistry",
-    face_data: dict[str, dict],
-    limit: int = 10,
-) -> List[Dict[str, Any]]:
-    """
-    Find identities most similar to the given identity.
-
-    Uses MLS between identity centroids as similarity measure.
-
-    Excludes:
-    - The identity itself
-    - Merged/deleted identities
-    - Identities with no valid anchors (can't compute centroid)
-
-    Each result includes merge eligibility (can_merge) computed via
-    validate_merge() - this is the Safety Foundation constraint.
-
-    Args:
-        identity_id: Target identity ID
-        registry: Identity registry
-        photo_registry: For co-occurrence validation
-        face_data: Dict mapping face_id to {'mu', 'sigma_sq'}
-        limit: Maximum neighbors to return (default 10)
-
-    Returns:
-        List of dicts sorted by similarity (highest MLS first).
-    """
-    from core.registry import validate_merge
-
-    # Compute target centroid
-    target_centroid = compute_identity_centroid(registry, identity_id, face_data)
-    if target_centroid is None:
-        logger.warning(f"Cannot find neighbors: no centroid for {identity_id}")
-        return []
-
-    target_mu, target_sigma_sq = target_centroid
-
-    # Get rejected identity IDs for filtering (D3: "Not Same Person")
-    target_identity = registry.get_identity(identity_id)
-    rejected_ids = {
-        neg.replace("identity:", "")
-        for neg in target_identity.get("negative_ids", [])
-        if neg.startswith("identity:")
-    }
-
-    # Get all other active identities (exclude merged by default)
-    all_identities = registry.list_identities(include_merged=False)
-
-    neighbors = []
-    for identity in all_identities:
-        other_id = identity["identity_id"]
-
-        # Skip self
-        if other_id == identity_id:
-            continue
-
-        # Skip rejected identities (D3: "Not Same Person")
-        if other_id in rejected_ids:
-            continue
-
-        # Compute other centroid
-        other_centroid = compute_identity_centroid(registry, other_id, face_data)
-        if other_centroid is None:
-            continue
-
-        other_mu, other_sigma_sq = other_centroid
-
-        # Compute MLS similarity (higher = more similar)
-        mls = mutual_likelihood_score(
-            target_mu, target_sigma_sq,
-            other_mu, other_sigma_sq,
-        )
-
-        # Check if merge is possible (Safety Foundation)
-        can_merge, reason = validate_merge(
-            identity_id, other_id, registry, photo_registry
-        )
-
-        # Count faces
-        face_count = len(identity.get("anchor_ids", [])) + len(identity.get("candidate_ids", []))
-
-        neighbors.append({
-            "identity_id": other_id,
-            "name": identity.get("name") or f"Identity {other_id[:8]}...",
-            "state": identity["state"],
-            "face_count": face_count,
-            "mls_score": float(mls),
-            "can_merge": can_merge,
-            "merge_blocked_reason": None if can_merge else reason,
-        })
-
-    # Sort by MLS descending (higher = more similar)
-    neighbors.sort(key=lambda x: x["mls_score"], reverse=True)
-
-    # --- INSTRUMENTATION HOOK ---
-    # Log the top 20 results (or all if less) to capture ranking shifts
-    # We log BEFORE truncation to 'limit' if possible, but here we just log the full sorted list slice
-    # Actually, let's log the top 20 regardless of the 'limit' arg for analysis
-    
-    top_k_snapshot = [
-        {
-            "id": n["identity_id"],
-            "score": float(n["mls_score"]),
-            "rank": i + 1,
-            "name": n["name"]
-        }
-        for i, n in enumerate(neighbors[:20])
-    ]
-
-    get_event_recorder().record("SEARCH", {
-        "identity_id": identity_id,
-        "candidate_count": len(neighbors),
-        "top_k": top_k_snapshot,
-        "threshold": "N/A", # No hard threshold in neighbor search
-        "ui_limit": limit
-    }, actor="system")
-    # ----------------------------
-
-    return neighbors[:limit]
-
-
-def sort_faces_by_outlier_score(
-    identity_id: str,
-    registry: "IdentityRegistry",
-    face_data: dict[str, dict],
-) -> list[tuple[str, float]]:
-    """
-    Sort faces by distance from identity centroid (descending = outliers first).
-
-    Uses MLS from face to centroid: lower MLS = further away = more of an outlier.
-    Returns faces sorted by outlier score (distance), highest first.
-
-    Args:
-        identity_id: ID of identity to analyze
-        registry: Identity registry
-        face_data: Dict mapping face_id to {'mu', 'sigma_sq'}
-
-    Returns:
-        List of (face_id, outlier_score) tuples, sorted by score descending.
-        Higher score = further from centroid = more likely to be an outlier.
-    """
-    identity = registry.get_identity(identity_id)
-
-    # Compute centroid
-    centroid = compute_identity_centroid(registry, identity_id, face_data)
-    if centroid is None:
-        return []
-
-    centroid_mu, centroid_sigma_sq = centroid
-
-    # Score each face
-    scored_faces = []
     all_entries = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    face_ids = []
+    embeddings = []
 
     for entry in all_entries:
         # Handle both string and dict anchor formats
-        if isinstance(entry, str):
-            face_id = entry
-        else:
-            face_id = entry.get("face_id")
+        fid = entry if isinstance(entry, str) else entry.get("face_id")
+        if fid in face_data:
+            face_ids.append(fid)
+            embeddings.append(face_data[fid]["mu"])
 
-        if face_id not in face_data:
+    if not embeddings:
+        return [], np.array([])
+
+    return face_ids, np.vstack(embeddings)
+
+def find_nearest_neighbors(target_id, registry, photo_registry, face_data, limit=5):
+    """
+    Find nearest neighbors using 'Single Linkage' (Best-Linkage) strategy.
+    
+    Instead of comparing centroids (averages), we find the closest PAIR of faces
+    between the target and the candidate. 
+    
+    Algorithm:
+    1. Get all embeddings for Target Identity (Set A)
+    2. Get all embeddings for Candidate Identity (Set B)
+    3. Calculate distances between ALL pairs (A x B)
+    4. The score is the MINIMUM distance found (Best single match)
+    """
+    # 1. Get Target Data
+    target_fids, target_embs = get_identity_embeddings(target_id, registry, face_data)
+    if target_embs.size == 0:
+        return []
+
+    target_identity = registry.get_identity(target_id)
+    # Get set of rejected IDs to exclude
+    negative_ids = set(target_identity.get("negative_ids", []))
+    
+    # Pre-calculate photo sets for co-occurrence check
+    target_photos = photo_registry.get_photos_for_faces(target_fids)
+
+    # 2. Candidate Filtering
+    candidates = []
+    all_identities = registry.list_identities()
+
+    for cand in all_identities:
+        cand_id = cand["identity_id"]
+        
+        # Skip self
+        if cand_id == target_id:
+            continue
+            
+        # Skip if explicitly rejected (Not Same Person)
+        if f"identity:{cand_id}" in negative_ids:
             continue
 
-        face = face_data[face_id]
+        # Get Candidate Data
+        cand_fids, cand_embs = get_identity_embeddings(cand_id, registry, face_data)
+        if cand_embs.size == 0:
+            continue
 
-        # Compute MLS from face to centroid
-        mls = mutual_likelihood_score(
-            centroid_mu, centroid_sigma_sq,
-            face["mu"], face["sigma_sq"],
-        )
+        # 3. Compute Distance (Single Linkage / Min-Dist)
+        # cdist computes distance between every row in A and every row in B
+        dists = cdist(target_embs, cand_embs, metric='euclidean')
+        
+        # Find the absolute best match between any face in A and any face in B
+        min_dist = np.min(dists)
 
-        # Convert to outlier score: negate MLS so lower similarity = higher score
-        outlier_score = -mls
-        scored_faces.append((face_id, outlier_score))
+        # 4. Check Co-occurrence (Blocking constraint)
+        cand_photos = photo_registry.get_photos_for_faces(cand_fids)
+        co_occurrence = not target_photos.isdisjoint(cand_photos)
 
-    # Sort by outlier score descending (outliers first)
+        candidates.append({
+            "identity_id": cand_id,
+            "name": cand.get("name", f"Identity {cand_id[:8]}..."),
+            "mls_score": -min_dist * 100,  # Negative distance for compatibility
+            "dist": min_dist,              # Raw distance for sorting
+            "face_count": len(cand_fids),
+            "can_merge": not co_occurrence,
+            "merge_blocked_reason": "co_occurrence" if co_occurrence else None
+        })
+
+    # 5. Sort by raw distance (smallest distance = best match)
+    candidates.sort(key=lambda x: x["dist"])
+
+    return candidates[:limit]
+
+def sort_faces_by_outlier_score(identity_id, registry, face_data):
+    """
+    Sort faces in an identity by how far they are from the identity's centroid.
+    Useful for finding 'impostors' in a cluster.
+    """
+    fids, embs = get_identity_embeddings(identity_id, registry, face_data)
+    if embs.size == 0:
+        return []
+
+    # Calculate centroid (simple mean)
+    centroid = np.mean(embs, axis=0)
+    
+    # Calculate distance of each face to centroid
+    dists = cdist([centroid], embs, metric='euclidean').flatten()
+    
+    # Pair FIDs with distances
+    scored_faces = list(zip(fids, dists))
+    
+    # Sort descending (furthest first)
     scored_faces.sort(key=lambda x: x[1], reverse=True)
-
+    
     return scored_faces
