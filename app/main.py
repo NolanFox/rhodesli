@@ -28,6 +28,7 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 from core.registry import IdentityRegistry, IdentityState
+from core.config import MATCH_THRESHOLD_HIGH, MATCH_THRESHOLD_MEDIUM
 
 # --- INSTRUMENTATION IMPORT ---
 from core.event_recorder import get_event_recorder
@@ -781,16 +782,12 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # --- CALIBRATION UPDATE (THE LEON STANDARD) ---
-    # 0.94 - 0.98 = The core "Leon" cluster (Same person, vintage quality)
-    # 1.04 - 1.09 = The fringe "Leon" matches (Different angles/ages)
-    
-    # High: < 1.0 (Captures the solid matches like 0.94)
-    if distance < 1.0:
+    # --- CALIBRATION: THE LEON STANDARD (ADR 007) ---
+    # Thresholds from core.config (derived from forensic evaluation)
+    if distance < MATCH_THRESHOLD_HIGH:
         similarity_class = "bg-emerald-100 text-emerald-700"
         similarity_label = "High"
-    # Medium: < 1.15 (Captures the looser matches up to 1.14)
-    elif distance < 1.15:
+    elif distance < MATCH_THRESHOLD_MEDIUM:
         similarity_class = "bg-amber-100 text-amber-700"
         similarity_label = "Medium"
     else:

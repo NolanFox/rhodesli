@@ -16,6 +16,12 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.distance import cdist
 
+# Add project root to path for core imports
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
+
+from core.config import MATCH_THRESHOLD_MEDIUM
+
 
 def load_face_data(data_path: Path) -> dict[str, dict]:
     """
@@ -111,8 +117,8 @@ def main():
         print(f"ERROR: Target face not found in embeddings: {target_face}")
         sys.exit(1)
 
-    # Distance threshold (calibrated per ADR 007)
-    DISTANCE_THRESHOLD = 1.20
+    # Distance threshold from core.config (calibrated per ADR 007)
+    DISTANCE_THRESHOLD = MATCH_THRESHOLD_MEDIUM
 
     # Evaluate positives
     print("\n=== POSITIVE MATCHES ===")
