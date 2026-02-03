@@ -624,18 +624,33 @@ def inbox_badge(count: int) -> A:
 def inbox_action_buttons(identity_id: str) -> Div:
     """
     Action buttons for INBOX identities.
-    Simpler than PROPOSED: just Review (move to proposed) or Skip.
+    Confirm: Accept as real identity (INBOX → CONFIRMED)
+    Reject: Explicitly reject (INBOX → REJECTED)
     """
     return Div(
+        # Confirm button (green, solid)
         Button(
-            "\u2192 Review",
-            cls="px-3 py-1.5 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors",
-            hx_post=f"/inbox/{identity_id}/review",
+            "\u2713 Confirm",
+            cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors",
+            hx_post=f"/inbox/{identity_id}/confirm",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
-            aria_label="Move to Proposed for detailed review",
+            hx_indicator=f"#loading-{identity_id}",
+            aria_label="Confirm this identity",
             type="button",
         ),
+        # Reject button (red, ghost)
+        Button(
+            "\u2717 Reject",
+            cls="px-3 py-1.5 text-sm font-bold border-2 border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors",
+            hx_post=f"/inbox/{identity_id}/reject",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            hx_indicator=f"#loading-{identity_id}",
+            aria_label="Reject this identity",
+            type="button",
+        ),
+        # Loading indicator (hidden by default)
         Span(
             "...",
             id=f"loading-{identity_id}",
@@ -656,6 +671,7 @@ def state_badge(state: str) -> Span:
         "CONFIRMED": "bg-emerald-600 text-white",
         "PROPOSED": "bg-amber-500 text-white",
         "CONTESTED": "bg-red-600 text-white",
+        "REJECTED": "bg-rose-700 text-white",
     }
     return Span(
         state,
@@ -2455,6 +2471,96 @@ def post(identity_id: str):
     return (
         identity_card(updated_identity, crop_files, lane_color="amber", show_actions=True),
         toast("Moved to Proposed for review.", "success"),
+    )
+
+
+@rt("/inbox/{identity_id}/confirm")
+def post(identity_id: str):
+    """
+    Confirm identity from INBOX state (INBOX → CONFIRMED).
+
+    Returns updated identity card in confirmed lane.
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.confirm_identity(identity_id, user_source="web_review")
+        save_registry(registry)
+    except ValueError as e:
+        return Response(
+            to_xml(toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    # Return updated card (now CONFIRMED)
+    return (
+        identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        toast("Identity confirmed.", "success"),
+    )
+
+
+@rt("/inbox/{identity_id}/reject")
+def post(identity_id: str):
+    """
+    Reject identity from INBOX state (INBOX → REJECTED).
+
+    Returns updated identity card with REJECTED state.
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.reject_identity(identity_id, user_source="web_review")
+        save_registry(registry)
+    except ValueError as e:
+        return Response(
+            to_xml(toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    # Return updated card (now REJECTED)
+    return (
+        identity_card(updated_identity, crop_files, lane_color="rose", show_actions=False),
+        toast("Identity rejected.", "success"),
     )
 
 

@@ -38,6 +38,7 @@ class IdentityState(Enum):
     PROPOSED = "PROPOSED"    # Initial state, accepts changes
     CONFIRMED = "CONFIRMED"  # Authoritative but reversible
     CONTESTED = "CONTESTED"  # Frozen until reviewed
+    REJECTED = "REJECTED"    # Explicitly rejected (soft state, reversible)
 
 
 class ActionType(Enum):
@@ -332,8 +333,19 @@ class IdentityRegistry:
         }
 
     def confirm_identity(self, identity_id: str, user_source: str) -> None:
-        """Transition identity to CONFIRMED state."""
-        
+        """
+        Transition identity to CONFIRMED state.
+
+        Can be called from INBOX or PROPOSED states.
+
+        Args:
+            identity_id: Identity ID
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If identity not found
+            ValueError: If identity is not in INBOX or PROPOSED state
+        """
         # --- INSTRUMENTATION HOOK ---
         get_event_recorder().record("CONFIRM", {
             "identity_id": identity_id,
@@ -342,6 +354,16 @@ class IdentityRegistry:
         # ----------------------------
 
         identity = self._identities[identity_id]
+
+        # Only allow confirmation from INBOX or PROPOSED states
+        allowed_states = {IdentityState.INBOX.value, IdentityState.PROPOSED.value}
+        if identity["state"] not in allowed_states:
+            raise ValueError(
+                f"Identity {identity_id} cannot be confirmed from state "
+                f"'{identity['state']}' (must be INBOX or PROPOSED)"
+            )
+
+        previous_state = identity["state"]
         previous_version = identity["version_id"]
 
         identity["state"] = IdentityState.CONFIRMED.value
@@ -354,7 +376,10 @@ class IdentityRegistry:
             face_ids=[],
             user_source=user_source,
             previous_version_id=previous_version,
-            metadata={"new_state": IdentityState.CONFIRMED.value},
+            metadata={
+                "new_state": IdentityState.CONFIRMED.value,
+                "previous_state": previous_state,
+            },
         )
 
     def move_to_proposed(self, identity_id: str, user_source: str) -> None:
@@ -393,6 +418,54 @@ class IdentityRegistry:
             previous_version_id=previous_version,
             metadata={
                 "new_state": IdentityState.PROPOSED.value,
+                "previous_state": IdentityState.INBOX.value,
+            },
+        )
+
+    def reject_identity(self, identity_id: str, user_source: str) -> None:
+        """
+        Transition identity from INBOX to REJECTED state.
+
+        Used when a user explicitly rejects an inbox item during review.
+        This is a soft state - the identity and its embeddings are preserved.
+
+        Args:
+            identity_id: Identity ID
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If identity not found
+            ValueError: If identity is not in INBOX state
+        """
+        # --- INSTRUMENTATION HOOK ---
+        get_event_recorder().record("REJECT_IDENTITY", {
+            "identity_id": identity_id,
+            "user_source": user_source
+        })
+        # ----------------------------
+
+        identity = self._identities[identity_id]
+
+        if identity["state"] != IdentityState.INBOX.value:
+            raise ValueError(
+                f"Identity {identity_id} is not in INBOX state "
+                f"(current: {identity['state']})"
+            )
+
+        previous_version = identity["version_id"]
+
+        identity["state"] = IdentityState.REJECTED.value
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.STATE_CHANGE.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "new_state": IdentityState.REJECTED.value,
                 "previous_state": IdentityState.INBOX.value,
             },
         )
