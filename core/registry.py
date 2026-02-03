@@ -1119,6 +1119,80 @@ class IdentityRegistry:
 
         return face_ids
 
+    def search_identities(
+        self,
+        query: str,
+        limit: int = 10,
+        exclude_id: str = None,
+    ) -> list[dict]:
+        """
+        Search for identities by name.
+
+        Used for manual search in the neighbors sidebar, allowing users to find
+        and merge identities that the algorithm may have split incorrectly.
+
+        Args:
+            query: Search string (case-insensitive substring match)
+            limit: Maximum results to return (default 10)
+            exclude_id: Identity ID to exclude (e.g., the currently viewed identity)
+
+        Returns:
+            List of lightweight summaries: {identity_id, name, face_count, preview_face_id}
+            Only returns CONFIRMED identities that are not merged.
+        """
+        # Empty or whitespace query returns nothing
+        query = query.strip() if query else ""
+        if not query:
+            return []
+
+        query_lower = query.lower()
+        results = []
+
+        for identity in self._identities.values():
+            # Skip merged identities
+            if identity.get("merged_into"):
+                continue
+
+            # Only CONFIRMED identities
+            if identity["state"] != IdentityState.CONFIRMED.value:
+                continue
+
+            # Skip excluded identity
+            if exclude_id and identity["identity_id"] == exclude_id:
+                continue
+
+            # Case-insensitive substring match on name
+            name = identity.get("name") or ""
+            if query_lower not in name.lower():
+                continue
+
+            # Get face count (anchors + candidates)
+            anchor_ids = identity.get("anchor_ids", [])
+            candidate_ids = identity.get("candidate_ids", [])
+            face_count = len(anchor_ids) + len(candidate_ids)
+
+            # Get preview face (first anchor, handles both string and dict)
+            preview_face_id = None
+            if anchor_ids:
+                first_anchor = anchor_ids[0]
+                if isinstance(first_anchor, str):
+                    preview_face_id = first_anchor
+                elif isinstance(first_anchor, dict):
+                    preview_face_id = first_anchor.get("face_id")
+
+            results.append({
+                "identity_id": identity["identity_id"],
+                "name": name,
+                "face_count": face_count,
+                "preview_face_id": preview_face_id,
+            })
+
+            # Respect limit
+            if len(results) >= limit:
+                break
+
+        return results
+
 
 def validate_merge(
     id_a: str,
