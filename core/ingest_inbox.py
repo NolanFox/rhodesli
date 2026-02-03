@@ -596,16 +596,236 @@ def _process_zip_file(
         }
 
 
+def process_directory(
+    directory: Path,
+    job_id: str,
+    data_dir: Path = None,
+    crops_dir: Path = None,
+) -> dict:
+    """
+    Process a directory of uploaded files (images and/or ZIPs).
+
+    Each file is processed independently with error isolation.
+    ZIP files are extracted and their contents processed.
+
+    Args:
+        directory: Path to directory containing uploaded files
+        job_id: Unique job identifier
+        data_dir: Data directory (default: project/data)
+        crops_dir: Crops output directory (default: project/app/static/crops)
+
+    Returns:
+        Result dict with aggregated status
+    """
+    project_root = Path(__file__).resolve().parent.parent
+
+    if data_dir is None:
+        data_dir = project_root / "data"
+
+    if crops_dir is None:
+        crops_dir = project_root / "app" / "static" / "crops"
+
+    inbox_dir = data_dir / "inbox"
+    embeddings_path = data_dir / "embeddings.npy"
+    identity_path = data_dir / "identities.json"
+    photo_index_path = data_dir / "photo_index.json"
+
+    # Collect all files to process (expand ZIPs)
+    files_to_process = []
+    zip_files = []
+
+    for item in directory.iterdir():
+        if item.is_file():
+            if item.suffix.lower() == ".zip":
+                zip_files.append(item)
+            elif is_image_file(item.name):
+                files_to_process.append(item)
+
+    # Count total files (images directly + images inside ZIPs)
+    total_images = len(files_to_process)
+    zip_image_counts = {}
+
+    import tempfile
+    import zipfile
+
+    # Pre-scan ZIPs to count images
+    for zf_path in zip_files:
+        try:
+            with zipfile.ZipFile(zf_path, "r") as zf:
+                image_names = [
+                    name for name in zf.namelist()
+                    if is_image_file(name)
+                    and not name.startswith("__MACOSX")
+                    and not name.startswith(".")
+                    and not name.split("/")[-1].startswith(".")
+                ]
+                zip_image_counts[zf_path] = image_names
+                total_images += len(image_names)
+        except zipfile.BadZipFile:
+            # Will be counted as 1 failed file
+            total_images += 1
+
+    # Write initial status
+    write_status_file(
+        inbox_dir, job_id, "processing",
+        total_files=total_images,
+        files_succeeded=0,
+        files_failed=0,
+    )
+
+    # Track aggregated results
+    total_faces = 0
+    all_identity_ids = []
+    files_succeeded = 0
+    files_failed = 0
+    errors = []
+    file_index = 0
+
+    # Process standalone images
+    for img_path in files_to_process:
+        write_status_file(
+            inbox_dir, job_id, "processing",
+            faces_extracted=total_faces,
+            identities_created=all_identity_ids,
+            total_files=total_images,
+            files_succeeded=files_succeeded,
+            files_failed=files_failed,
+            current_file=img_path.name,
+        )
+
+        try:
+            logger.info(f"Processing [{file_index + 1}/{total_images}]: {img_path.name}")
+
+            result = process_single_image(
+                filepath=img_path,
+                job_id=job_id,
+                file_index=file_index,
+                embeddings_path=embeddings_path,
+                photo_index_path=photo_index_path,
+                identity_path=identity_path,
+                crops_dir=crops_dir,
+            )
+
+            total_faces += result["faces_extracted"]
+            all_identity_ids.extend(result["identity_ids"])
+            files_succeeded += 1
+            logger.info(f"  Found {result['faces_extracted']} face(s)")
+
+        except Exception as e:
+            logger.error(f"  Error processing {img_path.name}: {e}")
+            files_failed += 1
+            errors.append({
+                "filename": img_path.name,
+                "error": str(e),
+            })
+
+        file_index += 1
+
+    # Process ZIP files
+    for zf_path in zip_files:
+        try:
+            with zipfile.ZipFile(zf_path, "r") as zf:
+                image_names = zip_image_counts.get(zf_path, [])
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    tmpdir_path = Path(tmpdir)
+
+                    for image_name in image_names:
+                        write_status_file(
+                            inbox_dir, job_id, "processing",
+                            faces_extracted=total_faces,
+                            identities_created=all_identity_ids,
+                            total_files=total_images,
+                            files_succeeded=files_succeeded,
+                            files_failed=files_failed,
+                            current_file=f"{zf_path.name}:{image_name}",
+                        )
+
+                        try:
+                            # Extract single file to temp dir
+                            extracted_path = tmpdir_path / Path(image_name).name
+                            with zf.open(image_name) as src, open(extracted_path, "wb") as dst:
+                                dst.write(src.read())
+
+                            logger.info(f"Processing [{file_index + 1}/{total_images}]: {zf_path.name}:{image_name}")
+
+                            result = process_single_image(
+                                filepath=extracted_path,
+                                job_id=job_id,
+                                file_index=file_index,
+                                embeddings_path=embeddings_path,
+                                photo_index_path=photo_index_path,
+                                identity_path=identity_path,
+                                crops_dir=crops_dir,
+                            )
+
+                            total_faces += result["faces_extracted"]
+                            all_identity_ids.extend(result["identity_ids"])
+                            files_succeeded += 1
+                            logger.info(f"  Found {result['faces_extracted']} face(s)")
+
+                        except Exception as e:
+                            logger.error(f"  Error processing {image_name}: {e}")
+                            files_failed += 1
+                            errors.append({
+                                "filename": f"{zf_path.name}:{image_name}",
+                                "error": str(e),
+                            })
+
+                        file_index += 1
+
+        except zipfile.BadZipFile as e:
+            logger.error(f"Invalid ZIP file {zf_path.name}: {e}")
+            files_failed += 1
+            errors.append({
+                "filename": zf_path.name,
+                "error": f"Invalid ZIP file: {e}",
+            })
+
+    # Determine final status
+    if files_failed == 0:
+        final_status = "success"
+    elif files_succeeded == 0:
+        final_status = "error"
+    else:
+        final_status = "partial"
+
+    write_status_file(
+        inbox_dir, job_id, final_status,
+        faces_extracted=total_faces,
+        identities_created=all_identity_ids,
+        total_files=total_images,
+        files_succeeded=files_succeeded,
+        files_failed=files_failed,
+        errors=errors if errors else None,
+    )
+
+    return {
+        "status": final_status,
+        "faces_extracted": total_faces,
+        "identities_created": all_identity_ids,
+        "total_files": total_images,
+        "files_succeeded": files_succeeded,
+        "files_failed": files_failed,
+        "errors": errors,
+    }
+
+
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Process uploaded file for inbox ingestion"
+        description="Process uploaded file(s) for inbox ingestion"
     )
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--file",
         type=Path,
-        required=True,
-        help="Path to uploaded file",
+        help="Path to uploaded file (single image or ZIP)",
+    )
+    group.add_argument(
+        "--directory",
+        type=Path,
+        help="Path to directory containing uploaded files",
     )
     parser.add_argument(
         "--job-id",
@@ -615,7 +835,10 @@ def main():
     )
     args = parser.parse_args()
 
-    result = process_uploaded_file(args.file, args.job_id)
+    if args.directory:
+        result = process_directory(args.directory, args.job_id)
+    else:
+        result = process_uploaded_file(args.file, args.job_id)
 
     if result["status"] == "error":
         sys.exit(1)

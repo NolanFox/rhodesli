@@ -575,14 +575,15 @@ def upload_area() -> Div:
         Form(
             Div(
                 Span("\u2191", cls="text-4xl text-stone-300"),
-                P("Drop photos here or click to upload", cls="text-stone-500 mt-2"),
+                P("Drop photos here or click to upload (multiple allowed)", cls="text-stone-500 mt-2"),
                 P("Faces will be added to your Inbox for review", cls="text-xs text-stone-400 mt-1"),
                 cls="text-center py-8"
             ),
             Input(
                 type="file",
-                name="file",
+                name="files",
                 accept="image/*,.zip",
+                multiple=True,
                 cls="absolute inset-0 opacity-0 cursor-pointer",
                 hx_post="/upload",
                 hx_encoding="multipart/form-data",
@@ -2450,49 +2451,66 @@ def post(id: str):
 # =============================================================================
 
 @rt("/upload")
-async def post(file: UploadFile):
+async def post(files: list[UploadFile]):
     """
-    Accept file upload and spawn subprocess for processing.
+    Accept file upload(s) and spawn subprocess for processing.
+
+    Handles multiple files (images and/or ZIPs) in a single batch job.
+    All files are saved to a job directory and processed together.
 
     Returns HTML partial with upload status and polling.
     """
     import subprocess
     import uuid
 
-    if not file or not file.filename:
+    # Filter out empty uploads
+    valid_files = [f for f in files if f and f.filename]
+
+    if not valid_files:
         return Div(
-            P("No file selected.", cls="text-red-600 text-sm"),
+            P("No files selected.", cls="text-red-600 text-sm"),
             cls="p-2"
         )
 
     # Generate unique job ID
     job_id = str(uuid.uuid4())[:8]
 
-    # Save uploaded file to temp location
-    uploads_dir = data_path / "uploads"
-    uploads_dir.mkdir(parents=True, exist_ok=True)
+    # Create job-specific directory for all uploads
+    job_dir = data_path / "uploads" / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
 
-    # Sanitize filename
-    safe_filename = file.filename.replace(" ", "_").replace("/", "_")
-    upload_path = uploads_dir / f"{job_id}_{safe_filename}"
+    # Save all files to job directory
+    saved_files = []
+    for f in valid_files:
+        # Sanitize filename
+        safe_filename = f.filename.replace(" ", "_").replace("/", "_")
+        upload_path = job_dir / safe_filename
 
-    # Write file content
-    content = await file.read()
-    with open(upload_path, "wb") as f:
-        f.write(content)
+        # Write file content
+        content = await f.read()
+        with open(upload_path, "wb") as out:
+            out.write(content)
+        saved_files.append(safe_filename)
 
     # Spawn subprocess for processing
     # Use subprocess.Popen for non-blocking execution
     ingest_script = project_root / "core" / "ingest_inbox.py"
     subprocess.Popen(
-        [sys.executable, str(ingest_script), "--file", str(upload_path), "--job-id", job_id],
+        [sys.executable, str(ingest_script), "--directory", str(job_dir), "--job-id", job_id],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
 
+    # Build initial status message
+    file_count = len(saved_files)
+    if file_count == 1:
+        msg = f"Processing {saved_files[0]}..."
+    else:
+        msg = f"Processing {file_count} files..."
+
     # Return status component that polls for completion
     return Div(
-        P(f"Processing {file.filename}...", cls="text-stone-600 text-sm"),
+        P(msg, cls="text-stone-600 text-sm"),
         Span("\u23f3", cls="animate-pulse"),
         hx_get=f"/upload/status/{job_id}",
         hx_trigger="every 2s",
