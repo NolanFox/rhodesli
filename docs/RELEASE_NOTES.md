@@ -1,5 +1,34 @@
 # Release Notes
 
+## v0.2.2 — Multi-File Upload Support
+
+This release fixes a critical contract mismatch that prevented users from uploading multiple photos at once.
+
+### Fixes
+
+- **Multi-File Upload**
+  - Frontend now supports selecting multiple files (images and/or ZIPs)
+  - Backend processes all selected files in a single batch job
+  - Progress shows total files being processed, not just the first one
+
+- **Batch Processing**
+  - Mixed uploads (images + ZIPs) processed correctly
+  - ZIPs within batch are expanded and processed with error isolation
+  - Each file processed independently—failures don't abort the batch
+
+### UX Improvements
+
+- Upload text clarifies "multiple allowed"
+- Status shows "Processing X files..." for multi-file uploads
+- Progress bar reflects true completion across entire batch
+
+### Not Changed
+
+- Recognition logic remains frozen (per CLAUDE.md constraints)
+- Single-file uploads continue to work as before
+
+---
+
 ## v0.2.1 — Reliability & Hardening
 
 This is a reliability release focused on test stability, ingestion resilience, and honest UX feedback.

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.2.2] - 2026-02-03
+
+### Fixed
+- Frontend/backend contract mismatch preventing multi-file uploads
+- Upload input now uses `name="files"` with `multiple=True`
+
+### Added
+- `--directory` CLI option for batch ingestion of multiple files
+- Support for mixed uploads (images + ZIPs in same selection)
+- Job-specific upload directories for batch isolation
+
+### Changed
+- Upload handler accepts `files: list[UploadFile]` instead of single file
+- Ingestion spawned with `--directory` instead of `--file` for batches
+- Status message shows file count for multi-file uploads
+
 ## [v0.2.1] - 2026-02-03
 
 ### Fixed
