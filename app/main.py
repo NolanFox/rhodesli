@@ -924,20 +924,107 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
         id=f"neighbor-{neighbor_id}", cls="p-3 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md"
     )
 
+def search_result_card(result: dict, target_identity_id: str, crop_files: set) -> Div:
+    """
+    Card for a manual search result.
+    Similar styling to neighbor_card but simpler (no distance/percentile).
+    """
+    result_id = result["identity_id"]
+    name = result["name"] or f"Identity {result_id[:8]}..."
+    face_count = result.get("face_count", 0)
+    preview_face_id = result.get("preview_face_id")
+
+    # Thumbnail from preview_face_id
+    thumbnail_img = Div(cls="w-10 h-10 bg-stone-200 rounded")
+    if preview_face_id:
+        crop_url = resolve_face_image_url(preview_face_id, crop_files)
+        if crop_url:
+            thumbnail_img = Img(
+                src=crop_url,
+                alt=name,
+                cls="w-10 h-10 object-cover rounded border border-stone-200"
+            )
+
+    # Merge button with manual_search source
+    merge_btn = Button(
+        "Merge",
+        cls="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-700",
+        hx_post=f"/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
+        hx_target=f"#identity-{target_identity_id}",
+        hx_swap="outerHTML",
+        hx_confirm=f"Merge '{name}'? This cannot be undone.",
+    )
+
+    return Div(
+        Div(
+            thumbnail_img,
+            Div(
+                Span(name, cls="font-medium text-stone-700 truncate text-sm"),
+                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-400 ml-2"),
+                cls="flex items-center ml-2 flex-1 min-w-0"
+            ),
+            merge_btn,
+            cls="flex items-center"
+        ),
+        id=f"search-result-{result_id}",
+        cls="p-2 bg-white border border-stone-200 rounded shadow-sm mb-2 hover:shadow-md"
+    )
+
+
+def search_results_panel(results: list, target_identity_id: str, crop_files: set) -> Div:
+    """Panel showing manual search results."""
+    if not results:
+        return Div(
+            P("No matching identities found.", cls="text-stone-400 italic text-sm"),
+            id=f"search-results-{target_identity_id}"
+        )
+
+    cards = [search_result_card(r, target_identity_id, crop_files) for r in results]
+    return Div(
+        *cards,
+        id=f"search-results-{target_identity_id}"
+    )
+
+
+def manual_search_section(identity_id: str) -> Div:
+    """
+    Manual search input and results container.
+    Positioned in neighbors sidebar after Load More, before Rejected section.
+    """
+    return Div(
+        H5("Manual Search", cls="text-sm font-semibold text-stone-600 mb-2"),
+        Input(
+            type="text",
+            name="q",
+            placeholder="Search by name...",
+            cls="w-full px-3 py-2 text-sm border border-stone-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent",
+            hx_get=f"/api/identity/{identity_id}/search",
+            hx_trigger="keyup changed delay:300ms",
+            hx_target=f"#search-results-{identity_id}",
+            hx_include="this",
+        ),
+        Div(id=f"search-results-{identity_id}", cls="mt-2"),
+        cls="mt-4 pt-3 border-t border-stone-200"
+    )
+
+
 def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0) -> Div:
     close_btn = Button("Close", cls="text-sm text-stone-500 hover:text-stone-700", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
-    if not neighbors: return Div(Div(P("No similar identities.", cls="text-stone-400 italic"), close_btn, cls="flex items-center justify-between"), cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200")
-    
+    if not neighbors: return Div(Div(P("No similar identities.", cls="text-stone-400 italic"), close_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200")
+
     cards = [neighbor_card(n, identity_id, crop_files) for n in neighbors]
     load_more = Button("Load More", cls="w-full text-sm text-blue-600 hover:text-blue-800 py-2 border border-blue-200 rounded hover:bg-blue-50",
                        hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
-    
+
+    # Manual search section - between Load More and Rejected
+    manual_search = manual_search_section(identity_id)
+
     rejected = Div(Div(Span(f"{rejected_count} hidden matches", cls="text-xs text-stone-400 italic"),
                        Button("Review", cls="text-xs text-blue-500 hover:text-blue-700 ml-2", hx_get=f"/api/identity/{identity_id}/rejected", hx_target=f"#rejected-list-{identity_id}", hx_swap="innerHTML"),
                        cls="flex items-center justify-between"), Div(id=f"rejected-list-{identity_id}"), cls="mt-4 pt-3 border-t border-stone-200") if rejected_count > 0 else None
 
     return Div(Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-stone-700"), close_btn, cls="flex items-center justify-between mb-3"),
-               Div(*cards), Div(load_more, cls="mt-3") if load_more else None, rejected, cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200")
+               Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected, cls="neighbors-sidebar p-4 bg-stone-50 rounded border border-stone-200")
 
 
 def name_display(identity_id: str, name: str) -> Div:
@@ -1749,6 +1836,38 @@ def get(identity_id: str):
     )
 
 
+@rt("/api/identity/{identity_id}/search")
+def get(identity_id: str, q: str = ""):
+    """
+    Search for identities by name for manual merge.
+
+    Phase 3B: Manual Search & Human-Authorized Merge Tools
+
+    Args:
+        identity_id: Current identity (excluded from results)
+        q: Search query (minimum 2 characters)
+
+    Returns HTMX partial with search result cards.
+    """
+    # Minimum query length
+    if len(q.strip()) < 2:
+        return Div(id=f"search-results-{identity_id}")
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Div(
+            P("Search unavailable.", cls="text-stone-400 italic text-sm"),
+            id=f"search-results-{identity_id}"
+        )
+
+    # Search for matching identities
+    results = registry.search_identities(q, exclude_id=identity_id)
+
+    crop_files = get_crop_files()
+    return search_results_panel(results, identity_id, crop_files)
+
+
 @rt("/api/identity/{identity_id}/rejected")
 def get(identity_id: str):
     """
@@ -1967,9 +2086,14 @@ def post(source_id: str, target_id: str):
 
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
-def post(target_id: str, source_id: str):
+def post(target_id: str, source_id: str, source: str = "web"):
     """
     Merge source identity into target identity.
+
+    Args:
+        target_id: Identity to merge into
+        source_id: Identity to be absorbed
+        source: Origin of merge request ("web" or "manual_search")
 
     Returns:
         200: Success with updated identity card
@@ -2000,11 +2124,14 @@ def post(target_id: str, source_id: str):
     # Load photo registry for validation
     photo_registry = load_photo_registry()
 
+    # Determine user_source from merge origin
+    user_source = source if source in ("web", "manual_search") else "web"
+
     # Attempt merge
     result = registry.merge_identities(
         source_id=source_id,
         target_id=target_id,
-        user_source="web",
+        user_source=user_source,
         photo_registry=photo_registry,
     )
 
