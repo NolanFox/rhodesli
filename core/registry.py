@@ -34,6 +34,7 @@ SCHEMA_VERSION = 1
 
 class IdentityState(Enum):
     """Identity lifecycle states."""
+    INBOX = "INBOX"          # Awaiting human review (from ingest pipeline)
     PROPOSED = "PROPOSED"    # Initial state, accepts changes
     CONFIRMED = "CONFIRMED"  # Authoritative but reversible
     CONTESTED = "CONTESTED"  # Frozen until reviewed
@@ -72,15 +73,19 @@ class IdentityRegistry:
         user_source: str,
         name: str = None,
         candidate_ids: list[str] = None,
+        state: IdentityState = None,
+        provenance: dict = None,
     ) -> str:
         """
-        Create a new identity in PROPOSED state.
+        Create a new identity.
 
         Args:
             anchor_ids: Initial confirmed face IDs
             user_source: Who/what initiated this action
             name: Optional human-readable name
             candidate_ids: Optional suggested matches
+            state: Optional initial state (default: PROPOSED)
+            provenance: Optional provenance metadata (job_id, source, etc.)
 
         Returns:
             identity_id
@@ -88,16 +93,20 @@ class IdentityRegistry:
         identity_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
 
+        # Default to PROPOSED if no state specified
+        initial_state = state if state else IdentityState.PROPOSED
+
         identity = {
             "identity_id": identity_id,
             "name": name,
-            "state": IdentityState.PROPOSED.value,
+            "state": initial_state.value,
             "anchor_ids": list(anchor_ids),
             "candidate_ids": list(candidate_ids) if candidate_ids else [],
             "negative_ids": [],
             "version_id": 1,
             "created_at": now,
             "updated_at": now,
+            "provenance": provenance,
         }
 
         self._identities[identity_id] = identity
@@ -346,6 +355,46 @@ class IdentityRegistry:
             user_source=user_source,
             previous_version_id=previous_version,
             metadata={"new_state": IdentityState.CONFIRMED.value},
+        )
+
+    def move_to_proposed(self, identity_id: str, user_source: str) -> None:
+        """
+        Transition identity from INBOX to PROPOSED state.
+
+        Used when a user reviews an inbox item and moves it to the main workflow.
+
+        Args:
+            identity_id: Identity ID
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If identity not found
+            ValueError: If identity is not in INBOX state
+        """
+        identity = self._identities[identity_id]
+
+        if identity["state"] != IdentityState.INBOX.value:
+            raise ValueError(
+                f"Identity {identity_id} is not in INBOX state "
+                f"(current: {identity['state']})"
+            )
+
+        previous_version = identity["version_id"]
+
+        identity["state"] = IdentityState.PROPOSED.value
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.STATE_CHANGE.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "new_state": IdentityState.PROPOSED.value,
+                "previous_state": IdentityState.INBOX.value,
+            },
         )
 
     def rename_identity(
