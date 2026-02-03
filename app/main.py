@@ -2506,16 +2506,17 @@ def get(job_id: str):
     """
     Poll job status for upload processing.
 
-    Returns HTML partial with current status.
+    Returns HTML partial with current status driven by backend job state.
+    Shows real progress (% complete, files processed) and error counts.
     """
     import json
 
     status_path = data_path / "inbox" / f"{job_id}.status.json"
 
     if not status_path.exists():
-        # Still processing
+        # Status file not yet created - job just started
         return Div(
-            P("Processing...", cls="text-stone-600 text-sm"),
+            P("Starting...", cls="text-stone-600 text-sm"),
             Span("\u23f3", cls="animate-pulse"),
             hx_get=f"/upload/status/{job_id}",
             hx_trigger="every 2s",
@@ -2527,30 +2528,111 @@ def get(job_id: str):
         status = json.load(f)
 
     if status["status"] == "processing":
+        # Show real progress from job state
+        total = status.get("total_files")
+        succeeded = status.get("files_succeeded", 0)
+        failed = status.get("files_failed", 0)
+        current_file = status.get("current_file")
+        faces = status.get("faces_extracted", 0)
+
+        # Build progress message driven by actual job state
+        if total and total > 0:
+            processed = succeeded + failed
+            pct = int((processed / total) * 100)
+            progress_text = f"Processing {processed}/{total} ({pct}%)"
+            if current_file:
+                progress_text = f"{progress_text}: {current_file}"
+            progress_elements = [
+                P(progress_text, cls="text-stone-600 text-sm"),
+                # Real progress bar based on actual completion
+                Div(
+                    Div(cls=f"h-1 bg-blue-500 rounded", style=f"width: {pct}%"),
+                    cls="w-full bg-stone-200 rounded h-1 mt-1"
+                ),
+            ]
+            if faces > 0:
+                progress_elements.append(
+                    P(f"{faces} face(s) found so far", cls="text-stone-400 text-xs mt-1")
+                )
+        else:
+            progress_elements = [
+                P("Processing...", cls="text-stone-600 text-sm"),
+                Span("\u23f3", cls="animate-pulse"),
+            ]
+
         return Div(
-            P("Processing...", cls="text-stone-600 text-sm"),
-            Span("\u23f3", cls="animate-pulse"),
+            *progress_elements,
             hx_get=f"/upload/status/{job_id}",
             hx_trigger="every 2s",
             hx_swap="outerHTML",
-            cls="p-2 bg-blue-50 rounded flex items-center gap-2"
+            cls="p-2 bg-blue-50 rounded"
         )
 
     if status["status"] == "error":
-        return Div(
-            P(f"Error: {status.get('error', 'Unknown error')}", cls="text-red-600 text-sm"),
-            cls="p-2 bg-red-50 rounded"
+        # Total failure
+        error_msg = status.get("error", "Unknown error")
+        errors = status.get("errors", [])
+
+        elements = [P(f"Error: {error_msg}", cls="text-red-600 text-sm font-medium")]
+
+        # Show per-file errors if available
+        if errors:
+            error_list = Ul(
+                *[Li(f"{e['filename']}: {e['error']}", cls="text-xs") for e in errors[:5]],
+                cls="text-red-500 mt-1 ml-4 list-disc"
+            )
+            elements.append(error_list)
+            if len(errors) > 5:
+                elements.append(P(f"... and {len(errors) - 5} more errors", cls="text-red-400 text-xs"))
+
+        return Div(*elements, cls="p-2 bg-red-50 rounded")
+
+    if status["status"] == "partial":
+        # Some files succeeded, some failed
+        faces = status.get("faces_extracted", 0)
+        identities = len(status.get("identities_created", []))
+        total = status.get("total_files", 0)
+        succeeded = status.get("files_succeeded", 0)
+        failed = status.get("files_failed", 0)
+        errors = status.get("errors", [])
+
+        elements = [
+            P(
+                f"\u2713 {faces} face(s) extracted from {succeeded}/{total} images",
+                cls="text-amber-600 text-sm font-medium"
+            ),
+        ]
+
+        # Show failure summary
+        if failed > 0:
+            elements.append(
+                P(f"\u26a0 {failed} image(s) failed", cls="text-red-500 text-sm")
+            )
+            # Show first few errors
+            if errors:
+                error_summary = ", ".join(e["filename"] for e in errors[:3])
+                if len(errors) > 3:
+                    error_summary += f", +{len(errors) - 3} more"
+                elements.append(P(f"Failed: {error_summary}", cls="text-red-400 text-xs"))
+
+        elements.append(
+            A("Refresh to see inbox", href="/", cls="text-blue-600 hover:underline text-xs mt-1 block")
         )
 
-    # Success
+        return Div(*elements, cls="p-2 bg-amber-50 rounded")
+
+    # Success (all files processed successfully)
     faces = status.get("faces_extracted", 0)
     identities = len(status.get("identities_created", []))
+    total = status.get("total_files")
+
+    success_text = f"\u2713 {faces} face(s) extracted"
+    if total and total > 1:
+        success_text = f"\u2713 {faces} face(s) extracted from {total} images"
+    success_text += f", {identities} added to Inbox"
 
     return Div(
-        P(
-            f"\u2713 {faces} face(s) extracted, {identities} added to Inbox",
-            cls="text-emerald-600 text-sm font-medium"
-        ),
+        P(success_text, cls="text-emerald-600 text-sm font-medium"),
         A("Refresh to see inbox", href="/", cls="text-blue-600 hover:underline text-xs ml-2"),
         cls="p-2 bg-emerald-50 rounded flex items-center"
     )
