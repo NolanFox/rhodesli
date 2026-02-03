@@ -54,6 +54,11 @@ def write_status_file(
     faces_extracted: int = 0,
     identities_created: list[str] = None,
     error: str = None,
+    total_files: int = None,
+    files_succeeded: int = None,
+    files_failed: int = None,
+    errors: list[dict] = None,
+    current_file: str = None,
 ) -> None:
     """
     Write job status to a JSON file.
@@ -61,10 +66,15 @@ def write_status_file(
     Args:
         inbox_dir: Directory for status files
         job_id: Job identifier
-        status: Status string (processing, success, error)
+        status: Status string (processing, success, error, partial)
         faces_extracted: Number of faces found
         identities_created: List of identity IDs created
         error: Error message if status is "error"
+        total_files: Total files in batch (for ZIP uploads)
+        files_succeeded: Number of files processed successfully
+        files_failed: Number of files that failed
+        errors: List of per-file error dicts [{filename, error}]
+        current_file: Name of file currently being processed
     """
     inbox_dir.mkdir(parents=True, exist_ok=True)
     status_path = inbox_dir / f"{job_id}.status.json"
@@ -79,6 +89,18 @@ def write_status_file(
 
     if error:
         data["error"] = error
+
+    # Batch processing metadata
+    if total_files is not None:
+        data["total_files"] = total_files
+    if files_succeeded is not None:
+        data["files_succeeded"] = files_succeeded
+    if files_failed is not None:
+        data["files_failed"] = files_failed
+    if errors:
+        data["errors"] = errors
+    if current_file:
+        data["current_file"] = current_file
 
     with open(status_path, "w") as f:
         json.dump(data, f, indent=2)
@@ -223,6 +245,92 @@ def generate_crop(
     return crop_filename
 
 
+def is_image_file(filename: str) -> bool:
+    """Check if filename has an image extension."""
+    image_extensions = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff", ".tif"}
+    return Path(filename).suffix.lower() in image_extensions
+
+
+def process_single_image(
+    filepath: Path,
+    job_id: str,
+    file_index: int,
+    embeddings_path: Path,
+    photo_index_path: Path,
+    identity_path: Path,
+    crops_dir: Path,
+) -> dict:
+    """
+    Process a single image file (internal helper).
+
+    Args:
+        filepath: Path to image file
+        job_id: Job identifier
+        file_index: Index for unique face_id generation in batch
+        embeddings_path: Path to embeddings.npy
+        photo_index_path: Path to photo_index.json
+        identity_path: Path to identities.json
+        crops_dir: Path to crops directory
+
+    Returns:
+        Result dict with faces_extracted, identity_ids, or error
+    """
+    from core.embeddings_io import atomic_append_embeddings
+    from core.photo_registry import PhotoRegistry
+    from core.registry import IdentityRegistry
+
+    # Extract faces
+    faces = extract_faces(filepath)
+
+    if not faces:
+        return {
+            "faces_extracted": 0,
+            "identity_ids": [],
+        }
+
+    # Generate face_ids (include file_index to ensure uniqueness in batch)
+    for i, face in enumerate(faces):
+        face["face_id"] = generate_face_id(f"{file_index}_{filepath.name}", i, job_id)
+
+    # Append to embeddings atomically
+    atomic_append_embeddings(embeddings_path, faces)
+
+    # Register in photo registry
+    photo_id = f"inbox_{job_id}_{file_index}_{filepath.stem}"
+    try:
+        photo_registry = PhotoRegistry.load(photo_index_path)
+    except FileNotFoundError:
+        photo_registry = PhotoRegistry()
+
+    for face in faces:
+        photo_registry.register_face(photo_id, str(filepath), face["face_id"])
+
+    photo_registry.save(photo_index_path)
+
+    # Create INBOX identities
+    try:
+        identity_registry = IdentityRegistry.load(identity_path)
+    except FileNotFoundError:
+        identity_registry = IdentityRegistry()
+
+    identity_ids = create_inbox_identities(
+        registry=identity_registry,
+        faces=faces,
+        job_id=job_id,
+    )
+
+    identity_registry.save(identity_path)
+
+    # Generate crops
+    for face in faces:
+        generate_crop(face, crops_dir)
+
+    return {
+        "faces_extracted": len(faces),
+        "identity_ids": identity_ids,
+    }
+
+
 def process_uploaded_file(
     filepath: Path,
     job_id: str,
@@ -232,8 +340,11 @@ def process_uploaded_file(
     """
     Main entry point for processing an uploaded file.
 
+    Handles both single images and ZIP archives. For ZIP files,
+    processes each image independently with error isolation.
+
     Args:
-        filepath: Path to uploaded image
+        filepath: Path to uploaded image or ZIP
         job_id: Unique job identifier
         data_dir: Data directory (default: project/data)
         crops_dir: Crops output directory (default: project/app/static/crops)
@@ -241,9 +352,8 @@ def process_uploaded_file(
     Returns:
         Result dict with status, faces_extracted, identities_created
     """
-    from core.embeddings_io import atomic_append_embeddings
-    from core.photo_registry import PhotoRegistry
-    from core.registry import IdentityRegistry
+    import tempfile
+    import zipfile
 
     project_root = Path(__file__).resolve().parent.parent
 
@@ -261,80 +371,221 @@ def process_uploaded_file(
     # Write initial status
     write_status_file(inbox_dir, job_id, "processing")
 
-    try:
-        # Extract faces
-        logger.info(f"Extracting faces from {filepath}")
-        faces = extract_faces(filepath)
-        logger.info(f"Found {len(faces)} face(s)")
-
-        if not faces:
-            write_status_file(
-                inbox_dir, job_id, "success",
-                faces_extracted=0,
-            )
-            return {
-                "status": "success",
-                "faces_extracted": 0,
-                "identities_created": [],
-            }
-
-        # Generate face_ids
-        for i, face in enumerate(faces):
-            face["face_id"] = generate_face_id(filepath.name, i, job_id)
-
-        # Append to embeddings atomically
-        atomic_append_embeddings(embeddings_path, faces)
-        logger.info(f"Appended {len(faces)} embeddings")
-
-        # Register in photo registry
-        photo_id = f"inbox_{job_id}_{filepath.stem}"
-        try:
-            photo_registry = PhotoRegistry.load(photo_index_path)
-        except FileNotFoundError:
-            photo_registry = PhotoRegistry()
-
-        for face in faces:
-            photo_registry.register_face(photo_id, str(filepath), face["face_id"])
-
-        photo_registry.save(photo_index_path)
-        logger.info(f"Registered faces in photo registry")
-
-        # Create INBOX identities
-        try:
-            identity_registry = IdentityRegistry.load(identity_path)
-        except FileNotFoundError:
-            identity_registry = IdentityRegistry()
-
-        identity_ids = create_inbox_identities(
-            registry=identity_registry,
-            faces=faces,
+    # Check if ZIP file
+    if filepath.suffix.lower() == ".zip":
+        return _process_zip_file(
+            filepath=filepath,
             job_id=job_id,
+            inbox_dir=inbox_dir,
+            embeddings_path=embeddings_path,
+            photo_index_path=photo_index_path,
+            identity_path=identity_path,
+            crops_dir=crops_dir,
         )
 
-        identity_registry.save(identity_path)
-        logger.info(f"Created {len(identity_ids)} INBOX identities")
+    # Single image processing
+    try:
+        logger.info(f"Extracting faces from {filepath}")
+        result = process_single_image(
+            filepath=filepath,
+            job_id=job_id,
+            file_index=0,
+            embeddings_path=embeddings_path,
+            photo_index_path=photo_index_path,
+            identity_path=identity_path,
+            crops_dir=crops_dir,
+        )
 
-        # Generate crops
-        for face in faces:
-            generate_crop(face, crops_dir)
+        logger.info(f"Found {result['faces_extracted']} face(s)")
 
-        logger.info(f"Generated face crops")
-
-        # Write final status
         write_status_file(
             inbox_dir, job_id, "success",
-            faces_extracted=len(faces),
-            identities_created=identity_ids,
+            faces_extracted=result["faces_extracted"],
+            identities_created=result["identity_ids"],
+            total_files=1,
+            files_succeeded=1,
+            files_failed=0,
         )
 
         return {
             "status": "success",
-            "faces_extracted": len(faces),
-            "identities_created": identity_ids,
+            "faces_extracted": result["faces_extracted"],
+            "identities_created": result["identity_ids"],
         }
 
     except Exception as e:
         logger.error(f"Error processing {filepath}: {e}")
+        write_status_file(
+            inbox_dir, job_id, "error",
+            error=str(e),
+            total_files=1,
+            files_succeeded=0,
+            files_failed=1,
+            errors=[{"filename": filepath.name, "error": str(e)}],
+        )
+        return {
+            "status": "error",
+            "error": str(e),
+        }
+
+
+def _process_zip_file(
+    filepath: Path,
+    job_id: str,
+    inbox_dir: Path,
+    embeddings_path: Path,
+    photo_index_path: Path,
+    identity_path: Path,
+    crops_dir: Path,
+) -> dict:
+    """
+    Process a ZIP archive containing multiple images.
+
+    Per-file error isolation ensures a single corrupt image
+    does not abort the entire batch.
+
+    Args:
+        filepath: Path to ZIP file
+        job_id: Job identifier
+        inbox_dir: Path for status files
+        embeddings_path: Path to embeddings.npy
+        photo_index_path: Path to photo_index.json
+        identity_path: Path to identities.json
+        crops_dir: Path to crops directory
+
+    Returns:
+        Result dict with aggregated status
+    """
+    import tempfile
+    import zipfile
+
+    logger.info(f"Processing ZIP archive: {filepath}")
+
+    try:
+        with zipfile.ZipFile(filepath, "r") as zf:
+            # Filter to image files only (skip __MACOSX, .DS_Store, etc.)
+            image_files = [
+                name for name in zf.namelist()
+                if is_image_file(name)
+                and not name.startswith("__MACOSX")
+                and not name.startswith(".")
+                and "/" not in name.split("/")[-1].startswith(".")
+            ]
+
+            total_files = len(image_files)
+            if total_files == 0:
+                write_status_file(
+                    inbox_dir, job_id, "success",
+                    faces_extracted=0,
+                    total_files=0,
+                    files_succeeded=0,
+                    files_failed=0,
+                )
+                return {
+                    "status": "success",
+                    "faces_extracted": 0,
+                    "identities_created": [],
+                    "total_files": 0,
+                }
+
+            logger.info(f"Found {total_files} image(s) in ZIP")
+
+            # Track aggregated results
+            total_faces = 0
+            all_identity_ids = []
+            files_succeeded = 0
+            files_failed = 0
+            errors = []
+
+            # Process each image with error isolation
+            with tempfile.TemporaryDirectory() as tmpdir:
+                tmpdir_path = Path(tmpdir)
+
+                for file_index, image_name in enumerate(image_files):
+                    # Update progress status
+                    write_status_file(
+                        inbox_dir, job_id, "processing",
+                        faces_extracted=total_faces,
+                        identities_created=all_identity_ids,
+                        total_files=total_files,
+                        files_succeeded=files_succeeded,
+                        files_failed=files_failed,
+                        current_file=image_name,
+                    )
+
+                    try:
+                        # Extract single file to temp dir
+                        extracted_path = tmpdir_path / Path(image_name).name
+                        with zf.open(image_name) as src, open(extracted_path, "wb") as dst:
+                            dst.write(src.read())
+
+                        logger.info(f"Processing [{file_index + 1}/{total_files}]: {image_name}")
+
+                        result = process_single_image(
+                            filepath=extracted_path,
+                            job_id=job_id,
+                            file_index=file_index,
+                            embeddings_path=embeddings_path,
+                            photo_index_path=photo_index_path,
+                            identity_path=identity_path,
+                            crops_dir=crops_dir,
+                        )
+
+                        total_faces += result["faces_extracted"]
+                        all_identity_ids.extend(result["identity_ids"])
+                        files_succeeded += 1
+
+                        logger.info(f"  Found {result['faces_extracted']} face(s)")
+
+                    except Exception as e:
+                        # Error isolation: log and continue
+                        logger.error(f"  Error processing {image_name}: {e}")
+                        files_failed += 1
+                        errors.append({
+                            "filename": image_name,
+                            "error": str(e),
+                        })
+
+            # Determine final status
+            if files_failed == 0:
+                final_status = "success"
+            elif files_succeeded == 0:
+                final_status = "error"
+            else:
+                final_status = "partial"  # Some succeeded, some failed
+
+            write_status_file(
+                inbox_dir, job_id, final_status,
+                faces_extracted=total_faces,
+                identities_created=all_identity_ids,
+                total_files=total_files,
+                files_succeeded=files_succeeded,
+                files_failed=files_failed,
+                errors=errors if errors else None,
+            )
+
+            return {
+                "status": final_status,
+                "faces_extracted": total_faces,
+                "identities_created": all_identity_ids,
+                "total_files": total_files,
+                "files_succeeded": files_succeeded,
+                "files_failed": files_failed,
+                "errors": errors,
+            }
+
+    except zipfile.BadZipFile as e:
+        logger.error(f"Invalid ZIP file: {e}")
+        write_status_file(
+            inbox_dir, job_id, "error",
+            error=f"Invalid ZIP file: {e}",
+        )
+        return {
+            "status": "error",
+            "error": f"Invalid ZIP file: {e}",
+        }
+    except Exception as e:
+        logger.error(f"Error processing ZIP: {e}")
         write_status_file(
             inbox_dir, job_id, "error",
             error=str(e),
