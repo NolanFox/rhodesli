@@ -84,3 +84,22 @@ import cv2  # Tests fail if cv2 not installed
 
 ### Path Resolution
 Always use `Path(__file__).resolve().parent` for file paths to ensure portability.
+
+## ADDITIONAL AGENT CONSTRAINTS (2026-02)
+
+### SENIOR ENGINEER PROTOCOL
+1. **Assumption Surfacing:** Explicitly state assumptions before coding or refactoring.
+2. **Confusion Management:** If requirements conflict or are ambiguous, STOP and ask for clarification.
+3. **Simplicity Enforcement:** Prefer the simplest solution that satisfies constraints; reject over-engineering.
+
+### FORENSIC INVARIANTS (LOCKED)
+These invariants are constitutional and override all other agent instructions.
+They may ONLY be changed by explicit user instruction.
+
+1. **Immutable Embeddings:** PFE vectors and derived embeddings in `data/` are read-only for UI and workflow tasks.
+2. **Reversible Merges:** All identity merges must be reversible; no destructive operations.
+3. **No Silent Math:** `core/neighbors.py` algorithmic logic is FROZEN. Changes require an explicit evaluation plan.
+4. **Conservation of Mass:** The UI must never delete a face; only detach, reject, or hide with recovery.
+5. **Human Authority:** `provenance="human"` decisions override `provenance="model"` in all conflicts.
+
+Any potential violation of these invariants must be surfaced immediately.
