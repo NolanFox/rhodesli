@@ -653,3 +653,244 @@ class TestGetCandidateFaceIds:
 
         with pytest.raises(KeyError):
             registry.get_candidate_face_ids("unknown-id")
+
+
+class TestSearchIdentities:
+    """Tests for search_identities() method (manual search support)."""
+
+    def test_case_insensitive_match(self):
+        """Search should match names case-insensitively."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="John Smith",
+            user_source="test",
+        )
+        registry.confirm_identity(identity_id, user_source="test")
+
+        # Should match regardless of case
+        results = registry.search_identities("john")
+        assert len(results) == 1
+        assert results[0]["identity_id"] == identity_id
+
+        results = registry.search_identities("JOHN")
+        assert len(results) == 1
+        assert results[0]["identity_id"] == identity_id
+
+        results = registry.search_identities("JoHn")
+        assert len(results) == 1
+        assert results[0]["identity_id"] == identity_id
+
+    def test_confirmed_only_filtering(self):
+        """Search should only return CONFIRMED identities."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+
+        # Create CONFIRMED identity
+        confirmed_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="Alice Confirmed",
+            user_source="test",
+        )
+        registry.confirm_identity(confirmed_id, user_source="test")
+
+        # Create PROPOSED identity (should not appear)
+        proposed_id = registry.create_identity(
+            anchor_ids=["face_002"],
+            name="Alice Proposed",
+            user_source="test",
+        )
+
+        # Create INBOX identity (should not appear)
+        inbox_id = registry.create_identity(
+            anchor_ids=["face_003"],
+            name="Alice Inbox",
+            user_source="test",
+            state=IdentityState.INBOX,
+        )
+
+        # Create REJECTED identity (should not appear)
+        rejected_id = registry.create_identity(
+            anchor_ids=["face_004"],
+            name="Alice Rejected",
+            user_source="test",
+            state=IdentityState.INBOX,
+        )
+        registry.reject_identity(rejected_id, user_source="test")
+
+        results = registry.search_identities("Alice")
+        assert len(results) == 1
+        assert results[0]["identity_id"] == confirmed_id
+
+    def test_excludes_current_identity(self):
+        """Search should exclude the identity specified by exclude_id."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        id_a = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="Test Person",
+            user_source="test",
+        )
+        registry.confirm_identity(id_a, user_source="test")
+
+        id_b = registry.create_identity(
+            anchor_ids=["face_002"],
+            name="Test Person",
+            user_source="test",
+        )
+        registry.confirm_identity(id_b, user_source="test")
+
+        # Without exclusion, both should match
+        results = registry.search_identities("Test")
+        assert len(results) == 2
+
+        # With exclusion, only one should match
+        results = registry.search_identities("Test", exclude_id=id_a)
+        assert len(results) == 1
+        assert results[0]["identity_id"] == id_b
+
+    def test_excludes_merged_identities(self):
+        """Search should not return merged identities."""
+        from core.registry import IdentityRegistry
+        from unittest.mock import MagicMock
+
+        registry = IdentityRegistry()
+
+        target_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="John Target",
+            user_source="test",
+        )
+        registry.confirm_identity(target_id, user_source="test")
+
+        source_id = registry.create_identity(
+            anchor_ids=["face_002"],
+            name="John Source",
+            user_source="test",
+        )
+        registry.confirm_identity(source_id, user_source="test")
+
+        # Before merge, both should appear
+        results = registry.search_identities("John")
+        assert len(results) == 2
+
+        # Create mock photo registry for merge
+        mock_photo_registry = MagicMock()
+        mock_photo_registry.get_photos_for_faces.return_value = set()
+
+        # Merge source into target
+        registry.merge_identities(
+            source_id=source_id,
+            target_id=target_id,
+            user_source="test",
+            photo_registry=mock_photo_registry,
+        )
+
+        # After merge, only target should appear
+        results = registry.search_identities("John")
+        assert len(results) == 1
+        assert results[0]["identity_id"] == target_id
+
+    def test_empty_query_returns_empty_list(self):
+        """Empty or whitespace query should return empty list."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="John Smith",
+            user_source="test",
+        )
+        registry.confirm_identity(identity_id, user_source="test")
+
+        assert registry.search_identities("") == []
+        assert registry.search_identities("   ") == []
+
+    def test_result_structure(self):
+        """Results should have correct structure with identity_id, name, face_count, preview_face_id."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001", "face_002"],
+            candidate_ids=["face_003"],
+            name="Jane Doe",
+            user_source="test",
+        )
+        registry.confirm_identity(identity_id, user_source="test")
+
+        results = registry.search_identities("Jane")
+        assert len(results) == 1
+
+        result = results[0]
+        assert result["identity_id"] == identity_id
+        assert result["name"] == "Jane Doe"
+        assert result["face_count"] == 3  # 2 anchors + 1 candidate
+        assert result["preview_face_id"] == "face_001"  # First anchor
+
+    def test_respects_limit(self):
+        """Search should respect the limit parameter."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        # Create 5 confirmed identities
+        for i in range(5):
+            identity_id = registry.create_identity(
+                anchor_ids=[f"face_{i:03d}"],
+                name=f"Test Person {i}",
+                user_source="test",
+            )
+            registry.confirm_identity(identity_id, user_source="test")
+
+        # Default limit (10) should return all 5
+        results = registry.search_identities("Test")
+        assert len(results) == 5
+
+        # Custom limit should be respected
+        results = registry.search_identities("Test", limit=3)
+        assert len(results) == 3
+
+    def test_substring_match(self):
+        """Search should find substring matches, not just prefix."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="John Smith Jr.",
+            user_source="test",
+        )
+        registry.confirm_identity(identity_id, user_source="test")
+
+        # Prefix match
+        results = registry.search_identities("John")
+        assert len(results) == 1
+
+        # Substring match (middle)
+        results = registry.search_identities("Smith")
+        assert len(results) == 1
+
+        # Substring match (suffix)
+        results = registry.search_identities("Jr")
+        assert len(results) == 1
+
+    def test_no_match_returns_empty_list(self):
+        """Query with no matches should return empty list."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="John Smith",
+            user_source="test",
+        )
+        registry.confirm_identity(identity_id, user_source="test")
+
+        results = registry.search_identities("xyz123")
+        assert results == []
