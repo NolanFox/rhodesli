@@ -68,3 +68,4 @@ data/backups/
 # Scientific Instrumentation Runtime
 data/current_run_id.txt
 logs/
+evaluation/run_log.jsonl
