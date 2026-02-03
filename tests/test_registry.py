@@ -537,6 +537,84 @@ class TestListOperations:
         assert confirmed[0]["identity_id"] == id1
 
 
+class TestInboxState:
+    """Tests for INBOX state and provenance support."""
+
+    def test_create_identity_with_inbox_state(self):
+        """Creating an identity with state=INBOX should honor that state."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+        )
+
+        identity = registry.get_identity(identity_id)
+        assert identity["state"] == IdentityState.INBOX.value
+
+    def test_provenance_stored_on_create(self):
+        """Provenance dict should be stored when provided."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        provenance = {
+            "source": "inbox_ingest",
+            "job_id": "abc123",
+            "filename": "photo.jpg",
+        }
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance=provenance,
+        )
+
+        identity = registry.get_identity(identity_id)
+        assert identity["provenance"] == provenance
+
+    def test_move_inbox_to_proposed(self):
+        """move_to_proposed should transition INBOX -> PROPOSED."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+        )
+
+        registry.move_to_proposed(identity_id, user_source="ui_review")
+
+        identity = registry.get_identity(identity_id)
+        assert identity["state"] == IdentityState.PROPOSED.value
+        assert identity["version_id"] == 2
+
+    def test_list_inbox_identities(self):
+        """list_identities(state=INBOX) should return only inbox identities."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        inbox_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+        )
+        proposed_id = registry.create_identity(
+            anchor_ids=["face_002"],
+            user_source="manual",
+        )
+
+        inbox_list = registry.list_identities(state=IdentityState.INBOX)
+        proposed_list = registry.list_identities(state=IdentityState.PROPOSED)
+
+        assert len(inbox_list) == 1
+        assert inbox_list[0]["identity_id"] == inbox_id
+        assert len(proposed_list) == 1
+        assert proposed_list[0]["identity_id"] == proposed_id
+
+
 class TestGetCandidateFaceIds:
     """Tests for get_candidate_face_ids() method (B2 thumbnail support)."""
 
