@@ -76,7 +76,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 2,
             "anchor_face_ids": ["image_001:face0", "image_002:face0"],
@@ -96,7 +96,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 2,
             "anchor_face_ids": ["missing_image:face0", "image_002:face0"],
@@ -119,7 +119,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 2,
             "anchor_face_ids": ["missing_a:face0", "missing_b:face0"],
@@ -139,7 +139,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 0,
             "anchor_face_ids": [],
@@ -159,7 +159,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 2,
             "anchor_face_ids": ["missing_anchor:face0"],
@@ -183,7 +183,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 1,
             "anchor_face_ids": [],  # No anchors (PROPOSED singleton)
@@ -206,7 +206,7 @@ class TestNeighborCardThumbnail:
         neighbor = {
             "identity_id": "test-id",
             "name": "Test Identity",
-            "mls_score": -50,
+            "distance": 0.5,
             "can_merge": True,
             "face_count": 2,
             "anchor_face_ids": ["missing_anchor:face0"],

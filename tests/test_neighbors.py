@@ -128,11 +128,11 @@ class TestFindNearestNeighbors:
             id_a, identity_registry, photo_registry, face_data, limit=10
         )
 
-        # id_b should come before id_c (higher MLS)
+        # id_b should come before id_c (lower distance = more similar)
         assert len(neighbors) == 2
         assert neighbors[0]["identity_id"] == id_b
         assert neighbors[1]["identity_id"] == id_c
-        assert neighbors[0]["mls_score"] > neighbors[1]["mls_score"]
+        assert neighbors[0]["distance"] < neighbors[1]["distance"]
 
     def test_includes_merge_eligibility(self):
         """Each result should indicate if merge is possible."""
