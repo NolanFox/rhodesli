@@ -22,6 +22,7 @@ from urllib.parse import quote
 import numpy as np
 from fasthtml.common import *
 from PIL import Image
+from starlette.datastructures import UploadFile
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
@@ -565,12 +566,93 @@ def toast_with_undo(
     )
 
 
+def upload_area() -> Div:
+    """
+    Drag-and-drop file upload area.
+    UX Intent: Easy bulk ingestion into inbox.
+    """
+    return Div(
+        Form(
+            Div(
+                Span("\u2191", cls="text-4xl text-stone-300"),
+                P("Drop photos here or click to upload", cls="text-stone-500 mt-2"),
+                P("Faces will be added to your Inbox for review", cls="text-xs text-stone-400 mt-1"),
+                cls="text-center py-8"
+            ),
+            Input(
+                type="file",
+                name="file",
+                accept="image/*,.zip",
+                cls="absolute inset-0 opacity-0 cursor-pointer",
+                hx_post="/upload",
+                hx_encoding="multipart/form-data",
+                hx_target="#upload-status",
+                hx_swap="innerHTML",
+            ),
+            cls="relative",
+            enctype="multipart/form-data",
+        ),
+        Div(id="upload-status", cls="mt-2"),
+        cls="border-2 border-dashed border-stone-300 rounded-lg p-4 hover:border-stone-400 hover:bg-stone-50 transition-colors mb-4",
+    )
+
+
+def inbox_badge(count: int) -> A:
+    """
+    Inbox badge showing count of items awaiting review.
+    """
+    if count == 0:
+        return A(
+            Span("\ud83d\udce5", cls="mr-2"),
+            "Inbox",
+            Span("(0)", cls="text-stone-400 ml-1"),
+            href="#inbox-lane",
+            cls="text-stone-500 hover:text-stone-700 text-sm"
+        )
+    return A(
+        Span("\ud83d\udce5", cls="mr-2"),
+        "Inbox",
+        Span(
+            f"({count})",
+            cls="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"
+        ),
+        href="#inbox-lane",
+        cls="text-stone-700 hover:text-blue-600 text-sm font-medium"
+    )
+
+
+def inbox_action_buttons(identity_id: str) -> Div:
+    """
+    Action buttons for INBOX identities.
+    Simpler than PROPOSED: just Review (move to proposed) or Skip.
+    """
+    return Div(
+        Button(
+            "\u2192 Review",
+            cls="px-3 py-1.5 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors",
+            hx_post=f"/inbox/{identity_id}/review",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            aria_label="Move to Proposed for detailed review",
+            type="button",
+        ),
+        Span(
+            "...",
+            id=f"loading-{identity_id}",
+            cls="htmx-indicator ml-2 text-stone-400 animate-pulse",
+            aria_hidden="true",
+        ),
+        cls="flex gap-2 items-center mt-3",
+    )
+
+
 def state_badge(state: str) -> Span:
     """
     Render state as a colored badge.
     UX Intent: Instant state recognition via color coding.
     """
     colors = {
+        "INBOX": "bg-blue-600 text-white",
         "CONFIRMED": "bg-emerald-600 text-white",
         "PROPOSED": "bg-amber-500 text-white",
         "CONTESTED": "bg-red-600 text-white",
@@ -910,6 +992,7 @@ def identity_card(
         return None
 
     border_colors = {
+        "blue": "border-l-blue-500",
         "emerald": "border-l-emerald-500",
         "amber": "border-l-amber-500",
         "red": "border-l-red-500",
@@ -974,8 +1057,9 @@ def identity_card(
             cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
             id=f"faces-{identity_id}",
         ),
-        # Action buttons for PROPOSED identities
+        # Action buttons based on state
         action_buttons(identity_id) if show_actions and state == "PROPOSED" else None,
+        inbox_action_buttons(identity_id) if show_actions and state == "INBOX" else None,
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
         cls=f"identity-card bg-stone-50 border border-stone-200 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-sm mb-4",
@@ -1045,6 +1129,7 @@ def lane_section(
             cards.append(card)
 
     bg_colors = {
+        "blue": "bg-blue-50/50",
         "emerald": "bg-emerald-50/50",
         "amber": "bg-amber-50/50",
         "red": "bg-red-50/50",
@@ -1116,23 +1201,30 @@ def skipped_section() -> Div:
 def get():
     """
     Main workstation view.
-    Renders identities in three lanes by state.
+    Renders identities in four lanes by state.
     """
     registry = load_registry()
     crop_files = get_crop_files()
 
+    inbox = registry.list_identities(state=IdentityState.INBOX)
     confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
     contested = registry.list_identities(state=IdentityState.CONTESTED)
 
+    inbox.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     confirmed.sort(key=lambda x: (x.get("name") or "", x.get("updated_at", "")))
     proposed.sort(key=lambda x: x.get("version_id", 0), reverse=True)
     contested.sort(key=lambda x: x.get("version_id", 0), reverse=True)
 
-    has_data = confirmed or proposed or contested
+    has_data = inbox or confirmed or proposed or contested
 
     if has_data:
         content = Div(
+            # Upload area at top
+            upload_area(),
+            # Inbox lane (new faces awaiting review)
+            lane_section("Inbox", inbox, crop_files, "blue", "\ud83d\udce5",
+                         show_actions=True, lane_id="inbox-lane") if inbox else None,
             # Proposed lane has action buttons enabled
             lane_section("Proposed", proposed, crop_files, "amber", "?",
                          show_actions=True, lane_id="proposed-lane"),
@@ -2208,6 +2300,163 @@ def post(id: str):
     # The UI handles the DOM move client-side
     return Response(status_code=200)
 # -------------------------------------
+
+
+# =============================================================================
+# ROUTES - INBOX INGESTION
+# =============================================================================
+
+@rt("/upload")
+async def post(file: UploadFile):
+    """
+    Accept file upload and spawn subprocess for processing.
+
+    Returns HTML partial with upload status and polling.
+    """
+    import subprocess
+    import uuid
+
+    if not file or not file.filename:
+        return Div(
+            P("No file selected.", cls="text-red-600 text-sm"),
+            cls="p-2"
+        )
+
+    # Generate unique job ID
+    job_id = str(uuid.uuid4())[:8]
+
+    # Save uploaded file to temp location
+    uploads_dir = data_path / "uploads"
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+
+    # Sanitize filename
+    safe_filename = file.filename.replace(" ", "_").replace("/", "_")
+    upload_path = uploads_dir / f"{job_id}_{safe_filename}"
+
+    # Write file content
+    content = await file.read()
+    with open(upload_path, "wb") as f:
+        f.write(content)
+
+    # Spawn subprocess for processing
+    # Use subprocess.Popen for non-blocking execution
+    ingest_script = project_root / "core" / "ingest_inbox.py"
+    subprocess.Popen(
+        [sys.executable, str(ingest_script), "--file", str(upload_path), "--job-id", job_id],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    # Return status component that polls for completion
+    return Div(
+        P(f"Processing {file.filename}...", cls="text-stone-600 text-sm"),
+        Span("\u23f3", cls="animate-pulse"),
+        hx_get=f"/upload/status/{job_id}",
+        hx_trigger="every 2s",
+        hx_swap="outerHTML",
+        cls="p-2 bg-blue-50 rounded flex items-center gap-2"
+    )
+
+
+@rt("/upload/status/{job_id}")
+def get(job_id: str):
+    """
+    Poll job status for upload processing.
+
+    Returns HTML partial with current status.
+    """
+    import json
+
+    status_path = data_path / "inbox" / f"{job_id}.status.json"
+
+    if not status_path.exists():
+        # Still processing
+        return Div(
+            P("Processing...", cls="text-stone-600 text-sm"),
+            Span("\u23f3", cls="animate-pulse"),
+            hx_get=f"/upload/status/{job_id}",
+            hx_trigger="every 2s",
+            hx_swap="outerHTML",
+            cls="p-2 bg-blue-50 rounded flex items-center gap-2"
+        )
+
+    with open(status_path) as f:
+        status = json.load(f)
+
+    if status["status"] == "processing":
+        return Div(
+            P("Processing...", cls="text-stone-600 text-sm"),
+            Span("\u23f3", cls="animate-pulse"),
+            hx_get=f"/upload/status/{job_id}",
+            hx_trigger="every 2s",
+            hx_swap="outerHTML",
+            cls="p-2 bg-blue-50 rounded flex items-center gap-2"
+        )
+
+    if status["status"] == "error":
+        return Div(
+            P(f"Error: {status.get('error', 'Unknown error')}", cls="text-red-600 text-sm"),
+            cls="p-2 bg-red-50 rounded"
+        )
+
+    # Success
+    faces = status.get("faces_extracted", 0)
+    identities = len(status.get("identities_created", []))
+
+    return Div(
+        P(
+            f"\u2713 {faces} face(s) extracted, {identities} added to Inbox",
+            cls="text-emerald-600 text-sm font-medium"
+        ),
+        A("Refresh to see inbox", href="/", cls="text-blue-600 hover:underline text-xs ml-2"),
+        cls="p-2 bg-emerald-50 rounded flex items-center"
+    )
+
+
+@rt("/inbox/{identity_id}/review")
+def post(identity_id: str):
+    """
+    Move identity from INBOX to PROPOSED state.
+
+    Returns updated identity card in proposed lane.
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.move_to_proposed(identity_id, user_source="web")
+        save_registry(registry)
+    except ValueError as e:
+        return Response(
+            to_xml(toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    # Return updated card (now PROPOSED, with full action buttons)
+    return (
+        identity_card(updated_identity, crop_files, lane_color="amber", show_actions=True),
+        toast("Moved to Proposed for review.", "success"),
+    )
+
 
 if __name__ == "__main__":
     # Startup diagnostics: log raw_photos directory info
