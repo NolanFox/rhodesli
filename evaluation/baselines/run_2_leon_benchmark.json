@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "benchmark_name": "Run 2 Leon Standard",
+    "subject": "Big Leon Capeluto",
+    "created_at": "2026-02-03T19:31:53.855715+00:00",
+    "calibration_adr": "ADR 007"
+  },
+  "evaluation": {
+    "timestamp": "2026-02-03T19:31:53.855715+00:00",
+    "target": "Brass_Rail_Restaurant_with_Leon_Capeluto_Picture:face0",
+    "threshold": 1.20,
+    "positive_matches": [
+      {"face_id": "Image 992_compress:face0", "distance": 0.9440, "rank": 1},
+      {"face_id": "757557325.971675:face0", "distance": 0.9941, "rank": 2},
+      {"face_id": "Image 964_compress:face1", "distance": 1.0490, "rank": 3},
+      {"face_id": "Image 032_compress:face1", "distance": 1.1675, "rank": 4}
+    ],
+    "negative_matches": [
+      {"face_id": "Image 055_compress:face0", "distance": 1.4024}
+    ],
+    "passed": true,
+    "positive_failures": [],
+    "negative_failures": []
+  },
+  "statistics": {
+    "positive_distance_min": 0.9440,
+    "positive_distance_max": 1.1675,
+    "positive_distance_mean": 1.0387,
+    "negative_distance_min": 1.4024,
+    "margin_to_hard_negative": 0.2349
+  }
+}

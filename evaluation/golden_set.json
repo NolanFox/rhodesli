@@ -1,0 +1,14 @@
+{
+  "target": "Brass_Rail_Restaurant_with_Leon_Capeluto_Picture:face0",
+  "positives": [
+    "Image 992_compress:face0",
+    "Image 964_compress:face1",
+    "757557325.971675:face0",
+    "Image 032_compress:face1"
+  ],
+  "hard_negatives": [
+    "Image 055_compress:face0"
+  ],
+  "threshold": 1.20,
+  "notes": "Big Leon Capeluto Run 2 ground truth. Threshold calibrated per ADR 007. Frozen baseline."
+}
