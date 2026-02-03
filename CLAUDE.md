@@ -103,3 +103,11 @@ They may ONLY be changed by explicit user instruction.
 5. **Human Authority:** `provenance="human"` decisions override `provenance="model"` in all conflicts.
 
 Any potential violation of these invariants must be surfaced immediately.
+
+## RELEASE DOCUMENTATION INVARIANT
+
+Any session that changes user-visible behavior or system capabilities MUST end by:
+1. Updating `docs/RELEASE_NOTES.md`
+2. Adding an entry to `CHANGELOG.md`
+
+A session is not considered complete until this is done. This is a hard rule, not a suggestion.

@@ -1,4 +1,6 @@
 [x] Phase 0: Reorg (Complete)
-[x] Phase 1.5: Evaluation Harness
-[ ] Phase 2: Ingestion
-[ ] Phase 3: UX
+[x] Phase 1.5: Evaluation Harness (Complete)
+[x] Phase 2: Ingestion (Complete)
+[x] Phase 3: UX & Human Review (Complete)
+[ ] Phase 4: Scale & Performance Hardening
+[ ] Phase 5: Multi-Identity Evaluation
