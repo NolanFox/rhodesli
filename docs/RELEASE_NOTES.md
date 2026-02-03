@@ -2,9 +2,15 @@
 
 ## v0.2.2 — Multi-File Upload Support
 
-This release fixes a critical contract mismatch that prevented users from uploading multiple photos at once.
+This release fixes a critical contract mismatch that prevented users from uploading multiple photos at once, plus a subprocess execution bug that could cause uploads to fail.
 
 ### Fixes
+
+- **Subprocess Execution Context**
+  - Fixed `ModuleNotFoundError: No module named 'core'` during uploads
+  - Worker subprocess now uses `-m core.ingest_inbox` with explicit `cwd` set to project root
+  - Created missing `core/__init__.py` package marker
+  - Added regression test to prevent future subprocess invocation failures
 
 - **Multi-File Upload**
   - Frontend now supports selecting multiple files (images and/or ZIPs)

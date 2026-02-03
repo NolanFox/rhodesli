@@ -2460,6 +2460,7 @@ async def post(files: list[UploadFile]):
 
     Returns HTML partial with upload status and polling.
     """
+    import os
     import subprocess
     import uuid
 
@@ -2494,9 +2495,19 @@ async def post(files: list[UploadFile]):
 
     # Spawn subprocess for processing
     # Use subprocess.Popen for non-blocking execution
-    ingest_script = project_root / "core" / "ingest_inbox.py"
+    # INVARIANT: All subprocesses must run from PROJECT_ROOT with cwd set explicitly
     subprocess.Popen(
-        [sys.executable, str(ingest_script), "--directory", str(job_dir), "--job-id", job_id],
+        [
+            sys.executable,
+            "-m",
+            "core.ingest_inbox",
+            "--directory",
+            str(job_dir),
+            "--job-id",
+            job_id,
+        ],
+        cwd=project_root,
+        env=os.environ.copy(),
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )

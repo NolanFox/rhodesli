@@ -7,11 +7,15 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - Frontend/backend contract mismatch preventing multi-file uploads
 - Upload input now uses `name="files"` with `multiple=True`
+- Subprocess execution context causing `ModuleNotFoundError: No module named 'core'`
+- Worker subprocess now invoked with `-m core.ingest_inbox` and explicit `cwd=PROJECT_ROOT`
 
 ### Added
 - `--directory` CLI option for batch ingestion of multiple files
 - Support for mixed uploads (images + ZIPs in same selection)
 - Job-specific upload directories for batch isolation
+- `core/__init__.py` package marker (was missing)
+- Regression test for worker subprocess entrypoint invocation
 
 ### Changed
 - Upload handler accepts `files: list[UploadFile]` instead of single file
