@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.2.1] - 2026-02-03
+
+### Fixed
+- Test suite aligned with current API contracts (mls_score -> distance)
+- Removed tests for compute_identity_centroid (intentionally omitted per design)
+
+### Added
+- ZIP ingestion with per-file error isolation
+- Per-file error tracking in job metadata
+- Partial success status for batch uploads with mixed results
+- Real-time progress reporting driven by backend job state
+
+### Changed
+- Upload progress bar now reflects actual completion percentage
+- Error reporting shows per-file failure details
+
 ## [v0.2.0] - 2026-02-03
 
 ### Added

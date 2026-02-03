@@ -1,5 +1,35 @@
 # Release Notes
 
+## v0.2.1 — Reliability & Hardening
+
+This is a reliability release focused on test stability, ingestion resilience, and honest UX feedback.
+
+### Improvements
+
+- **Test Suite Stability**
+  - Fixed legacy test failures by aligning assertions with current API contracts
+  - Removed tests for intentionally-omitted centroid computation (per design doc)
+  - All 258 tests now pass
+
+- **Ingestion Resilience**
+  - ZIP archives now process each image independently with error isolation
+  - A single corrupt image no longer aborts the entire batch
+  - Per-file errors captured and reported in job metadata
+
+- **Upload Progress Transparency**
+  - Progress bar driven by actual backend state, not timers
+  - Shows real completion percentage (files processed / total)
+  - Displays current file being processed
+  - New "partial" status for mixed success/failure batches
+  - Per-file error details visible to user
+
+### Not Changed
+
+- Recognition logic remains frozen (per CLAUDE.md constraints)
+- No new features introduced
+
+---
+
 ## v0.2.0 — Scale-Up & Human Review
 
 ### What's New
