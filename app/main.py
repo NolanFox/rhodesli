@@ -164,7 +164,8 @@ def load_face_embeddings() -> dict[str, dict]:
         face_index = filename_face_counts[filename]
         filename_face_counts[filename] += 1
 
-        face_id = generate_face_id(filename, face_index)
+        # Use stored face_id if present (inbox format), otherwise generate legacy format
+        face_id = entry.get("face_id") or generate_face_id(filename, face_index)
 
         # Extract mu and sigma_sq
         if "mu" in entry:
@@ -274,7 +275,8 @@ def load_embeddings_for_photos():
         filename_face_counts[filename] += 1
 
         photo_id = generate_photo_id(filename)
-        face_id = generate_face_id(filename, face_index)
+        # Use stored face_id if present (inbox format), otherwise generate legacy format
+        face_id = entry.get("face_id") or generate_face_id(filename, face_index)
 
         # Parse bbox - it might be a string or list
         bbox = entry["bbox"]
