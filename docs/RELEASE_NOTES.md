@@ -1,5 +1,54 @@
 # Release Notes
 
+## v0.3.7 — Four-State Triage Workflow
+
+This release introduces a simplified, reversible identity review workflow.
+
+### Breaking Change: New Workflow Model
+
+**Before:** Identities lived in Inbox/Proposed/Confirmed/Contested states. Skip was UI-only (lost on refresh). Rejected items vanished.
+
+**After:** Four clear sections with persistent states:
+
+| Section | Description | Actions |
+|---------|-------------|---------|
+| To Review | Items needing attention | Confirm / Skip / Reject |
+| Confirmed | Verified identities | Return to Review |
+| Skipped | Deferred for later | Confirm / Reject / Return to Review |
+| Rejected | Dismissed items | Return to Review |
+
+### Key Improvements
+
+1. **No More Vanishing Items**
+   - Rejected items now visible in Rejected section
+   - All 292 identities always visible across all sections
+
+2. **Persistent Skip**
+   - Skip is now a real state (`SKIPPED`) stored in the database
+   - Skipped items persist across sessions
+   - Can be confirmed, rejected, or returned to review
+
+3. **Full Reversibility**
+   - Every action can be undone via "Return to Review"
+   - No destructive operations
+
+### Technical Changes
+
+- Added `SKIPPED` to `IdentityState` enum in `core/registry.py`
+- Added `skip_identity()` and `reset_identity()` functions
+- Added `/identity/{id}/skip` and `/identity/{id}/reset` endpoints
+- Unified `review_action_buttons()` replaces separate button components
+- Removed UI-only `skipped_section()` hyperscript solution
+
+### Data Migration
+
+No migration needed. Existing data works as-is:
+- INBOX + PROPOSED → shown in "To Review"
+- CONFIRMED → shown in "Confirmed"
+- REJECTED + CONTESTED → shown in "Rejected"
+
+---
+
 ## v0.3.6 — Ingestion-Time Face Grouping
 
 This release adds automatic grouping of similar faces during upload, reducing user workload.

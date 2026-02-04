@@ -36,16 +36,37 @@ Run this checklist after any significant code change.
 - [ ] Source identity is removed from DOM
 
 ### 6. Confirm Identity
-- [ ] State changes to confirmed
-- [ ] Identity moves out of inbox
-- [ ] Card reflects new state
+- [ ] State changes to CONFIRMED
+- [ ] Identity moves to Confirmed section
+- [ ] Card shows "Return to Review" button only
+- [ ] Card reflects new state (emerald badge)
 
-### 7. Detach Face
+### 7. Skip Identity
+- [ ] Click Skip on a To Review item
+- [ ] State changes to SKIPPED
+- [ ] Identity moves to Skipped section
+- [ ] Card shows Confirm/Reject/Reset buttons
+- [ ] Can click Reset to return to To Review
+
+### 8. Reject Identity
+- [ ] Click Reject on a To Review item
+- [ ] State changes to REJECTED (or CONTESTED)
+- [ ] Identity moves to Rejected section
+- [ ] Card shows "Return to Review" button only
+- [ ] Item does NOT vanish - always visible in Rejected section
+
+### 9. Workflow Reversibility
+- [ ] From Confirmed: Click Reset → returns to To Review
+- [ ] From Skipped: Click Reset → returns to To Review
+- [ ] From Rejected: Click Reset → returns to To Review
+- [ ] All 292 identities always visible across all sections (no vanishing)
+
+### 10. Detach Face
 - [ ] Face is removed from identity
 - [ ] Face count updates immediately (no stale count)
-- [ ] Detached face creates new identity in Proposed lane
+- [ ] Detached face creates new identity in To Review section
 
-### 8. Manual Search
+### 11. Manual Search
 - [ ] Returns results
 - [ ] Results show photos (not blank cards)
 - [ ] Results are clickable
@@ -62,6 +83,7 @@ Run this checklist after any significant code change.
 | Photo 404 UX | app/main.py:1745-1762 | [ ] Deferred |
 | Inbox endpoint semantics | app/main.py:2872-2915 | [ ] Deferred |
 | Unsanitized filename | app/main.py:2728 | [ ] Deferred |
+| Vanishing reject items | app/main.py:1464 | [x] Fixed 2026-02-04 - Rejected state now fetched and rendered |
 
 ## Quick Smoke Test (5 min)
 

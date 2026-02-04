@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.7] - 2026-02-04
+
+### Added
+- `SKIPPED` state to `IdentityState` enum for deferred reviews
+- `skip_identity()` and `reset_identity()` functions in registry
+- `SKIP` and `RESET` action types for event logging
+- `/identity/{id}/skip` endpoint to defer items for later
+- `/identity/{id}/reset` endpoint to return any state to review queue
+- Unified `review_action_buttons()` showing state-appropriate buttons
+- stone/rose colors for Skipped/Rejected sections
+
+### Fixed
+- **Vanishing reject bug**: Rejected items now fetched and rendered in Rejected section
+- `confirm_identity()` and `reject_identity()` now accept SKIPPED state
+
+### Changed
+- Main page shows 4 sections: To Review, Confirmed, Skipped, Rejected
+- To Review combines INBOX + PROPOSED states
+- Rejected combines REJECTED + CONTESTED states
+- All identity cards now show appropriate action buttons for their state
+
+### Removed
+- Old `action_buttons()` with UI-only hyperscript skip
+- Old `skipped_section()` collapsible (replaced with proper lane_section)
+
 ## [v0.3.6] - 2026-02-04
 
 ### Added
