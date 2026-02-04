@@ -2524,7 +2524,15 @@ async def post(files: list[UploadFile]):
 
     # Spawn subprocess for processing
     # Use subprocess.Popen for non-blocking execution
-    # INVARIANT: All subprocesses must run from PROJECT_ROOT with cwd set explicitly
+    # INVARIANT: All subprocesses must run from PROJECT_ROOT with cwd AND PYTHONPATH set
+    subprocess_env = os.environ.copy()
+    # Explicitly set PYTHONPATH to ensure core imports work in all environments
+    existing_pythonpath = subprocess_env.get("PYTHONPATH", "")
+    if existing_pythonpath:
+        subprocess_env["PYTHONPATH"] = f"{project_root}{os.pathsep}{existing_pythonpath}"
+    else:
+        subprocess_env["PYTHONPATH"] = str(project_root)
+
     subprocess.Popen(
         [
             sys.executable,
@@ -2536,7 +2544,7 @@ async def post(files: list[UploadFile]):
             job_id,
         ],
         cwd=project_root,
-        env=os.environ.copy(),
+        env=subprocess_env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
