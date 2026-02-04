@@ -1802,11 +1802,10 @@ def photo_view_content(
             cls=f"{overlay_classes} group",
             style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
             title=display_name,
-            # Click navigates to identity (if assigned)
-            hx_get=f"/" if identity_id else None,
-            hx_push_url="true" if identity_id else None,
             data_face_id=face_id,
             data_identity_id=identity_id or "",
+            # Click closes modal and scrolls to identity (if assigned)
+            **{"_": f"on click add .hidden to #photo-modal then set target to #identity-{identity_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then set window.location.hash to 'identity-{identity_id}'"} if identity_id else {},
         )
         face_overlays.append(overlay)
 
