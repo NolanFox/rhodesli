@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.2] - 2026-02-03
+
+### Fixed
+- Find Similar returning no results for inbox faces
+- `load_face_embeddings()` now preserves stored `face_id` instead of regenerating
+- `load_embeddings_for_photos()` applies same fix for photo context views
+
+### Added
+- Contract tests for face_id preservation (`tests/test_face_record_contract.py`)
+
 ## [v0.3.1] - 2026-02-03
 
 ### Fixed

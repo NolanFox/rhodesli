@@ -1,5 +1,37 @@
 # Release Notes
 
+## v0.3.2 — Face ID Index Fix
+
+This patch fixes a critical bug where Find Similar and other embedding lookups failed for inbox faces.
+
+### Bug Summary
+
+After uploading images via inbox, "Find Similar" returned no results for inbox identities despite embeddings existing in `embeddings.npy`.
+
+### Root Cause
+
+`load_face_embeddings()` and `load_embeddings_for_photos()` in `app/main.py` ignored the stored `face_id` field and always regenerated IDs using `generate_face_id(filename, face_index)`. This created wrong keys for inbox faces:
+
+- Stored: `inbox_574e45ca5b8d`
+- Generated: `603575867.895093:face0` (WRONG)
+
+When `find_nearest_neighbors()` looked up `inbox_574e45ca5b8d` in `face_data`, it returned nothing because the key didn't exist.
+
+### Fix
+
+Both functions now check for stored `face_id` first:
+```python
+face_id = entry.get("face_id") or generate_face_id(filename, face_index)
+```
+
+### Verification
+
+- 261 inbox faces now correctly indexed (previously: 0)
+- 286 legacy faces still work
+- 305 tests pass (including 2 new contract tests)
+
+---
+
 ## v0.3.1 — Inbox Visibility Fix
 
 This patch fixes a critical bug where inbox items were invisible despite being correctly ingested.
