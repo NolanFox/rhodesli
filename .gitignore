@@ -69,3 +69,8 @@ data/backups/
 data/current_run_id.txt
 logs/
 evaluation/run_log.jsonl
+uploads/
+app/static/crops/
+data/embeddings.npy
+data/registry.json
+data/inbox/
