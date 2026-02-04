@@ -1230,6 +1230,18 @@ def identity_card(
                 photo_id=photo_id,
                 show_detach=can_detach,
             ))
+        else:
+            # Placeholder for faces with missing crop files
+            face_cards.append(Div(
+                Div(
+                    Span("?", cls="text-4xl text-stone-300"),
+                    cls="w-full aspect-square bg-stone-100 border border-stone-200 flex items-center justify-center"
+                ),
+                P("Image unavailable", cls="text-xs text-stone-400 mt-1"),
+                P(f"ID: {face_id[:12]}...", cls="text-xs font-mono text-stone-300"),
+                cls="face-card",
+                id=make_css_id(face_id),
+            ))
 
     if not face_cards:
         return None
@@ -2355,6 +2367,18 @@ def get(identity_id: str, sort: str = "date"):
                 crop_url=crop_url,
                 photo_id=photo_id,
             ))
+        else:
+            # Placeholder for faces with missing crop files
+            cards.append(Div(
+                Div(
+                    Span("?", cls="text-4xl text-stone-300"),
+                    cls="w-full aspect-square bg-stone-100 border border-stone-200 flex items-center justify-center"
+                ),
+                P("Image unavailable", cls="text-xs text-stone-400 mt-1"),
+                P(f"ID: {face_id[:12]}...", cls="text-xs font-mono text-stone-300"),
+                cls="face-card",
+                id=make_css_id(face_id),
+            ))
 
     return Div(
         *cards,
@@ -2555,26 +2579,41 @@ def post(face_id: str):
         to_identity_id=result["to_identity_id"],
     )
 
-    # 1. Prepare safe ID for removing the OLD face card
-    face_card_id = make_css_id(face_id)
-    
-    # 2. Render the NEW identity card
-    new_identity = registry.get_identity(result["to_identity_id"])
+    # 1. Get crop files for rendering
     crop_files = get_crop_files()
+
+    # 2. Render the NEW identity card (detached face's new home)
+    new_identity = registry.get_identity(result["to_identity_id"])
     new_card_html = identity_card(
-        new_identity, 
-        crop_files, 
+        new_identity,
+        crop_files,
         lane_color="amber", # New identities are PROPOSED
         show_actions=True
     )
 
+    # 3. Render the UPDATED old identity card (with correct face count)
+    old_identity = registry.get_identity(identity_id)
+    state_colors = {
+        "INBOX": "blue",
+        "PROPOSED": "amber",
+        "CONFIRMED": "emerald",
+        "CONTESTED": "red",
+    }
+    old_lane_color = state_colors.get(old_identity["state"], "stone")
+    old_card_html = identity_card(
+        old_identity,
+        crop_files,
+        lane_color=old_lane_color,
+        show_actions=old_identity["state"] in ("INBOX", "PROPOSED"),
+    )
+
     return (
-        # A. Delete the old face card from its current container
-        Div(id=face_card_id, hx_swap_oob="delete"),
-        
+        # A. Replace OLD identity card with updated face count
+        Div(old_card_html, id=f"identity-{identity_id}", hx_swap_oob="outerHTML"),
+
         # B. Insert the new identity card at the top of the Proposed lane
         Div(new_card_html, hx_swap_oob="afterbegin:#proposed-lane"),
-        
+
         # C. Success toast
         toast(f"Face detached into new identity.", "success"),
     )
