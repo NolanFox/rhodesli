@@ -209,6 +209,25 @@ class IdentityRegistry:
 
         return [i.copy() for i in identities]
 
+    def list_identities_by_job(self, job_id: str) -> list[dict]:
+        """
+        List all identities created by a specific ingestion job.
+
+        Used for job cleanup to find all artifacts from a failed upload.
+
+        Args:
+            job_id: Ingestion job identifier
+
+        Returns:
+            List of identity dicts where provenance.job_id matches (copies)
+        """
+        results = []
+        for identity in self._identities.values():
+            provenance = identity.get("provenance")
+            if provenance and provenance.get("job_id") == job_id:
+                results.append(identity.copy())
+        return results
+
     def merge_identities(
         self,
         source_id: str,
