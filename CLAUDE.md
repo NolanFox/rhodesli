@@ -63,6 +63,61 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 - **Test Location**: Tests mirror source files: `core/crop_faces.py` → `tests/test_crop.py`.
 - **Run Tests**: `pytest tests/` from project root.
 
+## Data Safety Rules
+
+### NEVER modify these files directly:
+- `data/identities.json`
+- `data/photo_index.json`
+- `data/embeddings.npy`
+- Any file in `data/` directory
+
+### When testing:
+- ALWAYS use test fixtures, not production data
+- NEVER run tests without proper isolation
+- Test files should use `tmp_path` or `tempfile` fixtures
+- If a test needs data, create mock data in the test
+
+### When writing scripts:
+- ALWAYS include `--dry-run` as the default mode
+- ALWAYS require explicit `--execute` or `--force` flag to make changes
+- ALWAYS print what WOULD change before changing it
+
+### When debugging:
+- Use READ-ONLY inspection (cat, grep, python print statements)
+- NEVER "fix" data by editing JSON files directly
+- If data is corrupt, write a migration script with --dry-run
+
+### Forbidden patterns:
+```python
+# NEVER do this:
+with open("data/identities.json", "w") as f:
+    json.dump(modified_data, f)
+
+# Instead, if data migration is needed:
+# 1. Create a script in scripts/
+# 2. Add --dry-run flag
+# 3. Get user approval before --execute
+```
+
+### Test Isolation
+All tests MUST be isolated from production data:
+```python
+# GOOD - Uses fixture
+def test_something(tmp_path):
+    test_data = tmp_path / "identities.json"
+    test_data.write_text('{"identities": {}}')
+    # ... test with test_data
+
+# BAD - Uses production data
+def test_something():
+    with open("data/identities.json") as f:  # NEVER DO THIS
+        data = json.load(f)
+```
+
+### Before Adding Any Test
+Ask: "Does this test touch real data in data/?"
+If yes: Rewrite to use fixtures.
+
 ## Code Patterns
 
 ### Import Hygiene (Critical for Testability)
@@ -84,6 +139,39 @@ import cv2  # Tests fail if cv2 not installed
 
 ### Path Resolution
 Always use `Path(__file__).resolve().parent` for file paths to ensure portability.
+
+## Documentation Rules
+
+### After Any Feature Change
+Update these files if affected:
+- `docs/MANUAL_TEST_CHECKLIST.md` - Add test cases for new features
+- `README.md` - Update if user-facing behavior changes
+
+### After Any Bug Fix
+- Add the bug to the "Known Bug Locations" table in `docs/MANUAL_TEST_CHECKLIST.md`
+- Mark as fixed once verified
+
+### Checklist Maintenance
+
+#### After Adding a Feature
+1. Add test cases to `docs/MANUAL_TEST_CHECKLIST.md` under appropriate section
+2. If it's a new flow, add a new section
+
+#### After Fixing a Bug
+1. Update the "Known Bug Locations" table in the checklist
+2. Mark as `[x] Fixed` with date
+3. Add a regression test case if applicable
+
+#### After Changing a Flow
+1. Update the relevant checklist section
+2. Remove obsolete test cases
+3. Add new test cases
+
+#### Checklist Review Trigger
+If any of these files change significantly, review the checklist:
+- `app/main.py` (UI routes)
+- `core/ingest_inbox.py` (upload flow)
+- `templates/*.html` (UI changes)
 
 ## ADDITIONAL AGENT CONSTRAINTS (2026-02)
 
