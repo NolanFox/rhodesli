@@ -2311,6 +2311,10 @@ def photo_view_content(
         # Photo info
         Div(
             P(
+                photo["filename"],
+                cls="text-stone-600 text-sm font-mono font-medium"
+            ),
+            P(
                 f"{len(photo['faces'])} face{'s' if len(photo['faces']) != 1 else ''} detected",
                 cls="text-stone-500 text-sm"
             ),
