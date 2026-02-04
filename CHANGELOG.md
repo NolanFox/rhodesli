@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.8] - 2026-02-04
+
+### Added
+- **Command Center UI**: Complete redesign with fixed sidebar navigation
+- `sidebar()` component with section navigation and live counts
+- Focus Mode: Review one identity at a time with prominent actions
+- Browse Mode: Traditional grid view for scanning
+- `identity_card_expanded()` for focus mode display
+- `identity_card_mini()` for queue preview
+- `get_next_focus_card()` helper for focus mode flow
+- `section_header()` component with Focus/Browse toggle
+- Section-specific rendering functions
+- URL parameters: `section` (to_review/confirmed/skipped/rejected) and `view` (focus/browse)
+
+### Changed
+- Main route now uses sidebar + main content layout
+- Action endpoints support `from_focus=true` to return next focus card
+- Default view is Focus mode showing one item prominently
+- Removed old header with "Rhodesli Forensic Workstation" title
+
+### Fixed
+- Actions in focus mode now advance to next item instead of showing completed card
+
 ## [v0.3.7] - 2026-02-04
 
 ### Added

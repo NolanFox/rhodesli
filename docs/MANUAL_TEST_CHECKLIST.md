@@ -71,6 +71,45 @@ Run this checklist after any significant code change.
 - [ ] Results show photos (not blank cards)
 - [ ] Results are clickable
 
+### 12. Command Center Layout (v0.3.8)
+- [ ] Sidebar is fixed on left (doesn't scroll with content)
+- [ ] Sidebar shows correct counts for all sections
+- [ ] Sidebar highlights current section with color
+- [ ] "Upload Photos" button in sidebar links to /upload
+- [ ] Version number displays in sidebar footer (v0.3.8)
+- [ ] Main content is offset from sidebar (not hidden behind it)
+
+### 13. Section Navigation
+- [ ] Click "Inbox" in sidebar → shows Inbox section
+- [ ] Click "Skipped" in sidebar → shows Skipped section
+- [ ] Click "Confirmed" in sidebar → shows Confirmed section
+- [ ] Click "Dismissed" in sidebar → shows Dismissed section
+- [ ] Each section shows appropriate header and content
+
+### 14. Focus Mode (Inbox section)
+- [ ] Default view shows one identity expanded
+- [ ] Expanded card shows large face thumbnail
+- [ ] Expanded card shows face count and all faces
+- [ ] "Up Next" queue shows upcoming items
+- [ ] Queue shows "+N more" indicator when appropriate
+- [ ] Focus/Browse toggle buttons are visible
+- [ ] "Focus" button is highlighted when in focus mode
+
+### 15. Focus Mode Actions
+- [ ] Click Confirm → advances to next identity (not stay on confirmed card)
+- [ ] Click Skip → advances to next identity
+- [ ] Click Reject → advances to next identity
+- [ ] Toast notification appears for each action
+- [ ] When all items reviewed → shows "All caught up!" message
+- [ ] "Find Similar" button works on expanded card
+
+### 16. Browse Mode (Inbox section)
+- [ ] Click "View All" → switches to grid view
+- [ ] "View All" button is highlighted when in browse mode
+- [ ] Grid shows all identity cards
+- [ ] Can switch back to Focus mode
+- [ ] Actions in browse mode update cards normally (don't advance)
+
 ## Known Bug Locations (Reference)
 
 | Bug | Location | Status |

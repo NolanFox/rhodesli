@@ -1,5 +1,55 @@
 # Release Notes
 
+## v0.3.8 — Command Center UI
+
+This release introduces a complete UI redesign with a sidebar-based "Command Center" layout and focused review sessions.
+
+### Key Changes
+
+**1. Sidebar Navigation**
+- Fixed sidebar on the left with section navigation
+- Live counts for each section (Inbox, Skipped, Confirmed, Dismissed)
+- Progress indicator: "X of Y identified"
+- Version number in footer
+
+**2. Focus Mode (Default)**
+- One identity displayed prominently at a time
+- Large face thumbnail with all faces visible
+- Prominent action buttons: Confirm, Skip, Reject
+- Queue preview showing upcoming items
+- Actions automatically advance to next item
+
+**3. Browse Mode**
+- Toggle between Focus and Browse modes in Inbox
+- Browse mode shows the traditional grid of all items
+- Useful for scanning or searching specific items
+
+**4. Section-Based Navigation**
+- Click any section in sidebar to navigate
+- Current section highlighted with color
+- No more scrolling through long lists
+
+### Technical Changes
+
+- New `sidebar()` component function
+- New `identity_card_expanded()` for focus mode
+- New `identity_card_mini()` for queue preview
+- New section rendering functions (`render_to_review_section`, etc.)
+- New `get_next_focus_card()` helper
+- Updated action endpoints to support `from_focus=true` parameter
+- Main route accepts `section` and `view` query parameters
+
+### URL Parameters
+
+| Parameter | Values | Default |
+|-----------|--------|---------|
+| `section` | to_review, confirmed, skipped, rejected | to_review |
+| `view` | focus, browse | focus |
+
+Example: `/?section=to_review&view=browse`
+
+---
+
 ## v0.3.7 — Four-State Triage Workflow
 
 This release introduces a simplified, reversible identity review workflow.

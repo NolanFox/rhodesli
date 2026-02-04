@@ -695,6 +695,481 @@ def toast_with_undo(
     )
 
 
+def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
+    """
+    Fixed sidebar navigation for the Command Center.
+
+    Args:
+        counts: Dict with keys: to_review, confirmed, skipped, rejected
+        current_section: Currently active section
+    """
+    def nav_item(href: str, icon: str, label: str, count: int, section_key: str, color: str):
+        """Single navigation item with badge."""
+        is_active = current_section == section_key
+
+        # Active vs inactive styling
+        if is_active:
+            container_cls = f"bg-{color}-50 text-{color}-700"
+            badge_cls = f"bg-{color}-500 text-white"
+        else:
+            container_cls = "text-gray-700 hover:bg-gray-100"
+            badge_cls = f"bg-{color}-100 text-{color}-700"
+
+        return A(
+            Span(
+                Span(icon, cls="mr-2"),
+                Span(label),
+                cls="flex items-center"
+            ),
+            Span(
+                str(count),
+                cls=f"px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}"
+            ),
+            href=href,
+            cls=f"flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium {container_cls}"
+        )
+
+    return Aside(
+        # Header
+        Div(
+            H1("Rhodesli", cls="text-xl font-bold text-gray-900"),
+            P("Identity System", cls="text-xs text-gray-500 mt-0.5"),
+            cls="px-6 py-5 border-b border-gray-100"
+        ),
+        # Upload Button
+        Div(
+            A(
+                Svg(
+                    Path(
+                        stroke_linecap="round",
+                        stroke_linejoin="round",
+                        stroke_width="2",
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                    ),
+                    cls="w-4 h-4",
+                    fill="none",
+                    stroke="currentColor",
+                    viewBox="0 0 24 24"
+                ),
+                " Upload Photos",
+                href="/upload",
+                cls="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+            ),
+            cls="px-4 py-4"
+        ),
+        # Navigation
+        Nav(
+            # Review Section
+            Div(
+                P(
+                    "Review",
+                    cls="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2"
+                ),
+                nav_item("/?section=to_review", "📥", "Inbox", counts["to_review"], "to_review", "blue"),
+                nav_item("/?section=skipped", "⏸", "Skipped", counts["skipped"], "skipped", "yellow"),
+                cls="mb-4"
+            ),
+            # Library Section
+            Div(
+                P(
+                    "Library",
+                    cls="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2"
+                ),
+                nav_item("/?section=confirmed", "✓", "Confirmed", counts["confirmed"], "confirmed", "green"),
+                nav_item("/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
+                cls="mb-4"
+            ),
+            cls="flex-1 px-3 py-2 space-y-1 overflow-y-auto"
+        ),
+        # Footer with stats
+        Div(
+            Div(
+                f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed']} identified",
+                cls="text-xs text-gray-400"
+            ),
+            Div("v0.3.8", cls="text-xs text-gray-300 mt-1"),
+            cls="px-4 py-3 border-t border-gray-100"
+        ),
+        cls="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col z-40"
+    )
+
+
+def section_header(title: str, subtitle: str, view_mode: str = None, section: str = None) -> Div:
+    """
+    Section header with optional Focus/Browse toggle.
+    """
+    header_content = [
+        Div(
+            H2(title, cls="text-2xl font-bold text-gray-900"),
+            P(subtitle, cls="text-sm text-gray-500 mt-1"),
+        )
+    ]
+
+    # Add view toggle for to_review section
+    if section == "to_review" and view_mode is not None:
+        toggle = Div(
+            A(
+                "Focus",
+                href="/?section=to_review&view=focus",
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-gray-900 text-white' if view_mode == 'focus' else 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+            ),
+            A(
+                "View All",
+                href="/?section=to_review&view=browse",
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-gray-900 text-white' if view_mode == 'browse' else 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+            ),
+            cls="flex items-center gap-2"
+        )
+        header_content.append(toggle)
+
+    return Div(
+        *header_content,
+        cls="flex items-center justify-between mb-6"
+    )
+
+
+def identity_card_expanded(identity: dict, crop_files: set) -> Div:
+    """
+    Expanded identity card for Focus Mode review.
+    Shows larger thumbnail and prominent actions.
+    """
+    identity_id = identity["identity_id"]
+    raw_name = ensure_utf8_display(identity.get("name"))
+    name = raw_name or f"Unidentified Person"
+    state = identity["state"]
+
+    # Get all faces
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    face_count = len(all_face_ids)
+
+    # Get first face for main thumbnail
+    main_crop_url = None
+    main_photo_id = None
+    if all_face_ids:
+        first_face = all_face_ids[0]
+        face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
+        main_crop_url = resolve_face_image_url(face_id, crop_files)
+        main_photo_id = get_photo_id_for_face(face_id)
+
+    # Build face grid for additional faces
+    face_previews = []
+    for face_entry in all_face_ids[:6]:  # Show up to 6 faces
+        if isinstance(face_entry, str):
+            face_id = face_entry
+        else:
+            face_id = face_entry.get("face_id", "")
+        crop_url = resolve_face_image_url(face_id, crop_files)
+        if crop_url:
+            face_previews.append(
+                Img(
+                    src=crop_url,
+                    cls="w-16 h-16 rounded object-cover border border-gray-200",
+                    alt=f"Face {face_id[:8]}"
+                )
+            )
+
+    # Action buttons - append ?from_focus=true so endpoints return next focus card
+    base_confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
+    base_reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
+    confirm_url = f"{base_confirm_url}?from_focus=true"
+    reject_url = f"{base_reject_url}?from_focus=true"
+    skip_url = f"/identity/{identity_id}/skip?from_focus=true"
+
+    actions = Div(
+        Button(
+            "✓ Confirm",
+            cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors",
+            hx_post=confirm_url,
+            hx_target="#focus-card",
+            hx_swap="outerHTML",
+            type="button",
+        ),
+        Button(
+            "⏸ Skip",
+            cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors",
+            hx_post=skip_url,
+            hx_target="#focus-card",
+            hx_swap="outerHTML",
+            type="button",
+        ),
+        Button(
+            "✗ Reject",
+            cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors",
+            hx_post=reject_url,
+            hx_target="#focus-card",
+            hx_swap="outerHTML",
+            type="button",
+        ),
+        Button(
+            "Find Similar",
+            cls="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors ml-auto",
+            hx_get=f"/api/identity/{identity_id}/neighbors",
+            hx_target=f"#neighbors-{identity_id}",
+            hx_swap="innerHTML",
+            type="button",
+        ),
+        cls="flex items-center gap-3 mt-6"
+    )
+
+    return Div(
+        Div(
+            # Left: Main Face
+            Div(
+                Div(
+                    Img(
+                        src=main_crop_url or "",
+                        alt=name,
+                        cls="w-full h-full object-cover"
+                    ) if main_crop_url else Span("?", cls="text-6xl text-gray-300"),
+                    cls="w-48 h-48 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center"
+                ),
+                Button(
+                    "View Full Photo →",
+                    cls="mt-2 text-sm text-indigo-600 hover:text-indigo-700",
+                    hx_get=f"/api/photo/{main_photo_id}/context" if main_photo_id else None,
+                    hx_target="#photo-modal-content",
+                    **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
+                    type="button",
+                ) if main_photo_id else None,
+                cls="flex-shrink-0"
+            ),
+            # Right: Details + Actions
+            Div(
+                H3(name, cls="text-xl font-semibold text-gray-900"),
+                P(
+                    f"{face_count} face{'s' if face_count != 1 else ''}",
+                    cls="text-sm text-gray-500 mt-1"
+                ),
+                # Face grid preview
+                Div(
+                    *face_previews,
+                    cls="flex gap-2 mt-4 flex-wrap"
+                ) if len(face_previews) > 1 else None,
+                # Neighbors container
+                Div(id=f"neighbors-{identity_id}", cls="mt-4"),
+                actions,
+                cls="flex-1 min-w-0"
+            ),
+            cls="flex gap-6"
+        ),
+        cls="bg-white rounded-xl shadow-sm border border-gray-200 p-6",
+        id="focus-card"
+    )
+
+
+def identity_card_mini(identity: dict, crop_files: set) -> Div:
+    """
+    Mini identity card for queue preview in Focus Mode.
+    """
+    identity_id = identity["identity_id"]
+
+    # Get first face for thumbnail
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    crop_url = None
+    if all_face_ids:
+        first_face = all_face_ids[0]
+        face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
+        crop_url = resolve_face_image_url(face_id, crop_files)
+
+    return Div(
+        Div(
+            Img(
+                src=crop_url or "",
+                cls="w-full h-full object-cover"
+            ) if crop_url else Span("?", cls="text-2xl text-gray-300"),
+            cls="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center"
+        ),
+        cls="w-24 flex-shrink-0"
+    )
+
+
+def render_to_review_section(
+    to_review: list,
+    crop_files: set,
+    view_mode: str,
+    counts: dict
+) -> Div:
+    """Render the To Review section with Focus or Browse mode."""
+
+    # For focus mode, prioritize items with more faces (more context to review)
+    high_confidence = sorted(
+        to_review,
+        key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
+        reverse=True
+    )[:10]
+
+    if view_mode == "focus":
+        if high_confidence:
+            # Show one item expanded + queue preview
+            content = Div(
+                identity_card_expanded(high_confidence[0], crop_files),
+                # Queue Preview
+                Div(
+                    H3("Up Next", cls="text-sm font-medium text-gray-500 mb-3"),
+                    Div(
+                        *[identity_card_mini(i, crop_files) for i in high_confidence[1:6]],
+                        Div(
+                            f"+{len(high_confidence) - 6} more",
+                            cls="w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-lg text-sm text-gray-500 aspect-square"
+                        ) if len(high_confidence) > 6 else None,
+                        cls="flex gap-3 overflow-x-auto pb-2"
+                    ),
+                    cls="mt-6"
+                ) if len(high_confidence) > 1 else None,
+            )
+        else:
+            # Empty state
+            content = Div(
+                Div("🎉", cls="text-4xl mb-4"),
+                H3("All caught up!", cls="text-lg font-medium text-gray-900"),
+                P("No items to review.", cls="text-gray-500 mt-1"),
+                A(
+                    "Upload more photos →",
+                    href="/upload",
+                    cls="inline-block mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
+                ),
+                cls="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center"
+            )
+    else:
+        # Browse mode - show grid
+        cards = [
+            identity_card(identity, crop_files, lane_color="blue", show_actions=True)
+            for identity in to_review
+        ]
+        cards = [c for c in cards if c]  # Filter None
+
+        if cards:
+            content = Div(*cards)
+        else:
+            content = Div(
+                "No items to review. Great job! 🎉",
+                cls="text-center py-12 text-gray-500"
+            )
+
+    return Div(
+        section_header(
+            "Inbox",
+            f"{counts['to_review']} items need your attention",
+            view_mode=view_mode,
+            section="to_review"
+        ),
+        content,
+        cls="space-y-6"
+    )
+
+
+def render_confirmed_section(confirmed: list, crop_files: set, counts: dict) -> Div:
+    """Render the Confirmed section."""
+    cards = [
+        identity_card(identity, crop_files, lane_color="emerald", show_actions=False)
+        for identity in confirmed
+    ]
+    cards = [c for c in cards if c]
+
+    if cards:
+        content = Div(*cards)
+    else:
+        content = Div(
+            "No confirmed identities yet.",
+            cls="text-center py-12 text-gray-500"
+        )
+
+    return Div(
+        section_header("Confirmed", f"{counts['confirmed']} people identified"),
+        content,
+        cls="space-y-6"
+    )
+
+
+def render_skipped_section(skipped: list, crop_files: set, counts: dict) -> Div:
+    """Render the Skipped section."""
+    cards = [
+        identity_card(identity, crop_files, lane_color="stone", show_actions=False)
+        for identity in skipped
+    ]
+    cards = [c for c in cards if c]
+
+    if cards:
+        content = Div(*cards)
+    else:
+        content = Div(
+            "No skipped items.",
+            cls="text-center py-12 text-gray-500"
+        )
+
+    return Div(
+        section_header("Skipped", f"{counts['skipped']} items deferred"),
+        content,
+        cls="space-y-6"
+    )
+
+
+def render_rejected_section(dismissed: list, crop_files: set, counts: dict) -> Div:
+    """Render the Rejected/Dismissed section."""
+    cards = [
+        identity_card(identity, crop_files, lane_color="rose", show_actions=False)
+        for identity in dismissed
+    ]
+    cards = [c for c in cards if c]
+
+    if cards:
+        content = Div(*cards)
+    else:
+        content = Div(
+            "No dismissed items.",
+            cls="text-center py-12 text-gray-500"
+        )
+
+    return Div(
+        section_header("Dismissed", f"{counts['rejected']} items dismissed"),
+        content,
+        cls="space-y-6"
+    )
+
+
+def get_next_focus_card(exclude_id: str = None):
+    """
+    Get the next identity card for focus mode review.
+
+    Returns an expanded identity card for the top priority item in to_review,
+    or an empty state if no items remain.
+    """
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    # Get all to_review items
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    to_review = inbox + proposed
+
+    # Filter out the just-actioned item
+    if exclude_id:
+        to_review = [i for i in to_review if i["identity_id"] != exclude_id]
+
+    # Sort by priority (more faces = higher priority)
+    to_review.sort(
+        key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
+        reverse=True
+    )
+
+    if to_review:
+        return identity_card_expanded(to_review[0], crop_files)
+    else:
+        # Empty state
+        return Div(
+            Div("🎉", cls="text-4xl mb-4"),
+            H3("All caught up!", cls="text-lg font-medium text-gray-900"),
+            P("No more items to review.", cls="text-gray-500 mt-1"),
+            A(
+                "Upload more photos →",
+                href="/upload",
+                cls="inline-block mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
+            ),
+            cls="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center",
+            id="focus-card"
+        )
+
+
 def upload_area() -> Div:
     """
     Drag-and-drop file upload area.
@@ -1380,10 +1855,13 @@ def lane_section(
 # =============================================================================
 
 @rt("/")
-def get():
+def get(section: str = "to_review", view: str = "focus"):
     """
-    Main workstation view.
-    Renders identities in four sections: Inbox, Confirmed, Skipped, Rejected.
+    Command Center: Sidebar-based navigation with focused review.
+
+    Args:
+        section: Which section to display (to_review, confirmed, skipped, rejected)
+        view: View mode for to_review section (focus or browse)
     """
     registry = load_registry()
     crop_files = get_crop_files()
@@ -1391,8 +1869,8 @@ def get():
     # Fetch all identity states
     inbox = registry.list_identities(state=IdentityState.INBOX)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
-    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
-    skipped = registry.list_identities(state=IdentityState.SKIPPED)
+    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
     rejected = registry.list_identities(state=IdentityState.REJECTED)
     contested = registry.list_identities(state=IdentityState.CONTESTED)
 
@@ -1402,61 +1880,44 @@ def get():
 
     # Sort each section
     to_review.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    confirmed.sort(key=lambda x: (x.get("name") or "", x.get("updated_at", "")))
-    skipped.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+    confirmed_list.sort(key=lambda x: (x.get("name") or "", x.get("updated_at", "")))
+    skipped_list.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
     dismissed.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
 
-    has_data = to_review or confirmed or skipped or dismissed
+    # Calculate counts for sidebar
+    counts = {
+        "to_review": len(to_review),
+        "confirmed": len(confirmed_list),
+        "skipped": len(skipped_list),
+        "rejected": len(dismissed),
+    }
 
-    if has_data:
-        content = Div(
-            # Upload area at top
-            upload_area(),
-            # Section 1: Inbox (needs attention)
-            lane_section("Inbox", to_review, crop_files, "blue", "\U0001F4E5",
-                         show_actions=True, lane_id="inbox-lane"),
-            # Section 2: Confirmed (verified identities)
-            lane_section("Confirmed", confirmed, crop_files, "emerald", "\u2713",
-                         lane_id="confirmed-lane"),
-            # Section 3: Skipped (deferred for later)
-            lane_section("Skipped", skipped, crop_files, "stone", "\u23f8",
-                         show_actions=False, lane_id="skipped-lane") if skipped else None,
-            # Section 4: Rejected (dismissed items)
-            lane_section("Rejected", dismissed, crop_files, "rose", "\u2717",
-                         show_actions=False, lane_id="rejected-lane") if dismissed else None,
-            cls="max-w-7xl mx-auto"
-        )
-    else:
-        crops_dir = static_path / "crops"
-        faces = []
-        for f in crops_dir.glob("*.jpg"):
-            quality = parse_quality_from_filename(f.name)
-            faces.append((f.name, quality))
-        faces.sort(key=lambda x: x[1], reverse=True)
+    # Validate section parameter
+    valid_sections = ("to_review", "confirmed", "skipped", "rejected")
+    if section not in valid_sections:
+        section = "to_review"
 
-        cards = [
-            face_card(face_id=fn, crop_url=f"/crops/{fn}", quality=q)
-            for fn, q in faces
-        ]
+    # Validate view parameter
+    if view not in ("focus", "browse"):
+        view = "focus"
 
-        content = Div(
-            Div(
-                P(
-                    "No identity registry found. Showing all faces as uncategorized.",
-                    cls="text-amber-700 bg-amber-100 px-4 py-2 rounded text-sm mb-4"
-                ),
-                Div(
-                    *cards,
-                    cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-                ),
-            ),
-            cls="max-w-7xl mx-auto"
-        )
+    # Render the appropriate section
+    if section == "to_review":
+        main_content = render_to_review_section(to_review, crop_files, view, counts)
+    elif section == "confirmed":
+        main_content = render_confirmed_section(confirmed_list, crop_files, counts)
+    elif section == "skipped":
+        main_content = render_skipped_section(skipped_list, crop_files, counts)
+    else:  # rejected
+        main_content = render_rejected_section(dismissed, crop_files, counts)
 
     style = Style("""
-        body {
-            background-color: #fafaf9;
+        html, body {
+            height: 100%;
             margin: 0;
+        }
+        body {
+            background-color: #f9fafb;
         }
         @keyframes fade-in {
             from { opacity: 0; transform: translateY(-10px); }
@@ -1492,34 +1953,32 @@ def get():
         }
     """)
 
-    return Title("Rhodesli Forensic Workstation"), style, Main(
+    return Title("Rhodesli Identity System"), style, Div(
         # Toast container for notifications
         toast_container(),
-        Header(
-            H1(
-                "Rhodesli",
-                cls="text-3xl font-serif font-bold text-stone-800 tracking-wide"
+        # Sidebar (fixed)
+        sidebar(counts, section),
+        # Main content (offset for sidebar)
+        Main(
+            Div(
+                main_content,
+                cls="max-w-6xl mx-auto px-8 py-6"
             ),
-            P(
-                "Forensic Identity Workstation",
-                cls="text-sm font-mono text-stone-500 mt-1"
-            ),
-            cls="text-center border-b-2 border-stone-800 pb-4 mb-6"
+            cls="ml-64 min-h-screen"
         ),
-        content,
         # Photo context modal (hidden by default)
         photo_modal(),
-        cls="p-4 md:p-8"
+        cls="h-full"
     )
 
 
 @rt("/confirm/{identity_id}")
-def post(identity_id: str):
+def post(identity_id: str, from_focus: bool = False):
     """
     Confirm an identity (move from PROPOSED to CONFIRMED).
 
     Returns:
-        200: Updated identity card
+        200: Updated identity card (or next focus card if from_focus=true)
         404: Identity not found
         409: Variance explosion (would corrupt fusion)
         423: Lock contention
@@ -1555,6 +2014,13 @@ def post(identity_id: str):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    # If from focus mode, return the next focus card
+    if from_focus:
+        return (
+            get_next_focus_card(exclude_id=identity_id),
+            toast("Identity confirmed.", "success"),
+        )
+
     # Return updated card (now CONFIRMED, no action buttons)
     crop_files = get_crop_files()
     updated_identity = registry.get_identity(identity_id)
@@ -1567,12 +2033,12 @@ def post(identity_id: str):
 
 
 @rt("/reject/{identity_id}")
-def post(identity_id: str):
+def post(identity_id: str, from_focus: bool = False):
     """
     Contest/reject an identity (move to CONTESTED).
 
     Returns:
-        200: Updated identity card (now contested)
+        200: Updated identity card (or next focus card if from_focus=true)
         404: Identity not found
         423: Lock contention
     """
@@ -1602,6 +2068,13 @@ def post(identity_id: str):
             to_xml(toast(f"Cannot reject: {str(e)}", "error")),
             status_code=409,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # If from focus mode, return the next focus card
+    if from_focus:
+        return (
+            get_next_focus_card(exclude_id=identity_id),
+            toast("Identity contested.", "warning"),
         )
 
     crop_files = get_crop_files()
@@ -2844,11 +3317,11 @@ def post(identity_id: str):
 
 
 @rt("/inbox/{identity_id}/confirm")
-def post(identity_id: str):
+def post(identity_id: str, from_focus: bool = False):
     """
     Confirm identity from INBOX state (INBOX → CONFIRMED).
 
-    Returns updated identity card in confirmed lane.
+    Returns updated identity card in confirmed lane, or next focus card if from_focus=true.
     """
     try:
         registry = load_registry()
@@ -2878,6 +3351,13 @@ def post(identity_id: str):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    # If from focus mode, return the next focus card
+    if from_focus:
+        return (
+            get_next_focus_card(exclude_id=identity_id),
+            toast("Identity confirmed.", "success"),
+        )
+
     crop_files = get_crop_files()
     updated_identity = registry.get_identity(identity_id)
 
@@ -2889,11 +3369,11 @@ def post(identity_id: str):
 
 
 @rt("/inbox/{identity_id}/reject")
-def post(identity_id: str):
+def post(identity_id: str, from_focus: bool = False):
     """
     Reject identity from INBOX state (INBOX → REJECTED).
 
-    Returns updated identity card with REJECTED state.
+    Returns updated identity card with REJECTED state, or next focus card if from_focus=true.
     """
     try:
         registry = load_registry()
@@ -2923,6 +3403,13 @@ def post(identity_id: str):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    # If from focus mode, return the next focus card
+    if from_focus:
+        return (
+            get_next_focus_card(exclude_id=identity_id),
+            toast("Identity rejected.", "success"),
+        )
+
     crop_files = get_crop_files()
     updated_identity = registry.get_identity(identity_id)
 
@@ -2934,12 +3421,12 @@ def post(identity_id: str):
 
 
 @rt("/identity/{identity_id}/skip")
-def post(identity_id: str):
+def post(identity_id: str, from_focus: bool = False):
     """
     Skip identity (defer for later review).
 
     Works from INBOX or PROPOSED state → SKIPPED.
-    Returns updated identity card in skipped lane.
+    Returns updated identity card in skipped lane, or next focus card if from_focus=true.
     """
     try:
         registry = load_registry()
@@ -2967,6 +3454,13 @@ def post(identity_id: str):
             to_xml(toast(str(e), "error")),
             status_code=400,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # If from focus mode, return the next focus card
+    if from_focus:
+        return (
+            get_next_focus_card(exclude_id=identity_id),
+            toast("Skipped for later.", "info"),
         )
 
     crop_files = get_crop_files()
