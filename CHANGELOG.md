@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 - `skip_identity()` and `reset_identity()` functions in registry
 - `SKIP` and `RESET` action types for event logging
 - `/identity/{id}/skip` endpoint to defer items for later
-- `/identity/{id}/reset` endpoint to return any state to review queue
+- `/identity/{id}/reset` endpoint to return any state to Inbox
 - Unified `review_action_buttons()` showing state-appropriate buttons
 - stone/rose colors for Skipped/Rejected sections
 
@@ -18,8 +18,8 @@ All notable changes to this project will be documented in this file.
 - `confirm_identity()` and `reject_identity()` now accept SKIPPED state
 
 ### Changed
-- Main page shows 4 sections: To Review, Confirmed, Skipped, Rejected
-- To Review combines INBOX + PROPOSED states
+- Main page shows 4 sections: Inbox, Confirmed, Skipped, Rejected
+- Inbox section combines INBOX + PROPOSED states
 - Rejected combines REJECTED + CONTESTED states
 - All identity cards now show appropriate action buttons for their state
 

@@ -38,33 +38,33 @@ Run this checklist after any significant code change.
 ### 6. Confirm Identity
 - [ ] State changes to CONFIRMED
 - [ ] Identity moves to Confirmed section
-- [ ] Card shows "Return to Review" button only
+- [ ] Card shows "Return to Inbox" button only
 - [ ] Card reflects new state (emerald badge)
 
 ### 7. Skip Identity
-- [ ] Click Skip on a To Review item
+- [ ] Click Skip on a Inbox item
 - [ ] State changes to SKIPPED
 - [ ] Identity moves to Skipped section
 - [ ] Card shows Confirm/Reject/Reset buttons
-- [ ] Can click Reset to return to To Review
+- [ ] Can click Reset to return to Inbox
 
 ### 8. Reject Identity
-- [ ] Click Reject on a To Review item
+- [ ] Click Reject on a Inbox item
 - [ ] State changes to REJECTED (or CONTESTED)
 - [ ] Identity moves to Rejected section
-- [ ] Card shows "Return to Review" button only
+- [ ] Card shows "Return to Inbox" button only
 - [ ] Item does NOT vanish - always visible in Rejected section
 
 ### 9. Workflow Reversibility
-- [ ] From Confirmed: Click Reset → returns to To Review
-- [ ] From Skipped: Click Reset → returns to To Review
-- [ ] From Rejected: Click Reset → returns to To Review
+- [ ] From Confirmed: Click Reset → returns to Inbox
+- [ ] From Skipped: Click Reset → returns to Inbox
+- [ ] From Rejected: Click Reset → returns to Inbox
 - [ ] All 292 identities always visible across all sections (no vanishing)
 
 ### 10. Detach Face
 - [ ] Face is removed from identity
 - [ ] Face count updates immediately (no stale count)
-- [ ] Detached face creates new identity in To Review section
+- [ ] Detached face creates new identity in Inbox section
 
 ### 11. Manual Search
 - [ ] Returns results

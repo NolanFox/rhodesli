@@ -12,10 +12,10 @@ This release introduces a simplified, reversible identity review workflow.
 
 | Section | Description | Actions |
 |---------|-------------|---------|
-| To Review | Items needing attention | Confirm / Skip / Reject |
-| Confirmed | Verified identities | Return to Review |
-| Skipped | Deferred for later | Confirm / Reject / Return to Review |
-| Rejected | Dismissed items | Return to Review |
+| Inbox | Items needing attention | Confirm / Skip / Reject |
+| Confirmed | Verified identities | Return to Inbox |
+| Skipped | Deferred for later | Confirm / Reject / Return to Inbox |
+| Rejected | Dismissed items | Return to Inbox |
 
 ### Key Improvements
 
@@ -26,10 +26,10 @@ This release introduces a simplified, reversible identity review workflow.
 2. **Persistent Skip**
    - Skip is now a real state (`SKIPPED`) stored in the database
    - Skipped items persist across sessions
-   - Can be confirmed, rejected, or returned to review
+   - Can be confirmed, rejected, or returned to Inbox
 
 3. **Full Reversibility**
-   - Every action can be undone via "Return to Review"
+   - Every action can be undone via "Return to Inbox"
    - No destructive operations
 
 ### Technical Changes
@@ -43,7 +43,7 @@ This release introduces a simplified, reversible identity review workflow.
 ### Data Migration
 
 No migration needed. Existing data works as-is:
-- INBOX + PROPOSED → shown in "To Review"
+- INBOX + PROPOSED → shown in "Inbox"
 - CONFIRMED → shown in "Confirmed"
 - REJECTED + CONTESTED → shown in "Rejected"
 

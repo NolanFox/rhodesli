@@ -809,13 +809,13 @@ def review_action_buttons(identity_id: str, state: str) -> Div:
     # Reset button - available for terminal states
     if state in ("CONFIRMED", "SKIPPED", "REJECTED", "CONTESTED"):
         buttons.append(Button(
-            "\u21a9 Return to Review",
+            "\u21a9 Return to Inbox",
             cls="px-3 py-1.5 text-sm font-bold border border-stone-400 text-stone-600 rounded hover:bg-stone-100 transition-colors",
             hx_post=f"/identity/{identity_id}/reset",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
             hx_indicator=f"#loading-{identity_id}",
-            aria_label="Return to review queue",
+            aria_label="Return to Inbox",
             type="button",
         ))
 
@@ -1383,7 +1383,7 @@ def lane_section(
 def get():
     """
     Main workstation view.
-    Renders identities in four sections: To Review, Confirmed, Skipped, Rejected.
+    Renders identities in four sections: Inbox, Confirmed, Skipped, Rejected.
     """
     registry = load_registry()
     crop_files = get_crop_files()
@@ -1412,9 +1412,9 @@ def get():
         content = Div(
             # Upload area at top
             upload_area(),
-            # Section 1: To Review (needs attention)
-            lane_section("To Review", to_review, crop_files, "blue", "\U0001F4E5",
-                         show_actions=True, lane_id="to-review-lane"),
+            # Section 1: Inbox (needs attention)
+            lane_section("Inbox", to_review, crop_files, "blue", "\U0001F4E5",
+                         show_actions=True, lane_id="inbox-lane"),
             # Section 2: Confirmed (verified identities)
             lane_section("Confirmed", confirmed, crop_files, "emerald", "\u2713",
                          lane_id="confirmed-lane"),
@@ -2981,10 +2981,10 @@ def post(identity_id: str):
 @rt("/identity/{identity_id}/reset")
 def post(identity_id: str):
     """
-    Reset identity back to review queue.
+    Reset identity back to Inbox.
 
     Works from any terminal state (CONFIRMED, SKIPPED, REJECTED, CONTESTED) → INBOX.
-    Returns updated identity card in inbox lane with action buttons.
+    Returns updated identity card in Inbox lane with action buttons.
     """
     try:
         registry = load_registry()
@@ -3019,7 +3019,7 @@ def post(identity_id: str):
 
     return (
         identity_card(updated_identity, crop_files, lane_color="blue", show_actions=True),
-        toast("Returned to review queue.", "info"),
+        toast("Returned to Inbox.", "info"),
     )
 
 
