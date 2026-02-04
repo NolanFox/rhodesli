@@ -30,6 +30,7 @@ sys.path.insert(0, str(project_root))
 
 from core.registry import IdentityRegistry, IdentityState
 from core.config import MATCH_THRESHOLD_HIGH, MATCH_THRESHOLD_MEDIUM
+from core.ui_safety import ensure_utf8_display
 
 # --- INSTRUMENTATION IMPORT ---
 from core.event_recorder import get_event_recorder
@@ -504,6 +505,9 @@ def toast(message: str, variant: str = "info") -> Div:
     Single toast notification.
     Variants: success, error, warning, info
     """
+    # UI BOUNDARY: sanitize message for safe rendering
+    safe_message = ensure_utf8_display(message)
+
     colors = {
         "success": "bg-emerald-600 text-white",
         "error": "bg-red-600 text-white",
@@ -518,7 +522,7 @@ def toast(message: str, variant: str = "info") -> Div:
     }
     return Div(
         Span(icons.get(variant, ""), cls="mr-2"),
-        Span(message),
+        Span(safe_message),
         cls=f"px-4 py-3 rounded shadow-lg flex items-center {colors.get(variant, colors['info'])} animate-fade-in",
         # Auto-dismiss after 4 seconds
         **{"_": "on load wait 4s then remove me"}
@@ -604,14 +608,14 @@ def inbox_badge(count: int) -> A:
     """
     if count == 0:
         return A(
-            Span("\ud83d\udce5", cls="mr-2"),
+            Span("\U0001F4E5", cls="mr-2"),
             "Inbox",
             Span("(0)", cls="text-stone-400 ml-1"),
             href="#inbox-lane",
             cls="text-stone-500 hover:text-stone-700 text-sm"
         )
     return A(
-        Span("\ud83d\udce5", cls="mr-2"),
+        Span("\U0001F4E5", cls="mr-2"),
         "Inbox",
         Span(
             f"({count})",
@@ -873,7 +877,8 @@ def face_card(
 
 def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> Div:
     neighbor_id = neighbor["identity_id"]
-    name = neighbor["name"]
+    # UI BOUNDARY: sanitize name for safe rendering
+    name = ensure_utf8_display(neighbor["name"])
     # Get values directly (no more negative scaling)
     distance = neighbor["distance"]
     percentile = neighbor.get("percentile", 1.0)
@@ -931,7 +936,9 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set) -
     Similar styling to neighbor_card but simpler (no distance/percentile).
     """
     result_id = result["identity_id"]
-    name = result["name"] or f"Identity {result_id[:8]}..."
+    # UI BOUNDARY: sanitize name for safe rendering
+    raw_name = ensure_utf8_display(result["name"])
+    name = raw_name or f"Identity {result_id[:8]}..."
     face_count = result.get("face_count", 0)
     preview_face_id = result.get("preview_face_id")
 
@@ -1033,7 +1040,9 @@ def name_display(identity_id: str, name: str) -> Div:
     Identity name display with edit button.
     Returns the name header component that can be swapped for inline editing.
     """
-    display_name = name or f"Identity {identity_id[:8]}..."
+    # UI BOUNDARY: sanitize name for safe rendering
+    safe_name = ensure_utf8_display(name)
+    display_name = safe_name or f"Identity {identity_id[:8]}..."
     return Div(
         H3(display_name, cls="text-lg font-serif font-bold text-stone-800"),
         Button(
@@ -1060,7 +1069,9 @@ def identity_card(
     UX Intent: Group context with individual face visibility.
     """
     identity_id = identity["identity_id"]
-    name = identity.get("name") or f"Identity {identity_id[:8]}..."
+    # UI BOUNDARY: sanitize name for safe rendering
+    raw_name = ensure_utf8_display(identity.get("name"))
+    name = raw_name or f"Identity {identity_id[:8]}..."
     state = identity["state"]
 
     # Combine anchors (confirmed) and candidates (proposed) for display
@@ -1327,7 +1338,7 @@ def get():
             # Upload area at top
             upload_area(),
             # Inbox lane (new faces awaiting review)
-            lane_section("Inbox", inbox, crop_files, "blue", "\ud83d\udce5",
+            lane_section("Inbox", inbox, crop_files, "blue", "\U0001F4E5",
                          show_actions=True, lane_id="inbox-lane") if inbox else None,
             # Proposed lane has action buttons enabled
             lane_section("Proposed", proposed, crop_files, "amber", "?",
@@ -1569,6 +1580,8 @@ def get(photo_id: str):
 
         # Convert bbox from [x1, y1, x2, y2] to {x, y, w, h}
         x1, y1, x2, y2 = bbox
+        # UI BOUNDARY: sanitize display_name for safe JSON rendering
+        raw_display_name = identity.get("name", "Unidentified") if identity else "Unidentified"
         face_obj = {
             "face_id": face_id,
             "bbox": {
@@ -1577,7 +1590,7 @@ def get(photo_id: str):
                 "w": x2 - x1,
                 "h": y2 - y1,
             },
-            "display_name": identity.get("name", "Unidentified") if identity else "Unidentified",
+            "display_name": ensure_utf8_display(raw_display_name),
             "identity_id": identity["identity_id"] if identity else None,
             "is_selected": False,
         }
@@ -1635,7 +1648,9 @@ def photo_view_content(
 
         # Get identity info
         identity = get_identity_for_face(registry, face_id)
-        display_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+        # UI BOUNDARY: sanitize display_name for safe rendering
+        raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+        display_name = ensure_utf8_display(raw_name)
         identity_id = identity["identity_id"] if identity else None
 
         # Determine if this face is selected
@@ -1906,7 +1921,9 @@ def get(identity_id: str):
         except KeyError:
             continue
 
-        name = rejected_identity.get("name") or f"Identity {rejected_id[:8]}..."
+        # UI BOUNDARY: sanitize name for safe rendering
+        raw_name = ensure_utf8_display(rejected_identity.get("name"))
+        name = raw_name or f"Identity {rejected_id[:8]}..."
 
         # Resolve thumbnail using anchor faces, then candidates
         thumbnail_img = None
@@ -2233,7 +2250,8 @@ def get(identity_id: str):
     except KeyError:
         return Response("Identity not found", status_code=404)
 
-    current_name = identity.get("name") or ""
+    # UI BOUNDARY: sanitize name for safe rendering in input value
+    current_name = ensure_utf8_display(identity.get("name")) or ""
 
     return Form(
         Input(
@@ -2606,8 +2624,9 @@ def get(job_id: str):
 
         # Show per-file errors if available
         if errors:
+            # UI BOUNDARY: sanitize filenames for safe rendering
             error_list = Ul(
-                *[Li(f"{e['filename']}: {e['error']}", cls="text-xs") for e in errors[:5]],
+                *[Li(f"{ensure_utf8_display(e['filename'])}: {ensure_utf8_display(e['error'])}", cls="text-xs") for e in errors[:5]],
                 cls="text-red-500 mt-1 ml-4 list-disc"
             )
             elements.append(error_list)
@@ -2639,7 +2658,8 @@ def get(job_id: str):
             )
             # Show first few errors
             if errors:
-                error_summary = ", ".join(e["filename"] for e in errors[:3])
+                # UI BOUNDARY: sanitize filenames for safe rendering
+                error_summary = ", ".join(ensure_utf8_display(e["filename"]) for e in errors[:3])
                 if len(errors) > 3:
                     error_summary += f", +{len(errors) - 3} more"
                 elements.append(P(f"Failed: {error_summary}", cls="text-red-400 text-xs"))
