@@ -23,6 +23,7 @@ import numpy as np
 from fasthtml.common import *
 from PIL import Image
 from starlette.datastructures import UploadFile
+from starlette.responses import FileResponse
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
@@ -64,6 +65,10 @@ async def startup_event():
     for dir_path in required_dirs:
         dir_path.mkdir(parents=True, exist_ok=True)
 
+    # Load photo path cache for serving inbox uploads
+    _load_photo_path_cache()
+    print(f"[startup] Photo path cache: {len(_photo_path_cache)} inbox photos indexed")
+
     get_event_recorder().record("RUN_START", {
         "action": "server_start",
         "timestamp_utc": datetime.utcnow().isoformat()
@@ -78,13 +83,88 @@ async def shutdown_event():
     }, actor="system")
 # ---------------------------------------
 
-# Mount raw_photos as /photos/ static route
-# IMPORTANT: Insert at position 0 so it takes precedence over FastHTML's
-# catch-all static route (/{fname:path}.{ext:static})
-from starlette.staticfiles import StaticFiles
-from starlette.routing import Mount
-photos_mount = Mount("/photos", StaticFiles(directory=str(photos_path)), name="photos")
-app.routes.insert(0, photos_mount)
+# Photo path lookup cache (loaded at startup)
+# Maps filename (basename) -> full path for photos stored outside raw_photos/
+_photo_path_cache: dict[str, Path] = {}
+
+
+def _load_photo_path_cache():
+    """
+    Build filename -> path lookup from photo_index.json.
+
+    Called at startup to enable O(1) photo path resolution without
+    filesystem searching. Only includes photos with absolute paths
+    (inbox uploads); raw_photos/ files use direct StaticFiles fallback.
+    """
+    global _photo_path_cache
+    _photo_path_cache.clear()
+
+    photo_index_path = data_path / "photo_index.json"
+    if not photo_index_path.exists():
+        return
+
+    with open(photo_index_path) as f:
+        index = json.load(f)
+
+    missing_files = []
+    for photo_id, photo_data in index.get("photos", {}).items():
+        path_str = photo_data.get("path", "")
+        path = Path(path_str)
+        # Only cache absolute paths (inbox uploads)
+        # Relative paths (legacy raw_photos) served via filesystem check
+        if path.is_absolute():
+            _photo_path_cache[path.name] = path
+            # Track missing files for startup warning
+            if not path.exists():
+                missing_files.append(path_str)
+
+    if missing_files:
+        print(f"[startup] WARNING: {len(missing_files)} photos in index have missing files")
+        print(f"[startup] First 5 missing: {missing_files[:5]}")
+
+
+@app.get("/photos/{filename:path}")
+async def serve_photo(filename: str):
+    """
+    Serve photos from raw_photos/ or data/uploads/.
+
+    Resolution order:
+    1. raw_photos/{filename} (legacy photos)
+    2. photo_path_cache lookup (inbox uploads)
+    """
+    # Try 1: Legacy raw_photos location
+    legacy_path = photos_path / filename
+    if legacy_path.exists() and legacy_path.is_file():
+        return FileResponse(legacy_path)
+
+    # Try 2: Lookup in photo_path_cache (populated from photo_index.json)
+    if filename in _photo_path_cache:
+        cached_path = _photo_path_cache[filename]
+        if cached_path.exists():
+            return FileResponse(cached_path)
+        else:
+            # File moved/deleted - return 404 with diagnostic info
+            return Response(
+                content=f"Photo file missing: {cached_path}",
+                status_code=404,
+                media_type="text/plain"
+            )
+
+    # Not found anywhere
+    return Response(
+        content=f"Photo not found: {filename}",
+        status_code=404,
+        media_type="text/plain"
+    )
+
+
+# IMPORTANT: Move photos route to position 0 to take precedence over
+# FastHTML's catch-all static route (/{fname:path}.{ext:static})
+for i, route in enumerate(app.routes):
+    if getattr(route, "path", None) == "/photos/{filename:path}":
+        photos_route = app.routes.pop(i)
+        app.routes.insert(0, photos_route)
+        break
 
 # Registry path - single source of truth
 REGISTRY_PATH = data_path / "identities.json"
