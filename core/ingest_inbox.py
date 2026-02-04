@@ -135,26 +135,40 @@ def create_inbox_identities(
     job_id: str,
 ) -> list[str]:
     """
-    Create an INBOX identity for each extracted face.
+    Create INBOX identities for extracted faces, grouping similar faces.
+
+    Similar faces (Euclidean distance < GROUPING_THRESHOLD) are grouped
+    together into a single identity. This reduces user workload when
+    uploading multiple photos of the same person.
 
     Args:
         registry: IdentityRegistry instance
-        faces: List of face dicts with face_id field
+        faces: List of face dicts with face_id and mu (embedding) fields
         job_id: Job identifier for provenance
 
     Returns:
-        List of created identity IDs
+        List of created identity IDs (one per group)
     """
+    from core.grouping import group_faces
     from core.registry import IdentityState
+
+    if not faces:
+        return []
 
     identity_ids = []
 
     # Get the starting number for sequential naming
     next_number = _get_next_unidentified_number(registry)
 
-    for face in faces:
-        face_id = face["face_id"]
-        filename = face.get("filename", "unknown")
+    # Group similar faces together
+    groups = group_faces(faces)
+
+    for group in groups:
+        # Collect all face_ids in this group
+        face_ids = [f["face_id"] for f in group]
+
+        # Use first face's filename for provenance
+        filename = group[0].get("filename", "unknown")
 
         # Generate human-readable name
         name = f"Unidentified Person {next_number:03d}"
@@ -165,10 +179,11 @@ def create_inbox_identities(
             "job_id": job_id,
             "filename": filename,
             "ingested_at": datetime.now(timezone.utc).isoformat(),
+            "grouped_faces": len(face_ids),
         }
 
         identity_id = registry.create_identity(
-            anchor_ids=[face_id],
+            anchor_ids=face_ids,
             user_source="inbox_ingest",
             name=name,
             state=IdentityState.INBOX,

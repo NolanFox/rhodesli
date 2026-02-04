@@ -256,6 +256,119 @@ class TestGroupFaces:
         assert extras == {"value1", "value2"}
 
 
+class TestCreateInboxIdentitiesWithGrouping:
+    """Integration tests for create_inbox_identities with grouping."""
+
+    def test_identical_faces_create_one_identity(self, tmp_path):
+        """10 identical faces should create 1 identity with 10 anchor_ids."""
+        from core.ingest_inbox import create_inbox_identities
+        from core.registry import IdentityRegistry
+
+        # Create a fresh registry
+        registry = IdentityRegistry()
+
+        # 10 faces with identical embeddings
+        embedding = random_embedding(seed=42)
+        faces = [
+            {"face_id": f"face_{i}", "mu": embedding.copy(), "filename": "test.jpg"}
+            for i in range(10)
+        ]
+
+        identity_ids = create_inbox_identities(registry, faces, job_id="test_job")
+
+        # Should create exactly 1 identity
+        assert len(identity_ids) == 1, f"Expected 1 identity, got {len(identity_ids)}"
+
+        # That identity should have all 10 faces as anchors
+        identity = registry.get_identity(identity_ids[0])
+        assert len(identity["anchor_ids"]) == 10, (
+            f"Expected 10 anchor_ids, got {len(identity['anchor_ids'])}"
+        )
+
+    def test_different_faces_create_separate_identities(self, tmp_path):
+        """10 different faces should create 10 separate identities."""
+        from core.ingest_inbox import create_inbox_identities
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        # 10 faces with different embeddings
+        faces = [
+            {"face_id": f"face_{i}", "mu": random_embedding(seed=i), "filename": f"img_{i}.jpg"}
+            for i in range(10)
+        ]
+
+        identity_ids = create_inbox_identities(registry, faces, job_id="test_job")
+
+        # Should create 10 identities
+        assert len(identity_ids) == 10, f"Expected 10 identities, got {len(identity_ids)}"
+
+        # Each identity should have 1 face
+        for iid in identity_ids:
+            identity = registry.get_identity(iid)
+            assert len(identity["anchor_ids"]) == 1
+
+    def test_mixed_batch_creates_correct_identities(self, tmp_path):
+        """5 of person A + 3 of person B → 2 identities."""
+        from core.ingest_inbox import create_inbox_identities
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        # 5 faces of person A
+        emb_a = random_embedding(seed=100)
+        faces_a = [
+            {"face_id": f"person_a_{i}", "mu": emb_a.copy(), "filename": "a.jpg"}
+            for i in range(5)
+        ]
+
+        # 3 faces of person B
+        emb_b = random_embedding(seed=200)
+        faces_b = [
+            {"face_id": f"person_b_{i}", "mu": emb_b.copy(), "filename": "b.jpg"}
+            for i in range(3)
+        ]
+
+        faces = faces_a + faces_b
+        np.random.seed(42)
+        np.random.shuffle(faces)
+
+        identity_ids = create_inbox_identities(registry, faces, job_id="test_job")
+
+        # Should create 2 identities
+        assert len(identity_ids) == 2, f"Expected 2 identities, got {len(identity_ids)}"
+
+        # Check anchor counts
+        anchor_counts = sorted([
+            len(registry.get_identity(iid)["anchor_ids"])
+            for iid in identity_ids
+        ])
+        assert anchor_counts == [3, 5], f"Expected [3, 5], got {anchor_counts}"
+
+    def test_provenance_records_grouped_faces(self, tmp_path):
+        """Provenance should record how many faces were grouped."""
+        from core.ingest_inbox import create_inbox_identities
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+
+        # 3 identical faces
+        embedding = random_embedding(seed=42)
+        faces = [
+            {"face_id": f"face_{i}", "mu": embedding.copy(), "filename": "test.jpg"}
+            for i in range(3)
+        ]
+
+        identity_ids = create_inbox_identities(registry, faces, job_id="test_job")
+
+        identity = registry.get_identity(identity_ids[0])
+        provenance = identity.get("provenance", {})
+
+        assert provenance.get("grouped_faces") == 3, (
+            f"Expected grouped_faces=3, got {provenance.get('grouped_faces')}"
+        )
+
+
 class TestGroupingThreshold:
     """Tests specifically for threshold configuration."""
 
