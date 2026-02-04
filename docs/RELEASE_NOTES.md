@@ -1,5 +1,36 @@
 # Release Notes
 
+## v0.3.9 — Darkroom Theme
+
+This release transforms the UI into a professional "forensic workstation" aesthetic with a dark theme and fixes remaining interaction bugs.
+
+### Visual Changes
+
+**Darkroom Theme**
+- Dark slate background (#0f172a) replaces light gray
+- Sidebar now slate-800 with slate-700 borders
+- Cards, modals, and inputs all themed for dark mode
+- Images pop against the dark background
+- Maintained accent colors (green, yellow, red, blue) for state indicators
+
+**Typography**
+- Added `.font-data` class for monospace data elements
+- Filenames, IDs, quality scores, and dimensions use monospace
+
+### Bug Fixes
+
+1. **Photo filename missing** - Filename now displays in Photo Context modal with other stats (faces detected, dimensions)
+2. **Face click doesn't navigate** - Clicking a face bounding box in Photo Context now navigates to that person's identity in the correct section (Confirmed, Inbox, Skipped, etc.)
+
+### Technical Changes
+
+- Updated ~175 color classes across all UI components
+- Added Hyperscript navigation logic that determines correct section based on identity state
+- Added `.font-data` CSS class for monospace typography
+- Updated version to v0.3.9 in sidebar footer
+
+---
+
 ## v0.3.8 — Command Center UI
 
 This release introduces a complete UI redesign with a sidebar-based "Command Center" layout and focused review sessions.

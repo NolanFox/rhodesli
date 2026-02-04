@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.9] - 2026-02-04
+
+### Added
+- **Darkroom Theme**: Professional dark mode for forensic workstation aesthetic
+- `.font-data` CSS class for monospace data elements (filenames, IDs, quality scores)
+- Photo filename display in Photo Context modal
+
+### Changed
+- Body background from light gray (#f9fafb) to slate-900 (#0f172a)
+- Sidebar to slate-800 with slate-700 borders
+- All UI components (cards, modals, inputs, buttons) themed for dark mode
+- Text colors updated: gray/stone-* to slate-* equivalents
+- Accent colors maintained for state indicators (green=confirmed, yellow=skipped, red=rejected, blue=inbox)
+
+### Fixed
+- **Photo filename not showing**: Filename now displays in Photo Context modal with monospace styling
+- **Face click navigation broken**: Clicking a face bounding box in Photo Context now properly navigates to that identity's section based on state (Confirmed/Inbox/Skipped/Rejected)
+
 ## [v0.3.8] - 2026-02-04
 
 ### Added
