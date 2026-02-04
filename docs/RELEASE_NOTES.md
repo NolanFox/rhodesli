@@ -1,5 +1,48 @@
 # Release Notes
 
+## v0.2.3 — Unicode Safety Fix
+
+This release fixes a critical crash caused by Unicode surrogate escapes reaching the web rendering layer.
+
+### Bug Fix
+
+- **UnicodeEncodeError: surrogates not allowed**
+  - The application crashed when filenames or identity names contained "surrogate escapes"
+  - These are invalid UTF-8 sequences that can appear when Python's filesystem APIs encounter undecodable bytes (PEP 383)
+  - Affected all response paths: HTML templates, JSON responses, and static file serving
+
+### Solution
+
+- **UI Boundary Sanitization**
+  - New `core/ui_safety.py` module with `ensure_utf8_display()` function
+  - Sanitization applied explicitly at all presentation boundaries:
+    - Identity names in gallery, neighbor cards, search results
+    - Display names in photo viewer overlays
+    - Filenames in error messages
+    - All JSON API responses
+  - Internal data structures remain unchanged (no silent data corruption)
+
+- **Malformed Emoji Fix**
+  - Fixed emoji literals that used invalid surrogate pair notation (`\ud83d\udce5`)
+  - Replaced with correct Unicode escape (`\U0001F4E5`)
+
+- **Ingestion Warning**
+  - Logs warning when processing files with surrogate escapes
+  - Data fidelity preserved—warning only, no mutation
+
+### Design Principle
+
+> Sanitization is LOSSY and EXPLICIT. It must ONLY be applied at presentation boundaries.
+
+This invariant prevents silent data corruption while guaranteeing UI stability.
+
+### Not Changed
+
+- Recognition logic remains frozen (per CLAUDE.md constraints)
+- Internal embeddings and identity data unaffected
+
+---
+
 ## v0.2.2 — Multi-File Upload Support
 
 This release fixes a critical contract mismatch that prevented users from uploading multiple photos at once, plus a subprocess execution bug that could cause uploads to fail.
