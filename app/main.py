@@ -52,7 +52,18 @@ app, rt = fast_app(
 # --- INSTRUMENTATION LIFECYCLE HOOKS ---
 @app.on_event("startup")
 async def startup_event():
-    """Log the start of a session/run."""
+    """Initialize required directories and log the start of a session/run."""
+    # Deployment safety: ensure all required directories exist
+    required_dirs = [
+        data_path / "uploads",
+        data_path / "inbox",
+        data_path / "cleanup_backups",
+        static_path / "crops",
+        Path(__file__).resolve().parent.parent / "logs",
+    ]
+    for dir_path in required_dirs:
+        dir_path.mkdir(parents=True, exist_ok=True)
+
     get_event_recorder().record("RUN_START", {
         "action": "server_start",
         "timestamp_utc": datetime.utcnow().isoformat()

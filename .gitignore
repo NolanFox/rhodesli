@@ -74,3 +74,5 @@ app/static/crops/
 data/embeddings.npy
 data/registry.json
 data/inbox/
+data/uploads/
+data/cleanup_backups/

@@ -104,6 +104,13 @@ They may ONLY be changed by explicit user instruction.
 
 Any potential violation of these invariants must be surfaced immediately.
 
+## DATA PERSISTENCE INVARIANTS
+
+When introducing any new data directory or file output:
+1. **Git Hygiene:** Immediately add the path to `.gitignore`.
+2. **Deployment Safety:** Ensure the code checks for existence and creates the directory (`makedirs(exist_ok=True)`) on startup in `app/main.py:startup_event()`. Never assume an ignored directory exists.
+3. **Module Execution:** Always invoke scripts as modules (`python -m package.script`) to ensure correct path resolution.
+
 ## RELEASE DOCUMENTATION INVARIANT
 
 Any session that changes user-visible behavior or system capabilities MUST end by:
