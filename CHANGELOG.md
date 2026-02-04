@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.1] - 2026-02-03
+
+### Fixed
+- Inbox lane showing 0 items despite identities existing with `state=INBOX`
+- `resolve_face_image_url()` now handles inbox face_id format (`inbox_{hash}`)
+
+### Added
+- Contract tests for inbox visibility invariant (`tests/test_inbox_contract.py`)
+
 ## [v0.3.0] - 2026-02-03
 
 ### Added

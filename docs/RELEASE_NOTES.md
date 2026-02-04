@@ -1,5 +1,31 @@
 # Release Notes
 
+## v0.3.1 — Inbox Visibility Fix
+
+This patch fixes a critical bug where inbox items were invisible despite being correctly ingested.
+
+### Bug Summary
+
+After uploading images, faces were correctly extracted and identities created with `state=INBOX`, but the Inbox lane showed 0 items.
+
+### Root Cause
+
+The `resolve_face_image_url()` function in `app/main.py` only handled the legacy face_id format (`{stem}:face{index}`), but inbox faces use a different format (`inbox_{hash}`).
+
+When `":face"` was not in the face_id, the function returned `None`, causing `identity_card()` to return `None`, causing the lane to render empty.
+
+### Fix
+
+`resolve_face_image_url()` now checks for direct `{face_id}.jpg` match first (inbox format), then falls back to legacy parsing. This is a simple, non-breaking change.
+
+### Verification
+
+- 87 inbox identities now render correctly
+- 303 tests pass (including 3 new contract tests)
+- Legacy face_id format still works
+
+---
+
 ## v0.3.0 — Job-Aware Ingestion & Safe Rewind
 
 This release introduces job-based tracking for all uploads, enabling surgical cleanup of failed ingestion without factory resets.
