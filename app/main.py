@@ -303,16 +303,32 @@ def load_embeddings_for_photos():
     return photos
 
 
-def get_photo_dimensions(filename: str) -> tuple:
+def get_photo_dimensions(filename_or_path: str) -> tuple:
     """
     Get image dimensions for a photo.
+
+    Args:
+        filename_or_path: Either a filename (looks in raw_photos/), a relative
+            path like 'raw_photos/file.jpg', or an absolute path. Tries the
+            path directly first, then falls back to raw_photos/{basename}.
 
     Returns:
         (width, height) tuple or (0, 0) if file not found
     """
-    filepath = photos_path / filename
-    if not filepath.exists():
-        return (0, 0)
+    path = Path(filename_or_path)
+
+    # Strategy: try the path as-is first, then fallback to raw_photos/{basename}
+    filepath = None
+
+    # Try 1: Path as provided (works for relative paths like 'raw_photos/file.jpg'
+    # and absolute paths)
+    if path.exists():
+        filepath = path
+    else:
+        # Try 2: Look in raw_photos/ by basename only
+        filepath = photos_path / path.name
+        if not filepath.exists():
+            return (0, 0)
 
     try:
         with Image.open(filepath) as img:
@@ -1577,8 +1593,8 @@ def get(photo_id: str):
             status_code=404,
         )
 
-    # Get image dimensions
-    width, height = get_photo_dimensions(photo["filename"])
+    # Get image dimensions - use filepath if available (for inbox uploads)
+    width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
     if width == 0 or height == 0:
         return JSONResponse(
             {"error": "Could not read photo dimensions", "photo_id": photo_id},
@@ -1641,7 +1657,9 @@ def photo_view_content(
         )
         return (error_content,) if is_partial else (Title("Photo Not Found"), error_content)
 
-    width, height = get_photo_dimensions(photo["filename"])
+    # Use filepath (absolute) if available, otherwise fall back to filename
+    # This handles inbox uploads which are stored outside raw_photos/
+    width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
     if width == 0:
         error_content = Div(
             P("Could not load photo", cls="text-red-600 font-bold"),

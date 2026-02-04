@@ -106,6 +106,29 @@ def write_status_file(
         json.dump(data, f, indent=2)
 
 
+def _get_next_unidentified_number(registry) -> int:
+    """
+    Find the next available number for "Unidentified Person N" naming.
+
+    Scans all existing identities for names matching the pattern and returns
+    the highest number + 1.
+    """
+    import re
+
+    max_number = 0
+    pattern = re.compile(r"^Unidentified Person (\d+)$")
+
+    for identity in registry.list_identities():
+        name = identity.get("name") or ""
+        match = pattern.match(name)
+        if match:
+            num = int(match.group(1))
+            if num > max_number:
+                max_number = num
+
+    return max_number + 1
+
+
 def create_inbox_identities(
     registry,
     faces: list[dict],
@@ -126,9 +149,16 @@ def create_inbox_identities(
 
     identity_ids = []
 
+    # Get the starting number for sequential naming
+    next_number = _get_next_unidentified_number(registry)
+
     for face in faces:
         face_id = face["face_id"]
         filename = face.get("filename", "unknown")
+
+        # Generate human-readable name
+        name = f"Unidentified Person {next_number:03d}"
+        next_number += 1
 
         provenance = {
             "source": "inbox_ingest",
@@ -140,6 +170,7 @@ def create_inbox_identities(
         identity_id = registry.create_identity(
             anchor_ids=[face_id],
             user_source="inbox_ingest",
+            name=name,
             state=IdentityState.INBOX,
             provenance=provenance,
         )
