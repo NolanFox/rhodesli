@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.4] - 2026-02-04
+
+### Fixed
+- View Photo returning 404 for inbox uploads stored in `data/uploads/`
+- `/photos/` endpoint now serves from both `raw_photos/` and `data/uploads/`
+
+### Added
+- `_photo_path_cache` for O(1) photo path resolution from photo_index.json
+- `serve_photo()` dynamic route replacing StaticFiles mount
+- Startup validation warns about missing photo files
+- Integration tests for photo serving (`tests/test_photo_serving_integration.py`)
+
 ## [v0.3.3] - 2026-02-04
 
 ### Fixed

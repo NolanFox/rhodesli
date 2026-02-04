@@ -1,5 +1,34 @@
 # Release Notes
 
+## v0.3.4 — Photo Serving Fix for Inbox Uploads
+
+This patch fixes "View Photo" returning 404 for inbox uploads.
+
+### Bug Summary
+
+**Symptom:** Clicking "View Photo" for inbox faces returned 404, even though photo_id was now correctly generated.
+
+**Root Cause:** The `/photos/` endpoint was a StaticFiles mount pointing only to `raw_photos/`. Inbox uploads are stored in `data/uploads/{job_id}/`, which the mount didn't cover.
+
+**Fix:** Replaced StaticFiles mount with dynamic route that:
+1. Checks `raw_photos/{filename}` first (legacy photos)
+2. Looks up filename in `photo_path_cache` (populated from `photo_index.json` at startup)
+3. Serves from the resolved absolute path
+
+### Technical Details
+
+- `_photo_path_cache`: dict mapping filename → full Path, loaded at startup
+- `serve_photo()`: Dynamic route at `/photos/{filename:path}`, inserted at position 0 for precedence
+- Startup validation warns about missing files in photo_index
+
+### Verification
+
+- 315 tests pass (including 5 new integration tests)
+- `test_photo_serves_from_uploads`: Confirms inbox photos servable
+- `test_full_user_flow_view_photo`: Tests all cached photos are servable
+
+---
+
 ## v0.3.3 — Identity Naming and View Photo Fixes
 
 This patch fixes two user-visible bugs in the inbox workflow.
