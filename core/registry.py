@@ -39,6 +39,7 @@ class IdentityState(Enum):
     CONFIRMED = "CONFIRMED"  # Authoritative but reversible
     CONTESTED = "CONTESTED"  # Frozen until reviewed
     REJECTED = "REJECTED"    # Explicitly rejected (soft state, reversible)
+    SKIPPED = "SKIPPED"      # Reviewed but deferred for later
 
 
 class ActionType(Enum):
@@ -49,6 +50,8 @@ class ActionType(Enum):
     UNREJECT = "unreject"
     CONFIRM = "confirm"
     CONTEST = "contest"
+    SKIP = "skip"
+    RESET = "reset"
     STATE_CHANGE = "state_change"
     UNDO = "undo"
     MERGE = "merge"
@@ -486,6 +489,109 @@ class IdentityRegistry:
             metadata={
                 "new_state": IdentityState.REJECTED.value,
                 "previous_state": IdentityState.INBOX.value,
+            },
+        )
+
+    def skip_identity(self, identity_id: str, user_source: str) -> None:
+        """
+        Transition identity to SKIPPED state (reviewed but deferred).
+
+        Can be called from any reviewable state (INBOX, PROPOSED).
+        This is a soft state - the identity can be returned to review later.
+
+        Args:
+            identity_id: Identity ID
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If identity not found
+            ValueError: If identity is not in a reviewable state
+        """
+        get_event_recorder().record("SKIP_IDENTITY", {
+            "identity_id": identity_id,
+            "user_source": user_source
+        })
+
+        identity = self._identities[identity_id]
+
+        # Allow skip from reviewable states
+        reviewable_states = {IdentityState.INBOX.value, IdentityState.PROPOSED.value}
+        if identity["state"] not in reviewable_states:
+            raise ValueError(
+                f"Identity {identity_id} cannot be skipped from state "
+                f"'{identity['state']}' (must be INBOX or PROPOSED)"
+            )
+
+        previous_state = identity["state"]
+        previous_version = identity["version_id"]
+
+        identity["state"] = IdentityState.SKIPPED.value
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.SKIP.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "new_state": IdentityState.SKIPPED.value,
+                "previous_state": previous_state,
+            },
+        )
+
+    def reset_identity(self, identity_id: str, user_source: str) -> None:
+        """
+        Reset identity back to INBOX state for re-review.
+
+        Can be called from any terminal state (CONFIRMED, SKIPPED, REJECTED, CONTESTED).
+        This enables full reversibility of all workflow actions.
+
+        Args:
+            identity_id: Identity ID
+            user_source: Who initiated this action
+
+        Raises:
+            KeyError: If identity not found
+            ValueError: If identity is already in a reviewable state
+        """
+        get_event_recorder().record("RESET_IDENTITY", {
+            "identity_id": identity_id,
+            "user_source": user_source
+        })
+
+        identity = self._identities[identity_id]
+
+        # Allow reset from terminal states back to INBOX
+        terminal_states = {
+            IdentityState.CONFIRMED.value,
+            IdentityState.SKIPPED.value,
+            IdentityState.REJECTED.value,
+            IdentityState.CONTESTED.value,
+        }
+        if identity["state"] not in terminal_states:
+            raise ValueError(
+                f"Identity {identity_id} cannot be reset from state "
+                f"'{identity['state']}' (already in review queue)"
+            )
+
+        previous_state = identity["state"]
+        previous_version = identity["version_id"]
+
+        identity["state"] = IdentityState.INBOX.value
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.RESET.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "new_state": IdentityState.INBOX.value,
+                "previous_state": previous_state,
             },
         )
 
