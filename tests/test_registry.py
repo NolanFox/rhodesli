@@ -894,3 +894,135 @@ class TestSearchIdentities:
 
         results = registry.search_identities("xyz123")
         assert results == []
+
+
+class TestListIdentitiesByJob:
+    """Tests for list_identities_by_job() method (job cleanup support)."""
+
+    def test_returns_identities_with_matching_job_id(self):
+        """Should return identities where provenance.job_id matches."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={
+                "source": "inbox_ingest",
+                "job_id": "job_abc123",
+                "filename": "photo.jpg",
+            },
+        )
+
+        results = registry.list_identities_by_job("job_abc123")
+
+        assert len(results) == 1
+        assert results[0]["identity_id"] == identity_id
+        assert results[0]["provenance"]["job_id"] == "job_abc123"
+
+    def test_returns_empty_list_when_no_match(self):
+        """Should return empty list when no identities match job_id."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={
+                "source": "inbox_ingest",
+                "job_id": "job_abc123",
+                "filename": "photo.jpg",
+            },
+        )
+
+        results = registry.list_identities_by_job("job_xyz999")
+
+        assert results == []
+
+    def test_excludes_identities_from_other_jobs(self):
+        """Should only return identities from the specified job."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+
+        # Create identity from job A
+        id_job_a = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={"job_id": "job_a", "source": "inbox_ingest"},
+        )
+
+        # Create identity from job B
+        id_job_b = registry.create_identity(
+            anchor_ids=["face_002"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={"job_id": "job_b", "source": "inbox_ingest"},
+        )
+
+        # Create identity without provenance
+        id_no_prov = registry.create_identity(
+            anchor_ids=["face_003"],
+            user_source="manual",
+        )
+
+        results = registry.list_identities_by_job("job_a")
+
+        assert len(results) == 1
+        assert results[0]["identity_id"] == id_job_a
+
+    def test_returns_multiple_identities_from_same_job(self):
+        """Should return all identities created by the same job."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+
+        # Create multiple identities from same job (e.g., multiple faces in upload)
+        id_1 = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={"job_id": "batch_job", "source": "inbox_ingest"},
+        )
+        id_2 = registry.create_identity(
+            anchor_ids=["face_002"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={"job_id": "batch_job", "source": "inbox_ingest"},
+        )
+        id_3 = registry.create_identity(
+            anchor_ids=["face_003"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={"job_id": "batch_job", "source": "inbox_ingest"},
+        )
+
+        results = registry.list_identities_by_job("batch_job")
+
+        assert len(results) == 3
+        result_ids = {r["identity_id"] for r in results}
+        assert result_ids == {id_1, id_2, id_3}
+
+    def test_returns_copy_not_reference(self):
+        """Returned identities should be copies to prevent mutation."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+        identity_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            user_source="ingest_pipeline",
+            state=IdentityState.INBOX,
+            provenance={"job_id": "test_job", "source": "inbox_ingest"},
+        )
+
+        results = registry.list_identities_by_job("test_job")
+
+        # Mutate the returned copy
+        results[0]["name"] = "MUTATED"
+
+        # Original should be unchanged
+        original = registry.get_identity(identity_id)
+        assert original["name"] is None
