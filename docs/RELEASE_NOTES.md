@@ -1,5 +1,64 @@
 # Release Notes
 
+## v0.3.0 — Job-Aware Ingestion & Safe Rewind
+
+This release introduces job-based tracking for all uploads, enabling surgical cleanup of failed ingestion without factory resets.
+
+### New Features
+
+- **Job Attribution**
+  - Every identity created during upload now records its originating `job_id`
+  - New `list_identities_by_job(job_id)` method for querying artifacts by job
+  - All artifacts traceable back to their upload session
+
+- **File-Level Idempotency**
+  - SHA256 content hashing prevents duplicate processing on upload retries
+  - Uploading the same file twice no longer creates duplicate identities
+  - Hash registry stored in `data/file_hashes.json`
+
+- **Cleanup Script (`scripts/cleanup_job.py`)**
+  - Surgically remove all artifacts from a specific failed upload
+  - `--dry-run` mode previews changes without executing
+  - `--execute` mode removes artifacts with automatic backup
+  - Creates backup in `data/cleanup_backups/` before any deletion
+
+### Cleanup Scope
+
+The cleanup script removes:
+- Identity registry entries (by `job_id` in provenance)
+- Photo registry entries (face-to-photo mappings)
+- Face crop images (`app/static/crops/{face_id}.jpg`)
+- File hash registry entries
+- Status files (`data/inbox/{job_id}.status.json`)
+- Upload directories (`data/uploads/{job_id}/`)
+
+### Forensic Invariants Preserved
+
+- **Embeddings are NOT modified**: `data/embeddings.npy` remains immutable
+- **Soft delete via orphan tracking**: Face IDs are recorded in `data/orphaned_face_ids.json`
+- **Reversible with backup**: All state files backed up before deletion
+
+### Usage
+
+```bash
+# Preview what would be cleaned up
+python scripts/cleanup_job.py JOB_ID --dry-run
+
+# Actually remove artifacts (creates backup first)
+python scripts/cleanup_job.py JOB_ID --execute
+```
+
+### Why This Matters
+
+Previously, a failed upload could leave behind:
+- Duplicate files in `uploads/`
+- Duplicate identities in the registry
+- No clear way to undo without a factory reset
+
+Now you can safely retry failed uploads with confidence that duplicates will be skipped, and surgically remove artifacts if needed.
+
+---
+
 ## v0.2.3 — Unicode Safety Fix
 
 This release fixes a critical crash caused by Unicode surrogate escapes reaching the web rendering layer.

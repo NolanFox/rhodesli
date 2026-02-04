@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.0] - 2026-02-03
+
+### Added
+- `list_identities_by_job(job_id)` method to IdentityRegistry for querying artifacts by job
+- `core/file_hash_registry.py` module for SHA256 content hashing and deduplication
+- File-level idempotency checking in ingestion pipeline (skip already-processed files)
+- `scripts/cleanup_job.py` script for surgical cleanup of failed uploads
+- `--dry-run` and `--execute` modes for cleanup with automatic backup
+- `data/orphaned_face_ids.json` for soft-delete tracking (embeddings remain immutable)
+
+### Changed
+- Ingestion pipeline now checks file hashes before processing to prevent duplicates
+- All process_single_image calls now pass file_hash_path for idempotency tracking
+
+### Fixed
+- Duplicate identities created when retrying failed uploads
+
 ## [v0.2.3] - 2026-02-03
 
 ### Fixed
