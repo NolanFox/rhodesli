@@ -1,5 +1,36 @@
 # Release Notes
 
+## v0.3.3 — Identity Naming and View Photo Fixes
+
+This patch fixes two user-visible bugs in the inbox workflow.
+
+### Bug 1: Identity Naming
+
+**Symptom:** Identities displayed as "Identity 25f0a152..." instead of "Unidentified Person XXX"
+
+**Root Cause:** Historical data—87 identities were created before the naming feature was added, storing `name: None` in `identities.json`.
+
+**Fix:** Backfilled 88 identities with sequential names ("Unidentified Person 205" through "Unidentified Person 292").
+
+### Bug 2: View Photo Collision
+
+**Symptom:** "View Photo" showed "Could not load photo" for inbox uploads, or displayed the wrong photo.
+
+**Root Cause:** `generate_photo_id()` used only the filename basename, so files like `uploads/session1/photo.jpg` and `uploads/session2/photo.jpg` got the same photo_id. The cache stored only the first filepath (from a deleted session).
+
+**Fix:**
+- `generate_photo_id()` now uses full path for absolute paths (inbox uploads)
+- Maintains basename-only for relative paths (backward compat with raw_photos/)
+- `load_embeddings_for_photos()` passes filepath to ensure correct photo_id generation
+
+### Verification
+
+- 292 identities now have valid names (previously: 204)
+- View Photo correctly resolves inbox uploads
+- 310 tests pass (including 2 new tests for photo_id generation)
+
+---
+
 ## v0.3.2 — Face ID Index Fix
 
 This patch fixes a critical bug where Find Similar and other embedding lookups failed for inbox faces.

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.3] - 2026-02-04
+
+### Fixed
+- Identities displaying as "Identity <UUID>..." instead of "Unidentified Person XXX"
+- View Photo showing wrong photo or "Could not load" for inbox uploads
+- `generate_photo_id()` now uses full path for absolute paths to avoid collisions
+
+### Changed
+- Backfilled 88 historical identities with proper sequential names
+
 ## [v0.3.2] - 2026-02-03
 
 ### Fixed
