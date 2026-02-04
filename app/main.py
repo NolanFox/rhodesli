@@ -2270,6 +2270,20 @@ def photo_view_content(
         display_name = ensure_utf8_display(raw_name)
         identity_id = identity["identity_id"] if identity else None
 
+        # Determine section based on identity state for navigation
+        if identity:
+            state = identity.get("state", "INBOX")
+            if state == "CONFIRMED":
+                nav_section = "confirmed"
+            elif state == "SKIPPED":
+                nav_section = "skipped"
+            elif state in ("REJECTED", "CONTESTED"):
+                nav_section = "rejected"
+            else:  # INBOX, PROPOSED
+                nav_section = "to_review"
+        else:
+            nav_section = "to_review"
+
         # Determine if this face is selected
         is_selected = face_id == selected_face_id
 
@@ -2279,6 +2293,9 @@ def photo_view_content(
             overlay_classes += " border-amber-500 bg-amber-500/20"
         else:
             overlay_classes += " border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
+
+        # Navigation script: close modal, try scroll if on page, else navigate to section
+        nav_script = f"on click add .hidden to #photo-modal then set target to #identity-{identity_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
 
         overlay = Div(
             # Tooltip on hover
@@ -2291,8 +2308,8 @@ def photo_view_content(
             title=display_name,
             data_face_id=face_id,
             data_identity_id=identity_id or "",
-            # Click closes modal and scrolls to identity (if assigned)
-            **{"_": f"on click add .hidden to #photo-modal then set target to #identity-{identity_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then set window.location.hash to 'identity-{identity_id}'"} if identity_id else {},
+            # Click closes modal and navigates to identity
+            **{"_": nav_script} if identity_id else {},
         )
         face_overlays.append(overlay)
 
