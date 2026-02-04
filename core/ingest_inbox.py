@@ -259,6 +259,7 @@ def process_single_image(
     photo_index_path: Path,
     identity_path: Path,
     crops_dir: Path,
+    file_hash_path: Path = None,
 ) -> dict:
     """
     Process a single image file (internal helper).
@@ -271,11 +272,13 @@ def process_single_image(
         photo_index_path: Path to photo_index.json
         identity_path: Path to identities.json
         crops_dir: Path to crops directory
+        file_hash_path: Path to file_hashes.json (for idempotency)
 
     Returns:
-        Result dict with faces_extracted, identity_ids, or error
+        Result dict with faces_extracted, identity_ids, skipped_duplicate, or error
     """
     from core.embeddings_io import atomic_append_embeddings
+    from core.file_hash_registry import FileHashRegistry
     from core.photo_registry import PhotoRegistry
     from core.registry import IdentityRegistry
     from core.ui_safety import has_surrogate_escapes
@@ -288,6 +291,24 @@ def process_single_image(
             f"Filename contains surrogate escapes (invalid UTF-8): {repr(filename_str)}. "
             "This may cause display issues in the web UI."
         )
+
+    # IDEMPOTENCY CHECK: Skip if file content already processed
+    file_hash = None
+    if file_hash_path and filepath.exists():
+        file_hash_registry = FileHashRegistry.load(file_hash_path)
+        file_hash = FileHashRegistry.compute_hash(filepath)
+        existing = file_hash_registry.lookup(file_hash)
+        if existing:
+            logger.info(
+                f"Skipping {filepath.name}: already processed as {existing['filename']} "
+                f"(hash: {file_hash[:12]}...)"
+            )
+            return {
+                "faces_extracted": len(existing["face_ids"]),
+                "identity_ids": [],  # Don't create new identities
+                "skipped_duplicate": True,
+                "existing_face_ids": existing["face_ids"],
+            }
 
     # Extract faces
     faces = extract_faces(filepath)
@@ -335,6 +356,17 @@ def process_single_image(
     for face in faces:
         generate_crop(face, crops_dir)
 
+    # Register file hash for idempotency (after successful processing)
+    if file_hash_path and file_hash:
+        file_hash_registry = FileHashRegistry.load(file_hash_path)
+        file_hash_registry.register_file(
+            file_hash=file_hash,
+            face_ids=[f["face_id"] for f in faces],
+            job_id=job_id,
+            filename=filepath.name,
+        )
+        file_hash_registry.save(file_hash_path)
+
     return {
         "faces_extracted": len(faces),
         "identity_ids": identity_ids,
@@ -377,6 +409,7 @@ def process_uploaded_file(
     embeddings_path = data_dir / "embeddings.npy"
     identity_path = data_dir / "identities.json"
     photo_index_path = data_dir / "photo_index.json"
+    file_hash_path = data_dir / "file_hashes.json"
 
     # Write initial status
     write_status_file(inbox_dir, job_id, "processing")
@@ -391,6 +424,7 @@ def process_uploaded_file(
             photo_index_path=photo_index_path,
             identity_path=identity_path,
             crops_dir=crops_dir,
+            file_hash_path=file_hash_path,
         )
 
     # Single image processing
@@ -404,6 +438,7 @@ def process_uploaded_file(
             photo_index_path=photo_index_path,
             identity_path=identity_path,
             crops_dir=crops_dir,
+            file_hash_path=file_hash_path,
         )
 
         logger.info(f"Found {result['faces_extracted']} face(s)")
@@ -447,6 +482,7 @@ def _process_zip_file(
     photo_index_path: Path,
     identity_path: Path,
     crops_dir: Path,
+    file_hash_path: Path = None,
 ) -> dict:
     """
     Process a ZIP archive containing multiple images.
@@ -462,6 +498,7 @@ def _process_zip_file(
         photo_index_path: Path to photo_index.json
         identity_path: Path to identities.json
         crops_dir: Path to crops directory
+        file_hash_path: Path to file_hashes.json (for idempotency)
 
     Returns:
         Result dict with aggregated status
@@ -539,13 +576,17 @@ def _process_zip_file(
                             photo_index_path=photo_index_path,
                             identity_path=identity_path,
                             crops_dir=crops_dir,
+                            file_hash_path=file_hash_path,
                         )
 
                         total_faces += result["faces_extracted"]
                         all_identity_ids.extend(result["identity_ids"])
                         files_succeeded += 1
 
-                        logger.info(f"  Found {result['faces_extracted']} face(s)")
+                        if result.get("skipped_duplicate"):
+                            logger.info(f"  Skipped (duplicate)")
+                        else:
+                            logger.info(f"  Found {result['faces_extracted']} face(s)")
 
                     except Exception as e:
                         # Error isolation: log and continue
@@ -639,6 +680,7 @@ def process_directory(
     embeddings_path = data_dir / "embeddings.npy"
     identity_path = data_dir / "identities.json"
     photo_index_path = data_dir / "photo_index.json"
+    file_hash_path = data_dir / "file_hashes.json"
 
     # Collect all files to process (expand ZIPs)
     files_to_process = []
@@ -714,12 +756,16 @@ def process_directory(
                 photo_index_path=photo_index_path,
                 identity_path=identity_path,
                 crops_dir=crops_dir,
+                file_hash_path=file_hash_path,
             )
 
             total_faces += result["faces_extracted"]
             all_identity_ids.extend(result["identity_ids"])
             files_succeeded += 1
-            logger.info(f"  Found {result['faces_extracted']} face(s)")
+            if result.get("skipped_duplicate"):
+                logger.info(f"  Skipped (duplicate)")
+            else:
+                logger.info(f"  Found {result['faces_extracted']} face(s)")
 
         except Exception as e:
             logger.error(f"  Error processing {img_path.name}: {e}")
@@ -767,12 +813,16 @@ def process_directory(
                                 photo_index_path=photo_index_path,
                                 identity_path=identity_path,
                                 crops_dir=crops_dir,
+                                file_hash_path=file_hash_path,
                             )
 
                             total_faces += result["faces_extracted"]
                             all_identity_ids.extend(result["identity_ids"])
                             files_succeeded += 1
-                            logger.info(f"  Found {result['faces_extracted']} face(s)")
+                            if result.get("skipped_duplicate"):
+                                logger.info(f"  Skipped (duplicate)")
+                            else:
+                                logger.info(f"  Found {result['faces_extracted']} face(s)")
 
                         except Exception as e:
                             logger.error(f"  Error processing {image_name}: {e}")
