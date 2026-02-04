@@ -1190,14 +1190,17 @@ class IdentityRegistry:
             candidate_ids = identity.get("candidate_ids", [])
             face_count = len(anchor_ids) + len(candidate_ids)
 
-            # Get preview face (first anchor, handles both string and dict)
+            # Get preview face (first anchor, fall back to candidate)
             preview_face_id = None
-            if anchor_ids:
-                first_anchor = anchor_ids[0]
-                if isinstance(first_anchor, str):
-                    preview_face_id = first_anchor
-                elif isinstance(first_anchor, dict):
-                    preview_face_id = first_anchor.get("face_id")
+            for face_list in [anchor_ids, candidate_ids]:
+                if face_list:
+                    first_face = face_list[0]
+                    if isinstance(first_face, str):
+                        preview_face_id = first_face
+                    elif isinstance(first_face, dict):
+                        preview_face_id = first_face.get("face_id")
+                    if preview_face_id:
+                        break
 
             results.append({
                 "identity_id": identity["identity_id"],

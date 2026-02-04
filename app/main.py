@@ -1088,11 +1088,14 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set) -
         hx_confirm=f"Merge '{name}'? This cannot be undone.",
     )
 
+    # Navigation hyperscript (same as neighbor_card)
+    nav_script = f"on click set target to #identity-{result_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target"
+
     return Div(
         Div(
-            thumbnail_img,
+            A(thumbnail_img, href=f"#identity-{result_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
             Div(
-                Span(name, cls="font-medium text-stone-700 truncate text-sm"),
+                A(name, href=f"#identity-{result_id}", cls="font-medium text-stone-700 truncate text-sm hover:text-blue-600 hover:underline cursor-pointer", **{"_": nav_script}),
                 Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-stone-400 ml-2"),
                 cls="flex items-center ml-2 flex-1 min-w-0"
             ),
