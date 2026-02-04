@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.5] - 2026-02-04
+
+### Fixed
+- Manual search showing blank grey thumbnails instead of face photos
+- Manual search results not clickable (missing navigation links)
+- `search_identities()` now falls back to `candidate_ids` when `anchor_ids` is empty
+- `search_result_card()` now wraps thumbnail and name in clickable `<a>` tags
+
+### Changed
+- `test_rename_identity` now restores original name after test (prevents data corruption)
+
+### Data
+- Restored "Victoria Cukran Capeluto" identity name (corrupted by test to "Test Person Name")
+
 ## [v0.3.4] - 2026-02-04
 
 ### Fixed

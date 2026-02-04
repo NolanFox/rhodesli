@@ -1,5 +1,40 @@
 # Release Notes
 
+## v0.3.5 — Manual Search Display Fix
+
+This patch fixes the manual search feature showing blank photos and unclickable results.
+
+### Bug 1: Manual Search Photos Blank
+
+**Symptom:** Searching for identities by name returned results with grey placeholder thumbnails instead of face photos.
+
+**Root Cause:** `search_identities()` in `core/registry.py` only looked for `preview_face_id` in `anchor_ids`. CONFIRMED identities often have empty `anchor_ids` with faces in `candidate_ids` instead.
+
+**Fix:** `search_identities()` now falls back to `candidate_ids` when `anchor_ids` is empty, matching the behavior of the working "Find Similar" feature.
+
+### Bug 2: Search Results Not Clickable
+
+**Symptom:** Manual search results could not be clicked to navigate to the identity.
+
+**Root Cause:** `search_result_card()` rendered the thumbnail and name as plain elements, unlike `neighbor_card()` which wrapped them in `<a>` tags with hyperscript navigation.
+
+**Fix:** Added `A()` wrappers with navigation hyperscript to both thumbnail and name in search results.
+
+### Data Restoration: Test Corruption
+
+**Issue:** The identity "Victoria Cukran Capeluto" was renamed to "Test Person Name" by the `test_rename_identity` regression test, which modified production data without cleanup.
+
+**Timeline (from event history):**
+- Feb 1: User named identity "Victoria Cukran Capeluto"
+- Feb 3 20:07: Test renamed to "Test Person Name"
+- Feb 3-4: Test ran 20+ more times (no-op renames)
+
+**Fix:**
+1. Restored original name via direct data edit with history event logged
+2. Updated `test_rename_identity` to use try/finally to always restore original name
+
+---
+
 ## v0.3.4 — Photo Serving Fix for Inbox Uploads
 
 This patch fixes "View Photo" returning 404 for inbox uploads.
