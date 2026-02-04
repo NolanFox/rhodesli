@@ -214,11 +214,19 @@ def load_photo_registry():
 
 def generate_photo_id(filename: str) -> str:
     """
-    Generate a stable, deterministic photo_id from filename.
-    Must match the logic in scripts/seed_registry.py.
+    Generate a stable, deterministic photo_id from filename or filepath.
+
+    For absolute paths (inbox uploads), uses full path to avoid collisions
+    when same filename exists in different upload directories.
+    For relative paths (raw_photos/), uses basename for backward compatibility.
     """
-    basename = Path(filename).name
-    hash_bytes = hashlib.sha256(basename.encode("utf-8")).hexdigest()
+    path = Path(filename)
+    if path.is_absolute():
+        # Inbox uploads: use full path to differentiate upload sessions
+        hash_bytes = hashlib.sha256(str(path).encode("utf-8")).hexdigest()
+    else:
+        # Legacy raw_photos: use basename only (backward compatible)
+        hash_bytes = hashlib.sha256(path.name.encode("utf-8")).hexdigest()
     return hash_bytes[:16]
 
 
@@ -274,7 +282,10 @@ def load_embeddings_for_photos():
         face_index = filename_face_counts[filename]
         filename_face_counts[filename] += 1
 
-        photo_id = generate_photo_id(filename)
+        # Use filepath for photo_id to avoid collisions when same filename
+        # exists in multiple upload directories
+        filepath = entry.get("filepath", f"raw_photos/{filename}")
+        photo_id = generate_photo_id(filepath)
         # Use stored face_id if present (inbox format), otherwise generate legacy format
         face_id = entry.get("face_id") or generate_face_id(filename, face_index)
 
@@ -288,7 +299,7 @@ def load_embeddings_for_photos():
         if photo_id not in photos:
             photos[photo_id] = {
                 "filename": filename,
-                "filepath": entry.get("filepath", f"raw_photos/{filename}"),
+                "filepath": filepath,
                 "faces": [],
             }
 

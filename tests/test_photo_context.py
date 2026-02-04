@@ -192,12 +192,19 @@ class TestGeneratePhotoId:
         id2 = generate_photo_id(filename)
         assert id1 == id2
 
-    def test_photo_id_uses_basename_only(self):
-        """Photo ID ignores directory path."""
+    def test_photo_id_uses_basename_for_relative_paths(self):
+        """Photo ID ignores directory path for relative paths (backward compat)."""
         id1 = generate_photo_id("test.jpg")
-        id2 = generate_photo_id("/some/path/test.jpg")
-        id3 = generate_photo_id("other/path/test.jpg")
+        id2 = generate_photo_id("other/path/test.jpg")
+        id3 = generate_photo_id("raw_photos/test.jpg")
         assert id1 == id2 == id3
+
+    def test_photo_id_uses_full_path_for_absolute_paths(self):
+        """Photo ID uses full path for absolute paths (inbox uploads)."""
+        id1 = generate_photo_id("/uploads/session1/test.jpg")
+        id2 = generate_photo_id("/uploads/session2/test.jpg")
+        # Different directories = different IDs
+        assert id1 != id2
 
     def test_photo_id_is_16_chars(self):
         """Photo ID is 16 character hex string."""
