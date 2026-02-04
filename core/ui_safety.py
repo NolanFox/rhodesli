@@ -50,3 +50,29 @@ def ensure_utf8_display(value: str | None) -> str:
         # encode with surrogateescape to handle the surrogates,
         # then decode back, replacing errors
         return value.encode("utf-8", errors="replace").decode("utf-8")
+
+
+def has_surrogate_escapes(value: str | None) -> bool:
+    """
+    Check if a string contains surrogate escape code points.
+
+    Surrogate escapes (U+D800 to U+DFFF) are invalid in UTF-8 and will
+    cause UnicodeEncodeError when the string reaches the web layer.
+
+    This function is for DETECTION and LOGGING only - it does not modify
+    the string. Use ensure_utf8_display() at the UI boundary to sanitize.
+
+    Args:
+        value: String to check
+
+    Returns:
+        True if string contains surrogate escapes, False otherwise
+    """
+    if value is None:
+        return False
+
+    try:
+        value.encode("utf-8")
+        return False
+    except UnicodeEncodeError:
+        return True

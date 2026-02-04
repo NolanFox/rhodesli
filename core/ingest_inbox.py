@@ -278,6 +278,16 @@ def process_single_image(
     from core.embeddings_io import atomic_append_embeddings
     from core.photo_registry import PhotoRegistry
     from core.registry import IdentityRegistry
+    from core.ui_safety import has_surrogate_escapes
+
+    # GUARDRAIL: Warn about filenames with surrogate escapes (but don't modify)
+    # These will cause issues at the UI layer but we preserve data fidelity here
+    filename_str = str(filepath.name)
+    if has_surrogate_escapes(filename_str):
+        logger.warning(
+            f"Filename contains surrogate escapes (invalid UTF-8): {repr(filename_str)}. "
+            "This may cause display issues in the web UI."
+        )
 
     # Extract faces
     faces = extract_faces(filepath)

@@ -193,3 +193,31 @@ class TestFilenameDisplaySafety:
         safe.encode("utf-8")
         assert "photo_" in safe
         assert "_001.jpg" in safe
+
+
+class TestHasSurrogateEscapes:
+    """Tests for the surrogate detection function."""
+
+    def test_detects_surrogates(self):
+        """Detects strings with surrogate escapes."""
+        from core.ui_safety import has_surrogate_escapes
+
+        assert has_surrogate_escapes("bad\udc80name.jpg") is True
+
+    def test_clean_string_returns_false(self):
+        """Clean UTF-8 strings return False."""
+        from core.ui_safety import has_surrogate_escapes
+
+        assert has_surrogate_escapes("clean_filename.jpg") is False
+
+    def test_valid_unicode_returns_false(self):
+        """Valid Unicode (accents, emoji) returns False."""
+        from core.ui_safety import has_surrogate_escapes
+
+        assert has_surrogate_escapes("José García 日本語") is False
+
+    def test_none_returns_false(self):
+        """None input returns False."""
+        from core.ui_safety import has_surrogate_escapes
+
+        assert has_surrogate_escapes(None) is False
