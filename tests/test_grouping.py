@@ -43,25 +43,34 @@ def random_embedding(seed: int = None) -> np.ndarray:
 
 def similar_embedding(base: np.ndarray, distance: float = 0.5) -> np.ndarray:
     """
-    Create an embedding at approximately the given Euclidean distance from base.
+    Create an embedding at the given Euclidean distance from base.
+
+    For unit vectors: distance = sqrt(2 - 2*cos(theta))
+    Solving for cos(theta): cos(theta) = 1 - distance^2/2
 
     Args:
-        base: Reference embedding (normalized)
-        distance: Target Euclidean distance from base
+        base: Reference embedding (normalized, unit vector)
+        distance: Target Euclidean distance from base (0 to 2)
 
     Returns:
-        New normalized embedding approximately `distance` away from base
+        New normalized embedding exactly `distance` away from base
     """
-    # Add noise proportional to desired distance
-    # For normalized vectors, distance = sqrt(2 - 2*cos(theta))
-    # Small distances ≈ linear perturbation
+    # Generate a random orthogonal direction
     noise = np.random.randn(512).astype(np.float32)
+    # Make noise orthogonal to base using Gram-Schmidt
+    noise = noise - np.dot(noise, base) * base
     noise = noise / np.linalg.norm(noise)
 
-    # Interpolate: move `distance/2` in the noise direction
-    # (heuristic that works for small distances on unit sphere)
-    perturbed = base + (distance / 2) * noise
-    return perturbed / np.linalg.norm(perturbed)
+    # For unit vectors: distance = sqrt(2 - 2*cos(theta))
+    # So: cos(theta) = 1 - distance^2/2
+    # And: sin(theta) = sqrt(1 - cos^2(theta))
+    cos_theta = 1 - (distance ** 2) / 2
+    cos_theta = np.clip(cos_theta, -1, 1)  # Numerical safety
+    sin_theta = np.sqrt(1 - cos_theta ** 2)
+
+    # New vector = cos(theta)*base + sin(theta)*orthogonal
+    result = cos_theta * base + sin_theta * noise
+    return result.astype(np.float32)
 
 
 class TestGroupFaces:

@@ -14,3 +14,8 @@ MATCH_THRESHOLD_HIGH = 1.00
 
 # Medium confidence: includes pose variations (extreme angles, vintage quality)
 MATCH_THRESHOLD_MEDIUM = 1.20
+
+# Grouping threshold for ingestion-time face clustering.
+# Stricter than MATCH_THRESHOLD_HIGH to prefer under-grouping.
+# Used by core/grouping.py during inbox ingestion.
+GROUPING_THRESHOLD = 0.95
