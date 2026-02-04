@@ -751,43 +751,85 @@ def inbox_badge(count: int) -> A:
     )
 
 
-def inbox_action_buttons(identity_id: str) -> Div:
+def review_action_buttons(identity_id: str, state: str) -> Div:
     """
-    Action buttons for INBOX identities.
-    Confirm: Accept as real identity (INBOX → CONFIRMED)
-    Reject: Explicitly reject (INBOX → REJECTED)
+    Unified action buttons based on identity state.
+
+    Button visibility by state:
+    - INBOX/PROPOSED: Confirm, Skip, Reject
+    - CONFIRMED: Reset only
+    - SKIPPED: Confirm, Reject, Reset
+    - REJECTED/CONTESTED: Reset only
     """
-    return Div(
-        # Confirm button (green, solid)
-        Button(
+    buttons = []
+
+    # Confirm button - available for reviewable and skipped states
+    if state in ("INBOX", "PROPOSED", "SKIPPED"):
+        # Use different endpoint for INBOX vs PROPOSED/SKIPPED
+        confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
+        buttons.append(Button(
             "\u2713 Confirm",
             cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors",
-            hx_post=f"/inbox/{identity_id}/confirm",
+            hx_post=confirm_url,
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
             hx_indicator=f"#loading-{identity_id}",
             aria_label="Confirm this identity",
             type="button",
-        ),
-        # Reject button (red, ghost)
-        Button(
+        ))
+
+    # Skip button - available for reviewable states only
+    if state in ("INBOX", "PROPOSED"):
+        buttons.append(Button(
+            "\u23f8 Skip",
+            cls="px-3 py-1.5 text-sm font-bold bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors",
+            hx_post=f"/identity/{identity_id}/skip",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            hx_indicator=f"#loading-{identity_id}",
+            aria_label="Skip for later",
+            type="button",
+        ))
+
+    # Reject button - available for reviewable and skipped states
+    if state in ("INBOX", "PROPOSED", "SKIPPED"):
+        # Use different endpoint for INBOX vs PROPOSED/SKIPPED
+        reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
+        buttons.append(Button(
             "\u2717 Reject",
             cls="px-3 py-1.5 text-sm font-bold border-2 border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors",
-            hx_post=f"/inbox/{identity_id}/reject",
+            hx_post=reject_url,
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
             hx_indicator=f"#loading-{identity_id}",
             aria_label="Reject this identity",
             type="button",
-        ),
-        # Loading indicator (hidden by default)
-        Span(
-            "...",
-            id=f"loading-{identity_id}",
-            cls="htmx-indicator ml-2 text-stone-400 animate-pulse",
-            aria_hidden="true",
-        ),
-        cls="flex gap-2 items-center mt-3",
+        ))
+
+    # Reset button - available for terminal states
+    if state in ("CONFIRMED", "SKIPPED", "REJECTED", "CONTESTED"):
+        buttons.append(Button(
+            "\u21a9 Return to Review",
+            cls="px-3 py-1.5 text-sm font-bold border border-stone-400 text-stone-600 rounded hover:bg-stone-100 transition-colors",
+            hx_post=f"/identity/{identity_id}/reset",
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            hx_indicator=f"#loading-{identity_id}",
+            aria_label="Return to review queue",
+            type="button",
+        ))
+
+    # Loading indicator
+    buttons.append(Span(
+        "...",
+        id=f"loading-{identity_id}",
+        cls="htmx-indicator ml-2 text-stone-400 animate-pulse",
+        aria_hidden="true",
+    ))
+
+    return Div(
+        *buttons,
+        cls="flex gap-2 items-center flex-wrap mt-3",
     )
 
 
@@ -820,94 +862,6 @@ def era_badge(era: str) -> Span:
     return Span(
         era,
         cls="absolute top-2 right-2 bg-stone-700/80 text-white text-xs px-2 py-1 font-mono"
-    )
-
-
-def action_buttons(identity_id: str) -> Div:
-    """
-    Action buttons for PROPOSED identities.
-    UX Intent: Direct manipulation with clear consequences.
-    Keyboard accessible: Tab to navigate, Enter/Space to activate.
-
-    Both Skip and Restore buttons are rendered; visibility is toggled via CSS classes.
-    """
-    # Script to move card to skipped container and show restore button
-    skip_script = f"""on click
-        set card to #identity-{identity_id}
-        set container to #skipped-container
-        set details to #skipped-details
-        remove .hidden from details
-        add .hidden to #skipped-empty-msg
-        put card at the end of container
-        add .hidden to #skip-btn-{identity_id}
-        remove .hidden from #restore-btn-{identity_id}
-        set count to #skipped-container's children's length
-        put '(' + count + ')' into #skipped-count"""
-
-    # Script to restore card from skipped container
-    restore_script = f"""on click
-        set card to #identity-{identity_id}
-        set lane to #proposed-lane
-        put card at the start of lane
-        add .hidden to #restore-btn-{identity_id}
-        remove .hidden from #skip-btn-{identity_id}
-        set count to #skipped-container's children's length
-        put '(' + count + ')' into #skipped-count
-        if count == 0 then
-            add .hidden to #skipped-details
-        end"""
-
-    return Div(
-        # Confirm button (green, solid)
-        Button(
-            "\u2713 Confirm",
-            cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors",
-            hx_post=f"/confirm/{identity_id}",
-            hx_target=f"#identity-{identity_id}",
-            hx_swap="outerHTML",
-            hx_indicator=f"#loading-{identity_id}",
-            aria_label="Confirm this identity match",
-            type="button",
-        ),
-        # Reject button (red, ghost)
-        Button(
-            "\u2717 Reject",
-            cls="px-3 py-1.5 text-sm font-bold border-2 border-red-600 text-red-600 rounded hover:bg-red-50 transition-colors",
-            hx_post=f"/reject/{identity_id}",
-            hx_target=f"#identity-{identity_id}",
-            hx_swap="outerHTML",
-            hx_indicator=f"#loading-{identity_id}",
-            aria_label="Reject this identity match",
-            type="button",
-        ),
-        # Skip button (neutral) - moves to skipped container
-        Button(
-            "? Skip",
-            id=f"skip-btn-{identity_id}",
-            cls="px-3 py-1.5 text-sm font-bold border border-stone-300 text-stone-500 rounded hover:bg-stone-100 transition-colors",
-            aria_label="Skip this identity for now",
-            type="button",
-            **{"_": skip_script}
-        ),
-        # Restore button (hidden by default) - restores from skipped container
-        Button(
-            "\u21a9 Restore",
-            id=f"restore-btn-{identity_id}",
-            cls="hidden px-3 py-1.5 text-sm font-bold border border-blue-500 text-blue-600 rounded hover:bg-blue-50 transition-colors",
-            aria_label="Restore this identity to review",
-            type="button",
-            **{"_": restore_script}
-        ),
-        # Loading indicator (hidden by default)
-        Span(
-            "...",
-            id=f"loading-{identity_id}",
-            cls="htmx-indicator ml-2 text-stone-400 animate-pulse",
-            aria_hidden="true",
-        ),
-        cls="flex gap-2 items-center mt-3",
-        role="group",
-        aria_label="Identity actions",
     )
 
 
@@ -1252,6 +1206,8 @@ def identity_card(
         "emerald": "border-l-emerald-500",
         "amber": "border-l-amber-500",
         "red": "border-l-red-500",
+        "stone": "border-l-stone-400",
+        "rose": "border-l-rose-500",
     }
 
     # Sort dropdown for face ordering
@@ -1313,9 +1269,8 @@ def identity_card(
             cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
             id=f"faces-{identity_id}",
         ),
-        # Action buttons based on state
-        action_buttons(identity_id) if show_actions and state == "PROPOSED" else None,
-        inbox_action_buttons(identity_id) if show_actions and state == "INBOX" else None,
+        # Action buttons based on state (always shown with state-appropriate buttons)
+        review_action_buttons(identity_id, state),
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
         cls=f"identity-card bg-stone-50 border border-stone-200 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-sm mb-4",
@@ -1417,37 +1372,6 @@ def lane_section(
         # Cards or empty state
         content_area,
         cls=f"mb-8 p-4 rounded {bg_colors.get(color, '')}"
-    )
-
-
-def skipped_section() -> Div:
-    """
-    Collapsible section for skipped identities.
-    Hidden by default, becomes visible when cards are skipped.
-    UI-only state - not persisted.
-    """
-    return Details(
-        Summary(
-            Span("\u23f8", cls="text-xl"),
-            Span("Skipped / Review Later", cls="text-lg font-serif font-bold text-stone-600 ml-2"),
-            Span(
-                "(0)",
-                id="skipped-count",
-                cls="text-sm text-stone-400 ml-2"
-            ),
-            cls="flex items-center cursor-pointer hover:bg-stone-100 p-2 rounded transition-colors"
-        ),
-        Div(
-            P(
-                "Cards skipped during this session will appear here.",
-                cls="text-stone-400 italic text-center py-4",
-                id="skipped-empty-msg"
-            ),
-            id="skipped-container",
-            cls="mt-4"
-        ),
-        id="skipped-details",
-        cls="hidden mb-8 p-4 rounded bg-stone-100/50 border border-stone-200"
     )
 
 

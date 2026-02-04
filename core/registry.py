@@ -377,12 +377,12 @@ class IdentityRegistry:
 
         identity = self._identities[identity_id]
 
-        # Only allow confirmation from INBOX or PROPOSED states
-        allowed_states = {IdentityState.INBOX.value, IdentityState.PROPOSED.value}
+        # Only allow confirmation from reviewable states (INBOX, PROPOSED, SKIPPED)
+        allowed_states = {IdentityState.INBOX.value, IdentityState.PROPOSED.value, IdentityState.SKIPPED.value}
         if identity["state"] not in allowed_states:
             raise ValueError(
                 f"Identity {identity_id} cannot be confirmed from state "
-                f"'{identity['state']}' (must be INBOX or PROPOSED)"
+                f"'{identity['state']}' (must be INBOX, PROPOSED, or SKIPPED)"
             )
 
         previous_state = identity["state"]
@@ -468,12 +468,15 @@ class IdentityRegistry:
 
         identity = self._identities[identity_id]
 
-        if identity["state"] != IdentityState.INBOX.value:
+        # Allow rejection from reviewable states (INBOX, PROPOSED, SKIPPED)
+        allowed_states = {IdentityState.INBOX.value, IdentityState.PROPOSED.value, IdentityState.SKIPPED.value}
+        if identity["state"] not in allowed_states:
             raise ValueError(
-                f"Identity {identity_id} is not in INBOX state "
-                f"(current: {identity['state']})"
+                f"Identity {identity_id} cannot be rejected from state "
+                f"'{identity['state']}' (must be INBOX, PROPOSED, or SKIPPED)"
             )
 
+        previous_state = identity["state"]
         previous_version = identity["version_id"]
 
         identity["state"] = IdentityState.REJECTED.value
@@ -488,7 +491,7 @@ class IdentityRegistry:
             previous_version_id=previous_version,
             metadata={
                 "new_state": IdentityState.REJECTED.value,
-                "previous_state": IdentityState.INBOX.value,
+                "previous_state": previous_state,
             },
         )
 
