@@ -2998,6 +2998,96 @@ def post(identity_id: str):
     )
 
 
+@rt("/identity/{identity_id}/skip")
+def post(identity_id: str):
+    """
+    Skip identity (defer for later review).
+
+    Works from INBOX or PROPOSED state → SKIPPED.
+    Returns updated identity card in skipped lane.
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.skip_identity(identity_id, user_source="web_review")
+        save_registry(registry)
+    except ValueError as e:
+        return Response(
+            to_xml(toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    return (
+        identity_card(updated_identity, crop_files, lane_color="stone", show_actions=False),
+        toast("Skipped for later.", "info"),
+    )
+
+
+@rt("/identity/{identity_id}/reset")
+def post(identity_id: str):
+    """
+    Reset identity back to review queue.
+
+    Works from any terminal state (CONFIRMED, SKIPPED, REJECTED, CONTESTED) → INBOX.
+    Returns updated identity card in inbox lane with action buttons.
+    """
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry.reset_identity(identity_id, user_source="web_review")
+        save_registry(registry)
+    except ValueError as e:
+        return Response(
+            to_xml(toast(str(e), "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(identity_id)
+
+    return (
+        identity_card(updated_identity, crop_files, lane_color="blue", show_actions=True),
+        toast("Returned to review queue.", "info"),
+    )
+
+
 if __name__ == "__main__":
     # Startup diagnostics: log raw_photos directory info
     print(f"[startup] raw_photos directory: {photos_path.resolve()}")
