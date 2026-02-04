@@ -24,6 +24,16 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - Actions in focus mode now advance to next item instead of showing completed card
+- **Upload button 405**: Added GET handler for `/upload` route
+- **View Full Photo stuck loading**: Fixed endpoint from non-existent `/api/photo/{id}/context` to `/photo/{id}/partial`
+- **Face thumbnails not clickable**: Wrapped faces in buttons with photo modal handler
+- **Find Similar anchor navigation fails**: Added fallback navigation when target element doesn't exist in Focus mode
+- **Up Next thumbnails not clickable**: Made thumbnails links with `current` parameter to load specific identity
+- **Skip ordering mismatch**: Aligned sorting in `get_next_focus_card()` with visual queue (sort by date then face count)
+
+### Documentation
+- Added `docs/POST_MORTEM_UI_BUGS.md` - Root cause analysis of 6 interaction bugs
+- Added `docs/INTERACTION_TESTING_PROTOCOL.md` - Testing protocol to prevent render-but-don't-work bugs
 
 ## [v0.3.7] - 2026-02-04
 

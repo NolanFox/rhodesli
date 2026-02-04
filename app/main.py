@@ -851,22 +851,41 @@ def identity_card_expanded(identity: dict, crop_files: set) -> Div:
         main_crop_url = resolve_face_image_url(face_id, crop_files)
         main_photo_id = get_photo_id_for_face(face_id)
 
-    # Build face grid for additional faces
+    # Build face grid for additional faces (skip first since it's shown as main thumbnail)
     face_previews = []
-    for face_entry in all_face_ids[:6]:  # Show up to 6 faces
+    for face_entry in all_face_ids[1:6]:  # Skip first face, show up to 5 more
         if isinstance(face_entry, str):
             face_id = face_entry
         else:
             face_id = face_entry.get("face_id", "")
         crop_url = resolve_face_image_url(face_id, crop_files)
         if crop_url:
-            face_previews.append(
-                Img(
-                    src=crop_url,
-                    cls="w-16 h-16 rounded object-cover border border-gray-200",
-                    alt=f"Face {face_id[:8]}"
+            # Get photo_id for this face to make it clickable
+            face_photo_id = get_photo_id_for_face(face_id)
+            if face_photo_id:
+                face_previews.append(
+                    Button(
+                        Img(
+                            src=crop_url,
+                            cls="w-16 h-16 rounded object-cover border border-gray-200 hover:border-indigo-400 transition-colors",
+                            alt=f"Face {face_id[:8]}"
+                        ),
+                        cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
+                        hx_get=f"/photo/{face_photo_id}/partial?face={face_id}",
+                        hx_target="#photo-modal-content",
+                        **{"_": "on click remove .hidden from #photo-modal"},
+                        type="button",
+                        title="Click to view photo"
+                    )
                 )
-            )
+            else:
+                face_previews.append(
+                    Img(
+                        src=crop_url,
+                        cls="w-16 h-16 rounded object-cover border border-gray-200",
+                        alt=f"Face {face_id[:8]}"
+                    )
+                )
 
     # Action buttons - append ?from_focus=true so endpoints return next focus card
     base_confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
@@ -926,7 +945,7 @@ def identity_card_expanded(identity: dict, crop_files: set) -> Div:
                 Button(
                     "View Full Photo →",
                     cls="mt-2 text-sm text-indigo-600 hover:text-indigo-700",
-                    hx_get=f"/api/photo/{main_photo_id}/context" if main_photo_id else None,
+                    hx_get=f"/photo/{main_photo_id}/partial" if main_photo_id else None,
                     hx_target="#photo-modal-content",
                     **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
                     type="button",
@@ -957,9 +976,14 @@ def identity_card_expanded(identity: dict, crop_files: set) -> Div:
     )
 
 
-def identity_card_mini(identity: dict, crop_files: set) -> Div:
+def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False) -> Div:
     """
     Mini identity card for queue preview in Focus Mode.
+
+    Args:
+        identity: Identity dict
+        crop_files: Set of available crop files
+        clickable: If True, clicking loads this identity in focus mode
     """
     identity_id = identity["identity_id"]
 
@@ -971,23 +995,38 @@ def identity_card_mini(identity: dict, crop_files: set) -> Div:
         face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
         crop_url = resolve_face_image_url(face_id, crop_files)
 
-    return Div(
-        Div(
-            Img(
-                src=crop_url or "",
-                cls="w-full h-full object-cover"
-            ) if crop_url else Span("?", cls="text-2xl text-gray-300"),
-            cls="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center"
-        ),
-        cls="w-24 flex-shrink-0"
-    )
+    img_element = Img(
+        src=crop_url or "",
+        cls="w-full h-full object-cover"
+    ) if crop_url else Span("?", cls="text-2xl text-gray-300")
+
+    if clickable:
+        # Wrap in a link that loads this identity in focus mode
+        return A(
+            Div(
+                img_element,
+                cls="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center hover:ring-2 hover:ring-indigo-400 transition-all"
+            ),
+            href=f"/?section=to_review&view=focus&current={identity_id}",
+            cls="w-24 flex-shrink-0 cursor-pointer",
+            title="Click to review this identity"
+        )
+    else:
+        return Div(
+            Div(
+                img_element,
+                cls="w-full aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center"
+            ),
+            cls="w-24 flex-shrink-0"
+        )
 
 
 def render_to_review_section(
     to_review: list,
     crop_files: set,
     view_mode: str,
-    counts: dict
+    counts: dict,
+    current_id: str = None
 ) -> Div:
     """Render the To Review section with Focus or Browse mode."""
 
@@ -998,6 +1037,26 @@ def render_to_review_section(
         reverse=True
     )[:10]
 
+    # If a specific identity was requested, move it to the front
+    if current_id and view_mode == "focus":
+        # Find the requested identity
+        current_identity = None
+        remaining = []
+        for item in high_confidence:
+            if item["identity_id"] == current_id:
+                current_identity = item
+            else:
+                remaining.append(item)
+        # If not found in high_confidence, search full list
+        if not current_identity:
+            for item in to_review:
+                if item["identity_id"] == current_id:
+                    current_identity = item
+                    break
+        # Reorder with current at front
+        if current_identity:
+            high_confidence = [current_identity] + remaining[:9]
+
     if view_mode == "focus":
         if high_confidence:
             # Show one item expanded + queue preview
@@ -1007,7 +1066,7 @@ def render_to_review_section(
                 Div(
                     H3("Up Next", cls="text-sm font-medium text-gray-500 mb-3"),
                     Div(
-                        *[identity_card_mini(i, crop_files) for i in high_confidence[1:6]],
+                        *[identity_card_mini(i, crop_files, clickable=True) for i in high_confidence[1:6]],
                         Div(
                             f"+{len(high_confidence) - 6} more",
                             cls="w-24 flex-shrink-0 flex items-center justify-center bg-gray-100 rounded-lg text-sm text-gray-500 aspect-square"
@@ -1133,6 +1192,9 @@ def get_next_focus_card(exclude_id: str = None):
 
     Returns an expanded identity card for the top priority item in to_review,
     or an empty state if no items remain.
+
+    IMPORTANT: This must use the same sorting as render_to_review_section to ensure
+    the "Up Next" queue matches what appears after an action.
     """
     registry = load_registry()
     crop_files = get_crop_files()
@@ -1146,11 +1208,14 @@ def get_next_focus_card(exclude_id: str = None):
     if exclude_id:
         to_review = [i for i in to_review if i["identity_id"] != exclude_id]
 
-    # Sort by priority (more faces = higher priority)
+    # Sort by priority: PRIMARY = face count (desc), SECONDARY = created_at (desc, for tie-breaking)
+    # This matches the sorting in render_to_review_section which receives to_review pre-sorted by created_at
+    # and then applies a stable sort by face count.
+    to_review.sort(key=lambda x: x.get("created_at", ""), reverse=True)  # Secondary: by date
     to_review.sort(
         key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
         reverse=True
-    )
+    )  # Primary: by face count (stable sort preserves date order for ties)
 
     if to_review:
         return identity_card_expanded(to_review[0], crop_files)
@@ -1469,11 +1534,12 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
             thumbnail_img = Img(src=crop_url, alt=name, cls="w-12 h-12 object-cover rounded border border-stone-200")
             break
 
-    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target"
+    # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
+    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section=to_review&view=browse#identity-{neighbor_id}'"
 
     return Div(
-        Div(A(thumbnail_img, href=f"#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
-            Div(Div(A(name, href=f"#identity-{neighbor_id}", cls="font-medium text-stone-700 truncate hover:text-blue-600 hover:underline cursor-pointer", **{"_": nav_script}),
+        Div(A(thumbnail_img, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
+            Div(Div(A(name, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="font-medium text-stone-700 truncate hover:text-blue-600 hover:underline cursor-pointer", **{"_": nav_script}),
                     Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
                 # EXPLAINABILITY: We show both. Distance tells you "Is it him?", Percentile tells you "Is it the best we have?"
                 Div(Span(f"Dist: {distance:.2f} (p={percentile:.2f})", cls="text-xs font-mono text-stone-400 ml-2 bg-stone-100 px-1 rounded"), cls="flex items-center"),
@@ -1855,13 +1921,14 @@ def lane_section(
 # =============================================================================
 
 @rt("/")
-def get(section: str = "to_review", view: str = "focus"):
+def get(section: str = "to_review", view: str = "focus", current: str = None):
     """
     Command Center: Sidebar-based navigation with focused review.
 
     Args:
         section: Which section to display (to_review, confirmed, skipped, rejected)
         view: View mode for to_review section (focus or browse)
+        current: Optional identity_id to show in focus mode (for Up Next clicks)
     """
     registry = load_registry()
     crop_files = get_crop_files()
@@ -1903,7 +1970,7 @@ def get(section: str = "to_review", view: str = "focus"):
 
     # Render the appropriate section
     if section == "to_review":
-        main_content = render_to_review_section(to_review, crop_files, view, counts)
+        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current)
     elif section == "confirmed":
         main_content = render_confirmed_section(confirmed_list, crop_files, counts)
     elif section == "skipped":
@@ -3043,6 +3110,63 @@ def post(id: str):
 # =============================================================================
 # ROUTES - INBOX INGESTION
 # =============================================================================
+
+@rt("/upload")
+def get():
+    """
+    Render the upload page.
+
+    This is the target of the sidebar "Upload Photos" link.
+    """
+    style = Style("""
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        body {
+            background-color: #f9fafb;
+        }
+    """)
+
+    # Get counts for sidebar
+    registry = load_registry()
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
+    rejected = registry.list_identities(state=IdentityState.REJECTED)
+    contested = registry.list_identities(state=IdentityState.CONTESTED)
+
+    to_review = inbox + proposed
+    dismissed = rejected + contested
+
+    counts = {
+        "to_review": len(to_review),
+        "confirmed": len(confirmed_list),
+        "skipped": len(skipped_list),
+        "rejected": len(dismissed),
+    }
+
+    return Title("Upload Photos - Rhodesli"), style, Div(
+        toast_container(),
+        sidebar(counts, current_section=None),  # No section selected
+        Main(
+            Div(
+                # Header
+                Div(
+                    H2("Upload Photos", cls="text-2xl font-bold text-gray-900"),
+                    P("Add new photos for identity analysis", cls="text-sm text-gray-500 mt-1"),
+                    cls="mb-6"
+                ),
+                # Upload form
+                upload_area(),
+                cls="max-w-3xl mx-auto px-8 py-6"
+            ),
+            cls="ml-64 min-h-screen"
+        ),
+        cls="h-full"
+    )
+
 
 @rt("/upload")
 async def post(files: list[UploadFile]):

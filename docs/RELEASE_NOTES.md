@@ -45,8 +45,24 @@ This release introduces a complete UI redesign with a sidebar-based "Command Cen
 |-----------|--------|---------|
 | `section` | to_review, confirmed, skipped, rejected | to_review |
 | `view` | focus, browse | focus |
+| `current` | identity_id | (auto-selected) |
 
 Example: `/?section=to_review&view=browse`
+
+### Bug Fixes (v0.3.8.1)
+
+**6 interaction bugs discovered and fixed:**
+
+1. **Upload button 405** - Added GET handler for `/upload` route
+2. **View Full Photo stuck** - Fixed endpoint from `/api/photo/{id}/context` to `/photo/{id}/partial`
+3. **Face thumbnails not clickable** - Wrapped in buttons with photo modal handler
+4. **Find Similar anchor fails** - Added fallback navigation when target doesn't exist
+5. **Up Next not clickable** - Made thumbnails links with `current` parameter
+6. **Skip ordering wrong** - Aligned sorting in `get_next_focus_card` with visual queue
+
+**Prevention measures:**
+- Added `docs/POST_MORTEM_UI_BUGS.md` - Root cause analysis
+- Added `docs/INTERACTION_TESTING_PROTOCOL.md` - Testing protocol
 
 ---
 
