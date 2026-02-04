@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.3.6] - 2026-02-04
+
+### Added
+- Ingestion-time face grouping: similar faces are automatically grouped into one inbox identity
+- `core/grouping.py`: `group_faces()` using Union-Find for transitive grouping
+- `GROUPING_THRESHOLD = 0.95` in `core/config.py` (stricter than Find Similar)
+- `grouped_faces` count in identity provenance for transparency
+- 15 new tests for grouping functionality (`tests/test_grouping.py`)
+
+### Changed
+- `create_inbox_identities()` now groups faces before creating identities
+- Uploading 10 photos of same person → 1 inbox identity (was 10)
+
 ## [v0.3.5] - 2026-02-04
 
 ### Fixed

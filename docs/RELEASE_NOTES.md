@@ -1,5 +1,47 @@
 # Release Notes
 
+## v0.3.6 — Ingestion-Time Face Grouping
+
+This release adds automatic grouping of similar faces during upload, reducing user workload.
+
+### Feature: Face Grouping
+
+**Before:** Uploading 10 photos of the same person created 10 separate inbox identities. Users had to manually merge them.
+
+**After:** Similar faces are automatically grouped during ingestion. 10 photos of Grandma = 1 inbox item (containing 10 faces).
+
+### How It Works
+
+1. When faces are extracted from uploaded images, pairwise Euclidean distances are computed on embeddings
+2. Faces with distance < 0.95 (stricter than Find Similar's 1.0 threshold) are grouped using Union-Find
+3. Each group becomes one inbox identity with multiple `anchor_ids`
+
+### Design Principles
+
+- **Conservative:** Under-grouping is preferred over over-grouping. It's easier to merge two identities than to split one.
+- **Advisory:** Groups go to inbox for user review. No auto-merging with existing confirmed identities.
+- **Transparent:** Provenance records `grouped_faces` count so users know how many faces were grouped.
+
+### Technical Details
+
+- New module: `core/grouping.py` with `group_faces()` function
+- New config: `GROUPING_THRESHOLD = 0.95` in `core/config.py`
+- Modified: `create_inbox_identities()` in `core/ingest_inbox.py`
+
+### Testing
+
+15 new tests in `tests/test_grouping.py` covering:
+- Identical faces grouped → 1 group
+- Different faces → separate groups
+- Mixed batches → correct grouping
+- Transitive closure (A~B, B~C → A,B,C together)
+- Conservative threshold behavior
+- Integration with `create_inbox_identities()`
+
+All 330 tests pass.
+
+---
+
 ## v0.3.5 — Manual Search Display Fix
 
 This patch fixes the manual search feature showing blank photos and unclickable results.
