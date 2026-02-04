@@ -457,20 +457,25 @@ def resolve_face_image_url(face_id: str, crop_files: set) -> str:
     """
     Resolve a canonical face ID to its crop image URL.
 
-    Face IDs use the format: {filename_stem}:face{index}
-    Crop files use the format: {sanitized_stem}_{quality}_{index}.jpg
-
-    This function bridges the gap by sanitizing the stem and matching the index.
+    Supports two face_id formats:
+    1. Legacy: {filename_stem}:face{index} -> {sanitized_stem}_{quality}_{index}.jpg
+    2. Inbox: inbox_{hash} -> inbox_{hash}.jpg (direct mapping)
 
     Args:
-        face_id: Canonical face identifier (e.g., "Image 992_compress:face0")
+        face_id: Canonical face identifier
         crop_files: Set of available crop filenames
 
     Returns:
-        URL path to the crop image (e.g., "/crops/image_992_compress_22.17_0.jpg")
-        or None if no matching crop file is found.
+        URL path to the crop image, or None if no matching crop file is found.
     """
-    # Parse face_id: extract stem and face index
+    # Try inbox format first (simple direct mapping)
+    # Inbox crops are named exactly {face_id}.jpg
+    inbox_crop = f"{face_id}.jpg"
+    if inbox_crop in crop_files:
+        return f"/crops/{inbox_crop}"
+
+    # Fall back to legacy format parsing
+    # Legacy face_ids use format: {filename_stem}:face{index}
     if ":face" not in face_id:
         return None
 
