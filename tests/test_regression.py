@@ -360,22 +360,30 @@ class TestRenameIdentity:
     """
 
     def test_rename_identity(self, test_client, registry):
-        """Rename endpoint updates identity name."""
+        """Rename endpoint updates identity name (non-destructive: restores original)."""
         identities = registry.list_identities()
         if not identities:
             pytest.skip("No identities in registry")
 
         identity_id = identities[0]["identity_id"]
+        original_name = identities[0].get("name", "")
 
-        # Rename it
-        response = test_client.post(
-            f"/api/identity/{identity_id}/rename",
-            data={"name": "Test Person Name"}
-        )
-        assert response.status_code == 200
+        try:
+            # Rename it
+            response = test_client.post(
+                f"/api/identity/{identity_id}/rename",
+                data={"name": "Test Person Name"}
+            )
+            assert response.status_code == 200
 
-        # Response should contain the new name
-        assert "Test Person Name" in response.text
+            # Response should contain the new name
+            assert "Test Person Name" in response.text
+        finally:
+            # ALWAYS restore the original name to prevent data corruption
+            test_client.post(
+                f"/api/identity/{identity_id}/rename",
+                data={"name": original_name}
+            )
 
     def test_rename_empty_rejected(self, test_client, registry):
         """Empty names should be rejected."""
