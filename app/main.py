@@ -802,6 +802,7 @@ def state_badge(state: str) -> Span:
         "PROPOSED": "bg-amber-500 text-white",
         "CONTESTED": "bg-red-600 text-white",
         "REJECTED": "bg-rose-700 text-white",
+        "SKIPPED": "bg-stone-500 text-white",
     }
     return Span(
         state,
@@ -1388,6 +1389,8 @@ def lane_section(
         "emerald": "bg-emerald-50/50",
         "amber": "bg-amber-50/50",
         "red": "bg-red-50/50",
+        "stone": "bg-stone-100/50",
+        "rose": "bg-rose-50/50",
     }
     
     # Fix: Always render the container ID even if empty, so OOB swaps have a target.
@@ -1456,39 +1459,47 @@ def skipped_section() -> Div:
 def get():
     """
     Main workstation view.
-    Renders identities in four lanes by state.
+    Renders identities in four sections: To Review, Confirmed, Skipped, Rejected.
     """
     registry = load_registry()
     crop_files = get_crop_files()
 
+    # Fetch all identity states
     inbox = registry.list_identities(state=IdentityState.INBOX)
-    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped = registry.list_identities(state=IdentityState.SKIPPED)
+    rejected = registry.list_identities(state=IdentityState.REJECTED)
     contested = registry.list_identities(state=IdentityState.CONTESTED)
 
-    inbox.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-    confirmed.sort(key=lambda x: (x.get("name") or "", x.get("updated_at", "")))
-    proposed.sort(key=lambda x: x.get("version_id", 0), reverse=True)
-    contested.sort(key=lambda x: x.get("version_id", 0), reverse=True)
+    # Combine into 4 workflow sections
+    to_review = inbox + proposed  # Items needing attention
+    dismissed = rejected + contested  # Items explicitly dismissed
 
-    has_data = inbox or confirmed or proposed or contested
+    # Sort each section
+    to_review.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    confirmed.sort(key=lambda x: (x.get("name") or "", x.get("updated_at", "")))
+    skipped.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+    dismissed.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
+
+    has_data = to_review or confirmed or skipped or dismissed
 
     if has_data:
         content = Div(
             # Upload area at top
             upload_area(),
-            # Inbox lane (new faces awaiting review)
-            lane_section("Inbox", inbox, crop_files, "blue", "\U0001F4E5",
-                         show_actions=True, lane_id="inbox-lane") if inbox else None,
-            # Proposed lane has action buttons enabled
-            lane_section("Proposed", proposed, crop_files, "amber", "?",
-                         show_actions=True, lane_id="proposed-lane"),
+            # Section 1: To Review (needs attention)
+            lane_section("To Review", to_review, crop_files, "blue", "\U0001F4E5",
+                         show_actions=True, lane_id="to-review-lane"),
+            # Section 2: Confirmed (verified identities)
             lane_section("Confirmed", confirmed, crop_files, "emerald", "\u2713",
                          lane_id="confirmed-lane"),
-            lane_section("Contested", contested, crop_files, "red", "\u26a0",
-                         lane_id="contested-lane"),
-            # Skipped section (UI-only, hidden until cards are skipped)
-            skipped_section(),
+            # Section 3: Skipped (deferred for later)
+            lane_section("Skipped", skipped, crop_files, "stone", "\u23f8",
+                         show_actions=False, lane_id="skipped-lane") if skipped else None,
+            # Section 4: Rejected (dismissed items)
+            lane_section("Rejected", dismissed, crop_files, "rose", "\u2717",
+                         show_actions=False, lane_id="rejected-lane") if dismissed else None,
             cls="max-w-7xl mx-auto"
         )
     else:
