@@ -30,7 +30,14 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 from core.registry import IdentityRegistry, IdentityState
-from core.config import MATCH_THRESHOLD_HIGH, MATCH_THRESHOLD_MEDIUM
+from core.config import (
+    MATCH_THRESHOLD_HIGH,
+    MATCH_THRESHOLD_MEDIUM,
+    HOST,
+    PORT,
+    DEBUG,
+    PROCESSING_ENABLED,
+)
 from core.ui_safety import ensure_utf8_display
 
 # --- INSTRUMENTATION IMPORT ---
@@ -2178,6 +2185,32 @@ def lane_section(
 
 
 # =============================================================================
+# ROUTES - HEALTH CHECK
+# =============================================================================
+
+
+@rt("/health")
+def health():
+    """Health check endpoint for Railway deployment."""
+    registry = load_registry()
+
+    # Count photos from photo_index.json
+    photo_count = 0
+    photo_index_path = data_path / "photo_index.json"
+    if photo_index_path.exists():
+        with open(photo_index_path) as f:
+            index = json.load(f)
+            photo_count = len(index.get("photos", {}))
+
+    return {
+        "status": "ok",
+        "identities": len(registry.list_identities()),
+        "photos": photo_count,
+        "processing_enabled": PROCESSING_ENABLED,
+    }
+
+
+# =============================================================================
 # ROUTES - PHASE 2: TEACH MODE
 # =============================================================================
 
@@ -3491,20 +3524,30 @@ def get():
 @rt("/upload")
 async def post(files: list[UploadFile], source: str = ""):
     """
-    Accept file upload(s) and spawn subprocess for processing.
+    Accept file upload(s) and optionally spawn subprocess for processing.
 
     Handles multiple files (images and/or ZIPs) in a single batch job.
-    All files are saved to a job directory and processed together.
+    All files are saved to a job directory.
+
+    When PROCESSING_ENABLED=True (local dev):
+        - Files go to data/uploads/{job_id}/
+        - Subprocess spawned to run core/ingest_inbox.py
+        - Real-time status polling
+
+    When PROCESSING_ENABLED=False (production):
+        - Files go to data/staging/{job_id}/
+        - No subprocess spawned (ML deps not available)
+        - Shows "pending admin review" message
 
     Args:
         files: Uploaded image files or ZIPs
         source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
 
-    Returns HTML partial with upload status and polling.
+    Returns HTML partial with upload status.
     """
-    import os
-    import subprocess
+    import json
     import uuid
+    from datetime import datetime, timezone
 
     # Filter out empty uploads
     valid_files = [f for f in files if f and f.filename]
@@ -3518,8 +3561,12 @@ async def post(files: list[UploadFile], source: str = ""):
     # Generate unique job ID
     job_id = str(uuid.uuid4())[:8]
 
-    # Create job-specific directory for all uploads
-    job_dir = data_path / "uploads" / job_id
+    # Choose destination based on processing mode
+    if PROCESSING_ENABLED:
+        job_dir = data_path / "uploads" / job_id
+    else:
+        job_dir = data_path / "staging" / job_id
+
     job_dir.mkdir(parents=True, exist_ok=True)
 
     # Save all files to job directory
@@ -3535,8 +3582,45 @@ async def post(files: list[UploadFile], source: str = ""):
             out.write(content)
         saved_files.append(safe_filename)
 
-    # Spawn subprocess for processing
-    # Use subprocess.Popen for non-blocking execution
+    # Save metadata for staged uploads (helps admin know context)
+    metadata = {
+        "job_id": job_id,
+        "source": source or "Unknown",
+        "files": saved_files,
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "processing_enabled": PROCESSING_ENABLED,
+    }
+    metadata_path = job_dir / "_metadata.json"
+    with open(metadata_path, "w") as f:
+        json.dump(metadata, f, indent=2)
+
+    # If processing is disabled (production), return staged message
+    if not PROCESSING_ENABLED:
+        file_count = len(saved_files)
+        if file_count == 1:
+            file_msg = f"1 photo"
+        else:
+            file_msg = f"{file_count} photos"
+
+        return Div(
+            Div(
+                Span("✓", cls="text-green-400 text-lg"),
+                P(f"Received {file_msg}", cls="text-slate-200 font-medium"),
+                cls="flex items-center gap-2"
+            ),
+            P(
+                "Pending admin review and processing. "
+                "Photos will appear after the next data sync.",
+                cls="text-slate-400 text-sm mt-1"
+            ),
+            P(f"Reference: {job_id}", cls="text-slate-500 text-xs mt-2 font-mono"),
+            cls="p-3 bg-green-900/20 border border-green-500/30 rounded"
+        )
+
+    # Processing enabled: spawn subprocess for ML processing
+    import os
+    import subprocess
+
     # INVARIANT: All subprocesses must run from PROJECT_ROOT with cwd AND PYTHONPATH set
     subprocess_env = os.environ.copy()
     # Explicitly set PYTHONPATH to ensure core imports work in all environments
@@ -3971,11 +4055,44 @@ def post(identity_id: str):
 
 
 if __name__ == "__main__":
-    # Startup diagnostics: log raw_photos directory info
-    print(f"[startup] raw_photos directory: {photos_path.resolve()}")
+    # Startup diagnostics
+    print("=" * 60)
+    print("RHODESLI STARTUP")
+    print("=" * 60)
+    print(f"[config] Host: {HOST}")
+    print(f"[config] Port: {PORT}")
+    print(f"[config] Debug: {DEBUG}")
+    print(f"[config] Processing enabled: {PROCESSING_ENABLED}")
+    print(f"[paths] Data directory: {data_path.resolve()}")
+    print(f"[paths] Photos directory: {photos_path.resolve()}")
+
+    # Check photos directory
     if photos_path.exists():
-        files = list(photos_path.iterdir())[:3]
-        print(f"[startup] first 3 files: {[f.name for f in files]}")
+        photo_count = len(list(photos_path.iterdir()))
+        print(f"[data] Photos found: {photo_count}")
     else:
-        print("[startup] WARNING: raw_photos directory does not exist")
-    serve()
+        print("[data] WARNING: raw_photos directory does not exist")
+
+    # Check data files
+    registry = load_registry()
+    print(f"[data] Identities loaded: {len(registry.list_identities())}")
+
+    # Count photos from photo_index.json
+    photo_index_path = data_path / "photo_index.json"
+    if photo_index_path.exists():
+        with open(photo_index_path) as f:
+            index = json.load(f)
+            photo_count = len(index.get("photos", {}))
+        print(f"[data] Photos indexed: {photo_count}")
+    else:
+        print("[data] WARNING: photo_index.json not found")
+
+    # Ensure staging directory exists for production uploads
+    staging_dir = data_path / "staging"
+    staging_dir.mkdir(parents=True, exist_ok=True)
+
+    print("=" * 60)
+    print(f"Server starting at http://{HOST}:{PORT}")
+    print("=" * 60)
+
+    serve(host=HOST, port=PORT, reload=DEBUG)
