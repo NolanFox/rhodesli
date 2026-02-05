@@ -5,6 +5,61 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 14: Auth + Find Similar Fix + Portfolio (2026-02-05)
+
+**Goal:** Complete deployment workstreams — add authentication, fix Find Similar, update portfolio, harden task management.
+
+**Completed:**
+
+Workstream E: Harden Harness
+- Added Boris Cherny autonomous workflow protocol to CLAUDE.md
+- Verified tasks/lessons.md and updated tasks/todo.md with master plan
+
+Workstream B: Fix Find Similar
+- Root cause: `scipy` imported at module level in core/neighbors.py but missing from requirements.txt
+- Added `scipy` to requirements.txt
+- Added try-except error handling around the /api/identity/{id}/neighbors endpoint
+
+Workstream F: Portfolio Update
+- Updated Rhodesli project entry in nolan-portfolio/data/resume.yaml
+- Added live link to rhodesli.nolanandrewfox.com
+- Updated description and tech stack tags
+- Committed and pushed to master
+
+Workstream D: Supabase Authentication (Phase B)
+- Created `app/auth.py` — Supabase client with graceful degradation
+- Created `app/__init__.py` for package imports
+- Added Beforeware + secret_key to fast_app() (conditional on auth being enabled)
+- Added /login, /signup, /logout routes with invite-only signup
+- Added supabase>=2.0.0 to requirements.txt
+- Updated .env.example with auth configuration
+
+**Files created:**
+- `app/auth.py`
+- `app/__init__.py`
+
+**Files modified:**
+- `app/main.py` (auth integration, error handling, auth routes)
+- `requirements.txt` (scipy, supabase)
+- `.env.example` (auth env vars)
+- `CLAUDE.md` (Boris Cherny workflow)
+- `tasks/todo.md` (master plan)
+- `CHANGELOG.md` (v0.6.0)
+- `docs/RELEASE_NOTES.md` (v0.6.0)
+
+**Pending User Actions:**
+1. Add CNAME record in Cloudflare: `rhodesli` → `rhodesli-production.up.railway.app`
+2. Add custom domain in Railway dashboard
+3. Create Supabase project and get credentials
+4. Add auth env vars to Railway (SUPABASE_URL, SUPABASE_ANON_KEY, SESSION_SECRET, INVITE_CODES)
+
+**Commits:**
+- `d05c35b` chore: add Boris Cherny task management workflow
+- `b7bcb61` fix: Find Similar 500 error in production
+- `6686a68` feat: add Supabase authentication (Phase B)
+
+---
+
 ## Session 13: R2 Photo Loading Fix (2026-02-05)
 
 **Goal:** Fix photos not displaying on the live site after R2 migration.

@@ -1,5 +1,32 @@
 # Release Notes
 
+## v0.6.0 — Authentication + Find Similar Fix
+
+### Authentication (Phase B)
+
+Invite-only authentication using Supabase. Disabled by default — set environment variables to enable:
+
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=eyJ...
+SESSION_SECRET=your-random-secret
+INVITE_CODES=family2026,rhodes123
+```
+
+When enabled, all routes require login. Users need a valid invite code to sign up.
+
+Routes added: `/login`, `/signup`, `/logout`
+
+### Find Similar Fix
+
+The "Find Similar" feature was returning 500 errors in production because `scipy` was missing from `requirements.txt`. Fixed by adding `scipy` as a dependency and adding error handling around the neighbors computation endpoint.
+
+### Portfolio Update
+
+Updated the Rhodesli project description on nolanandrewfox.com with the live deployment link and current tech stack.
+
+---
+
 ## v0.5.1 — Single Volume Deployment Fix
 
 **Issue:** Railway only allows ONE persistent volume per service. The v0.5.0 deployment guide incorrectly assumed two separate volumes.

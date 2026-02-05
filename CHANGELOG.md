@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.6.0] - 2026-02-05
+
+### Added
+- **Supabase Authentication (Phase B)**: Invite-only auth with login/signup/logout
+  - `app/auth.py` — Supabase client with graceful degradation (disabled when env vars unset)
+  - Login, signup, and logout routes in `app/main.py`
+  - Beforeware-based route protection (conditional on auth being configured)
+  - Invite code validation for signup access control
+  - Session management via FastHTML's built-in session support
+
+### Fixed
+- **Find Similar 500 error**: Added `scipy` to `requirements.txt` (was missing — only in requirements-local.txt). Added error handling around the neighbors endpoint.
+
+### Changed
+- `requirements.txt` — Added scipy, supabase>=2.0.0
+- `.env.example` — Updated auth configuration section with Supabase env vars
+- `CLAUDE.md` — Added Boris Cherny autonomous workflow protocol
+
 ## [v0.5.1] - 2026-02-05
 
 ### Fixed

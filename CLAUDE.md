@@ -457,7 +457,7 @@ tasks/
 | Phase | Status | What It Does |
 |-------|--------|--------------|
 | A | ✅ Complete | Docker, Railway config, deployment guide |
-| B | Not started | Auth + invite-only signup |
+| B | Code complete (needs Supabase setup) | Auth + invite-only signup |
 | C | Not started | Annotation engine |
 | D | Not started | Photo upload queue |
 | E | Not started | Admin moderation dashboard |
