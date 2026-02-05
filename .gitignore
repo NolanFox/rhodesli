@@ -26,6 +26,11 @@ ENV/
 env/
 .venv/
 
+# Environment files (never commit secrets)
+.env
+.env.local
+.env.*.local
+
 # IDE
 .idea/
 .vscode/
@@ -75,4 +80,5 @@ data/embeddings.npy
 data/registry.json
 data/inbox/
 data/uploads/
+data/staging/
 data/cleanup_backups/

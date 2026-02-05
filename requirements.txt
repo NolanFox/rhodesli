@@ -2,3 +2,4 @@ python-fasthtml
 uvicorn
 numpy
 portalocker
+Pillow

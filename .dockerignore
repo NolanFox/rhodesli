@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+env/
+.env
+*.egg-info/
+
+# Development
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Documentation (not needed in container)
+*.md
+docs/
+
+# Tests (not needed in production)
+tests/
+
+# Notebooks (not needed in production)
+notebooks/
+
+# Heavy ML dependencies file (not used in production)
+requirements-local.txt
+
+# Note: data/ and raw_photos/ are NOT ignored here
+# They are bundled into the image for first-run initialization
+# After first deploy, the Railway volume takes over
