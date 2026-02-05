@@ -577,12 +577,70 @@ def photo_url(filename: str) -> str:
     return storage.get_photo_url(filename)
 
 
+_crop_files_cache = None
+
+
 def get_crop_files():
-    """Get set of available crop files."""
+    """
+    Get set of available crop filenames.
+
+    In local mode: reads from static/crops directory.
+    In R2 mode: builds the expected crop filenames from embeddings data,
+    since we can't list R2 bucket contents.
+
+    Crop filename format: {sanitized_stem}_{quality:.2f}_{face_index}.jpg
+    """
+    global _crop_files_cache
+    if _crop_files_cache is not None:
+        return _crop_files_cache
+
+    # Try local mode first
     crops_dir = static_path / "crops"
     if crops_dir.exists():
-        return {f.name for f in crops_dir.glob("*.jpg")}
-    return set()
+        crop_files = {f.name for f in crops_dir.glob("*.jpg")}
+        if crop_files:
+            _crop_files_cache = crop_files
+            return _crop_files_cache
+
+    # R2 mode or no local crops: build from embeddings
+    # The embeddings have: filename, quality, and we compute face_index
+    # by tracking order of faces within each unique filename
+    crop_files = set()
+
+    embeddings_path = DATA_DIR / "embeddings.npy"
+    if embeddings_path.exists():
+        try:
+            embeddings = np.load(embeddings_path, allow_pickle=True)
+            filename_face_counts = {}
+
+            for entry in embeddings:
+                if not isinstance(entry, dict):
+                    continue
+
+                filename = entry.get("filename", "")
+                quality = entry.get("quality")
+
+                if not filename or quality is None:
+                    continue
+
+                # Get face index (order within this filename)
+                face_index = filename_face_counts.get(filename, 0)
+                filename_face_counts[filename] = face_index + 1
+
+                # Build crop filename
+                stem = Path(filename).stem
+                sanitized = stem.lower()
+                sanitized = re.sub(r'[^a-z0-9]+', '_', sanitized)
+                sanitized = sanitized.strip('_')
+
+                crop_filename = f"{sanitized}_{quality:.2f}_{face_index}.jpg"
+                crop_files.add(crop_filename)
+
+        except Exception as e:
+            logging.warning(f"Failed to build crop files from embeddings: {e}")
+
+    _crop_files_cache = crop_files
+    return _crop_files_cache
 
 
 def sanitize_stem(stem: str) -> str:
