@@ -57,6 +57,74 @@ def volume_is_valid(data_dir: Path) -> bool:
     return True
 
 
+def _migrate_photo_dimensions(data_dir: Path) -> None:
+    """
+    Migrate photo dimensions from bundle to existing photo_index.json.
+
+    If the bundle has photo dimensions but the volume's photo_index.json
+    doesn't, merge them in. This is a one-time migration for the R2 mode
+    photo dimensions feature.
+    """
+    import json
+
+    bundle_photo_index = BUNDLED_DATA / "photo_index.json"
+    volume_photo_index = data_dir / "photo_index.json"
+
+    if not bundle_photo_index.exists() or not volume_photo_index.exists():
+        return
+
+    try:
+        with open(bundle_photo_index) as f:
+            bundle_data = json.load(f)
+        with open(volume_photo_index) as f:
+            volume_data = json.load(f)
+
+        # Check if bundle has dimensions that volume doesn't
+        bundle_photos = bundle_data.get("photos", {})
+        volume_photos = volume_data.get("photos", {})
+
+        # Count photos that need dimensions
+        needs_update = 0
+        for photo_id, photo_data in bundle_photos.items():
+            bundle_width = photo_data.get("width", 0)
+            bundle_height = photo_data.get("height", 0)
+
+            if bundle_width > 0 and bundle_height > 0:
+                volume_entry = volume_photos.get(photo_id, {})
+                volume_width = volume_entry.get("width", 0)
+                volume_height = volume_entry.get("height", 0)
+
+                if volume_width == 0 or volume_height == 0:
+                    needs_update += 1
+
+        if needs_update == 0:
+            return  # No migration needed
+
+        print(f"[init] Migrating photo dimensions for {needs_update} photos...")
+
+        # Merge dimensions from bundle into volume
+        for photo_id, photo_data in bundle_photos.items():
+            bundle_width = photo_data.get("width", 0)
+            bundle_height = photo_data.get("height", 0)
+
+            if bundle_width > 0 and bundle_height > 0:
+                if photo_id in volume_photos:
+                    volume_entry = volume_photos[photo_id]
+                    if volume_entry.get("width", 0) == 0:
+                        volume_entry["width"] = bundle_width
+                        volume_entry["height"] = bundle_height
+
+        # Write back
+        with open(volume_photo_index, "w") as f:
+            json.dump(volume_data, f, indent=2)
+
+        print(f"[init] Photo dimensions migration complete.")
+
+    except Exception as e:
+        print(f"[init] WARNING: Photo dimensions migration failed: {e}")
+        # Non-fatal - volume still works, just without face overlays
+
+
 def init_volume():
     """Copy bundled data to volume if it doesn't exist yet.
 
@@ -87,6 +155,9 @@ def init_volume():
                         else:
                             shutil.copy2(item, dest)
                         print(f"[init] Added missing file: {item.name}")
+
+            # MIGRATION: Update photo_index.json with dimensions if bundle has them
+            _migrate_photo_dimensions(data_dir)
 
             print("[init] Volume already initialized and valid, skipping seed.")
             print(f"[init] Data dir: {data_dir}")
