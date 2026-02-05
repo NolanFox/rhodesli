@@ -8,9 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Install minimal system dependencies
-# libgl1-mesa-glx and libglib2.0-0 are needed by Pillow for some image formats
+# libgl1 and libglib2.0-0 are needed by Pillow for some image formats
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
