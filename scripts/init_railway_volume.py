@@ -1,19 +1,24 @@
 """
 First-run initialization for Railway persistent volume.
 
-Copies bundled data files into the volume if they don't already exist.
+Copies bundled JSON data files into the volume if they don't already exist.
 This runs as part of the start command on first deploy.
-# Force rebuild: 2026-02-05-v2
+# Force rebuild: 2026-02-05-v3
+
+Architecture:
+  - JSON data (identities.json, photo_index.json) → Railway Volume
+  - Photos and crops → Cloudflare R2 (NOT bundled in image)
 
 Railway supports only ONE persistent volume per service. When STORAGE_DIR
 is set, the volume is mounted at that path and we create subdirectories:
   /app/storage/
-  ├── data/          ← identities.json, photo_index.json, embeddings, etc.
-  ├── raw_photos/    ← source photographs
-  └── staging/       ← future upload staging area
+  └── data/          ← identities.json, photo_index.json, embeddings, etc.
 
-The Docker image bundles data in /app/data_bundle/ and /app/photos_bundle/.
-On first run, these are copied to the appropriate subdirectories.
+Photos are served from Cloudflare R2 via public URLs. They are NOT seeded
+from Docker image bundles. See scripts/upload_to_r2.py to upload photos.
+
+The Docker image bundles JSON data in /app/data_bundle/.
+On first run, this is copied to the volume.
 On subsequent runs, the volume already has data, so this is a no-op.
 
 CRITICAL: The .initialized marker is ONLY created when data is actually copied.
@@ -31,19 +36,14 @@ STORAGE_DIR = os.getenv("STORAGE_DIR")  # Only set on Railway
 if STORAGE_DIR:
     # Railway single-volume mode
     VOLUME_DATA_DIR = os.path.join(STORAGE_DIR, "data")
-    VOLUME_PHOTOS_DIR = os.path.join(STORAGE_DIR, "raw_photos")
-    VOLUME_STAGING_DIR = os.path.join(STORAGE_DIR, "staging")
     MARKER_DIR = STORAGE_DIR  # Marker lives in volume root
 else:
     # Local/legacy mode (individual paths)
     VOLUME_DATA_DIR = os.getenv("DATA_DIR", "data")
-    VOLUME_PHOTOS_DIR = os.getenv("PHOTOS_DIR", "raw_photos")
-    VOLUME_STAGING_DIR = os.path.join(VOLUME_DATA_DIR, "staging")
     MARKER_DIR = VOLUME_DATA_DIR
 
 # Bundle paths (where Docker image has the seed data)
 BUNDLED_DATA = Path("/app/data_bundle")
-BUNDLED_PHOTOS = Path("/app/photos_bundle")
 
 # Critical files that MUST exist for valid initialization
 REQUIRED_DATA_FILES = ["identities.json", "photo_index.json"]
@@ -65,13 +65,9 @@ def init_volume():
 
     # Ensure target directories exist
     data_dir = Path(VOLUME_DATA_DIR)
-    photos_dir = Path(VOLUME_PHOTOS_DIR)
-    staging_dir = Path(VOLUME_STAGING_DIR)
     marker_dir = Path(MARKER_DIR)
 
     data_dir.mkdir(parents=True, exist_ok=True)
-    photos_dir.mkdir(parents=True, exist_ok=True)
-    staging_dir.mkdir(parents=True, exist_ok=True)
 
     marker = marker_dir / ".initialized"
 
@@ -80,8 +76,7 @@ def init_volume():
         if volume_is_valid(data_dir):
             print("[init] Volume already initialized and valid, skipping seed.")
             print(f"[init] Data dir: {data_dir}")
-            print(f"[init] Photos dir: {photos_dir}")
-            print(f"[init] Staging dir: {staging_dir}")
+            print("[init] Photos served from R2 (STORAGE_MODE=r2, R2_PUBLIC_URL)")
             return True
         else:
             print("[init] WARNING: Volume marked as initialized but data is MISSING.")
@@ -93,11 +88,10 @@ def init_volume():
     if STORAGE_DIR:
         print(f"[init] Single-volume mode: STORAGE_DIR={STORAGE_DIR}")
     else:
-        print("[init] Legacy mode: using DATA_DIR and PHOTOS_DIR separately")
+        print("[init] Legacy mode: using DATA_DIR")
 
     # Track what we actually copy
     data_copied = 0
-    photos_copied = 0
 
     # Copy bundled data files
     if BUNDLED_DATA.exists():
@@ -120,41 +114,26 @@ def init_volume():
     else:
         print(f"[init] No bundled data found at {BUNDLED_DATA}")
 
-    # Copy bundled photos
-    if BUNDLED_PHOTOS.exists():
-        # Check if bundle has actual photos (not just .gitkeep)
-        photo_items = [f for f in BUNDLED_PHOTOS.iterdir() if f.name != ".gitkeep"]
-        if photo_items:
-            print(f"[init] Copying photos from {BUNDLED_PHOTOS} to {photos_dir}...")
-            for item in photo_items:
-                dest = photos_dir / item.name
-                if not dest.exists():
-                    shutil.copy2(item, dest)
-                    photos_copied += 1
-            print(f"[init] Copied {photos_copied} photos.")
-        else:
-            print(f"[init] Photos bundle is empty (likely GitHub deploy).")
-    else:
-        print(f"[init] No bundled photos found at {BUNDLED_PHOTOS}")
-
-    print(f"[init] Staging directory: {staging_dir}")
-
     # CRITICAL: Only create marker if we actually have valid data
     if volume_is_valid(data_dir):
         marker.touch()
         print("[init] Volume initialization complete.")
         print(f"[init] Marker created: {marker}")
-        print(f"[init] Summary: {data_copied} data items, {photos_copied} photos copied.")
+        print(f"[init] Summary: {data_copied} data items copied.")
+        print("[init] Photos are served from Cloudflare R2 (not from volume).")
         return True
-    elif data_copied == 0 and photos_copied == 0:
+    elif data_copied == 0:
         # Nothing was copied - this is a GitHub deploy on an empty volume
         print("")
         print("=" * 60)
         print("[init] ERROR: No data to seed and volume is empty.")
         print("[init] This happens when deploying from GitHub (bundles are empty).")
         print("[init] ")
-        print("[init] TO FIX: Deploy using 'railway up' from your local machine.")
-        print("[init] This will upload data/ and raw_photos/ from your local copy.")
+        print("[init] TO FIX: Deploy using 'railway up --no-gitignore' from your local machine.")
+        print("[init] This will upload data/ from your local copy.")
+        print("[init] ")
+        print("[init] NOTE: Photos come from R2, not from the image.")
+        print("[init] Run 'python scripts/upload_to_r2.py --execute' locally to upload photos.")
         print("=" * 60)
         print("")
         # Do NOT create marker - allow future CLI deploy to seed
@@ -164,7 +143,7 @@ def init_volume():
         print("")
         print("=" * 60)
         print("[init] ERROR: Initialization incomplete.")
-        print(f"[init] Copied {data_copied} data items, {photos_copied} photos.")
+        print(f"[init] Copied {data_copied} data items.")
         print(f"[init] But required files are missing: {REQUIRED_DATA_FILES}")
         print("[init] Check disk space and permissions.")
         print("=" * 60)

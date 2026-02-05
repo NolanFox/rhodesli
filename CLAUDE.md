@@ -301,6 +301,73 @@ Examples of deployment-impacting changes:
 - Changing volume mount expectations
 - Modifying the init script
 
+## Deployment Architecture Rules
+
+### Platform Constraint Research (MANDATORY)
+
+Before ANY deployment work for a new platform, research and document:
+- Upload/build size limits
+- Memory limits
+- Disk/volume limits
+- Timeout limits
+- Pricing model (what costs money at scale?)
+
+Create a section in the deployment guide: "Platform Constraints" listing these.
+
+**Railway Constraints (validated 2026-02):**
+- Upload limit: ~100MB via CLI
+- Build timeout: 15 minutes
+- Volume storage: Included on Hobby plan ($5/mo)
+- Memory: 512MB-8GB depending on plan
+
+### Deployment Spike Rule
+
+Before building deployment infrastructure, run a minimal spike:
+- Deploy a "hello world" with similar asset sizes
+- Verify the deployment actually works
+- Document any constraints discovered
+
+If the spike fails, fix the architecture BEFORE building more infrastructure.
+
+### Asset Separation Checklist
+
+For every deployment, explicitly categorize:
+
+| Asset Type | Size | Where It Lives | Why |
+|------------|------|----------------|-----|
+| Application code | Small | Docker image | Changes frequently |
+| Config files | Tiny | Docker image or env vars | Changes occasionally |
+| JSON data | Small-Medium | Platform volume | Persists across deploys |
+| Binary data (embeddings) | Medium | Platform volume or object storage | Persists, too big for image |
+| Media (photos, videos) | Large | Object storage (S3/R2) | Never in Docker images |
+| ML models | Large | Object storage | Never in Docker images |
+
+**Rule: If an asset is >50MB, it probably doesn't belong in a Docker image.**
+
+### Assumption Documentation
+
+When making architectural decisions, document assumptions explicitly:
+```markdown
+## Assumptions (to be validated)
+- [ ] Railway can handle 255MB uploads — VALIDATE BEFORE BUILDING
+- [ ] Supabase free tier has enough storage — CHECK LIMITS
+- [ ] etc.
+```
+
+Validate assumptions with spikes before building infrastructure around them.
+
+### 30-Minute Debugging Rule
+
+If you've been debugging the same deployment issue for >30 minutes:
+1. STOP fixing symptoms
+2. Step back and ask: "Is our fundamental approach wrong?"
+3. List alternatives to the current architecture
+4. Consider if a different approach would avoid the problem entirely
+
+Symptom chasing feels like progress but often isn't.
+
+**Retrospective:** See `docs/RETROSPECTIVES/2026-02-05-deployment-failure.md` for an example of what happens when these rules aren't followed.
+
 ## Post-Bug Protocol
 
 When a bug is discovered that could have been caught earlier:
@@ -341,6 +408,7 @@ A session is not considered complete until this is done. This is a hard rule, no
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
 | Hosting | Railway (Hobby plan) | Persistent volumes, simple deploys |
+| Photo Storage | Cloudflare R2 | Photos too large for Docker image (~255MB) |
 | Auth | Supabase (Phase B) | Managed auth + Postgres |
 | DNS | Cloudflare subdomain | `rhodesli.nolanandrewfox.com` |
 | Data | JSON = canonical, Postgres = community | Curator controls truth |

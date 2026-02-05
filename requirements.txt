@@ -3,3 +3,4 @@ uvicorn
 numpy
 portalocker
 Pillow
+boto3

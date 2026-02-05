@@ -2,6 +2,38 @@
 
 Deploy Rhodesli to Railway with a custom domain on Cloudflare.
 
+## Pre-Deployment Checklist
+
+**Complete this checklist BEFORE writing deployment code for any new platform.**
+
+### Platform Research
+- [x] Documented upload/build size limits (Railway: ~100MB)
+- [x] Documented memory limits (Railway: 512MB-8GB)
+- [x] Documented disk/volume limits (Railway: included on Hobby)
+- [x] Documented timeout limits (Railway: 15 min build)
+- [x] Checked pricing model (Railway: $5-20/mo)
+
+### Asset Inventory (Rhodesli)
+
+| Asset Type | Size | Location | Rationale |
+|------------|------|----------|-----------|
+| Application code | ~10MB | Docker image | Changes frequently |
+| JSON data | ~500KB | Railway volume | Persists, too large for env vars |
+| Embeddings | ~2.3MB | Railway volume | Persists, binary data |
+| Photos | ~255MB | **Cloudflare R2** | Too large for Docker/volume seeding |
+| Face crops | ~20MB | **Cloudflare R2** | Derived from photos |
+
+### Deployment Spike
+- [x] Tested basic deploy works
+- [x] Validated photo storage approach (R2 required due to size limits)
+
+### Assumptions Validated
+- [x] Railway can handle JSON data seeding via volume (~5MB) ✓
+- [x] Railway CANNOT handle 255MB photo uploads ✗ → Use R2
+- [x] Cloudflare R2 can serve photos publicly ✓
+
+---
+
 ## Architecture Overview
 
 ```
@@ -10,27 +42,29 @@ Deploy Rhodesli to Railway with a custom domain on Cloudflare.
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Docker Container (python:3.11-slim)                   │ │
 │  │  - FastHTML web app (app/main.py)                      │ │
-│  │  - Lightweight: ~200MB image                           │ │
-│  │  - No ML dependencies (insightface, torch, etc.)       │ │
+│  │  - Lightweight: ~50MB image                            │ │
+│  │  - No ML dependencies, no photos bundled               │ │
 │  └────────────────────────────────────────────────────────┘ │
 │                           │                                  │
 │                           ▼                                  │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Railway Persistent Volume (/app/storage)              │ │
-│  │  ├── data/        - identities.json, photo_index.json │ │
-│  │  │                - embeddings.npy                     │ │
-│  │  ├── raw_photos/  - source photographs                │ │
-│  │  └── staging/     - upload staging area               │ │
+│  │  └── data/        - identities.json, photo_index.json │ │
+│  │                   - embeddings.npy (~2.3MB)            │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
-                            │
-                            │ HTTPS (Cloudflare SSL)
-                            ▼
-                    ┌───────────────┐
-                    │   Cloudflare  │
-                    │   DNS/Proxy   │
-                    └───────────────┘
+         │                                    │
+         │ HTTPS                              │ Photo URLs
+         ▼                                    ▼
+┌─────────────────┐               ┌─────────────────────────┐
+│   Cloudflare    │               │   Cloudflare R2         │
+│   DNS/Proxy     │               │   (Object Storage)      │
+└─────────────────┘               │   ├── raw_photos/       │
+                                  │   └── crops/            │
+                                  └─────────────────────────┘
 ```
+
+**Key insight:** Photos (~255MB) are served from Cloudflare R2, not bundled in the Docker image. This avoids Railway's upload size limits and allows simple `git push` deploys.
 
 ## Prerequisites
 
@@ -39,52 +73,24 @@ Deploy Rhodesli to Railway with a custom domain on Cloudflare.
 - Cloudflare account with `nolanandrewfox.com` configured
 - Docker installed locally (for testing)
 
-## Deployment Modes (Critical)
+## Deployment Overview
 
-Railway deployments can come from two sources with **DIFFERENT behaviors**:
+With the R2 architecture, deployment is now simple:
 
-### CLI Deploy (`railway up`)
+| What | Where | How to Update |
+|------|-------|---------------|
+| Photos + Crops | Cloudflare R2 | `python scripts/upload_to_r2.py --execute` |
+| JSON Data | Railway Volume | Bundled in Docker image, copied to volume on first run |
+| Application Code | Docker Image | `git push origin main` |
 
-- Uploads files from your **LOCAL machine**
-- **CRITICAL:** Railway CLI uses `.gitignore` by default, NOT just `.railwayignore`
-- `data/` and `raw_photos/` are gitignored, so they're excluded unless you use `--no-gitignore`
-- **Use for:** Initial deploy, adding new photos, reseeding data
-- **Required when:** You need to upload data/raw_photos to the image bundles
+### Typical Workflows
 
-```bash
-# Standard deploy (uses .gitignore - excludes data/)
-railway up
-
-# Full deploy including gitignored files (use for seeding data)
-railway up --no-gitignore
-```
-
-> **Size Limit Warning:** Railway/Cloudflare has upload size limits (~100MB). If upload fails with
-> "413 Payload Too Large", update `.railwayignore` to exclude large files like `raw_photos/` and
-> `data/embeddings.npy`. The app can work with just JSON data (face crops are separate).
-
-### Git Deploy (`git push` or Dashboard redeploy)
-
-- Builds from your **GitHub REPOSITORY**
-- Respects `.gitignore`
-- `data/` and `raw_photos/` are NOT included (they're gitignored)
-- **Use for:** Code changes, config updates, bug fixes
-- **Works because:** Volume already has data from previous CLI deploy
-
-```bash
-git push origin main
-```
-
-### The Golden Rule
-
-| Scenario | Method | Why |
-|----------|--------|-----|
-| First deploy ever | `railway up` | Seeds volume with photos/data |
-| Code changes only | `git push` | Photos already on volume |
-| Adding new photos | `railway up` | Re-bundles with new photos |
-| Fixing a bug | `git push` | No data change needed |
-| Volume is empty/corrupted | `railway up` + reset | See Reset Protocol below |
-| Config/env changes | Railway dashboard | No build needed |
+| Scenario | Steps |
+|----------|-------|
+| **First deploy** | 1. Set up R2 bucket, 2. Upload photos to R2, 3. Set env vars, 4. `git push` |
+| **Code changes** | `git push origin main` |
+| **Add new photos** | `python scripts/upload_to_r2.py --execute` (no redeploy needed) |
+| **Fix a bug** | `git push origin main` |
 
 ### Understanding the Init Script
 
@@ -92,10 +98,10 @@ The init script (`scripts/init_railway_volume.py`) runs on every container start
 
 1. **If `.initialized` marker exists AND data is valid** → Skip seeding (normal operation)
 2. **If `.initialized` exists BUT data is missing** → Remove marker, attempt re-seed
-3. **If no marker AND bundles have data** → Copy to volume, create marker
+3. **If no marker AND bundles have data** → Copy JSON to volume, create marker
 4. **If no marker AND bundles are empty** → Log error, do NOT create marker
 
-The marker is ONLY created when data is successfully copied. This prevents "initialized but empty" corruption.
+The marker is ONLY created when data is successfully copied. Photos are NOT seeded from bundles - they come from R2.
 
 ## Step 1: Test Docker Build Locally
 
@@ -160,7 +166,83 @@ Visit http://localhost:5001 and verify:
 - [ ] Photo viewer works
 - [ ] All navigation works
 
-## Step 2: Railway Setup
+## Step 2: Cloudflare R2 Setup
+
+Photos and face crops are served from Cloudflare R2, not bundled in the Docker image.
+This keeps the image small and allows `git push` deploys without size limits.
+
+### 2.1 Create R2 Bucket
+
+1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Navigate to **R2** in the sidebar
+3. Click **Create bucket**
+4. Name it: `rhodesli-photos`
+5. Choose location: **Automatic** (or closest to your users)
+6. Click **Create bucket**
+
+### 2.2 Enable Public Access
+
+By default, R2 buckets are private. We need public read access for photos.
+
+1. Open your bucket (`rhodesli-photos`)
+2. Go to **Settings** tab
+3. Under **Public access**, click **Allow Access**
+4. Confirm the warning about public access
+5. Copy the **Public bucket URL** (e.g., `https://pub-abc123.r2.dev`)
+
+> **Save this URL!** You'll need it for the `R2_PUBLIC_URL` environment variable.
+
+### 2.3 Create API Token
+
+Create credentials for uploading photos:
+
+1. Go to **R2** → **Manage R2 API Tokens**
+2. Click **Create API Token**
+3. Name: `rhodesli-upload`
+4. Permissions: **Object Read & Write**
+5. Specify bucket: `rhodesli-photos` (or leave blank for all buckets)
+6. Click **Create API Token**
+7. **Copy immediately:**
+   - Access Key ID
+   - Secret Access Key
+
+> **Warning:** The secret is only shown once. Save it securely.
+
+### 2.4 Upload Photos to R2
+
+From your local machine with the photos:
+
+```bash
+# Set environment variables
+export R2_ACCOUNT_ID=your-account-id          # From Cloudflare dashboard URL
+export R2_ACCESS_KEY_ID=your-access-key       # From step 2.3
+export R2_SECRET_ACCESS_KEY=your-secret-key   # From step 2.3
+export R2_BUCKET_NAME=rhodesli-photos
+
+# Preview what would be uploaded
+python scripts/upload_to_r2.py --dry-run
+
+# Actually upload (~5 minutes for 255MB)
+python scripts/upload_to_r2.py --execute
+```
+
+The script uploads:
+- `raw_photos/` → `rhodesli-photos/raw_photos/`
+- `app/static/crops/` → `rhodesli-photos/crops/`
+
+### 2.5 Verify R2 Upload
+
+After upload, verify photos are accessible:
+
+```bash
+# Replace with your actual public URL
+curl -I "https://pub-abc123.r2.dev/raw_photos/some-photo.jpg"
+# Should return: HTTP/2 200
+```
+
+Or visit the URL in your browser - you should see the photo.
+
+## Step 3: Railway Setup
 
 ### 2.1 Login and Initialize
 
@@ -187,7 +269,7 @@ railway init
 railway up
 ```
 
-## Step 3: Create Persistent Volume
+## Step 4: Create Persistent Volume
 
 Railway needs persistent storage for photos and data.
 
@@ -214,16 +296,20 @@ The init script automatically creates this structure inside the volume:
 > **Note:** On first deploy, the init script copies bundled data from the Docker
 > image into the volume. The `.initialized` marker prevents re-copying on restarts.
 
-## Step 4: Set Environment Variables
+## Step 5: Set Environment Variables
 
 In Railway dashboard → Service → Variables tab:
+
+### Required Variables
 
 | Variable | Value | Description |
 |----------|-------|-------------|
 | `HOST` | `0.0.0.0` | Network binding |
 | `DEBUG` | `false` | Disable hot reload |
 | `PROCESSING_ENABLED` | `false` | Disable ML processing |
-| `STORAGE_DIR` | `/app/storage` | **Required:** Single volume mount path |
+| `STORAGE_DIR` | `/app/storage` | Single volume mount path |
+| `STORAGE_MODE` | `r2` | **Required:** Tell app to use R2 for photos |
+| `R2_PUBLIC_URL` | `https://pub-xxx.r2.dev` | **Required:** Your R2 public bucket URL from step 2.2 |
 
 > **Note:** Railway automatically sets `PORT`. Your app reads it from the environment.
 
@@ -231,7 +317,18 @@ In Railway dashboard → Service → Variables tab:
 > automatically (`/app/storage/data` and `/app/storage/raw_photos`). You do NOT need
 > to set `DATA_DIR` or `PHOTOS_DIR` separately on Railway.
 
-## Step 5: Deploy
+### R2 Upload Variables (Not needed on Railway)
+
+These are only used locally for `scripts/upload_to_r2.py`. You don't need to set them on Railway:
+
+| Variable | Used For |
+|----------|----------|
+| `R2_ACCOUNT_ID` | Uploading photos |
+| `R2_ACCESS_KEY_ID` | Uploading photos |
+| `R2_SECRET_ACCESS_KEY` | Uploading photos |
+| `R2_BUCKET_NAME` | Uploading photos |
+
+## Step 6: Deploy
 
 ### If connected to GitHub:
 
@@ -265,7 +362,7 @@ railway up
   Server starting at http://0.0.0.0:5001
   ```
 
-## Step 6: Verify Deployment
+## Step 7: Verify Deployment
 
 Railway provides a temporary URL like:
 `rhodesli-production.up.railway.app`
@@ -287,7 +384,7 @@ curl https://rhodesli-production.up.railway.app/health
 - [ ] Clicking faces navigates correctly
 - [ ] Upload page shows (files staged, not processed)
 
-## Step 7: Configure Custom Domain (Cloudflare)
+## Step 8: Configure Custom Domain (Cloudflare)
 
 ### 7.1 Add Domain in Railway
 
@@ -320,7 +417,7 @@ curl https://rhodesli.nolanandrewfox.com/health
 
 Visit `https://rhodesli.nolanandrewfox.com` in browser.
 
-## Step 8: Post-Deploy Checklist
+## Step 9: Post-Deploy Checklist
 
 - [ ] App accessible at `rhodesli.nolanandrewfox.com`
 - [ ] HTTPS working (green lock icon)

@@ -41,6 +41,7 @@ from core.config import (
     PHOTOS_DIR,
 )
 from core.ui_safety import ensure_utf8_display
+from core import storage
 
 # --- INSTRUMENTATION IMPORT ---
 from core.event_recorder import get_event_recorder
@@ -568,11 +569,12 @@ def photo_url(filename: str) -> str:
     """
     Generate a properly URL-encoded path for a photo.
 
+    In local mode: returns /photos/{filename} (served by app route)
+    In R2 mode: returns Cloudflare R2 public URL
+
     Encodes the filename to handle spaces and special characters.
-    The encoding happens exactly once, at URL construction time.
-    Uses default safe='/' to preserve dots in file extensions.
     """
-    return f"/photos/{quote(filename)}"
+    return storage.get_photo_url(filename)
 
 
 def get_crop_files():
@@ -602,6 +604,9 @@ def resolve_face_image_url(face_id: str, crop_files: set) -> str:
     1. Legacy: {filename_stem}:face{index} -> {sanitized_stem}_{quality}_{index}.jpg
     2. Inbox: inbox_{hash} -> inbox_{hash}.jpg (direct mapping)
 
+    In local mode: returns /static/crops/{filename}
+    In R2 mode: returns Cloudflare R2 public URL
+
     Args:
         face_id: Canonical face identifier
         crop_files: Set of available crop filenames
@@ -613,7 +618,7 @@ def resolve_face_image_url(face_id: str, crop_files: set) -> str:
     # Inbox crops are named exactly {face_id}.jpg
     inbox_crop = f"{face_id}.jpg"
     if inbox_crop in crop_files:
-        return f"/crops/{inbox_crop}"
+        return storage.get_crop_url_by_filename(inbox_crop)
 
     # Fall back to legacy format parsing
     # Legacy face_ids use format: {filename_stem}:face{index}
@@ -637,7 +642,7 @@ def resolve_face_image_url(face_id: str, crop_files: set) -> str:
 
     for crop in crop_files:
         if pattern.match(crop):
-            return f"/crops/{crop}"
+            return storage.get_crop_url_by_filename(crop)
 
     return None
 
@@ -1357,7 +1362,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                 face_avatars.append(
                     Div(
                         Img(
-                            src=f"/static/crops/{crop_file}",
+                            src=storage.get_crop_url_by_filename(crop_file),
                             cls="w-full h-full object-cover",
                             title=face["name"]
                         ),

@@ -5,6 +5,75 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 12: R2 Migration + Deployment Retrospective (2026-02-05)
+
+**Goal:** Migrate photo storage from Docker image bundling to Cloudflare R2. Conduct retrospective on deployment failure.
+
+**Background:**
+Previous sessions spent hours debugging Railway deployment failures. The root cause was architectural: trying to bundle 255MB of photos into a Docker image hit Railway's upload limits (~100MB). We kept fixing symptoms (gitignore, railwayignore, init scripts) instead of recognizing the fundamental problem.
+
+**Part 1: Retrospective**
+- Created `docs/RETROSPECTIVES/2026-02-05-deployment-failure.md` documenting:
+  - What went wrong (no platform research, no deployment spike, symptom chasing)
+  - Why it wasn't caught earlier
+  - Lessons for future
+- Added "Deployment Architecture Rules" to `CLAUDE.md`:
+  - Platform Constraint Research (MANDATORY)
+  - Deployment Spike Rule
+  - Asset Separation Checklist (photos >50MB → object storage)
+  - 30-Minute Debugging Rule
+- Added Pre-Deployment Checklist to `docs/DEPLOYMENT_GUIDE.md`
+
+**Part 2: R2 Migration**
+- Created `core/storage.py` — storage abstraction with local/R2 modes
+- Updated `app/main.py` — photo URLs now use storage module
+- Created `scripts/upload_to_r2.py` — upload photos to R2 with --dry-run/--execute
+- Updated configuration:
+  - `.env.example` with STORAGE_MODE, R2_PUBLIC_URL
+  - `requirements.txt` added boto3
+  - `.railwayignore` to exclude photos (served from R2)
+- Updated `scripts/init_railway_volume.py` — JSON only, no photo bundling
+- Updated `Dockerfile` — removed photos_bundle
+- Added comprehensive R2 setup section to `docs/DEPLOYMENT_GUIDE.md`
+
+**Architecture Change:**
+```
+Before: Photos bundled in Docker image → Too large (255MB)
+After:  Photos served from Cloudflare R2 → Unlimited size
+```
+
+| Asset | Before | After |
+|-------|--------|-------|
+| Photos (255MB) | Docker image | Cloudflare R2 |
+| Crops (20MB) | Docker image | Cloudflare R2 |
+| JSON data (500KB) | Docker image → Volume | Docker image → Volume |
+| Application code | Docker image | Docker image |
+
+**Files Created:**
+- `docs/RETROSPECTIVES/2026-02-05-deployment-failure.md`
+- `core/storage.py`
+- `scripts/upload_to_r2.py`
+
+**Files Modified:**
+- `CLAUDE.md` (Deployment Architecture Rules)
+- `docs/DEPLOYMENT_GUIDE.md` (R2 setup, pre-deployment checklist)
+- `.env.example` (R2 config)
+- `requirements.txt` (boto3)
+- `.railwayignore` (exclude photos)
+- `scripts/init_railway_volume.py` (JSON only)
+- `Dockerfile` (no photos_bundle)
+- `app/main.py` (use storage module)
+
+**Next Steps (Manual):**
+1. Create R2 bucket in Cloudflare
+2. Enable public access
+3. Create API token
+4. Upload photos: `python scripts/upload_to_r2.py --execute`
+5. Set Railway env vars: STORAGE_MODE=r2, R2_PUBLIC_URL
+6. Deploy: `git push origin main`
+
+---
+
 ## Session 11: Autonomous Deployment Debug (2026-02-05)
 
 **Goal:** Fix Railway deployment failing with 502 errors despite previous init script fixes.

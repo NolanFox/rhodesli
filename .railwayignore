@@ -27,12 +27,15 @@ notebooks/
 # Heavy ML dependencies (not used in production)
 requirements-local.txt
 
-# NOTE: raw_photos/ is excluded to keep upload size under limits
-# Photos must be uploaded separately or synced via a different method
-raw_photos/*
-!raw_photos/.gitkeep
+# =============================================================================
+# Photo/Crop Storage (served from Cloudflare R2, not Docker image)
+# =============================================================================
+# Photos and crops are stored in R2 and served via public URLs.
+# See scripts/upload_to_r2.py to upload these to R2.
+raw_photos/
+app/static/crops/
 
-# Large data files not needed for core functionality
-data/backups/
+# Large data files - embeddings stay on volume, not in image
 data/embeddings.npy
+data/backups/
 data/*.db

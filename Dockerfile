@@ -26,15 +26,15 @@ COPY app/ app/
 COPY core/ core/
 COPY scripts/ scripts/
 
-# Bundle data for first-run volume initialization
-# These are copied TO the volume on first deploy, then the volume persists
+# Bundle JSON data for first-run volume initialization
+# This is copied TO the volume on first deploy, then the volume persists
+# NOTE: Photos are NOT bundled - they're served from Cloudflare R2
 COPY data/ /app/data_bundle/
-COPY raw_photos/ /app/photos_bundle/
 
 # Create necessary directories
 # /app/storage is for Railway single-volume mode (when STORAGE_DIR is set)
-# /app/data and /app/raw_photos are for local Docker testing
-RUN mkdir -p /app/data /app/raw_photos /app/storage
+# /app/data is for local Docker testing
+RUN mkdir -p /app/data /app/storage
 
 # Port (Railway sets PORT env var automatically)
 EXPOSE ${PORT:-5001}
@@ -50,13 +50,14 @@ ENV DEBUG=false
 ENV PROCESSING_ENABLED=false
 
 # Storage configuration:
-# - STORAGE_DIR is set only on Railway (single-volume mode)
-# - When STORAGE_DIR is set, DATA_DIR and PHOTOS_DIR are derived from it
-# - When STORAGE_DIR is not set (local Docker), use DATA_DIR and PHOTOS_DIR directly
-# Railway sets: STORAGE_DIR=/app/storage (via environment variables)
-# Local Docker: uses DATA_DIR=data and PHOTOS_DIR=raw_photos
+# - JSON data lives on Railway volume (STORAGE_DIR=/app/storage)
+# - Photos served from Cloudflare R2 (STORAGE_MODE=r2, R2_PUBLIC_URL)
+# - Local dev uses filesystem (STORAGE_MODE=local, default)
+#
+# Railway sets: STORAGE_DIR=/app/storage, STORAGE_MODE=r2, R2_PUBLIC_URL
+# Local Docker: uses DATA_DIR=data, STORAGE_MODE=local (default)
 ENV DATA_DIR=data
-ENV PHOTOS_DIR=raw_photos
+ENV STORAGE_MODE=local
 
 # Start: init volume if needed, then run app
 CMD python scripts/init_railway_volume.py && python app/main.py
