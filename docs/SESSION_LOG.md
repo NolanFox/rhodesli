@@ -5,6 +5,54 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 13: R2 Photo Loading Fix (2026-02-05)
+
+**Goal:** Fix photos not displaying on the live site after R2 migration.
+
+**Problem:**
+Photos were uploaded to R2 successfully (485 files), but the live site showed "?" placeholders instead of images. R2 was accessible (HTTP 200), health endpoint worked, but no R2 URLs appeared in the HTML.
+
+**Root Cause Analysis:**
+1. `get_crop_files()` in `app/main.py` only read from local `static/crops` directory
+2. In production, this directory doesn't exist — crops are in R2
+3. Without the crop_files set, `resolve_face_image_url()` couldn't match face_ids to crop filenames
+4. All images returned `None`, rendering "?" placeholders
+
+**Secondary Issue:**
+The embeddings.npy file wasn't deployed to Railway volume — it was excluded in both `.gitignore` and `.railwayignore`. This file is needed to construct crop filenames (contains quality scores).
+
+**Diagnostic Process:**
+1. Verified R2 accessibility — crops returned HTTP 200
+2. Added debug info to `/health` endpoint — revealed `crop_files_count: 0`, `embeddings_exists: false`
+3. Traced code path: `get_crop_files()` → `resolve_face_image_url()` → `identity_card()`
+4. Identified that crop filenames could be constructed from embeddings data
+
+**Solution:**
+1. Modified `get_crop_files()` to build crop filename set from embeddings.npy in R2 mode
+2. Removed `data/embeddings.npy` from `.railwayignore`
+3. Modified init script to copy missing files even when volume is already initialized
+4. Redeployed with `railway up --no-gitignore` to include embeddings file
+
+**Files Modified:**
+- `app/main.py` — `get_crop_files()` now builds from embeddings in R2 mode
+- `.railwayignore` — removed embeddings.npy exclusion
+- `scripts/init_railway_volume.py` — adds missing bundled files to initialized volumes
+
+**Verification:**
+- Health check: 124 photos ✓
+- Homepage: 7 R2 URLs in HTML ✓
+- Image load: HTTP 200 from R2 ✓
+
+**Lesson Learned:**
+When migrating storage, verify the full data flow:
+1. Can we access the storage? (R2 returns 200) ✓
+2. Does the app generate correct URLs? (Need embeddings for crop filenames) ✗
+3. Do the URLs match what's in storage? (Pattern matching) ✓
+
+The intermediate step (2) was broken but symptoms appeared at the end.
+
+---
+
 ## Session 12: R2 Migration + Deployment Retrospective (2026-02-05)
 
 **Goal:** Migrate photo storage from Docker image bundling to Cloudflare R2. Conduct retrospective on deployment failure.
