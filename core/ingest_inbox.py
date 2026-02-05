@@ -306,6 +306,7 @@ def process_single_image(
     identity_path: Path,
     crops_dir: Path,
     file_hash_path: Path = None,
+    source: str = "",
 ) -> dict:
     """
     Process a single image file (internal helper).
@@ -319,6 +320,7 @@ def process_single_image(
         identity_path: Path to identities.json
         crops_dir: Path to crops directory
         file_hash_path: Path to file_hashes.json (for idempotency)
+        source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
 
     Returns:
         Result dict with faces_extracted, identity_ids, skipped_duplicate, or error
@@ -380,7 +382,7 @@ def process_single_image(
         photo_registry = PhotoRegistry()
 
     for face in faces:
-        photo_registry.register_face(photo_id, str(filepath), face["face_id"])
+        photo_registry.register_face(photo_id, str(filepath), face["face_id"], source=source)
 
     photo_registry.save(photo_index_path)
 
@@ -424,6 +426,7 @@ def process_uploaded_file(
     job_id: str,
     data_dir: Path = None,
     crops_dir: Path = None,
+    source: str = "",
 ) -> dict:
     """
     Main entry point for processing an uploaded file.
@@ -436,6 +439,7 @@ def process_uploaded_file(
         job_id: Unique job identifier
         data_dir: Data directory (default: project/data)
         crops_dir: Crops output directory (default: project/app/static/crops)
+        source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
 
     Returns:
         Result dict with status, faces_extracted, identities_created
@@ -471,6 +475,7 @@ def process_uploaded_file(
             identity_path=identity_path,
             crops_dir=crops_dir,
             file_hash_path=file_hash_path,
+            source=source,
         )
 
     # Single image processing
@@ -485,6 +490,7 @@ def process_uploaded_file(
             identity_path=identity_path,
             crops_dir=crops_dir,
             file_hash_path=file_hash_path,
+            source=source,
         )
 
         logger.info(f"Found {result['faces_extracted']} face(s)")
@@ -529,6 +535,7 @@ def _process_zip_file(
     identity_path: Path,
     crops_dir: Path,
     file_hash_path: Path = None,
+    source: str = "",
 ) -> dict:
     """
     Process a ZIP archive containing multiple images.
@@ -545,6 +552,7 @@ def _process_zip_file(
         identity_path: Path to identities.json
         crops_dir: Path to crops directory
         file_hash_path: Path to file_hashes.json (for idempotency)
+        source: Collection/provenance label
 
     Returns:
         Result dict with aggregated status
@@ -623,6 +631,7 @@ def _process_zip_file(
                             identity_path=identity_path,
                             crops_dir=crops_dir,
                             file_hash_path=file_hash_path,
+                            source=source,
                         )
 
                         total_faces += result["faces_extracted"]
@@ -698,6 +707,7 @@ def process_directory(
     job_id: str,
     data_dir: Path = None,
     crops_dir: Path = None,
+    source: str = "",
 ) -> dict:
     """
     Process a directory of uploaded files (images and/or ZIPs).
@@ -710,6 +720,7 @@ def process_directory(
         job_id: Unique job identifier
         data_dir: Data directory (default: project/data)
         crops_dir: Crops output directory (default: project/app/static/crops)
+        source: Collection/provenance label
 
     Returns:
         Result dict with aggregated status
@@ -803,6 +814,7 @@ def process_directory(
                 identity_path=identity_path,
                 crops_dir=crops_dir,
                 file_hash_path=file_hash_path,
+                source=source,
             )
 
             total_faces += result["faces_extracted"]
@@ -860,6 +872,7 @@ def process_directory(
                                 identity_path=identity_path,
                                 crops_dir=crops_dir,
                                 file_hash_path=file_hash_path,
+                                source=source,
                             )
 
                             total_faces += result["faces_extracted"]
@@ -939,12 +952,18 @@ def main():
         required=True,
         help="Unique job identifier",
     )
+    parser.add_argument(
+        "--source",
+        type=str,
+        default="",
+        help="Collection/provenance label (e.g., 'Betty Capeluto Miami Collection')",
+    )
     args = parser.parse_args()
 
     if args.directory:
-        result = process_directory(args.directory, args.job_id)
+        result = process_directory(args.directory, args.job_id, source=args.source)
     else:
-        result = process_uploaded_file(args.file, args.job_id)
+        result = process_uploaded_file(args.file, args.job_id, source=args.source)
 
     if result["status"] == "error":
         sys.exit(1)
