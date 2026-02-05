@@ -791,6 +791,15 @@ def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
                 nav_item("/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
                 cls="mb-4"
             ),
+            # Browse Section (photo-centric)
+            Div(
+                P(
+                    "Browse",
+                    cls="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
+                ),
+                nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
+                cls="mb-4"
+            ),
             cls="flex-1 px-3 py-2 space-y-1 overflow-y-auto"
         ),
         # Footer with stats
@@ -1194,6 +1203,147 @@ def render_rejected_section(dismissed: list, crop_files: set, counts: dict) -> D
     return Div(
         section_header("Dismissed", f"{counts['rejected']} items dismissed"),
         content,
+        cls="space-y-6"
+    )
+
+
+def render_photos_section(counts: dict, registry, crop_files: set) -> Div:
+    """
+    Render the Photos section - a grid view of all photos.
+
+    This is the photo-centric workflow, complementing the face-centric inbox.
+    """
+    _build_caches()
+    if not _photo_cache:
+        return Div(
+            section_header("Photos", "0 photos"),
+            Div(
+                "No photos uploaded yet.",
+                cls="text-center py-12 text-slate-400"
+            ),
+            cls="space-y-6"
+        )
+
+    # Get all photos with metadata
+    photos = []
+    sources_set = set()
+    for photo_id, photo_data in _photo_cache.items():
+        source = photo_data.get("source", "")
+        if source:
+            sources_set.add(source)
+
+        # Get identified faces in this photo
+        identified_faces = []
+        for face in photo_data.get("faces", []):
+            face_id = face["face_id"]
+            identity = get_identity_for_face(registry, face_id)
+            if identity and identity.get("name"):
+                identified_faces.append({
+                    "name": identity.get("name"),
+                    "face_id": face_id,
+                    "identity_id": identity.get("identity_id"),
+                })
+
+        photos.append({
+            "photo_id": photo_id,
+            "filename": photo_data.get("filename", "unknown"),
+            "filepath": photo_data.get("filepath", ""),
+            "source": source,
+            "face_count": len(photo_data.get("faces", [])),
+            "identified_count": len(identified_faces),
+            "identified_faces": identified_faces[:4],  # Max 4 for display
+        })
+
+    sources = sorted(sources_set)
+
+    # Build subtitle
+    subtitle_parts = [f"{len(photos)} photos"]
+    if sources:
+        subtitle_parts.append(f"{len(sources)} collections")
+    subtitle = " \u2022 ".join(subtitle_parts)
+
+    # Photo grid
+    photo_cards = []
+    for photo in photos:
+        # Face avatars for identified people
+        face_avatars = []
+        for i, face in enumerate(photo["identified_faces"][:3]):
+            crop_file = f"{face['face_id']}.jpg"
+            if crop_file in crop_files:
+                face_avatars.append(
+                    Div(
+                        Img(
+                            src=f"/static/crops/{crop_file}",
+                            cls="w-full h-full object-cover",
+                            title=face["name"]
+                        ),
+                        cls="w-6 h-6 rounded-full border-2 border-slate-800 overflow-hidden",
+                        style=f"margin-left: {-4 if i > 0 else 0}px; z-index: {10-i};"
+                    )
+                )
+
+        if photo["identified_count"] > 3:
+            face_avatars.append(
+                Div(
+                    f"+{photo['identified_count'] - 3}",
+                    cls="w-6 h-6 rounded-full border-2 border-slate-800 bg-slate-700 "
+                        "flex items-center justify-center text-xs text-slate-300",
+                    style="margin-left: -4px;"
+                )
+            )
+
+        card = Div(
+            # Photo thumbnail
+            Div(
+                Img(
+                    src=photo_url(photo["filename"]),
+                    cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
+                    loading="lazy"
+                ),
+                # Face count badge
+                Div(
+                    f"{photo['face_count']} faces",
+                    cls="absolute top-2 right-2 bg-black/70 text-white text-xs font-data "
+                        "px-2 py-1 rounded-full backdrop-blur-sm"
+                ),
+                # Identified faces indicator
+                Div(
+                    *face_avatars,
+                    cls="absolute bottom-2 left-2 flex"
+                ) if face_avatars else None,
+                cls="aspect-[4/3] overflow-hidden relative"
+            ),
+            # Photo info
+            Div(
+                P(photo["filename"], cls="text-sm text-white truncate font-data"),
+                P(
+                    f"\U0001F4C1 {photo['source']}",
+                    cls="text-xs text-slate-500 truncate mt-0.5"
+                ) if photo["source"] else None,
+                cls="p-3"
+            ),
+            cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "
+                "hover:border-slate-500 transition-colors cursor-pointer group",
+            hx_get=f"/photo/{photo['photo_id']}/partial",
+            hx_target="#photo-modal-content",
+            hx_swap="innerHTML",
+            # Show modal on load
+            **{"_": "on htmx:afterOnLoad remove .hidden from #photo-modal"}
+        )
+        photo_cards.append(card)
+
+    # Photo grid layout
+    grid = Div(
+        *photo_cards,
+        cls="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+    )
+
+    return Div(
+        section_header("Photos", subtitle),
+        grid if photo_cards else Div(
+            "No photos found.",
+            cls="text-center py-12 text-slate-400"
+        ),
         cls="space-y-6"
     )
 
@@ -1997,16 +2147,21 @@ def get(section: str = "to_review", view: str = "focus", current: str = None):
     skipped_list.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
     dismissed.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
 
+    # Get photo count for sidebar
+    _build_caches()
+    photo_count = len(_photo_cache) if _photo_cache else 0
+
     # Calculate counts for sidebar
     counts = {
         "to_review": len(to_review),
         "confirmed": len(confirmed_list),
         "skipped": len(skipped_list),
         "rejected": len(dismissed),
+        "photos": photo_count,
     }
 
     # Validate section parameter
-    valid_sections = ("to_review", "confirmed", "skipped", "rejected")
+    valid_sections = ("to_review", "confirmed", "skipped", "rejected", "photos")
     if section not in valid_sections:
         section = "to_review"
 
@@ -2021,6 +2176,8 @@ def get(section: str = "to_review", view: str = "focus", current: str = None):
         main_content = render_confirmed_section(confirmed_list, crop_files, counts)
     elif section == "skipped":
         main_content = render_skipped_section(skipped_list, crop_files, counts)
+    elif section == "photos":
+        main_content = render_photos_section(counts, registry, crop_files)
     else:  # rejected
         main_content = render_rejected_section(dismissed, crop_files, counts)
 
@@ -3216,11 +3373,16 @@ def get():
     to_review = inbox + proposed
     dismissed = rejected + contested
 
+    # Get photo count
+    _build_caches()
+    photo_count = len(_photo_cache) if _photo_cache else 0
+
     counts = {
         "to_review": len(to_review),
         "confirmed": len(confirmed_list),
         "skipped": len(skipped_list),
         "rejected": len(dismissed),
+        "photos": photo_count,
     }
 
     # Load existing sources for autocomplete
