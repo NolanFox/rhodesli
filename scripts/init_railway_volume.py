@@ -3,6 +3,7 @@ First-run initialization for Railway persistent volume.
 
 Copies bundled data files into the volume if they don't already exist.
 This runs as part of the start command on first deploy.
+# Force rebuild: 2026-02-05-v2
 
 Railway supports only ONE persistent volume per service. When STORAGE_DIR
 is set, the volume is mounted at that path and we create subdirectories:

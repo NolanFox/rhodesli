@@ -46,14 +46,22 @@ Railway deployments can come from two sources with **DIFFERENT behaviors**:
 ### CLI Deploy (`railway up`)
 
 - Uploads files from your **LOCAL machine**
-- Respects `.railwayignore` (NOT `.gitignore`)
-- `data/` and `raw_photos/` ARE included in the build
+- **CRITICAL:** Railway CLI uses `.gitignore` by default, NOT just `.railwayignore`
+- `data/` and `raw_photos/` are gitignored, so they're excluded unless you use `--no-gitignore`
 - **Use for:** Initial deploy, adding new photos, reseeding data
 - **Required when:** You need to upload data/raw_photos to the image bundles
 
 ```bash
+# Standard deploy (uses .gitignore - excludes data/)
 railway up
+
+# Full deploy including gitignored files (use for seeding data)
+railway up --no-gitignore
 ```
+
+> **Size Limit Warning:** Railway/Cloudflare has upload size limits (~100MB). If upload fails with
+> "413 Payload Too Large", update `.railwayignore` to exclude large files like `raw_photos/` and
+> `data/embeddings.npy`. The app can work with just JSON data (face crops are separate).
 
 ### Git Deploy (`git push` or Dashboard redeploy)
 
@@ -380,6 +388,26 @@ railway run -- cp /local/path /app/data/
 - Embeddings.npy must fit in memory (~2.4MB currently, should be fine)
 - If needed, upgrade to Pro plan
 
+### Upload too large (413 Payload Too Large)
+
+- Railway/Cloudflare has upload size limits (~100MB)
+- Full `data/` + `raw_photos/` can exceed this (~340MB)
+- Solution: Update `.railwayignore` to exclude large files:
+  ```
+  raw_photos/*
+  !raw_photos/.gitkeep
+  data/backups/
+  data/embeddings.npy
+  ```
+- The app works with just JSON files (identities.json, photo_index.json)
+- Face crops are served from a separate location
+
+### Data bundle is empty after `railway up`
+
+- Railway CLI uses `.gitignore` by default
+- `data/` is gitignored, so it's excluded from upload
+- Solution: Use `railway up --no-gitignore` to include gitignored files
+
 ## Reset Protocol
 
 If the site shows 0 photos or the volume is stuck in a bad state:
@@ -395,10 +423,14 @@ rm -f /app/storage/.initialized && python scripts/init_railway_volume.py && pyth
 ### Step 2: Deploy from CLI (NOT dashboard)
 
 ```bash
-railway up
+# Use --no-gitignore to include the gitignored data/ directory
+railway up --no-gitignore
 ```
 
-This ensures photos are in the build AND the marker is cleared.
+This ensures data files are in the build AND the marker is cleared.
+
+> **Note:** If upload fails due to size limits, update `.railwayignore` to exclude `raw_photos/*`
+> and `data/embeddings.npy`, then retry. The app works with just JSON data.
 
 ### Step 3: Verify data loaded
 
@@ -480,6 +512,7 @@ For this app's current size (~350MB data + photos), Hobby plan is sufficient.
 
 | Date | Change | Triggered By | Session |
 |------|--------|--------------|---------|
+| 2026-02-05 | Document --no-gitignore flag and upload size limits | Railway CLI uses .gitignore, excluding data/ | Autonomous debug session |
 | 2026-02-05 | Add Reset Protocol for corrupted/empty volumes | Init script created marker even when empty | Init script hardening |
 | 2026-02-05 | Expand Deployment Modes with CLI vs Git explanation | Confusion about which method to use when | Init script hardening |
 | 2026-02-05 | Add Deployment Modes section (CLI vs GitHub) | GitHub deploys fail on missing gitignored dirs | Dockerfile GitHub fix |

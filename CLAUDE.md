@@ -229,6 +229,19 @@ These three files serve different purposes:
 
 **Critical Rule:** If a directory is needed for Docker image bundles (like seeding data), it must NOT be in `.dockerignore` or `.railwayignore`, even if it's in `.gitignore`.
 
+### Railway CLI and .gitignore (IMPORTANT)
+
+**Railway CLI uses `.gitignore` by default**, even when `.railwayignore` exists. This means:
+- `railway up` will exclude gitignored files unless you use `--no-gitignore`
+- Even if `.railwayignore` doesn't exclude `data/`, it will still be excluded because `data/*.json` is in `.gitignore`
+
+**Correct deployment command:**
+```bash
+railway up --no-gitignore
+```
+
+**Size limits:** Railway/Cloudflare has upload limits (~100MB). If upload fails, update `.railwayignore` to exclude large files like `raw_photos/` and `data/embeddings.npy`.
+
 ### Gitignore-Dockerfile Consistency Rule
 
 When modifying `.gitignore` or `Dockerfile`:

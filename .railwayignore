@@ -27,5 +27,12 @@ notebooks/
 # Heavy ML dependencies (not used in production)
 requirements-local.txt
 
-# NOTE: data/ and raw_photos/ are NOT listed here
-# They MUST be uploaded for the Docker image bundles
+# NOTE: raw_photos/ is excluded to keep upload size under limits
+# Photos must be uploaded separately or synced via a different method
+raw_photos/*
+!raw_photos/.gitkeep
+
+# Large data files not needed for core functionality
+data/backups/
+data/embeddings.npy
+data/*.db

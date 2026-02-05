@@ -5,6 +5,54 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 11: Autonomous Deployment Debug (2026-02-05)
+
+**Goal:** Fix Railway deployment failing with 502 errors despite previous init script fixes.
+
+**Problem:**
+1. Health check returning 502
+2. Container restart loop
+3. Logs showing "Data bundle is empty (likely GitHub deploy)" even after `railway up`
+
+**Root Causes Discovered:**
+1. **Railway CLI uses `.gitignore` by default** — not just `.railwayignore`
+2. `data/*.json` and `raw_photos/*` are in `.gitignore`, so they were excluded from `railway up` uploads
+3. Upload size limit (~100MB) prevented full data+photos upload even with `--no-gitignore`
+
+**Solution:**
+1. Use `railway up --no-gitignore` to include gitignored files
+2. Update `.railwayignore` to exclude large files:
+   - `raw_photos/*` (255MB)
+   - `data/backups/`
+   - `data/embeddings.npy`
+3. This keeps upload under size limit while including essential JSON data
+
+**Completed:**
+- Updated `.railwayignore` to exclude large files
+- Successfully deployed with `railway up --no-gitignore`
+- Updated `docs/DEPLOYMENT_GUIDE.md`:
+  - Documented `--no-gitignore` flag requirement
+  - Added upload size troubleshooting
+  - Added "Data bundle is empty" troubleshooting
+- Added cache-busting comment to init script to force rebuild
+
+**Verification:**
+- ✅ Health check returns 200 with 268 identities, 124 photos
+- ✅ Face crops load correctly
+- ✅ Main page renders with identity cards
+- ✅ Site accessible at https://rhodesli-production.up.railway.app/
+
+**Key Insight:**
+Railway CLI defaults to `.gitignore` behavior even when `.railwayignore` exists. Always use `--no-gitignore` when deploying data that's gitignored but needed in the Docker image.
+
+**Files modified:**
+- `.railwayignore` (exclude large files)
+- `scripts/init_railway_volume.py` (cache-busting comment)
+- `docs/DEPLOYMENT_GUIDE.md` (new troubleshooting, updated CLI section)
+- `docs/SESSION_LOG.md` (this entry)
+
+---
+
 ## Session 10: Init Script Hardening + Deployment Config Fix (2026-02-05)
 
 **Goal:** Fix Railway deployment failures caused by init script creating `.initialized` marker even when no data was copied, leaving volume locked in empty state.
