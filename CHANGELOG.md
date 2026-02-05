@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.4.0] - 2026-02-04
+
+### Added
+- **Source Attribution**: Photos now track provenance/collection metadata
+- `source` field in PhotoRegistry schema (backward compatible)
+- Source input field on upload form with autocomplete suggestions
+- Source display in Photo Context modal
+- **Photo Viewer**: New photo-centric browsing section
+- "Browse > Photos" sidebar navigation
+- Photo grid showing thumbnails, face counts, identified faces
+- Filter by collection dropdown
+- Sort options: newest, oldest, most faces, by collection
+- `scripts/migrate_photo_sources.py` for classifying existing photos
+- `--source` CLI argument for ingestion pipeline
+
+### Changed
+- PhotoRegistry now stores `source` alongside `path` and `face_ids`
+- Upload endpoint accepts and passes source to subprocess
+- Index route accepts `filter_source` and `sort_by` query params
+
+### Fixed
+- N/A
+
 ## [v0.3.9] - 2026-02-04
 
 ### Added

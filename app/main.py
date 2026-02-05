@@ -808,7 +808,7 @@ def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
                 f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed']} identified",
                 cls="text-xs text-slate-500 font-data"
             ),
-            Div("v0.3.9", cls="text-xs text-slate-600 mt-1"),
+            Div("v0.4.0", cls="text-xs text-slate-600 mt-1"),
             cls="px-4 py-3 border-t border-slate-700"
         ),
         cls="fixed left-0 top-0 h-screen w-64 bg-slate-800 border-r border-slate-700 flex flex-col z-40"

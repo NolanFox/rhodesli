@@ -1,5 +1,33 @@
 # Release Notes
 
+## v0.4.0 — Source Attribution + Photo Viewer
+
+This release adds photo provenance tracking and a new photo-centric browsing workflow.
+
+### New Features
+
+**Source/Collection Tracking**
+- Photos can now have a `source` field indicating their provenance (e.g., "Betty Capeluto Miami Collection")
+- Upload form includes a source input with autocomplete from existing collections
+- Source displayed in Photo Context modal
+- 124 existing photos automatically classified via migration script
+
+**Photo Viewer**
+- New "Browse > Photos" section in sidebar
+- Grid view of all photos with thumbnails, face counts, and identified faces
+- Filter by collection/source
+- Sort by: newest, oldest, most faces, by collection
+- Click any photo to open Photo Context modal
+
+### Technical Changes
+
+- Added `source` field to PhotoRegistry schema (backward compatible)
+- Added `--source` parameter to ingestion pipeline
+- Created `scripts/migrate_photo_sources.py` for data migration
+- Added filter/sort query parameters to index route
+
+---
+
 ## v0.3.9 — Darkroom Theme
 
 This release transforms the UI into a professional "forensic workstation" aesthetic with a dark theme and fixes remaining interaction bugs.
