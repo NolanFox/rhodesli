@@ -42,6 +42,7 @@ from core.config import (
 )
 from core.ui_safety import ensure_utf8_display
 from core import storage
+from app.auth import is_auth_enabled, SESSION_SECRET, AUTH_SKIP_ROUTES, login_user, signup_user, logout_user
 
 # --- INSTRUMENTATION IMPORT ---
 from core.event_recorder import get_event_recorder
@@ -51,8 +52,19 @@ static_path = Path(__file__).resolve().parent / "static"
 data_path = Path(DATA_DIR) if Path(DATA_DIR).is_absolute() else project_root / DATA_DIR
 photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_root / PHOTOS_DIR
 
+# Auth beforeware: redirects unauthenticated users to /login when Supabase is configured
+_auth_beforeware = None
+if is_auth_enabled():
+    def _auth_check(req, sess):
+        auth = req.scope['auth'] = sess.get('auth', None)
+        if not auth:
+            return RedirectResponse('/login', status_code=303)
+    _auth_beforeware = Beforeware(_auth_check, skip=AUTH_SKIP_ROUTES)
+
 app, rt = fast_app(
     pico=False,
+    secret_key=SESSION_SECRET,
+    before=_auth_beforeware,
     hdrs=(
         Script(src="https://cdn.tailwindcss.com"),
         # Hyperscript required for _="on click..." modal interactions
@@ -4193,6 +4205,183 @@ def post(identity_id: str):
     )
 
 
+# =============================================================================
+# AUTHENTICATION ROUTES
+# =============================================================================
+
+@rt("/login")
+def get(sess):
+    """Login page. Redirects to home if already authenticated or auth disabled."""
+    if not is_auth_enabled():
+        return RedirectResponse('/', status_code=303)
+    if sess.get('auth'):
+        return RedirectResponse('/', status_code=303)
+
+    return Html(
+        Head(
+            Title("Login - Rhodesli"),
+            Script(src="https://cdn.tailwindcss.com"),
+        ),
+        Body(
+            Div(
+                H1("Rhodesli", cls="text-2xl font-bold mb-2"),
+                P("Family Heritage Archive", cls="text-gray-400 mb-8"),
+                Form(
+                    Div(
+                        Label("Email", fr="email", cls="block text-sm mb-1"),
+                        Input(type="email", name="email", id="email", required=True,
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        cls="mb-4"
+                    ),
+                    Div(
+                        Label("Password", fr="password", cls="block text-sm mb-1"),
+                        Input(type="password", name="password", id="password", required=True,
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        cls="mb-4"
+                    ),
+                    Button("Sign In", type="submit",
+                           cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
+                    method="post", action="/login", cls="space-y-2"
+                ),
+                P(
+                    "Need an account? ",
+                    A("Sign up with invite code", href="/signup", cls="text-blue-400 hover:underline"),
+                    cls="mt-4 text-gray-400 text-sm"
+                ),
+                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+            ),
+            cls="min-h-screen bg-gray-900 text-white"
+        ),
+    )
+
+
+@rt("/login")
+def post(email: str, password: str, sess):
+    """Handle login form submission."""
+    user, error = login_user(email, password)
+    if error:
+        return Html(
+            Head(Title("Login - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Body(
+                Div(
+                    H1("Rhodesli", cls="text-2xl font-bold mb-2"),
+                    P(error, cls="text-red-400 mb-4 text-sm"),
+                    Form(
+                        Div(Label("Email", fr="email", cls="block text-sm mb-1"),
+                            Input(type="email", name="email", id="email", value=email, required=True,
+                                  cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"), cls="mb-4"),
+                        Div(Label("Password", fr="password", cls="block text-sm mb-1"),
+                            Input(type="password", name="password", id="password", required=True,
+                                  cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"), cls="mb-4"),
+                        Button("Sign In", type="submit", cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
+                        method="post", action="/login",
+                    ),
+                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                ),
+                cls="min-h-screen bg-gray-900 text-white"
+            ),
+        )
+    sess['auth'] = user
+    return RedirectResponse('/', status_code=303)
+
+
+@rt("/signup")
+def get(sess):
+    """Signup page with invite code."""
+    if not is_auth_enabled():
+        return RedirectResponse('/', status_code=303)
+    if sess.get('auth'):
+        return RedirectResponse('/', status_code=303)
+
+    return Html(
+        Head(
+            Title("Sign Up - Rhodesli"),
+            Script(src="https://cdn.tailwindcss.com"),
+        ),
+        Body(
+            Div(
+                H1("Join Rhodesli", cls="text-2xl font-bold mb-2"),
+                P("Invite-only registration", cls="text-gray-400 mb-8"),
+                Form(
+                    Div(
+                        Label("Invite Code", fr="invite_code", cls="block text-sm mb-1"),
+                        Input(type="text", name="invite_code", id="invite_code", required=True,
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        cls="mb-4"
+                    ),
+                    Div(
+                        Label("Email", fr="email", cls="block text-sm mb-1"),
+                        Input(type="email", name="email", id="email", required=True,
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        cls="mb-4"
+                    ),
+                    Div(
+                        Label("Password", fr="password", cls="block text-sm mb-1"),
+                        Input(type="password", name="password", id="password", required=True, minlength="8",
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        P("Minimum 8 characters", cls="text-gray-500 text-xs mt-1"),
+                        cls="mb-4"
+                    ),
+                    Button("Create Account", type="submit",
+                           cls="w-full p-2 bg-green-600 hover:bg-green-700 rounded text-white font-medium"),
+                    method="post", action="/signup",
+                ),
+                P(
+                    "Already have an account? ",
+                    A("Sign in", href="/login", cls="text-blue-400 hover:underline"),
+                    cls="mt-4 text-gray-400 text-sm"
+                ),
+                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+            ),
+            cls="min-h-screen bg-gray-900 text-white"
+        ),
+    )
+
+
+@rt("/signup")
+def post(email: str, password: str, invite_code: str, sess):
+    """Handle signup form submission."""
+    user, error = signup_user(email, password, invite_code)
+    if error:
+        return Html(
+            Head(Title("Sign Up - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Body(
+                Div(
+                    H1("Join Rhodesli", cls="text-2xl font-bold mb-2"),
+                    P(error, cls="text-red-400 mb-4 text-sm"),
+                    Form(
+                        Div(Label("Invite Code", fr="invite_code", cls="block text-sm mb-1"),
+                            Input(type="text", name="invite_code", id="invite_code", value=invite_code, required=True,
+                                  cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"), cls="mb-4"),
+                        Div(Label("Email", fr="email", cls="block text-sm mb-1"),
+                            Input(type="email", name="email", id="email", value=email, required=True,
+                                  cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"), cls="mb-4"),
+                        Div(Label("Password", fr="password", cls="block text-sm mb-1"),
+                            Input(type="password", name="password", id="password", required=True, minlength="8",
+                                  cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"), cls="mb-4"),
+                        Button("Create Account", type="submit",
+                               cls="w-full p-2 bg-green-600 hover:bg-green-700 rounded text-white font-medium"),
+                        method="post", action="/signup",
+                    ),
+                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                ),
+                cls="min-h-screen bg-gray-900 text-white"
+            ),
+        )
+    sess['auth'] = user
+    return RedirectResponse('/', status_code=303)
+
+
+@rt("/logout")
+def get(sess):
+    """Log out and redirect to login."""
+    logout_user()
+    sess.clear()
+    if is_auth_enabled():
+        return RedirectResponse('/login', status_code=303)
+    return RedirectResponse('/', status_code=303)
+
+
 if __name__ == "__main__":
     # Startup diagnostics
     print("=" * 60)
@@ -4202,6 +4391,7 @@ if __name__ == "__main__":
     print(f"[config] Port: {PORT}")
     print(f"[config] Debug: {DEBUG}")
     print(f"[config] Processing enabled: {PROCESSING_ENABLED}")
+    print(f"[config] Auth enabled: {is_auth_enabled()}")
     print(f"[paths] Data directory: {data_path.resolve()}")
     print(f"[paths] Photos directory: {photos_path.resolve()}")
 
