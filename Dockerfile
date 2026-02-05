@@ -32,7 +32,9 @@ COPY data/ /app/data_bundle/
 COPY raw_photos/ /app/photos_bundle/
 
 # Create necessary directories
-RUN mkdir -p /app/data /app/raw_photos
+# /app/storage is for Railway single-volume mode (when STORAGE_DIR is set)
+# /app/data and /app/raw_photos are for local Docker testing
+RUN mkdir -p /app/data /app/raw_photos /app/storage
 
 # Port (Railway sets PORT env var automatically)
 EXPOSE ${PORT:-5001}
@@ -46,6 +48,13 @@ ENV HOST=0.0.0.0
 ENV PORT=5001
 ENV DEBUG=false
 ENV PROCESSING_ENABLED=false
+
+# Storage configuration:
+# - STORAGE_DIR is set only on Railway (single-volume mode)
+# - When STORAGE_DIR is set, DATA_DIR and PHOTOS_DIR are derived from it
+# - When STORAGE_DIR is not set (local Docker), use DATA_DIR and PHOTOS_DIR directly
+# Railway sets: STORAGE_DIR=/app/storage (via environment variables)
+# Local Docker: uses DATA_DIR=data and PHOTOS_DIR=raw_photos
 ENV DATA_DIR=data
 ENV PHOTOS_DIR=raw_photos
 

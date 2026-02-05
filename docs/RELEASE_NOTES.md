@@ -1,5 +1,39 @@
 # Release Notes
 
+## v0.5.1 — Single Volume Deployment Fix
+
+**Issue:** Railway only allows ONE persistent volume per service. The v0.5.0 deployment guide incorrectly assumed two separate volumes.
+
+### Fix
+
+Added `STORAGE_DIR` environment variable for single-volume mode:
+
+```
+/app/storage/           ← Single Railway volume mounted here
+├── data/               ← identities.json, photo_index.json, etc.
+├── raw_photos/         ← Source photographs
+└── staging/            ← Upload staging area
+```
+
+### Railway Configuration
+
+Set these environment variables:
+- `STORAGE_DIR=/app/storage` ← **New: required for Railway**
+- `HOST=0.0.0.0`
+- `DEBUG=false`
+- `PROCESSING_ENABLED=false`
+
+Mount one volume:
+- **Name:** `rhodesli-storage`
+- **Mount path:** `/app/storage`
+- **Size:** 1 GB
+
+### Local Development
+
+No changes needed. When `STORAGE_DIR` is not set, the app uses `DATA_DIR` and `PHOTOS_DIR` directly (default: `data/` and `raw_photos/`).
+
+---
+
 ## v0.5.0 — Railway Deployment Ready
 
 This release adds full Docker-based deployment configuration for hosting Rhodesli on Railway with a custom domain.

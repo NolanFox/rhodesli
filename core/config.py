@@ -27,9 +27,20 @@ PORT = int(os.getenv("PORT", "5001"))
 # Debug mode (enables hot reload, verbose logging)
 DEBUG = os.getenv("DEBUG", "true").lower() == "true"
 
-# Data paths (relative to project root)
-DATA_DIR = os.getenv("DATA_DIR", "data")
-PHOTOS_DIR = os.getenv("PHOTOS_DIR", "raw_photos")
+# Storage configuration
+# Railway supports only ONE persistent volume per service.
+# When STORAGE_DIR is set (Railway), DATA_DIR and PHOTOS_DIR derive from it.
+# When STORAGE_DIR is not set (local dev), use individual path defaults.
+STORAGE_DIR = os.getenv("STORAGE_DIR")  # Only set on Railway
+
+if STORAGE_DIR:
+    # Railway single-volume mode: /app/storage contains data/ and raw_photos/
+    DATA_DIR = os.path.join(STORAGE_DIR, "data")
+    PHOTOS_DIR = os.path.join(STORAGE_DIR, "raw_photos")
+else:
+    # Local development: use individual paths
+    DATA_DIR = os.getenv("DATA_DIR", "data")
+    PHOTOS_DIR = os.getenv("PHOTOS_DIR", "raw_photos")
 
 # Processing mode: when False, uploads are staged but not processed
 # Set to False in production (Railway) where ML deps aren't installed

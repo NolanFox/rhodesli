@@ -4,8 +4,15 @@ First-run initialization for Railway persistent volume.
 Copies bundled data files into the volume if they don't already exist.
 This runs as part of the start command on first deploy.
 
+Railway supports only ONE persistent volume per service. When STORAGE_DIR
+is set, the volume is mounted at that path and we create subdirectories:
+  /app/storage/
+  ├── data/          ← identities.json, photo_index.json, embeddings, etc.
+  ├── raw_photos/    ← source photographs
+  └── staging/       ← future upload staging area
+
 The Docker image bundles data in /app/data_bundle/ and /app/photos_bundle/.
-On first run, these are copied to the mounted volume paths.
+On first run, these are copied to the appropriate subdirectories.
 On subsequent runs, the volume already has data, so this is a no-op.
 """
 
@@ -13,9 +20,21 @@ import os
 import shutil
 from pathlib import Path
 
-# Volume mount paths (these are where Railway mounts persistent storage)
-VOLUME_DATA_DIR = os.getenv("DATA_DIR", "data")
-VOLUME_PHOTOS_DIR = os.getenv("PHOTOS_DIR", "raw_photos")
+# Storage configuration (mirrors core/config.py logic)
+STORAGE_DIR = os.getenv("STORAGE_DIR")  # Only set on Railway
+
+if STORAGE_DIR:
+    # Railway single-volume mode
+    VOLUME_DATA_DIR = os.path.join(STORAGE_DIR, "data")
+    VOLUME_PHOTOS_DIR = os.path.join(STORAGE_DIR, "raw_photos")
+    VOLUME_STAGING_DIR = os.path.join(STORAGE_DIR, "staging")
+    MARKER_DIR = STORAGE_DIR  # Marker lives in volume root
+else:
+    # Local/legacy mode (individual paths)
+    VOLUME_DATA_DIR = os.getenv("DATA_DIR", "data")
+    VOLUME_PHOTOS_DIR = os.getenv("PHOTOS_DIR", "raw_photos")
+    VOLUME_STAGING_DIR = os.path.join(VOLUME_DATA_DIR, "staging")
+    MARKER_DIR = VOLUME_DATA_DIR
 
 # Bundle paths (where Docker image has the seed data)
 BUNDLED_DATA = Path("/app/data_bundle")
@@ -28,16 +47,27 @@ def init_volume():
     # Ensure target directories exist
     data_dir = Path(VOLUME_DATA_DIR)
     photos_dir = Path(VOLUME_PHOTOS_DIR)
+    staging_dir = Path(VOLUME_STAGING_DIR)
+    marker_dir = Path(MARKER_DIR)
+
     data_dir.mkdir(parents=True, exist_ok=True)
     photos_dir.mkdir(parents=True, exist_ok=True)
+    staging_dir.mkdir(parents=True, exist_ok=True)
 
     # Check if volume has been initialized
-    marker = data_dir / ".initialized"
+    marker = marker_dir / ".initialized"
     if marker.exists():
         print("[init] Volume already initialized, skipping seed data copy.")
+        print(f"[init] Data dir: {data_dir}")
+        print(f"[init] Photos dir: {photos_dir}")
+        print(f"[init] Staging dir: {staging_dir}")
         return
 
     print("[init] First run detected. Initializing volume from bundled data...")
+    if STORAGE_DIR:
+        print(f"[init] Single-volume mode: STORAGE_DIR={STORAGE_DIR}")
+    else:
+        print("[init] Legacy mode: using DATA_DIR and PHOTOS_DIR separately")
 
     # Copy bundled data files
     if BUNDLED_DATA.exists():
@@ -69,10 +99,7 @@ def init_volume():
     else:
         print(f"[init] No bundled photos found at {BUNDLED_PHOTOS}")
 
-    # Create staging directory for production uploads
-    staging_dir = data_dir / "staging"
-    staging_dir.mkdir(exist_ok=True)
-    print(f"[init] Created staging directory: {staging_dir}")
+    print(f"[init] Staging directory: {staging_dir}")
 
     # Create initialization marker
     marker.touch()

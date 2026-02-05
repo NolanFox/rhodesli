@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.1] - 2026-02-05
+
+### Fixed
+- **Single Railway Volume**: Railway only supports one volume per service
+  - Added `STORAGE_DIR` environment variable for single-volume mode
+  - When set, `DATA_DIR` and `PHOTOS_DIR` are derived automatically
+  - Init script creates subdirectories: `data/`, `raw_photos/`, `staging/`
+  - Local development unchanged (uses `DATA_DIR` and `PHOTOS_DIR` directly)
+
+### Changed
+- `core/config.py`: Added `STORAGE_DIR` logic with fallback to individual paths
+- `scripts/init_railway_volume.py`: Supports single-volume mode
+- `app/main.py`: Uses config paths instead of hardcoded project-relative paths
+- `Dockerfile`: Creates `/app/storage` directory, updated comments
+- `docs/DEPLOYMENT_GUIDE.md`: Updated for single volume setup
+- `.env.example`: Added `STORAGE_DIR` documentation
+
+### Documentation
+- Added "Deployment Impact Rule" to CLAUDE.md
+
 ## [v0.5.0] - 2026-02-05
 
 ### Added

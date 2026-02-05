@@ -16,10 +16,11 @@ Deploy Rhodesli to Railway with a custom domain on Cloudflare.
 │                           │                                  │
 │                           ▼                                  │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Railway Persistent Volume                             │ │
-│  │  /app/data/     - identities.json, photo_index.json   │ │
-│  │                 - embeddings.npy, staging/             │ │
-│  │  /app/raw_photos/ - source photographs                │ │
+│  │  Railway Persistent Volume (/app/storage)              │ │
+│  │  ├── data/        - identities.json, photo_index.json │ │
+│  │  │                - embeddings.npy                     │ │
+│  │  ├── raw_photos/  - source photographs                │ │
+│  │  └── staging/     - upload staging area               │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                             │
@@ -45,8 +46,13 @@ Before deploying, verify the Docker image works:
 ```bash
 # Build the image
 docker build -t rhodesli .
+```
 
-# Run with local data mounted
+### Test 1: Local Development Mode (dual mount)
+
+This mirrors local development where data/ and raw_photos/ are separate:
+
+```bash
 docker run -p 5001:5001 \
     -v $(pwd)/data:/app/data \
     -v $(pwd)/raw_photos:/app/raw_photos \
@@ -58,14 +64,43 @@ docker run -p 5001:5001 \
 # Test health endpoint
 curl http://localhost:5001/health
 # Should return: {"status": "ok", "identities": ..., "photos": ..., "processing_enabled": false}
-
-# Visit http://localhost:5001 and verify:
-# - App loads with dark theme
-# - Sidebar shows correct counts
-# - Focus mode displays identity with photos
-# - Photo viewer works
-# - All navigation works
 ```
+
+### Test 2: Railway Mode (single volume)
+
+This mimics the Railway deployment with STORAGE_DIR:
+
+```bash
+# Create temp storage directory
+mkdir -p /tmp/rhodesli-storage
+
+# Run with single volume mount
+docker run -p 5001:5001 \
+    -v /tmp/rhodesli-storage:/app/storage \
+    -e STORAGE_DIR=/app/storage \
+    -e PORT=5001 \
+    -e DEBUG=false \
+    -e PROCESSING_ENABLED=false \
+    rhodesli
+
+# Init script should create:
+#   /tmp/rhodesli-storage/data/
+#   /tmp/rhodesli-storage/raw_photos/
+#   /tmp/rhodesli-storage/staging/
+#   /tmp/rhodesli-storage/.initialized
+
+# Test health endpoint
+curl http://localhost:5001/health
+```
+
+### Verification Checklist
+
+Visit http://localhost:5001 and verify:
+- [ ] App loads with dark theme
+- [ ] Sidebar shows correct counts
+- [ ] Focus mode displays identity with photos
+- [ ] Photo viewer works
+- [ ] All navigation works
 
 ## Step 2: Railway Setup
 
@@ -94,25 +129,32 @@ railway init
 railway up
 ```
 
-## Step 3: Create Persistent Volumes
+## Step 3: Create Persistent Volume
 
 Railway needs persistent storage for photos and data.
+
+> **Important:** Railway allows only ONE persistent volume per service. We use a single
+> volume mounted at `/app/storage` which contains subdirectories for data and photos.
 
 1. In Railway dashboard, click your service
 2. Open Command Palette (`⌘K` on Mac, `Ctrl+K` on Windows)
 3. Select "Add Volume"
 
-### Volume 1: Data
-- **Name:** `rhodesli-data`
-- **Mount Path:** `/app/data`
+### Storage Volume
+- **Name:** `rhodesli-storage`
+- **Mount Path:** `/app/storage`
 - **Size:** 1 GB (can grow later)
 
-### Volume 2: Photos
-- **Name:** `rhodesli-photos`
-- **Mount Path:** `/app/raw_photos`
-- **Size:** 1 GB (can grow later)
+The init script automatically creates this structure inside the volume:
+```
+/app/storage/
+├── data/          ← identities.json, photo_index.json, embeddings
+├── raw_photos/    ← source photographs
+└── staging/       ← upload staging area
+```
 
-> **Note:** On first deploy, the init script copies bundled data from the Docker image into these volumes.
+> **Note:** On first deploy, the init script copies bundled data from the Docker
+> image into the volume. The `.initialized` marker prevents re-copying on restarts.
 
 ## Step 4: Set Environment Variables
 
@@ -123,10 +165,13 @@ In Railway dashboard → Service → Variables tab:
 | `HOST` | `0.0.0.0` | Network binding |
 | `DEBUG` | `false` | Disable hot reload |
 | `PROCESSING_ENABLED` | `false` | Disable ML processing |
-| `DATA_DIR` | `data` | Relative path to data |
-| `PHOTOS_DIR` | `raw_photos` | Relative path to photos |
+| `STORAGE_DIR` | `/app/storage` | **Required:** Single volume mount path |
 
 > **Note:** Railway automatically sets `PORT`. Your app reads it from the environment.
+
+> **Important:** When `STORAGE_DIR` is set, `DATA_DIR` and `PHOTOS_DIR` are derived
+> automatically (`/app/storage/data` and `/app/storage/raw_photos`). You do NOT need
+> to set `DATA_DIR` or `PHOTOS_DIR` separately on Railway.
 
 ## Step 5: Deploy
 
@@ -236,7 +281,7 @@ Visit `https://rhodesli.nolanandrewfox.com` in browser.
 Since `PROCESSING_ENABLED=false` in production:
 
 1. Contributors upload photos via web UI
-2. Files land in `/app/data/staging/{job_id}/`
+2. Files land in `/app/storage/staging/{job_id}/`
 3. Admin downloads staged files to local machine
 4. Admin runs `python -m core.ingest_inbox` locally (ML deps installed)
 5. Admin syncs updated data back to Railway volume
@@ -261,8 +306,9 @@ railway run -- cp /local/path /app/data/
 
 ### Photos not loading
 
-- Verify volume mount paths match `DATA_DIR` and `PHOTOS_DIR`
-- Check init script ran (look for `.initialized` marker in data dir)
+- Verify `STORAGE_DIR=/app/storage` is set in Railway environment variables
+- Verify the volume is mounted at `/app/storage`
+- Check init script ran (look for `.initialized` marker in `/app/storage/`)
 - Check Railway logs for file-not-found errors
 
 ### 502 Bad Gateway
@@ -315,16 +361,24 @@ railway up
 Periodically download data from Railway volume:
 
 ```bash
-railway run -- cat /app/data/identities.json > backup_identities.json
-railway run -- cat /app/data/photo_index.json > backup_photo_index.json
+railway run -- cat /app/storage/data/identities.json > backup_identities.json
+railway run -- cat /app/storage/data/photo_index.json > backup_photo_index.json
 ```
 
 ## Cost Estimate
 
 Railway Hobby plan ($5/month):
 - 512MB RAM
-- 1GB disk per volume
+- 1GB disk per volume (single volume for all storage)
 - Unlimited bandwidth
 - Custom domains included
 
 For this app's current size (~350MB data + photos), Hobby plan is sufficient.
+
+---
+
+## Change Log
+
+| Date | Change | Triggered By | Session |
+|------|--------|--------------|---------|
+| 2026-02-05 | Switch to single volume mount (STORAGE_DIR=/app/storage) | Railway only allows 1 volume per service | Deployment fix session |

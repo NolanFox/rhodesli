@@ -217,6 +217,23 @@ find raw_photos/ -type f | sort -f | uniq -di
 
 Any value that assumes a specific machine, OS, or filesystem should be flagged.
 
+## Deployment Impact Rule
+
+Any change that affects how the app is built, configured, started, or where it reads/writes data MUST also update:
+
+1. `docs/DEPLOYMENT_GUIDE.md` — reflect the new setup steps
+2. `.env.example` — reflect any new/changed environment variables
+3. `Dockerfile` — if build process changed
+4. `CHANGELOG.md` — note the deployment-relevant change
+
+Examples of deployment-impacting changes:
+- Changing file paths or directory structure
+- Adding/removing environment variables
+- Changing how the app starts (serve() parameters, CMD)
+- Adding/removing dependencies in requirements.txt
+- Changing volume mount expectations
+- Modifying the init script
+
 ## Post-Bug Protocol
 
 When a bug is discovered that could have been caught earlier:

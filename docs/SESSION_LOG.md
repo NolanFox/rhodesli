@@ -5,6 +5,44 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 8: Single Railway Volume Fix (2026-02-05)
+
+**Goal:** Fix deployment configuration for Railway's single-volume limitation.
+
+**Problem:** Railway only allows ONE persistent volume per service. Our deployment guide assumed two volumes (`/app/data` and `/app/raw_photos`).
+
+**Completed:**
+- Added `STORAGE_DIR` environment variable for single-volume mode
+- Updated `core/config.py` to derive `DATA_DIR` and `PHOTOS_DIR` from `STORAGE_DIR` when set
+- Updated `scripts/init_railway_volume.py` to create subdirectories in single volume
+- Updated `app/main.py` to use config paths instead of hardcoded paths
+- Updated `Dockerfile` with storage directory creation and comments
+- Updated `docs/DEPLOYMENT_GUIDE.md` for single volume setup
+- Updated `.env.example` with `STORAGE_DIR` documentation
+- Added "Deployment Impact Rule" to CLAUDE.md
+
+**Files modified:**
+- `core/config.py` (added STORAGE_DIR logic)
+- `scripts/init_railway_volume.py` (single-volume support)
+- `app/main.py` (use config paths)
+- `Dockerfile` (storage directory, comments)
+- `docs/DEPLOYMENT_GUIDE.md` (single volume instructions)
+- `.env.example` (STORAGE_DIR documentation)
+- `CLAUDE.md` (added Deployment Impact Rule)
+- `docs/SESSION_LOG.md` (this entry)
+
+**Verification:**
+- ✅ Local dev: `python app/main.py` uses `./data/` and `./raw_photos/`
+- ✅ Docker dual-mount: mounts data/ and raw_photos/ separately
+- ✅ Docker single-volume: `STORAGE_DIR=/app/storage` creates subdirectories
+
+**Notes:**
+- Railway environment requires: `STORAGE_DIR=/app/storage`
+- Volume mount path: `/app/storage`
+- Init script creates: `storage/data/`, `storage/raw_photos/`, `storage/staging/`
+
+---
+
 ## Session 7: Harness Improvement (2026-02-05)
 
 **Goal:** Update documentation to prevent future absolute-path-style bugs from reaching production.

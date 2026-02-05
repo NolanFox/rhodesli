@@ -37,6 +37,8 @@ from core.config import (
     PORT,
     DEBUG,
     PROCESSING_ENABLED,
+    DATA_DIR,
+    PHOTOS_DIR,
 )
 from core.ui_safety import ensure_utf8_display
 
@@ -44,8 +46,9 @@ from core.ui_safety import ensure_utf8_display
 from core.event_recorder import get_event_recorder
 
 static_path = Path(__file__).resolve().parent / "static"
-data_path = Path(__file__).resolve().parent.parent / "data"
-photos_path = Path(__file__).resolve().parent.parent / "raw_photos"
+# Data and photos paths come from config, which handles STORAGE_DIR for Railway
+data_path = Path(DATA_DIR) if Path(DATA_DIR).is_absolute() else project_root / DATA_DIR
+photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_root / PHOTOS_DIR
 
 app, rt = fast_app(
     pico=False,
