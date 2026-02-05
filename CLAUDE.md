@@ -206,3 +206,62 @@ Any session that changes user-visible behavior or system capabilities MUST end b
 2. Adding an entry to `CHANGELOG.md`
 
 A session is not considered complete until this is done. This is a hard rule, not a suggestion.
+
+## Project Status
+
+### Current State: Phase A Complete (Deployment Ready)
+
+- Web app containerized with Docker
+- Railway + Cloudflare deployment configured
+- Health endpoint available at `/health`
+- Staged upload workflow (files stored, no ML processing in production)
+
+**NOT YET IMPLEMENTED:**
+- Auth (Phase B)
+- Community annotations (Phase C)
+- Photo upload queue (Phase D)
+- Admin moderation dashboard (Phase E)
+- Automated backups (Phase F)
+
+### Architecture Decisions (Summary)
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Hosting | Railway (Hobby plan) | Persistent volumes, simple deploys |
+| Auth | Supabase (Phase B) | Managed auth + Postgres |
+| DNS | Cloudflare subdomain | `rhodesli.nolanandrewfox.com` |
+| Data | JSON = canonical, Postgres = community | Curator controls truth |
+| ML Processing | Local only | Heavy deps not on server |
+
+**Full details:** `docs/SYSTEM_DESIGN_WEB.md`
+
+### Phase History
+
+| Phase | Status | What It Does |
+|-------|--------|--------------|
+| A | ✅ Complete | Docker, Railway config, deployment guide |
+| B | Not started | Auth + invite-only signup |
+| C | Not started | Annotation engine |
+| D | Not started | Photo upload queue |
+| E | Not started | Admin moderation dashboard |
+| F | Not started | Backup, security, polish |
+
+### Key Files for Context
+
+| File | Purpose |
+|------|---------|
+| `docs/SYSTEM_DESIGN_WEB.md` | Full architecture (1300+ lines) |
+| `docs/DEPLOYMENT_GUIDE.md` | How to deploy to Railway |
+| `docs/OPERATIONS.md` | Day-to-day runbook |
+| `docs/SESSION_LOG.md` | What was done in each session |
+| `CLAUDE.md` | Project conventions + this status |
+| `CHANGELOG.md` | Version history |
+| `docs/MANUAL_TEST_CHECKLIST.md` | Testing procedures |
+
+### Session Handoff Protocol
+
+At the END of every implementation session:
+1. Update `docs/SESSION_LOG.md` with what was done
+2. Update this Project Status section if phase status changed
+3. Update `docs/RELEASE_NOTES.md` if user-visible changes
+4. Update `CHANGELOG.md` with version entry
