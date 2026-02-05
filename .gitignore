@@ -82,3 +82,4 @@ data/inbox/
 data/uploads/
 data/staging/
 data/cleanup_backups/
+data/.initialized
