@@ -217,7 +217,19 @@ find raw_photos/ -type f | sort -f | uniq -di
 
 Any value that assumes a specific machine, OS, or filesystem should be flagged.
 
-## Gitignore-Dockerfile Consistency Rule
+## Gitignore vs Dockerignore vs Railwayignore
+
+These three files serve different purposes:
+
+| File | Purpose | `data/` and `raw_photos/` |
+|------|---------|---------------------------|
+| `.gitignore` | What shouldn't be in version control | EXCLUDED (too large for git) |
+| `.dockerignore` | What shouldn't be in Docker build context | INCLUDED (needed for bundles) |
+| `.railwayignore` | What Railway CLI should upload | INCLUDED (needed for seeding) |
+
+**Critical Rule:** If a directory is needed for Docker image bundles (like seeding data), it must NOT be in `.dockerignore` or `.railwayignore`, even if it's in `.gitignore`.
+
+### Gitignore-Dockerfile Consistency Rule
 
 When modifying `.gitignore` or `Dockerfile`:
 
@@ -236,6 +248,28 @@ When modifying `.gitignore` or `Dockerfile`:
    docker build -t test .
    rm -rf raw_photos data && mv raw_photos_backup raw_photos && mv data_backup data
    ```
+
+## Init Script Marker Files
+
+When using marker files (like `.initialized`) to track deployment state:
+
+1. **NEVER create the marker unless the operation actually succeeded**
+   - Verify critical files exist before creating marker
+   - If nothing was copied, do NOT create marker
+
+2. **ALWAYS validate the marker — check that expected files exist even if marker is present**
+   - Marker exists + data missing = corrupted state
+   - Detect and recover automatically
+
+3. **ALWAYS provide recovery — if state is corrupted, detect and fix automatically**
+   - Remove invalid markers
+   - Re-attempt initialization
+   - Log clearly what happened
+
+4. **ALWAYS log clearly — make it obvious what happened and what to do next**
+   - Success: "Volume initialization complete. Marker created."
+   - Empty bundles: "ERROR: No data to seed. Deploy with 'railway up' from local machine."
+   - Corrupted: "WARNING: Volume marked as initialized but data is MISSING. Removing marker..."
 
 ## Deployment Impact Rule
 

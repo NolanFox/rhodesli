@@ -5,6 +5,56 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 10: Init Script Hardening + Deployment Config Fix (2026-02-05)
+
+**Goal:** Fix Railway deployment failures caused by init script creating `.initialized` marker even when no data was copied, leaving volume locked in empty state.
+
+**Problem:**
+1. Init script always created `.initialized` marker, even when bundles were empty (GitHub deploy)
+2. Once marker exists, volume appears "initialized" but is actually empty
+3. No recovery mechanism — stuck in bad state forever
+4. `.railwayignore` wasn't committed, so `railway up` might still exclude needed files
+
+**Root Cause:** The init script had no validation — it created the marker unconditionally at the end of the function, regardless of whether any data was actually copied.
+
+**Completed:**
+- Hardened `scripts/init_railway_volume.py`:
+  - Added `volume_is_valid()` function to check for required files
+  - Marker is only created when critical files exist
+  - Detects "initialized but empty" state and auto-recovers
+  - Returns exit code 1 on failure (helps Railway detect failed deploys)
+  - Clear error messages explaining what to do
+- Added `.railwayignore` to git tracking (was previously uncommitted)
+- Updated `CLAUDE.md`:
+  - Added "Gitignore vs Dockerignore vs Railwayignore" comparison table
+  - Added "Init Script Marker Files" section with best practices
+- Updated `docs/DEPLOYMENT_GUIDE.md`:
+  - Expanded "Deployment Modes" section with CLI vs Git explanation
+  - Added "Reset Protocol" for recovering stuck/empty volumes
+  - Updated Change Log
+
+**Files modified:**
+- `scripts/init_railway_volume.py` (major hardening)
+- `.railwayignore` (now tracked in git)
+- `CLAUDE.md` (new sections)
+- `docs/DEPLOYMENT_GUIDE.md` (reset protocol, expanded modes)
+- `docs/SESSION_LOG.md` (this entry)
+
+**Verification:**
+- ✅ Init script detects "initialized but empty" state
+- ✅ Init script removes invalid marker and attempts re-init
+- ✅ Init script exits with code 1 on failure
+- ✅ Init script does NOT create marker when bundles are empty
+
+**Key Insight:**
+The marker file pattern is dangerous if not implemented carefully. Always:
+1. Validate before creating marker
+2. Validate after finding marker
+3. Provide automatic recovery
+4. Exit with error codes on failure
+
+---
+
 ## Session 9: Dockerfile GitHub Deploy Fix (2026-02-05)
 
 **Goal:** Fix Dockerfile so it builds successfully from both CLI (`railway up`) and GitHub push deployments.

@@ -1,0 +1,31 @@
+# Git
+.git
+
+# Python
+__pycache__
+*.pyc
+venv/
+.venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+
+# Tests and docs (not needed in production)
+tests/
+notebooks/
+
+# Heavy ML dependencies (not used in production)
+requirements-local.txt
+
+# NOTE: data/ and raw_photos/ are NOT listed here
+# They MUST be uploaded for the Docker image bundles

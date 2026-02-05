@@ -39,41 +39,55 @@ Deploy Rhodesli to Railway with a custom domain on Cloudflare.
 - Cloudflare account with `nolanandrewfox.com` configured
 - Docker installed locally (for testing)
 
-## Deployment Modes
+## Deployment Modes (Critical)
 
-There are two ways to deploy, with different behaviors regarding data bundling:
+Railway deployments can come from two sources with **DIFFERENT behaviors**:
 
-### Initial Deploy (First Time) — Use CLI
+### CLI Deploy (`railway up`)
 
-Use Railway CLI to include photos and data in the build:
+- Uploads files from your **LOCAL machine**
+- Respects `.railwayignore` (NOT `.gitignore`)
+- `data/` and `raw_photos/` ARE included in the build
+- **Use for:** Initial deploy, adding new photos, reseeding data
+- **Required when:** You need to upload data/raw_photos to the image bundles
 
 ```bash
 railway up
 ```
 
-This uploads local files including gitignored directories (`raw_photos/`, `data/`).
-The init script copies them to the persistent volume on first run.
+### Git Deploy (`git push` or Dashboard redeploy)
 
-### Code Updates (After Initial Deploy) — Use GitHub
-
-Push to GitHub and Railway auto-deploys:
+- Builds from your **GitHub REPOSITORY**
+- Respects `.gitignore`
+- `data/` and `raw_photos/` are NOT included (they're gitignored)
+- **Use for:** Code changes, config updates, bug fixes
+- **Works because:** Volume already has data from previous CLI deploy
 
 ```bash
 git push origin main
 ```
 
-The Dockerfile handles missing `raw_photos/` and `data/` gracefully (they contain
-only `.gitkeep` files in the GitHub build context). Photos are already on the
-persistent volume from the initial deploy.
-
-### When to Use CLI vs GitHub
+### The Golden Rule
 
 | Scenario | Method | Why |
 |----------|--------|-----|
-| First deploy | `railway up` | Seeds volume with photos/data |
+| First deploy ever | `railway up` | Seeds volume with photos/data |
 | Code changes only | `git push` | Photos already on volume |
-| New photos added locally | `railway up` | Re-bundles and seeds volume |
+| Adding new photos | `railway up` | Re-bundles with new photos |
+| Fixing a bug | `git push` | No data change needed |
+| Volume is empty/corrupted | `railway up` + reset | See Reset Protocol below |
 | Config/env changes | Railway dashboard | No build needed |
+
+### Understanding the Init Script
+
+The init script (`scripts/init_railway_volume.py`) runs on every container start:
+
+1. **If `.initialized` marker exists AND data is valid** → Skip seeding (normal operation)
+2. **If `.initialized` exists BUT data is missing** → Remove marker, attempt re-seed
+3. **If no marker AND bundles have data** → Copy to volume, create marker
+4. **If no marker AND bundles are empty** → Log error, do NOT create marker
+
+The marker is ONLY created when data is successfully copied. This prevents "initialized but empty" corruption.
 
 ## Step 1: Test Docker Build Locally
 
@@ -366,6 +380,55 @@ railway run -- cp /local/path /app/data/
 - Embeddings.npy must fit in memory (~2.4MB currently, should be fine)
 - If needed, upgrade to Pro plan
 
+## Reset Protocol
+
+If the site shows 0 photos or the volume is stuck in a bad state:
+
+### Step 1: Set temporary start command
+
+In Railway Dashboard → Settings → Deploy → Custom Start Command:
+
+```bash
+rm -f /app/storage/.initialized && python scripts/init_railway_volume.py && python app/main.py
+```
+
+### Step 2: Deploy from CLI (NOT dashboard)
+
+```bash
+railway up
+```
+
+This ensures photos are in the build AND the marker is cleared.
+
+### Step 3: Verify data loaded
+
+Check deploy logs for:
+```
+[init] Copying data from /app/data_bundle to /app/storage/data...
+[init] Copied X data items.
+[init] Copying photos from /app/photos_bundle to /app/storage/raw_photos...
+[init] Copied Y photos.
+```
+
+And startup logs for:
+```
+[data] Photos found: 112
+[data] Identities loaded: 268
+```
+
+### Step 4: Clear the start command
+
+Go back to Railway Dashboard → Settings → Deploy → Custom Start Command.
+Delete the command (make it empty).
+
+### Step 5: Confirm clean startup
+
+Run `railway up` once more (or let GitHub auto-deploy).
+The logs should show:
+```
+[init] Volume already initialized and valid, skipping seed.
+```
+
 ## Maintenance
 
 ### Updating the App
@@ -417,5 +480,7 @@ For this app's current size (~350MB data + photos), Hobby plan is sufficient.
 
 | Date | Change | Triggered By | Session |
 |------|--------|--------------|---------|
+| 2026-02-05 | Add Reset Protocol for corrupted/empty volumes | Init script created marker even when empty | Init script hardening |
+| 2026-02-05 | Expand Deployment Modes with CLI vs Git explanation | Confusion about which method to use when | Init script hardening |
 | 2026-02-05 | Add Deployment Modes section (CLI vs GitHub) | GitHub deploys fail on missing gitignored dirs | Dockerfile GitHub fix |
 | 2026-02-05 | Switch to single volume mount (STORAGE_DIR=/app/storage) | Railway only allows 1 volume per service | Deployment fix session |
