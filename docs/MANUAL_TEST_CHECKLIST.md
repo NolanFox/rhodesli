@@ -110,6 +110,25 @@ Run this checklist after any significant code change.
 - [ ] Can switch back to Focus mode
 - [ ] Actions in browse mode update cards normally (don't advance)
 
+### 17. Source Attribution (v0.4.0)
+- [ ] Upload form has source/collection text input
+- [ ] Source autocomplete suggests existing collections
+- [ ] New uploads include source in photo metadata
+- [ ] Source displays in Photo Context modal (below dimensions)
+
+### 18. Photo Viewer (v0.4.0)
+- [ ] "Photos" link appears in sidebar under "Browse" section
+- [ ] Photo count badge is accurate
+- [ ] Click Photos → shows grid of all photos
+- [ ] Photo cards show: thumbnail, face count, identified faces avatars, filename, source
+- [ ] Filter dropdown shows all collections
+- [ ] Filter by collection works correctly
+- [ ] Sort dropdown has: newest, oldest, most faces, by collection
+- [ ] Each sort option works correctly
+- [ ] Click photo → Photo Context modal opens
+- [ ] Face overlays in Photo Context are clickable
+- [ ] Clicking face navigates to that identity
+
 ## Known Bug Locations (Reference)
 
 | Bug | Location | Status |
