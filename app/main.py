@@ -2866,11 +2866,24 @@ def get(identity_id: str, limit: int = 5, offset: int = 0):
     photo_registry = load_photo_registry()
 
     # Request one extra to determine if more exist (B3: pagination)
-    from core.neighbors import find_nearest_neighbors
-    total_to_fetch = offset + limit + 1
-    all_neighbors = find_nearest_neighbors(
-        identity_id, registry, photo_registry, face_data, limit=total_to_fetch
-    )
+    try:
+        from core.neighbors import find_nearest_neighbors
+        total_to_fetch = offset + limit + 1
+        all_neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=total_to_fetch
+        )
+    except ImportError as e:
+        print(f"[neighbors] Missing dependency: {e}")
+        return Div(
+            P("Find Similar requires scipy. Check server dependencies.", cls="text-amber-500 text-center py-4"),
+            cls="neighbors-sidebar"
+        )
+    except Exception as e:
+        print(f"[neighbors] Error computing neighbors: {e}")
+        return Div(
+            P("Could not compute similar identities.", cls="text-red-500 text-center py-4"),
+            cls="neighbors-sidebar"
+        )
 
     # Determine if more neighbors exist beyond current page
     has_more = len(all_neighbors) > offset + limit

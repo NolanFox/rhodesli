@@ -1,6 +1,7 @@
 python-fasthtml
 uvicorn
 numpy
+scipy
 portalocker
 Pillow
 boto3
