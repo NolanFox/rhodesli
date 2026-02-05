@@ -28,3 +28,13 @@
 - **Mistake**: When wrapping a `for` loop body inside `if has_dimensions:`, only the first few lines of the loop body were re-indented. The rest stayed at the outer level, causing them to run once after the loop instead of per-iteration.
 - **Rule**: When adding a new conditional wrapper around existing code, verify EVERY line in the block got re-indented. Check the last line of the block specifically.
 - **Prevention**: After any indentation change, read the full block end-to-end and confirm the closing lines are at the correct depth.
+
+### Lesson 6: Auth should be additive, not restrictive by default
+- **Mistake**: Protected entire site with Beforeware login requirement — visitors couldn't view anything
+- **Rule**: Start with public access, add protection only to specific routes that need it
+- **Prevention**: List all routes and explicitly decide: public, login-required, or admin-only
+
+### Lesson 7: Auth guards must respect "auth disabled" mode
+- **Mistake**: Adding `_check_admin(sess)` to POST routes broke tests because auth wasn't configured but the check still rejected requests (no user in session)
+- **Rule**: When auth is disabled (`is_auth_enabled() == False`), ALL permission checks must pass through
+- **Prevention**: First line of every auth check: `if not is_auth_enabled(): return None`

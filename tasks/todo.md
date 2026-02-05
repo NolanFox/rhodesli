@@ -1,39 +1,41 @@
-# Master Task: Complete Rhodesli Deployment
+# Master Task: Fix Auth System — Public Access + Role-Based Permissions
 
 **Session**: 2026-02-05
-**Status**: COMPLETE (pending user actions)
+**Status**: COMPLETE
 
-## Workstream E: Harden Harness ✅
-- [x] Verify tasks/lessons.md exists
-- [x] Update CLAUDE.md with Boris Cherny workflow
-- [x] Create master todo.md
+## Phase 1: Rewrite auth module
+- [x] Replace Supabase SDK with direct httpx calls
+- [x] Add User dataclass with is_admin flag
+- [x] Add ADMIN_EMAILS environment variable support
+- [x] Add get_current_user(), validate_invite_code()
 
-## Workstream A: Custom Domain ⏳
-- [ ] Add CNAME record in Cloudflare (USER ACTION REQUIRED)
-- [ ] Configure custom domain in Railway dashboard (USER ACTION REQUIRED)
-- [ ] Verify https://rhodesli.nolanandrewfox.com loads
+## Phase 2: Remove blanket auth, add granular protection
+- [x] Remove Beforeware that blocked all routes
+- [x] Add _check_admin() guard to 13 admin-only POST routes
+- [x] Add _check_login() guard to upload POST route
+- [x] Auth checks pass through when auth is disabled
 
-## Workstream B: Fix "Find Similar" ✅
-- [x] Diagnose root cause (scipy missing from requirements.txt)
-- [x] Add scipy to requirements.txt
-- [x] Add error handling to neighbors endpoint
-- [ ] Deploy and verify Find Similar works (auto-deploys on push)
+## Phase 3: Update UI for permission-aware rendering
+- [x] review_action_buttons: hidden for non-admins
+- [x] name_display: edit button hidden for non-admins
+- [x] face_card: detach button hidden for non-admins
+- [x] identity_card_expanded: action buttons hidden for non-admins
+- [x] sidebar: login/logout state, conditional upload button
+- [x] Thread is_admin through render pipeline
 
-## Workstream F: Portfolio Update ✅
-- [x] Update Rhodesli description and link in resume.yaml
-- [x] Commit and push nolan-portfolio
+## Phase 4: Dependencies and config
+- [x] Replace supabase SDK with httpx in requirements.txt
+- [x] Add ADMIN_EMAILS to .env.example
 
-## Workstream D: Supabase Authentication ✅ (code complete)
-- [x] Create app/auth.py module
-- [x] Add Beforeware + session to fast_app()
-- [x] Add /login, /signup, /logout routes
-- [x] Add supabase to requirements.txt
-- [x] Update .env.example with auth config
-- [ ] Create Supabase project (USER ACTION REQUIRED)
-- [ ] Add env vars to Railway (USER ACTION REQUIRED)
-- [ ] Test auth flow end-to-end
+## Phase 5: Verification
+- [x] Syntax check passes
+- [x] All imports work
+- [x] Tests: 318 passing, 7 pre-existing failures (no new failures)
+- [x] Committed: da6bc61
 
-## Final ✅
-- [x] Update SESSION_LOG.md
-- [x] Update CHANGELOG.md
-- [x] Update RELEASE_NOTES.md
+## USER ACTION REQUIRED (Railway deployment)
+- [ ] Add `ADMIN_EMAILS=NolanFox@gmail.com` to Railway env vars
+- [ ] Disable "Confirm email" in Supabase Auth settings if signup fails
+- [ ] Deploy (auto-deploys on `git push origin main`)
+- [ ] Test public access: visit site without logging in
+- [ ] Test admin access: login with admin email, verify action buttons appear
