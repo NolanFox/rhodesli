@@ -1235,12 +1235,45 @@ def get_next_focus_card(exclude_id: str = None):
         )
 
 
-def upload_area() -> Div:
+def upload_area(existing_sources: list[str] = None) -> Div:
     """
-    Drag-and-drop file upload area.
-    UX Intent: Easy bulk ingestion into inbox.
+    Drag-and-drop file upload area with source/collection field.
+    UX Intent: Easy bulk ingestion into inbox with provenance tracking.
+
+    Args:
+        existing_sources: List of existing source labels for autocomplete
     """
+    if existing_sources is None:
+        existing_sources = []
+
     return Div(
+        # Source/Collection input field
+        Div(
+            Label(
+                "Collection / Source",
+                cls="block text-sm font-medium text-slate-300 mb-2"
+            ),
+            Input(
+                type="text",
+                name="source",
+                id="upload-source",
+                placeholder="e.g., Betty Capeluto Miami Collection, Ancestry, Newspapers.com",
+                list="source-suggestions",
+                cls="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg "
+                    "text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 "
+                    "focus:border-transparent"
+            ),
+            Datalist(
+                *[Option(value=s) for s in existing_sources],
+                id="source-suggestions"
+            ) if existing_sources else None,
+            P(
+                "Where did these photos come from? This helps track provenance.",
+                cls="text-xs text-slate-500 mt-1"
+            ),
+            cls="mb-4"
+        ),
+        # File upload area
         Form(
             Div(
                 Span("\u2191", cls="text-4xl text-slate-500"),
@@ -1258,6 +1291,7 @@ def upload_area() -> Div:
                 hx_encoding="multipart/form-data",
                 hx_target="#upload-status",
                 hx_swap="innerHTML",
+                hx_include="#upload-source",  # Include source field with upload
             ),
             cls="relative",
             enctype="multipart/form-data",
@@ -3172,6 +3206,20 @@ def get():
         "rejected": len(dismissed),
     }
 
+    # Load existing sources for autocomplete
+    existing_sources = []
+    try:
+        from core.photo_registry import PhotoRegistry
+        photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+        sources_set = set()
+        for photo_id in photo_registry._photos:
+            source = photo_registry.get_source(photo_id)
+            if source:
+                sources_set.add(source)
+        existing_sources = sorted(sources_set)
+    except FileNotFoundError:
+        pass  # No photos yet
+
     return Title("Upload Photos - Rhodesli"), style, Div(
         toast_container(),
         sidebar(counts, current_section=None),  # No section selected
@@ -3184,7 +3232,7 @@ def get():
                     cls="mb-6"
                 ),
                 # Upload form
-                upload_area(),
+                upload_area(existing_sources=existing_sources),
                 cls="max-w-3xl mx-auto px-8 py-6"
             ),
             cls="ml-64 min-h-screen"
@@ -3194,12 +3242,16 @@ def get():
 
 
 @rt("/upload")
-async def post(files: list[UploadFile]):
+async def post(files: list[UploadFile], source: str = ""):
     """
     Accept file upload(s) and spawn subprocess for processing.
 
     Handles multiple files (images and/or ZIPs) in a single batch job.
     All files are saved to a job directory and processed together.
+
+    Args:
+        files: Uploaded image files or ZIPs
+        source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
 
     Returns HTML partial with upload status and polling.
     """
@@ -3247,16 +3299,21 @@ async def post(files: list[UploadFile]):
     else:
         subprocess_env["PYTHONPATH"] = str(project_root)
 
+    # Build subprocess arguments
+    subprocess_args = [
+        sys.executable,
+        "-m",
+        "core.ingest_inbox",
+        "--directory",
+        str(job_dir),
+        "--job-id",
+        job_id,
+    ]
+    if source:
+        subprocess_args.extend(["--source", source])
+
     subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "core.ingest_inbox",
-            "--directory",
-            str(job_dir),
-            "--job-id",
-            job_id,
-        ],
+        subprocess_args,
         cwd=project_root,
         env=subprocess_env,
         stdout=subprocess.DEVNULL,
