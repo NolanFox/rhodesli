@@ -2278,11 +2278,22 @@ def health():
             index = json.load(f)
             photo_count = len(index.get("photos", {}))
 
+    # Debug info for R2 migration
+    crop_files = get_crop_files()
+    embeddings_path = Path(DATA_DIR) / "embeddings.npy"
+
     return {
         "status": "ok",
         "identities": len(registry.list_identities()),
         "photos": photo_count,
         "processing_enabled": PROCESSING_ENABLED,
+        "debug": {
+            "crop_files_count": len(crop_files),
+            "storage_mode": storage.STORAGE_MODE,
+            "r2_mode": storage.is_r2_mode(),
+            "embeddings_exists": embeddings_path.exists(),
+            "data_dir": str(DATA_DIR),
+        }
     }
 
 
