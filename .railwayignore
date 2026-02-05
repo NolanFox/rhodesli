@@ -35,7 +35,7 @@ requirements-local.txt
 raw_photos/
 app/static/crops/
 
-# Large data files - embeddings stay on volume, not in image
-data/embeddings.npy
+# Large data files (backups, databases)
+# NOTE: embeddings.npy IS included - needed for crop filename resolution
 data/backups/
 data/*.db

@@ -74,6 +74,20 @@ def init_volume():
     # SANITY CHECK: If marker exists but data is missing, we have a corrupted state
     if marker.exists():
         if volume_is_valid(data_dir):
+            # Volume is valid, but check for missing optional files (like embeddings.npy)
+            # These might be added in later deploys
+            if BUNDLED_DATA.exists():
+                for item in BUNDLED_DATA.iterdir():
+                    if item.name == ".gitkeep":
+                        continue
+                    dest = data_dir / item.name
+                    if not dest.exists():
+                        if item.is_dir():
+                            shutil.copytree(item, dest)
+                        else:
+                            shutil.copy2(item, dest)
+                        print(f"[init] Added missing file: {item.name}")
+
             print("[init] Volume already initialized and valid, skipping seed.")
             print(f"[init] Data dir: {data_dir}")
             print("[init] Photos served from R2 (STORAGE_MODE=r2, R2_PUBLIC_URL)")
