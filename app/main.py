@@ -100,8 +100,8 @@ def _load_photo_path_cache():
     Build filename -> path lookup from photo_index.json.
 
     Called at startup to enable O(1) photo path resolution without
-    filesystem searching. Only includes photos with absolute paths
-    (inbox uploads); raw_photos/ files use direct StaticFiles fallback.
+    filesystem searching. Includes paths for inbox uploads (data/uploads/)
+    which are stored outside raw_photos/.
     """
     global _photo_path_cache
     _photo_path_cache.clear()
@@ -116,13 +116,23 @@ def _load_photo_path_cache():
     missing_files = []
     for photo_id, photo_data in index.get("photos", {}).items():
         path_str = photo_data.get("path", "")
+        if not path_str:
+            continue
+
         path = Path(path_str)
-        # Only cache absolute paths (inbox uploads)
-        # Relative paths (legacy raw_photos) served via filesystem check
+
+        # Resolve relative paths against project root
         if path.is_absolute():
-            _photo_path_cache[path.name] = path
+            full_path = path
+        else:
+            full_path = project_root / path
+
+        # Cache inbox uploads (data/uploads/) for serving
+        # Legacy raw_photos/ files are served via StaticFiles fallback
+        if "data/uploads" in path_str or path.is_absolute():
+            _photo_path_cache[full_path.name] = full_path
             # Track missing files for startup warning
-            if not path.exists():
+            if not full_path.exists():
                 missing_files.append(path_str)
 
     if missing_files:

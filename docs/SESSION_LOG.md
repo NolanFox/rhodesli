@@ -5,6 +5,34 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 6: Fix Hardcoded Paths (2026-02-05)
+
+**Goal:** Convert absolute paths in photo_index.json to relative paths for Docker/Railway compatibility.
+
+**Problem:** 12 inbox photos had absolute paths like `/Users/nolanfox/rhodesli/data/uploads/...` which caused Docker runtime warnings and would fail on Railway.
+
+**Completed:**
+- Diagnosed issue: 12 photos in `data/uploads/b5e8a89e/` had absolute paths
+- Created `scripts/fix_absolute_paths.py` migration script with `--dry-run`/`--execute` flags
+- Updated `app/main.py:_load_photo_path_cache()` to handle relative paths
+- Migrated photo_index.json to use relative paths (`data/uploads/...`)
+- Verified in Docker: no missing file warnings, health endpoint OK, photos served correctly
+
+**Files created:**
+- `scripts/fix_absolute_paths.py`
+
+**Files modified:**
+- `app/main.py` (updated path resolution logic)
+- `data/photo_index.json` (converted 12 absolute paths to relative)
+- `data/photo_index.json.bak` (backup created by migration)
+
+**Verification:**
+- Docker startup: `[startup] Photo path cache: 12 inbox photos indexed` (no warnings)
+- Health endpoint: `status: ok`, 268 identities, 124 photos
+- Photo serving: HTTP 200 for both inbox and legacy photos
+
+---
+
 ## Session 5: Operational Documentation (2026-02-05)
 
 **Goal:** Create operational documentation for day-to-day management.
