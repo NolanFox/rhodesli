@@ -415,6 +415,37 @@ def load_embeddings_for_photos():
     return photos
 
 
+_photo_dimensions_cache = None
+
+
+def _load_photo_dimensions_cache() -> dict:
+    """Load photo dimensions from photo_index.json into a cache."""
+    global _photo_dimensions_cache
+    if _photo_dimensions_cache is not None:
+        return _photo_dimensions_cache
+
+    _photo_dimensions_cache = {}
+    photo_index_path = data_path / "photo_index.json"
+    if photo_index_path.exists():
+        try:
+            import json
+            with open(photo_index_path) as f:
+                data = json.load(f)
+            for photo_id, photo_data in data.get("photos", {}).items():
+                width = photo_data.get("width", 0)
+                height = photo_data.get("height", 0)
+                if width > 0 and height > 0:
+                    # Index by path and by filename for flexible lookup
+                    path = photo_data.get("path", "")
+                    if path:
+                        _photo_dimensions_cache[path] = (width, height)
+                        _photo_dimensions_cache[Path(path).name] = (width, height)
+        except Exception as e:
+            logging.warning(f"Failed to load photo dimensions cache: {e}")
+
+    return _photo_dimensions_cache
+
+
 def get_photo_dimensions(filename_or_path: str) -> tuple:
     """
     Get image dimensions for a photo.
@@ -429,7 +460,19 @@ def get_photo_dimensions(filename_or_path: str) -> tuple:
     """
     path = Path(filename_or_path)
 
-    # Strategy: try the path as-is first, then fallback to raw_photos/{basename}
+    # In R2 mode, photos aren't stored locally, so use cached dimensions
+    # from photo_index.json instead of reading from filesystem
+    if storage.is_r2_mode():
+        cache = _load_photo_dimensions_cache()
+        # Try exact path first, then filename only
+        if str(filename_or_path) in cache:
+            return cache[str(filename_or_path)]
+        if path.name in cache:
+            return cache[path.name]
+        # If not in cache, return (0, 0) - can't read from R2 directly
+        return (0, 0)
+
+    # Local mode: read from filesystem
     filepath = None
 
     # Try 1: Path as provided (works for relative paths like 'raw_photos/file.jpg'
@@ -672,11 +715,14 @@ def resolve_face_image_url(face_id: str, crop_files: set) -> str:
     Returns:
         URL path to the crop image, or None if no matching crop file is found.
     """
-    # Try inbox format first (simple direct mapping)
-    # Inbox crops are named exactly {face_id}.jpg
-    inbox_crop = f"{face_id}.jpg"
-    if inbox_crop in crop_files:
-        return storage.get_crop_url_by_filename(inbox_crop)
+    # Inbox format: face_ids starting with "inbox_" have crops named exactly {face_id}.jpg
+    # In R2 mode, inbox crops aren't in embeddings.npy (and thus not in crop_files),
+    # so we return the URL directly without checking crop_files.
+    if face_id.startswith("inbox_"):
+        inbox_crop = f"{face_id}.jpg"
+        # In local mode, verify it exists; in R2 mode, assume it exists
+        if storage.is_r2_mode() or inbox_crop in crop_files:
+            return storage.get_crop_url_by_filename(inbox_crop)
 
     # Fall back to legacy format parsing
     # Legacy face_ids use format: {filename_stem}:face{index}
