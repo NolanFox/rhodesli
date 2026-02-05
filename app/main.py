@@ -1207,11 +1207,19 @@ def render_rejected_section(dismissed: list, crop_files: set, counts: dict) -> D
     )
 
 
-def render_photos_section(counts: dict, registry, crop_files: set) -> Div:
+def render_photos_section(counts: dict, registry, crop_files: set,
+                          filter_source: str = "", sort_by: str = "newest") -> Div:
     """
     Render the Photos section - a grid view of all photos.
 
     This is the photo-centric workflow, complementing the face-centric inbox.
+
+    Args:
+        counts: Sidebar counts dict
+        registry: Identity registry
+        crop_files: Set of available crop filenames
+        filter_source: Filter to show only this collection (empty = all)
+        sort_by: Sort order (newest, oldest, most_faces, collection)
     """
     _build_caches()
     if not _photo_cache:
@@ -1256,11 +1264,67 @@ def render_photos_section(counts: dict, registry, crop_files: set) -> Div:
 
     sources = sorted(sources_set)
 
+    # Apply filter
+    if filter_source:
+        photos = [p for p in photos if p["source"] == filter_source]
+
+    # Apply sorting
+    if sort_by == "oldest":
+        photos = sorted(photos, key=lambda p: p["filename"])
+    elif sort_by == "newest":
+        photos = sorted(photos, key=lambda p: p["filename"], reverse=True)
+    elif sort_by == "most_faces":
+        photos = sorted(photos, key=lambda p: p["face_count"], reverse=True)
+    elif sort_by == "collection":
+        photos = sorted(photos, key=lambda p: (p["source"] or "zzz", p["filename"]))
+
     # Build subtitle
     subtitle_parts = [f"{len(photos)} photos"]
     if sources:
         subtitle_parts.append(f"{len(sources)} collections")
     subtitle = " \u2022 ".join(subtitle_parts)
+
+    # Build filter/sort options
+    source_options = [Option("All Collections", value="", selected=not filter_source)]
+    for s in sources:
+        source_options.append(Option(s, value=s, selected=(filter_source == s)))
+
+    sort_options = [
+        Option("Newest First", value="newest", selected=(sort_by == "newest")),
+        Option("Oldest First", value="oldest", selected=(sort_by == "oldest")),
+        Option("Most Faces", value="most_faces", selected=(sort_by == "most_faces")),
+        Option("By Collection", value="collection", selected=(sort_by == "collection")),
+    ]
+
+    # Filter/sort controls
+    from urllib.parse import quote
+    filter_bar = Div(
+        # Collection filter
+        Div(
+            Label("Collection:", cls="text-sm text-slate-400 mr-2"),
+            Select(
+                *source_options,
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                    "focus:ring-2 focus:ring-indigo-500",
+                onchange=f"window.location.href='/?section=photos&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}'"
+            ),
+            cls="flex items-center"
+        ),
+        # Sort
+        Div(
+            Label("Sort:", cls="text-sm text-slate-400 mr-2"),
+            Select(
+                *sort_options,
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                    "focus:ring-2 focus:ring-indigo-500",
+                onchange=f"window.location.href='/?section=photos&filter_source={quote(filter_source)}&sort_by=' + this.value"
+            ),
+            cls="flex items-center"
+        ),
+        # Result count
+        Span(f"{len(photos)} photos", cls="text-sm text-slate-500 ml-auto"),
+        cls="flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4"
+    )
 
     # Photo grid
     photo_cards = []
@@ -1340,8 +1404,9 @@ def render_photos_section(counts: dict, registry, crop_files: set) -> Div:
 
     return Div(
         section_header("Photos", subtitle),
+        filter_bar,
         grid if photo_cards else Div(
-            "No photos found.",
+            "No photos found." + (" Clear filter to see all." if filter_source else ""),
             cls="text-center py-12 text-slate-400"
         ),
         cls="space-y-6"
@@ -2117,14 +2182,17 @@ def lane_section(
 # =============================================================================
 
 @rt("/")
-def get(section: str = "to_review", view: str = "focus", current: str = None):
+def get(section: str = "to_review", view: str = "focus", current: str = None,
+        filter_source: str = "", sort_by: str = "newest"):
     """
     Command Center: Sidebar-based navigation with focused review.
 
     Args:
-        section: Which section to display (to_review, confirmed, skipped, rejected)
+        section: Which section to display (to_review, confirmed, skipped, rejected, photos)
         view: View mode for to_review section (focus or browse)
         current: Optional identity_id to show in focus mode (for Up Next clicks)
+        filter_source: Collection/source to filter photos by (photos section only)
+        sort_by: Sort order for photos (newest, oldest, most_faces, collection)
     """
     registry = load_registry()
     crop_files = get_crop_files()
@@ -2177,7 +2245,7 @@ def get(section: str = "to_review", view: str = "focus", current: str = None):
     elif section == "skipped":
         main_content = render_skipped_section(skipped_list, crop_files, counts)
     elif section == "photos":
-        main_content = render_photos_section(counts, registry, crop_files)
+        main_content = render_photos_section(counts, registry, crop_files, filter_source, sort_by)
     else:  # rejected
         main_content = render_rejected_section(dismissed, crop_files, counts)
 
