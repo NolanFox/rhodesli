@@ -607,7 +607,7 @@ def get_crop_files():
     # by tracking order of faces within each unique filename
     crop_files = set()
 
-    embeddings_path = DATA_DIR / "embeddings.npy"
+    embeddings_path = Path(DATA_DIR) / "embeddings.npy"
     if embeddings_path.exists():
         try:
             embeddings = np.load(embeddings_path, allow_pickle=True)
