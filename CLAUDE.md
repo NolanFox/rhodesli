@@ -34,7 +34,7 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 
 **"Clean Vercel" Constraint**: `app/` must stay separate from `core/`. Heavy libs (torch, insightface, opencv) go in `requirements-local.txt`, NEVER in `requirements.txt`.
 
-**Pathing**: Always use `Path(__file__).resolve().parent` for file paths.
+**Pathing**: Always use `Path(__file__).resolve().parent` for file paths in code. Data files (JSON in `data/`) must use **relative paths** (e.g., `data/uploads/...`) never absolute paths (e.g., `/Users/.../data/uploads/...`).
 
 ## Workflow Rules
 
@@ -198,6 +198,35 @@ When introducing any new data directory or file output:
 1. **Git Hygiene:** Immediately add the path to `.gitignore`.
 2. **Deployment Safety:** Ensure the code checks for existence and creates the directory (`makedirs(exist_ok=True)`) on startup in `app/main.py:startup_event()`. Never assume an ignored directory exists.
 3. **Module Execution:** Always invoke scripts as modules (`python -m package.script`) to ensure correct path resolution.
+
+## Pre-Deployment Checklist
+
+Before any deployment or containerization work, audit data files for environment-specific values:
+
+```bash
+# Check for absolute paths
+grep -rn "/Users/\|/home/" data/ --include="*.json"
+
+# Check for hardcoded hostnames
+grep -rn "localhost\|127\.0\.0\.1" data/ --include="*.json"
+
+# Check for case-sensitivity issues (Mac → Linux)
+# Look for files that differ only by case
+find raw_photos/ -type f | sort -f | uniq -di
+```
+
+Any value that assumes a specific machine, OS, or filesystem should be flagged.
+
+## Post-Bug Protocol
+
+When a bug is discovered that could have been caught earlier:
+
+1. Fix the bug
+2. Add a rule to CLAUDE.md that would have prevented it
+3. Add a check to `docs/MANUAL_TEST_CHECKLIST.md`
+4. Note it in `docs/SESSION_LOG.md`
+
+This creates a feedback loop where each bug improves the harness for future sessions.
 
 ## RELEASE DOCUMENTATION INVARIANT
 

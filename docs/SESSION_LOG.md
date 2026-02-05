@@ -5,6 +5,28 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 7: Harness Improvement (2026-02-05)
+
+**Goal:** Update documentation to prevent future absolute-path-style bugs from reaching production.
+
+**Completed:**
+- Added Pre-Deployment Checklist to CLAUDE.md with path/hostname audit commands
+- Added Post-Bug Protocol to CLAUDE.md for systematic harness improvements
+- Added Docker Startup Log Audit section to MANUAL_TEST_CHECKLIST.md
+- Added absolute paths bug to Known Bug Locations table (marked fixed)
+
+**Files modified:**
+- `CLAUDE.md` (added Pre-Deployment Checklist + Post-Bug Protocol sections)
+- `docs/MANUAL_TEST_CHECKLIST.md` (added Docker audit section, updated bug table)
+- `docs/SESSION_LOG.md` (this entry)
+
+**Lessons learned:**
+- Data files generated locally can contain environment-specific values
+- The path from local dev → Docker → Railway is a critical validation point
+- Startup logs are the first line of defense for catching environment issues
+
+---
+
 ## Session 6: Fix Hardcoded Paths (2026-02-05)
 
 **Goal:** Convert absolute paths in photo_index.json to relative paths for Docker/Railway compatibility.

@@ -141,6 +141,13 @@ Run this checklist after any significant code change.
 - [ ] Photo viewer works
 - [ ] Photo context modal opens
 
+### Docker Startup Log Audit
+- [ ] No "WARNING" lines in startup output
+- [ ] No absolute paths in warnings (e.g., /Users/, /home/)
+- [ ] Photo count matches expected (currently 124 photos, 268 identities)
+- [ ] Health endpoint returns expected counts
+- [ ] No "missing files" warnings
+
 ### 20. Production Upload (PROCESSING_ENABLED=false)
 - [ ] Upload page renders
 - [ ] Can select and upload files
@@ -172,6 +179,7 @@ Run this checklist after any significant code change.
 | Inbox endpoint semantics | app/main.py:2872-2915 | [ ] Deferred |
 | Unsanitized filename | app/main.py:2728 | [ ] Deferred |
 | Vanishing reject items | app/main.py:1464 | [x] Fixed 2026-02-04 - Rejected state now fetched and rendered |
+| Absolute paths in photo_index.json | data/photo_index.json | [x] Fixed 2026-02-05 - Converted to relative paths via migration script |
 
 ## Quick Smoke Test (5 min)
 
