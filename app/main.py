@@ -2671,27 +2671,27 @@ def photo_view_content(
     # Use filepath (absolute) if available, otherwise fall back to filename
     # This handles inbox uploads which are stored outside raw_photos/
     width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
-    if width == 0:
-        error_content = Div(
-            P("Could not load photo", cls="text-red-400 font-bold"),
-            cls="text-center p-8"
-        )
-        return (error_content,) if is_partial else (Title("Photo Error"), error_content)
+
+    # If dimensions aren't available (e.g., R2 mode without cached dimensions),
+    # we can still show the photo - just without face overlays
+    has_dimensions = width > 0 and height > 0
 
     registry = load_registry()
 
     # Build face overlays with CSS percentages for responsive scaling
+    # Only if we have dimensions (needed for percentage calculations)
     face_overlays = []
-    for face_data in photo["faces"]:
-        face_id = face_data["face_id"]
-        bbox = face_data["bbox"]  # [x1, y1, x2, y2]
-        x1, y1, x2, y2 = bbox
+    if has_dimensions:
+        for face_data in photo["faces"]:
+            face_id = face_data["face_id"]
+            bbox = face_data["bbox"]  # [x1, y1, x2, y2]
+            x1, y1, x2, y2 = bbox
 
-        # Convert to percentages for responsive positioning
-        left_pct = (x1 / width) * 100
-        top_pct = (y1 / height) * 100
-        width_pct = ((x2 - x1) / width) * 100
-        height_pct = ((y2 - y1) / height) * 100
+            # Convert to percentages for responsive positioning
+            left_pct = (x1 / width) * 100
+            top_pct = (y1 / height) * 100
+            width_pct = ((x2 - x1) / width) * 100
+            height_pct = ((y2 - y1) / height) * 100
 
         # Get identity info
         identity = get_identity_for_face(registry, face_id)
@@ -2766,9 +2766,13 @@ def photo_view_content(
                 cls="text-slate-400 text-sm"
             ),
             P(
-                f"{width} x {height} px",
+                f"{width} x {height} px" if has_dimensions else "Dimensions unavailable",
                 cls="text-slate-500 text-xs font-data"
             ),
+            P(
+                "(Face overlays require cached dimensions)",
+                cls="text-slate-600 text-xs italic"
+            ) if not has_dimensions and photo["faces"] else None,
             # Source/collection info (if available)
             P(
                 f"Source: {photo.get('source', 'Unknown')}",
