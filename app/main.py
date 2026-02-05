@@ -511,6 +511,18 @@ def _build_caches():
             for face in photo_data["faces"]:
                 _face_to_photo_cache[face["face_id"]] = photo_id
 
+        # Merge source data from photo_index.json
+        try:
+            from core.photo_registry import PhotoRegistry
+            photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+            for photo_id in _photo_cache:
+                source = photo_registry.get_source(photo_id)
+                _photo_cache[photo_id]["source"] = source
+        except FileNotFoundError:
+            # No photo_index.json yet, set empty sources
+            for photo_id in _photo_cache:
+                _photo_cache[photo_id]["source"] = ""
+
 
 def get_photo_metadata(photo_id: str) -> dict:
     """Get photo metadata including face bboxes."""
@@ -2377,6 +2389,11 @@ def photo_view_content(
                 f"{width} x {height} px",
                 cls="text-slate-500 text-xs font-data"
             ),
+            # Source/collection info (if available)
+            P(
+                f"Source: {photo.get('source', 'Unknown')}",
+                cls="text-slate-400 text-xs mt-1"
+            ) if photo.get("source") else None,
             cls="mt-4"
         ),
         cls="photo-viewer p-4"
