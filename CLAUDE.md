@@ -387,6 +387,42 @@ Any session that changes user-visible behavior or system capabilities MUST end b
 
 A session is not considered complete until this is done. This is a hard rule, not a suggestion.
 
+## Autonomous Workflow Protocol (Boris Cherny Method)
+
+### Session Start (MANDATORY)
+1. `cat tasks/lessons.md` — Read past mistakes first
+2. `cat tasks/todo.md` — Check for in-progress work
+3. Review recent entries in docs/SESSION_LOG.md
+
+### Task Execution
+1. **Plan First**: Write plan to `tasks/todo.md` with checkboxes
+2. **Verify Plan**: Check in before implementing — does this cover all affected features?
+3. **Track Progress**: Check off items as completed
+4. **Staff Engineer Test**: Before committing, ask "Would a senior engineer approve this?"
+5. **Document Results**: Add review section to todo.md
+6. **Capture Lessons**: After ANY user correction, add to lessons.md
+
+### Self-Improvement Loop
+After ANY correction from the user:
+1. Add to tasks/lessons.md: what mistake was made, rule to prevent it, specific verification step
+2. Review lessons.md at next session start
+
+### Regression Prevention
+Before declaring ANY fix complete:
+- [ ] Listed all features that could be affected
+- [ ] Tested EACH feature explicitly
+- [ ] Compared behavior before vs after change
+- [ ] Checked edge cases (empty states, many items, errors)
+- [ ] Ran verification scripts
+- [ ] Passes staff engineer review standard
+
+### File Structure
+```
+tasks/
+  lessons.md    # Persistent learnings across sessions
+  todo.md       # Current task tracking with checkboxes
+```
+
 ## Project Status
 
 ### Current State: Phase A Complete (Deployment Ready)

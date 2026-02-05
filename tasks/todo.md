@@ -1,27 +1,37 @@
-# Task: Fix Face Box Regression
+# Master Task: Complete Rhodesli Deployment
 
-**Status**: COMPLETE
+**Session**: 2026-02-05
+**Status**: IN PROGRESS
 
-## Problem Statement
-Photos show only 1 face box when there should be multiple.
-Example: Image 972 shows "14 faces detected" but only 1 green box displays.
+## Workstream E: Harden Harness
+- [x] Verify tasks/lessons.md exists
+- [x] Update CLAUDE.md with Boris Cherny workflow
+- [x] Create master todo.md
 
-## Root Cause
-In commit d7f6e2f ("fix: graceful degradation when photo dimensions unavailable"),
-the face overlay loop in `photo_view_content()` was wrapped in `if has_dimensions:`.
-However, only the bbox percentage calculations (lines computing left_pct, top_pct, etc.)
-were indented into the `for` loop. The rest of the loop body -- identity lookup,
-overlay div construction, and `face_overlays.append()` -- remained at the `if` block
-level, outside the `for` loop. This caused them to execute only once (using the last
-face's variables) instead of once per face.
+## Workstream A: Custom Domain
+- [ ] Add CNAME record in Cloudflare (USER ACTION REQUIRED)
+- [ ] Configure custom domain in Railway dashboard (USER ACTION REQUIRED)
+- [ ] Verify https://rhodesli.nolanandrewfox.com loads
 
-## Fix Applied
-Re-indented lines 2696-2744 of app/main.py from 8-space (if-level) to 12-space
-(for-loop level), restoring the full loop body.
+## Workstream B: Fix "Find Similar"
+- [x] Diagnose root cause (scipy missing from requirements.txt)
+- [x] Add scipy to requirements.txt
+- [x] Add error handling to neighbors endpoint
+- [ ] Deploy and verify Find Similar works
 
-## Plan
-- [x] 1. Find where face boxes are rendered in app/main.py
-- [x] 2. Identify what recent change broke the face iteration
-- [x] 3. Fix the root cause (indentation)
-- [x] 4. Verify syntax compiles
-- [x] 5. Commit and push
+## Workstream F: Portfolio Update
+- [x] Update Rhodesli description and link in resume.yaml
+- [ ] Commit and push nolan-portfolio
+
+## Workstream D: Supabase Authentication
+- [ ] Create Supabase project (USER ACTION REQUIRED)
+- [ ] Create core/auth.py module
+- [ ] Create app/auth_routes.py
+- [ ] Add session middleware to main.py
+- [ ] Update deployment guide with auth setup
+- [ ] Test auth flow end-to-end
+
+## Final
+- [ ] Update SESSION_LOG.md
+- [ ] Update CHANGELOG.md
+- [ ] Update RELEASE_NOTES.md
