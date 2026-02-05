@@ -39,6 +39,42 @@ Deploy Rhodesli to Railway with a custom domain on Cloudflare.
 - Cloudflare account with `nolanandrewfox.com` configured
 - Docker installed locally (for testing)
 
+## Deployment Modes
+
+There are two ways to deploy, with different behaviors regarding data bundling:
+
+### Initial Deploy (First Time) — Use CLI
+
+Use Railway CLI to include photos and data in the build:
+
+```bash
+railway up
+```
+
+This uploads local files including gitignored directories (`raw_photos/`, `data/`).
+The init script copies them to the persistent volume on first run.
+
+### Code Updates (After Initial Deploy) — Use GitHub
+
+Push to GitHub and Railway auto-deploys:
+
+```bash
+git push origin main
+```
+
+The Dockerfile handles missing `raw_photos/` and `data/` gracefully (they contain
+only `.gitkeep` files in the GitHub build context). Photos are already on the
+persistent volume from the initial deploy.
+
+### When to Use CLI vs GitHub
+
+| Scenario | Method | Why |
+|----------|--------|-----|
+| First deploy | `railway up` | Seeds volume with photos/data |
+| Code changes only | `git push` | Photos already on volume |
+| New photos added locally | `railway up` | Re-bundles and seeds volume |
+| Config/env changes | Railway dashboard | No build needed |
+
 ## Step 1: Test Docker Build Locally
 
 Before deploying, verify the Docker image works:
@@ -381,4 +417,5 @@ For this app's current size (~350MB data + photos), Hobby plan is sufficient.
 
 | Date | Change | Triggered By | Session |
 |------|--------|--------------|---------|
+| 2026-02-05 | Add Deployment Modes section (CLI vs GitHub) | GitHub deploys fail on missing gitignored dirs | Dockerfile GitHub fix |
 | 2026-02-05 | Switch to single volume mount (STORAGE_DIR=/app/storage) | Railway only allows 1 volume per service | Deployment fix session |

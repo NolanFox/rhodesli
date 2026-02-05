@@ -5,6 +5,38 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 9: Dockerfile GitHub Deploy Fix (2026-02-05)
+
+**Goal:** Fix Dockerfile so it builds successfully from both CLI (`railway up`) and GitHub push deployments.
+
+**Problem:** Railway deployment via GitHub push failed because `raw_photos/` and `data/` are gitignored but the Dockerfile has rigid `COPY` commands for them. GitHub builds don't have the gitignored content, causing COPY to fail.
+
+**Root Cause:** `raw_photos/` had no tracked files. The `.gitkeep` was whitelisted in `.gitignore` but never created.
+
+**Completed:**
+- Created `raw_photos/.gitkeep` so directory exists in GitHub builds
+- Updated `scripts/init_railway_volume.py` to detect empty bundles (GitHub deploy) and log clear warnings
+- Added "Deployment Modes" section to `docs/DEPLOYMENT_GUIDE.md` explaining CLI vs GitHub deploys
+- Added "Gitignore-Dockerfile Consistency Rule" to `CLAUDE.md`
+
+**Files modified:**
+- `raw_photos/.gitkeep` (created)
+- `scripts/init_railway_volume.py` (empty bundle detection)
+- `docs/DEPLOYMENT_GUIDE.md` (deployment modes section)
+- `CLAUDE.md` (gitignore-dockerfile consistency rule)
+- `docs/SESSION_LOG.md` (this entry)
+
+**Verification:**
+- ✅ `docker build .` succeeds with full data (CLI deploy simulation)
+- ✅ `docker build .` succeeds with only `.gitkeep` files (GitHub deploy simulation)
+- ✅ Init script logs appropriate warnings when bundles are empty
+
+**Key Insight:**
+- Initial deploy: `railway up` (CLI) — seeds volume with local photos/data
+- Code updates: `git push` — photos already on volume, Dockerfile handles empty bundles
+
+---
+
 ## Session 8: Single Railway Volume Fix (2026-02-05)
 
 **Goal:** Fix deployment configuration for Railway's single-volume limitation.

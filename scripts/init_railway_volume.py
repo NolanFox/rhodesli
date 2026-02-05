@@ -71,31 +71,43 @@ def init_volume():
 
     # Copy bundled data files
     if BUNDLED_DATA.exists():
-        print(f"[init] Copying data from {BUNDLED_DATA} to {data_dir}...")
-        copied_count = 0
-        for item in BUNDLED_DATA.iterdir():
-            dest = data_dir / item.name
-            if not dest.exists():
-                if item.is_dir():
-                    shutil.copytree(item, dest)
-                else:
-                    shutil.copy2(item, dest)
-                copied_count += 1
-                print(f"[init]   Copied: {item.name}")
-        print(f"[init] Copied {copied_count} data items.")
+        # Check if bundle has actual data (not just .gitkeep)
+        bundle_items = [f for f in BUNDLED_DATA.iterdir() if f.name != ".gitkeep"]
+        if bundle_items:
+            print(f"[init] Copying data from {BUNDLED_DATA} to {data_dir}...")
+            copied_count = 0
+            for item in bundle_items:
+                dest = data_dir / item.name
+                if not dest.exists():
+                    if item.is_dir():
+                        shutil.copytree(item, dest)
+                    else:
+                        shutil.copy2(item, dest)
+                    copied_count += 1
+                    print(f"[init]   Copied: {item.name}")
+            print(f"[init] Copied {copied_count} data items.")
+        else:
+            print(f"[init] WARNING: Data bundle is empty (GitHub deploy detected).")
+            print(f"[init] Volume must be seeded via 'railway up' or manual upload.")
     else:
         print(f"[init] No bundled data found at {BUNDLED_DATA}")
 
     # Copy bundled photos
     if BUNDLED_PHOTOS.exists():
-        print(f"[init] Copying photos from {BUNDLED_PHOTOS} to {photos_dir}...")
-        copied_count = 0
-        for item in BUNDLED_PHOTOS.iterdir():
-            dest = photos_dir / item.name
-            if not dest.exists():
-                shutil.copy2(item, dest)
-                copied_count += 1
-        print(f"[init] Copied {copied_count} photos.")
+        # Check if bundle has actual photos (not just .gitkeep)
+        photo_items = [f for f in BUNDLED_PHOTOS.iterdir() if f.name != ".gitkeep"]
+        if photo_items:
+            print(f"[init] Copying photos from {BUNDLED_PHOTOS} to {photos_dir}...")
+            copied_count = 0
+            for item in photo_items:
+                dest = photos_dir / item.name
+                if not dest.exists():
+                    shutil.copy2(item, dest)
+                    copied_count += 1
+            print(f"[init] Copied {copied_count} photos.")
+        else:
+            print(f"[init] WARNING: Photos bundle is empty (GitHub deploy detected).")
+            print(f"[init] Volume already seeded? Or use 'railway up' to seed with local photos.")
     else:
         print(f"[init] No bundled photos found at {BUNDLED_PHOTOS}")
 

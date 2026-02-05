@@ -217,6 +217,26 @@ find raw_photos/ -type f | sort -f | uniq -di
 
 Any value that assumes a specific machine, OS, or filesystem should be flagged.
 
+## Gitignore-Dockerfile Consistency Rule
+
+When modifying `.gitignore` or `Dockerfile`:
+
+1. **Check for conflicts:** If a directory is in `.gitignore`, the Dockerfile CANNOT use a rigid `COPY <dir>/` command — it will fail during GitHub-triggered builds where gitignored files are absent.
+
+2. **Solutions:**
+   - Add a `.gitkeep` file to gitignored directories so the directory exists in both CLI and GitHub builds
+   - Use conditional copy logic in the Dockerfile
+   - Document that initial deploy must use CLI (`railway up`)
+
+3. **Verification:** Always test that `docker build .` succeeds even when gitignored directories contain only `.gitkeep` files:
+   ```bash
+   # Simulate GitHub build context
+   mv raw_photos raw_photos_backup && mv data data_backup
+   mkdir -p raw_photos data && touch raw_photos/.gitkeep data/.gitkeep
+   docker build -t test .
+   rm -rf raw_photos data && mv raw_photos_backup raw_photos && mv data_backup data
+   ```
+
 ## Deployment Impact Rule
 
 Any change that affects how the app is built, configured, started, or where it reads/writes data MUST also update:
