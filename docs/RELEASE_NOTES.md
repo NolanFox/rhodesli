@@ -1,5 +1,49 @@
 # Release Notes
 
+## v0.5.0 — Railway Deployment Ready
+
+This release adds full Docker-based deployment configuration for hosting Rhodesli on Railway with a custom domain.
+
+### New Features
+
+**Docker Deployment**
+- Lightweight Docker image (~200MB) using python:3.11-slim
+- Only web dependencies installed (no ML/AI libraries)
+- `railway.toml` configuration with health check
+- First-run volume initialization script
+
+**Production-Ready Configuration**
+- All server settings configurable via environment variables
+- `HOST`, `PORT`, `DEBUG`, `PROCESSING_ENABLED`
+- `/health` endpoint for monitoring
+
+**Staged Upload Workflow**
+- When `PROCESSING_ENABLED=false` (production), uploads go to `data/staging/`
+- No ML processing attempted in production
+- Shows "Pending admin review" message to users
+- Admin can download staged files, process locally, sync back
+
+### Technical Changes
+
+- `core/config.py` expanded with server configuration
+- `app/main.py` uses config for host/port/debug
+- Upload handler branches on `PROCESSING_ENABLED`
+- Added Pillow to `requirements.txt`
+- Added comprehensive startup logging
+
+### Architecture
+
+The "Clean Vercel" constraint is maintained:
+- Production Docker image uses only `requirements.txt` (lightweight)
+- `requirements-local.txt` (torch, insightface, etc.) NOT installed on Railway
+- ML processing happens locally; web app is display-only in production
+
+### Deployment Guide
+
+See `docs/DEPLOYMENT_GUIDE.md` for step-by-step Railway + Cloudflare setup.
+
+---
+
 ## v0.4.0 — Source Attribution + Photo Viewer
 
 This release adds photo provenance tracking and a new photo-centric browsing workflow.

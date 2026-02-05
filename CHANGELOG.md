@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.5.0] - 2026-02-05
+
+### Added
+- **Railway Deployment**: Full Docker-based deployment configuration
+- `Dockerfile` using python:3.11-slim with lightweight web dependencies only
+- `.dockerignore` excluding dev files, tests, and ML dependencies
+- `railway.toml` with health check configuration
+- `.env.example` documenting all environment variables
+- `scripts/init_railway_volume.py` for first-run data seeding
+- `/health` endpoint returning status, identity/photo counts, processing mode
+- `PROCESSING_ENABLED` environment variable to control ML processing
+- `docs/DEPLOYMENT_GUIDE.md` with step-by-step Railway + Cloudflare setup
+
+### Changed
+- `core/config.py` now includes server configuration (HOST, PORT, DEBUG, etc.)
+- `app/main.py` uses environment variables for host/port/debug settings
+- Upload handler checks `PROCESSING_ENABLED`:
+  - When `false`: stores files in `data/staging/` for admin review (no ML)
+  - When `true`: spawns subprocess for ML processing (local dev)
+- Added Pillow to `requirements.txt` (needed for image dimensions)
+- Updated `.gitignore`: added `.env`, `data/staging/`
+- Comprehensive startup logging showing config and data stats
+
+### Architecture
+- **Clean Vercel Constraint Maintained**: Docker image uses only `requirements.txt`
+- ML dependencies (`requirements-local.txt`) are NOT installed in production
+- Production workflow: web users upload → staging → admin processes locally → sync back
+
 ## [v0.4.0] - 2026-02-04
 
 ### Added

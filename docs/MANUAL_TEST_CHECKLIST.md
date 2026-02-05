@@ -129,6 +129,36 @@ Run this checklist after any significant code change.
 - [ ] Face overlays in Photo Context are clickable
 - [ ] Clicking face navigates to that identity
 
+### 19. Docker Deployment (v0.5.0)
+- [ ] `docker build -t rhodesli .` succeeds
+- [ ] `docker run` with mounted volumes starts without errors
+- [ ] Startup logs show correct config values
+- [ ] `/health` endpoint returns JSON with status, counts
+- [ ] App loads at localhost:5001
+- [ ] All photos display correctly (served from mounted volume)
+- [ ] Sidebar navigation works
+- [ ] Focus mode works
+- [ ] Photo viewer works
+- [ ] Photo context modal opens
+
+### 20. Production Upload (PROCESSING_ENABLED=false)
+- [ ] Upload page renders
+- [ ] Can select and upload files
+- [ ] Files saved to `data/staging/{job_id}/`
+- [ ] `_metadata.json` created with source and timestamp
+- [ ] UI shows "Received X photos - Pending admin review" message
+- [ ] NO subprocess spawned (no ML processing attempt)
+- [ ] App does not crash or error
+
+### 21. Railway Deployment (Production)
+- [ ] App accessible at custom domain (rhodesli.nolanandrewfox.com)
+- [ ] HTTPS working (Cloudflare SSL)
+- [ ] `/health` returns expected counts
+- [ ] All identities visible
+- [ ] All photos load from Railway volume
+- [ ] Upload shows "pending admin review" message
+- [ ] No console errors
+
 ## Known Bug Locations (Reference)
 
 | Bug | Location | Status |
