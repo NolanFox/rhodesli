@@ -2693,55 +2693,55 @@ def photo_view_content(
             width_pct = ((x2 - x1) / width) * 100
             height_pct = ((y2 - y1) / height) * 100
 
-        # Get identity info
-        identity = get_identity_for_face(registry, face_id)
-        # UI BOUNDARY: sanitize display_name for safe rendering
-        raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
-        display_name = ensure_utf8_display(raw_name)
-        identity_id = identity["identity_id"] if identity else None
+            # Get identity info
+            identity = get_identity_for_face(registry, face_id)
+            # UI BOUNDARY: sanitize display_name for safe rendering
+            raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+            display_name = ensure_utf8_display(raw_name)
+            identity_id = identity["identity_id"] if identity else None
 
-        # Determine section based on identity state for navigation
-        if identity:
-            state = identity.get("state", "INBOX")
-            if state == "CONFIRMED":
-                nav_section = "confirmed"
-            elif state == "SKIPPED":
-                nav_section = "skipped"
-            elif state in ("REJECTED", "CONTESTED"):
-                nav_section = "rejected"
-            else:  # INBOX, PROPOSED
+            # Determine section based on identity state for navigation
+            if identity:
+                state = identity.get("state", "INBOX")
+                if state == "CONFIRMED":
+                    nav_section = "confirmed"
+                elif state == "SKIPPED":
+                    nav_section = "skipped"
+                elif state in ("REJECTED", "CONTESTED"):
+                    nav_section = "rejected"
+                else:  # INBOX, PROPOSED
+                    nav_section = "to_review"
+            else:
                 nav_section = "to_review"
-        else:
-            nav_section = "to_review"
 
-        # Determine if this face is selected
-        is_selected = face_id == selected_face_id
+            # Determine if this face is selected
+            is_selected = face_id == selected_face_id
 
-        # Build the overlay div
-        overlay_classes = "face-overlay absolute border-2 cursor-pointer transition-all hover:border-amber-400"
-        if is_selected:
-            overlay_classes += " border-amber-500 bg-amber-500/20"
-        else:
-            overlay_classes += " border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
+            # Build the overlay div
+            overlay_classes = "face-overlay absolute border-2 cursor-pointer transition-all hover:border-amber-400"
+            if is_selected:
+                overlay_classes += " border-amber-500 bg-amber-500/20"
+            else:
+                overlay_classes += " border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
 
-        # Navigation script: close modal, try scroll if on page, else navigate to section
-        nav_script = f"on click add .hidden to #photo-modal then set target to #identity-{identity_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+            # Navigation script: close modal, try scroll if on page, else navigate to section
+            nav_script = f"on click add .hidden to #photo-modal then set target to #identity-{identity_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
 
-        overlay = Div(
-            # Tooltip on hover
-            Span(
-                display_name,
-                cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
-            ),
-            cls=f"{overlay_classes} group",
-            style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
-            title=display_name,
-            data_face_id=face_id,
-            data_identity_id=identity_id or "",
-            # Click closes modal and navigates to identity
-            **{"_": nav_script} if identity_id else {},
-        )
-        face_overlays.append(overlay)
+            overlay = Div(
+                # Tooltip on hover
+                Span(
+                    display_name,
+                    cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
+                ),
+                cls=f"{overlay_classes} group",
+                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+                title=display_name,
+                data_face_id=face_id,
+                data_identity_id=identity_id or "",
+                # Click closes modal and navigates to identity
+                **{"_": nav_script} if identity_id else {},
+            )
+            face_overlays.append(overlay)
 
     # Main content
     content = Div(
