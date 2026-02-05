@@ -42,7 +42,11 @@ from core.config import (
 )
 from core.ui_safety import ensure_utf8_display
 from core import storage
-from app.auth import is_auth_enabled, SESSION_SECRET, AUTH_SKIP_ROUTES, login_user, signup_user, logout_user
+from app.auth import (
+    is_auth_enabled, SESSION_SECRET, INVITE_CODES,
+    get_current_user, User,
+    login_with_supabase, signup_with_supabase, validate_invite_code,
+)
 
 # --- INSTRUMENTATION IMPORT ---
 from core.event_recorder import get_event_recorder
@@ -52,19 +56,12 @@ static_path = Path(__file__).resolve().parent / "static"
 data_path = Path(DATA_DIR) if Path(DATA_DIR).is_absolute() else project_root / DATA_DIR
 photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_root / PHOTOS_DIR
 
-# Auth beforeware: redirects unauthenticated users to /login when Supabase is configured
-_auth_beforeware = None
-if is_auth_enabled():
-    def _auth_check(req, sess):
-        auth = req.scope['auth'] = sess.get('auth', None)
-        if not auth:
-            return RedirectResponse('/login', status_code=303)
-    _auth_beforeware = Beforeware(_auth_check, skip=AUTH_SKIP_ROUTES)
+# No blanket auth — all GET routes are public.
+# Specific POST routes use @require_admin or @require_login decorators.
 
 app, rt = fast_app(
     pico=False,
     secret_key=SESSION_SECRET,
-    before=_auth_beforeware,
     hdrs=(
         Script(src="https://cdn.tailwindcss.com"),
         # Hyperscript required for _="on click..." modal interactions
@@ -221,6 +218,34 @@ def save_registry(registry):
 # We keep this for backward compatibility if needed, but EventRecorder is primary now.
 
 logs_path = Path(__file__).resolve().parent.parent / "logs"
+
+
+def _check_admin(sess) -> Response | None:
+    """Return a 403/redirect Response if user is not admin, else None.
+    When auth is disabled, always allows access."""
+    if not is_auth_enabled():
+        return None  # Auth disabled — everyone has access
+    user = get_current_user(sess or {})
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    if not user.is_admin:
+        return Response(
+            to_xml(toast("You don't have permission to do this.", "error")),
+            status_code=403,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+        )
+    return None
+
+
+def _check_login(sess) -> Response | None:
+    """Return a redirect Response if user is not logged in, else None.
+    When auth is disabled, always allows access."""
+    if not is_auth_enabled():
+        return None  # Auth disabled — everyone has access
+    user = get_current_user(sess or {})
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    return None
 
 
 def log_user_action(action: str, **kwargs) -> None:
@@ -848,13 +873,14 @@ def toast_with_undo(
     )
 
 
-def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
+def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
     """
     Fixed sidebar navigation for the Command Center.
 
     Args:
         counts: Dict with keys: to_review, confirmed, skipped, rejected
         current_section: Currently active section
+        user: Current user (None if anonymous)
     """
     def nav_item(href: str, icon: str, label: str, count: int, section_key: str, color: str):
         """Single navigation item with badge."""
@@ -889,7 +915,7 @@ def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
             P("Identity System", cls="text-xs text-slate-400 mt-0.5"),
             cls="px-6 py-5 border-b border-slate-700"
         ),
-        # Upload Button
+        # Upload Button (login required) or Login prompt
         Div(
             A(
                 Svg(
@@ -907,6 +933,10 @@ def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
                 " Upload Photos",
                 href="/upload",
                 cls="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors"
+            ) if user else A(
+                "Sign in to upload",
+                href="/login",
+                cls="flex items-center justify-center w-full px-4 py-2.5 border border-slate-600 text-slate-400 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors"
             ),
             cls="px-4 py-4"
         ),
@@ -943,13 +973,26 @@ def sidebar(counts: dict, current_section: str = "to_review") -> Aside:
             ),
             cls="flex-1 px-3 py-2 space-y-1 overflow-y-auto"
         ),
-        # Footer with stats
+        # Footer with user info and stats
         Div(
+            # User info / auth link
+            Div(
+                Div(
+                    Span(user.email, cls="text-xs text-slate-400 truncate"),
+                    Span(" (admin)" if user.is_admin else "", cls="text-xs text-indigo-400"),
+                    cls="flex items-center gap-1"
+                ),
+                A("Sign out", href="/logout", cls="text-xs text-slate-500 hover:text-slate-300 underline"),
+                cls="flex items-center justify-between mb-2"
+            ) if user else Div(
+                A("Sign in", href="/login", cls="text-xs text-slate-400 hover:text-slate-300 underline"),
+                cls="mb-2"
+            ),
             Div(
                 f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed']} identified",
                 cls="text-xs text-slate-500 font-data"
             ),
-            Div("v0.4.0", cls="text-xs text-slate-600 mt-1"),
+            Div("v0.6.0", cls="text-xs text-slate-600 mt-1"),
             cls="px-4 py-3 border-t border-slate-700"
         ),
         cls="fixed left-0 top-0 h-screen w-64 bg-slate-800 border-r border-slate-700 flex flex-col z-40"
@@ -990,10 +1033,10 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
     )
 
 
-def identity_card_expanded(identity: dict, crop_files: set) -> Div:
+def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = True) -> Div:
     """
     Expanded identity card for Focus Mode review.
-    Shows larger thumbnail and prominent actions.
+    Shows larger thumbnail and prominent actions (admin only).
     """
     identity_id = identity["identity_id"]
     raw_name = ensure_utf8_display(identity.get("name"))
@@ -1049,48 +1092,61 @@ def identity_card_expanded(identity: dict, crop_files: set) -> Div:
                     )
                 )
 
-    # Action buttons - append ?from_focus=true so endpoints return next focus card
-    base_confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
-    base_reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
-    confirm_url = f"{base_confirm_url}?from_focus=true"
-    reject_url = f"{base_reject_url}?from_focus=true"
-    skip_url = f"/identity/{identity_id}/skip?from_focus=true"
+    # Action buttons - only for admins
+    if is_admin:
+        base_confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
+        base_reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
+        confirm_url = f"{base_confirm_url}?from_focus=true"
+        reject_url = f"{base_reject_url}?from_focus=true"
+        skip_url = f"/identity/{identity_id}/skip?from_focus=true"
 
-    actions = Div(
-        Button(
-            "✓ Confirm",
-            cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors",
-            hx_post=confirm_url,
-            hx_target="#focus-card",
-            hx_swap="outerHTML",
-            type="button",
-        ),
-        Button(
-            "⏸ Skip",
-            cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors",
-            hx_post=skip_url,
-            hx_target="#focus-card",
-            hx_swap="outerHTML",
-            type="button",
-        ),
-        Button(
-            "✗ Reject",
-            cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors",
-            hx_post=reject_url,
-            hx_target="#focus-card",
-            hx_swap="outerHTML",
-            type="button",
-        ),
-        Button(
-            "Find Similar",
-            cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors ml-auto",
-            hx_get=f"/api/identity/{identity_id}/neighbors",
-            hx_target=f"#neighbors-{identity_id}",
-            hx_swap="innerHTML",
-            type="button",
-        ),
-        cls="flex items-center gap-3 mt-6"
-    )
+        actions = Div(
+            Button(
+                "✓ Confirm",
+                cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors",
+                hx_post=confirm_url,
+                hx_target="#focus-card",
+                hx_swap="outerHTML",
+                type="button",
+            ),
+            Button(
+                "⏸ Skip",
+                cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors",
+                hx_post=skip_url,
+                hx_target="#focus-card",
+                hx_swap="outerHTML",
+                type="button",
+            ),
+            Button(
+                "✗ Reject",
+                cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors",
+                hx_post=reject_url,
+                hx_target="#focus-card",
+                hx_swap="outerHTML",
+                type="button",
+            ),
+            Button(
+                "Find Similar",
+                cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors ml-auto",
+                hx_get=f"/api/identity/{identity_id}/neighbors",
+                hx_target=f"#neighbors-{identity_id}",
+                hx_swap="innerHTML",
+                type="button",
+            ),
+            cls="flex items-center gap-3 mt-6"
+        )
+    else:
+        actions = Div(
+            Button(
+                "Find Similar",
+                cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors",
+                hx_get=f"/api/identity/{identity_id}/neighbors",
+                hx_target=f"#neighbors-{identity_id}",
+                hx_swap="innerHTML",
+                type="button",
+            ),
+            cls="flex items-center gap-3 mt-6"
+        )
 
     return Div(
         Div(
@@ -1188,7 +1244,8 @@ def render_to_review_section(
     crop_files: set,
     view_mode: str,
     counts: dict,
-    current_id: str = None
+    current_id: str = None,
+    is_admin: bool = True,
 ) -> Div:
     """Render the To Review section with Focus or Browse mode."""
 
@@ -1223,7 +1280,7 @@ def render_to_review_section(
         if high_confidence:
             # Show one item expanded + queue preview
             content = Div(
-                identity_card_expanded(high_confidence[0], crop_files),
+                identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
                 # Queue Preview
                 Div(
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
@@ -1254,7 +1311,7 @@ def render_to_review_section(
     else:
         # Browse mode - show grid
         cards = [
-            identity_card(identity, crop_files, lane_color="blue", show_actions=True)
+            identity_card(identity, crop_files, lane_color="blue", show_actions=True, is_admin=is_admin)
             for identity in to_review
         ]
         cards = [c for c in cards if c]  # Filter None
@@ -1279,10 +1336,10 @@ def render_to_review_section(
     )
 
 
-def render_confirmed_section(confirmed: list, crop_files: set, counts: dict) -> Div:
+def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
     """Render the Confirmed section."""
     cards = [
-        identity_card(identity, crop_files, lane_color="emerald", show_actions=False)
+        identity_card(identity, crop_files, lane_color="emerald", show_actions=False, is_admin=is_admin)
         for identity in confirmed
     ]
     cards = [c for c in cards if c]
@@ -1302,10 +1359,10 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict) -> 
     )
 
 
-def render_skipped_section(skipped: list, crop_files: set, counts: dict) -> Div:
+def render_skipped_section(skipped: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
     """Render the Skipped section."""
     cards = [
-        identity_card(identity, crop_files, lane_color="stone", show_actions=False)
+        identity_card(identity, crop_files, lane_color="stone", show_actions=False, is_admin=is_admin)
         for identity in skipped
     ]
     cards = [c for c in cards if c]
@@ -1325,10 +1382,10 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict) -> Div:
     )
 
 
-def render_rejected_section(dismissed: list, crop_files: set, counts: dict) -> Div:
+def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
     """Render the Rejected/Dismissed section."""
     cards = [
-        identity_card(identity, crop_files, lane_color="rose", show_actions=False)
+        identity_card(identity, crop_files, lane_color="rose", show_actions=False, is_admin=is_admin)
         for identity in dismissed
     ]
     cards = [c for c in cards if c]
@@ -1693,16 +1750,14 @@ def inbox_badge(count: int) -> A:
     )
 
 
-def review_action_buttons(identity_id: str, state: str) -> Div:
+def review_action_buttons(identity_id: str, state: str, is_admin: bool = True) -> Div:
     """
     Unified action buttons based on identity state.
-
-    Button visibility by state:
-    - INBOX/PROPOSED: Confirm, Skip, Reject
-    - CONFIRMED: Reset only
-    - SKIPPED: Confirm, Reject, Reset
-    - REJECTED/CONTESTED: Reset only
+    Only rendered for admin users.
     """
+    if not is_admin:
+        return Div()  # No buttons for non-admins
+
     buttons = []
 
     # Confirm button - available for reviewable and skipped states
@@ -2061,24 +2116,25 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
                Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected, cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
 
-def name_display(identity_id: str, name: str) -> Div:
+def name_display(identity_id: str, name: str, is_admin: bool = True) -> Div:
     """
-    Identity name display with edit button.
+    Identity name display with edit button (admin only).
     Returns the name header component that can be swapped for inline editing.
     """
     # UI BOUNDARY: sanitize name for safe rendering
     safe_name = ensure_utf8_display(name)
     display_name = safe_name or f"Identity {identity_id[:8]}..."
+    edit_btn = Button(
+        "Edit",
+        hx_get=f"/api/identity/{identity_id}/rename-form",
+        hx_target=f"#name-{identity_id}",
+        hx_swap="outerHTML",
+        cls="ml-2 text-xs text-slate-400 hover:text-slate-300 underline",
+        type="button",
+    ) if is_admin else None
     return Div(
         H3(display_name, cls="text-lg font-serif font-bold text-white"),
-        Button(
-            "Edit",
-            hx_get=f"/api/identity/{identity_id}/rename-form",
-            hx_target=f"#name-{identity_id}",
-            hx_swap="outerHTML",
-            cls="ml-2 text-xs text-slate-400 hover:text-slate-300 underline",
-            type="button",
-        ),
+        edit_btn,
         id=f"name-{identity_id}",
         cls="flex items-center"
     )
@@ -2089,10 +2145,12 @@ def identity_card(
     crop_files: set,
     lane_color: str = "stone",
     show_actions: bool = False,
+    is_admin: bool = True,
 ) -> Div:
     """
     Identity group card showing all faces (anchors + candidates).
     UX Intent: Group context with individual face visibility.
+    Action buttons only shown for admin users.
     """
     identity_id = identity["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
@@ -2103,8 +2161,8 @@ def identity_card(
     # Combine anchors (confirmed) and candidates (proposed) for display
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
 
-    # Show detach button only if identity has more than one face
-    can_detach = len(all_face_ids) > 1
+    # Show detach button only if identity has more than one face AND user is admin
+    can_detach = len(all_face_ids) > 1 and is_admin
 
     # Build face cards for each face
     face_cards = []
@@ -2191,7 +2249,7 @@ def identity_card(
         # Header with name, state, and controls
         Div(
             Div(
-                name_display(identity_id, identity.get("name")),
+                name_display(identity_id, identity.get("name"), is_admin=is_admin),
                 state_badge(state),
                 Span(
                     f"{len(face_cards)} face{'s' if len(face_cards) != 1 else ''}",
@@ -2212,8 +2270,8 @@ def identity_card(
             cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
             id=f"faces-{identity_id}",
         ),
-        # Action buttons based on state (always shown with state-appropriate buttons)
-        review_action_buttons(identity_id, state),
+        # Action buttons based on state (admin only)
+        review_action_buttons(identity_id, state, is_admin=is_admin),
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
         cls=f"identity-card bg-slate-800 border border-slate-700 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-lg mb-4",
@@ -2350,17 +2408,14 @@ def health():
 
 @rt("/")
 def get(section: str = "to_review", view: str = "focus", current: str = None,
-        filter_source: str = "", sort_by: str = "newest"):
+        filter_source: str = "", sort_by: str = "newest", sess=None):
     """
     Command Center: Sidebar-based navigation with focused review.
-
-    Args:
-        section: Which section to display (to_review, confirmed, skipped, rejected, photos)
-        view: View mode for to_review section (focus or browse)
-        current: Optional identity_id to show in focus mode (for Up Next clicks)
-        filter_source: Collection/source to filter photos by (photos section only)
-        sort_by: Sort order for photos (newest, oldest, most_faces, collection)
+    Public access — anyone can view. Action buttons shown only to admins.
     """
+    user = get_current_user(sess or {})
+    user_is_admin = user.is_admin if user else False
+
     registry = load_registry()
     crop_files = get_crop_files()
 
@@ -2406,15 +2461,15 @@ def get(section: str = "to_review", view: str = "focus", current: str = None,
 
     # Render the appropriate section
     if section == "to_review":
-        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current)
+        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current, is_admin=user_is_admin)
     elif section == "confirmed":
-        main_content = render_confirmed_section(confirmed_list, crop_files, counts)
+        main_content = render_confirmed_section(confirmed_list, crop_files, counts, is_admin=user_is_admin)
     elif section == "skipped":
-        main_content = render_skipped_section(skipped_list, crop_files, counts)
+        main_content = render_skipped_section(skipped_list, crop_files, counts, is_admin=user_is_admin)
     elif section == "photos":
         main_content = render_photos_section(counts, registry, crop_files, filter_source, sort_by)
     else:  # rejected
-        main_content = render_rejected_section(dismissed, crop_files, counts)
+        main_content = render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin)
 
     style = Style("""
         html, body {
@@ -2466,7 +2521,7 @@ def get(section: str = "to_review", view: str = "focus", current: str = None,
         # Toast container for notifications
         toast_container(),
         # Sidebar (fixed)
-        sidebar(counts, section),
+        sidebar(counts, section, user=user),
         # Main content (offset for sidebar)
         Main(
             Div(
@@ -2482,16 +2537,14 @@ def get(section: str = "to_review", view: str = "focus", current: str = None,
 
 
 @rt("/confirm/{identity_id}")
-def post(identity_id: str, from_focus: bool = False):
+def post(identity_id: str, from_focus: bool = False, sess=None):
     """
     Confirm an identity (move from PROPOSED to CONFIRMED).
-
-    Returns:
-        200: Updated identity card (or next focus card if from_focus=true)
-        404: Identity not found
-        409: Variance explosion (would corrupt fusion)
-        423: Lock contention
+    Requires admin.
     """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -2542,15 +2595,11 @@ def post(identity_id: str, from_focus: bool = False):
 
 
 @rt("/reject/{identity_id}")
-def post(identity_id: str, from_focus: bool = False):
-    """
-    Contest/reject an identity (move to CONTESTED).
-
-    Returns:
-        200: Updated identity card (or next focus card if from_focus=true)
-        404: Identity not found
-        423: Lock contention
-    """
+def post(identity_id: str, from_focus: bool = False, sess=None):
+    """Contest/reject an identity (move to CONTESTED). Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -3100,18 +3149,13 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{source_id}/reject/{target_id}")
-def post(source_id: str, target_id: str):
+def post(source_id: str, target_id: str, sess=None):
     """
-    Record that two identities are NOT the same person (D2, D4).
-
-    This is the "Not Same Person" action from Find Similar mode.
-    The rejected identity will no longer appear in Find Similar results.
-
-    Returns:
-        200: Success with empty div (triggers HTMX removal) + toast
-        404: Identity not found
-        423: Lock contention
+    Record that two identities are NOT the same person (D2, D4). Requires admin.
     """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -3152,18 +3196,11 @@ def post(source_id: str, target_id: str):
 
 
 @rt("/api/identity/{source_id}/unreject/{target_id}")
-def post(source_id: str, target_id: str):
-    """
-    Undo "Not Same Person" rejection (D5).
-
-    This reverses a previous reject_identity_pair, allowing the target
-    identity to reappear in Find Similar results.
-
-    Returns:
-        200: Success toast
-        404: Identity not found
-        423: Lock contention
-    """
+def post(source_id: str, target_id: str, sess=None):
+    """Undo "Not Same Person" rejection (D5). Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -3205,21 +3242,18 @@ def post(source_id: str, target_id: str):
 
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
-def post(target_id: str, source_id: str, source: str = "web"):
+def post(target_id: str, source_id: str, source: str = "web", sess=None):
     """
-    Merge source identity into target identity.
+    Merge source identity into target identity. Requires admin.
 
     Args:
         target_id: Identity to merge into
         source_id: Identity to be absorbed
         source: Origin of merge request ("web" or "manual_search")
-
-    Returns:
-        200: Success with updated identity card
-        404: Identity not found
-        409: Merge blocked (co-occurrence or already merged)
-        423: Lock contention
     """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -3410,19 +3444,11 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{identity_id}/rename")
-def post(identity_id: str, name: str = ""):
-    """
-    Rename an identity.
-
-    Form fields:
-    - name: New name (required, max 100 chars)
-
-    Returns:
-        200: Updated name display component
-        400: Empty name after stripping
-        404: Identity not found
-        423: Lock contention
-    """
+def post(identity_id: str, name: str = "", sess=None):
+    """Rename an identity. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -3478,16 +3504,11 @@ def post(identity_id: str, name: str = ""):
 # =============================================================================
 
 @rt("/api/face/{face_id:path}/detach")
-def post(face_id: str):
-    """
-    Detach a face from its identity into a new identity.
-
-    Returns:
-        200: OOB delete of face card + success toast
-        404: Face or identity not found
-        409: Cannot detach (only face in identity)
-        423: Lock contention
-    """
+def post(face_id: str, sess=None):
+    """Detach a face from its identity into a new identity. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -3581,10 +3602,11 @@ def post(face_id: str):
 
 # --- INSTRUMENTATION SKIP ENDPOINT ---
 @rt("/api/identity/{id}/skip")
-def post(id: str):
-    """
-    Log the skip action (which is otherwise UI-only).
-    """
+def post(id: str, sess=None):
+    """Log the skip action. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     get_event_recorder().record("SKIP", {"identity_id": id})
     # No return needed as this is fire-and-forget for logging
     # The UI handles the DOM move client-side
@@ -3597,12 +3619,13 @@ def post(id: str):
 # =============================================================================
 
 @rt("/upload")
-def get():
+def get(sess=None):
     """
-    Render the upload page.
-
-    This is the target of the sidebar "Upload Photos" link.
+    Render the upload page. Requires login when auth is enabled.
     """
+    user = get_current_user(sess or {})
+    if is_auth_enabled() and not user:
+        return RedirectResponse("/login", status_code=303)
     style = Style("""
         html, body {
             height: 100%;
@@ -3653,7 +3676,7 @@ def get():
 
     return Title("Upload Photos - Rhodesli"), style, Div(
         toast_container(),
-        sidebar(counts, current_section=None),  # No section selected
+        sidebar(counts, current_section=None, user=user),
         Main(
             Div(
                 # Header
@@ -3673,9 +3696,10 @@ def get():
 
 
 @rt("/upload")
-async def post(files: list[UploadFile], source: str = ""):
+async def post(files: list[UploadFile], source: str = "", sess=None):
     """
     Accept file upload(s) and optionally spawn subprocess for processing.
+    Requires login.
 
     Handles multiple files (images and/or ZIPs) in a single batch job.
     All files are saved to a job directory.
@@ -3696,6 +3720,10 @@ async def post(files: list[UploadFile], source: str = ""):
 
     Returns HTML partial with upload status.
     """
+    denied = _check_login(sess)
+    if denied:
+        return denied
+
     import json
     import uuid
     from datetime import datetime, timezone
@@ -3960,12 +3988,11 @@ def get(job_id: str):
 
 
 @rt("/inbox/{identity_id}/review")
-def post(identity_id: str):
-    """
-    Move identity from INBOX to PROPOSED state.
-
-    Returns updated identity card in proposed lane.
-    """
+def post(identity_id: str, sess=None):
+    """Move identity from INBOX to PROPOSED state. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -4005,12 +4032,11 @@ def post(identity_id: str):
 
 
 @rt("/inbox/{identity_id}/confirm")
-def post(identity_id: str, from_focus: bool = False):
-    """
-    Confirm identity from INBOX state (INBOX → CONFIRMED).
-
-    Returns updated identity card in confirmed lane, or next focus card if from_focus=true.
-    """
+def post(identity_id: str, from_focus: bool = False, sess=None):
+    """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -4057,12 +4083,11 @@ def post(identity_id: str, from_focus: bool = False):
 
 
 @rt("/inbox/{identity_id}/reject")
-def post(identity_id: str, from_focus: bool = False):
-    """
-    Reject identity from INBOX state (INBOX → REJECTED).
-
-    Returns updated identity card with REJECTED state, or next focus card if from_focus=true.
-    """
+def post(identity_id: str, from_focus: bool = False, sess=None):
+    """Reject identity from INBOX state (INBOX -> REJECTED). Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -4109,13 +4134,15 @@ def post(identity_id: str, from_focus: bool = False):
 
 
 @rt("/identity/{identity_id}/skip")
-def post(identity_id: str, from_focus: bool = False):
+def post(identity_id: str, from_focus: bool = False, sess=None):
     """
-    Skip identity (defer for later review).
+    Skip identity (defer for later review). Requires admin.
 
-    Works from INBOX or PROPOSED state → SKIPPED.
-    Returns updated identity card in skipped lane, or next focus card if from_focus=true.
+    Works from INBOX or PROPOSED state -> SKIPPED.
     """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -4161,13 +4188,11 @@ def post(identity_id: str, from_focus: bool = False):
 
 
 @rt("/identity/{identity_id}/reset")
-def post(identity_id: str):
-    """
-    Reset identity back to Inbox.
-
-    Works from any terminal state (CONFIRMED, SKIPPED, REJECTED, CONTESTED) → INBOX.
-    Returns updated identity card in Inbox lane with action buttons.
-    """
+def post(identity_id: str, sess=None):
+    """Reset identity back to Inbox. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     try:
         registry = load_registry()
     except Exception:
@@ -4256,9 +4281,9 @@ def get(sess):
 
 
 @rt("/login")
-def post(email: str, password: str, sess):
+async def post(email: str, password: str, sess):
     """Handle login form submission."""
-    user, error = login_user(email, password)
+    user, error = await login_with_supabase(email, password)
     if error:
         return Html(
             Head(Title("Login - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
@@ -4339,9 +4364,13 @@ def get(sess):
 
 
 @rt("/signup")
-def post(email: str, password: str, invite_code: str, sess):
+async def post(email: str, password: str, invite_code: str, sess):
     """Handle signup form submission."""
-    user, error = signup_user(email, password, invite_code)
+    if not validate_invite_code(invite_code):
+        error = "Invalid invite code"
+        user = None
+    else:
+        user, error = await signup_with_supabase(email, password)
     if error:
         return Html(
             Head(Title("Sign Up - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
@@ -4374,11 +4403,8 @@ def post(email: str, password: str, invite_code: str, sess):
 
 @rt("/logout")
 def get(sess):
-    """Log out and redirect to login."""
-    logout_user()
+    """Log out and redirect to home."""
     sess.clear()
-    if is_auth_enabled():
-        return RedirectResponse('/login', status_code=303)
     return RedirectResponse('/', status_code=303)
 
 

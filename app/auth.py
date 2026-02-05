@@ -1,20 +1,26 @@
 """
-Authentication module using Supabase.
+Authentication module with role-based permissions.
 
-Implements invite-only signup with session management.
+Permission levels:
+- Public: Can view everything (no login required)
+- User: Can view + upload photos (login required)
+- Admin: Can view + upload + edit/confirm/detach (admin flag required)
+
 When SUPABASE_URL is not set, auth is disabled and all routes are accessible.
 """
 
 import os
+from dataclasses import dataclass
+from functools import wraps
 
 # Auth configuration from environment
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY", "")
-SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-secret-change-in-production")
 INVITE_CODES = [c.strip() for c in os.getenv("INVITE_CODES", "").split(",") if c.strip()]
 
-_supabase_client = None
+# Admin emails — users with these emails get admin privileges
+ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
 
 
 def is_auth_enabled() -> bool:
@@ -22,72 +28,128 @@ def is_auth_enabled() -> bool:
     return bool(SUPABASE_URL and SUPABASE_ANON_KEY)
 
 
-def get_supabase():
-    """Get the Supabase client (lazy initialization)."""
-    global _supabase_client
-    if not is_auth_enabled():
-        return None
-    if _supabase_client is None:
-        from supabase import create_client
-        _supabase_client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
-    return _supabase_client
+@dataclass
+class User:
+    id: str
+    email: str
+    is_admin: bool = False
+
+    @classmethod
+    def from_session(cls, session_data: dict) -> "User | None":
+        if not session_data:
+            return None
+        email = session_data.get("email", "")
+        return cls(
+            id=session_data.get("id", ""),
+            email=email,
+            is_admin=email.lower() in ADMIN_EMAILS,
+        )
 
 
-def login_user(email: str, password: str) -> tuple[dict | None, str | None]:
-    """
-    Attempt to log in a user.
-    Returns (user_data, error_message).
-    """
-    client = get_supabase()
-    if not client:
+def get_current_user(session: dict) -> User | None:
+    """Get the current user from session, or None if not logged in."""
+    user_data = session.get("auth")
+    return User.from_session(user_data) if user_data else None
+
+
+def is_admin(session: dict) -> bool:
+    """Check if current user is an admin."""
+    user = get_current_user(session)
+    return user is not None and user.is_admin
+
+
+def require_login(func):
+    """Decorator: requires any logged-in user. Returns 303 redirect to /login."""
+    @wraps(func)
+    def wrapper(*args, sess, **kwargs):
+        if not get_current_user(sess):
+            from starlette.responses import RedirectResponse
+            return RedirectResponse("/login", status_code=303)
+        return func(*args, sess=sess, **kwargs)
+    return wrapper
+
+
+def require_admin(func):
+    """Decorator: requires admin user. Returns 403 for non-admins, 303 redirect for anonymous."""
+    @wraps(func)
+    def wrapper(*args, sess, **kwargs):
+        user = get_current_user(sess)
+        if not user:
+            from starlette.responses import RedirectResponse
+            return RedirectResponse("/login", status_code=303)
+        if not user.is_admin:
+            from starlette.responses import Response
+            return Response("Forbidden", status_code=403)
+        return func(*args, sess=sess, **kwargs)
+    return wrapper
+
+
+def validate_invite_code(code: str) -> bool:
+    """Check if invite code is valid."""
+    return code.strip() in INVITE_CODES
+
+
+async def signup_with_supabase(email: str, password: str) -> tuple[dict | None, str | None]:
+    """Create a new user in Supabase via direct HTTP."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
         return None, "Authentication not configured"
 
+    import httpx
+
     try:
-        response = client.auth.sign_in_with_password({
-            "email": email,
-            "password": password
-        })
-        return {"email": response.user.email, "id": response.user.id}, None
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{SUPABASE_URL}/auth/v1/signup",
+                json={"email": email, "password": password},
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                user = data.get("user", {})
+                return {
+                    "id": user.get("id"),
+                    "email": user.get("email"),
+                }, None
+            else:
+                error_data = response.json()
+                msg = error_data.get("error_description") or error_data.get("msg") or "Signup failed"
+                return None, msg
     except Exception as e:
-        return None, str(e)
+        return None, f"Connection error: {e}"
 
 
-def signup_user(email: str, password: str, invite_code: str) -> tuple[dict | None, str | None]:
-    """
-    Register a new user (invite-only).
-    Returns (user_data, error_message).
-    """
-    if not INVITE_CODES:
-        return None, "No invite codes configured"
-    if invite_code not in INVITE_CODES:
-        return None, "Invalid invite code"
-
-    client = get_supabase()
-    if not client:
+async def login_with_supabase(email: str, password: str) -> tuple[dict | None, str | None]:
+    """Authenticate user with Supabase via direct HTTP."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
         return None, "Authentication not configured"
 
+    import httpx
+
     try:
-        response = client.auth.sign_up({
-            "email": email,
-            "password": password
-        })
-        return {"email": response.user.email, "id": response.user.id}, None
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{SUPABASE_URL}/auth/v1/token?grant_type=password",
+                json={"email": email, "password": password},
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                user = data.get("user", {})
+                return {
+                    "id": user.get("id"),
+                    "email": user.get("email"),
+                }, None
+            else:
+                error_data = response.json()
+                msg = error_data.get("error_description") or error_data.get("msg") or "Login failed"
+                return None, msg
     except Exception as e:
-        return None, str(e)
-
-
-def logout_user():
-    """Sign out the current user from Supabase."""
-    client = get_supabase()
-    if client:
-        try:
-            client.auth.sign_out()
-        except Exception:
-            pass
-
-
-# Routes that don't require authentication
-AUTH_SKIP_ROUTES = [
-    "/login", "/signup", "/logout", "/health",
-    "/static", "/favicon.ico",
-]
+        return None, f"Connection error: {e}"

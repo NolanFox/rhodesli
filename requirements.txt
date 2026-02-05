@@ -5,4 +5,4 @@ scipy
 portalocker
 Pillow
 boto3
-supabase>=2.0.0
+httpx>=0.24.0
