@@ -38,24 +38,24 @@ class TestLoginPageOAuthButtons:
 
 
 class TestGlobalScripts:
-    """Main layout should include required global JavaScript handlers."""
+    """Workstation layout should include required global JavaScript handlers."""
 
     def test_error_hash_handler_present(self, client):
-        """Main page includes the error hash fragment handler script."""
-        response = client.get("/")
+        """Workstation page includes the error hash fragment handler script."""
+        response = client.get("/?section=to_review")
         # Check for key markers of the error hash handler
         assert "error_code" in response.text or "errorCode" in response.text
         assert "otp_expired" in response.text
 
     def test_login_modal_handler_present(self, client):
-        """Main page includes the HTMX 401 → login modal handler."""
-        response = client.get("/")
+        """Workstation page includes the HTMX 401 → login modal handler."""
+        response = client.get("/?section=to_review")
         assert "htmx:beforeSwap" in response.text
         assert "login-modal" in response.text
 
     def test_confirm_dialog_handler_present(self, client):
-        """Main page includes the styled confirmation dialog handler."""
-        response = client.get("/")
+        """Workstation page includes the styled confirmation dialog handler."""
+        response = client.get("/?section=to_review")
         assert "htmx:confirm" in response.text
         assert "confirm-modal" in response.text
 
@@ -65,7 +65,7 @@ class TestGlobalScripts:
         The app uses a styled htmx:confirm dialog instead.
         Native confirm() breaks the darkroom theme.
         """
-        response = client.get("/")
+        response = client.get("/?section=to_review")
         import re
         # Look for confirm( but not htmx:confirm or confirm-modal
         # This is a heuristic check on the rendered page
@@ -82,42 +82,42 @@ class TestGlobalScripts:
 
 
 class TestLoginModal:
-    """Login modal component should be present on main pages."""
+    """Login modal component should be present on workstation pages."""
 
     def test_login_modal_container_present(self, client):
-        """Main page includes the hidden login modal."""
-        response = client.get("/")
+        """Workstation page includes the hidden login modal."""
+        response = client.get("/?section=to_review")
         assert 'id="login-modal"' in response.text
 
     def test_login_modal_has_form(self, client):
         """Login modal includes email/password form."""
-        response = client.get("/")
+        response = client.get("/?section=to_review")
         # Check for modal form elements
         assert 'id="modal-email"' in response.text or 'name="email"' in response.text
 
     def test_login_modal_posts_to_modal_endpoint(self, client):
         """Login modal form submits to /login/modal (not /login)."""
-        response = client.get("/")
+        response = client.get("/?section=to_review")
         assert "/login/modal" in response.text
 
 
 class TestConfirmModal:
-    """Styled confirmation modal should be present on main pages."""
+    """Styled confirmation modal should be present on workstation pages."""
 
     def test_confirm_modal_container_present(self, client):
-        """Main page includes the hidden confirmation modal."""
-        response = client.get("/")
+        """Workstation page includes the hidden confirmation modal."""
+        response = client.get("/?section=to_review")
         assert 'id="confirm-modal"' in response.text
 
     def test_confirm_modal_has_buttons(self, client):
         """Confirmation modal has Cancel and Confirm buttons."""
-        response = client.get("/")
+        response = client.get("/?section=to_review")
         assert 'id="confirm-modal-yes"' in response.text
         assert 'id="confirm-modal-no"' in response.text
 
     def test_confirm_modal_has_message_target(self, client):
         """Confirmation modal has a message display element."""
-        response = client.get("/")
+        response = client.get("/?section=to_review")
         assert 'id="confirm-modal-message"' in response.text
 
 
@@ -170,17 +170,17 @@ class TestGoogleOAuthBranding:
 
 
 class TestLoginModalOAuthButton:
-    """Login modal (on main page) should also have proper Google button."""
+    """Login modal (on workstation page) should also have proper Google button."""
 
     def test_login_modal_has_google_button(self, client, google_oauth_enabled):
         """Login modal includes Google OAuth button."""
-        response = client.get("/")
-        # The login_modal() function is rendered on the main page
+        response = client.get("/?section=to_review")
+        # The login_modal() function is rendered on the workstation page
         assert "Sign in with Google" in response.text
 
     def test_login_modal_google_button_has_svg(self, client, google_oauth_enabled):
         """Login modal Google button has the SVG logo."""
-        response = client.get("/")
+        response = client.get("/?section=to_review")
         # Should have the Google G SVG somewhere on the page (in the modal)
         assert 'viewBox="0 0 24 24"' in response.text
 

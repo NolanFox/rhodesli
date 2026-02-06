@@ -312,7 +312,7 @@ class TestModalAndScriptInclusion:
 
     def test_hyperscript_is_included(self, test_client):
         """Hyperscript library must be included for modal interactions."""
-        resp = test_client.get("/")
+        resp = test_client.get("/?section=to_review")
         assert resp.status_code == 200
 
         # Hyperscript is required for _="on click..." modal interactions
@@ -321,7 +321,7 @@ class TestModalAndScriptInclusion:
 
     def test_htmx_is_included(self, test_client):
         """HTMX library must be included for dynamic content loading."""
-        resp = test_client.get("/")
+        resp = test_client.get("/?section=to_review")
         assert resp.status_code == 200
 
         assert "htmx" in resp.text.lower(), \
@@ -329,7 +329,7 @@ class TestModalAndScriptInclusion:
 
     def test_photo_modal_has_high_z_index(self, test_client):
         """Photo modal must have z-index above other UI elements."""
-        resp = test_client.get("/")
+        resp = test_client.get("/?section=to_review")
         assert resp.status_code == 200
 
         # Modal should have very high z-index to be above toasts (z-50)
@@ -340,7 +340,7 @@ class TestModalAndScriptInclusion:
 
     def test_modal_backdrop_uses_absolute_positioning(self, test_client):
         """Modal backdrop should use absolute (not fixed) positioning."""
-        resp = test_client.get("/")
+        resp = test_client.get("/?section=to_review")
         assert resp.status_code == 200
 
         # The backdrop should be absolute within the fixed modal container

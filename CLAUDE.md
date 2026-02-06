@@ -1,546 +1,67 @@
-# CLAUDE.md
+# Rhodesli — Family Photo Archive with ML Face Detection
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-## Commands
-
-```bash
-# Run the web server
-python app/main.py
-
-# Install web dependencies only
-pip install -r requirements.txt
-
-# Install full dependencies (including ML/AI for ingestion)
-pip install -r requirements.txt && pip install -r requirements-local.txt
-```
+## Quick Reference
+- Stack: FastHTML, InsightFace/AdaFace, Supabase Auth, Railway, Cloudflare R2
+- Test: `pytest tests/ -v`
+- Deploy: `git push origin main` (Railway auto-deploys)
+- Local dev: `source venv/bin/activate && python app/main.py`
+- Full deps (ML): `pip install -r requirements.txt && pip install -r requirements-local.txt`
 
 ## Architecture
-
-Rhodesli uses a **Hybrid Architecture** separating heavy AI processing from the lightweight web interface:
-
-- **`app/`** - FastHTML web application (lightweight, no ML dependencies)
-- **`core/`** - Heavy AI processing: face detection/recognition with InsightFace, embedding generation
-- **`data/`** - SQLite databases and NumPy embeddings (gitignored)
-- **`notebooks/`** - Experimental research
-
-The flow is: `core/` processes photos → generates embeddings in `data/` → `app/` queries and displays results.
-
-Two separate requirement files exist intentionally: `requirements.txt` for the web server, `requirements-local.txt` for ML/ingestion pipelines.
-
-## Project Rules
-
-**"Truth-Seeker" Constraint**: NO Generative AI. We use AdaFace/InsightFace for forensic matching. We value uncertainty (PFE) over confident matching.
-
-**"Clean Vercel" Constraint**: `app/` must stay separate from `core/`. Heavy libs (torch, insightface, opencv) go in `requirements-local.txt`, NEVER in `requirements.txt`.
-
-**Pathing**: Always use `Path(__file__).resolve().parent` for file paths in code. Data files (JSON in `data/`) must use **relative paths** (e.g., `data/uploads/...`) never absolute paths (e.g., `/Users/.../data/uploads/...`).
-
-## Workflow Rules
-
-### Planning
-- **Plan-then-Execute**: Use Plan Mode (Shift+Tab twice) for all non-trivial tasks. Research and design before writing code.
-- **Task Orchestration**: Use the `/task` system to manage complex builds. Break work into steps smaller than 100 lines of code.
-- **Parallel Sessions**: Use multiple Claude sessions—one for research/exploration, another for building/implementation.
-
-### Git Protocol
-- **Commit Frequency**: Create a new Git commit after EVERY successful sub-task (e.g., after each failing test is made passing).
-- **Commit Messages**: Use conventional commit format: `feat:`, `test:`, `fix:`, `refactor:`, `docs:`, `chore:`, `style:`.
-- **Auto-Commit**: Do not wait for full task completion; prioritize small, incremental saves. Proceed autonomously.
-- **TDD Commits**: Commit failing tests separately (`test: add failing tests...`) before committing implementation (`feat: implement...`).
-- **Styling Commits**: For CSS/styling work, commit after EVERY individual property group (e.g., `style: add typography`, `style: add sepia filters`, `style: add border treatments`). Ultra-granular.
-
-### Session Hygiene
-- **Context Quality**: Run `/compact` every 20-30 minutes of active coding to maintain context quality.
-- **Virtual Environment**: Always run `source venv/bin/activate` when opening a new terminal tab.
-- **Verification**: Run `python core/ingest.py` (with a dry run if possible) to verify data integrity before building UI components.
-
-## Testing & TDD Rules
-
-- **Red-Green-Refactor**: Always write a failing test before implementation. No exceptions.
-- **Green Before Commit**: All tests must pass before committing implementation code.
-- **Test Framework**: Use pytest and httpx for testing.
-- **Test Location**: Tests mirror source files: `core/crop_faces.py` → `tests/test_crop.py`.
-- **Run Tests**: `pytest tests/` from project root.
-
-## Testing Requirements
-
-### Rule: Every change gets tests
-When modifying or adding features, ALWAYS write or update tests that cover:
-1. **The happy path** — the feature works as intended
-2. **The failure mode** — what happens when it breaks (wrong auth, missing data, etc.)
-3. **The regression case** — a test that would have caught the bug that prompted this change
-
-### Rule: Permission changes get permission tests
-Any change to routes, auth checks, or permission logic MUST include:
-- Test that public routes remain public
-- Test that protected routes reject unauthenticated users (return 401 for HTMX, redirect for browser)
-- Test that admin-only routes reject non-admin users
-- Test that admin routes work for admin users
-
-### Rule: UI changes get content tests
-Any change to templates, login pages, or client-side JS MUST include:
-- Test that expected elements are present in rendered HTML
-- Test that removed elements are NOT present (e.g., disabled OAuth buttons)
-- Test that required scripts are included in the page
-
-### Rule: Test before declaring done
-Before marking any task complete:
-1. Run `pytest tests/ -v` — all tests must pass
-2. If the change is deployed, run production verification checks via curl
-3. Never skip writing tests because "it's a small change" — small changes cause regressions
-
-### Test patterns
-- Use shared fixtures from `tests/conftest.py` for auth states: `auth_enabled`, `auth_disabled`, `no_user`, `regular_user`, `admin_user`, `google_oauth_enabled`
-- Use HTMX headers (`HX-Request: true`) when testing HTMX endpoints
-- Test both the response code AND the response content where relevant
-- Permission tests should use a matrix: [route] x [auth_state] -> [expected_status]
-- Mock `app.main.is_auth_enabled` and `app.main.get_current_user` to control auth state in tests
-
-## Data Safety Rules
-
-### NEVER modify these files directly:
-- `data/identities.json`
-- `data/photo_index.json`
-- `data/embeddings.npy`
-- Any file in `data/` directory
-
-### When testing:
-- ALWAYS use test fixtures, not production data
-- NEVER run tests without proper isolation
-- Test files should use `tmp_path` or `tempfile` fixtures
-- If a test needs data, create mock data in the test
-
-### When writing scripts:
-- ALWAYS include `--dry-run` as the default mode
-- ALWAYS require explicit `--execute` or `--force` flag to make changes
-- ALWAYS print what WOULD change before changing it
-
-### When debugging:
-- Use READ-ONLY inspection (cat, grep, python print statements)
-- NEVER "fix" data by editing JSON files directly
-- If data is corrupt, write a migration script with --dry-run
-
-### Forbidden patterns:
-```python
-# NEVER do this:
-with open("data/identities.json", "w") as f:
-    json.dump(modified_data, f)
-
-# Instead, if data migration is needed:
-# 1. Create a script in scripts/
-# 2. Add --dry-run flag
-# 3. Get user approval before --execute
-```
-
-### Test Isolation
-All tests MUST be isolated from production data:
-```python
-# GOOD - Uses fixture
-def test_something(tmp_path):
-    test_data = tmp_path / "identities.json"
-    test_data.write_text('{"identities": {}}')
-    # ... test with test_data
-
-# BAD - Uses production data
-def test_something():
-    with open("data/identities.json") as f:  # NEVER DO THIS
-        data = json.load(f)
-```
-
-### Before Adding Any Test
-Ask: "Does this test touch real data in data/?"
-If yes: Rewrite to use fixtures.
-
-## Code Patterns
-
-### Import Hygiene (Critical for Testability)
-In `core/` modules, **defer heavy imports** (cv2, numpy, torch, insightface) inside functions that use them. This allows pure helper functions to be unit tested without ML dependencies installed.
-
-```python
-# GOOD: Pure functions can be tested without cv2
-def add_padding(bbox, image_shape, padding=0.10):
-    ...
-
-def main():
-    import cv2  # Deferred import
-    import numpy as np
-    ...
-
-# BAD: Module-level import breaks tests
-import cv2  # Tests fail if cv2 not installed
-```
-
-### Path Resolution
-Always use `Path(__file__).resolve().parent` for file paths to ensure portability.
-
-## Documentation Rules
-
-### After Any Feature Change
-Update these files if affected:
-- `docs/MANUAL_TEST_CHECKLIST.md` - Add test cases for new features
-- `README.md` - Update if user-facing behavior changes
-
-### After Any Bug Fix
-- Add the bug to the "Known Bug Locations" table in `docs/MANUAL_TEST_CHECKLIST.md`
-- Mark as fixed once verified
-
-### Checklist Maintenance
-
-#### After Adding a Feature
-1. Add test cases to `docs/MANUAL_TEST_CHECKLIST.md` under appropriate section
-2. If it's a new flow, add a new section
-
-#### After Fixing a Bug
-1. Update the "Known Bug Locations" table in the checklist
-2. Mark as `[x] Fixed` with date
-3. Add a regression test case if applicable
-
-#### After Changing a Flow
-1. Update the relevant checklist section
-2. Remove obsolete test cases
-3. Add new test cases
-
-#### Checklist Review Trigger
-If any of these files change significantly, review the checklist:
-- `app/main.py` (UI routes)
-- `core/ingest_inbox.py` (upload flow)
-- `templates/*.html` (UI changes)
-
-## ADDITIONAL AGENT CONSTRAINTS (2026-02)
-
-### SENIOR ENGINEER PROTOCOL
-1. **Assumption Surfacing:** Explicitly state assumptions before coding or refactoring.
-2. **Confusion Management:** If requirements conflict or are ambiguous, STOP and ask for clarification.
-3. **Simplicity Enforcement:** Prefer the simplest solution that satisfies constraints; reject over-engineering.
-
-### FORENSIC INVARIANTS (LOCKED)
-These invariants are constitutional and override all other agent instructions.
-They may ONLY be changed by explicit user instruction.
-
-1. **Immutable Embeddings:** PFE vectors and derived embeddings in `data/` are read-only for UI and workflow tasks.
-2. **Reversible Merges:** All identity merges must be reversible; no destructive operations.
-3. **No Silent Math:** `core/neighbors.py` algorithmic logic is FROZEN. Changes require an explicit evaluation plan.
-4. **Conservation of Mass:** The UI must never delete a face; only detach, reject, or hide with recovery.
-5. **Human Authority:** `provenance="human"` decisions override `provenance="model"` in all conflicts.
-
-Any potential violation of these invariants must be surfaced immediately.
-
-## DATA PERSISTENCE INVARIANTS
-
-When introducing any new data directory or file output:
-1. **Git Hygiene:** Immediately add the path to `.gitignore`.
-2. **Deployment Safety:** Ensure the code checks for existence and creates the directory (`makedirs(exist_ok=True)`) on startup in `app/main.py:startup_event()`. Never assume an ignored directory exists.
-3. **Module Execution:** Always invoke scripts as modules (`python -m package.script`) to ensure correct path resolution.
-
-## External Service CLIs & APIs
-
-### Supabase Management API
-- Endpoint: `https://api.supabase.com/v1/projects/{PROJECT_REF}/config/auth`
-- Auth: Bearer token (personal access token from Dashboard → Account → Access Tokens)
-- Can configure: email templates, OAuth providers, auth settings
-- Key fields: `mailer_templates_*_content`, `mailer_subjects_*`, `external_google_*`, `external_facebook_*`
-- Get API keys: `GET /v1/projects/{ref}/api-keys` — use `type: "legacy"`, `name: "anon"` for auth API
-- Always try this before declaring Supabase config as "manual"
-
-### Railway CLI
-- `railway variables set KEY=VALUE` — set env vars
-- `railway variables` / `railway variables --json` — list env vars
-- `railway logs --tail N` — view logs
-- Always use CLI for env var changes, never ask user to do it manually
-
-### Supabase API Key Types (IMPORTANT)
-- **Legacy JWT key** (`eyJ...`): Required by Supabase Auth REST API (`/auth/v1/*`)
-- **New publishable key** (`sb_publishable_...`): For Supabase client SDK only
-- **Always set `SUPABASE_ANON_KEY` to the legacy JWT key** in Railway/production
-
-### General Rule
-Before marking any task as "Manual Setup Required", check:
-1. Does the service have a CLI tool? (railway, supabase, wrangler, gcloud)
-2. Does the service have a Management/Admin API?
-3. Can it be done via curl?
-Only mark as manual if all three are unavailable.
-
-## Pre-Deployment Checklist
-
-Before any deployment or containerization work, audit data files for environment-specific values:
-
-```bash
-# Check for absolute paths
-grep -rn "/Users/\|/home/" data/ --include="*.json"
-
-# Check for hardcoded hostnames
-grep -rn "localhost\|127\.0\.0\.1" data/ --include="*.json"
-
-# Check for case-sensitivity issues (Mac → Linux)
-# Look for files that differ only by case
-find raw_photos/ -type f | sort -f | uniq -di
-```
-
-Any value that assumes a specific machine, OS, or filesystem should be flagged.
-
-## Gitignore vs Dockerignore vs Railwayignore
-
-These three files serve different purposes:
-
-| File | Purpose | `data/` and `raw_photos/` |
-|------|---------|---------------------------|
-| `.gitignore` | What shouldn't be in version control | EXCLUDED (too large for git) |
-| `.dockerignore` | What shouldn't be in Docker build context | INCLUDED (needed for bundles) |
-| `.railwayignore` | What Railway CLI should upload | INCLUDED (needed for seeding) |
-
-**Critical Rule:** If a directory is needed for Docker image bundles (like seeding data), it must NOT be in `.dockerignore` or `.railwayignore`, even if it's in `.gitignore`.
-
-### Railway CLI and .gitignore (IMPORTANT)
-
-**Railway CLI uses `.gitignore` by default**, even when `.railwayignore` exists. This means:
-- `railway up` will exclude gitignored files unless you use `--no-gitignore`
-- Even if `.railwayignore` doesn't exclude `data/`, it will still be excluded because `data/*.json` is in `.gitignore`
-
-**Correct deployment command:**
-```bash
-railway up --no-gitignore
-```
-
-**Size limits:** Railway/Cloudflare has upload limits (~100MB). If upload fails, update `.railwayignore` to exclude large files like `raw_photos/` and `data/embeddings.npy`.
-
-### Gitignore-Dockerfile Consistency Rule
-
-When modifying `.gitignore` or `Dockerfile`:
-
-1. **Check for conflicts:** If a directory is in `.gitignore`, the Dockerfile CANNOT use a rigid `COPY <dir>/` command — it will fail during GitHub-triggered builds where gitignored files are absent.
-
-2. **Solutions:**
-   - Add a `.gitkeep` file to gitignored directories so the directory exists in both CLI and GitHub builds
-   - Use conditional copy logic in the Dockerfile
-   - Document that initial deploy must use CLI (`railway up`)
-
-3. **Verification:** Always test that `docker build .` succeeds even when gitignored directories contain only `.gitkeep` files:
-   ```bash
-   # Simulate GitHub build context
-   mv raw_photos raw_photos_backup && mv data data_backup
-   mkdir -p raw_photos data && touch raw_photos/.gitkeep data/.gitkeep
-   docker build -t test .
-   rm -rf raw_photos data && mv raw_photos_backup raw_photos && mv data_backup data
-   ```
-
-## Init Script Marker Files
-
-When using marker files (like `.initialized`) to track deployment state:
-
-1. **NEVER create the marker unless the operation actually succeeded**
-   - Verify critical files exist before creating marker
-   - If nothing was copied, do NOT create marker
-
-2. **ALWAYS validate the marker — check that expected files exist even if marker is present**
-   - Marker exists + data missing = corrupted state
-   - Detect and recover automatically
-
-3. **ALWAYS provide recovery — if state is corrupted, detect and fix automatically**
-   - Remove invalid markers
-   - Re-attempt initialization
-   - Log clearly what happened
-
-4. **ALWAYS log clearly — make it obvious what happened and what to do next**
-   - Success: "Volume initialization complete. Marker created."
-   - Empty bundles: "ERROR: No data to seed. Deploy with 'railway up' from local machine."
-   - Corrupted: "WARNING: Volume marked as initialized but data is MISSING. Removing marker..."
-
-## Deployment Impact Rule
-
-Any change that affects how the app is built, configured, started, or where it reads/writes data MUST also update:
-
-1. `docs/DEPLOYMENT_GUIDE.md` — reflect the new setup steps
-2. `.env.example` — reflect any new/changed environment variables
-3. `Dockerfile` — if build process changed
-4. `CHANGELOG.md` — note the deployment-relevant change
-
-Examples of deployment-impacting changes:
-- Changing file paths or directory structure
-- Adding/removing environment variables
-- Changing how the app starts (serve() parameters, CMD)
-- Adding/removing dependencies in requirements.txt
-- Changing volume mount expectations
-- Modifying the init script
-
-## Deployment Architecture Rules
-
-### Platform Constraint Research (MANDATORY)
-
-Before ANY deployment work for a new platform, research and document:
-- Upload/build size limits
-- Memory limits
-- Disk/volume limits
-- Timeout limits
-- Pricing model (what costs money at scale?)
-
-Create a section in the deployment guide: "Platform Constraints" listing these.
-
-**Railway Constraints (validated 2026-02):**
-- Upload limit: ~100MB via CLI
-- Build timeout: 15 minutes
-- Volume storage: Included on Hobby plan ($5/mo)
-- Memory: 512MB-8GB depending on plan
-
-### Deployment Spike Rule
-
-Before building deployment infrastructure, run a minimal spike:
-- Deploy a "hello world" with similar asset sizes
-- Verify the deployment actually works
-- Document any constraints discovered
-
-If the spike fails, fix the architecture BEFORE building more infrastructure.
-
-### Asset Separation Checklist
-
-For every deployment, explicitly categorize:
-
-| Asset Type | Size | Where It Lives | Why |
-|------------|------|----------------|-----|
-| Application code | Small | Docker image | Changes frequently |
-| Config files | Tiny | Docker image or env vars | Changes occasionally |
-| JSON data | Small-Medium | Platform volume | Persists across deploys |
-| Binary data (embeddings) | Medium | Platform volume or object storage | Persists, too big for image |
-| Media (photos, videos) | Large | Object storage (S3/R2) | Never in Docker images |
-| ML models | Large | Object storage | Never in Docker images |
-
-**Rule: If an asset is >50MB, it probably doesn't belong in a Docker image.**
-
-### Assumption Documentation
-
-When making architectural decisions, document assumptions explicitly:
-```markdown
-## Assumptions (to be validated)
-- [ ] Railway can handle 255MB uploads — VALIDATE BEFORE BUILDING
-- [ ] Supabase free tier has enough storage — CHECK LIMITS
-- [ ] etc.
-```
-
-Validate assumptions with spikes before building infrastructure around them.
-
-### 30-Minute Debugging Rule
-
-If you've been debugging the same deployment issue for >30 minutes:
-1. STOP fixing symptoms
-2. Step back and ask: "Is our fundamental approach wrong?"
-3. List alternatives to the current architecture
-4. Consider if a different approach would avoid the problem entirely
-
-Symptom chasing feels like progress but often isn't.
-
-**Retrospective:** See `docs/RETROSPECTIVES/2026-02-05-deployment-failure.md` for an example of what happens when these rules aren't followed.
-
-## Post-Bug Protocol
-
-When a bug is discovered that could have been caught earlier:
-
-1. Fix the bug
-2. Add a rule to CLAUDE.md that would have prevented it
-3. Add a check to `docs/MANUAL_TEST_CHECKLIST.md`
-4. Note it in `docs/SESSION_LOG.md`
-
-This creates a feedback loop where each bug improves the harness for future sessions.
-
-## RELEASE DOCUMENTATION INVARIANT
-
-Any session that changes user-visible behavior or system capabilities MUST end by:
-1. Updating `docs/RELEASE_NOTES.md`
-2. Adding an entry to `CHANGELOG.md`
-
-A session is not considered complete until this is done. This is a hard rule, not a suggestion.
-
-## Autonomous Workflow Protocol (Boris Cherny Method)
-
-### Session Start (MANDATORY)
-1. `cat tasks/lessons.md` — Read past mistakes first
-2. `cat tasks/todo.md` — Check for in-progress work
-3. Review recent entries in docs/SESSION_LOG.md
-
-### Task Execution
-1. **Plan First**: Write plan to `tasks/todo.md` with checkboxes
-2. **Verify Plan**: Check in before implementing — does this cover all affected features?
-3. **Track Progress**: Check off items as completed
-4. **Staff Engineer Test**: Before committing, ask "Would a senior engineer approve this?"
-5. **Document Results**: Add review section to todo.md
-6. **Capture Lessons**: After ANY user correction, add to lessons.md
-
-### Self-Improvement Loop
-After ANY correction from the user:
-1. Add to tasks/lessons.md: what mistake was made, rule to prevent it, specific verification step
-2. Review lessons.md at next session start
-
-### Regression Prevention
-Before declaring ANY fix complete:
-- [ ] Listed all features that could be affected
-- [ ] Tested EACH feature explicitly
-- [ ] Compared behavior before vs after change
-- [ ] Checked edge cases (empty states, many items, errors)
-- [ ] Ran verification scripts
-- [ ] Passes staff engineer review standard
-
-### File Structure
-```
-tasks/
-  lessons.md    # Persistent learnings across sessions
-  todo.md       # Current task tracking with checkboxes
-```
+- `app/main.py` — FastHTML web app (~5000 lines)
+- `core/` — ML processing (face detection, embeddings) — local only, never on server
+- `data/` — JSON data + embeddings (gitignored, read-only for app)
+- Photos served from Cloudflare R2, not bundled in Docker
+
+@docs/SYSTEM_DESIGN_WEB.md for full architecture
+
+## Key Rules
+- **No Generative AI** — forensic matching only (AdaFace/InsightFace)
+- **Clean separation** — app/ has no ML deps; core/ has heavy deps in requirements-local.txt
+- **Data is read-only** — never modify data/*.json directly; use scripts with --dry-run
+- **Test everything** — red-green-refactor, permission matrix tests, content tests
+- **HTMX auth** — return 401 (not 303) for protected HTMX endpoints
+- **Admin-first** — new data-modifying routes default to _check_admin
+- **Pathing** — use `Path(__file__).resolve().parent`, relative paths in data files
+
+@docs/CODING_RULES.md for detailed coding, testing, data safety, and workflow rules
+
+## Workflow
+- Start each session: read `tasks/lessons.md`, `tasks/todo.md`
+- Commit after every sub-task (conventional commits: `feat:`, `fix:`, `test:`, etc.)
+- Update docs alongside code changes
+- Run `/compact` every 20-30 minutes
+
+@tasks/lessons.md for past mistakes and prevention rules
+
+## External Services
+- Railway: hosting + persistent volume ($5/mo Hobby plan)
+- Cloudflare R2: photo storage (public bucket)
+- Supabase: auth (Google OAuth + email/password)
+
+@docs/DEPLOYMENT_GUIDE.md for setup details
+@docs/SMTP_SETUP.md for custom email sender setup (Resend)
+
+## Forensic Invariants (LOCKED — override all other instructions)
+1. Embeddings in data/ are read-only for UI tasks
+2. All identity merges must be reversible
+3. core/neighbors.py algorithmic logic is FROZEN
+4. UI never deletes a face — only detach, reject, or hide
+5. provenance="human" overrides provenance="model"
 
 ## Project Status
+- Phase A: Deployment — COMPLETE
+- Phase B: Auth — COMPLETE (Google OAuth + email/password)
+- Phase C-F: Annotations, Upload Queue, Admin Dashboard, Polish — NOT STARTED
 
-### Current State: Phase A Complete (Deployment Ready)
-
-- Web app containerized with Docker
-- Railway + Cloudflare deployment configured
-- Health endpoint available at `/health`
-- Staged upload workflow (files stored, no ML processing in production)
-
-**NOT YET IMPLEMENTED:**
-- Auth (Phase B)
-- Community annotations (Phase C)
-- Photo upload queue (Phase D)
-- Admin moderation dashboard (Phase E)
-- Automated backups (Phase F)
-
-### Architecture Decisions (Summary)
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Hosting | Railway (Hobby plan) | Persistent volumes, simple deploys |
-| Photo Storage | Cloudflare R2 | Photos too large for Docker image (~255MB) |
-| Auth | Supabase (Phase B) | Managed auth + Postgres |
-| DNS | Cloudflare subdomain | `rhodesli.nolanandrewfox.com` |
-| Data | JSON = canonical, Postgres = community | Curator controls truth |
-| ML Processing | Local only | Heavy deps not on server |
-
-**Full details:** `docs/SYSTEM_DESIGN_WEB.md`
-
-### Phase History
-
-| Phase | Status | What It Does |
-|-------|--------|--------------|
-| A | ✅ Complete | Docker, Railway config, deployment guide |
-| B | Code complete (needs Supabase setup) | Auth + invite-only signup |
-| C | Not started | Annotation engine |
-| D | Not started | Photo upload queue |
-| E | Not started | Admin moderation dashboard |
-| F | Not started | Backup, security, polish |
-
-### Key Files for Context
-
+## Key Files
 | File | Purpose |
 |------|---------|
-| `docs/SYSTEM_DESIGN_WEB.md` | Full architecture (1300+ lines) |
-| `docs/DEPLOYMENT_GUIDE.md` | How to deploy to Railway |
-| `docs/OPERATIONS.md` | Day-to-day runbook |
-| `docs/SESSION_LOG.md` | What was done in each session |
-| `CLAUDE.md` | Project conventions + this status |
-| `CHANGELOG.md` | Version history |
-| `docs/MANUAL_TEST_CHECKLIST.md` | Testing procedures |
-
-### Session Handoff Protocol
-
-At the END of every implementation session:
-1. Update `docs/SESSION_LOG.md` with what was done
-2. Update this Project Status section if phase status changed
-3. Update `docs/RELEASE_NOTES.md` if user-visible changes
-4. Update `CHANGELOG.md` with version entry
+| `docs/SYSTEM_DESIGN_WEB.md` | Full architecture |
+| `docs/DEPLOYMENT_GUIDE.md` | Railway + R2 + Cloudflare setup |
+| `docs/CODING_RULES.md` | Testing, data safety, workflow rules |
+| `docs/PHOTO_WORKFLOW.md` | How to add/sync photos |
+| `docs/design/MERGE_DESIGN.md` | Non-destructive merge system design |
+| `docs/design/ML_FEEDBACK.md` | ML feedback loop analysis |
+| `tasks/lessons.md` | Persistent learnings across sessions |
+| `tasks/todo.md` | Current task tracking |

@@ -11,10 +11,12 @@ Error Semantics:
 """
 
 import hashlib
+import io
 import json
 import logging
 import re
 import sys
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
@@ -65,6 +67,7 @@ app, rt = fast_app(
     pico=False,
     secret_key=SESSION_SECRET,
     hdrs=(
+        Meta(name="viewport", content="width=device-width, initial-scale=1"),
         Script(src="https://cdn.tailwindcss.com"),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
@@ -973,7 +976,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 cls=f"px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}"
             ),
             href=href,
-            cls=f"flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium {container_cls}"
+            cls=f"flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {container_cls}"
         )
 
     return Aside(
@@ -1059,7 +1062,17 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             Div("v0.6.0", cls="text-xs text-slate-600 mt-1"),
             cls="px-4 py-3 border-t border-slate-700"
         ),
-        cls="fixed left-0 top-0 h-screen w-64 bg-slate-800 border-r border-slate-700 flex flex-col z-40"
+        # Close button for mobile
+        Div(
+            Button(
+                Span("\u00d7", cls="text-2xl"),
+                onclick="closeSidebar()",
+                cls="text-slate-400 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            ),
+            cls="absolute top-3 right-3 lg:hidden"
+        ),
+        id="sidebar",
+        cls="fixed left-0 top-0 h-screen w-64 bg-slate-800 border-r border-slate-700 flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-transform"
     )
 
 
@@ -2378,7 +2391,7 @@ def photo_modal() -> Div:
                 P("Loading...", cls="text-slate-400 text-center py-8"),
                 id="photo-modal-content",
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl max-w-5xl max-h-[90vh] overflow-auto p-6 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-auto p-6 relative border border-slate-700"
         ),
         id="photo-modal",
         cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9999]"
@@ -2553,14 +2566,296 @@ def health():
 # ROUTES - PHASE 2: TEACH MODE
 # =============================================================================
 
+def _compute_landing_stats() -> dict:
+    """Compute live stats for the landing page."""
+    registry = load_registry()
+    _build_caches()
+    all_identities = registry.list_identities()
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    total_faces = sum(
+        len(i.get("anchor_ids", [])) + len(i.get("candidate_ids", []))
+        for i in all_identities
+    )
+    needs_help = sum(
+        len(i.get("anchor_ids", [])) + len(i.get("candidate_ids", []))
+        for i in inbox + proposed
+    )
+    return {
+        "photo_count": len(_photo_cache) if _photo_cache else 0,
+        "named_count": len(confirmed),
+        "total_faces": total_faces,
+        "needs_help": needs_help,
+    }
+
+
+def _get_featured_photos(limit: int = 8) -> list:
+    """Pick photos that have confirmed/named identities for the landing page hero."""
+    registry = load_registry()
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    _build_caches()
+    if not _photo_cache:
+        return []
+    # Collect photo IDs that contain faces from confirmed identities
+    confirmed_face_ids = set()
+    for identity in confirmed:
+        confirmed_face_ids.update(identity.get("anchor_ids", []))
+        confirmed_face_ids.update(identity.get("candidate_ids", []))
+    featured_photo_ids = []
+    for photo_id, photo_data in _photo_cache.items():
+        for face in photo_data.get("faces", []):
+            if face.get("face_id") in confirmed_face_ids:
+                featured_photo_ids.append(photo_id)
+                break
+    # If not enough confirmed photos, fill with any photos
+    if len(featured_photo_ids) < limit:
+        for photo_id in _photo_cache:
+            if photo_id not in featured_photo_ids:
+                featured_photo_ids.append(photo_id)
+                if len(featured_photo_ids) >= limit:
+                    break
+    return [
+        {"id": pid, "url": photo_url(_photo_cache[pid]["filename"])}
+        for pid in featured_photo_ids[:limit]
+        if pid in _photo_cache
+    ]
+
+
+def landing_page(user, stats, featured_photos):
+    """Render the public landing page for the family heritage archive."""
+    auth_enabled = is_auth_enabled()
+    logged_in = user is not None
+
+    # Hero photo grid
+    hero_images = [
+        Img(
+            src=p["url"], alt="Rhodes-Capeluto family photo",
+            loading="lazy",
+            cls="w-full h-full object-cover"
+        )
+        for p in featured_photos
+    ]
+
+    # CTA buttons based on auth state
+    if logged_in:
+        cta_buttons = Div(
+            A("Continue Reviewing", href="/?section=to_review",
+              cls="inline-block px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors text-lg"),
+            A("Browse Photos", href="/?section=photos",
+              cls="inline-block px-8 py-3 border border-slate-500 text-slate-300 font-semibold rounded-lg hover:bg-slate-700 transition-colors text-lg ml-4"),
+            cls="mt-8 flex flex-wrap gap-4 justify-center"
+        )
+    elif auth_enabled:
+        cta_buttons = Div(
+            A("Start Exploring", href="/?section=photos",
+              cls="inline-block px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors text-lg"),
+            A("Join the Project", href="/signup",
+              cls="inline-block px-8 py-3 border border-slate-500 text-slate-300 font-semibold rounded-lg hover:bg-slate-700 transition-colors text-lg ml-4"),
+            cls="mt-8 flex flex-wrap gap-4 justify-center"
+        )
+    else:
+        cta_buttons = Div(
+            A("Start Exploring", href="/?section=photos",
+              cls="inline-block px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors text-lg"),
+            cls="mt-8 flex flex-wrap gap-4 justify-center"
+        )
+
+    # Navigation bar
+    nav_items = [
+        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-white transition-colors"),
+        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-white transition-colors"),
+        A("Help Identify", href="/?section=to_review", cls="text-slate-300 hover:text-white transition-colors"),
+    ]
+    if auth_enabled and not logged_in:
+        nav_items.append(
+            A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 font-medium transition-colors")
+        )
+
+    landing_style = Style("""
+        html, body { height: 100%; margin: 0; }
+        body { background-color: #0f172a; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 180px);
+            gap: 4px;
+        }
+        @media (max-width: 767px) {
+            .hero-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(4, 120px);
+            }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .hero-grid {
+                grid-template-rows: repeat(2, 150px);
+            }
+        }
+        @media (min-width: 1024px) {
+            .hero-grid {
+                grid-template-rows: repeat(2, 200px);
+            }
+        }
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            line-height: 1;
+        }
+        .stat-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            margin-top: 0.5rem;
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.6s ease-out; }
+    """)
+
+    return Title("Rhodesli — Rhodes-Capeluto Family Archive"), landing_style, Div(
+        # Navigation
+        Nav(
+            Div(
+                A("Rhodesli", href="/", cls="text-xl font-bold text-white"),
+                Div(*nav_items, cls="flex items-center gap-6"),
+                cls="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between flex-wrap gap-4"
+            ),
+            cls="border-b border-slate-800"
+        ),
+        # Hero section
+        Section(
+            Div(
+                Div(
+                    H1("Preserving the faces and stories of the Rhodes-Capeluto family",
+                       cls="text-3xl md:text-5xl font-bold text-white leading-tight max-w-3xl mx-auto"),
+                    P("A community effort to identify and connect generations of family history through archival photographs.",
+                      cls="text-lg text-slate-400 mt-4 max-w-2xl mx-auto"),
+                    cta_buttons,
+                    cls="text-center py-12 px-6"
+                ),
+                # Photo mosaic
+                Div(*hero_images, cls="hero-grid mt-4 rounded-xl overflow-hidden opacity-90") if hero_images else None,
+                cls="max-w-6xl mx-auto"
+            ),
+            id="hero", cls="pt-8 pb-12"
+        ),
+        # Stats section
+        Section(
+            Div(
+                Div(
+                    Div(str(stats["photo_count"]), cls="stat-number"),
+                    Div("photos preserved", cls="stat-label"),
+                    cls="stat-card"
+                ),
+                Div(
+                    Div(str(stats["named_count"]), cls="stat-number"),
+                    Div("people identified", cls="stat-label"),
+                    cls="stat-card"
+                ),
+                Div(
+                    Div(str(stats["total_faces"]), cls="stat-number"),
+                    Div("faces detected", cls="stat-label"),
+                    cls="stat-card"
+                ),
+                Div(
+                    Div(str(stats["needs_help"]), cls="stat-number"),
+                    Div("faces need your help", cls="stat-label"),
+                    cls="stat-card"
+                ),
+                cls="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
+            ),
+            id="stats", cls="py-16 px-6 bg-slate-800/50"
+        ),
+        # How it works
+        Section(
+            Div(
+                H2("How You Can Help", cls="text-2xl font-bold text-white text-center mb-10"),
+                Div(
+                    Div(
+                        Div("1", cls="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4"),
+                        H3("Browse Photos", cls="text-lg font-semibold text-white mb-2 text-center"),
+                        P("Explore archival photographs from family collections spanning generations.",
+                          cls="text-slate-400 text-center text-sm"),
+                        cls="flex-1 p-6"
+                    ),
+                    Div(
+                        Div("2", cls="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4"),
+                        H3("Identify People", cls="text-lg font-semibold text-white mb-2 text-center"),
+                        P("Help name faces our system has detected. Your knowledge preserves family history.",
+                          cls="text-slate-400 text-center text-sm"),
+                        cls="flex-1 p-6"
+                    ),
+                    Div(
+                        Div("3", cls="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4"),
+                        H3("Connect History", cls="text-lg font-semibold text-white mb-2 text-center"),
+                        P("See how family members appear across photos and help piece together our shared story.",
+                          cls="text-slate-400 text-center text-sm"),
+                        cls="flex-1 p-6"
+                    ),
+                    cls="grid grid-cols-1 md:grid-cols-3 gap-6"
+                ),
+                cls="max-w-5xl mx-auto"
+            ),
+            id="how-it-works", cls="py-16 px-6"
+        ),
+        # About section
+        Section(
+            Div(
+                H2("About This Project", cls="text-2xl font-bold text-white text-center mb-6"),
+                P("Rhodesli is a community project dedicated to preserving the photographic heritage of the Rhodes-Capeluto family. "
+                  "Using face recognition technology, we are building a searchable archive that connects faces across generations of photographs. "
+                  "Every identification you make helps future generations understand where they came from.",
+                  cls="text-slate-400 text-center max-w-3xl mx-auto leading-relaxed"),
+                cls="max-w-5xl mx-auto"
+            ),
+            id="about", cls="py-16 px-6 bg-slate-800/30"
+        ),
+        # Bottom CTA
+        Section(
+            Div(
+                H2("Ready to explore?", cls="text-2xl font-bold text-white text-center mb-4"),
+                P(f"{stats['needs_help']} faces are waiting to be identified.",
+                  cls="text-slate-400 text-center mb-8"),
+                cta_buttons,
+                cls="max-w-3xl mx-auto text-center"
+            ),
+            id="cta", cls="py-16 px-6"
+        ),
+        # Footer
+        Footer(
+            Div(
+                P("Rhodesli — Preserving family history, one face at a time.",
+                  cls="text-slate-500 text-sm text-center"),
+                cls="max-w-6xl mx-auto px-6 py-8"
+            ),
+            cls="border-t border-slate-800"
+        ),
+        cls="min-h-screen bg-slate-900"
+    )
+
+
 @rt("/")
-def get(section: str = "to_review", view: str = "focus", current: str = None,
+def get(section: str = None, view: str = "focus", current: str = None,
         filter_source: str = "", sort_by: str = "newest", sess=None):
     """
-    Command Center: Sidebar-based navigation with focused review.
+    Landing page (no section) or Command Center (with section parameter).
     Public access — anyone can view. Action buttons shown only to admins.
     """
     user = get_current_user(sess or {})
+
+    # If no section specified, show the landing page
+    if section is None:
+        stats = _compute_landing_stats()
+        featured_photos = _get_featured_photos(8)
+        return landing_page(user, stats, featured_photos)
+
     user_is_admin = user.is_admin if user else False
 
     registry = load_registry()
@@ -2662,20 +2957,83 @@ def get(section: str = "to_review", view: str = "focus", current: str = None,
         .font-data {
             font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
         }
+        /* Mobile responsive sidebar */
+        @media (max-width: 767px) {
+            #sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            #sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0 !important;
+            }
+        }
+        @media (min-width: 768px) {
+            #sidebar { transform: translateX(0); }
+        }
+        @media (min-width: 1024px) {
+            .main-content { margin-left: 16rem; }
+        }
+    """)
+
+    # Mobile header (shown only on small screens)
+    mobile_header = Div(
+        Button(
+            # Hamburger icon
+            Svg(
+                Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                     d="M4 6h16M4 12h16M4 18h16"),
+                cls="w-6 h-6", fill="none", stroke="currentColor", viewBox="0 0 24 24"
+            ),
+            onclick="toggleSidebar()",
+            cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+        ),
+        Span("Rhodesli", cls="text-lg font-bold text-white"),
+        cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30"
+    )
+
+    # Sidebar overlay for mobile
+    sidebar_overlay = Div(
+        onclick="closeSidebar()",
+        cls="sidebar-overlay fixed inset-0 bg-black/50 z-30 hidden lg:hidden"
+    )
+
+    # Sidebar toggle script
+    sidebar_script = Script("""
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.toggle('open');
+            sb.classList.toggle('-translate-x-full');
+            ov.classList.toggle('hidden');
+        }
+        function closeSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.remove('open');
+            sb.classList.add('-translate-x-full');
+            ov.classList.add('hidden');
+        }
     """)
 
     return Title("Rhodesli Identity System"), style, Div(
         # Toast container for notifications
         toast_container(),
+        # Mobile header
+        mobile_header,
+        # Sidebar overlay (mobile backdrop)
+        sidebar_overlay,
         # Sidebar (fixed)
         sidebar(counts, section, user=user),
         # Main content (offset for sidebar)
         Main(
             Div(
                 main_content,
-                cls="max-w-6xl mx-auto px-8 py-6"
+                cls="max-w-6xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="ml-64 min-h-screen"
+            cls="main-content ml-0 lg:ml-64 min-h-screen"
         ),
         # Photo context modal (hidden by default)
         photo_modal(),
@@ -2683,6 +3041,7 @@ def get(section: str = "to_review", view: str = "focus", current: str = None,
         login_modal(),
         # Styled confirmation modal (replaces native browser confirm())
         confirm_modal(),
+        sidebar_script,
         cls="h-full"
     )
 
@@ -3827,8 +4186,49 @@ def get(sess=None):
     except FileNotFoundError:
         pass  # No photos yet
 
-    return Title("Upload Photos - Rhodesli"), style, Div(
+    upload_style = Style("""
+        @media (max-width: 767px) {
+            #sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            #sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0 !important; }
+        }
+        @media (min-width: 768px) { #sidebar { transform: translateX(0); } }
+        @media (min-width: 1024px) { .main-content { margin-left: 16rem; } }
+    """)
+    mobile_header = Div(
+        Button(
+            Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                     d="M4 6h16M4 12h16M4 18h16"),
+                cls="w-6 h-6", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+            onclick="toggleSidebar()",
+            cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+        ),
+        Span("Upload Photos", cls="text-lg font-bold text-white"),
+        cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30"
+    )
+    sidebar_overlay = Div(onclick="closeSidebar()",
+                          cls="sidebar-overlay fixed inset-0 bg-black/50 z-30 hidden lg:hidden")
+    sidebar_script = Script("""
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.toggle('open');
+            sb.classList.toggle('-translate-x-full');
+            ov.classList.toggle('hidden');
+        }
+        function closeSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.remove('open');
+            sb.classList.add('-translate-x-full');
+            ov.classList.add('hidden');
+        }
+    """)
+
+    return Title("Upload Photos - Rhodesli"), style, upload_style, Div(
         toast_container(),
+        mobile_header,
+        sidebar_overlay,
         sidebar(counts, current_section=None, user=user),
         Main(
             Div(
@@ -3840,10 +4240,11 @@ def get(sess=None):
                 ),
                 # Upload form
                 upload_area(existing_sources=existing_sources),
-                cls="max-w-3xl mx-auto px-8 py-6"
+                cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="ml-64 min-h-screen"
+            cls="main-content ml-0 lg:ml-64 min-h-screen"
         ),
+        sidebar_script,
         cls="h-full"
     )
 
@@ -4398,6 +4799,7 @@ def get(sess):
 
     return Html(
         Head(
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Login - Rhodesli"),
             Script(src="https://cdn.tailwindcss.com"),
         ),
@@ -4446,7 +4848,7 @@ def get(sess):
                     A("Sign up with invite code", href="/signup", cls="text-blue-400 hover:underline"),
                     cls="mt-2 text-gray-400 text-sm"
                 ),
-                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
             ),
             cls="min-h-screen bg-gray-900 text-white"
         ),
@@ -4459,7 +4861,7 @@ async def post(email: str, password: str, sess):
     user, error = await login_with_supabase(email, password)
     if error:
         return Html(
-            Head(Title("Login - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Head(Meta(name="viewport", content="width=device-width, initial-scale=1"), Title("Login - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
             Body(
                 Div(
                     H1("Rhodesli", cls="text-2xl font-bold mb-2"),
@@ -4474,7 +4876,7 @@ async def post(email: str, password: str, sess):
                         Button("Sign In", type="submit", cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
                         method="post", action="/login",
                     ),
-                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
                 ),
                 cls="min-h-screen bg-gray-900 text-white"
             ),
@@ -4503,6 +4905,7 @@ def get(sess):
 
     return Html(
         Head(
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Sign Up - Rhodesli"),
             Script(src="https://cdn.tailwindcss.com"),
         ),
@@ -4539,7 +4942,7 @@ def get(sess):
                     A("Sign in", href="/login", cls="text-blue-400 hover:underline"),
                     cls="mt-4 text-gray-400 text-sm"
                 ),
-                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
             ),
             cls="min-h-screen bg-gray-900 text-white"
         ),
@@ -4556,7 +4959,7 @@ async def post(email: str, password: str, invite_code: str, sess):
         user, error = await signup_with_supabase(email, password)
     if error:
         return Html(
-            Head(Title("Sign Up - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Head(Meta(name="viewport", content="width=device-width, initial-scale=1"), Title("Sign Up - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
             Body(
                 Div(
                     H1("Join Rhodesli", cls="text-2xl font-bold mb-2"),
@@ -4575,7 +4978,7 @@ async def post(email: str, password: str, invite_code: str, sess):
                                cls="w-full p-2 bg-green-600 hover:bg-green-700 rounded text-white font-medium"),
                         method="post", action="/signup",
                     ),
-                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
                 ),
                 cls="min-h-screen bg-gray-900 text-white"
             ),
@@ -4592,6 +4995,7 @@ def get(sess):
 
     return Html(
         Head(
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Reset Password - Rhodesli"),
             Script(src="https://cdn.tailwindcss.com"),
         ),
@@ -4614,7 +5018,7 @@ def get(sess):
                     A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"),
                     cls="mt-6 text-center"
                 ),
-                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
             ),
             cls="min-h-screen bg-gray-900 text-white"
         ),
@@ -4630,6 +5034,7 @@ async def post(email: str, sess):
     msg = "If an account exists with that email, you'll receive a reset link."
     return Html(
         Head(
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Reset Password - Rhodesli"),
             Script(src="https://cdn.tailwindcss.com"),
         ),
@@ -4641,7 +5046,7 @@ async def post(email: str, sess):
                     A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"),
                     cls="mt-6 text-center"
                 ),
-                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
             ),
             cls="min-h-screen bg-gray-900 text-white"
         ),
@@ -4653,6 +5058,7 @@ def get(sess):
     """Handle reset password callback from email link. Tokens are in URL fragment."""
     return Html(
         Head(
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Set New Password - Rhodesli"),
             Script(src="https://cdn.tailwindcss.com"),
             Script("""
@@ -4726,7 +5132,7 @@ def get(sess):
                     A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"),
                     cls="mt-6 text-center"
                 ),
-                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
             ),
             cls="min-h-screen bg-gray-900 text-white"
         ),
@@ -4746,13 +5152,13 @@ async def post(access_token: str, password: str, password_confirm: str, sess):
 
     if error:
         return Html(
-            Head(Title("Set New Password - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Head(Meta(name="viewport", content="width=device-width, initial-scale=1"), Title("Set New Password - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
             Body(
                 Div(
                     H1("Set New Password", cls="text-2xl font-bold mb-6"),
                     P(error, cls="text-red-400 mb-4 text-sm"),
                     P(A("← Request a new reset link", href="/forgot-password", cls="text-blue-400 hover:underline"), cls="mt-4"),
-                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
                 ),
                 cls="min-h-screen bg-gray-900 text-white"
             ),
@@ -4762,27 +5168,27 @@ async def post(access_token: str, password: str, password_confirm: str, sess):
 
     if success:
         return Html(
-            Head(Title("Password Updated - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Head(Meta(name="viewport", content="width=device-width, initial-scale=1"), Title("Password Updated - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
             Body(
                 Div(
                     H1("Password Updated", cls="text-2xl font-bold mb-4"),
                     P("Your password has been updated successfully.", cls="text-green-400 mb-6"),
                     A("Sign in with your new password", href="/login",
                       cls="block w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium text-center"),
-                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
                 ),
                 cls="min-h-screen bg-gray-900 text-white"
             ),
         )
     else:
         return Html(
-            Head(Title("Set New Password - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Head(Meta(name="viewport", content="width=device-width, initial-scale=1"), Title("Set New Password - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
             Body(
                 Div(
                     H1("Set New Password", cls="text-2xl font-bold mb-6"),
                     P(err or "Failed to update password.", cls="text-red-400 mb-4 text-sm"),
                     P(A("← Request a new reset link", href="/forgot-password", cls="text-blue-400 hover:underline"), cls="mt-4"),
-                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                    cls="max-w-md mx-auto mt-10 sm:mt-20 p-4 sm:p-8 bg-gray-800 rounded-lg"
                 ),
                 cls="min-h-screen bg-gray-900 text-white"
             ),
@@ -4794,6 +5200,7 @@ def get(sess):
     """Handle OAuth callback from social providers. Tokens are in URL fragment."""
     return Html(
         Head(
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Logging in..."),
             Script(src="https://cdn.tailwindcss.com"),
             Script("""
@@ -4879,6 +5286,60 @@ def get(sess):
     """Log out and redirect to home."""
     sess.clear()
     return RedirectResponse('/', status_code=303)
+
+
+# --- Admin Data Export Endpoints ---
+
+@rt("/admin/export/identities")
+def get(sess=None):
+    """Download identities.json. Admin-only."""
+    block = _check_admin(sess)
+    if block:
+        return block
+    fpath = data_path / "identities.json"
+    if not fpath.exists():
+        return Response("File not found", status_code=404)
+    return FileResponse(
+        str(fpath),
+        media_type="application/json",
+        filename="identities.json",
+    )
+
+
+@rt("/admin/export/photo-index")
+def get(sess=None):
+    """Download photo_index.json. Admin-only."""
+    block = _check_admin(sess)
+    if block:
+        return block
+    fpath = data_path / "photo_index.json"
+    if not fpath.exists():
+        return Response("File not found", status_code=404)
+    return FileResponse(
+        str(fpath),
+        media_type="application/json",
+        filename="photo_index.json",
+    )
+
+
+@rt("/admin/export/all")
+def get(sess=None):
+    """Download a ZIP of all data files. Admin-only."""
+    block = _check_admin(sess)
+    if block:
+        return block
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for name in ("identities.json", "photo_index.json"):
+            fpath = data_path / name
+            if fpath.exists():
+                zf.write(str(fpath), arcname=name)
+    buf.seek(0)
+    return Response(
+        content=buf.getvalue(),
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=rhodesli-data-export.zip"},
+    )
 
 
 if __name__ == "__main__":
