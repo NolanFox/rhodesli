@@ -716,15 +716,19 @@ def parse_quality_from_filename(filename: str) -> float:
     return 0.0
 
 
-def photo_url(filename: str) -> str:
+def photo_url(filename: str, filepath: str = "") -> str:
     """
     Generate a properly URL-encoded path for a photo.
 
     In local mode: returns /photos/{filename} (served by app route)
-    In R2 mode: returns Cloudflare R2 public URL
+    In R2 mode: returns Cloudflare R2 public URL for raw_photos,
+                but local /photos/ route for uploaded photos (not on R2)
 
     Encodes the filename to handle spaces and special characters.
     """
+    # Uploaded photos (data/uploads/) are on the local volume, not R2
+    if filepath and "data/uploads" in filepath:
+        return storage.get_upload_photo_url(filepath)
     return storage.get_photo_url(filename)
 
 
@@ -1635,7 +1639,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             # Photo thumbnail
             Div(
                 Img(
-                    src=photo_url(photo["filename"]),
+                    src=photo_url(photo["filename"], photo.get("filepath", "")),
                     cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                     loading="lazy"
                 ),
@@ -2616,7 +2620,7 @@ def _get_featured_photos(limit: int = 8) -> list:
                 if len(featured_photo_ids) >= limit:
                     break
     return [
-        {"id": pid, "url": photo_url(_photo_cache[pid]["filename"])}
+        {"id": pid, "url": photo_url(_photo_cache[pid]["filename"], _photo_cache[pid].get("filepath", ""))}
         for pid in featured_photo_ids[:limit]
         if pid in _photo_cache
     ]
@@ -3213,7 +3217,7 @@ def get(photo_id: str):
         faces.append(face_obj)
 
     return JSONResponse({
-        "photo_url": photo_url(photo["filename"]),
+        "photo_url": photo_url(photo["filename"], photo.get("filepath", "")),
         "image_width": width,
         "image_height": height,
         "faces": faces,
@@ -3319,7 +3323,7 @@ def photo_view_content(
         # Photo container with overlays
         Div(
             Img(
-                src=photo_url(photo["filename"]),
+                src=photo_url(photo["filename"], photo.get("filepath", "")),
                 alt=photo["filename"],
                 cls="max-w-full h-auto"
             ),
