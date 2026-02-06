@@ -15,13 +15,35 @@ The heavy AI work (face detection, embedding generation, clustering) happens loc
 
 ## 2. Web App Uploads
 
-The web upload endpoint (`/upload`) is currently **admin-only** (until a moderation queue is built in Phase D).
+The web upload endpoint (`/upload`) supports two roles:
 
-- Uploaded files go to `data/staging/` on the server.
-- `PROCESSING_ENABLED=false` by default in production, so uploaded files sit unprocessed.
-- When processing is enabled, the server spawns a subprocess for ingestion. This requires ML dependencies which are not present on Railway.
+### Admin Uploads
+- Admin uploads go directly to `data/uploads/{job_id}/` (local dev) or `data/staging/{job_id}/` (production)
+- When `PROCESSING_ENABLED=true` (local dev), a subprocess runs the ML pipeline immediately
+- When `PROCESSING_ENABLED=false` (production), files sit staged for local processing
 
-In practice, web uploads are used for receiving photos from family members. The admin then downloads them, processes locally, and re-deploys.
+### Contributor Uploads (Pending Queue)
+- Logged-in non-admin users can upload photos via `/upload`
+- Files are saved to `data/staging/{job_id}/` with a pending status
+- A record is created in `data/pending_uploads.json` tracking the submission
+- Admin is optionally notified via email (if Resend API key is configured)
+- Admin reviews pending uploads at `/admin/pending`
+- Admin can approve or reject each submission
+- Approved uploads are processed via `scripts/process_pending.py` (locally)
+
+### Pending Upload Lifecycle
+```
+Contributor uploads → data/staging/{job_id}/ + pending_uploads.json
+                           ↓
+                    Admin reviews at /admin/pending
+                           ↓
+                    Approve → status="approved"
+                    Reject  → status="rejected", files cleaned up
+                           ↓
+                    Admin runs: python scripts/process_pending.py --execute
+                           ↓
+                    Approved files processed through ML pipeline
+```
 
 ## 3. Syncing Data
 
@@ -54,13 +76,22 @@ You can override the production URL:
 SITE_URL=https://staging.example.com ./scripts/sync_from_production.sh
 ```
 
-## 4. Future Vision
+## 4. ML Clustering Scripts
 
-The long-term plan (Phase D and beyond):
+For evaluating and improving ML accuracy:
 
-1. **Web upload** by any authenticated user (not just admin).
-2. **Moderation queue**: Uploaded photos land in an admin review queue before entering the pipeline.
-3. **Background ML processing**: A worker service (or scheduled job) picks up approved uploads, runs face detection and embedding generation, and updates the data files.
-4. **Automatic sync**: Data changes on the processing worker propagate to the web server without manual intervention.
+| Script | Purpose |
+|--------|---------|
+| `scripts/build_golden_set.py` | Extract ground truth from confirmed identities |
+| `scripts/evaluate_golden_set.py` | Measure precision/recall/F1 at various thresholds |
+| `scripts/cluster_new_faces.py` | Match new faces against confirmed identity centroids |
 
-Until then, the local-first workflow described in section 1 is the primary path.
+All scripts support `--dry-run` (default) and `--execute` flags.
+
+## 5. Future Vision
+
+The long-term plan:
+
+1. **Background ML processing**: A worker service (or scheduled job) picks up approved uploads, runs face detection and embedding generation, and updates the data files.
+2. **Automatic sync**: Data changes on the processing worker propagate to the web server without manual intervention.
+3. **Community annotations**: Contributors can suggest names, dates, locations for identities and photos.

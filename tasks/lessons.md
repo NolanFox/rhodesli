@@ -103,3 +103,20 @@
 - **Mistake**: Tried to set `smtp_sender_name` via Management API, but it only works when custom SMTP is configured.
 - **Rule**: Supabase's built-in mailer uses a fixed sender name. Custom sender requires configuring custom SMTP (Resend, SendGrid, etc.).
 - **Prevention**: Check if custom SMTP is configured before trying to change sender-related fields.
+
+## Session 2026-02-06: Overnight Polish & UX Overhaul
+
+### Lesson 20: Parallel subagents can safely edit the same file
+- **Observation**: 5 agents edited `app/main.py` simultaneously, each touching different functions. All changes merged cleanly because each agent re-reads the file before editing.
+- **Rule**: When parallelizing work on a single large file, assign each agent to distinct functions/sections. The Edit tool's unique-string matching prevents conflicts.
+- **Prevention**: In task prompts, be explicit about which sections/functions each agent owns.
+
+### Lesson 21: Test assertions must match current UI, not historical UI
+- **Mistake**: 9 pre-existing test failures were caused by UI changes (new landing page, color changes, URL prefix changes) that weren't accompanied by test updates.
+- **Rule**: When changing UI text, CSS classes, or URL patterns, grep for those strings in tests and update assertions.
+- **Prevention**: After any UI change, run `grep -r "old_string" tests/` to find stale assertions.
+
+### Lesson 22: Upload permissions should be admin-only until moderation exists
+- **Mistake**: Originally had `_check_login` on upload, which was too permissive without rate limiting or moderation.
+- **Rule**: Default new data-modifying routes to `_check_admin`. Only downgrade to `_check_login` when the moderation queue (pending uploads) is implemented.
+- **Prevention**: The pending upload queue (Phase 3) is the guardrail that allows reverting to `_check_login`.

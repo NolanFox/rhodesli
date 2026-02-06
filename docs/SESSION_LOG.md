@@ -5,6 +5,62 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 15: Overnight Polish & UX Overhaul (2026-02-06)
+
+**Goal:** Major UX overhaul with bug fixes, 5 parallel feature improvements, pending upload queue, ML clustering scripts, and documentation updates.
+
+**Completed:**
+
+Phase 1: Critical Bug Fix
+- Fixed uploaded photos not rendering in R2 mode — `photo_url()` now detects `data/uploads` paths and serves locally
+
+Phase 2: UX Overhaul (5 parallel agents)
+- 2A: Merge system overhaul — undo merge, direction auto-correction, name conflict modal, bulk merge/reject
+- 2B: Landing page redesign — Rhodes heritage branding, interactive face detection overlays, animated stats
+- 2C: Sidebar & navigation — collapsible with localStorage, search-as-you-type, sort controls
+- 2D: Face card & photo viewing — carousel pagination (8/page), photo lightbox with face overlays, comparison modal
+- 2E: Inbox workflow speed — no-reload HTMX, CSS animations, bulk merge/reject, gamified Match mode
+- Fixed 9 pre-existing test failures (gallery, neighbor, inbox contract, photo paths)
+
+Phase 3: Pending Upload Queue
+- `data/pending_uploads.json` tracker with atomic writes
+- Reverted upload from admin-only to login-required with moderation queue
+- Admin pending review page (`/admin/pending`) with approve/reject
+- Sidebar pending count badge for admins
+- Optional email notification via Resend API
+- `scripts/process_pending.py` for processing approved uploads
+
+Phase 4: ML Clustering Pipeline
+- `scripts/build_golden_set.py` — extracts ground truth from confirmed identities
+- `scripts/evaluate_golden_set.py` — precision/recall/F1 at various distance thresholds
+- `scripts/cluster_new_faces.py` — matches new faces against confirmed identity centroids
+
+Phase 5: Documentation
+- Updated tasks/todo.md, tasks/lessons.md (lessons 20-22)
+- Updated docs/PHOTO_WORKFLOW.md with pending queue section
+- Updated docs/SESSION_LOG.md (this entry)
+
+**Files created:**
+- `scripts/build_golden_set.py`
+- `scripts/evaluate_golden_set.py`
+- `scripts/cluster_new_faces.py`
+- `scripts/process_pending.py`
+- `tests/test_pending_uploads.py`
+
+**Files modified:**
+- `app/main.py` (upload queue, pending review, sidebar badge, UX overhaul)
+- `core/registry.py` (merge undo, direction auto-correction)
+- `tests/test_app.py` (fixed assertions)
+- `tests/test_inbox_contract.py` (fixed URL prefix)
+- `tests/test_landing.py` (updated for new landing page)
+- `tests/test_registry.py`, `tests/test_safety.py` (merge test updates)
+- `tasks/todo.md`, `tasks/lessons.md`
+- `docs/PHOTO_WORKFLOW.md`, `docs/SESSION_LOG.md`
+
+**Test Results:** 484+ tests passing, 0 failures
+
+---
+
 ## Session 14: Auth + Find Similar Fix + Portfolio (2026-02-05)
 
 **Goal:** Complete deployment workstreams — add authentication, fix Find Similar, update portfolio, harden task management.
