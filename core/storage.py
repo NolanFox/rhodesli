@@ -98,17 +98,20 @@ def get_upload_photo_url(relative_path: str) -> str:
     """
     Get URL for an uploaded photo (from inbox/staging).
 
-    These are stored in data/uploads/ locally. In R2 mode, they could
-    be in a separate uploads/ prefix, but for now we keep uploads local
-    since they're temporary and processed locally.
+    These are stored in data/uploads/ locally. In R2 mode, they are
+    uploaded to the raw_photos/ prefix on R2 alongside other photos.
 
     Args:
         relative_path: Path like "data/uploads/filename.jpg"
 
     Returns:
-        URL to access the upload
+        URL to access the upload (R2 URL in R2 mode, local route otherwise)
     """
-    # Uploads are always served locally via the /photos/ route
-    # which handles both raw_photos/ and data/uploads/
     filename = Path(relative_path).name
-    return f"/photos/{quote(filename)}"
+
+    if is_r2_mode():
+        # In R2 mode, uploaded photos are pushed to raw_photos/ on R2
+        return f"{R2_PUBLIC_URL}/raw_photos/{quote(filename)}"
+    else:
+        # Local mode: served via the /photos/ route
+        return f"/photos/{quote(filename)}"

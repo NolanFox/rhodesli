@@ -3100,6 +3100,9 @@ def _get_featured_photos(limit: int = 8) -> list:
         dims = dim_cache.get(filename) or dim_cache.get(Path(filename).name)
         w, h = dims if dims else (0, 0)
         is_landscape = w > h if w and h else False
+        # Skip photos without cached dimensions (can't render face boxes)
+        if w == 0 or h == 0:
+            continue
         # Score: prefer landscape, more faces, more confirmed
         score = (confirmed_count * 3) + num_faces + (2 if is_landscape else 0)
         if num_faces >= 2:  # Only show photos with multiple people
@@ -3188,7 +3191,8 @@ def landing_page(stats, featured_photos):
                     src=p["url"],
                     alt="Archival photograph from the Jewish community of Rhodes",
                     loading="eager" if i < 2 else "lazy",
-                    cls="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    cls="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105",
+                    onerror="this.closest('.hero-card').style.display='none'"
                 ),
                 # Face detection overlay
                 Div(

@@ -172,6 +172,13 @@ def main():
         files_to_upload.extend(photos)
         print(f"Found {len(photos)} photos in raw_photos/")
 
+        # Also include uploaded photos from data/uploads/ (flatten into raw_photos/)
+        uploads_dir = project_root / "data" / "uploads"
+        if uploads_dir.exists():
+            uploads = list_files_to_upload(uploads_dir, "raw_photos")
+            files_to_upload.extend(uploads)
+            print(f"Found {len(uploads)} photos in data/uploads/")
+
     if not args.photos_only:
         crops = list_files_to_upload(crops_dir, "crops")
         files_to_upload.extend(crops)
