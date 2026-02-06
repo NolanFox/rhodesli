@@ -983,7 +983,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             P("Identity System", cls="text-xs text-slate-400 mt-0.5"),
             cls="px-6 py-5 border-b border-slate-700"
         ),
-        # Upload Button (login required) or Login prompt
+        # Upload Button (admin-only until moderation queue built)
         Div(
             A(
                 Svg(
@@ -998,14 +998,10 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     stroke="currentColor",
                     viewBox="0 0 24 24"
                 ),
-                " Upload Photos",
+                " Upload",
                 href="/upload",
                 cls="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors"
-            ) if user else A(
-                "Sign in to upload",
-                href="/login",
-                cls="flex items-center justify-center w-full px-4 py-2.5 border border-slate-600 text-slate-400 text-sm font-medium rounded-lg hover:bg-slate-700 transition-colors"
-            ),
+            ) if (user and user.is_admin) else None,
             cls="px-4 py-4"
         ),
         # Navigation
@@ -3776,11 +3772,13 @@ def post(id: str, sess=None):
 @rt("/upload")
 def get(sess=None):
     """
-    Render the upload page. Requires login when auth is enabled.
+    Render the upload page. Requires admin when auth is enabled.
+    # TODO: Revert to _check_login when upload moderation queue is built (Phase D)
     """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
     user = get_current_user(sess or {})
-    if is_auth_enabled() and not user:
-        return RedirectResponse("/login", status_code=303)
     style = Style("""
         html, body {
             height: 100%;
@@ -3854,7 +3852,8 @@ def get(sess=None):
 async def post(files: list[UploadFile], source: str = "", sess=None):
     """
     Accept file upload(s) and optionally spawn subprocess for processing.
-    Requires login.
+    Requires admin.
+    # TODO: Revert to _check_login when upload moderation queue is built (Phase D)
 
     Handles multiple files (images and/or ZIPs) in a single batch job.
     All files are saved to a job directory.
@@ -3875,7 +3874,7 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
 
     Returns HTML partial with upload status.
     """
-    denied = _check_login(sess)
+    denied = _check_admin(sess)
     if denied:
         return denied
 

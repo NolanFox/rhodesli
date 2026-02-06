@@ -139,21 +139,29 @@ class TestAdminRoutesAdminUser:
 
 
 class TestUploadRoutePermissions:
-    """Upload route has login-required permission."""
+    """Upload route has admin-required permission.
 
-    def test_upload_get_redirects_when_auth_enabled_no_user(self, client, auth_enabled, no_user):
-        """GET /upload redirects to login when not authenticated."""
+    Upload is admin-only until moderation queue is built (Phase D).
+    See TODO in main.py: revert to _check_login when ready.
+    """
+
+    def test_upload_get_returns_401_when_anonymous(self, client, auth_enabled, no_user):
+        """GET /upload returns 401 when not authenticated."""
         response = client.get("/upload", follow_redirects=False)
-        assert response.status_code == 303
-        assert "/login" in response.headers.get("location", "")
+        assert response.status_code == 401
+
+    def test_upload_get_returns_403_for_non_admin(self, client, auth_enabled, regular_user):
+        """GET /upload returns 403 for non-admin users."""
+        response = client.get("/upload", follow_redirects=False)
+        assert response.status_code == 403
 
     def test_upload_get_accessible_when_auth_disabled(self, client, auth_disabled):
         """GET /upload is accessible when auth is disabled."""
         response = client.get("/upload")
         assert response.status_code == 200
 
-    def test_upload_get_accessible_when_logged_in(self, client, auth_enabled, regular_user):
-        """GET /upload is accessible for logged-in users."""
+    def test_upload_get_accessible_for_admin(self, client, auth_enabled, admin_user):
+        """GET /upload is accessible for admin users."""
         response = client.get("/upload")
         assert response.status_code == 200
 
@@ -162,11 +170,17 @@ class TestUploadRoutePermissions:
 
         FastHTML validates required params (files) before calling the handler,
         so a bare POST returns 400. With proper multipart data, the handler
-        returns 401 via _check_login. Either way, the upload is blocked.
+        returns 401 via _check_admin. Either way, the upload is blocked.
         """
         response = client.post("/upload", follow_redirects=False)
         assert response.status_code in (400, 401), \
             f"Expected 400 or 401, got {response.status_code}"
+
+    def test_upload_post_rejects_non_admin(self, client, auth_enabled, regular_user):
+        """POST /upload rejects non-admin users."""
+        response = client.post("/upload", follow_redirects=False)
+        assert response.status_code in (400, 403), \
+            f"Expected 400 or 403, got {response.status_code}"
 
 
 class TestHtmxAuthBehavior:

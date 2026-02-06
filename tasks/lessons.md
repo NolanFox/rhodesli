@@ -94,6 +94,11 @@
 - **Rule**: Test both HTMX (`HX-Request: true`) and browser request paths. They return different status codes (401 vs 303).
 - **Prevention**: Use the `tests/conftest.py` fixtures to test routes with and without HTMX headers.
 
+### Lesson 19: Default to admin-only for new data-modifying features
+- **Mistake**: `POST /upload` used `_check_login` (any user), but had no file size limits, rate limiting, or moderation queue. Any logged-in user could fill disk with uploads.
+- **Rule**: Default to admin-only for new data-modifying features. Loosen permissions only when moderation/guardrails are in place.
+- **Prevention**: When adding a new POST route that writes data, use `_check_admin` first. Add a `# TODO: Revert to _check_login when <guardrail> is built` comment. Only downgrade to `_check_login` after implementing the guardrail.
+
 ### Lesson 18: Supabase sender name requires custom SMTP
 - **Mistake**: Tried to set `smtp_sender_name` via Management API, but it only works when custom SMTP is configured.
 - **Rule**: Supabase's built-in mailer uses a fixed sender name. Custom sender requires configuring custom SMTP (Resend, SendGrid, etc.).
