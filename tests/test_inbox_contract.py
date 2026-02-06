@@ -43,8 +43,8 @@ class TestInboxContract:
             f"resolve_face_image_url returned None for inbox face_id '{face_id}'. "
             f"Expected '/crops/inbox_abc123def456.jpg'"
         )
-        assert result == "/crops/inbox_abc123def456.jpg", (
-            f"Expected '/crops/inbox_abc123def456.jpg', got '{result}'"
+        assert result == "/static/crops/inbox_abc123def456.jpg", (
+            f"Expected '/static/crops/inbox_abc123def456.jpg', got '{result}'"
         )
 
     def test_identity_card_renders_for_inbox_identity(self):
@@ -102,6 +102,6 @@ class TestInboxContract:
         assert result is not None, (
             f"resolve_face_image_url returned None for legacy face_id '{face_id}'"
         )
-        assert result == "/crops/image_001_compress_22.17_0.jpg", (
-            f"Expected '/crops/image_001_compress_22.17_0.jpg', got '{result}'"
+        assert result == "/static/crops/image_001_compress_22.17_0.jpg", (
+            f"Expected '/static/crops/image_001_compress_22.17_0.jpg', got '{result}'"
         )

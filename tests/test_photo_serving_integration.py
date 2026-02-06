@@ -93,10 +93,13 @@ def test_photo_index_paths_exist():
             if not path.exists():
                 missing.append(path_str)
         else:
-            # Check relative paths in raw_photos
-            raw_path = project_root / "raw_photos" / path.name
-            if not raw_path.exists():
-                missing.append(f"raw_photos/{path.name}")
+            # Check relative paths: resolve against project root
+            full_path = project_root / path_str
+            if not full_path.exists():
+                # Also try raw_photos/ fallback for legacy entries
+                raw_path = project_root / "raw_photos" / path.name
+                if not raw_path.exists():
+                    missing.append(path_str)
 
     assert not missing, f"Missing {len(missing)} files: {missing[:5]}"
 

@@ -50,20 +50,20 @@ class TestGalleryRoute:
         response = client.get("/")
         assert "grid" in response.text  # Tailwind grid classes
 
-    def test_gallery_has_quality_scores(self, client):
-        """Gallery displays quality scores."""
-        response = client.get("/")
-        assert "Quality:" in response.text
+    def test_triage_view_has_inbox_header(self, client):
+        """Triage section displays the Inbox header."""
+        response = client.get("/?section=to_review")
+        assert "Inbox" in response.text
 
     def test_gallery_has_face_cards(self, client):
-        """Gallery has face card elements with images."""
-        response = client.get("/")
-        assert "/crops/" in response.text and "<img" in response.text
+        """Gallery has face card elements with images when viewing browse."""
+        response = client.get("/?section=to_review&view=browse")
+        assert "crops/" in response.text and "<img" in response.text
 
-    def test_gallery_has_workstation_subtitle(self, client):
-        """Gallery has workstation subtitle."""
-        response = client.get("/")
-        assert "Forensic Identity Workstation" in response.text
+    def test_triage_view_has_attention_subtitle(self, client):
+        """Triage section shows items needing attention."""
+        response = client.get("/?section=to_review")
+        assert "need your attention" in response.text
 
 
 class TestNeighborCardThumbnail:
@@ -110,7 +110,7 @@ class TestNeighborCardThumbnail:
         # Should fall back to second anchor's crop
         assert "/crops/image_002_22.00_0.jpg" in html
         # Should NOT show placeholder
-        assert 'class="w-12 h-12 bg-stone-200' not in html
+        assert 'class="w-12 h-12 bg-slate-600' not in html
 
     def test_shows_placeholder_when_no_anchors_have_crops(self):
         """When no anchors have crop files, shows placeholder."""
@@ -130,7 +130,7 @@ class TestNeighborCardThumbnail:
         html = to_xml(card)
 
         # Should show placeholder div
-        assert 'class="w-12 h-12 bg-stone-200' in html
+        assert 'class="w-12 h-12 bg-slate-600' in html
 
     def test_shows_placeholder_when_no_anchors(self):
         """When identity has no anchors, shows placeholder."""
@@ -150,7 +150,7 @@ class TestNeighborCardThumbnail:
         html = to_xml(card)
 
         # Should show placeholder
-        assert 'class="w-12 h-12 bg-stone-200' in html
+        assert 'class="w-12 h-12 bg-slate-600' in html
 
     def test_falls_back_to_candidate_when_no_anchor_crops(self):
         """When no anchors have crops, falls back to candidate faces (B2-REPAIR)."""
@@ -174,7 +174,7 @@ class TestNeighborCardThumbnail:
         # Should use candidate's crop
         assert "/crops/candidate_image_21.50_0.jpg" in html
         # Should NOT show placeholder
-        assert 'class="w-12 h-12 bg-stone-200' not in html
+        assert 'class="w-12 h-12 bg-slate-600' not in html
 
     def test_falls_back_to_candidate_when_no_anchors(self):
         """PROPOSED identities with only candidates should show candidate thumbnail."""
@@ -197,7 +197,7 @@ class TestNeighborCardThumbnail:
         # Should use candidate's crop
         assert "/crops/solo_candidate_21.50_0.jpg" in html
         # Should NOT show placeholder
-        assert 'class="w-12 h-12 bg-stone-200' not in html
+        assert 'class="w-12 h-12 bg-slate-600' not in html
 
     def test_shows_placeholder_when_neither_anchor_nor_candidate_has_crop(self):
         """When neither anchors nor candidates have crops, shows placeholder."""
@@ -218,4 +218,4 @@ class TestNeighborCardThumbnail:
         html = to_xml(card)
 
         # Should show placeholder
-        assert 'class="w-12 h-12 bg-stone-200' in html
+        assert 'class="w-12 h-12 bg-slate-600' in html
