@@ -47,6 +47,7 @@ from app.auth import (
     get_current_user, User,
     login_with_supabase, signup_with_supabase, validate_invite_code,
     send_password_reset, update_password, get_oauth_url, get_user_from_token,
+    exchange_code_for_session,
 )
 
 # --- INSTRUMENTATION IMPORT ---
@@ -4490,6 +4491,32 @@ def get(sess):
             Script(src="https://cdn.tailwindcss.com"),
             Script("""
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Check for PKCE code in query params (Supabase email flow)
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const code = urlParams.get('code');
+
+                    if (code) {
+                        // Exchange PKCE code server-side for access token
+                        document.getElementById('error-msg').textContent = 'Verifying your link...';
+                        fetch('/auth/exchange-code', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({code: code})
+                        }).then(r => r.json()).then(data => {
+                            if (data.access_token) {
+                                document.getElementById('access_token').value = data.access_token;
+                                document.getElementById('reset-form').style.display = 'block';
+                                document.getElementById('error-msg').style.display = 'none';
+                            } else {
+                                document.getElementById('error-msg').textContent = data.error || 'This link has expired. Please request a new one.';
+                            }
+                        }).catch(function() {
+                            document.getElementById('error-msg').textContent = 'Something went wrong. Please request a new reset link.';
+                        });
+                        return;
+                    }
+
+                    // Legacy: check for access_token in URL hash fragment
                     const hash = window.location.hash.substring(1);
                     const params = new URLSearchParams(hash);
                     const accessToken = params.get('access_token');
@@ -4499,7 +4526,7 @@ def get(sess):
                         document.getElementById('access_token').value = accessToken;
                         document.getElementById('reset-form').style.display = 'block';
                         document.getElementById('error-msg').style.display = 'none';
-                    } else if (!accessToken) {
+                    } else if (!accessToken && !code) {
                         document.getElementById('error-msg').textContent = 'Invalid or expired reset link. Please request a new one.';
                     }
                 });
@@ -4658,6 +4685,27 @@ async def post(request, sess):
         return JSONResponse({"success": True})
     else:
         return JSONResponse({"error": error or "Failed to get user"}, status_code=401)
+
+
+@rt("/auth/exchange-code")
+async def post(request, sess):
+    """Exchange a PKCE auth code for an access token (used by password recovery)."""
+    from starlette.responses import JSONResponse
+
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid request"}, status_code=400)
+
+    code = data.get("code")
+    if not code:
+        return JSONResponse({"error": "No code provided"}, status_code=400)
+
+    result, error = await exchange_code_for_session(code)
+    if result:
+        return JSONResponse({"access_token": result["access_token"]})
+    else:
+        return JSONResponse({"error": error or "Code exchange failed"}, status_code=400)
 
 
 @rt("/logout")

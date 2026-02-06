@@ -136,6 +136,7 @@ async def send_password_reset(email: str) -> tuple[bool, str | None]:
                 f"{SUPABASE_URL}/auth/v1/recover",
                 json={
                     "email": email,
+                    "redirect_to": f"{site_url}/reset-password",
                 },
                 headers={
                     "apikey": SUPABASE_ANON_KEY,
@@ -221,6 +222,41 @@ async def get_user_from_token(access_token: str) -> tuple[dict | None, str | Non
             else:
                 error_data = response.json()
                 msg = error_data.get("error_description") or "Failed to get user"
+                return None, msg
+    except Exception as e:
+        return None, f"Connection error: {e}"
+
+
+async def exchange_code_for_session(code: str) -> tuple[dict | None, str | None]:
+    """Exchange a PKCE auth code for an access token and user info."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return None, "Authentication not configured"
+
+    import httpx
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{SUPABASE_URL}/auth/v1/token?grant_type=pkce",
+                json={"auth_code": code, "code_verifier": ""},
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "access_token": data.get("access_token"),
+                    "user": {
+                        "id": data.get("user", {}).get("id"),
+                        "email": data.get("user", {}).get("email"),
+                    },
+                }, None
+            else:
+                error_data = response.json()
+                msg = error_data.get("error_description") or error_data.get("msg") or "Code exchange failed"
                 return None, msg
     except Exception as e:
         return None, f"Connection error: {e}"
