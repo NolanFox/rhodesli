@@ -302,7 +302,11 @@ class TestMergeIdentities:
         assert result["reason"] == "co_occurrence"
 
     def test_successful_merge_transfers_faces(self):
-        """Successful merge should move all faces from source to target."""
+        """Successful merge should move all faces from source to target.
+
+        Uses auto_correct_direction=False to test raw merge mechanics
+        independent of direction heuristics.
+        """
         from core.photo_registry import PhotoRegistry
         from core.registry import IdentityRegistry
 
@@ -327,6 +331,7 @@ class TestMergeIdentities:
             target_id=id_a,
             user_source="test",
             photo_registry=photo_registry,
+            auto_correct_direction=False,
         )
 
         assert result["success"] is True
@@ -337,6 +342,10 @@ class TestMergeIdentities:
         assert "face_a" in target["anchor_ids"]
         assert "face_b" in target["anchor_ids"]
         assert "face_c" in target["candidate_ids"]
+
+        # Verify merge_history was recorded
+        assert len(target.get("merge_history", [])) == 1
+        assert target["merge_history"][0]["source_id"] == id_b
 
     def test_merge_marks_source_as_merged(self):
         """Source identity should have merged_into field set after merge."""

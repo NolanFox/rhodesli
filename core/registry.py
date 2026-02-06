@@ -55,6 +55,7 @@ class ActionType(Enum):
     STATE_CHANGE = "state_change"
     UNDO = "undo"
     MERGE = "merge"
+    UNDO_MERGE = "undo_merge"
     RENAME = "rename"
     DETACH = "detach"
 
@@ -231,12 +232,125 @@ class IdentityRegistry:
                 results.append(identity.copy())
         return results
 
+    @staticmethod
+    def _is_real_name(name: str | None) -> bool:
+        """Check if a name is a real human-assigned name (not auto-generated)."""
+        if not name:
+            return False
+        return not name.startswith("Unidentified Person ")
+
+    @staticmethod
+    def _state_priority(state: str) -> int:
+        """Return trust priority for a state (higher = more trusted)."""
+        priorities = {
+            "CONFIRMED": 4,
+            "PROPOSED": 3,
+            "INBOX": 2,
+            "SKIPPED": 1,
+            "CONTESTED": 0,
+            "REJECTED": 0,
+        }
+        return priorities.get(state, 0)
+
+    def resolve_merge_direction(
+        self, id_a: str, id_b: str
+    ) -> dict:
+        """
+        Determine correct merge direction based on name/state/face count.
+
+        Rules (in order):
+        1. If both have real names -> name_conflict (caller must resolve)
+        2. Named identity always becomes target (keeps name)
+        3. Higher-trust state becomes target
+        4. More faces becomes target (tiebreaker)
+        5. Fall through: id_a is target (preserve caller intent)
+
+        Returns:
+            Dict with keys:
+            - target_id, source_id: resolved direction
+            - swapped: bool (True if direction was auto-corrected)
+            - conflict: "name_conflict" | None
+        """
+        a = self._identities[id_a]
+        b = self._identities[id_b]
+
+        a_named = self._is_real_name(a.get("name"))
+        b_named = self._is_real_name(b.get("name"))
+
+        # Rule 4: Two real names -> conflict
+        if a_named and b_named:
+            return {
+                "target_id": id_a,
+                "source_id": id_b,
+                "swapped": False,
+                "conflict": "name_conflict",
+            }
+
+        # Rule 1: Named always wins
+        if b_named and not a_named:
+            # b should be target, a should be source -> swap
+            return {
+                "target_id": id_b,
+                "source_id": id_a,
+                "swapped": True,
+                "conflict": None,
+            }
+        if a_named and not b_named:
+            # a is already target -> no swap
+            return {
+                "target_id": id_a,
+                "source_id": id_b,
+                "swapped": False,
+                "conflict": None,
+            }
+
+        # Both unnamed: Rule 2 - higher state wins
+        a_priority = self._state_priority(a.get("state", "INBOX"))
+        b_priority = self._state_priority(b.get("state", "INBOX"))
+
+        if b_priority > a_priority:
+            return {
+                "target_id": id_b,
+                "source_id": id_a,
+                "swapped": True,
+                "conflict": None,
+            }
+        if a_priority > b_priority:
+            return {
+                "target_id": id_a,
+                "source_id": id_b,
+                "swapped": False,
+                "conflict": None,
+            }
+
+        # Rule 3: More faces wins (tiebreaker)
+        a_faces = len(a.get("anchor_ids", [])) + len(a.get("candidate_ids", []))
+        b_faces = len(b.get("anchor_ids", [])) + len(b.get("candidate_ids", []))
+
+        if b_faces > a_faces:
+            return {
+                "target_id": id_b,
+                "source_id": id_a,
+                "swapped": True,
+                "conflict": None,
+            }
+
+        # Default: preserve caller intent (a is target)
+        return {
+            "target_id": id_a,
+            "source_id": id_b,
+            "swapped": False,
+            "conflict": None,
+        }
+
     def merge_identities(
         self,
         source_id: str,
         target_id: str,
         user_source: str,
         photo_registry: "PhotoRegistry",
+        resolved_name: str = None,
+        auto_correct_direction: bool = True,
     ) -> dict:
         """
         Merge source identity INTO target identity.
@@ -244,23 +358,27 @@ class IdentityRegistry:
         Safety Foundation: Calls validate_merge() first - merge is blocked if
         the two identities have faces appearing in the same photo.
 
-        Process:
-        1. Validate merge via validate_merge() (non-negotiable)
-        2. Move all faces from source to target (anchors + candidates)
-        3. Mark source as merged (soft delete via merged_into field)
-        4. Record MERGE event in history
+        Enhanced behavior:
+        - Auto-corrects merge direction (named identity always survives)
+        - Detects name conflicts (both identities named) and returns 'name_conflict'
+        - Records merge_history on target for undo capability
+        - Promotes target state if source had higher-trust state
 
         Args:
             source_id: Identity to be absorbed
             target_id: Identity to absorb source
             user_source: Who initiated this action
             photo_registry: For co-occurrence validation
+            resolved_name: Name to use when both identities have names (resolves conflict)
+            auto_correct_direction: If True, swap source/target based on name/state heuristics
 
         Returns:
             Dict with:
             - success: bool
-            - reason: str (on failure)
+            - reason: str (on failure: co_occurrence, already_merged, name_conflict)
             - source_id, target_id, faces_merged: (on success)
+            - direction_swapped: bool (on success, True if direction was auto-corrected)
+            - name_conflict_details: dict (when reason is name_conflict)
 
         Raises:
             KeyError: If either identity not found
@@ -288,70 +406,255 @@ class IdentityRegistry:
                 "message": f"Merge blocked: {reason}",
             }
 
-        source = self._identities[source_id]
-        target = self._identities[target_id]
-
-        # Check if source is already merged
-        if source.get("merged_into"):
+        # Check if source is already merged (check both before direction swap)
+        if self._identities[source_id].get("merged_into"):
             return {
                 "success": False,
                 "reason": "already_merged",
-                "message": f"Source identity already merged into {source['merged_into']}",
+                "message": f"Source identity already merged into {self._identities[source_id]['merged_into']}",
             }
+        if self._identities[target_id].get("merged_into"):
+            return {
+                "success": False,
+                "reason": "already_merged",
+                "message": f"Target identity already merged into {self._identities[target_id]['merged_into']}",
+            }
+
+        # Resolve merge direction
+        direction_swapped = False
+        if auto_correct_direction:
+            resolution = self.resolve_merge_direction(target_id, source_id)
+
+            # Check for name conflict
+            if resolution["conflict"] == "name_conflict" and not resolved_name:
+                # Return conflict details for the UI to handle
+                target_data = self._identities[target_id]
+                source_data = self._identities[source_id]
+                return {
+                    "success": False,
+                    "reason": "name_conflict",
+                    "message": "Both identities have names. Please choose which name to keep.",
+                    "name_conflict_details": {
+                        "identity_a": {
+                            "id": target_id,
+                            "name": target_data.get("name"),
+                            "face_count": len(target_data.get("anchor_ids", [])) + len(target_data.get("candidate_ids", [])),
+                            "state": target_data.get("state"),
+                        },
+                        "identity_b": {
+                            "id": source_id,
+                            "name": source_data.get("name"),
+                            "face_count": len(source_data.get("anchor_ids", [])) + len(source_data.get("candidate_ids", [])),
+                            "state": source_data.get("state"),
+                        },
+                    },
+                }
+
+            # Apply direction correction
+            actual_target_id = resolution["target_id"]
+            actual_source_id = resolution["source_id"]
+            direction_swapped = resolution["swapped"]
+        else:
+            actual_target_id = target_id
+            actual_source_id = source_id
+
+        source = self._identities[actual_source_id]
+        target = self._identities[actual_target_id]
 
         previous_version = target["version_id"]
         faces_merged = 0
+
+        # Track which faces are being added (for merge_history / undo)
+        anchors_added = []
+        candidates_added = []
+        negatives_added = []
 
         # Move anchors from source to target
         for anchor in source["anchor_ids"]:
             if anchor not in target["anchor_ids"]:
                 target["anchor_ids"].append(anchor)
+                anchors_added.append(anchor)
                 faces_merged += 1
 
         # Move candidates from source to target
         for candidate in source["candidate_ids"]:
             if candidate not in target["candidate_ids"]:
                 target["candidate_ids"].append(candidate)
+                candidates_added.append(candidate)
                 faces_merged += 1
 
         # Preserve negative evidence
         for negative in source.get("negative_ids", []):
             if negative not in target.get("negative_ids", []):
                 target.setdefault("negative_ids", []).append(negative)
+                negatives_added.append(negative)
 
         # Mark source as merged (soft delete)
         now = datetime.now(timezone.utc).isoformat()
-        source["merged_into"] = target_id
+        source["merged_into"] = actual_target_id
         source["updated_at"] = now
+
+        # State promotion: target gets max(target.state, source.state)
+        source_priority = self._state_priority(source.get("state", "INBOX"))
+        target_priority = self._state_priority(target.get("state", "INBOX"))
+        if source_priority > target_priority:
+            target["state"] = source["state"]
+
+        # If a resolved_name was provided (name conflict resolution), apply it
+        if resolved_name:
+            target["name"] = resolved_name
 
         # Update target version
         target["version_id"] += 1
         target["updated_at"] = now
 
-        # Record merge event
+        # Record merge_history on target for undo capability
+        merge_history_entry = {
+            "merge_event_id": str(uuid.uuid4()),
+            "timestamp": now,
+            "source_id": actual_source_id,
+            "source_name": source.get("name"),
+            "source_state": source.get("state"),
+            "faces_added": {
+                "anchors": anchors_added,
+                "candidates": candidates_added,
+                "negatives": negatives_added,
+            },
+            "direction_auto_corrected": direction_swapped,
+            "merged_by": user_source,
+        }
+        target.setdefault("merge_history", []).append(merge_history_entry)
+
+        # Record merge event in global history
         self._record_event(
-            identity_id=target_id,
+            identity_id=actual_target_id,
             action=ActionType.MERGE.value,
             face_ids=[],
             user_source=user_source,
             previous_version_id=previous_version,
             metadata={
-                "source_identity_id": source_id,
+                "source_identity_id": actual_source_id,
                 "faces_merged": faces_merged,
+                "direction_swapped": direction_swapped,
+                "merge_event_id": merge_history_entry["merge_event_id"],
             },
         )
 
         logger.info(
-            f"Merged identity {source_id} into {target_id} "
-            f"({faces_merged} faces transferred)"
+            f"Merged identity {actual_source_id} into {actual_target_id} "
+            f"({faces_merged} faces transferred, swapped={direction_swapped})"
+        )
+
+        return {
+            "success": True,
+            "reason": "ok",
+            "source_id": actual_source_id,
+            "target_id": actual_target_id,
+            "faces_merged": faces_merged,
+            "direction_swapped": direction_swapped,
+        }
+
+    def undo_merge(self, identity_id: str, user_source: str) -> dict:
+        """
+        Undo the most recent merge on an identity.
+
+        Reads the last entry from merge_history, removes the merged faces
+        from the target, and restores the source identity.
+
+        Args:
+            identity_id: The target identity (that absorbed faces)
+            user_source: Who initiated this undo
+
+        Returns:
+            Dict with:
+            - success: bool
+            - reason: str (on failure)
+            - source_id: restored identity ID (on success)
+            - faces_removed: number of faces moved back (on success)
+        """
+        target = self._identities.get(identity_id)
+        if not target:
+            return {"success": False, "reason": "not_found", "message": "Identity not found."}
+
+        merge_history = target.get("merge_history", [])
+        if not merge_history:
+            return {"success": False, "reason": "no_merge_history", "message": "No merges to undo."}
+
+        # Get the most recent merge
+        last_merge = merge_history[-1]
+        source_id = last_merge["source_id"]
+
+        # Verify source still exists
+        source = self._identities.get(source_id)
+        if not source:
+            return {"success": False, "reason": "source_not_found", "message": "Source identity no longer exists."}
+
+        # Check that target itself is not merged into something else
+        if target.get("merged_into"):
+            return {
+                "success": False,
+                "reason": "target_is_merged",
+                "message": "Cannot undo: this identity has been merged into another.",
+            }
+
+        faces_removed = 0
+        faces_added = last_merge.get("faces_added", {})
+
+        # Remove anchors that came from the merge (handle partial detach gracefully)
+        for anchor in faces_added.get("anchors", []):
+            if anchor in target["anchor_ids"]:
+                target["anchor_ids"].remove(anchor)
+                faces_removed += 1
+
+        # Remove candidates that came from the merge
+        for candidate in faces_added.get("candidates", []):
+            if candidate in target["candidate_ids"]:
+                target["candidate_ids"].remove(candidate)
+                faces_removed += 1
+
+        # Remove negatives that came from the merge
+        for negative in faces_added.get("negatives", []):
+            neg_list = target.get("negative_ids", [])
+            if negative in neg_list:
+                neg_list.remove(negative)
+
+        # Restore source identity (clear merged_into)
+        now = datetime.now(timezone.utc).isoformat()
+        source.pop("merged_into", None)
+        source["updated_at"] = now
+
+        # Remove the merge_history entry
+        merge_history.pop()
+
+        # Update target version
+        previous_version = target["version_id"]
+        target["version_id"] += 1
+        target["updated_at"] = now
+
+        # Record undo event
+        self._record_event(
+            identity_id=identity_id,
+            action=ActionType.UNDO_MERGE.value,
+            face_ids=[],
+            user_source=user_source,
+            previous_version_id=previous_version,
+            metadata={
+                "restored_source_id": source_id,
+                "faces_removed": faces_removed,
+                "merge_event_id": last_merge.get("merge_event_id"),
+            },
+        )
+
+        logger.info(
+            f"Undid merge on {identity_id}: restored {source_id} "
+            f"({faces_removed} faces moved back)"
         )
 
         return {
             "success": True,
             "reason": "ok",
             "source_id": source_id,
-            "target_id": target_id,
-            "faces_merged": faces_merged,
+            "faces_removed": faces_removed,
         }
 
     def confirm_identity(self, identity_id: str, user_source: str) -> None:

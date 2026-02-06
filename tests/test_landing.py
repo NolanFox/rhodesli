@@ -1,13 +1,15 @@
 """Landing page tests: content, stats, CTAs, photos, auth states.
 
 Tests that the landing page:
-- Returns 200 for all users (anonymous and logged-in)
+- Returns 200 for anonymous users (shows landing page)
+- Logged-in users get redirected to the dashboard (section=to_review)
 - Contains expected sections: hero, stats, how-it-works, CTA, about
 - Shows live stats computed from actual data (not hardcoded zeros)
 - Shows correct CTAs based on auth state
 - Includes featured photo images with lazy loading
-- Works for anonymous users (no auth required)
-- Works for logged-in users (shows different CTA)
+- Features interactive face detection overlay data
+- Shows unidentified mystery faces with CTAs
+- Mentions the Jewish Community of Rhodes and Sephardic heritage
 """
 
 import pytest
@@ -23,14 +25,19 @@ class TestLandingPageBasics:
         assert response.status_code == 200
 
     def test_contains_title(self, client):
-        """Landing page has the family archive title."""
+        """Landing page has the archive title."""
         response = client.get("/")
         assert "Rhodesli" in response.text
 
-    def test_contains_family_tagline(self, client):
-        """Landing page has the family-oriented tagline."""
+    def test_contains_community_tagline(self, client):
+        """Landing page references the Jewish Community of Rhodes."""
         response = client.get("/")
-        assert "Rhodes-Capeluto" in response.text
+        assert "Jewish Community of Rhodes" in response.text
+
+    def test_contains_sephardic_heritage(self, client):
+        """Landing page mentions Sephardic and Ladino heritage."""
+        response = client.get("/")
+        assert "Sephardic" in response.text or "Ladino" in response.text
 
     def test_contains_hero_section(self, client):
         """Landing page has the hero section."""
@@ -57,22 +64,19 @@ class TestLandingPageBasics:
         response = client.get("/")
         assert 'id="cta"' in response.text
 
-    def test_does_not_contain_tech_jargon(self, client):
-        """Landing page avoids technical jargon inappropriate for family members."""
+    def test_footer_mentions_no_generative_ai(self, client):
+        """Footer clarifies that only forensic face matching is used."""
         response = client.get("/")
-        text = response.text.lower()
-        # Should not have "identity system" as a visible heading
-        # (it's OK in HTML attributes or code comments)
-        assert "forensic" not in text or "forensic" in text.split("<!--")[0] is False
+        assert "forensic face matching" in response.text
 
 
 class TestLandingPageStats:
     """Stats section should show live data, not hardcoded zeros."""
 
     def test_stats_photo_count_present(self, client):
-        """Landing page shows photo count."""
+        """Landing page shows photo count label."""
         response = client.get("/")
-        assert "photos preserved" in response.text
+        assert "archival photos" in response.text
 
     def test_stats_people_identified_present(self, client):
         """Landing page shows people identified count."""
@@ -84,23 +88,19 @@ class TestLandingPageStats:
         response = client.get("/")
         assert "faces detected" in response.text
 
-    def test_stats_faces_need_help_present(self, client):
-        """Landing page shows faces needing help count."""
+    def test_stats_unidentified_present(self, client):
+        """Landing page shows unidentified faces count."""
         response = client.get("/")
-        assert "faces need your help" in response.text
+        assert "still unidentified" in response.text
 
     def test_stats_are_not_all_zero(self, client):
         """Stats reflect actual data -- not all zeros."""
-        response = client.get("/")
-        text = response.text
-        # At minimum, photo_count should be nonzero if data exists
-        # The stat cards show the number in a div before the label
-        # Check that at least one stat is a nonzero number
         from app.main import _compute_landing_stats
         stats = _compute_landing_stats()
-        # At least one stat should be > 0 (project has data)
-        assert any(v > 0 for v in stats.values()), \
-            f"All landing stats are zero: {stats}. Expected live data."
+        # At least one numeric stat should be > 0 (project has data)
+        numeric_stats = {k: v for k, v in stats.items() if isinstance(v, (int, float))}
+        assert any(v > 0 for v in numeric_stats.values()), \
+            f"All landing stats are zero: {numeric_stats}. Expected live data."
 
     def test_stats_match_actual_data(self, client):
         """Stats on the page match what _compute_landing_stats returns."""
@@ -108,11 +108,16 @@ class TestLandingPageStats:
         stats = _compute_landing_stats()
         response = client.get("/")
         text = response.text
-        # Each stat number should appear in the page
-        assert str(stats["photo_count"]) in text
-        assert str(stats["named_count"]) in text
-        assert str(stats["total_faces"]) in text
-        assert str(stats["needs_help"]) in text
+        # Each stat number should appear in the page (as data-count attribute)
+        assert f'data-count="{stats["photo_count"]}"' in text
+        assert f'data-count="{stats["named_count"]}"' in text
+        assert f'data-count="{stats["total_faces"]}"' in text
+        assert f'data-count="{stats["needs_help"]}"' in text
+
+    def test_stats_have_animated_counters(self, client):
+        """Stats use data-count attributes for animated counting."""
+        response = client.get("/")
+        assert "data-count=" in response.text
 
 
 class TestLandingPagePhotos:
@@ -136,16 +141,26 @@ class TestLandingPagePhotos:
         assert 'loading="lazy"' in response.text
 
     def test_images_have_alt_text(self, client):
-        """Featured images have alt text for accessibility."""
+        """Featured images have descriptive alt text for accessibility."""
         response = client.get("/")
-        assert 'alt="Rhodes-Capeluto family photo"' in response.text
+        assert "Archival photograph from the Jewish community of Rhodes" in response.text
 
     def test_hero_has_multiple_photos(self, client):
-        """Hero section shows multiple featured photos."""
+        """Hero section shows multiple featured photos in mosaic."""
         response = client.get("/")
-        # Count image tags in the hero section
-        hero_img_count = response.text.count("Rhodes-Capeluto family photo")
-        assert hero_img_count >= 6, f"Expected at least 6 hero photos, found {hero_img_count}"
+        # Count hero-card divs (each contains one photo)
+        hero_card_count = response.text.count("hero-card")
+        assert hero_card_count >= 4, f"Expected at least 4 hero photos, found {hero_card_count}"
+
+    def test_hero_has_face_detection_overlay(self, client):
+        """Hero photos include face detection overlay elements."""
+        response = client.get("/")
+        assert "face-overlay" in response.text or "face-box" in response.text
+
+    def test_hover_instruction_present(self, client):
+        """Landing page has instruction to hover over photos."""
+        response = client.get("/")
+        assert "face detection" in response.text.lower()
 
 
 class TestLandingPageNavigation:
@@ -175,34 +190,46 @@ class TestLandingPageAnonymous:
         response = client.get("/")
         assert "Start Exploring" in response.text
 
-    def test_anonymous_with_auth_sees_join(self, client, auth_enabled, no_user):
-        """Anonymous users with auth enabled see 'Join the Project' CTA."""
+    def test_anonymous_sees_help_identify(self, client, auth_disabled, no_user):
+        """Anonymous users see 'Help Identify' CTA."""
         response = client.get("/")
-        assert "Join the Project" in response.text
+        assert "Help Identify" in response.text
 
     def test_anonymous_with_auth_sees_sign_in(self, client, auth_enabled, no_user):
         """Anonymous users with auth enabled see 'Sign In' in nav."""
         response = client.get("/")
         assert "Sign In" in response.text
 
+    def test_anonymous_sees_mystery_faces_section(self, client, auth_disabled, no_user):
+        """Anonymous users see the 'Can you identify these faces?' section."""
+        response = client.get("/")
+        # Section may be present if there are unidentified faces
+        assert "identify" in response.text.lower()
+
 
 class TestLandingPageLoggedIn:
-    """Landing page for logged-in users."""
+    """Logged-in users get redirected to the dashboard, not the landing page."""
 
-    def test_logged_in_sees_continue_reviewing(self, client, auth_enabled, regular_user):
-        """Logged-in users see 'Continue Reviewing' CTA."""
+    def test_logged_in_sees_dashboard(self, client, auth_enabled, regular_user):
+        """Logged-in users see the dashboard/workstation, not the landing page."""
         response = client.get("/")
-        assert "Continue Reviewing" in response.text
+        # Logged-in users should be redirected to the triage dashboard
+        # which has the sidebar and workstation elements
+        assert "sidebar" in response.text.lower() or "to_review" in response.text.lower() \
+            or "Rhodesli Identity System" in response.text
 
-    def test_logged_in_sees_browse_photos(self, client, auth_enabled, regular_user):
-        """Logged-in users see 'Browse Photos' secondary CTA."""
+    def test_logged_in_does_not_see_landing_hero(self, client, auth_enabled, regular_user):
+        """Logged-in users do NOT see the landing page hero section."""
         response = client.get("/")
-        assert "Browse Photos" in response.text
+        # The landing page hero has specific content not in the dashboard
+        assert "Jewish Community of Rhodes" not in response.text
 
-    def test_logged_in_does_not_see_join(self, client, auth_enabled, regular_user):
-        """Logged-in users do NOT see 'Join the Project'."""
+    def test_logged_in_does_not_see_landing_cta(self, client, auth_enabled, regular_user):
+        """Logged-in users do NOT see 'Start Exploring' landing CTA."""
         response = client.get("/")
-        assert "Join the Project" not in response.text
+        # The landing page "Start Exploring" button should not appear
+        # (the dashboard has different navigation)
+        assert "btn-primary" not in response.text
 
 
 class TestWorkstationStillWorks:

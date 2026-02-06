@@ -14,6 +14,7 @@ import hashlib
 import io
 import json
 import logging
+import random
 import re
 import sys
 import zipfile
@@ -950,7 +951,11 @@ def toast_with_undo(
 
 def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
     """
-    Fixed sidebar navigation for the Command Center.
+    Collapsible sidebar navigation for the Command Center.
+
+    Supports expanded (full labels + counts) and collapsed (icons only) states.
+    Default: collapsed on mobile (< 768px), expanded on desktop.
+    Collapse state persisted in localStorage.
 
     Args:
         counts: Dict with keys: to_review, confirmed, skipped, rejected
@@ -958,7 +963,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
         user: Current user (None if anonymous)
     """
     def nav_item(href: str, icon: str, label: str, count: int, section_key: str, color: str):
-        """Single navigation item with badge."""
+        """Single navigation item with badge. Adapts to collapsed state."""
         is_active = current_section == section_key
 
         # Dark theme: Active vs inactive styling
@@ -970,46 +975,73 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             badge_cls = f"bg-{color}-500/20 text-{color}-400"
 
         return A(
-            Span(
-                Span(icon, cls="mr-2"),
-                Span(label),
-                cls="flex items-center"
-            ),
+            # Icon always visible
+            Span(icon, cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
+            # Label shown when expanded
+            Span(label, cls="sidebar-label ml-2 whitespace-nowrap"),
+            # Badge shown when expanded
             Span(
                 str(count),
-                cls=f"px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}"
+                cls=f"sidebar-label ml-auto px-2 py-0.5 text-xs font-bold rounded-full {badge_cls}"
             ),
             href=href,
-            cls=f"flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {container_cls}"
+            title=f"{label} ({count})",
+            cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[40px] {container_cls}"
         )
 
     return Aside(
-        # Header
+        # Header with collapse toggle
         Div(
-            H1("Rhodesli", cls="text-xl font-bold text-white"),
-            P("Identity System", cls="text-xs text-slate-400 mt-0.5"),
-            cls="px-6 py-5 border-b border-slate-700"
+            Div(
+                H1("Rhodesli", cls="sidebar-label text-lg font-bold text-white leading-tight"),
+                P("Identity System", cls="sidebar-label text-xs text-slate-400 mt-0.5"),
+                cls="flex-1 min-w-0"
+            ),
+            Button(
+                Svg(
+                    Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M15 19l-7-7 7-7"),
+                    cls="sidebar-chevron w-4 h-4 transition-transform duration-200",
+                    fill="none", stroke="currentColor", viewBox="0 0 24 24"
+                ),
+                onclick="toggleSidebarCollapse()",
+                cls="sidebar-collapse-btn hidden lg:flex items-center justify-center p-1 rounded text-slate-400 hover:text-white hover:bg-slate-700 transition-colors",
+                title="Toggle sidebar"
+            ),
+            cls="flex items-center px-3 py-3 border-b border-slate-700/50"
+        ),
+        # Search input
+        Div(
+            Div(
+                Svg(
+                    Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"),
+                    cls="w-4 h-4 text-slate-400 flex-shrink-0",
+                    fill="none", stroke="currentColor", viewBox="0 0 24 24"
+                ),
+                Input(type="text", name="q", placeholder="Search names...", autocomplete="off",
+                      cls="sidebar-label bg-transparent border-none outline-none text-sm text-slate-200 placeholder-slate-500 w-full ml-2",
+                      id="sidebar-search-input",
+                      hx_get="/api/search", hx_trigger="keyup changed delay:300ms",
+                      hx_target="#sidebar-search-results", hx_swap="innerHTML"),
+                cls="flex items-center bg-slate-700/50 rounded-lg px-3 py-2"
+            ),
+            Div(id="sidebar-search-results", cls="sidebar-search-results"),
+            cls="sidebar-search px-3 pt-3 pb-1 relative"
         ),
         # Upload Button (admin-only until moderation queue built)
         Div(
             A(
                 Svg(
-                    Path(
-                        stroke_linecap="round",
-                        stroke_linejoin="round",
-                        stroke_width="2",
-                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                    ),
-                    cls="w-4 h-4",
-                    fill="none",
-                    stroke="currentColor",
-                    viewBox="0 0 24 24"
+                    Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"),
+                    cls="w-4 h-4 flex-shrink-0", fill="none", stroke="currentColor", viewBox="0 0 24 24"
                 ),
-                " Upload",
-                href="/upload",
-                cls="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors"
+                Span("Upload", cls="sidebar-label ml-2"),
+                href="/upload", title="Upload photos",
+                cls="flex items-center justify-center gap-0 w-full px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors"
             ) if (user and user.is_admin) else None,
-            cls="px-4 py-4"
+            cls="px-3 py-2"
         ),
         # Navigation
         Nav(
@@ -1017,54 +1049,53 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             Div(
                 P(
                     "Review",
-                    cls="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
+                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=to_review", "📥", "Inbox", counts["to_review"], "to_review", "blue"),
                 nav_item("/?section=skipped", "⏸", "Skipped", counts["skipped"], "skipped", "yellow"),
-                cls="mb-4"
+                cls="mb-3"
             ),
             # Library Section
             Div(
                 P(
                     "Library",
-                    cls="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
+                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=confirmed", "✓", "Confirmed", counts["confirmed"], "confirmed", "green"),
                 nav_item("/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
-                cls="mb-4"
+                cls="mb-3"
             ),
             # Browse Section (photo-centric)
             Div(
                 P(
                     "Browse",
-                    cls="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2"
+                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
-                cls="mb-4"
+                cls="mb-3"
             ),
-            cls="flex-1 px-3 py-2 space-y-1 overflow-y-auto"
+            cls="flex-1 px-2 py-2 space-y-0 overflow-y-auto"
         ),
         # Footer with user info and stats
         Div(
-            # User info / auth link
             Div(
                 Div(
-                    Span(user.email, cls="text-xs text-slate-400 truncate"),
-                    Span(" (admin)" if user.is_admin else "", cls="text-xs text-indigo-400"),
-                    cls="flex items-center gap-1"
+                    Span(user.email, cls="sidebar-label text-xs text-slate-400 truncate"),
+                    Span(" (admin)" if user.is_admin else "", cls="sidebar-label text-xs text-indigo-400"),
+                    cls="flex items-center gap-1 min-w-0"
                 ),
-                A("Sign out", href="/logout", cls="text-xs text-slate-500 hover:text-slate-300 underline"),
-                cls="flex items-center justify-between mb-2"
+                A("Sign out", href="/logout", cls="sidebar-label text-xs text-slate-500 hover:text-slate-300 underline flex-shrink-0"),
+                cls="flex items-center justify-between mb-1 gap-2"
             ) if user else Div(
-                A("Sign in", href="/login", cls="text-xs text-slate-400 hover:text-slate-300 underline"),
-                cls="mb-2"
+                A("Sign in", href="/login", cls="sidebar-label text-xs text-slate-400 hover:text-slate-300 underline"),
+                cls="mb-1"
             ),
             Div(
                 f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed']} identified",
-                cls="text-xs text-slate-500 font-data"
+                cls="sidebar-label text-xs text-slate-500 font-data"
             ),
-            Div("v0.6.0", cls="text-xs text-slate-600 mt-1"),
-            cls="px-4 py-3 border-t border-slate-700"
+            Div("v0.6.0", cls="sidebar-label text-xs text-slate-600 mt-0.5"),
+            cls="px-3 py-2 border-t border-slate-700/50"
         ),
         # Close button for mobile
         Div(
@@ -1076,7 +1107,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             cls="absolute top-3 right-3 lg:hidden"
         ),
         id="sidebar",
-        cls="fixed left-0 top-0 h-screen w-64 bg-slate-800 border-r border-slate-700 flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-transform"
+        cls="sidebar-container fixed left-0 top-0 h-screen bg-slate-800 border-r border-slate-700/50 flex flex-col z-40 -translate-x-full lg:translate-x-0 transition-all duration-200"
     )
 
 
@@ -1103,6 +1134,11 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
                 "View All",
                 href="/?section=to_review&view=browse",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'browse' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            ),
+            A(
+                "Match",
+                href="/?section=to_review&view=match",
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-amber-500 text-white' if view_mode == 'match' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             ),
             cls="flex items-center gap-2"
         )
@@ -1213,6 +1249,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
+                **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
             ),
             cls="flex items-center gap-3 mt-6"
         )
@@ -1225,6 +1262,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
+                **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
             ),
             cls="flex items-center gap-3 mt-6"
         )
@@ -1327,6 +1365,7 @@ def render_to_review_section(
     counts: dict,
     current_id: str = None,
     is_admin: bool = True,
+    sort_by: str = "newest",
 ) -> Div:
     """Render the To Review section with Focus or Browse mode."""
 
@@ -1389,8 +1428,55 @@ def render_to_review_section(
                 ),
                 cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center"
             )
+    elif view_mode == "match":
+        # Match mode - gamified side-by-side pairing
+        content = Div(
+            Div(
+                Div(
+                    Span("Matched: ", cls="text-slate-400"),
+                    Span("0", id="match-counter", cls="text-white font-bold"),
+                    Span(" pairs today", cls="text-slate-400"),
+                    cls="text-sm"
+                ),
+                cls="flex items-center justify-between mb-4"
+            ),
+            Div(
+                P("Loading next pair...", cls="text-slate-400 text-center py-8"),
+                id="match-pair-container",
+                hx_get="/api/match/next-pair",
+                hx_trigger="load",
+                hx_swap="innerHTML",
+            ),
+            Script("""
+                // Match counter persistence via cookie
+                function getMatchCount() {
+                    var today = new Date().toISOString().slice(0, 10);
+                    var stored = document.cookie.split(';').find(c => c.trim().startsWith('match_count_' + today + '='));
+                    return stored ? parseInt(stored.split('=')[1]) : 0;
+                }
+                function incrementMatchCount() {
+                    var today = new Date().toISOString().slice(0, 10);
+                    var count = getMatchCount() + 1;
+                    document.cookie = 'match_count_' + today + '=' + count + '; path=/; max-age=86400';
+                    var el = document.getElementById('match-counter');
+                    if (el) el.textContent = count;
+                }
+                // Initialize counter on load
+                document.addEventListener('DOMContentLoaded', function() {
+                    var el = document.getElementById('match-counter');
+                    if (el) el.textContent = getMatchCount();
+                });
+            """),
+            cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6",
+        )
     else:
-        # Browse mode - show grid
+        # Browse mode - apply sorting
+        if sort_by == "faces":
+            to_review = sorted(to_review, key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])), reverse=True)
+        elif sort_by == "name":
+            to_review = sorted(to_review, key=lambda x: (x.get("name") or "").lower())
+        # default: newest (already sorted by created_at desc above)
+
         cards = [
             identity_card(identity, crop_files, lane_color="blue", show_actions=True, is_admin=is_admin)
             for identity in to_review
@@ -1401,24 +1487,61 @@ def render_to_review_section(
             content = Div(*cards)
         else:
             content = Div(
-                "No items to review. Great job! 🎉",
+                "No items to review.",
                 cls="text-center py-12 text-slate-400"
             )
 
+    # Build header with optional sort controls (browse mode only)
+    header = section_header(
+        "Inbox",
+        f"{counts['to_review']} items need your attention",
+        view_mode=view_mode,
+        section="to_review"
+    )
+    if view_mode == "browse":
+        return Div(
+            Div(header, _sort_control("to_review", sort_by), cls="flex items-center justify-between flex-wrap gap-2 mb-6"),
+            content,
+            cls="space-y-4"
+        )
+    return Div(header, content, cls="space-y-6")
+
+
+def _sort_control(section: str, current_sort: str) -> Div:
+    """Render sort control buttons for a section."""
+    options = [
+        ("name", "A-Z"),
+        ("faces", "Faces"),
+        ("newest", "Newest"),
+    ]
+    buttons = []
+    for value, label in options:
+        is_active = current_sort == value
+        cls = "px-2 py-1 text-xs font-medium rounded transition-colors "
+        if is_active:
+            cls += "bg-slate-600 text-white"
+        else:
+            cls += "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+        buttons.append(
+            A(label, href=f"/?section={section}&sort_by={value}", cls=cls)
+        )
     return Div(
-        section_header(
-            "Inbox",
-            f"{counts['to_review']} items need your attention",
-            view_mode=view_mode,
-            section="to_review"
-        ),
-        content,
-        cls="space-y-6"
+        Span("Sort:", cls="text-xs text-slate-500 mr-1"),
+        *buttons,
+        cls="flex items-center gap-1"
     )
 
 
-def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
-    """Render the Confirmed section."""
+def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_admin: bool = True, sort_by: str = "name") -> Div:
+    """Render the Confirmed section with optional sorting."""
+    # Apply sorting
+    if sort_by == "faces":
+        confirmed = sorted(confirmed, key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])), reverse=True)
+    elif sort_by == "newest":
+        confirmed = sorted(confirmed, key=lambda x: x.get("updated_at", x.get("created_at", "")), reverse=True)
+    else:  # default: name (A-Z)
+        confirmed = sorted(confirmed, key=lambda x: (x.get("name") or "").lower())
+
     cards = [
         identity_card(identity, crop_files, lane_color="emerald", show_actions=False, is_admin=is_admin)
         for identity in confirmed
@@ -1434,9 +1557,13 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
         )
 
     return Div(
-        section_header("Confirmed", f"{counts['confirmed']} people identified"),
+        Div(
+            section_header("Confirmed", f"{counts['confirmed']} people identified"),
+            _sort_control("confirmed", sort_by),
+            cls="flex items-center justify-between flex-wrap gap-2 mb-6"
+        ),
         content,
-        cls="space-y-6"
+        cls="space-y-4"
     )
 
 
@@ -2033,7 +2160,7 @@ def face_card(
     )
 
 
-def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> Div:
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True) -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
@@ -2057,11 +2184,22 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
         similarity_label = "Low"
     # -----------------------------------------------
 
-    # Merge button
+    # Merge button -- no confirm dialog; undo available via toast
     merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
                        hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_identity_id}",
-                       hx_swap="outerHTML", hx_confirm=f"Merge '{name}'? This cannot be undone.") if can_merge else \
+                       hx_swap="outerHTML") if can_merge else \
                 Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
+
+    # Compare button -- opens side-by-side comparison modal
+    compare_btn = Button(
+        "Compare",
+        cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
+        hx_get=f"/api/identity/{target_identity_id}/compare/{neighbor_id}",
+        hx_target="#compare-modal-content",
+        hx_swap="innerHTML",
+        **{"_": "on click remove .hidden from #compare-modal"},
+        type="button",
+    )
 
     # Thumbnail logic
     thumbnail_img = Div(cls="w-12 h-12 bg-slate-600 rounded")
@@ -2072,20 +2210,28 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set) -> D
             thumbnail_img = Img(src=crop_url, alt=name, cls="w-12 h-12 object-cover rounded border border-slate-600")
             break
 
+    # Checkbox for bulk selection (linked to bulk form via hyperscript)
+    checkbox = Input(
+        type="checkbox",
+        cls="w-4 h-4 rounded border-slate-500 bg-slate-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
+        **{"_": f"on change toggle @checked on #bulk-{neighbor_id}"},
+    ) if (show_checkbox and can_merge) else None
+
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
     nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section=to_review&view=browse#identity-{neighbor_id}'"
 
     return Div(
-        Div(A(thumbnail_img, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
+        Div(checkbox,
+            A(thumbnail_img, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
             Div(Div(A(name, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="font-medium text-slate-200 truncate hover:text-blue-400 hover:underline cursor-pointer", **{"_": nav_script}),
                     Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
                 # EXPLAINABILITY: We show both. Distance tells you "Is it him?", Percentile tells you "Is it the best we have?"
                 Div(Span(f"Dist: {distance:.2f} (p={percentile:.2f})", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"), cls="flex items-center"),
                 cls="flex-1 min-w-0 ml-3"),
-            Div(merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+            Div(compare_btn, merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                                   hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML"),
                 cls="flex items-center gap-2 flex-shrink-0 ml-2"),
-            cls="flex items-center"),
+            cls="flex items-center gap-2"),
         id=f"neighbor-{neighbor_id}", cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg"
     )
 
@@ -2112,14 +2258,13 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set) -
                 cls="w-10 h-10 object-cover rounded border border-slate-600"
             )
 
-    # Merge button with manual_search source
+    # Merge button with manual_search source -- no confirm dialog; undo via toast
     merge_btn = Button(
         "Merge",
         cls="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
         hx_post=f"/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
         hx_target=f"#identity-{target_identity_id}",
         hx_swap="outerHTML",
-        hx_confirm=f"Merge '{name}'? This cannot be undone.",
     )
 
     # Navigation hyperscript (same as neighbor_card)
@@ -2182,9 +2327,51 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
     close_btn = Button("Close", cls="text-sm text-slate-400 hover:text-slate-300", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
     if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), close_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
+    # Mergeable neighbors get checkboxes for bulk operations
+    mergeable = [n for n in neighbors if n.get("can_merge")]
     cards = [neighbor_card(n, identity_id, crop_files) for n in neighbors]
     load_more = Button("Load More", cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
                        hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
+
+    # Bulk actions (only if there are mergeable neighbors)
+    bulk_actions = None
+    if len(mergeable) > 1:
+        select_all_script = (
+            "on click "
+            "set cbs to <input[name='bulk_ids']/> in closest form "
+            "repeat for cb in cbs set cb.checked to my.checked end"
+        )
+        bulk_actions = Form(
+            # Hidden inputs for each mergeable neighbor (checkboxes)
+            Div(
+                Label(
+                    Input(type="checkbox", cls="mr-2 accent-blue-500",
+                          **{"_": select_all_script}),
+                    Span("Select All", cls="text-xs text-slate-400"),
+                    cls="flex items-center cursor-pointer mb-2",
+                ),
+                *[Div(
+                    Input(type="checkbox", name="bulk_ids", value=n["identity_id"],
+                          cls="hidden bulk-checkbox",
+                          id=f"bulk-{n['identity_id']}"),
+                    cls="hidden",
+                ) for n in mergeable],
+                cls="",
+            ),
+            Div(
+                Button("Merge Selected", type="submit",
+                       formaction=f"/api/identity/{identity_id}/bulk-merge",
+                       cls="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500"),
+                Button("Not Same Selected", type="submit",
+                       formaction=f"/api/identity/{identity_id}/bulk-reject",
+                       cls="px-3 py-1.5 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20"),
+                cls="flex gap-2",
+            ),
+            hx_post=f"/api/identity/{identity_id}/bulk-merge",
+            hx_target=f"#neighbors-{identity_id}",
+            hx_swap="innerHTML",
+            cls="mb-3 p-2 bg-slate-600/50 rounded border border-slate-600",
+        )
 
     # Manual search section - between Load More and Rejected
     manual_search = manual_search_section(identity_id)
@@ -2194,6 +2381,7 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
                        cls="flex items-center justify-between"), Div(id=f"rejected-list-{identity_id}"), cls="mt-4 pt-3 border-t border-slate-600") if rejected_count > 0 else None
 
     return Div(Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-white"), close_btn, cls="flex items-center justify-between mb-3"),
+               bulk_actions,
                Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected, cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
 
@@ -2221,6 +2409,90 @@ def name_display(identity_id: str, name: str, is_admin: bool = True) -> Div:
     )
 
 
+FACES_PER_PAGE = 8
+
+
+def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach):
+    """Build face card elements from a list of face entries."""
+    cards = []
+    for face_entry in face_entries:
+        if isinstance(face_entry, str):
+            face_id = face_entry
+            era = None
+        else:
+            face_id = face_entry.get("face_id", "")
+            era = face_entry.get("era_bin")
+
+        crop_url = resolve_face_image_url(face_id, crop_files)
+        if crop_url:
+            photo_id = get_photo_id_for_face(face_id)
+            cards.append(face_card(
+                face_id=face_id,
+                crop_url=crop_url,
+                era=era,
+                identity_id=identity_id,
+                photo_id=photo_id,
+                show_detach=can_detach,
+            ))
+        else:
+            cards.append(Div(
+                Div(
+                    Span("?", cls="text-4xl text-slate-500"),
+                    cls="w-full aspect-square bg-slate-700 border border-slate-600 flex items-center justify-center"
+                ),
+                P("Image unavailable", cls="text-xs text-slate-400 mt-1"),
+                P(f"ID: {face_id[:12]}...", cls="text-xs font-data text-slate-500"),
+                cls="face-card",
+                id=make_css_id(face_id),
+            ))
+    return cards
+
+
+def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sort: str = "date"):
+    """Build pagination controls for face grid carousel."""
+    total_pages = (total_faces + FACES_PER_PAGE - 1) // FACES_PER_PAGE
+    if total_pages <= 1:
+        return None
+
+    start = page * FACES_PER_PAGE + 1
+    end = min((page + 1) * FACES_PER_PAGE, total_faces)
+
+    prev_btn = Button(
+        Span("<", cls="text-lg"),
+        cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded transition-colors",
+        hx_get=f"/api/identity/{identity_id}/faces?page={page - 1}&sort={sort}",
+        hx_target=f"#faces-{identity_id}",
+        hx_swap="outerHTML",
+        type="button",
+    ) if page > 0 else Button(
+        Span("<", cls="text-lg"),
+        cls="px-2 py-1 text-slate-400 opacity-30 cursor-not-allowed rounded",
+        type="button",
+        disabled=True,
+    )
+
+    next_btn = Button(
+        Span(">", cls="text-lg"),
+        cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded transition-colors",
+        hx_get=f"/api/identity/{identity_id}/faces?page={page + 1}&sort={sort}",
+        hx_target=f"#faces-{identity_id}",
+        hx_swap="outerHTML",
+        type="button",
+    ) if page < total_pages - 1 else Button(
+        Span(">", cls="text-lg"),
+        cls="px-2 py-1 text-slate-400 opacity-30 cursor-not-allowed rounded",
+        type="button",
+        disabled=True,
+    )
+
+    return Div(
+        prev_btn,
+        Span(f"{start}-{end} of {total_faces}", cls="text-xs text-slate-400 mx-2"),
+        next_btn,
+        cls="flex items-center justify-center gap-1 mt-3"
+    )
+
+
 def identity_card(
     identity: dict,
     crop_files: set,
@@ -2232,6 +2504,7 @@ def identity_card(
     Identity group card showing all faces (anchors + candidates).
     UX Intent: Group context with individual face visibility.
     Action buttons only shown for admin users.
+    Shows first page of faces (max FACES_PER_PAGE) with pagination if more exist.
     """
     identity_id = identity["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
@@ -2241,44 +2514,14 @@ def identity_card(
 
     # Combine anchors (confirmed) and candidates (proposed) for display
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    total_faces = len(all_face_ids)
 
     # Show detach button only if identity has more than one face AND user is admin
-    can_detach = len(all_face_ids) > 1 and is_admin
+    can_detach = total_faces > 1 and is_admin
 
-    # Build face cards for each face
-    face_cards = []
-    for face_entry in all_face_ids:
-        if isinstance(face_entry, str):
-            face_id = face_entry
-            era = None
-        else:
-            face_id = face_entry.get("face_id", "")
-            era = face_entry.get("era_bin")
-
-        crop_url = resolve_face_image_url(face_id, crop_files)
-        if crop_url:
-            # Look up photo_id for "View Photo" button
-            photo_id = get_photo_id_for_face(face_id)
-            face_cards.append(face_card(
-                face_id=face_id,
-                crop_url=crop_url,
-                era=era,
-                identity_id=identity_id,
-                photo_id=photo_id,
-                show_detach=can_detach,
-            ))
-        else:
-            # Placeholder for faces with missing crop files
-            face_cards.append(Div(
-                Div(
-                    Span("?", cls="text-4xl text-slate-500"),
-                    cls="w-full aspect-square bg-slate-700 border border-slate-600 flex items-center justify-center"
-                ),
-                P("Image unavailable", cls="text-xs text-slate-400 mt-1"),
-                P(f"ID: {face_id[:12]}...", cls="text-xs font-data text-slate-500"),
-                cls="face-card",
-                id=make_css_id(face_id),
-            ))
+    # Show only first page of faces
+    page_entries = all_face_ids[:FACES_PER_PAGE]
+    face_cards = _build_face_cards_for_entries(page_entries, crop_files, identity_id, can_detach)
 
     if not face_cards:
         return None
@@ -2299,12 +2542,23 @@ def identity_card(
         cls="text-xs border border-slate-600 bg-slate-700 text-slate-300 rounded px-2 py-1",
         hx_get=f"/api/identity/{identity_id}/faces",
         hx_target=f"#faces-{identity_id}",
-        hx_swap="innerHTML",
+        hx_swap="outerHTML",
         name="sort",
         hx_trigger="change",
     )
 
-    # Find Similar button (loads neighbors via HTMX)
+    # View All Photos button (opens lightbox)
+    view_all_photos_btn = Button(
+        "View All Photos",
+        cls="text-sm text-amber-400 hover:text-amber-300 underline",
+        hx_get=f"/api/identity/{identity_id}/photos?index=0",
+        hx_target="#lightbox-content",
+        hx_swap="innerHTML",
+        **{"_": "on click remove .hidden from #photo-lightbox"},
+        type="button",
+    ) if total_faces > 0 else None
+
+    # Find Similar button (loads neighbors via HTMX) -- scrolls into view after swap
     find_similar_btn = Button(
         "Find Similar",
         cls="text-sm text-indigo-400 hover:text-indigo-300 underline",
@@ -2313,6 +2567,7 @@ def identity_card(
         hx_swap="innerHTML",
         hx_indicator=f"#neighbors-loading-{identity_id}",
         type="button",
+        **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
     )
 
     # Neighbors container (populated by HTMX)
@@ -2326,6 +2581,9 @@ def identity_card(
         cls="mt-4"
     )
 
+    # Pagination controls
+    pagination = _face_pagination_controls(identity_id, 0, total_faces, "date")
+
     return Div(
         # Header with name, state, and controls
         Div(
@@ -2333,22 +2591,26 @@ def identity_card(
                 name_display(identity_id, identity.get("name"), is_admin=is_admin),
                 state_badge(state),
                 Span(
-                    f"{len(face_cards)} face{'s' if len(face_cards) != 1 else ''}",
+                    f"{total_faces} face{'s' if total_faces != 1 else ''}",
                     cls="text-xs text-slate-400 ml-2"
                 ),
                 cls="flex items-center gap-3"
             ),
             Div(
                 sort_dropdown,
+                view_all_photos_btn,
                 find_similar_btn,
                 cls="flex items-center gap-3"
             ),
             cls="flex items-center justify-between mb-3"
         ),
-        # Face grid
+        # Face grid (paginated)
         Div(
-            *face_cards,
-            cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+            Div(
+                *face_cards,
+                cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+            ),
+            pagination,
             id=f"faces-{identity_id}",
         ),
         # Action buttons based on state (admin only)
@@ -2399,6 +2661,83 @@ def photo_modal() -> Div:
         ),
         id="photo-modal",
         cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9999]"
+    )
+
+
+def photo_lightbox() -> Div:
+    """
+    Fullscreen photo lightbox for browsing all photos of an identity.
+    Supports keyboard navigation (left/right arrows, Escape to close)
+    and touch swipe on mobile.
+    """
+    return Div(
+        # Backdrop
+        Div(
+            cls="absolute inset-0 bg-black/90",
+            **{"_": "on click add .hidden to #photo-lightbox"},
+        ),
+        # Content
+        Div(
+            # Close button
+            Button(
+                "X",
+                cls="absolute top-4 right-4 text-white hover:text-slate-300 text-2xl font-bold z-10",
+                **{"_": "on click add .hidden to #photo-lightbox"},
+                type="button",
+                aria_label="Close lightbox",
+            ),
+            # Lightbox content (populated by HTMX)
+            Div(
+                P("Loading...", cls="text-slate-400 text-center py-8"),
+                id="lightbox-content",
+                cls="w-full h-full flex items-center justify-center",
+            ),
+            cls="relative w-full h-full flex items-center justify-center p-4",
+        ),
+        id="photo-lightbox",
+        cls="hidden fixed inset-0 z-[10000]",
+        **{"_": "on keydown[key=='Escape'] add .hidden to me "
+               "on keydown[key=='ArrowLeft'] send lightbox-prev to me "
+               "on keydown[key=='ArrowRight'] send lightbox-next to me"},
+        tabindex="-1",
+    )
+
+
+def compare_modal() -> Div:
+    """
+    Side-by-side comparison modal for evaluating merge candidates.
+    Shows the source identity's best face alongside the neighbor's best face.
+    """
+    return Div(
+        # Backdrop
+        Div(
+            cls="absolute inset-0 bg-black/85",
+            **{"_": "on click add .hidden to #compare-modal"},
+        ),
+        # Content
+        Div(
+            # Header
+            Div(
+                H2("Compare Faces", cls="text-xl font-serif font-bold text-white"),
+                Button(
+                    "X",
+                    cls="text-slate-400 hover:text-white text-xl font-bold",
+                    **{"_": "on click add .hidden to #compare-modal"},
+                    type="button",
+                    aria_label="Close comparison",
+                ),
+                cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700"
+            ),
+            # Comparison content (populated by HTMX)
+            Div(
+                P("Loading...", cls="text-slate-400 text-center py-8"),
+                id="compare-modal-content",
+            ),
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto p-6 relative border border-slate-700"
+        ),
+        id="compare-modal",
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[10000]",
+        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
     )
 
 
@@ -2586,262 +2925,724 @@ def _compute_landing_stats() -> dict:
         len(i.get("anchor_ids", [])) + len(i.get("candidate_ids", []))
         for i in inbox + proposed
     )
+    # Collect confirmed names for display
+    named_people = [
+        i["name"] for i in confirmed
+        if not i["name"].startswith("Unidentified")
+    ]
+    # Collect a few unidentified faces for the "Can you help?" teaser
+    crop_files = get_crop_files()
+    unidentified_faces = []
+    unid_identities = [
+        i for i in inbox + proposed
+        if not i.get("merged_into")
+    ]
+    random.shuffle(unid_identities)
+    for identity in unid_identities[:6]:
+        face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+        if face_ids:
+            url = resolve_face_image_url(face_ids[0], crop_files)
+            if url:
+                unidentified_faces.append({
+                    "identity_id": identity["identity_id"],
+                    "crop_url": url,
+                })
+        if len(unidentified_faces) >= 4:
+            break
+    # Source collections
+    sources = set()
+    if _photo_cache:
+        for pd in _photo_cache.values():
+            src = pd.get("source", "")
+            if src:
+                sources.add(src)
     return {
         "photo_count": len(_photo_cache) if _photo_cache else 0,
         "named_count": len(confirmed),
         "total_faces": total_faces,
         "needs_help": needs_help,
+        "named_people": named_people,
+        "unidentified_faces": unidentified_faces,
+        "sources": sorted(sources),
     }
 
 
 def _get_featured_photos(limit: int = 8) -> list:
-    """Pick photos that have confirmed/named identities for the landing page hero."""
+    """Pick photos that have confirmed/named identities for the landing page hero.
+
+    Returns richer data including face bounding boxes and photo dimensions
+    for the interactive hover effect on the landing page.
+    """
     registry = load_registry()
     confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
     _build_caches()
     if not _photo_cache:
         return []
-    # Collect photo IDs that contain faces from confirmed identities
+
+    dim_cache = _load_photo_dimensions_cache()
+
+    # Build map of face_id -> identity name
+    face_to_name = {}
     confirmed_face_ids = set()
     for identity in confirmed:
-        confirmed_face_ids.update(identity.get("anchor_ids", []))
-        confirmed_face_ids.update(identity.get("candidate_ids", []))
-    featured_photo_ids = []
+        name = identity.get("name", "")
+        if name.startswith("Unidentified"):
+            name = ""
+        for fid in identity.get("anchor_ids", []) + identity.get("candidate_ids", []):
+            confirmed_face_ids.add(fid)
+            if name:
+                face_to_name[fid] = name
+
+    # Prefer landscape photos with many faces and confirmed identities
+    scored_photos = []
     for photo_id, photo_data in _photo_cache.items():
-        for face in photo_data.get("faces", []):
-            if face.get("face_id") in confirmed_face_ids:
-                featured_photo_ids.append(photo_id)
-                break
-    # If not enough confirmed photos, fill with any photos
+        faces = photo_data.get("faces", [])
+        num_faces = len(faces)
+        confirmed_count = sum(1 for f in faces if f.get("face_id") in confirmed_face_ids)
+        filename = photo_data["filename"]
+        dims = dim_cache.get(filename) or dim_cache.get(Path(filename).name)
+        w, h = dims if dims else (0, 0)
+        is_landscape = w > h if w and h else False
+        # Score: prefer landscape, more faces, more confirmed
+        score = (confirmed_count * 3) + num_faces + (2 if is_landscape else 0)
+        if num_faces >= 2:  # Only show photos with multiple people
+            scored_photos.append((score, photo_id))
+
+    scored_photos.sort(key=lambda x: x[0], reverse=True)
+    featured_photo_ids = [pid for _, pid in scored_photos[:limit]]
+
+    # If not enough, fill with any multi-face photos
     if len(featured_photo_ids) < limit:
         for photo_id in _photo_cache:
             if photo_id not in featured_photo_ids:
-                featured_photo_ids.append(photo_id)
-                if len(featured_photo_ids) >= limit:
-                    break
-    return [
-        {"id": pid, "url": photo_url(_photo_cache[pid]["filename"], _photo_cache[pid].get("filepath", ""))}
-        for pid in featured_photo_ids[:limit]
-        if pid in _photo_cache
-    ]
+                faces = _photo_cache[photo_id].get("faces", [])
+                if len(faces) >= 1:
+                    featured_photo_ids.append(photo_id)
+                    if len(featured_photo_ids) >= limit:
+                        break
+
+    results = []
+    for pid in featured_photo_ids[:limit]:
+        if pid not in _photo_cache:
+            continue
+        pdata = _photo_cache[pid]
+        filename = pdata["filename"]
+        filepath = pdata.get("filepath", "")
+        dims = dim_cache.get(filename) or dim_cache.get(Path(filename).name)
+        w, h = dims if dims else (0, 0)
+        faces = pdata.get("faces", [])
+
+        face_boxes = []
+        for face in faces:
+            fid = face.get("face_id", "")
+            bbox = face.get("bbox", [])
+            if bbox and w > 0 and h > 0:
+                # Convert bbox from pixel coords to percentages
+                x1, y1, x2, y2 = bbox
+                face_boxes.append({
+                    "left": round(x1 / w * 100, 2),
+                    "top": round(y1 / h * 100, 2),
+                    "width": round((x2 - x1) / w * 100, 2),
+                    "height": round((y2 - y1) / h * 100, 2),
+                    "name": face_to_name.get(fid, ""),
+                })
+
+        results.append({
+            "id": pid,
+            "url": photo_url(filename, filepath),
+            "width": w,
+            "height": h,
+            "face_count": len(faces),
+            "face_boxes": face_boxes,
+        })
+    return results
 
 
-def landing_page(user, stats, featured_photos):
-    """Render the public landing page for the family heritage archive."""
+def landing_page(stats, featured_photos):
+    """Render the public landing page for the Rhodesli heritage archive.
+
+    This page is only shown to anonymous visitors. Logged-in users are
+    redirected to the dashboard by the GET / route handler.
+    """
     auth_enabled = is_auth_enabled()
-    logged_in = user is not None
 
-    # Hero photo grid
-    hero_images = [
-        Img(
-            src=p["url"], alt="Rhodes-Capeluto family photo",
-            loading="lazy",
-            cls="w-full h-full object-cover"
-        )
-        for p in featured_photos
-    ]
+    # Build hero photo cards with face detection overlay data
+    hero_cards = []
+    for i, p in enumerate(featured_photos[:6]):
+        # Build face detection overlay boxes (shown on hover)
+        face_overlays = []
+        for box in p.get("face_boxes", []):
+            name = box.get("name", "")
+            face_overlays.append(
+                Div(
+                    Span(name, cls="face-label") if name else None,
+                    cls="face-box",
+                    style=f"left:{box['left']}%;top:{box['top']}%;width:{box['width']}%;height:{box['height']}%;"
+                )
+            )
+        # Determine grid span for visual variety
+        span_cls = ""
+        if i == 0:
+            span_cls = "md:col-span-2 md:row-span-2"
 
-    # CTA buttons based on auth state
-    if logged_in:
-        cta_buttons = Div(
-            A("Continue Reviewing", href="/?section=to_review",
-              cls="inline-block px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors text-lg"),
-            A("Browse Photos", href="/?section=photos",
-              cls="inline-block px-8 py-3 border border-slate-500 text-slate-300 font-semibold rounded-lg hover:bg-slate-700 transition-colors text-lg ml-4"),
-            cls="mt-8 flex flex-wrap gap-4 justify-center"
+        hero_cards.append(
+            Div(
+                Img(
+                    src=p["url"],
+                    alt="Archival photograph from the Jewish community of Rhodes",
+                    loading="eager" if i < 2 else "lazy",
+                    cls="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                ),
+                # Face detection overlay
+                Div(
+                    *face_overlays,
+                    cls="face-overlay"
+                ) if face_overlays else None,
+                # Face count badge
+                Div(
+                    Span(f"{p['face_count']} faces detected", cls="text-xs"),
+                    cls="absolute bottom-2 right-2 bg-black/70 text-amber-200 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                ) if p.get("face_count", 0) > 0 else None,
+                cls=f"hero-card group relative overflow-hidden {span_cls}",
+            )
         )
-    elif auth_enabled:
-        cta_buttons = Div(
-            A("Start Exploring", href="/?section=photos",
-              cls="inline-block px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors text-lg"),
-            A("Join the Project", href="/signup",
-              cls="inline-block px-8 py-3 border border-slate-500 text-slate-300 font-semibold rounded-lg hover:bg-slate-700 transition-colors text-lg ml-4"),
-            cls="mt-8 flex flex-wrap gap-4 justify-center"
-        )
-    else:
-        cta_buttons = Div(
-            A("Start Exploring", href="/?section=photos",
-              cls="inline-block px-8 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors text-lg"),
-            cls="mt-8 flex flex-wrap gap-4 justify-center"
+
+    # "Can you help?" mystery faces
+    mystery_faces = []
+    for face in stats.get("unidentified_faces", []):
+        mystery_faces.append(
+            A(
+                Img(
+                    src=face["crop_url"],
+                    alt="Unidentified person from the Rhodes archive",
+                    loading="lazy",
+                    cls="w-full h-full object-cover rounded-full border-2 border-amber-400/50 hover:border-amber-300 transition-all duration-300 hover:scale-110"
+                ),
+                href=f"/?section=to_review&current={face['identity_id']}",
+                cls="block w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex-shrink-0"
+            )
         )
 
     # Navigation bar
     nav_items = [
-        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-white transition-colors"),
-        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-white transition-colors"),
-        A("Help Identify", href="/?section=to_review", cls="text-slate-300 hover:text-white transition-colors"),
+        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("Help Identify", href="/?section=to_review", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
     ]
-    if auth_enabled and not logged_in:
+    if auth_enabled:
         nav_items.append(
-            A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 font-medium transition-colors")
+            A("Sign In", href="/login", cls="text-amber-300 hover:text-amber-200 font-medium transition-colors text-sm md:text-base")
         )
 
+    # Named people for the ticker / display
+    named_people = stats.get("named_people", [])
+
     landing_style = Style("""
+        /* ============ LANDING PAGE STYLES ============ */
         html, body { height: 100%; margin: 0; }
-        body { background-color: #0f172a; }
-        .hero-grid {
+        body { background-color: #1a1511; }
+
+        /* Warm sepia/archival color palette */
+        .landing-bg { background: linear-gradient(180deg, #1a1511 0%, #1e1a15 40%, #1a1511 100%); }
+
+        /* Hero mosaic grid */
+        .hero-mosaic {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(2, 180px);
-            gap: 4px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 200px);
+            gap: 3px;
         }
         @media (max-width: 767px) {
-            .hero-grid {
+            .hero-mosaic {
                 grid-template-columns: repeat(2, 1fr);
-                grid-template-rows: repeat(4, 120px);
+                grid-template-rows: repeat(3, 160px);
             }
+            .hero-mosaic .md\\:col-span-2 { grid-column: span 2; }
+            .hero-mosaic .md\\:row-span-2 { grid-row: span 1; }
         }
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .hero-grid {
-                grid-template-rows: repeat(2, 150px);
+        @media (min-width: 768px) {
+            .hero-mosaic {
+                grid-template-rows: repeat(2, 220px);
             }
         }
         @media (min-width: 1024px) {
-            .hero-grid {
-                grid-template-rows: repeat(2, 200px);
+            .hero-mosaic {
+                grid-template-rows: repeat(2, 260px);
             }
         }
-        .stat-card {
-            text-align: center;
-            padding: 1.5rem;
+
+        .hero-card {
+            position: relative;
+            overflow: hidden;
+            background: #2a241e;
         }
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent 60%, rgba(26, 21, 17, 0.6) 100%);
+            pointer-events: none;
+        }
+
+        /* Face detection overlay */
+        .face-overlay {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 5;
+        }
+        .hero-card:hover .face-overlay {
+            opacity: 1;
+        }
+        .face-box {
+            position: absolute;
+            border: 2px solid rgba(251, 191, 36, 0.8);
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+        }
+        .face-label {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            font-size: 11px;
+            color: #fbbf24;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+
+        /* Sepia film border on hero */
+        .hero-frame {
+            border: 3px solid #3d3428;
+            border-radius: 4px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        .hero-frame::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border: 1px solid rgba(251, 191, 36, 0.1);
+            border-radius: 5px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Stat counter animation */
         .stat-number {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #e2e8f0;
+            color: #f5e6d3;
             line-height: 1;
+            font-variant-numeric: tabular-nums;
         }
         .stat-label {
-            font-size: 0.875rem;
-            color: #94a3b8;
+            font-size: 0.8rem;
+            color: #a09080;
             margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
         }
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(10px); }
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem 1rem;
+            background: rgba(61, 52, 40, 0.3);
+            border: 1px solid rgba(61, 52, 40, 0.5);
+            border-radius: 8px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(251, 191, 36, 0.3);
+        }
+
+        /* Name ticker / scroll */
+        .names-scroll {
+            display: flex;
+            gap: 2rem;
+            animation: scroll-names 30s linear infinite;
+            width: max-content;
+        }
+        @keyframes scroll-names {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        .names-track {
+            overflow: hidden;
+            mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+
+        /* Animations */
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in { animation: fade-in 0.6s ease-out; }
+        .animate-fade-in-up { animation: fade-in-up 0.8s ease-out both; }
+        .delay-1 { animation-delay: 0.15s; }
+        .delay-2 { animation-delay: 0.3s; }
+        .delay-3 { animation-delay: 0.45s; }
+        .delay-4 { animation-delay: 0.6s; }
+
+        @keyframes gentle-pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        .animate-gentle-pulse { animation: gentle-pulse 3s ease-in-out infinite; }
+
+        /* CTA buttons */
+        .btn-primary {
+            display: inline-block;
+            padding: 0.875rem 2rem;
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+            color: #fff;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 1rem;
+            box-shadow: 0 2px 10px rgba(180, 83, 9, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            box-shadow: 0 4px 20px rgba(180, 83, 9, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            display: inline-block;
+            padding: 0.875rem 2rem;
+            border: 1px solid #5d4e3c;
+            color: #d4c4a8;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 1rem;
+        }
+        .btn-secondary:hover {
+            border-color: #a08c6e;
+            background: rgba(61, 52, 40, 0.4);
+            color: #f5e6d3;
+        }
+
+        /* About section separator */
+        .ornament {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0 auto;
+            max-width: 200px;
+        }
+        .ornament::before, .ornament::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #5d4e3c, transparent);
+        }
+
+        /* Mystery face glow */
+        .mystery-face-ring {
+            position: relative;
+        }
+        .mystery-face-ring::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #fbbf24, #b45309, #fbbf24);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+        .mystery-face-ring:hover::before {
+            opacity: 0.6;
+            animation: gentle-pulse 2s ease-in-out infinite;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .stat-number { font-size: 1.75rem; }
+            .stat-card { padding: 1rem 0.5rem; }
+        }
     """)
 
-    return Title("Rhodesli — Rhodes-Capeluto Family Archive"), landing_style, Div(
+    landing_script = Script("""
+        // Animated counter for stats
+        document.addEventListener('DOMContentLoaded', function() {
+            var counters = document.querySelectorAll('[data-count]');
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        var el = entry.target;
+                        var target = parseInt(el.getAttribute('data-count'));
+                        var duration = 1500;
+                        var start = 0;
+                        var startTime = null;
+                        function step(timestamp) {
+                            if (!startTime) startTime = timestamp;
+                            var progress = Math.min((timestamp - startTime) / duration, 1);
+                            // Ease out cubic
+                            var eased = 1 - Math.pow(1 - progress, 3);
+                            el.textContent = Math.floor(eased * target).toLocaleString();
+                            if (progress < 1) {
+                                requestAnimationFrame(step);
+                            } else {
+                                el.textContent = target.toLocaleString();
+                            }
+                        }
+                        requestAnimationFrame(step);
+                        observer.unobserve(el);
+                    }
+                });
+            }, {threshold: 0.3});
+            counters.forEach(function(c) { observer.observe(c); });
+        });
+    """)
+
+    # Duplicate names list for seamless scroll effect
+    names_display = named_people + named_people if named_people else []
+
+    return Title("Rhodesli -- Jewish Community of Rhodes Photo Archive"), landing_style, landing_script, Div(
         # Navigation
         Nav(
             Div(
-                A("Rhodesli", href="/", cls="text-xl font-bold text-white"),
-                Div(*nav_items, cls="flex items-center gap-6"),
-                cls="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between flex-wrap gap-4"
+                Div(
+                    Span("Rhodesli", cls="text-xl md:text-2xl font-bold text-amber-100 tracking-wide"),
+                    Span("Photo Archive", cls="text-xs text-amber-400/60 ml-2 hidden md:inline tracking-widest uppercase"),
+                    cls="flex items-baseline"
+                ),
+                Div(*nav_items, cls="flex items-center gap-4 md:gap-6"),
+                cls="max-w-6xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between flex-wrap gap-3"
             ),
-            cls="border-b border-slate-800"
+            cls="border-b border-amber-900/30 bg-black/20 backdrop-blur-sm sticky top-0 z-50"
         ),
+
         # Hero section
         Section(
             Div(
+                # Headline area
                 Div(
-                    H1("Preserving the faces and stories of the Rhodes-Capeluto family",
-                       cls="text-3xl md:text-5xl font-bold text-white leading-tight max-w-3xl mx-auto"),
-                    P("A community effort to identify and connect generations of family history through archival photographs.",
-                      cls="text-lg text-slate-400 mt-4 max-w-2xl mx-auto"),
-                    cta_buttons,
-                    cls="text-center py-12 px-6"
+                    Div(
+                        Div(cls="ornament mb-6"),
+                        H1(
+                            Span("Preserving the faces and stories", cls="block"),
+                            Span("of the Jewish Community of Rhodes", cls="block text-amber-200"),
+                            cls="text-3xl md:text-5xl lg:text-6xl font-bold text-amber-50 leading-tight tracking-tight"
+                        ),
+                        P("A digital archive using face recognition to reconnect generations of a Ladino-speaking "
+                          "Sephardic community scattered by history. Browse photographs, identify faces, and help "
+                          "preserve a living record.",
+                          cls="text-base md:text-lg text-amber-100/60 mt-6 max-w-2xl mx-auto leading-relaxed"),
+                        # CTA buttons
+                        Div(
+                            A("Start Exploring", href="/?section=photos", cls="btn-primary"),
+                            A("Help Identify", href="/?section=to_review", cls="btn-secondary"),
+                            cls="mt-8 flex flex-wrap gap-4 justify-center"
+                        ),
+                        cls="text-center animate-fade-in-up"
+                    ),
+                    cls="py-10 md:py-16 px-4 md:px-6"
                 ),
-                # Photo mosaic
-                Div(*hero_images, cls="hero-grid mt-4 rounded-xl overflow-hidden opacity-90") if hero_images else None,
-                cls="max-w-6xl mx-auto"
+
+                # Photo mosaic with face detection hover
+                Div(
+                    Div(
+                        *hero_cards,
+                        cls="hero-mosaic"
+                    ),
+                    # Instruction hint
+                    P("Hover over photos to reveal face detection",
+                      cls="text-center text-amber-400/40 text-xs mt-3 tracking-wide uppercase animate-gentle-pulse"),
+                    cls="hero-frame animate-fade-in-up delay-1"
+                ) if hero_cards else None,
+
+                cls="max-w-5xl mx-auto"
             ),
-            id="hero", cls="pt-8 pb-12"
+            id="hero", cls="pt-4 pb-8 md:pb-12"
         ),
+
+        # Names ticker -- confirmed identities scrolling
+        Section(
+            Div(
+                P("Identified so far", cls="text-center text-amber-400/50 text-xs tracking-widest uppercase mb-3"),
+                Div(
+                    Div(
+                        *[Span(name, cls="text-amber-200/70 whitespace-nowrap text-sm md:text-base") for name in names_display],
+                        cls="names-scroll"
+                    ),
+                    cls="names-track"
+                ),
+                cls="max-w-5xl mx-auto"
+            ),
+            cls="py-6 px-4 border-y border-amber-900/20"
+        ) if named_people else None,
+
         # Stats section
         Section(
             Div(
                 Div(
-                    Div(str(stats["photo_count"]), cls="stat-number"),
-                    Div("photos preserved", cls="stat-label"),
-                    cls="stat-card"
+                    Div(
+                        Div("0", cls="stat-number", **{"data-count": str(stats["photo_count"])}),
+                        Div("archival photos", cls="stat-label"),
+                        cls="stat-card animate-fade-in-up"
+                    ),
+                    Div(
+                        Div("0", cls="stat-number", **{"data-count": str(stats["named_count"])}),
+                        Div("people identified", cls="stat-label"),
+                        cls="stat-card animate-fade-in-up delay-1"
+                    ),
+                    Div(
+                        Div("0", cls="stat-number", **{"data-count": str(stats["total_faces"])}),
+                        Div("faces detected by AI", cls="stat-label"),
+                        cls="stat-card animate-fade-in-up delay-2"
+                    ),
+                    Div(
+                        Div("0", cls="stat-number", **{"data-count": str(stats["needs_help"])}),
+                        Div("still unidentified", cls="stat-label"),
+                        cls="stat-card animate-fade-in-up delay-3"
+                    ),
+                    cls="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
                 ),
-                Div(
-                    Div(str(stats["named_count"]), cls="stat-number"),
-                    Div("people identified", cls="stat-label"),
-                    cls="stat-card"
-                ),
-                Div(
-                    Div(str(stats["total_faces"]), cls="stat-number"),
-                    Div("faces detected", cls="stat-label"),
-                    cls="stat-card"
-                ),
-                Div(
-                    Div(str(stats["needs_help"]), cls="stat-number"),
-                    Div("faces need your help", cls="stat-label"),
-                    cls="stat-card"
-                ),
-                cls="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
+                cls="max-w-4xl mx-auto"
             ),
-            id="stats", cls="py-16 px-6 bg-slate-800/50"
+            id="stats", cls="py-12 md:py-16 px-4 md:px-6"
         ),
+
+        # "Can you help?" mystery faces section
+        Section(
+            Div(
+                Div(
+                    H2("Can you identify these faces?",
+                       cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-3"),
+                    P("Our AI has detected these faces across the archive, but we do not know who they are. "
+                      "If you recognize anyone, your knowledge is priceless.",
+                      cls="text-amber-100/50 text-center max-w-xl mx-auto text-sm md:text-base"),
+                    cls="mb-8"
+                ),
+                # Mystery face circles
+                Div(
+                    *[Div(face, cls="mystery-face-ring") for face in mystery_faces],
+                    cls="flex justify-center gap-5 md:gap-8 flex-wrap"
+                ) if mystery_faces else None,
+                Div(
+                    A("Help Identify People", href="/?section=to_review",
+                      cls="btn-primary mt-8 inline-block"),
+                    cls="text-center"
+                ),
+                cls="max-w-3xl mx-auto"
+            ),
+            id="identify", cls="py-12 md:py-16 px-4 md:px-6 bg-gradient-to-b from-transparent via-amber-900/10 to-transparent"
+        ) if mystery_faces else None,
+
         # How it works
         Section(
             Div(
-                H2("How You Can Help", cls="text-2xl font-bold text-white text-center mb-10"),
+                Div(cls="ornament mb-8"),
+                H2("How It Works", cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-10"),
                 Div(
                     Div(
-                        Div("1", cls="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4"),
-                        H3("Browse Photos", cls="text-lg font-semibold text-white mb-2 text-center"),
-                        P("Explore archival photographs from family collections spanning generations.",
-                          cls="text-slate-400 text-center text-sm"),
-                        cls="flex-1 p-6"
+                        Div(
+                            Span("01", cls="text-3xl font-bold text-amber-500/30"),
+                            cls="mb-3"
+                        ),
+                        H3("Scan & Detect", cls="text-lg font-semibold text-amber-100 mb-2"),
+                        P("Advanced face detection AI scans archival photographs, finding and isolating every face "
+                          "across decades of family photos.",
+                          cls="text-amber-100/50 text-sm leading-relaxed"),
+                        cls="p-6 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-700/30 transition-colors"
                     ),
                     Div(
-                        Div("2", cls="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4"),
-                        H3("Identify People", cls="text-lg font-semibold text-white mb-2 text-center"),
-                        P("Help name faces our system has detected. Your knowledge preserves family history.",
-                          cls="text-slate-400 text-center text-sm"),
-                        cls="flex-1 p-6"
+                        Div(
+                            Span("02", cls="text-3xl font-bold text-amber-500/30"),
+                            cls="mb-3"
+                        ),
+                        H3("Match & Group", cls="text-lg font-semibold text-amber-100 mb-2"),
+                        P("Facial embeddings connect the same person across different photos, even spanning decades. "
+                          "The system proposes identity clusters for human review.",
+                          cls="text-amber-100/50 text-sm leading-relaxed"),
+                        cls="p-6 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-700/30 transition-colors"
                     ),
                     Div(
-                        Div("3", cls="w-12 h-12 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xl font-bold mx-auto mb-4"),
-                        H3("Connect History", cls="text-lg font-semibold text-white mb-2 text-center"),
-                        P("See how family members appear across photos and help piece together our shared story.",
-                          cls="text-slate-400 text-center text-sm"),
-                        cls="flex-1 p-6"
+                        Div(
+                            Span("03", cls="text-3xl font-bold text-amber-500/30"),
+                            cls="mb-3"
+                        ),
+                        H3("Name & Preserve", cls="text-lg font-semibold text-amber-100 mb-2"),
+                        P("Community members who recognize a face can name them, adding irreplaceable human knowledge. "
+                          "Every identification is preserved for future generations.",
+                          cls="text-amber-100/50 text-sm leading-relaxed"),
+                        cls="p-6 bg-amber-900/10 rounded-lg border border-amber-900/20 hover:border-amber-700/30 transition-colors"
                     ),
-                    cls="grid grid-cols-1 md:grid-cols-3 gap-6"
+                    cls="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"
                 ),
                 cls="max-w-5xl mx-auto"
             ),
-            id="how-it-works", cls="py-16 px-6"
+            id="how-it-works", cls="py-12 md:py-16 px-4 md:px-6"
         ),
+
         # About section
         Section(
             Div(
-                H2("About This Project", cls="text-2xl font-bold text-white text-center mb-6"),
-                P("Rhodesli is a community project dedicated to preserving the photographic heritage of the Rhodes-Capeluto family. "
-                  "Using face recognition technology, we are building a searchable archive that connects faces across generations of photographs. "
-                  "Every identification you make helps future generations understand where they came from.",
-                  cls="text-slate-400 text-center max-w-3xl mx-auto leading-relaxed"),
+                Div(cls="ornament mb-8"),
+                H2("About This Archive", cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-6"),
+                Div(
+                    P("The Jewish community of Rhodes, known as ",
+                      Em("La Komunita Djudia de Rodes"),
+                      " in Ladino, thrived for centuries on this Aegean island at the crossroads of "
+                      "East and West. A vibrant Sephardic culture of scholars, merchants, and artisans "
+                      "built a unique tradition blending Ottoman, Italian, and Mediterranean influences.",
+                      cls="text-amber-100/60 leading-relaxed mb-4"),
+                    P("Rhodesli is a digital preservation project using machine learning to "
+                      "reconnect the faces and stories scattered across family photo collections. "
+                      "By combining AI face detection with the living memory of community members, "
+                      "we are building a searchable archive that connects generations.",
+                      cls="text-amber-100/60 leading-relaxed mb-4"),
+                    P("The photographs in this archive come from multiple family collections" +
+                      (f" including the {', '.join(stats.get('sources', []))}" if stats.get('sources') else "") +
+                      ". Each identification you make helps future generations understand where they came from.",
+                      cls="text-amber-100/60 leading-relaxed"),
+                    cls="max-w-2xl mx-auto text-center"
+                ),
                 cls="max-w-5xl mx-auto"
             ),
-            id="about", cls="py-16 px-6 bg-slate-800/30"
+            id="about", cls="py-12 md:py-16 px-4 md:px-6 bg-gradient-to-b from-transparent via-amber-950/20 to-transparent"
         ),
+
         # Bottom CTA
         Section(
             Div(
-                H2("Ready to explore?", cls="text-2xl font-bold text-white text-center mb-4"),
-                P(f"{stats['needs_help']} faces are waiting to be identified.",
-                  cls="text-slate-400 text-center mb-8"),
-                cta_buttons,
+                H2("Every name matters",
+                   cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-3"),
+                P(f"{stats['needs_help']} faces are waiting to be identified. Your family knowledge can bring them home.",
+                  cls="text-amber-100/50 text-center mb-8 max-w-lg mx-auto"),
+                Div(
+                    A("Start Exploring", href="/?section=photos", cls="btn-primary"),
+                    A("Browse People", href="/?section=confirmed", cls="btn-secondary"),
+                    cls="flex flex-wrap gap-4 justify-center"
+                ),
                 cls="max-w-3xl mx-auto text-center"
             ),
-            id="cta", cls="py-16 px-6"
+            id="cta", cls="py-12 md:py-16 px-4 md:px-6"
         ),
+
         # Footer
         Footer(
             Div(
-                P("Rhodesli — Preserving family history, one face at a time.",
-                  cls="text-slate-500 text-sm text-center"),
+                Div(cls="ornament mb-4"),
+                P("Rhodesli",
+                  cls="text-amber-200/40 text-sm text-center font-semibold tracking-wide"),
+                P("Preserving the photographic heritage of the Jewish Community of Rhodes",
+                  cls="text-amber-100/25 text-xs text-center mt-1"),
+                P("Built with care. No generative AI -- only forensic face matching.",
+                  cls="text-amber-100/20 text-xs text-center mt-3"),
                 cls="max-w-6xl mx-auto px-6 py-8"
             ),
-            cls="border-t border-slate-800"
+            cls="border-t border-amber-900/20"
         ),
-        cls="min-h-screen bg-slate-900"
+        cls="min-h-screen landing-bg"
     )
 
 
@@ -2850,15 +3651,22 @@ def get(section: str = None, view: str = "focus", current: str = None,
         filter_source: str = "", sort_by: str = "newest", sess=None):
     """
     Landing page (no section) or Command Center (with section parameter).
-    Public access — anyone can view. Action buttons shown only to admins.
+    Public access -- anyone can view. Action buttons shown only to admins.
+    Logged-in users with no section go to the triage dashboard.
     """
     user = get_current_user(sess or {})
 
-    # If no section specified, show the landing page
+    # If no section specified:
+    # - Logged-in users go straight to the dashboard
+    # - Anonymous users see the public landing page
     if section is None:
-        stats = _compute_landing_stats()
-        featured_photos = _get_featured_photos(8)
-        return landing_page(user, stats, featured_photos)
+        if user is not None:
+            section = "to_review"
+        else:
+            stats = _compute_landing_stats()
+            featured_photos = _get_featured_photos(8)
+            return landing_page(stats, featured_photos)
+
 
     user_is_admin = user.is_admin if user else False
 
@@ -2902,14 +3710,14 @@ def get(section: str = None, view: str = "focus", current: str = None,
         section = "to_review"
 
     # Validate view parameter
-    if view not in ("focus", "browse"):
+    if view not in ("focus", "browse", "match"):
         view = "focus"
 
     # Render the appropriate section
     if section == "to_review":
-        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current, is_admin=user_is_admin)
+        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current, is_admin=user_is_admin, sort_by=sort_by)
     elif section == "confirmed":
-        main_content = render_confirmed_section(confirmed_list, crop_files, counts, is_admin=user_is_admin)
+        main_content = render_confirmed_section(confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by)
     elif section == "skipped":
         main_content = render_skipped_section(skipped_list, crop_files, counts, is_admin=user_is_admin)
     elif section == "photos":
@@ -2933,11 +3741,30 @@ def get(section: str = None, view: str = "focus", current: str = None,
             from { opacity: 1; transform: translateX(0); }
             to { opacity: 0; transform: translateX(100px); }
         }
+        @keyframes card-enter {
+            from { opacity: 0; transform: scale(0.97) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes card-exit {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.97) translateY(-8px); }
+        }
         .animate-fade-in {
             animation: fade-in 0.3s ease-out;
         }
         .animate-slide-out {
             animation: slide-out-right 0.3s ease-in forwards;
+        }
+        .animate-card-enter {
+            animation: card-enter 0.35s ease-out;
+        }
+        /* HTMX swap transitions for focus card */
+        #focus-card {
+            animation: card-enter 0.35s ease-out;
+        }
+        /* Match mode pair transition */
+        .match-pair {
+            animation: card-enter 0.35s ease-out;
         }
         .htmx-indicator {
             display: none;
@@ -2961,15 +3788,58 @@ def get(section: str = None, view: str = "focus", current: str = None,
         .font-data {
             font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
         }
+        /* Collapsible sidebar */
+        .sidebar-container {
+            width: 15rem;
+            transition: width 0.2s ease, transform 0.3s ease;
+        }
+        .sidebar-container.collapsed {
+            width: 3.5rem;
+        }
+        .sidebar-container.collapsed .sidebar-label,
+        .sidebar-container.collapsed .sidebar-search,
+        .sidebar-container.collapsed .sidebar-search-results {
+            display: none;
+        }
+        .sidebar-container.collapsed .sidebar-nav-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+        .sidebar-container.collapsed .sidebar-icon {
+            margin: 0;
+        }
+        .sidebar-container.collapsed .sidebar-chevron {
+            transform: rotate(180deg);
+        }
+        .sidebar-container.collapsed .sidebar-collapse-btn {
+            margin: 0 auto;
+        }
+        .sidebar-search-results:not(:empty) {
+            position: absolute;
+            left: 0.75rem;
+            right: 0.75rem;
+            top: 100%;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
         /* Mobile responsive sidebar */
         @media (max-width: 767px) {
             #sidebar {
+                width: 15rem !important;
                 transform: translateX(-100%);
                 transition: transform 0.3s ease;
             }
             #sidebar.open {
                 transform: translateX(0);
             }
+            #sidebar .sidebar-label { display: inline !important; }
+            #sidebar .sidebar-search { display: block !important; }
             .main-content {
                 margin-left: 0 !important;
             }
@@ -2978,7 +3848,13 @@ def get(section: str = None, view: str = "focus", current: str = None,
             #sidebar { transform: translateX(0); }
         }
         @media (min-width: 1024px) {
-            .main-content { margin-left: 16rem; }
+            .main-content {
+                margin-left: 15rem;
+                transition: margin-left 0.2s ease;
+            }
+            .main-content.sidebar-collapsed {
+                margin-left: 3.5rem;
+            }
         }
     """)
 
@@ -3004,8 +3880,9 @@ def get(section: str = None, view: str = "focus", current: str = None,
         cls="sidebar-overlay fixed inset-0 bg-black/50 z-30 hidden lg:hidden"
     )
 
-    # Sidebar toggle script
+    # Sidebar toggle script (mobile open/close + desktop collapse/expand)
     sidebar_script = Script("""
+        // Mobile: open/close sidebar
         function toggleSidebar() {
             var sb = document.getElementById('sidebar');
             var ov = document.querySelector('.sidebar-overlay');
@@ -3020,6 +3897,34 @@ def get(section: str = None, view: str = "focus", current: str = None,
             sb.classList.add('-translate-x-full');
             ov.classList.add('hidden');
         }
+        // Desktop: collapse/expand sidebar
+        function toggleSidebarCollapse() {
+            var sb = document.getElementById('sidebar');
+            var mc = document.querySelector('.main-content');
+            var isCollapsed = sb.classList.toggle('collapsed');
+            if (mc) mc.classList.toggle('sidebar-collapsed', isCollapsed);
+            try { localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(e) {}
+        }
+        // Restore sidebar state from localStorage on page load
+        (function() {
+            try {
+                var collapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+                if (collapsed && window.innerWidth >= 1024) {
+                    var sb = document.getElementById('sidebar');
+                    var mc = document.querySelector('.main-content');
+                    if (sb) sb.classList.add('collapsed');
+                    if (mc) mc.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+            // Close search results when clicking outside
+            document.addEventListener('click', function(e) {
+                var search = document.querySelector('.sidebar-search');
+                var results = document.getElementById('sidebar-search-results');
+                if (search && results && !search.contains(e.target)) {
+                    results.innerHTML = '';
+                }
+            });
+        })();
     """)
 
     return Title("Rhodesli Identity System"), style, Div(
@@ -3037,10 +3942,14 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 main_content,
                 cls="max-w-6xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="main-content ml-0 lg:ml-64 min-h-screen"
+            cls="main-content min-h-screen"
         ),
         # Photo context modal (hidden by default)
         photo_modal(),
+        # Photo lightbox for browsing all photos of an identity
+        photo_lightbox(),
+        # Side-by-side comparison modal for merge evaluation
+        compare_modal(),
         # Login modal (shown when unauthenticated user triggers protected action)
         login_modal(),
         # Styled confirmation modal (replaces native browser confirm())
@@ -3548,6 +4457,55 @@ def get(identity_id: str, q: str = ""):
     return search_results_panel(results, identity_id, crop_files)
 
 
+@rt("/api/search")
+def get(q: str = ""):
+    """
+    Global search for identities by name. Used by the sidebar search input.
+
+    Args:
+        q: Search query (minimum 2 characters, case-insensitive partial match)
+
+    Returns HTMX partial with matching identity results (limit 10).
+    Each result links to the confirmed section with the identity highlighted.
+    """
+    if len(q.strip()) < 2:
+        return ""
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Div(
+            P("Search unavailable.", cls="text-slate-400 italic text-sm p-2"),
+        )
+
+    # Search confirmed identities by name
+    results = registry.search_identities(q)
+    if not results:
+        return Div(
+            P("No matches found.", cls="text-slate-400 italic text-sm p-3"),
+        )
+
+    crop_files = get_crop_files()
+    items = []
+    for r in results[:10]:
+        face_url = resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
+        thumb = Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0") if face_url else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
+        name = ensure_utf8_display(r["name"]) or "Unnamed"
+        items.append(
+            A(
+                thumb,
+                Div(
+                    Span(name, cls="text-sm text-slate-200 truncate"),
+                    Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
+                    cls="flex flex-col min-w-0"
+                ),
+                href=f"/?section=confirmed&current={r['identity_id']}",
+                cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer"
+            )
+        )
+    return Div(*items)
+
+
 @rt("/api/identity/{identity_id}/rejected")
 def get(identity_id: str):
     """
@@ -3755,15 +4713,101 @@ def post(source_id: str, target_id: str, sess=None):
     return (Div(), oob_toast)
 
 
+def _name_conflict_modal(target_id: str, source_id: str, details: dict, merge_source: str) -> Div:
+    """Render a name conflict resolution modal for two-named merges."""
+    a = details["identity_a"]
+    b = details["identity_b"]
+    return Div(
+        Div(cls="absolute inset-0 bg-black/80",
+            **{"_": "on click remove closest .fixed"}),
+        Div(
+            H3("Name Conflict", cls="text-lg font-bold text-white mb-4"),
+            P("Both identities have names. Choose which name to keep:",
+              cls="text-slate-300 mb-4 text-sm"),
+            Form(
+                Input(type="hidden", name="source", value=merge_source),
+                Div(
+                    Label(
+                        Input(type="radio", name="resolved_name", value=a["name"],
+                              cls="mr-2", checked=True),
+                        Span(a["name"], cls="font-semibold text-white"),
+                        Span(f" ({a['face_count']} faces, {a['state']})",
+                             cls="text-slate-400 text-sm"),
+                        cls="flex items-center cursor-pointer hover:bg-slate-700 p-2 rounded",
+                    ),
+                    cls="mb-2",
+                ),
+                Div(
+                    Label(
+                        Input(type="radio", name="resolved_name", value=b["name"],
+                              cls="mr-2"),
+                        Span(b["name"], cls="font-semibold text-white"),
+                        Span(f" ({b['face_count']} faces, {b['state']})",
+                             cls="text-slate-400 text-sm"),
+                        cls="flex items-center cursor-pointer hover:bg-slate-700 p-2 rounded",
+                    ),
+                    cls="mb-2",
+                ),
+                Div(
+                    Label(
+                        Input(type="radio", name="resolved_name", value="__custom__",
+                              cls="mr-2",
+                              **{"_": "on change show #custom-name-input"}),
+                        Span("Custom name", cls="text-slate-300"),
+                        cls="flex items-center cursor-pointer hover:bg-slate-700 p-2 rounded",
+                    ),
+                    Input(type="text", name="custom_name", id="custom-name-input",
+                          placeholder="Enter custom name...",
+                          cls="hidden mt-2 w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-white text-sm"),
+                    cls="mb-4",
+                ),
+                Div(
+                    Button("Cancel", type="button",
+                           cls="px-4 py-2 text-sm text-slate-400 hover:text-white",
+                           **{"_": "on click remove closest .fixed"}),
+                    Button("Merge", type="submit",
+                           cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500"),
+                    cls="flex justify-end gap-3",
+                ),
+                hx_post=f"/api/identity/{target_id}/merge/{source_id}",
+                hx_target=f"#identity-{target_id}",
+                hx_swap="outerHTML",
+            ),
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-md p-6 relative border border-slate-700",
+        ),
+        cls="fixed inset-0 flex items-center justify-center p-4 z-[9999]",
+    )
+
+
+def toast_with_merge_undo(message: str, target_id: str) -> Div:
+    """Toast notification with Undo button for merge actions."""
+    return Div(
+        Span("\u2713", cls="mr-2"),
+        Span(message, cls="flex-1"),
+        Button(
+            "Undo",
+            cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            hx_post=f"/api/identity/{target_id}/undo-merge",
+            hx_swap="outerHTML",
+            hx_target="closest div",
+            type="button",
+        ),
+        cls="px-4 py-3 rounded shadow-lg flex items-center bg-emerald-600 text-white animate-fade-in",
+        **{"_": "on load wait 8s then remove me"},
+    )
+
+
 @rt("/api/identity/{target_id}/merge/{source_id}")
-def post(target_id: str, source_id: str, source: str = "web", sess=None):
+def post(target_id: str, source_id: str, source: str = "web",
+         resolved_name: str = None, custom_name: str = None, sess=None):
     """
     Merge source identity into target identity. Requires admin.
 
-    Args:
-        target_id: Identity to merge into
-        source_id: Identity to be absorbed
-        source: Origin of merge request ("web" or "manual_search")
+    Enhanced behavior:
+    - Auto-corrects merge direction (named identity always survives)
+    - Detects name conflicts (both named) and shows resolution modal
+    - Records merge_history on target for undo capability
+    - Promotes target state if source had higher-trust state
     """
     denied = _check_admin(sess)
     if denied:
@@ -3794,15 +4838,31 @@ def post(target_id: str, source_id: str, source: str = "web", sess=None):
     # Determine user_source from merge origin
     user_source = source if source in ("web", "manual_search") else "web"
 
-    # Attempt merge
+    # Handle custom name from conflict resolution form
+    actual_resolved_name = resolved_name
+    if resolved_name == "__custom__" and custom_name:
+        actual_resolved_name = custom_name.strip()
+    elif resolved_name == "__custom__":
+        actual_resolved_name = None  # No custom name, will re-trigger conflict
+
+    # Attempt merge (with auto-correction)
     result = registry.merge_identities(
         source_id=source_id,
         target_id=target_id,
         user_source=user_source,
         photo_registry=photo_registry,
+        resolved_name=actual_resolved_name,
     )
 
     if not result["success"]:
+        # Handle name conflict -- show resolution modal
+        if result["reason"] == "name_conflict":
+            return _name_conflict_modal(
+                target_id, source_id,
+                result["name_conflict_details"],
+                merge_source=source,
+            )
+
         error_messages = {
             "co_occurrence": "Cannot merge: these identities appear in the same photo.",
             "already_merged": "Cannot merge: source identity was already merged.",
@@ -3818,27 +4878,215 @@ def post(target_id: str, source_id: str, source: str = "web", sess=None):
     # Save and return success
     save_registry(registry)
 
-    crop_files = get_crop_files()
-    updated_identity = registry.get_identity(target_id)
+    # Use the actual target/source from the result (may have been swapped)
+    actual_target_id = result["target_id"]
+    actual_source_id = result["source_id"]
 
-    # Return updated target card + OOB removal of source card
+    crop_files = get_crop_files()
+    updated_identity = registry.get_identity(actual_target_id)
+    target_name = ensure_utf8_display(updated_identity.get("name")) or "identity"
+
+    # Log the action
+    log_user_action(
+        "MERGE",
+        source_identity_id=actual_source_id,
+        target_identity_id=actual_target_id,
+        faces_merged=result["faces_merged"],
+        direction_swapped=result.get("direction_swapped", False),
+    )
+
+    # Build OOB elements to remove absorbed identity from DOM
+    oob_elements = [
+        Div(id=f"identity-{actual_source_id}", hx_swap_oob="delete"),
+        Div(id=f"neighbor-{actual_source_id}", hx_swap_oob="delete"),
+        Div(id=f"search-result-{actual_source_id}", hx_swap_oob="delete"),
+    ]
+
+    # If direction was swapped, also clean up the original identity cards
+    if result.get("direction_swapped"):
+        oob_elements.extend([
+            Div(id=f"neighbor-{actual_target_id}", hx_swap_oob="delete"),
+            Div(id=f"search-result-{actual_target_id}", hx_swap_oob="delete"),
+        ])
+
+    # Toast with undo
+    merge_toast = toast_with_merge_undo(
+        f"Merged {result['faces_merged']} face(s) into {target_name}.",
+        actual_target_id,
+    )
+
     return (
         identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
-        # OOB: Remove source card from DOM (it's been absorbed)
-        Div(id=f"identity-{source_id}", hx_swap_oob="delete"),
-        toast(f"Merged {result['faces_merged']} face(s) successfully.", "success"),
+        *oob_elements,
+        merge_toast,
     )
 
 
-@rt("/api/identity/{identity_id}/faces")
-def get(identity_id: str, sort: str = "date"):
+@rt("/api/identity/{identity_id}/undo-merge")
+def post(identity_id: str, sess=None):
     """
-    Get faces for an identity with optional sorting.
+    Undo the most recent merge on an identity. Requires admin.
+
+    Reads merge_history, restores the source identity, removes
+    merged faces from target.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Validate identity exists
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Attempt undo
+    result = registry.undo_merge(identity_id, user_source="web")
+
+    if not result["success"]:
+        error_messages = {
+            "no_merge_history": "Nothing to undo.",
+            "source_not_found": "Cannot undo: source identity no longer exists.",
+            "target_is_merged": "Cannot undo: this identity has been merged into another.",
+        }
+        message = error_messages.get(result["reason"], f"Undo failed: {result['reason']}")
+        return Response(
+            to_xml(toast(message, "warning")),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    save_registry(registry)
+
+    log_user_action(
+        "UNDO_MERGE",
+        target_identity_id=identity_id,
+        restored_source_id=result["source_id"],
+        faces_removed=result["faces_removed"],
+    )
+
+    return toast(f"Merge undone. {result['faces_removed']} face(s) restored.", "success")
+
+
+@rt("/api/identity/{identity_id}/bulk-merge")
+def post(identity_id: str, bulk_ids: list = None, sess=None):
+    """
+    Bulk merge multiple identities into one target. Requires admin.
+
+    Merges each selected identity into the target one by one.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if not bulk_ids:
+        return toast("No identities selected.", "warning")
+
+    # Ensure bulk_ids is a list (single value comes as string)
+    if isinstance(bulk_ids, str):
+        bulk_ids = [bulk_ids]
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    photo_registry = load_photo_registry()
+
+    merged_count = 0
+    total_faces = 0
+    errors = []
+
+    for source_id in bulk_ids:
+        try:
+            result = registry.merge_identities(
+                source_id=source_id,
+                target_id=identity_id,
+                user_source="web",
+                photo_registry=photo_registry,
+            )
+            if result["success"]:
+                merged_count += 1
+                total_faces += result["faces_merged"]
+            else:
+                errors.append(f"{source_id[:8]}: {result['reason']}")
+        except Exception as e:
+            errors.append(f"{source_id[:8]}: {str(e)}")
+
+    if merged_count > 0:
+        save_registry(registry)
+
+    if errors:
+        return toast(f"Merged {merged_count} identities ({total_faces} faces). {len(errors)} failed.", "warning")
+
+    return toast(f"Merged {merged_count} identities ({total_faces} faces).", "success")
+
+
+@rt("/api/identity/{identity_id}/bulk-reject")
+def post(identity_id: str, bulk_ids: list = None, sess=None):
+    """
+    Bulk mark multiple identities as Not Same. Requires admin.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if not bulk_ids:
+        return toast("No identities selected.", "warning")
+
+    # Ensure bulk_ids is a list
+    if isinstance(bulk_ids, str):
+        bulk_ids = [bulk_ids]
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    rejected_count = 0
+    for target_id in bulk_ids:
+        try:
+            registry.reject_identity_pair(identity_id, target_id, user_source="web")
+            rejected_count += 1
+        except Exception:
+            pass
+
+    if rejected_count > 0:
+        save_registry(registry)
+
+    return toast(f"Marked {rejected_count} identities as 'Not Same'.", "info")
+
+
+@rt("/api/identity/{identity_id}/faces")
+def get(identity_id: str, sort: str = "date", page: int = 0):
+    """
+    Get faces for an identity with optional sorting and pagination.
 
     Query params:
     - sort: "date" (default) or "outlier"
+    - page: 0-indexed page number (FACES_PER_PAGE items per page)
 
-    Returns HTML partial with face cards.
+    Returns HTML partial with face cards and pagination controls.
     """
     try:
         registry = load_registry()
@@ -3849,48 +5097,56 @@ def get(identity_id: str, sort: str = "date"):
     crop_files = get_crop_files()
     face_data = get_face_data()
 
-    # Get faces in requested order
+    # Get all face entries in requested order
     if sort == "outlier":
         from core.neighbors import sort_faces_by_outlier_score
         sorted_faces = sort_faces_by_outlier_score(identity_id, registry, face_data)
-        face_ids = [face_id for face_id, _ in sorted_faces]
+        all_entries = [face_id for face_id, _ in sorted_faces]
     else:
-        # Default: preserve original order
         all_entries = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
-        face_ids = []
-        for entry in all_entries:
-            if isinstance(entry, str):
-                face_ids.append(entry)
-            else:
-                face_ids.append(entry.get("face_id"))
+
+    total_faces = len(all_entries)
+    can_detach = total_faces > 1
+
+    # Paginate
+    start = page * FACES_PER_PAGE
+    end = start + FACES_PER_PAGE
+    page_entries = all_entries[start:end]
 
     # Build face cards
-    cards = []
-    for face_id in face_ids:
-        crop_url = resolve_face_image_url(face_id, crop_files)
-        if crop_url:
-            photo_id = get_photo_id_for_face(face_id)
-            cards.append(face_card(
-                face_id=face_id,
-                crop_url=crop_url,
-                photo_id=photo_id,
-            ))
-        else:
-            # Placeholder for faces with missing crop files
-            cards.append(Div(
-                Div(
-                    Span("?", cls="text-4xl text-slate-500"),
-                    cls="w-full aspect-square bg-slate-700 border border-slate-600 flex items-center justify-center"
-                ),
-                P("Image unavailable", cls="text-xs text-slate-400 mt-1"),
-                P(f"ID: {face_id[:12]}...", cls="text-xs font-data text-slate-500"),
-                cls="face-card",
-                id=make_css_id(face_id),
-            ))
+    if sort == "outlier":
+        # For outlier sort, entries are plain face_id strings
+        cards = []
+        for face_id in page_entries:
+            crop_url = resolve_face_image_url(face_id, crop_files)
+            if crop_url:
+                photo_id = get_photo_id_for_face(face_id)
+                cards.append(face_card(
+                    face_id=face_id,
+                    crop_url=crop_url,
+                    photo_id=photo_id,
+                    identity_id=identity_id,
+                    show_detach=can_detach,
+                ))
+            else:
+                cards.append(Div(
+                    Div(Span("?", cls="text-4xl text-slate-500"),
+                        cls="w-full aspect-square bg-slate-700 border border-slate-600 flex items-center justify-center"),
+                    P("Image unavailable", cls="text-xs text-slate-400 mt-1"),
+                    P(f"ID: {face_id[:12]}...", cls="text-xs font-data text-slate-500"),
+                    cls="face-card", id=make_css_id(face_id),
+                ))
+    else:
+        cards = _build_face_cards_for_entries(page_entries, crop_files, identity_id, can_detach)
+
+    pagination = _face_pagination_controls(identity_id, page, total_faces, sort)
 
     return Div(
-        *cards,
-        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+        Div(
+            *cards,
+            cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+        ),
+        pagination,
         id=f"faces-{identity_id}",
     )
 
@@ -3898,6 +5154,131 @@ def get(identity_id: str, sort: str = "date"):
 # =============================================================================
 # ROUTES - RENAME IDENTITY
 # =============================================================================
+
+@rt("/api/identity/{identity_id}/photos")
+def get(identity_id: str, index: int = 0):
+    """Get a single photo for the lightbox, with face overlays and navigation."""
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return P("Identity not found", cls="text-red-400")
+
+    all_face_entries = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    if not all_face_entries:
+        return P("No faces for this identity", cls="text-slate-400")
+
+    index = max(0, min(index, len(all_face_entries) - 1))
+    total = len(all_face_entries)
+
+    face_entry = all_face_entries[index]
+    face_id = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
+
+    pid = get_photo_id_for_face(face_id)
+    if not pid:
+        return P("Photo not found for this face", cls="text-slate-400")
+    photo = get_photo_metadata(pid)
+    if not photo:
+        return P("Photo metadata not found", cls="text-slate-400")
+
+    width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
+    has_dimensions = width > 0 and height > 0
+
+    face_overlays = []
+    identity_name = ensure_utf8_display(identity.get("name")) or "Unknown"
+    if has_dimensions:
+        for fd in photo["faces"]:
+            fid = fd["face_id"]
+            x1, y1, x2, y2 = fd["bbox"]
+            lp = (x1 / width) * 100
+            tp = (y1 / height) * 100
+            wp = ((x2 - x1) / width) * 100
+            hp = ((y2 - y1) / height) * 100
+            fi = get_identity_for_face(registry, fid)
+            is_t = fi and fi["identity_id"] == identity_id
+            if is_t:
+                oc = "absolute border-2 border-amber-500 bg-amber-500/20"
+                lb = Span(identity_name, cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap pointer-events-none")
+            else:
+                dn = ensure_utf8_display(fi.get("name", "")) if fi else ""
+                oc = "absolute border border-emerald-500/50 bg-emerald-500/5 group"
+                lb = Span(dn or "Unknown", cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none") if dn else None
+            face_overlays.append(Div(lb, cls=oc, style=f"left: {lp:.2f}%; top: {tp:.2f}%; width: {wp:.2f}%; height: {hp:.2f}%;"))
+
+    prev_btn = Button(Span("<", cls="text-3xl"), cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+        hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}", hx_target="#lightbox-content", hx_swap="innerHTML", type="button") if index > 0 else None
+    next_btn = Button(Span(">", cls="text-3xl"), cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+        hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}", hx_target="#lightbox-content", hx_swap="innerHTML", type="button") if index < total - 1 else None
+
+    nav_script = Script(f"""(function(){{var el=document.getElementById('lightbox-photo-container');if(!el)return;var sx=0;el.addEventListener('touchstart',function(e){{sx=e.touches[0].clientX}});el.addEventListener('touchend',function(e){{var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){{if(d>0&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(d<0&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}})}}}});function kh(e){{if(e.key==='ArrowLeft'&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(e.key==='ArrowRight'&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(e.key==='Escape'){{document.getElementById('photo-lightbox').classList.add('hidden');document.removeEventListener('keydown',kh)}}}}if(window._lbKb)document.removeEventListener('keydown',window._lbKb);window._lbKb=kh;document.addEventListener('keydown',kh)}})();""")
+
+    return Div(
+        Div(Img(src=photo_url(photo["filename"], photo.get("filepath", "")), alt=photo["filename"], cls="max-h-[80vh] max-w-full object-contain"),
+            *face_overlays, prev_btn, next_btn, cls="relative inline-block", id="lightbox-photo-container"),
+        Div(Span(f"{index + 1} / {total}", cls="text-white font-medium"),
+            Span(f" -- {photo['filename']}", cls="text-slate-400 text-sm ml-2"),
+            Span(identity_name, cls="text-amber-400 text-sm ml-4"), cls="mt-3 text-center"),
+        nav_script, cls="flex flex-col items-center")
+
+
+@rt("/api/identity/{target_id}/compare/{neighbor_id}")
+def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0):
+    """Side-by-side comparison view for evaluating merge candidates."""
+    try:
+        registry = load_registry()
+        tgt = registry.get_identity(target_id)
+        nbr = registry.get_identity(neighbor_id)
+    except KeyError:
+        return P("Identity not found", cls="text-red-400")
+    crop_files = get_crop_files()
+    tf = tgt.get("anchor_ids", []) + tgt.get("candidate_ids", [])
+    nf = nbr.get("anchor_ids", []) + nbr.get("candidate_ids", [])
+    if not tf or not nf:
+        return P("No faces available for comparison", cls="text-slate-400")
+    target_idx = max(0, min(target_idx, len(tf) - 1))
+    neighbor_idx = max(0, min(neighbor_idx, len(nf) - 1))
+    def _rf(entries, idx):
+        e = entries[idx]
+        fid = e if isinstance(e, str) else e.get("face_id", "")
+        return fid, resolve_face_image_url(fid, crop_files)
+    _, t_url = _rf(tf, target_idx)
+    _, n_url = _rf(nf, neighbor_idx)
+    t_name = ensure_utf8_display(tgt.get("name")) or f"Identity {target_id[:8]}..."
+    n_name = ensure_utf8_display(nbr.get("name")) or f"Identity {neighbor_id[:8]}..."
+    def _cn(side, cur, tot, oth):
+        if tot <= 1: return None
+        b = f"/api/identity/{target_id}/compare/{neighbor_id}"
+        if side == "t":
+            pu = f"{b}?target_idx={cur-1}&neighbor_idx={oth}"
+            nu = f"{b}?target_idx={cur+1}&neighbor_idx={oth}"
+        else:
+            pu = f"{b}?target_idx={oth}&neighbor_idx={cur-1}"
+            nu = f"{b}?target_idx={oth}&neighbor_idx={cur+1}"
+        pb = Button("<", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm", hx_get=pu, hx_target="#compare-modal-content", hx_swap="innerHTML", type="button") if cur > 0 else Button("<", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
+        nb = Button(">", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm", hx_get=nu, hx_target="#compare-modal-content", hx_swap="innerHTML", type="button") if cur < tot - 1 else Button(">", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
+        return Div(pb, Span(f"{cur+1}/{tot}", cls="text-xs text-slate-400 mx-1"), nb, cls="flex items-center justify-center gap-1 mt-2")
+    m_btn = Button("Merge", cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+        hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_id}", hx_swap="outerHTML",
+        **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
+    ns_btn = Button("Not Same", cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+        hx_post=f"/api/identity/{target_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
+        **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
+    cl_btn = Button("Close", cls="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-600 rounded",
+        **{"_": "on click add .hidden to #compare-modal"}, type="button")
+    return Div(
+        Div(
+            Div(P(t_name, cls="text-sm font-medium text-amber-400 mb-2 text-center truncate"),
+                Div(Img(src=t_url or "", alt=t_name, cls="max-w-full max-h-[50vh] object-contain rounded") if t_url else Div(Span("?", cls="text-6xl text-slate-500"), cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+                    cls="flex justify-center bg-slate-700/50 rounded p-2"),
+                _cn("t", target_idx, len(tf), neighbor_idx), cls="flex-1 min-w-0"),
+            Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
+            Div(P(n_name, cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate"),
+                Div(Img(src=n_url or "", alt=n_name, cls="max-w-full max-h-[50vh] object-contain rounded") if n_url else Div(Span("?", cls="text-6xl text-slate-500"), cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+                    cls="flex justify-center bg-slate-700/50 rounded p-2"),
+                _cn("n", neighbor_idx, len(nf), target_idx), cls="flex-1 min-w-0"),
+            cls="flex gap-4 items-start"),
+        Div(m_btn, ns_btn, cl_btn, cls="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700"))
+
 
 @rt("/api/identity/{identity_id}/rename-form")
 def get(identity_id: str):
@@ -4191,13 +5572,25 @@ def get(sess=None):
         pass  # No photos yet
 
     upload_style = Style("""
+        .sidebar-container { width: 15rem; transition: width 0.2s ease, transform 0.3s ease; }
+        .sidebar-container.collapsed { width: 3.5rem; }
+        .sidebar-container.collapsed .sidebar-label,
+        .sidebar-container.collapsed .sidebar-search,
+        .sidebar-container.collapsed .sidebar-search-results { display: none; }
+        .sidebar-container.collapsed .sidebar-nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-container.collapsed .sidebar-icon { margin: 0; }
+        .sidebar-container.collapsed .sidebar-chevron { transform: rotate(180deg); }
+        .sidebar-container.collapsed .sidebar-collapse-btn { margin: 0 auto; }
+        .sidebar-search-results:not(:empty) { position: absolute; left: 0.75rem; right: 0.75rem; top: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; max-height: 300px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         @media (max-width: 767px) {
-            #sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            #sidebar { width: 15rem !important; transform: translateX(-100%); transition: transform 0.3s ease; }
             #sidebar.open { transform: translateX(0); }
+            #sidebar .sidebar-label { display: inline !important; }
+            #sidebar .sidebar-search { display: block !important; }
             .main-content { margin-left: 0 !important; }
         }
         @media (min-width: 768px) { #sidebar { transform: translateX(0); } }
-        @media (min-width: 1024px) { .main-content { margin-left: 16rem; } }
+        @media (min-width: 1024px) { .main-content { margin-left: 15rem; transition: margin-left 0.2s ease; } .main-content.sidebar-collapsed { margin-left: 3.5rem; } }
     """)
     mobile_header = Div(
         Button(
@@ -4227,6 +5620,24 @@ def get(sess=None):
             sb.classList.add('-translate-x-full');
             ov.classList.add('hidden');
         }
+        function toggleSidebarCollapse() {
+            var sb = document.getElementById('sidebar');
+            var mc = document.querySelector('.main-content');
+            var isCollapsed = sb.classList.toggle('collapsed');
+            if (mc) mc.classList.toggle('sidebar-collapsed', isCollapsed);
+            try { localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(e) {}
+        }
+        (function() {
+            try {
+                var collapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+                if (collapsed && window.innerWidth >= 1024) {
+                    var sb = document.getElementById('sidebar');
+                    var mc = document.querySelector('.main-content');
+                    if (sb) sb.classList.add('collapsed');
+                    if (mc) mc.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
     """)
 
     return Title("Upload Photos - Rhodesli"), style, upload_style, Div(
@@ -4246,7 +5657,7 @@ def get(sess=None):
                 upload_area(existing_sources=existing_sources),
                 cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="main-content ml-0 lg:ml-64 min-h-screen"
+            cls="main-content min-h-screen"
         ),
         sidebar_script,
         cls="h-full"
@@ -5344,6 +6755,280 @@ def get(sess=None):
         media_type="application/zip",
         headers={"Content-Disposition": "attachment; filename=rhodesli-data-export.zip"},
     )
+
+
+# =============================================================================
+# ROUTES - MATCH MODE (Gamified Pairing)
+# =============================================================================
+
+
+def _get_best_match_pair():
+    """
+    Find the best pair of identities to show in match mode.
+
+    Returns (identity_a, identity_b, distance) or None if no pairs available.
+    Uses the same neighbor-finding logic as Find Similar but picks the
+    globally strongest match across all inbox/proposed identities.
+    """
+    registry = load_registry()
+    face_data = get_face_data()
+    photo_registry = load_photo_registry()
+
+    # Get all reviewable identities
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    to_review = inbox + proposed
+
+    if len(to_review) < 2:
+        return None
+
+    # Find the best pair: identity with strongest neighbor
+    best_pair = None
+    best_distance = float('inf')
+
+    # Sort by face count (more faces = more reliable match)
+    to_review.sort(
+        key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
+        reverse=True
+    )
+
+    # Check top identities for best neighbor match
+    for identity in to_review[:20]:  # Limit search to top 20 for performance
+        try:
+            from core.neighbors import find_nearest_neighbors
+            neighbors = find_nearest_neighbors(
+                identity["identity_id"], registry, photo_registry, face_data, limit=1
+            )
+            if neighbors and neighbors[0]["distance"] < best_distance:
+                best_distance = neighbors[0]["distance"]
+                best_pair = (identity, neighbors[0], best_distance)
+        except Exception:
+            continue
+
+    return best_pair
+
+
+@rt("/api/match/next-pair")
+def get():
+    """
+    Get the next pair of faces to compare in Match mode.
+
+    Returns an HTMX partial with two face crops side by side
+    and Same Person / Different People buttons.
+    """
+    pair = _get_best_match_pair()
+
+    if pair is None:
+        return Div(
+            H3("No more pairs to match!", cls="text-lg font-medium text-white"),
+            P("All available identities have been reviewed.", cls="text-slate-400 mt-2"),
+            A("Back to Focus mode", href="/?section=to_review&view=focus",
+              cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"),
+            cls="text-center py-12"
+        )
+
+    identity_a, neighbor_b, distance = pair
+    identity_id_a = identity_a["identity_id"]
+    identity_id_b = neighbor_b["identity_id"]
+
+    crop_files = get_crop_files()
+
+    # Get first face crop for each identity
+    def _get_face_url(identity_data):
+        face_ids = identity_data.get("anchor_ids", []) + identity_data.get("candidate_ids", [])
+        if not face_ids:
+            return None, None
+        first = face_ids[0]
+        fid = first if isinstance(first, str) else first.get("face_id", "")
+        return fid, resolve_face_image_url(fid, crop_files)
+
+    face_id_a, crop_url_a = _get_face_url(identity_a)
+    # For neighbor, we need to load the full identity
+    try:
+        registry = load_registry()
+        identity_b_full = registry.get_identity(identity_id_b)
+        face_id_b, crop_url_b = _get_face_url(identity_b_full)
+    except KeyError:
+        face_id_b, crop_url_b = None, None
+
+    name_a = ensure_utf8_display(identity_a.get("name")) or f"Person {identity_id_a[:8]}..."
+    name_b = ensure_utf8_display(neighbor_b.get("name")) or f"Person {identity_id_b[:8]}..."
+
+    # Similarity indicator
+    if distance < MATCH_THRESHOLD_HIGH:
+        sim_cls = "text-emerald-400"
+        sim_label = "High similarity"
+    elif distance < MATCH_THRESHOLD_MEDIUM:
+        sim_cls = "text-amber-400"
+        sim_label = "Medium similarity"
+    else:
+        sim_cls = "text-slate-400"
+        sim_label = "Low similarity"
+
+    return Div(
+        # Similarity indicator
+        Div(
+            Span(sim_label, cls=f"text-xs font-medium {sim_cls}"),
+            Span(f"(dist: {distance:.2f})", cls="text-xs font-data text-slate-500 ml-2"),
+            cls="text-center mb-4"
+        ),
+        # Side by side faces
+        Div(
+            # Face A
+            Div(
+                Div(
+                    Img(src=crop_url_a or "", alt=name_a,
+                        cls="w-full h-full object-cover") if crop_url_a else
+                    Span("?", cls="text-6xl text-slate-500"),
+                    cls="w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center mx-auto"
+                ),
+                P(name_a, cls="text-sm text-slate-300 mt-2 text-center truncate"),
+                P(f"{len(identity_a.get('anchor_ids', []) + identity_a.get('candidate_ids', []))} faces",
+                  cls="text-xs text-slate-500 text-center"),
+                cls="flex-1"
+            ),
+            # VS divider
+            Div(
+                Span("vs", cls="text-slate-500 text-lg font-bold"),
+                cls="flex items-center justify-center px-4"
+            ),
+            # Face B
+            Div(
+                Div(
+                    Img(src=crop_url_b or "", alt=name_b,
+                        cls="w-full h-full object-cover") if crop_url_b else
+                    Span("?", cls="text-6xl text-slate-500"),
+                    cls="w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center mx-auto"
+                ),
+                P(name_b, cls="text-sm text-slate-300 mt-2 text-center truncate"),
+                P(f"{neighbor_b.get('face_count', 0)} faces",
+                  cls="text-xs text-slate-500 text-center"),
+                cls="flex-1"
+            ),
+            cls="flex items-start justify-center gap-2 match-pair"
+        ),
+        # Action buttons
+        Div(
+            Button(
+                "Same Person",
+                cls="px-6 py-3 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors",
+                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same",
+                hx_target="#match-pair-container",
+                hx_swap="innerHTML",
+                type="button",
+            ),
+            Button(
+                "Different People",
+                cls="px-6 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors",
+                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different",
+                hx_target="#match-pair-container",
+                hx_swap="innerHTML",
+                type="button",
+            ),
+            Button(
+                "Skip",
+                cls="px-4 py-3 text-sm text-slate-400 hover:text-slate-300 transition-colors",
+                hx_get="/api/match/next-pair",
+                hx_target="#match-pair-container",
+                hx_swap="innerHTML",
+                type="button",
+            ),
+            cls="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-slate-700"
+        ),
+        cls="match-pair"
+    )
+
+
+@rt("/api/match/decide")
+def post(identity_a: str, identity_b: str, decision: str, sess=None):
+    """
+    Record a match decision and return the next pair.
+
+    Args:
+        identity_a: First identity ID
+        identity_b: Second identity ID
+        decision: "same" (merge) or "different" (reject pair)
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if decision == "same":
+        # Merge identity_b into identity_a
+        try:
+            registry = load_registry()
+            photo_registry = load_photo_registry()
+            result = registry.merge_identities(
+                source_id=identity_b,
+                target_id=identity_a,
+                user_source="match_mode",
+                photo_registry=photo_registry,
+            )
+            if result["success"]:
+                save_registry(registry)
+                # OOB toast
+                oob_toast = Div(
+                    toast(f"Merged! {result['faces_merged']} face(s) combined.", "success"),
+                    hx_swap_oob="beforeend:#toast-container",
+                )
+            else:
+                oob_toast = Div(
+                    toast(f"Cannot merge: {result['reason']}", "warning"),
+                    hx_swap_oob="beforeend:#toast-container",
+                )
+        except Exception as e:
+            oob_toast = Div(
+                toast(f"Error: {str(e)}", "error"),
+                hx_swap_oob="beforeend:#toast-container",
+            )
+    elif decision == "different":
+        # Mark as not same person
+        try:
+            registry = load_registry()
+            registry.reject_identity_pair(identity_a, identity_b, user_source="match_mode")
+            save_registry(registry)
+            oob_toast = Div(
+                toast("Marked as different people.", "info"),
+                hx_swap_oob="beforeend:#toast-container",
+            )
+        except Exception as e:
+            oob_toast = Div(
+                toast(f"Error: {str(e)}", "error"),
+                hx_swap_oob="beforeend:#toast-container",
+            )
+    else:
+        oob_toast = Div(
+            toast("Invalid decision.", "error"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
+
+    # Increment counter script (OOB)
+    counter_script = Div(
+        Script("if (typeof incrementMatchCount === 'function') incrementMatchCount();"),
+        hx_swap_oob="beforeend:body",
+    )
+
+    # Get next pair
+    pair = _get_best_match_pair()
+    if pair is None:
+        next_content = Div(
+            H3("No more pairs!", cls="text-lg font-medium text-white"),
+            P("You have matched all available pairs.", cls="text-slate-400 mt-2"),
+            A("Back to Focus mode", href="/?section=to_review&view=focus",
+              cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"),
+            cls="text-center py-12"
+        )
+        return (next_content, oob_toast, counter_script)
+
+    # Return next pair by redirecting to the GET endpoint
+    # (reuse the rendering logic)
+    next_pair_html = Div(
+        P("Loading next pair...", cls="text-slate-400 text-center py-4"),
+        hx_get="/api/match/next-pair",
+        hx_trigger="load",
+        hx_swap="outerHTML",
+    )
+    return (next_pair_html, oob_toast, counter_script)
 
 
 if __name__ == "__main__":

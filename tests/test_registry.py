@@ -783,12 +783,14 @@ class TestSearchIdentities:
         mock_photo_registry = MagicMock()
         mock_photo_registry.get_photos_for_faces.return_value = set()
 
-        # Merge source into target
+        # Merge source into target (auto_correct_direction=False to skip
+        # name conflict detection -- this test is about search exclusion)
         registry.merge_identities(
             source_id=source_id,
             target_id=target_id,
             user_source="test",
             photo_registry=mock_photo_registry,
+            auto_correct_direction=False,
         )
 
         # After merge, only target should appear
