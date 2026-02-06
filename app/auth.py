@@ -122,6 +122,105 @@ async def signup_with_supabase(email: str, password: str) -> tuple[dict | None, 
         return None, f"Connection error: {e}"
 
 
+async def send_password_reset(email: str) -> tuple[bool, str | None]:
+    """Send password reset email via Supabase."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return False, "Authentication not configured"
+
+    import httpx
+
+    try:
+        site_url = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{SUPABASE_URL}/auth/v1/recover",
+                json={
+                    "email": email,
+                },
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Content-Type": "application/json",
+                },
+            )
+
+            if response.status_code == 200:
+                return True, None
+            else:
+                error_data = response.json()
+                msg = error_data.get("error_description") or error_data.get("msg") or "Failed to send reset email"
+                return False, msg
+    except Exception as e:
+        return False, f"Connection error: {e}"
+
+
+async def update_password(access_token: str, new_password: str) -> tuple[bool, str | None]:
+    """Update user's password using their access token."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return False, "Authentication not configured"
+
+    import httpx
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.put(
+                f"{SUPABASE_URL}/auth/v1/user",
+                json={"password": new_password},
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": f"Bearer {access_token}",
+                    "Content-Type": "application/json",
+                },
+            )
+
+            if response.status_code == 200:
+                return True, None
+            else:
+                error_data = response.json()
+                msg = error_data.get("error_description") or "Failed to update password"
+                return False, msg
+    except Exception as e:
+        return False, f"Connection error: {e}"
+
+
+def get_oauth_url(provider: str) -> str | None:
+    """Get OAuth redirect URL for social login."""
+    if not SUPABASE_URL:
+        return None
+    site_url = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
+    return f"{SUPABASE_URL}/auth/v1/authorize?provider={provider}&redirect_to={site_url}/auth/callback"
+
+
+async def get_user_from_token(access_token: str) -> tuple[dict | None, str | None]:
+    """Get user info from Supabase using an access token."""
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        return None, "Authentication not configured"
+
+    import httpx
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{SUPABASE_URL}/auth/v1/user",
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": f"Bearer {access_token}",
+                },
+            )
+
+            if response.status_code == 200:
+                user_data = response.json()
+                return {
+                    "id": user_data.get("id"),
+                    "email": user_data.get("email"),
+                }, None
+            else:
+                error_data = response.json()
+                msg = error_data.get("error_description") or "Failed to get user"
+                return None, msg
+    except Exception as e:
+        return None, f"Connection error: {e}"
+
+
 async def login_with_supabase(email: str, password: str) -> tuple[dict | None, str | None]:
     """Authenticate user with Supabase via direct HTTP."""
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:

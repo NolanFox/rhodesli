@@ -46,6 +46,7 @@ from app.auth import (
     is_auth_enabled, SESSION_SECRET, INVITE_CODES,
     get_current_user, User,
     login_with_supabase, signup_with_supabase, validate_invite_code,
+    send_password_reset, update_password, get_oauth_url, get_user_from_token,
 )
 
 # --- INSTRUMENTATION IMPORT ---
@@ -4268,10 +4269,30 @@ def get(sess):
                            cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
                     method="post", action="/login", cls="space-y-2"
                 ),
+                Div(
+                    Div(cls="flex-grow border-t border-gray-600"),
+                    Span("or", cls="px-4 text-gray-500 text-sm"),
+                    Div(cls="flex-grow border-t border-gray-600"),
+                    cls="flex items-center my-6"
+                ) if get_oauth_url("google") else None,
+                A(
+                    "Continue with Google",
+                    href=get_oauth_url("google") or "#",
+                    cls="block w-full p-2 mb-3 bg-white text-gray-800 rounded font-medium hover:bg-gray-100 text-center"
+                ) if get_oauth_url("google") else None,
+                A(
+                    "Continue with Facebook",
+                    href=get_oauth_url("facebook") or "#",
+                    cls="block w-full p-2 bg-[#1877F2] text-white rounded font-medium hover:bg-[#166FE5] text-center"
+                ) if get_oauth_url("facebook") else None,
+                P(
+                    A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"),
+                    cls="mt-4 text-center text-sm"
+                ),
                 P(
                     "Need an account? ",
                     A("Sign up with invite code", href="/signup", cls="text-blue-400 hover:underline"),
-                    cls="mt-4 text-gray-400 text-sm"
+                    cls="mt-2 text-gray-400 text-sm"
                 ),
                 cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
             ),
@@ -4399,6 +4420,249 @@ async def post(email: str, password: str, invite_code: str, sess):
         )
     sess['auth'] = user
     return RedirectResponse('/', status_code=303)
+
+
+@rt("/forgot-password")
+def get(sess):
+    """Forgot password page."""
+    if not is_auth_enabled():
+        return RedirectResponse('/', status_code=303)
+
+    return Html(
+        Head(
+            Title("Reset Password - Rhodesli"),
+            Script(src="https://cdn.tailwindcss.com"),
+        ),
+        Body(
+            Div(
+                H1("Reset Password", cls="text-2xl font-bold mb-2"),
+                P("Enter your email to receive a reset link", cls="text-gray-400 mb-6"),
+                Form(
+                    Div(
+                        Label("Email", fr="email", cls="block text-sm mb-1"),
+                        Input(type="email", name="email", id="email", required=True,
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        cls="mb-4"
+                    ),
+                    Button("Send Reset Link", type="submit",
+                           cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
+                    method="post", action="/forgot-password",
+                ),
+                P(
+                    A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"),
+                    cls="mt-6 text-center"
+                ),
+                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+            ),
+            cls="min-h-screen bg-gray-900 text-white"
+        ),
+    )
+
+
+@rt("/forgot-password")
+async def post(email: str, sess):
+    """Handle forgot password form."""
+    success, error = await send_password_reset(email)
+
+    # Always show success message to avoid email enumeration
+    msg = "If an account exists with that email, you'll receive a reset link."
+    return Html(
+        Head(
+            Title("Reset Password - Rhodesli"),
+            Script(src="https://cdn.tailwindcss.com"),
+        ),
+        Body(
+            Div(
+                H1("Reset Password", cls="text-2xl font-bold mb-2"),
+                P(msg, cls="text-green-400 mb-6 text-sm"),
+                P(
+                    A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"),
+                    cls="mt-6 text-center"
+                ),
+                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+            ),
+            cls="min-h-screen bg-gray-900 text-white"
+        ),
+    )
+
+
+@rt("/reset-password")
+def get(sess):
+    """Handle reset password callback from email link. Tokens are in URL fragment."""
+    return Html(
+        Head(
+            Title("Set New Password - Rhodesli"),
+            Script(src="https://cdn.tailwindcss.com"),
+            Script("""
+                document.addEventListener('DOMContentLoaded', function() {
+                    const hash = window.location.hash.substring(1);
+                    const params = new URLSearchParams(hash);
+                    const accessToken = params.get('access_token');
+                    const type = params.get('type');
+
+                    if (accessToken && type === 'recovery') {
+                        document.getElementById('access_token').value = accessToken;
+                        document.getElementById('reset-form').style.display = 'block';
+                        document.getElementById('error-msg').style.display = 'none';
+                    } else if (!accessToken) {
+                        document.getElementById('error-msg').textContent = 'Invalid or expired reset link. Please request a new one.';
+                    }
+                });
+            """),
+        ),
+        Body(
+            Div(
+                H1("Set New Password", cls="text-2xl font-bold mb-6"),
+                P("Invalid or expired reset link.", id="error-msg", cls="text-red-400 mb-4 text-sm"),
+                Form(
+                    Input(type="hidden", name="access_token", id="access_token"),
+                    Div(
+                        Label("New Password", fr="password", cls="block text-sm mb-1"),
+                        Input(type="password", name="password", id="password", required=True, minlength="8",
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        P("Minimum 8 characters", cls="text-gray-500 text-xs mt-1"),
+                        cls="mb-4"
+                    ),
+                    Div(
+                        Label("Confirm Password", fr="password_confirm", cls="block text-sm mb-1"),
+                        Input(type="password", name="password_confirm", id="password_confirm", required=True, minlength="8",
+                              cls="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"),
+                        cls="mb-4"
+                    ),
+                    Button("Update Password", type="submit",
+                           cls="w-full p-2 bg-green-600 hover:bg-green-700 rounded text-white font-medium"),
+                    method="post", action="/reset-password",
+                    id="reset-form", style="display:none",
+                ),
+                P(
+                    A("← Back to Login", href="/login", cls="text-blue-400 hover:underline"),
+                    cls="mt-6 text-center"
+                ),
+                cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+            ),
+            cls="min-h-screen bg-gray-900 text-white"
+        ),
+    )
+
+
+@rt("/reset-password")
+async def post(access_token: str, password: str, password_confirm: str, sess):
+    """Handle password reset form submission."""
+    error = None
+    if not access_token:
+        error = "Invalid reset link. Please request a new one."
+    elif password != password_confirm:
+        error = "Passwords do not match."
+    elif len(password) < 8:
+        error = "Password must be at least 8 characters."
+
+    if error:
+        return Html(
+            Head(Title("Set New Password - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Body(
+                Div(
+                    H1("Set New Password", cls="text-2xl font-bold mb-6"),
+                    P(error, cls="text-red-400 mb-4 text-sm"),
+                    P(A("← Request a new reset link", href="/forgot-password", cls="text-blue-400 hover:underline"), cls="mt-4"),
+                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                ),
+                cls="min-h-screen bg-gray-900 text-white"
+            ),
+        )
+
+    success, err = await update_password(access_token, password)
+
+    if success:
+        return Html(
+            Head(Title("Password Updated - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Body(
+                Div(
+                    H1("Password Updated", cls="text-2xl font-bold mb-4"),
+                    P("Your password has been updated successfully.", cls="text-green-400 mb-6"),
+                    A("Sign in with your new password", href="/login",
+                      cls="block w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium text-center"),
+                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                ),
+                cls="min-h-screen bg-gray-900 text-white"
+            ),
+        )
+    else:
+        return Html(
+            Head(Title("Set New Password - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Body(
+                Div(
+                    H1("Set New Password", cls="text-2xl font-bold mb-6"),
+                    P(err or "Failed to update password.", cls="text-red-400 mb-4 text-sm"),
+                    P(A("← Request a new reset link", href="/forgot-password", cls="text-blue-400 hover:underline"), cls="mt-4"),
+                    cls="max-w-md mx-auto mt-20 p-8 bg-gray-800 rounded-lg"
+                ),
+                cls="min-h-screen bg-gray-900 text-white"
+            ),
+        )
+
+
+@rt("/auth/callback")
+def get(sess):
+    """Handle OAuth callback from social providers. Tokens are in URL fragment."""
+    return Html(
+        Head(
+            Title("Logging in..."),
+            Script(src="https://cdn.tailwindcss.com"),
+            Script("""
+                document.addEventListener('DOMContentLoaded', function() {
+                    const hash = window.location.hash.substring(1);
+                    const params = new URLSearchParams(hash);
+                    const accessToken = params.get('access_token');
+
+                    if (accessToken) {
+                        fetch('/auth/session', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({access_token: accessToken})
+                        }).then(r => r.json()).then(data => {
+                            if (data.success) {
+                                window.location.href = '/';
+                            } else {
+                                window.location.href = '/login?error=oauth_failed';
+                            }
+                        }).catch(() => {
+                            window.location.href = '/login?error=oauth_failed';
+                        });
+                    } else {
+                        window.location.href = '/login?error=oauth_failed';
+                    }
+                });
+            """),
+        ),
+        Body(
+            Div(
+                P("Completing login...", cls="text-gray-400"),
+                cls="flex items-center justify-center min-h-screen bg-gray-900"
+            ),
+        ),
+    )
+
+
+@rt("/auth/session")
+async def post(request, sess):
+    """Create session from OAuth access token."""
+    from starlette.responses import JSONResponse
+
+    try:
+        data = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid request"}, status_code=400)
+
+    access_token = data.get("access_token")
+    if not access_token:
+        return JSONResponse({"error": "No token"}, status_code=400)
+
+    user, error = await get_user_from_token(access_token)
+    if user:
+        sess['auth'] = user
+        return JSONResponse({"success": True})
+    else:
+        return JSONResponse({"error": error or "Failed to get user"}, status_code=401)
 
 
 @rt("/logout")

@@ -1,41 +1,43 @@
-# Master Task: Fix Auth System — Public Access + Role-Based Permissions
+# Task: Complete Auth System — Standard Login Experience
 
-**Session**: 2026-02-05
+**Session**: 2026-02-05 (session 2)
 **Status**: COMPLETE
 
-## Phase 1: Rewrite auth module
-- [x] Replace Supabase SDK with direct httpx calls
-- [x] Add User dataclass with is_admin flag
-- [x] Add ADMIN_EMAILS environment variable support
-- [x] Add get_current_user(), validate_invite_code()
-
-## Phase 2: Remove blanket auth, add granular protection
-- [x] Remove Beforeware that blocked all routes
-- [x] Add _check_admin() guard to 13 admin-only POST routes
-- [x] Add _check_login() guard to upload POST route
-- [x] Auth checks pass through when auth is disabled
-
-## Phase 3: Update UI for permission-aware rendering
-- [x] review_action_buttons: hidden for non-admins
-- [x] name_display: edit button hidden for non-admins
-- [x] face_card: detach button hidden for non-admins
-- [x] identity_card_expanded: action buttons hidden for non-admins
-- [x] sidebar: login/logout state, conditional upload button
-- [x] Thread is_admin through render pipeline
-
-## Phase 4: Dependencies and config
-- [x] Replace supabase SDK with httpx in requirements.txt
-- [x] Add ADMIN_EMAILS to .env.example
-
-## Phase 5: Verification
+## Password Recovery
+- [x] Add send_password_reset() to auth.py
+- [x] Add update_password() to auth.py
+- [x] Add GET/POST /forgot-password routes
+- [x] Add GET/POST /reset-password routes
+- [x] Add "Forgot password?" link to login page
 - [x] Syntax check passes
-- [x] All imports work
-- [x] Tests: 318 passing, 7 pre-existing failures (no new failures)
-- [x] Committed: da6bc61
+- [x] Tests: 320 passing, 8 pre-existing failures (no new failures)
 
-## USER ACTION REQUIRED (Railway deployment)
-- [ ] Add `ADMIN_EMAILS=NolanFox@gmail.com` to Railway env vars
-- [ ] Disable "Confirm email" in Supabase Auth settings if signup fails
-- [ ] Deploy (auto-deploys on `git push origin main`)
-- [ ] Test public access: visit site without logging in
-- [ ] Test admin access: login with admin email, verify action buttons appear
+## OAuth / Social Login
+- [x] Add get_oauth_url() to auth.py
+- [x] Add get_user_from_token() to auth.py
+- [x] Add GET /auth/callback route (client-side token extraction)
+- [x] Add POST /auth/session route (token → session)
+- [x] Add Google/Facebook buttons to login page (conditionally shown)
+
+## Email Templates
+- [x] Created docs/design/EMAIL_TEMPLATES.md with dark theme templates
+
+## USER ACTION REQUIRED
+
+### Supabase Configuration
+- [ ] Set Site URL: Authentication → URL Configuration → `https://rhodesli.nolanandrewfox.com`
+- [ ] Set Redirect URLs: `https://rhodesli.nolanandrewfox.com/**`
+- [ ] Customize email templates: Authentication → Email Templates (copy from docs/design/EMAIL_TEMPLATES.md)
+
+### Google OAuth (optional)
+- [ ] Create OAuth Client at https://console.cloud.google.com/apis/credentials
+- [ ] Redirect URI: `https://fvynibivlphxwfowzkjl.supabase.co/auth/v1/callback`
+- [ ] Enable in Supabase → Authentication → Providers → Google
+
+### Facebook OAuth (optional)
+- [ ] Create App at https://developers.facebook.com/apps
+- [ ] Redirect URI: `https://fvynibivlphxwfowzkjl.supabase.co/auth/v1/callback`
+- [ ] Enable in Supabase → Authentication → Providers → Facebook
+
+### Railway
+- [ ] Add `SITE_URL=https://rhodesli.nolanandrewfox.com` environment variable
