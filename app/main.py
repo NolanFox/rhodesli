@@ -47,7 +47,7 @@ from core.ui_safety import ensure_utf8_display
 from core import storage
 from app.auth import (
     is_auth_enabled, SESSION_SECRET, INVITE_CODES,
-    get_current_user, User,
+    get_current_user, User, ADMIN_EMAILS,
     login_with_supabase, signup_with_supabase, validate_invite_code,
     send_password_reset, update_password, get_oauth_url, get_user_from_token,
     exchange_code_for_session,
@@ -339,6 +339,94 @@ def log_user_action(action: str, **kwargs) -> None:
 
     with open(log_file, "a") as f:
         f.write(line)
+
+
+# =============================================================================
+# PENDING UPLOADS REGISTRY
+# =============================================================================
+
+def _load_pending_uploads() -> dict:
+    """Load pending uploads registry."""
+    path = data_path / "pending_uploads.json"
+    if not path.exists():
+        return {"uploads": {}}
+    with open(path) as f:
+        return json.load(f)
+
+
+def _save_pending_uploads(data: dict) -> None:
+    """Save pending uploads registry (atomic write)."""
+    path = data_path / "pending_uploads.json"
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=2)
+    tmp.rename(path)
+
+
+def _count_pending_uploads() -> int:
+    """Count pending uploads awaiting review."""
+    data = _load_pending_uploads()
+    return sum(1 for u in data["uploads"].values() if u["status"] == "pending")
+
+
+async def _notify_admin_upload(uploader_email: str, job_id: str, file_count: int, source: str) -> None:
+    """Send email notification to admins about a new pending upload.
+
+    Uses Resend API if RESEND_API_KEY is set. Fire-and-forget — does not
+    block the upload response on email delivery.
+    """
+    import os
+    resend_api_key = os.getenv("RESEND_API_KEY", "")
+    if not resend_api_key:
+        logging.info(f"[upload] No RESEND_API_KEY set, skipping email notification for job {job_id}")
+        return
+
+    if not ADMIN_EMAILS:
+        logging.info(f"[upload] No ADMIN_EMAILS configured, skipping email notification for job {job_id}")
+        return
+
+    import httpx
+
+    site_url = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
+    from_email = os.getenv("NOTIFICATION_FROM_EMAIL", "noreply@nolanandrewfox.com")
+    subject = f"New photo upload pending review ({file_count} file{'s' if file_count != 1 else ''})"
+    html_body = f"""
+    <div style="font-family: sans-serif; max-width: 480px;">
+        <h2 style="color: #1e293b;">New Upload Pending Review</h2>
+        <p><strong>Uploader:</strong> {uploader_email}</p>
+        <p><strong>Files:</strong> {file_count}</p>
+        <p><strong>Source:</strong> {source or 'Not specified'}</p>
+        <p><strong>Job ID:</strong> <code>{job_id}</code></p>
+        <p style="margin-top: 20px;">
+            <a href="{site_url}/admin/pending"
+               style="display: inline-block; background-color: #2563eb; color: #ffffff !important;
+                      padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold;">
+                Review Uploads
+            </a>
+        </p>
+    </div>
+    """
+
+    try:
+        async with httpx.AsyncClient() as client:
+            for admin_email in ADMIN_EMAILS:
+                await client.post(
+                    "https://api.resend.com/emails",
+                    json={
+                        "from": f"Rhodesli <{from_email}>",
+                        "to": [admin_email],
+                        "subject": subject,
+                        "html": html_body,
+                    },
+                    headers={
+                        "Authorization": f"Bearer {resend_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    timeout=10.0,
+                )
+        logging.info(f"[upload] Email notification sent for job {job_id}")
+    except Exception as e:
+        logging.warning(f"[upload] Failed to send email notification for job {job_id}: {e}")
 
 
 # =============================================================================
@@ -1029,7 +1117,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             Div(id="sidebar-search-results", cls="sidebar-search-results"),
             cls="sidebar-search px-3 pt-3 pb-1 relative"
         ),
-        # Upload Button (admin-only until moderation queue built)
+        # Upload Button (any logged-in user can upload; non-admin uploads go to moderation queue)
         Div(
             A(
                 Svg(
@@ -1040,7 +1128,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 Span("Upload", cls="sidebar-label ml-2"),
                 href="/upload", title="Upload photos",
                 cls="flex items-center justify-center gap-0 w-full px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors"
-            ) if (user and user.is_admin) else None,
+            ) if user else None,
             cls="px-3 py-2"
         ),
         # Navigation
@@ -1074,6 +1162,15 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
                 cls="mb-3"
             ),
+            # Admin Section (admin-only, with pending uploads badge)
+            Div(
+                P(
+                    "Admin",
+                    cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
+                ),
+                nav_item("/admin/pending", "📋", "Pending Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
+                cls="mb-3"
+            ) if (user and user.is_admin) else None,
             cls="flex-1 px-2 py-2 space-y-0 overflow-y-auto"
         ),
         # Footer with user info and stats
@@ -3702,6 +3799,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
         "skipped": len(skipped_list),
         "rejected": len(dismissed),
         "photos": photo_count,
+        "pending_uploads": _count_pending_uploads(),
     }
 
     # Validate section parameter
@@ -5516,10 +5614,10 @@ def post(id: str, sess=None):
 @rt("/upload")
 def get(sess=None):
     """
-    Render the upload page. Requires admin when auth is enabled.
-    # TODO: Revert to _check_login when upload moderation queue is built (Phase D)
+    Render the upload page. Requires login when auth is enabled.
+    Non-admin uploads go through the moderation queue (pending_uploads.json).
     """
-    denied = _check_admin(sess)
+    denied = _check_login(sess)
     if denied:
         return denied
     user = get_current_user(sess or {})
@@ -5555,6 +5653,7 @@ def get(sess=None):
         "skipped": len(skipped_list),
         "rejected": len(dismissed),
         "photos": photo_count,
+        "pending_uploads": _count_pending_uploads(),
     }
 
     # Load existing sources for autocomplete
@@ -5668,21 +5767,26 @@ def get(sess=None):
 async def post(files: list[UploadFile], source: str = "", sess=None):
     """
     Accept file upload(s) and optionally spawn subprocess for processing.
-    Requires admin.
-    # TODO: Revert to _check_login when upload moderation queue is built (Phase D)
+    Requires login. Non-admin uploads go to moderation queue.
 
     Handles multiple files (images and/or ZIPs) in a single batch job.
     All files are saved to a job directory.
 
-    When PROCESSING_ENABLED=True (local dev):
-        - Files go to data/uploads/{job_id}/
-        - Subprocess spawned to run core/ingest_inbox.py
-        - Real-time status polling
+    Admin flow:
+        When PROCESSING_ENABLED=True (local dev):
+            - Files go to data/uploads/{job_id}/
+            - Subprocess spawned to run core/ingest_inbox.py
+            - Real-time status polling
+        When PROCESSING_ENABLED=False (production):
+            - Files go to data/staging/{job_id}/
+            - No subprocess spawned (ML deps not available)
+            - Shows "pending admin review" message
 
-    When PROCESSING_ENABLED=False (production):
+    Non-admin flow:
         - Files go to data/staging/{job_id}/
-        - No subprocess spawned (ML deps not available)
-        - Shows "pending admin review" message
+        - Pending upload record created in pending_uploads.json
+        - Admin email notification sent (if RESEND_API_KEY configured)
+        - Shows "submitted for review" message
 
     Args:
         files: Uploaded image files or ZIPs
@@ -5690,7 +5794,7 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
 
     Returns HTML partial with upload status.
     """
-    denied = _check_admin(sess)
+    denied = _check_login(sess)
     if denied:
         return denied
 
@@ -5707,11 +5811,17 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
             cls="p-2"
         )
 
+    # Determine if current user is admin
+    user = get_current_user(sess or {})
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
+    uploader_email = user.email if user else "unknown"
+
     # Generate unique job ID
     job_id = str(uuid.uuid4())[:8]
 
-    # Choose destination based on processing mode
-    if PROCESSING_ENABLED:
+    # Choose destination based on processing mode and user role
+    # Non-admin uploads ALWAYS go to staging for moderation
+    if user_is_admin and PROCESSING_ENABLED:
         job_dir = data_path / "uploads" / job_id
     else:
         job_dir = data_path / "staging" / job_id
@@ -5738,12 +5848,51 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
         "files": saved_files,
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "processing_enabled": PROCESSING_ENABLED,
+        "uploader_email": uploader_email,
     }
     metadata_path = job_dir / "_metadata.json"
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
-    # If processing is disabled (production), return staged message
+    # Non-admin flow: create pending upload record and notify admin
+    if not user_is_admin:
+        pending = _load_pending_uploads()
+        pending["uploads"][job_id] = {
+            "job_id": job_id,
+            "uploader_email": uploader_email,
+            "source": source or "Unknown",
+            "files": saved_files,
+            "file_count": len(saved_files),
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "status": "pending",
+        }
+        _save_pending_uploads(pending)
+
+        # Fire-and-forget email notification to admin
+        try:
+            await _notify_admin_upload(uploader_email, job_id, len(saved_files), source)
+        except Exception:
+            pass  # Email notification failure should never block upload
+
+        file_count = len(saved_files)
+        file_msg = f"1 photo" if file_count == 1 else f"{file_count} photos"
+
+        return Div(
+            Div(
+                Span("✓", cls="text-green-400 text-lg"),
+                P(f"Submitted {file_msg} for review", cls="text-slate-200 font-medium"),
+                cls="flex items-center gap-2"
+            ),
+            P(
+                "Your upload has been submitted for admin review. "
+                "You'll see the photos once they are approved and processed.",
+                cls="text-slate-400 text-sm mt-1"
+            ),
+            P(f"Reference: {job_id}", cls="text-slate-500 text-xs mt-2 font-mono"),
+            cls="p-3 bg-green-900/20 border border-green-500/30 rounded"
+        )
+
+    # Admin flow: If processing is disabled (production), return staged message
     if not PROCESSING_ENABLED:
         file_count = len(saved_files)
         if file_count == 1:
@@ -5955,6 +6104,358 @@ def get(job_id: str):
         A("Refresh to see inbox", href="/", cls="text-indigo-400 hover:underline text-xs ml-2"),
         cls="p-2 bg-emerald-900/30 border border-emerald-500/30 rounded flex items-center"
     )
+
+
+# =============================================================================
+# ROUTES - ADMIN PENDING UPLOADS REVIEW
+# =============================================================================
+
+
+@rt("/admin/pending")
+def get(sess=None):
+    """
+    Admin page to review pending uploads from non-admin users.
+    Requires admin when auth is enabled.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    user = get_current_user(sess or {})
+
+    style = Style("""
+        html, body { height: 100%; margin: 0; }
+        body { background-color: #0f172a; }
+    """)
+
+    # Build sidebar counts
+    registry = load_registry()
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
+    rejected = registry.list_identities(state=IdentityState.REJECTED)
+    contested = registry.list_identities(state=IdentityState.CONTESTED)
+    to_review = inbox + proposed
+    dismissed = rejected + contested
+    _build_caches()
+    photo_count = len(_photo_cache) if _photo_cache else 0
+
+    counts = {
+        "to_review": len(to_review),
+        "confirmed": len(confirmed_list),
+        "skipped": len(skipped_list),
+        "rejected": len(dismissed),
+        "photos": photo_count,
+        "pending_uploads": _count_pending_uploads(),
+    }
+
+    # Load pending uploads
+    pending = _load_pending_uploads()
+    pending_items = [u for u in pending["uploads"].values() if u["status"] == "pending"]
+    # Sort by submitted_at descending (newest first)
+    pending_items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
+
+    # Also show recently reviewed items
+    reviewed_items = [u for u in pending["uploads"].values() if u["status"] in ("approved", "rejected")]
+    reviewed_items.sort(key=lambda x: x.get("reviewed_at", x.get("submitted_at", "")), reverse=True)
+    reviewed_items = reviewed_items[:10]  # Show last 10
+
+    # Build pending cards
+    if pending_items:
+        pending_cards = []
+        for item in pending_items:
+            job_id = item["job_id"]
+            file_count = item.get("file_count", len(item.get("files", [])))
+            file_msg = f"1 file" if file_count == 1 else f"{file_count} files"
+            pending_cards.append(
+                Div(
+                    Div(
+                        Div(
+                            P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
+                            P(f"{file_msg} | Source: {item.get('source', 'Unknown')}", cls="text-slate-400 text-xs"),
+                            P(f"Submitted: {item.get('submitted_at', 'Unknown')[:19].replace('T', ' ')}", cls="text-slate-500 text-xs mt-0.5"),
+                            P(f"Job ID: {job_id}", cls="text-slate-600 text-xs font-mono"),
+                            cls="flex-1"
+                        ),
+                        Div(
+                            Button(
+                                "Approve",
+                                hx_post=f"/admin/pending/{job_id}/approve",
+                                hx_target=f"#pending-card-{job_id}",
+                                hx_swap="outerHTML",
+                                cls="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-500 transition-colors"
+                            ),
+                            Button(
+                                "Reject",
+                                hx_post=f"/admin/pending/{job_id}/reject",
+                                hx_target=f"#pending-card-{job_id}",
+                                hx_swap="outerHTML",
+                                cls="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-500 transition-colors"
+                            ),
+                            cls="flex gap-2 items-start"
+                        ),
+                        cls="flex items-start justify-between gap-4"
+                    ),
+                    id=f"pending-card-{job_id}",
+                    cls="p-4 bg-slate-800 border border-slate-700 rounded-lg"
+                )
+            )
+        pending_section = Div(*pending_cards, cls="space-y-3")
+    else:
+        pending_section = Div(
+            P("No pending uploads.", cls="text-slate-500 text-sm"),
+            cls="p-4 bg-slate-800/50 border border-slate-700/50 rounded-lg"
+        )
+
+    # Build reviewed history cards
+    if reviewed_items:
+        reviewed_cards = []
+        for item in reviewed_items:
+            status_color = "green" if item["status"] == "approved" else "red"
+            status_label = "Approved" if item["status"] == "approved" else "Rejected"
+            file_count = item.get("file_count", len(item.get("files", [])))
+            file_msg = f"1 file" if file_count == 1 else f"{file_count} files"
+            reviewed_cards.append(
+                Div(
+                    Div(
+                        Span(status_label, cls=f"text-{status_color}-400 text-xs font-bold uppercase"),
+                        Span(" | ", cls="text-slate-600"),
+                        Span(item.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
+                        Span(f" | {file_msg}", cls="text-slate-500 text-xs"),
+                        cls="flex items-center gap-1"
+                    ),
+                    cls="px-3 py-2 bg-slate-800/30 border border-slate-700/30 rounded"
+                )
+            )
+        reviewed_section = Div(
+            H3("Recently Reviewed", cls="text-lg font-semibold text-slate-300 mb-3 mt-6"),
+            *reviewed_cards,
+            cls="space-y-2"
+        )
+    else:
+        reviewed_section = None
+
+    # Sidebar styles (same as upload page)
+    page_style = Style("""
+        .sidebar-container { width: 15rem; transition: width 0.2s ease, transform 0.3s ease; }
+        .sidebar-container.collapsed { width: 3.5rem; }
+        .sidebar-container.collapsed .sidebar-label,
+        .sidebar-container.collapsed .sidebar-search,
+        .sidebar-container.collapsed .sidebar-search-results { display: none; }
+        .sidebar-container.collapsed .sidebar-nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-container.collapsed .sidebar-icon { margin: 0; }
+        .sidebar-container.collapsed .sidebar-chevron { transform: rotate(180deg); }
+        .sidebar-container.collapsed .sidebar-collapse-btn { margin: 0 auto; }
+        .sidebar-search-results:not(:empty) { position: absolute; left: 0.75rem; right: 0.75rem; top: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; max-height: 300px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        @media (max-width: 767px) {
+            #sidebar { width: 15rem !important; transform: translateX(-100%); transition: transform 0.3s ease; }
+            #sidebar.open { transform: translateX(0); }
+            #sidebar .sidebar-label { display: inline !important; }
+            #sidebar .sidebar-search { display: block !important; }
+            .main-content { margin-left: 0 !important; }
+        }
+        @media (min-width: 768px) { #sidebar { transform: translateX(0); } }
+        @media (min-width: 1024px) { .main-content { margin-left: 15rem; transition: margin-left 0.2s ease; } .main-content.sidebar-collapsed { margin-left: 3.5rem; } }
+    """)
+    mobile_header = Div(
+        Button(
+            Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                     d="M4 6h16M4 12h16M4 18h16"),
+                cls="w-6 h-6", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+            onclick="toggleSidebar()",
+            cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+        ),
+        Span("Pending Uploads", cls="text-lg font-bold text-white"),
+        cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30"
+    )
+    sidebar_overlay = Div(onclick="closeSidebar()",
+                          cls="sidebar-overlay fixed inset-0 bg-black/50 z-30 hidden lg:hidden")
+    sidebar_script = Script("""
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.toggle('open');
+            sb.classList.toggle('-translate-x-full');
+            ov.classList.toggle('hidden');
+        }
+        function closeSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.remove('open');
+            sb.classList.add('-translate-x-full');
+            ov.classList.add('hidden');
+        }
+        function toggleSidebarCollapse() {
+            var sb = document.getElementById('sidebar');
+            var mc = document.querySelector('.main-content');
+            var isCollapsed = sb.classList.toggle('collapsed');
+            if (mc) mc.classList.toggle('sidebar-collapsed', isCollapsed);
+            try { localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(e) {}
+        }
+        (function() {
+            try {
+                var collapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+                if (collapsed && window.innerWidth >= 1024) {
+                    var sb = document.getElementById('sidebar');
+                    var mc = document.querySelector('.main-content');
+                    if (sb) sb.classList.add('collapsed');
+                    if (mc) mc.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    """)
+
+    return Title("Pending Uploads - Rhodesli"), style, page_style, Div(
+        toast_container(),
+        mobile_header,
+        sidebar_overlay,
+        sidebar(counts, current_section="pending_uploads", user=user),
+        Main(
+            Div(
+                # Header
+                Div(
+                    H2("Pending Uploads", cls="text-2xl font-bold text-white"),
+                    P(f"{len(pending_items)} upload{'s' if len(pending_items) != 1 else ''} awaiting review", cls="text-sm text-slate-400 mt-1"),
+                    cls="mb-6"
+                ),
+                pending_section,
+                reviewed_section if reviewed_section else "",
+                cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
+            ),
+            cls="main-content min-h-screen"
+        ),
+        sidebar_script,
+        cls="h-full"
+    )
+
+
+@rt("/admin/pending/{job_id}/approve")
+def post(job_id: str, sess=None):
+    """Approve a pending upload. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    pending = _load_pending_uploads()
+    if job_id not in pending["uploads"]:
+        return Div(
+            P("Upload not found.", cls="text-red-400 text-sm"),
+            cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg"
+        )
+
+    upload = pending["uploads"][job_id]
+    if upload["status"] != "pending":
+        return Div(
+            P(f"Upload already {upload['status']}.", cls="text-slate-400 text-sm"),
+            cls="p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg"
+        )
+
+    # Update status to approved
+    upload["status"] = "approved"
+    upload["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    user = get_current_user(sess or {})
+    upload["reviewed_by"] = user.email if user else "unknown"
+    _save_pending_uploads(pending)
+
+    # If PROCESSING_ENABLED, move files from staging to uploads and spawn processing
+    if PROCESSING_ENABLED:
+        import shutil
+        staging_dir = data_path / "staging" / job_id
+        uploads_dir = data_path / "uploads" / job_id
+        if staging_dir.exists():
+            uploads_dir.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
+
+            # Spawn processing subprocess (same as admin upload flow)
+            import os
+            import subprocess
+            subprocess_env = os.environ.copy()
+            existing_pythonpath = subprocess_env.get("PYTHONPATH", "")
+            if existing_pythonpath:
+                subprocess_env["PYTHONPATH"] = f"{project_root}{os.pathsep}{existing_pythonpath}"
+            else:
+                subprocess_env["PYTHONPATH"] = str(project_root)
+
+            source = upload.get("source", "")
+            subprocess_args = [
+                sys.executable, "-m", "core.ingest_inbox",
+                "--directory", str(uploads_dir),
+                "--job-id", job_id,
+            ]
+            if source:
+                subprocess_args.extend(["--source", source])
+
+            subprocess.Popen(
+                subprocess_args,
+                cwd=project_root,
+                env=subprocess_env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+
+    file_count = upload.get("file_count", len(upload.get("files", [])))
+    return Div(
+        Div(
+            Span("Approved", cls="text-green-400 text-xs font-bold uppercase"),
+            Span(" | ", cls="text-slate-600"),
+            Span(upload.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
+            Span(f" | {file_count} file{'s' if file_count != 1 else ''}", cls="text-slate-500 text-xs"),
+            cls="flex items-center gap-1"
+        ),
+        cls="p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
+    )
+
+
+@rt("/admin/pending/{job_id}/reject")
+def post(job_id: str, sess=None):
+    """Reject a pending upload. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    pending = _load_pending_uploads()
+    if job_id not in pending["uploads"]:
+        return Div(
+            P("Upload not found.", cls="text-red-400 text-sm"),
+            cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg"
+        )
+
+    upload = pending["uploads"][job_id]
+    if upload["status"] != "pending":
+        return Div(
+            P(f"Upload already {upload['status']}.", cls="text-slate-400 text-sm"),
+            cls="p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg"
+        )
+
+    # Update status to rejected
+    upload["status"] = "rejected"
+    upload["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    user = get_current_user(sess or {})
+    upload["reviewed_by"] = user.email if user else "unknown"
+    _save_pending_uploads(pending)
+
+    # Optionally clean up staging files
+    import shutil
+    staging_dir = data_path / "staging" / job_id
+    if staging_dir.exists():
+        shutil.rmtree(staging_dir, ignore_errors=True)
+
+    file_count = upload.get("file_count", len(upload.get("files", [])))
+    return Div(
+        Div(
+            Span("Rejected", cls="text-red-400 text-xs font-bold uppercase"),
+            Span(" | ", cls="text-slate-600"),
+            Span(upload.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
+            Span(f" | {file_count} file{'s' if file_count != 1 else ''}", cls="text-slate-500 text-xs"),
+            cls="flex items-center gap-1"
+        ),
+        cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg"
+    )
+
+
+# =============================================================================
+# ROUTES - INBOX REVIEW (existing)
+# =============================================================================
 
 
 @rt("/inbox/{identity_id}/review")

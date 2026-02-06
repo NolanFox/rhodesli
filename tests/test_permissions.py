@@ -44,6 +44,8 @@ ADMIN_POST_ROUTES = [
     "/inbox/test-id-123/reject",
     "/identity/test-id-123/skip",
     "/identity/test-id-123/reset",
+    "/admin/pending/test-id-123/approve",
+    "/admin/pending/test-id-123/reject",
 ]
 
 # Login-required POST routes (use _check_login)
@@ -139,10 +141,10 @@ class TestAdminRoutesAdminUser:
 
 
 class TestUploadRoutePermissions:
-    """Upload route has admin-required permission.
+    """Upload route requires login (any user can upload).
 
-    Upload is admin-only until moderation queue is built (Phase D).
-    See TODO in main.py: revert to _check_login when ready.
+    Non-admin uploads go to the moderation queue (pending_uploads.json).
+    Admin uploads follow the existing direct processing flow.
     """
 
     def test_upload_get_returns_401_when_anonymous(self, client, auth_enabled, no_user):
@@ -150,10 +152,10 @@ class TestUploadRoutePermissions:
         response = client.get("/upload", follow_redirects=False)
         assert response.status_code == 401
 
-    def test_upload_get_returns_403_for_non_admin(self, client, auth_enabled, regular_user):
-        """GET /upload returns 403 for non-admin users."""
+    def test_upload_get_accessible_for_non_admin(self, client, auth_enabled, regular_user):
+        """GET /upload is accessible for non-admin users (moderation queue handles safety)."""
         response = client.get("/upload", follow_redirects=False)
-        assert response.status_code == 403
+        assert response.status_code == 200
 
     def test_upload_get_accessible_when_auth_disabled(self, client, auth_disabled):
         """GET /upload is accessible when auth is disabled."""
@@ -170,17 +172,50 @@ class TestUploadRoutePermissions:
 
         FastHTML validates required params (files) before calling the handler,
         so a bare POST returns 400. With proper multipart data, the handler
-        returns 401 via _check_admin. Either way, the upload is blocked.
+        returns 401 via _check_login. Either way, the upload is blocked.
         """
         response = client.post("/upload", follow_redirects=False)
         assert response.status_code in (400, 401), \
             f"Expected 400 or 401, got {response.status_code}"
 
-    def test_upload_post_rejects_non_admin(self, client, auth_enabled, regular_user):
-        """POST /upload rejects non-admin users."""
-        response = client.post("/upload", follow_redirects=False)
-        assert response.status_code in (400, 403), \
-            f"Expected 400 or 403, got {response.status_code}"
+
+class TestAdminPendingRoutePermissions:
+    """Admin pending uploads review routes require admin."""
+
+    def test_pending_get_returns_401_when_anonymous(self, client, auth_enabled, no_user):
+        """GET /admin/pending returns 401 when not authenticated."""
+        response = client.get("/admin/pending", follow_redirects=False)
+        assert response.status_code == 401
+
+    def test_pending_get_returns_403_for_non_admin(self, client, auth_enabled, regular_user):
+        """GET /admin/pending returns 403 for non-admin users."""
+        response = client.get("/admin/pending", follow_redirects=False)
+        assert response.status_code == 403
+
+    def test_pending_get_accessible_for_admin(self, client, auth_enabled, admin_user):
+        """GET /admin/pending is accessible for admin users."""
+        response = client.get("/admin/pending")
+        assert response.status_code == 200
+
+    def test_pending_approve_returns_401_when_anonymous(self, client, auth_enabled, no_user):
+        """POST /admin/pending/{id}/approve returns 401 when not authenticated."""
+        response = client.post("/admin/pending/test-id/approve", follow_redirects=False)
+        assert response.status_code == 401
+
+    def test_pending_approve_returns_403_for_non_admin(self, client, auth_enabled, regular_user):
+        """POST /admin/pending/{id}/approve returns 403 for non-admin."""
+        response = client.post("/admin/pending/test-id/approve", follow_redirects=False)
+        assert response.status_code == 403
+
+    def test_pending_reject_returns_401_when_anonymous(self, client, auth_enabled, no_user):
+        """POST /admin/pending/{id}/reject returns 401 when not authenticated."""
+        response = client.post("/admin/pending/test-id/reject", follow_redirects=False)
+        assert response.status_code == 401
+
+    def test_pending_reject_returns_403_for_non_admin(self, client, auth_enabled, regular_user):
+        """POST /admin/pending/{id}/reject returns 403 for non-admin."""
+        response = client.post("/admin/pending/test-id/reject", follow_redirects=False)
+        assert response.status_code == 403
 
 
 class TestHtmxAuthBehavior:
