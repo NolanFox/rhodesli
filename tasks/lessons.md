@@ -54,3 +54,20 @@
 - **Mistake**: Planned Facebook OAuth as a simple credential-swap step
 - **Rule**: Facebook/Meta requires Business Verification + App Review even for basic "Login with Facebook", making it impractical for small/invite-only projects
 - **Prevention**: For small projects, stick with Google OAuth + email/password. Only add Facebook if the user base justifies the weeks-long verification process.
+
+## Session 2026-02-05: UX & Auth Polish
+
+### Lesson 11: HTMX silently follows 3xx redirects — use 401 + beforeSwap for auth
+- **Mistake**: `_check_admin()` returned `RedirectResponse("/login", 303)`. HTMX followed the redirect transparently, fetched the full login page HTML, and swapped it into the target element (replacing the identity card).
+- **Rule**: For HTMX-triggered auth failures, return 401 (not 303). Use a global `htmx:beforeSwap` handler to intercept 401 and show a login modal.
+- **Prevention**: Never use RedirectResponse for auth guards that protect HTMX POST endpoints. Use `Response("", status_code=401)` and handle it client-side.
+
+### Lesson 12: Email clients strip `<style>` blocks — always use inline styles
+- **Mistake**: Email template buttons used `class="button"` with styles defined in `<style>` block. Gmail, Outlook, and Apple Mail stripped the `<style>` block, making buttons invisible/unreadable.
+- **Rule**: All styling on email `<a>` buttons MUST use inline `style=` attributes.
+- **Prevention**: Use `style="display: inline-block; background-color: #2563eb; color: #ffffff !important; ..."` directly on the element.
+
+### Lesson 13: Supabase recovery email redirects to Site URL by default
+- **Mistake**: Password reset email link redirected to `/#access_token=...` (the Site URL) instead of `/reset-password#access_token=...`.
+- **Rule**: Pass `redirect_to` in the options when calling `/auth/v1/recover` to control where the user lands.
+- **Prevention**: Always specify `"redirect_to": f"{site_url}/reset-password"` in the recovery request body.

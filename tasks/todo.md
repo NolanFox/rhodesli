@@ -1,48 +1,33 @@
-# Task: Complete Auth System — Standard Login Experience
+# Task: UX & Auth Polish — Pre-Launch Fixes
 
-**Session**: 2026-02-05 (sessions 2+3)
+**Session**: 2026-02-05 (session 4)
 **Status**: COMPLETE
 
-## Password Recovery
-- [x] Add send_password_reset() to auth.py
-- [x] Add update_password() to auth.py
-- [x] Add GET/POST /forgot-password routes
-- [x] Add GET/POST /reset-password routes
-- [x] Add "Forgot password?" link to login page
-- [x] Syntax check passes
-- [x] Tests: 320 passing, 8 pre-existing failures (no new failures)
+## Issues Fixed
+- [x] Issue 1: Password recovery flow — added redirect_to, PKCE code exchange
+- [x] Issue 2: Email button legibility — inline styles on all email template buttons
+- [x] Issue 3: Remove Facebook button — provider allow-list in auth.py
+- [x] Issue 4: Google button styling — official 4-color G logo, white background
+- [x] Issue 5: Unauthenticated action flow — login modal, 401 instead of 303
+- [x] Issue 6: Error hash handling — global JS toast for otp_expired, access_denied
 
-## OAuth / Social Login
-- [x] Add get_oauth_url() to auth.py
-- [x] Add get_user_from_token() to auth.py
-- [x] Add GET /auth/callback route (client-side token extraction)
-- [x] Add POST /auth/session route (token → session)
-- [x] Add Google/Facebook buttons to login page (conditionally shown)
+## Additional Improvements
+- [x] Styled confirmation dialog replacing native browser confirm()
+- [x] Email template update script (scripts/update_email_templates.sh)
+- [x] htmx:beforeSwap global handler for 401 interception
+- [x] htmx:confirm global handler for styled confirmations
+- [x] Recovery token redirect (wrong page → /reset-password)
 
-## Email Templates (via Management API)
-- [x] Created docs/design/EMAIL_TEMPLATES.md with dark theme templates
-- [x] Updated confirmation subject: "Welcome to Rhodesli!"
-- [x] Updated recovery subject: "Reset your Rhodesli password"
-- [x] Updated magic link subject: "Your Rhodesli login link"
-- [x] Updated invite subject: "You're invited to Rhodesli!"
-- [x] All 4 template bodies updated with dark theme HTML
-
-## Supabase Configuration (via Management API)
-- [x] Site URL set: `https://rhodesli.nolanandrewfox.com`
-- [x] Redirect URLs set: `https://rhodesli.nolanandrewfox.com/**`
-- [x] Google OAuth enabled with client credentials
-- [x] Fixed SUPABASE_ANON_KEY on Railway (was publishable key, needs JWT key)
-
-## Railway
-- [x] Set SITE_URL=https://rhodesli.nolanandrewfox.com
-- [x] Fixed SUPABASE_ANON_KEY to use legacy JWT key
-- [x] Pushed to trigger redeploy
-
-## Facebook OAuth
-- [x] DEFERRED — requires Meta Business Verification + App Review, impractical for invite-only MVP
+## Pending (requires SUPABASE_ACCESS_TOKEN)
+- [ ] Push email templates to Supabase via Management API
+- [ ] Update sender name to "Rhodesli"
+- [ ] Verify email button rendering in inbox
 
 ## Verification
-- [x] Test password reset email sent to NolanFox@gmail.com
-- [ ] Confirm dark theme email arrived (USER)
-- [ ] Verify Google login button on live site (after deploy)
-- [ ] End-to-end: forgot password → email → reset → login
+- [ ] Visual: Google button has 4-color G logo on /login
+- [ ] Visual: No Facebook button on /login
+- [ ] Manual: Password reset email → /reset-password (not /)
+- [ ] Manual: Click Merge in incognito → login modal appears, card intact
+- [ ] Manual: Click Merge when logged in → styled confirm dialog
+- [ ] Manual: Navigate to /#error=access_denied&error_code=otp_expired → toast
+- [ ] Manual: Trigger test email → verify white button text
