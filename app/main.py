@@ -68,6 +68,43 @@ app, rt = fast_app(
         Script(src="https://cdn.tailwindcss.com"),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
+        # Global: handle auth error hash fragments and recovery redirects
+        Script("""
+            document.addEventListener('DOMContentLoaded', function() {
+                var hash = window.location.hash.substring(1);
+                if (!hash) return;
+                var params = new URLSearchParams(hash);
+                var error = params.get('error');
+                var errorCode = params.get('error_code');
+                var errorDesc = params.get('error_description');
+
+                // If user lands on wrong page with a valid recovery token, redirect
+                var type = params.get('type');
+                if (type === 'recovery' && params.get('access_token')) {
+                    window.location.href = '/reset-password' + window.location.hash;
+                    return;
+                }
+
+                if (error) {
+                    var messages = {
+                        'otp_expired': 'This link has expired. Please request a new one.',
+                        'access_denied': 'There was a problem with your login link. Please try again.'
+                    };
+                    var msg = messages[errorCode] || (errorDesc ? errorDesc.replace(/\\+/g, ' ') : 'An error occurred.');
+
+                    var container = document.getElementById('toast-container');
+                    if (container) {
+                        var toast = document.createElement('div');
+                        toast.className = 'px-4 py-3 rounded shadow-lg flex items-center bg-red-600 text-white';
+                        toast.innerHTML = '<span class="mr-2">&#10007;</span><span>' + msg + '</span>';
+                        container.appendChild(toast);
+                        setTimeout(function() { toast.remove(); }, 8000);
+                    }
+
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+                }
+            });
+        """),
     ),
     static_path=str(static_path),
 )
