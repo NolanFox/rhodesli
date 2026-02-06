@@ -63,6 +63,40 @@ Two separate requirement files exist intentionally: `requirements.txt` for the w
 - **Test Location**: Tests mirror source files: `core/crop_faces.py` → `tests/test_crop.py`.
 - **Run Tests**: `pytest tests/` from project root.
 
+## Testing Requirements
+
+### Rule: Every change gets tests
+When modifying or adding features, ALWAYS write or update tests that cover:
+1. **The happy path** — the feature works as intended
+2. **The failure mode** — what happens when it breaks (wrong auth, missing data, etc.)
+3. **The regression case** — a test that would have caught the bug that prompted this change
+
+### Rule: Permission changes get permission tests
+Any change to routes, auth checks, or permission logic MUST include:
+- Test that public routes remain public
+- Test that protected routes reject unauthenticated users (return 401 for HTMX, redirect for browser)
+- Test that admin-only routes reject non-admin users
+- Test that admin routes work for admin users
+
+### Rule: UI changes get content tests
+Any change to templates, login pages, or client-side JS MUST include:
+- Test that expected elements are present in rendered HTML
+- Test that removed elements are NOT present (e.g., disabled OAuth buttons)
+- Test that required scripts are included in the page
+
+### Rule: Test before declaring done
+Before marking any task complete:
+1. Run `pytest tests/ -v` — all tests must pass
+2. If the change is deployed, run production verification checks via curl
+3. Never skip writing tests because "it's a small change" — small changes cause regressions
+
+### Test patterns
+- Use shared fixtures from `tests/conftest.py` for auth states: `auth_enabled`, `auth_disabled`, `no_user`, `regular_user`, `admin_user`, `google_oauth_enabled`
+- Use HTMX headers (`HX-Request: true`) when testing HTMX endpoints
+- Test both the response code AND the response content where relevant
+- Permission tests should use a matrix: [route] x [auth_state] -> [expected_status]
+- Mock `app.main.is_auth_enabled` and `app.main.get_current_user` to control auth state in tests
+
 ## Data Safety Rules
 
 ### NEVER modify these files directly:

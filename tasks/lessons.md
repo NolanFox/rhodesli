@@ -71,3 +71,30 @@
 - **Mistake**: Password reset email link redirected to `/#access_token=...` (the Site URL) instead of `/reset-password#access_token=...`.
 - **Rule**: Pass `redirect_to` in the options when calling `/auth/v1/recover` to control where the user lands.
 - **Prevention**: Always specify `"redirect_to": f"{site_url}/reset-password"` in the recovery request body.
+
+## Session 2026-02-05: Testing Harness
+
+### Lesson 14: Every UX bug found in manual testing is a missing automated test
+- **Mistake**: All 6 UX issues from the polish session (Facebook button, 303 redirects, missing scripts) could have been caught by automated tests, but none existed.
+- **Rule**: Write the test that would have caught the bug, not just the fix.
+- **Prevention**: After fixing any bug, immediately write a regression test for it.
+
+### Lesson 15: Permission regressions are the most dangerous bugs
+- **Mistake**: Changing `_check_admin` to return 303 (redirect) instead of 401 broke HTMX inline actions silently — the page appeared to work but swapped in full login page HTML.
+- **Rule**: Always test the full matrix of routes x auth levels (anonymous, user, admin).
+- **Prevention**: `tests/test_permissions.py` has matrix tests for all admin routes. Run them after any auth change.
+
+### Lesson 16: Testing should not be a separate phase
+- **Mistake**: Built 7 commits of UX fixes with no tests, then had to retrofit tests after the fact.
+- **Rule**: Write tests alongside the feature, not after. Test first, implement second.
+- **Prevention**: CLAUDE.md now has mandatory testing rules that require tests with every change.
+
+### Lesson 17: HTMX endpoints behave differently than browser requests
+- **Mistake**: Testing with a browser showed a redirect working fine, but HTMX silently followed the 303 and swapped the redirect target's HTML.
+- **Rule**: Test both HTMX (`HX-Request: true`) and browser request paths. They return different status codes (401 vs 303).
+- **Prevention**: Use the `tests/conftest.py` fixtures to test routes with and without HTMX headers.
+
+### Lesson 18: Supabase sender name requires custom SMTP
+- **Mistake**: Tried to set `smtp_sender_name` via Management API, but it only works when custom SMTP is configured.
+- **Rule**: Supabase's built-in mailer uses a fixed sender name. Custom sender requires configuring custom SMTP (Resend, SendGrid, etc.).
+- **Prevention**: Check if custom SMTP is configured before trying to change sender-related fields.
