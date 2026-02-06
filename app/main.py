@@ -4280,11 +4280,6 @@ def get(sess):
                     href=get_oauth_url("google") or "#",
                     cls="block w-full p-2 mb-3 bg-white text-gray-800 rounded font-medium hover:bg-gray-100 text-center"
                 ) if get_oauth_url("google") else None,
-                A(
-                    "Continue with Facebook",
-                    href=get_oauth_url("facebook") or "#",
-                    cls="block w-full p-2 bg-[#1877F2] text-white rounded font-medium hover:bg-[#166FE5] text-center"
-                ) if get_oauth_url("facebook") else None,
                 P(
                     A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"),
                     cls="mt-4 text-center text-sm"

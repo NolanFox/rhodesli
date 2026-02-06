@@ -182,8 +182,13 @@ async def update_password(access_token: str, new_password: str) -> tuple[bool, s
         return False, f"Connection error: {e}"
 
 
+ENABLED_OAUTH_PROVIDERS = {"google"}  # Facebook deferred — requires Meta Business Verification
+
+
 def get_oauth_url(provider: str) -> str | None:
     """Get OAuth redirect URL for social login."""
+    if provider not in ENABLED_OAUTH_PROVIDERS:
+        return None
     if not SUPABASE_URL:
         return None
     site_url = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
