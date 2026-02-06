@@ -105,6 +105,33 @@ app, rt = fast_app(
                 }
             });
         """),
+        # Global: intercept HTMX 401 responses to show login modal instead of swapping content
+        Script("""
+            document.body.addEventListener('htmx:beforeSwap', function(evt) {
+                if (evt.detail.xhr.status === 401) {
+                    evt.detail.shouldSwap = false;
+                    var modal = document.getElementById('login-modal');
+                    if (modal) modal.classList.remove('hidden');
+                }
+            });
+        """),
+        # Global: styled confirmation dialog replacing native confirm()
+        Script("""
+            document.body.addEventListener('htmx:confirm', function(evt) {
+                evt.preventDefault();
+                var modal = document.getElementById('confirm-modal');
+                if (!modal) { evt.detail.issueRequest(true); return; }
+                document.getElementById('confirm-modal-message').textContent = evt.detail.question;
+                modal.classList.remove('hidden');
+                document.getElementById('confirm-modal-yes').onclick = function() {
+                    modal.classList.add('hidden');
+                    evt.detail.issueRequest(true);
+                };
+                document.getElementById('confirm-modal-no').onclick = function() {
+                    modal.classList.add('hidden');
+                };
+            });
+        """),
     ),
     static_path=str(static_path),
 )
@@ -260,13 +287,14 @@ logs_path = Path(__file__).resolve().parent.parent / "logs"
 
 
 def _check_admin(sess) -> Response | None:
-    """Return a 403/redirect Response if user is not admin, else None.
-    When auth is disabled, always allows access."""
+    """Return a 401/403/redirect Response if user is not admin, else None.
+    When auth is disabled, always allows access.
+    Returns 401 (not 303) so HTMX beforeSwap handler can show login modal."""
     if not is_auth_enabled():
         return None  # Auth disabled — everyone has access
     user = get_current_user(sess or {})
     if not user:
-        return RedirectResponse("/login", status_code=303)
+        return Response("", status_code=401)
     if not user.is_admin:
         return Response(
             to_xml(toast("You don't have permission to do this.", "error")),
@@ -277,13 +305,14 @@ def _check_admin(sess) -> Response | None:
 
 
 def _check_login(sess) -> Response | None:
-    """Return a redirect Response if user is not logged in, else None.
-    When auth is disabled, always allows access."""
+    """Return a 401/redirect Response if user is not logged in, else None.
+    When auth is disabled, always allows access.
+    Returns 401 (not 303) so HTMX beforeSwap handler can show login modal."""
     if not is_auth_enabled():
         return None  # Auth disabled — everyone has access
     user = get_current_user(sess or {})
     if not user:
-        return RedirectResponse("/login", status_code=303)
+        return Response("", status_code=401)
     return None
 
 
@@ -2360,6 +2389,89 @@ def photo_modal() -> Div:
     )
 
 
+def login_modal() -> Div:
+    """Login modal for unauthenticated HTMX action attempts.
+    Shown by htmx:beforeSwap handler when server returns 401."""
+    google_url = get_oauth_url("google")
+    return Div(
+        Div(cls="absolute inset-0 bg-black/80",
+            **{"_": "on click add .hidden to #login-modal"}),
+        Div(
+            Div(
+                H2("Sign in to continue", cls="text-xl font-bold text-white"),
+                Button("X", cls="text-slate-400 hover:text-white text-xl font-bold",
+                       **{"_": "on click add .hidden to #login-modal"},
+                       type="button", aria_label="Close"),
+                cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700"
+            ),
+            P("Sign in to confirm identities and make changes.", cls="text-slate-400 mb-6 text-sm"),
+            Form(
+                Div(
+                    Label("Email", fr="modal-email", cls="block text-sm mb-1 text-slate-300"),
+                    Input(type="email", name="email", id="modal-email", required=True,
+                          cls="w-full p-2 rounded bg-slate-700 text-white border border-slate-600"),
+                    cls="mb-4"
+                ),
+                Div(
+                    Label("Password", fr="modal-password", cls="block text-sm mb-1 text-slate-300"),
+                    Input(type="password", name="password", id="modal-password", required=True,
+                          cls="w-full p-2 rounded bg-slate-700 text-white border border-slate-600"),
+                    cls="mb-4"
+                ),
+                Button("Sign In", type="submit",
+                       cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
+                Div(id="login-modal-error", cls="text-red-400 text-sm mt-2"),
+                hx_post="/login/modal", hx_target="#login-modal-error", hx_swap="innerHTML",
+            ),
+            # Google OAuth divider + button
+            Div(
+                Div(cls="flex-grow border-t border-slate-600"),
+                Span("or", cls="px-4 text-slate-500 text-sm"),
+                Div(cls="flex-grow border-t border-slate-600"),
+                cls="flex items-center my-4"
+            ) if google_url else None,
+            A(
+                NotStr('<svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>'),
+                Span("Sign in with Google"),
+                href=google_url or "#",
+                style="display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 40px; "
+                      "background: white; border: 1px solid #dadce0; border-radius: 4px; cursor: pointer; "
+                      "font-family: 'Roboto', Arial, sans-serif; font-size: 14px; color: #3c4043; "
+                      "font-weight: 500; text-decoration: none; justify-content: center; width: 100%;",
+            ) if google_url else None,
+            P(
+                A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"),
+                cls="mt-4 text-center text-sm"
+            ),
+            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md p-8 relative border border-slate-700"
+        ),
+        id="login-modal",
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9998]"
+    )
+
+
+def confirm_modal() -> Div:
+    """Styled confirmation modal replacing native browser confirm().
+    Shown by htmx:confirm event handler."""
+    return Div(
+        Div(cls="absolute inset-0 bg-black/80",
+            **{"_": "on click add .hidden to #confirm-modal"}),
+        Div(
+            P("", id="confirm-modal-message", cls="text-white text-lg mb-6"),
+            Div(
+                Button("Cancel", id="confirm-modal-no", type="button",
+                       cls="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-500"),
+                Button("Confirm", id="confirm-modal-yes", type="button",
+                       cls="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-bold"),
+                cls="flex justify-end gap-3"
+            ),
+            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md p-6 relative border border-slate-700"
+        ),
+        id="confirm-modal",
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9997]"
+    )
+
+
 def lane_section(
     title: str,
     identities: list,
@@ -2571,6 +2683,10 @@ def get(section: str = "to_review", view: str = "focus", current: str = None,
         ),
         # Photo context modal (hidden by default)
         photo_modal(),
+        # Login modal (shown when unauthenticated user triggers protected action)
+        login_modal(),
+        # Styled confirmation modal (replaces native browser confirm())
+        confirm_modal(),
         cls="h-full"
     )
 
@@ -4366,6 +4482,16 @@ async def post(email: str, password: str, sess):
         )
     sess['auth'] = user
     return RedirectResponse('/', status_code=303)
+
+
+@rt("/login/modal")
+async def post(email: str, password: str, sess):
+    """Handle login from the modal context. Returns error text or HX-Refresh on success."""
+    user, error = await login_with_supabase(email, password)
+    if error:
+        return error
+    sess['auth'] = user
+    return Response("", headers={"HX-Refresh": "true"})
 
 
 @rt("/signup")
