@@ -1,6 +1,6 @@
 # Task: Complete Auth System — Standard Login Experience
 
-**Session**: 2026-02-05 (session 2)
+**Session**: 2026-02-05 (sessions 2+3)
 **Status**: COMPLETE
 
 ## Password Recovery
@@ -19,25 +19,30 @@
 - [x] Add POST /auth/session route (token → session)
 - [x] Add Google/Facebook buttons to login page (conditionally shown)
 
-## Email Templates
+## Email Templates (via Management API)
 - [x] Created docs/design/EMAIL_TEMPLATES.md with dark theme templates
+- [x] Updated confirmation subject: "Welcome to Rhodesli!"
+- [x] Updated recovery subject: "Reset your Rhodesli password"
+- [x] Updated magic link subject: "Your Rhodesli login link"
+- [x] Updated invite subject: "You're invited to Rhodesli!"
+- [x] All 4 template bodies updated with dark theme HTML
 
-## USER ACTION REQUIRED
+## Supabase Configuration (via Management API)
+- [x] Site URL set: `https://rhodesli.nolanandrewfox.com`
+- [x] Redirect URLs set: `https://rhodesli.nolanandrewfox.com/**`
+- [x] Google OAuth enabled with client credentials
+- [x] Fixed SUPABASE_ANON_KEY on Railway (was publishable key, needs JWT key)
 
-### Supabase Configuration
-- [ ] Set Site URL: Authentication → URL Configuration → `https://rhodesli.nolanandrewfox.com`
-- [ ] Set Redirect URLs: `https://rhodesli.nolanandrewfox.com/**`
-- [ ] Customize email templates: Authentication → Email Templates (copy from docs/design/EMAIL_TEMPLATES.md)
+## Railway
+- [x] Set SITE_URL=https://rhodesli.nolanandrewfox.com
+- [x] Fixed SUPABASE_ANON_KEY to use legacy JWT key
+- [x] Pushed to trigger redeploy
 
-### Google OAuth (optional)
-- [ ] Create OAuth Client at https://console.cloud.google.com/apis/credentials
-- [ ] Redirect URI: `https://fvynibivlphxwfowzkjl.supabase.co/auth/v1/callback`
-- [ ] Enable in Supabase → Authentication → Providers → Google
+## Facebook OAuth
+- [x] DEFERRED — requires Meta Business Verification + App Review, impractical for invite-only MVP
 
-### Facebook OAuth (optional)
-- [ ] Create App at https://developers.facebook.com/apps
-- [ ] Redirect URI: `https://fvynibivlphxwfowzkjl.supabase.co/auth/v1/callback`
-- [ ] Enable in Supabase → Authentication → Providers → Facebook
-
-### Railway
-- [ ] Add `SITE_URL=https://rhodesli.nolanandrewfox.com` environment variable
+## Verification
+- [x] Test password reset email sent to NolanFox@gmail.com
+- [ ] Confirm dark theme email arrived (USER)
+- [ ] Verify Google login button on live site (after deploy)
+- [ ] End-to-end: forgot password → email → reset → login

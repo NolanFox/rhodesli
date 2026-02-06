@@ -199,6 +199,34 @@ When introducing any new data directory or file output:
 2. **Deployment Safety:** Ensure the code checks for existence and creates the directory (`makedirs(exist_ok=True)`) on startup in `app/main.py:startup_event()`. Never assume an ignored directory exists.
 3. **Module Execution:** Always invoke scripts as modules (`python -m package.script`) to ensure correct path resolution.
 
+## External Service CLIs & APIs
+
+### Supabase Management API
+- Endpoint: `https://api.supabase.com/v1/projects/{PROJECT_REF}/config/auth`
+- Auth: Bearer token (personal access token from Dashboard → Account → Access Tokens)
+- Can configure: email templates, OAuth providers, auth settings
+- Key fields: `mailer_templates_*_content`, `mailer_subjects_*`, `external_google_*`, `external_facebook_*`
+- Get API keys: `GET /v1/projects/{ref}/api-keys` — use `type: "legacy"`, `name: "anon"` for auth API
+- Always try this before declaring Supabase config as "manual"
+
+### Railway CLI
+- `railway variables set KEY=VALUE` — set env vars
+- `railway variables` / `railway variables --json` — list env vars
+- `railway logs --tail N` — view logs
+- Always use CLI for env var changes, never ask user to do it manually
+
+### Supabase API Key Types (IMPORTANT)
+- **Legacy JWT key** (`eyJ...`): Required by Supabase Auth REST API (`/auth/v1/*`)
+- **New publishable key** (`sb_publishable_...`): For Supabase client SDK only
+- **Always set `SUPABASE_ANON_KEY` to the legacy JWT key** in Railway/production
+
+### General Rule
+Before marking any task as "Manual Setup Required", check:
+1. Does the service have a CLI tool? (railway, supabase, wrangler, gcloud)
+2. Does the service have a Management/Admin API?
+3. Can it be done via curl?
+Only mark as manual if all three are unavailable.
+
 ## Pre-Deployment Checklist
 
 Before any deployment or containerization work, audit data files for environment-specific values:
