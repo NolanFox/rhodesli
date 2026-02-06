@@ -80,54 +80,20 @@ class TestIdentityNaming:
 class TestViewPhoto:
     """Test that View Photo resolves correct file paths."""
 
-    def test_photo_view_uses_filepath_for_inbox_photos(self):
+    def test_get_photo_dimensions_finds_file_in_raw_photos(self):
         """
-        Bug 2: photo_view_content should use filepath (not just filename)
-        when rendering inbox photos that aren't in raw_photos/.
-
-        The actual bug: get_photo_dimensions() is called with just the filename,
-        but inbox photos live at filepath (e.g., data/uploads/{session}/file.jpg).
+        All photos (including uploaded) live in raw_photos/.
+        get_photo_dimensions should find them by basename.
         """
-        from pathlib import Path
-        from PIL import Image
-        import numpy as np
-        import tempfile
-        import shutil
+        from app.main import get_photo_dimensions
 
-        # Create a temporary directory simulating data/uploads/{session}/
-        with tempfile.TemporaryDirectory() as tmpdir:
-            # Create a real image file in the temp directory
-            img_path = Path(tmpdir) / "test_inbox_photo.jpg"
-            img = Image.new("RGB", (100, 100), color="red")
-            img.save(img_path, "JPEG")
+        # Uploaded photos now live in raw_photos/ alongside legacy photos
+        width, height = get_photo_dimensions("603569408.731013.jpg")
 
-            # Simulate what load_embeddings_for_photos returns for inbox photos:
-            # filename is just the basename, but filepath is the full path
-            photo_metadata = {
-                "filename": "test_inbox_photo.jpg",  # Just the name
-                "filepath": str(img_path),  # Full path to actual file
-                "faces": [],
-            }
-
-            # The current broken code does this:
-            from app.main import get_photo_dimensions, photos_path
-
-            # This is what photo_view_content currently does - passes filename only
-            width_broken, height_broken = get_photo_dimensions(photo_metadata["filename"])
-
-            # This fails because file is NOT in raw_photos/
-            assert (width_broken, height_broken) == (0, 0), (
-                "Test setup issue: file should NOT be found in raw_photos/"
-            )
-
-            # The fix: get_photo_dimensions should accept filepath or check if absolute
-            # For now, test that using the filepath directly works
-            width_fixed, height_fixed = get_photo_dimensions(photo_metadata["filepath"])
-
-            # Should find the file at the absolute path
-            assert (width_fixed, height_fixed) == (100, 100), (
-                f"get_photo_dimensions(filepath) should find file, got ({width_fixed}, {height_fixed})"
-            )
+        # Should find the uploaded photo in raw_photos/
+        assert (width, height) != (0, 0), (
+            "get_photo_dimensions should find uploaded photo in raw_photos/"
+        )
 
     def test_view_photo_fallback_to_raw_photos(self):
         """

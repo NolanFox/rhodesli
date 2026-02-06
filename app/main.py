@@ -146,7 +146,7 @@ async def startup_event():
     """Initialize required directories and log the start of a session/run."""
     # Deployment safety: ensure all required directories exist
     required_dirs = [
-        data_path / "uploads",
+        data_path / "staging",
         data_path / "inbox",
         data_path / "cleanup_backups",
         static_path / "crops",
@@ -154,10 +154,6 @@ async def startup_event():
     ]
     for dir_path in required_dirs:
         dir_path.mkdir(parents=True, exist_ok=True)
-
-    # Load photo path cache for serving inbox uploads
-    _load_photo_path_cache()
-    print(f"[startup] Photo path cache: {len(_photo_path_cache)} inbox photos indexed")
 
     get_event_recorder().record("RUN_START", {
         "action": "server_start",
@@ -173,84 +169,17 @@ async def shutdown_event():
     }, actor="system")
 # ---------------------------------------
 
-# Photo path lookup cache (loaded at startup)
-# Maps filename (basename) -> full path for photos stored outside raw_photos/
-_photo_path_cache: dict[str, Path] = {}
-
-
-def _load_photo_path_cache():
-    """
-    Build filename -> path lookup from photo_index.json.
-
-    Called at startup to enable O(1) photo path resolution without
-    filesystem searching. Includes paths for inbox uploads (data/uploads/)
-    which are stored outside raw_photos/.
-    """
-    global _photo_path_cache
-    _photo_path_cache.clear()
-
-    photo_index_path = data_path / "photo_index.json"
-    if not photo_index_path.exists():
-        return
-
-    with open(photo_index_path) as f:
-        index = json.load(f)
-
-    missing_files = []
-    for photo_id, photo_data in index.get("photos", {}).items():
-        path_str = photo_data.get("path", "")
-        if not path_str:
-            continue
-
-        path = Path(path_str)
-
-        # Resolve relative paths against project root
-        if path.is_absolute():
-            full_path = path
-        else:
-            full_path = project_root / path
-
-        # Cache inbox uploads (data/uploads/) for serving
-        # Legacy raw_photos/ files are served via StaticFiles fallback
-        if "data/uploads" in path_str or path.is_absolute():
-            _photo_path_cache[full_path.name] = full_path
-            # Track missing files for startup warning
-            if not full_path.exists():
-                missing_files.append(path_str)
-
-    if missing_files:
-        print(f"[startup] WARNING: {len(missing_files)} photos in index have missing files")
-        print(f"[startup] First 5 missing: {missing_files[:5]}")
-
-
 @app.get("/photos/{filename:path}")
 async def serve_photo(filename: str):
     """
-    Serve photos from raw_photos/ or data/uploads/.
+    Serve photos from raw_photos/.
 
-    Resolution order:
-    1. raw_photos/{filename} (legacy photos)
-    2. photo_path_cache lookup (inbox uploads)
+    All photos (original and uploaded) live in a single directory.
     """
-    # Try 1: Legacy raw_photos location
-    legacy_path = photos_path / filename
-    if legacy_path.exists() and legacy_path.is_file():
-        return FileResponse(legacy_path)
+    photo_path = photos_path / filename
+    if photo_path.exists() and photo_path.is_file():
+        return FileResponse(photo_path)
 
-    # Try 2: Lookup in photo_path_cache (populated from photo_index.json)
-    if filename in _photo_path_cache:
-        cached_path = _photo_path_cache[filename]
-        if cached_path.exists():
-            return FileResponse(cached_path)
-        else:
-            # File moved/deleted - return 404 with diagnostic info
-            return Response(
-                content=f"Photo file missing: {cached_path}",
-                status_code=404,
-                media_type="text/plain"
-            )
-
-    # Not found anywhere
     return Response(
         content=f"Photo not found: {filename}",
         status_code=404,
@@ -512,19 +441,12 @@ def load_photo_registry():
 
 def generate_photo_id(filename: str) -> str:
     """
-    Generate a stable, deterministic photo_id from filename or filepath.
+    Generate a stable, deterministic photo_id from filename.
 
-    For absolute paths (inbox uploads), uses full path to avoid collisions
-    when same filename exists in different upload directories.
-    For relative paths (raw_photos/), uses basename for backward compatibility.
+    Always uses basename for consistency — all photos live in raw_photos/.
     """
-    path = Path(filename)
-    if path.is_absolute():
-        # Inbox uploads: use full path to differentiate upload sessions
-        hash_bytes = hashlib.sha256(str(path).encode("utf-8")).hexdigest()
-    else:
-        # Legacy raw_photos: use basename only (backward compatible)
-        hash_bytes = hashlib.sha256(path.name.encode("utf-8")).hexdigest()
+    basename = Path(filename).name
+    hash_bytes = hashlib.sha256(basename.encode("utf-8")).hexdigest()
     return hash_bytes[:16]
 
 
@@ -557,7 +479,6 @@ def load_embeddings_for_photos():
     Returns:
         dict mapping photo_id -> {
             "filename": str,
-            "filepath": str,
             "faces": list of {face_id, bbox, face_index}
         }
     """
@@ -580,10 +501,7 @@ def load_embeddings_for_photos():
         face_index = filename_face_counts[filename]
         filename_face_counts[filename] += 1
 
-        # Use filepath for photo_id to avoid collisions when same filename
-        # exists in multiple upload directories
-        filepath = entry.get("filepath", f"raw_photos/{filename}")
-        photo_id = generate_photo_id(filepath)
+        photo_id = generate_photo_id(filename)
         # Use stored face_id if present (inbox format), otherwise generate legacy format
         face_id = entry.get("face_id") or generate_face_id(filename, face_index)
 
@@ -597,7 +515,6 @@ def load_embeddings_for_photos():
         if photo_id not in photos:
             photos[photo_id] = {
                 "filename": filename,
-                "filepath": filepath,
                 "faces": [],
             }
 
@@ -643,44 +560,30 @@ def _load_photo_dimensions_cache() -> dict:
     return _photo_dimensions_cache
 
 
-def get_photo_dimensions(filename_or_path: str) -> tuple:
+def get_photo_dimensions(filename: str) -> tuple:
     """
     Get image dimensions for a photo.
 
     Args:
-        filename_or_path: Either a filename (looks in raw_photos/), a relative
-            path like 'raw_photos/file.jpg', or an absolute path. Tries the
-            path directly first, then falls back to raw_photos/{basename}.
+        filename: Photo filename (looked up in raw_photos/).
 
     Returns:
         (width, height) tuple or (0, 0) if file not found
     """
-    path = Path(filename_or_path)
+    basename = Path(filename).name
 
     # In R2 mode, photos aren't stored locally, so use cached dimensions
     # from photo_index.json instead of reading from filesystem
     if storage.is_r2_mode():
         cache = _load_photo_dimensions_cache()
-        # Try exact path first, then filename only
-        if str(filename_or_path) in cache:
-            return cache[str(filename_or_path)]
-        if path.name in cache:
-            return cache[path.name]
-        # If not in cache, return (0, 0) - can't read from R2 directly
+        if basename in cache:
+            return cache[basename]
         return (0, 0)
 
     # Local mode: read from filesystem
-    filepath = None
-
-    # Try 1: Path as provided (works for relative paths like 'raw_photos/file.jpg'
-    # and absolute paths)
-    if path.exists():
-        filepath = path
-    else:
-        # Try 2: Look in raw_photos/ by basename only
-        filepath = photos_path / path.name
-        if not filepath.exists():
-            return (0, 0)
+    filepath = photos_path / basename
+    if not filepath.exists():
+        return (0, 0)
 
     try:
         with Image.open(filepath) as img:
@@ -805,19 +708,13 @@ def parse_quality_from_filename(filename: str) -> float:
     return 0.0
 
 
-def photo_url(filename: str, filepath: str = "") -> str:
+def photo_url(filename: str) -> str:
     """
     Generate a properly URL-encoded path for a photo.
 
     In local mode: returns /photos/{filename} (served by app route)
-    In R2 mode: returns Cloudflare R2 public URL for raw_photos,
-                but local /photos/ route for uploaded photos (not on R2)
-
-    Encodes the filename to handle spaces and special characters.
+    In R2 mode: returns Cloudflare R2 public URL for raw_photos/
     """
-    # Uploaded photos (data/uploads/) are on the local volume, not R2
-    if filepath and "data/uploads" in filepath:
-        return storage.get_upload_photo_url(filepath)
     return storage.get_photo_url(filename)
 
 
@@ -1758,7 +1655,6 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         photos.append({
             "photo_id": photo_id,
             "filename": photo_data.get("filename", "unknown"),
-            "filepath": photo_data.get("filepath", ""),
             "source": source,
             "face_count": len(photo_data.get("faces", [])),
             "identified_count": len(identified_faces),
@@ -1863,7 +1759,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             # Photo thumbnail
             Div(
                 Img(
-                    src=photo_url(photo["filename"], photo.get("filepath", "")),
+                    src=photo_url(photo["filename"]),
                     cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                     loading="lazy"
                 ),
@@ -3127,7 +3023,6 @@ def _get_featured_photos(limit: int = 8) -> list:
             continue
         pdata = _photo_cache[pid]
         filename = pdata["filename"]
-        filepath = pdata.get("filepath", "")
         dims = dim_cache.get(filename) or dim_cache.get(Path(filename).name)
         w, h = dims if dims else (0, 0)
         faces = pdata.get("faces", [])
@@ -3149,7 +3044,7 @@ def _get_featured_photos(limit: int = 8) -> list:
 
         results.append({
             "id": pid,
-            "url": photo_url(filename, filepath),
+            "url": photo_url(filename),
             "width": w,
             "height": h,
             "face_count": len(faces),
@@ -4190,8 +4085,8 @@ def get(photo_id: str):
             status_code=404,
         )
 
-    # Get image dimensions - use filepath if available (for inbox uploads)
-    width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
+    # Get image dimensions for face overlay positioning
+    width, height = get_photo_dimensions(photo["filename"])
     if width == 0 or height == 0:
         return JSONResponse(
             {"error": "Could not read photo dimensions", "photo_id": photo_id},
@@ -4228,7 +4123,7 @@ def get(photo_id: str):
         faces.append(face_obj)
 
     return JSONResponse({
-        "photo_url": photo_url(photo["filename"], photo.get("filepath", "")),
+        "photo_url": photo_url(photo["filename"]),
         "image_width": width,
         "image_height": height,
         "faces": faces,
@@ -4254,9 +4149,9 @@ def photo_view_content(
         )
         return (error_content,) if is_partial else (Title("Photo Not Found"), error_content)
 
-    # Use filepath (absolute) if available, otherwise fall back to filename
+    # Get image dimensions for face overlay positioning
     # This handles inbox uploads which are stored outside raw_photos/
-    width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
+    width, height = get_photo_dimensions(photo["filename"])
 
     # If dimensions aren't available (e.g., R2 mode without cached dimensions),
     # we can still show the photo - just without face overlays
@@ -4334,7 +4229,7 @@ def photo_view_content(
         # Photo container with overlays
         Div(
             Img(
-                src=photo_url(photo["filename"], photo.get("filepath", "")),
+                src=photo_url(photo["filename"]),
                 alt=photo["filename"],
                 cls="max-w-full h-auto"
             ),
@@ -5283,7 +5178,7 @@ def get(identity_id: str, index: int = 0):
     if not photo:
         return P("Photo metadata not found", cls="text-slate-400")
 
-    width, height = get_photo_dimensions(photo.get("filepath") or photo["filename"])
+    width, height = get_photo_dimensions(photo["filename"])
     has_dimensions = width > 0 and height > 0
 
     face_overlays = []
@@ -5315,7 +5210,7 @@ def get(identity_id: str, index: int = 0):
     nav_script = Script(f"""(function(){{var el=document.getElementById('lightbox-photo-container');if(!el)return;var sx=0;el.addEventListener('touchstart',function(e){{sx=e.touches[0].clientX}});el.addEventListener('touchend',function(e){{var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){{if(d>0&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(d<0&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}})}}}});function kh(e){{if(e.key==='ArrowLeft'&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(e.key==='ArrowRight'&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(e.key==='Escape'){{document.getElementById('photo-lightbox').classList.add('hidden');document.removeEventListener('keydown',kh)}}}}if(window._lbKb)document.removeEventListener('keydown',window._lbKb);window._lbKb=kh;document.addEventListener('keydown',kh)}})();""")
 
     return Div(
-        Div(Img(src=photo_url(photo["filename"], photo.get("filepath", "")), alt=photo["filename"], cls="max-h-[80vh] max-w-full object-contain"),
+        Div(Img(src=photo_url(photo["filename"]), alt=photo["filename"], cls="max-h-[80vh] max-w-full object-contain"),
             *face_overlays, prev_btn, next_btn, cls="relative inline-block", id="lightbox-photo-container"),
         Div(Span(f"{index + 1} / {total}", cls="text-white font-medium"),
             Span(f" -- {photo['filename']}", cls="text-slate-400 text-sm ml-2"),
@@ -5776,18 +5671,17 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
     Handles multiple files (images and/or ZIPs) in a single batch job.
     All files are saved to a job directory.
 
+    All uploads go to data/staging/{job_id}/.
+
     Admin flow:
         When PROCESSING_ENABLED=True (local dev):
-            - Files go to data/uploads/{job_id}/
             - Subprocess spawned to run core/ingest_inbox.py
             - Real-time status polling
         When PROCESSING_ENABLED=False (production):
-            - Files go to data/staging/{job_id}/
             - No subprocess spawned (ML deps not available)
             - Shows "pending admin review" message
 
     Non-admin flow:
-        - Files go to data/staging/{job_id}/
         - Pending upload record created in pending_uploads.json
         - Admin email notification sent (if RESEND_API_KEY configured)
         - Shows "submitted for review" message
@@ -5823,12 +5717,8 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
     # Generate unique job ID
     job_id = str(uuid.uuid4())[:8]
 
-    # Choose destination based on processing mode and user role
-    # Non-admin uploads ALWAYS go to staging for moderation
-    if user_is_admin and PROCESSING_ENABLED:
-        job_dir = data_path / "uploads" / job_id
-    else:
-        job_dir = data_path / "staging" / job_id
+    # All uploads go to staging first (processing or moderation)
+    job_dir = data_path / "staging" / job_id
 
     job_dir.mkdir(parents=True, exist_ok=True)
 

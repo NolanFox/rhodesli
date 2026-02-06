@@ -362,7 +362,6 @@ railway logs
 ```bash
 # On Railway
 railway run -- ls /app/raw_photos/ | head
-railway run -- ls /app/data/uploads/ | head
 
 # Verify photo_index.json paths match
 railway run -- python -c "

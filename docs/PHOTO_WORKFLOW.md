@@ -18,7 +18,7 @@ The heavy AI work (face detection, embedding generation, clustering) happens loc
 The web upload endpoint (`/upload`) supports two roles:
 
 ### Admin Uploads
-- Admin uploads go directly to `data/uploads/{job_id}/` (local dev) or `data/staging/{job_id}/` (production)
+- All uploads go to `data/staging/{job_id}/` for processing or moderation
 - When `PROCESSING_ENABLED=true` (local dev), a subprocess runs the ML pipeline immediately
 - When `PROCESSING_ENABLED=false` (production), files sit staged for local processing
 

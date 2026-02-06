@@ -94,24 +94,3 @@ def get_crop_url_by_filename(crop_filename: str) -> str:
         return f"/static/crops/{quote(crop_filename)}"
 
 
-def get_upload_photo_url(relative_path: str) -> str:
-    """
-    Get URL for an uploaded photo (from inbox/staging).
-
-    These are stored in data/uploads/ locally. In R2 mode, they are
-    uploaded to the raw_photos/ prefix on R2 alongside other photos.
-
-    Args:
-        relative_path: Path like "data/uploads/filename.jpg"
-
-    Returns:
-        URL to access the upload (R2 URL in R2 mode, local route otherwise)
-    """
-    filename = Path(relative_path).name
-
-    if is_r2_mode():
-        # In R2 mode, uploaded photos are pushed to raw_photos/ on R2
-        return f"{R2_PUBLIC_URL}/raw_photos/{quote(filename)}"
-    else:
-        # Local mode: served via the /photos/ route
-        return f"/photos/{quote(filename)}"

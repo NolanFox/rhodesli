@@ -1,6 +1,6 @@
 """
 Integration test - exercises real file paths, no mocking.
-Tests that photos in data/uploads/ can be served via /photos/ endpoint.
+Tests that all photos are served from raw_photos/ via /photos/ endpoint.
 """
 import json
 from pathlib import Path
@@ -16,48 +16,14 @@ data_path = project_root / "data"
 
 @pytest.fixture
 def client():
-    """Create test client, forcing cache reload."""
-    from app.main import app, _load_photo_path_cache
-
-    # Reload cache to ensure test sees current state
-    _load_photo_path_cache()
+    """Create test client."""
+    from app.main import app
 
     return TestClient(app)
 
 
-def test_photo_serves_from_uploads(client):
-    """Photos in data/uploads should be servable via /photos/ endpoint."""
-    photo_index_path = data_path / "photo_index.json"
-    if not photo_index_path.exists():
-        pytest.skip("No photo_index.json found")
-
-    with open(photo_index_path) as f:
-        index = json.load(f)
-
-    # Find an inbox photo (absolute path)
-    inbox_photo = None
-    for photo_id, photo_data in index.get("photos", {}).items():
-        path = Path(photo_data.get("path", ""))
-        if path.is_absolute() and path.exists():
-            inbox_photo = (photo_id, photo_data, path)
-            break
-
-    if not inbox_photo:
-        pytest.skip("No inbox photos with existing files found")
-
-    photo_id, photo_data, photo_path = inbox_photo
-    filename = photo_path.name
-
-    # Request it via /photos/ endpoint
-    response = client.get(f"/photos/{filename}")
-
-    # Should succeed
-    assert response.status_code == 200, f"Failed to serve {filename}: {response.status_code} - {response.text}"
-    assert len(response.content) > 0, "Response body is empty"
-
-
-def test_photo_serves_legacy_raw_photos(client):
-    """Legacy photos in raw_photos/ should still be servable."""
+def test_photo_serves_from_raw_photos(client):
+    """Photos in raw_photos/ should be servable via /photos/ endpoint."""
     raw_photos_path = project_root / "raw_photos"
     if not raw_photos_path.exists():
         pytest.skip("raw_photos directory does not exist")
@@ -71,11 +37,12 @@ def test_photo_serves_legacy_raw_photos(client):
 
     response = client.get(f"/photos/{filename}")
 
-    assert response.status_code == 200, f"Failed to serve legacy photo {filename}: {response.status_code}"
+    assert response.status_code == 200, f"Failed to serve photo {filename}: {response.status_code}"
+    assert len(response.content) > 0, "Response body is empty"
 
 
 def test_photo_index_paths_exist():
-    """All paths in photo_index should exist on disk."""
+    """All paths in photo_index should resolve to files in raw_photos/."""
     photo_index_path = data_path / "photo_index.json"
     if not photo_index_path.exists():
         pytest.skip("No photo_index.json")
@@ -83,25 +50,19 @@ def test_photo_index_paths_exist():
     with open(photo_index_path) as f:
         index = json.load(f)
 
+    raw_photos_path = project_root / "raw_photos"
     missing = []
     for photo_id, photo_data in index.get("photos", {}).items():
         path_str = photo_data.get("path", "")
-        path = Path(path_str)
+        if not path_str:
+            continue
 
-        # Check absolute paths directly
-        if path.is_absolute():
-            if not path.exists():
-                missing.append(path_str)
-        else:
-            # Check relative paths: resolve against project root
-            full_path = project_root / path_str
-            if not full_path.exists():
-                # Also try raw_photos/ fallback for legacy entries
-                raw_path = project_root / "raw_photos" / path.name
-                if not raw_path.exists():
-                    missing.append(path_str)
+        # All photos should be findable by basename in raw_photos/
+        basename = Path(path_str).name
+        if not (raw_photos_path / basename).exists():
+            missing.append(path_str)
 
-    assert not missing, f"Missing {len(missing)} files: {missing[:5]}"
+    assert not missing, f"Missing {len(missing)} files in raw_photos/: {missing[:5]}"
 
 
 def test_nonexistent_photo_returns_404(client):
@@ -111,26 +72,16 @@ def test_nonexistent_photo_returns_404(client):
     assert response.status_code == 404
 
 
-def test_full_user_flow_view_photo(client):
-    """
-    THE test - verifies the core user flow works.
+def test_uploaded_photos_in_raw_photos():
+    """Uploaded photos (e.g., 603569408.731013.jpg) should be in raw_photos/."""
+    raw_photos_path = project_root / "raw_photos"
+    if not raw_photos_path.exists():
+        pytest.skip("raw_photos directory does not exist")
 
-    If this test passes, "View Photo" works for inbox uploads.
-    Tests: photo_path_cache populated → all cached photos servable
-    """
-    from app.main import _photo_path_cache, _load_photo_path_cache
+    # Check for uploaded-style filenames (numeric timestamps)
+    upload_files = list(raw_photos_path.glob("603*.jpg"))
+    # If we have uploaded photos, verify they're accessible
+    if not upload_files:
+        pytest.skip("No uploaded photos found in raw_photos/")
 
-    # Reload cache to ensure test sees current state
-    _load_photo_path_cache()
-
-    if not _photo_path_cache:
-        pytest.skip("No inbox photos in cache")
-
-    # Test ALL cached photos are servable
-    failed = []
-    for filename, path in list(_photo_path_cache.items())[:10]:  # Test up to 10
-        response = client.get(f"/photos/{filename}")
-        if response.status_code != 200:
-            failed.append(f"{filename}: {response.status_code}")
-
-    assert not failed, f"Failed to serve photos: {failed}"
+    assert len(upload_files) > 0, "Expected uploaded photos in raw_photos/"

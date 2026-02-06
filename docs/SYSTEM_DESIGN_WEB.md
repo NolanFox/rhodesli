@@ -852,7 +852,7 @@ Contributor                  FastHTML                  Supabase
 **Admin approval:**
 1. Admin reviews in moderation queue
 2. Accept → triggers ingestion pipeline:
-   - Move files from staging/ to raw_photos/ or data/uploads/
+   - Move files from staging/ to raw_photos/
    - Run face detection
    - Update embeddings.npy
    - Update photo_index.json
@@ -879,7 +879,7 @@ Contributor                  FastHTML                  Supabase
 
 #### Photo Upload Accepted:
 This is the most complex promotion because it triggers the ingestion pipeline:
-1. Move file(s) from data/staging/ to raw_photos/ (or data/uploads/)
+1. Move file(s) from data/staging/ to raw_photos/
 2. Run face detection on new photo(s)
 3. Generate embeddings for detected faces
 4. Append new embeddings to embeddings.npy

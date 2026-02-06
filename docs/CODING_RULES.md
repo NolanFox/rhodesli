@@ -125,7 +125,7 @@ import cv2  # Tests fail if cv2 not installed
 Always use `Path(__file__).resolve().parent` for file paths to ensure portability.
 
 ### Pathing in Data Files
-Data files (JSON in `data/`) must use **relative paths** (e.g., `data/uploads/...`) never absolute paths (e.g., `/Users/.../data/uploads/...`).
+Data files (JSON in `data/`) must use **relative paths** (e.g., `raw_photos/file.jpg`) never absolute paths (e.g., `/Users/.../raw_photos/file.jpg`). All photos live in `raw_photos/` — there is no separate uploads directory.
 
 ---
 
