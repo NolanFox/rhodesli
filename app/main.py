@@ -1230,7 +1230,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 "✓ Confirm",
                 cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors",
                 hx_post=confirm_url,
-                hx_target="#focus-card",
+                hx_target="#focus-container",
                 hx_swap="outerHTML",
                 type="button",
             ),
@@ -1238,7 +1238,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 "⏸ Skip",
                 cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors",
                 hx_post=skip_url,
-                hx_target="#focus-card",
+                hx_target="#focus-container",
                 hx_swap="outerHTML",
                 type="button",
             ),
@@ -1246,7 +1246,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 "✗ Reject",
                 cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors",
                 hx_post=reject_url,
-                hx_target="#focus-card",
+                hx_target="#focus-container",
                 hx_swap="outerHTML",
                 type="button",
             ),
@@ -1277,24 +1277,27 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
 
     return Div(
         Div(
-            # Left: Main Face
+            # Left: Main Face (clickable to open photo)
             Div(
-                Div(
-                    Img(
-                        src=main_crop_url or "",
-                        alt=name,
-                        cls="w-full h-full object-cover"
-                    ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-48 h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
-                ),
                 Button(
-                    "View Full Photo →",
-                    cls="mt-2 text-sm text-indigo-400 hover:text-indigo-300",
-                    hx_get=f"/photo/{main_photo_id}/partial" if main_photo_id else None,
+                    Div(
+                        Img(
+                            src=main_crop_url or "",
+                            alt=name,
+                            cls="w-full h-full object-cover"
+                        ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
+                        cls="w-48 h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                    ),
+                    cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
+                    hx_get=f"/photo/{main_photo_id}/partial?face={face_id}" if main_photo_id else None,
                     hx_target="#photo-modal-content",
                     **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
                     type="button",
-                ) if main_photo_id else None,
+                    title="Click to view photo",
+                ) if main_photo_id else Div(
+                    Span("?", cls="text-6xl text-slate-500"),
+                    cls="w-48 h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                ),
                 cls="flex-shrink-0"
             ),
             # Right: Details + Actions
@@ -1406,11 +1409,10 @@ def render_to_review_section(
 
     if view_mode == "focus":
         if high_confidence:
-            # Show one item expanded + queue preview
-            content = Div(
-                identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
-                # Queue Preview
-                Div(
+            # Build Up Next carousel
+            up_next = None
+            if len(high_confidence) > 1:
+                up_next = Div(
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                     Div(
                         *[identity_card_mini(i, crop_files, clickable=True) for i in high_confidence[1:6]],
@@ -1421,7 +1423,12 @@ def render_to_review_section(
                         cls="flex gap-3 overflow-x-auto pb-2"
                     ),
                     cls="mt-6"
-                ) if len(high_confidence) > 1 else None,
+                )
+            # Show one item expanded + queue preview, wrapped in focus-container for HTMX swap
+            content = Div(
+                identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
+                up_next,
+                id="focus-container"
             )
         else:
             # Empty state
@@ -1830,7 +1837,7 @@ def get_next_focus_card(exclude_id: str = None):
     """
     Get the next identity card for focus mode review.
 
-    Returns an expanded identity card for the top priority item in to_review,
+    Returns an expanded identity card + Up Next carousel for the top priority items,
     or an empty state if no items remain.
 
     IMPORTANT: This must use the same sorting as render_to_review_section to ensure
@@ -1857,8 +1864,30 @@ def get_next_focus_card(exclude_id: str = None):
         reverse=True
     )  # Primary: by face count (stable sort preserves date order for ties)
 
-    if to_review:
-        return identity_card_expanded(to_review[0], crop_files)
+    high_confidence = to_review[:10]
+
+    if high_confidence:
+        # Build Up Next carousel
+        up_next = None
+        if len(high_confidence) > 1:
+            up_next = Div(
+                H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
+                Div(
+                    *[identity_card_mini(i, crop_files, clickable=True) for i in high_confidence[1:6]],
+                    Div(
+                        f"+{len(high_confidence) - 6} more",
+                        cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
+                    ) if len(high_confidence) > 6 else None,
+                    cls="flex gap-3 overflow-x-auto pb-2"
+                ),
+                cls="mt-6"
+            )
+
+        return Div(
+            identity_card_expanded(high_confidence[0], crop_files),
+            up_next,
+            id="focus-container"
+        )
     else:
         # Empty state
         return Div(
@@ -1871,7 +1900,7 @@ def get_next_focus_card(exclude_id: str = None):
                 cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"
             ),
             cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
-            id="focus-card"
+            id="focus-container"
         )
 
 
@@ -2218,10 +2247,11 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
             break
 
     # Checkbox for bulk selection (linked to bulk form via hyperscript)
+    # Uses property assignment (not attribute toggle) so FormData picks it up
     checkbox = Input(
         type="checkbox",
         cls="w-4 h-4 rounded border-slate-500 bg-slate-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0",
-        **{"_": f"on change toggle @checked on #bulk-{neighbor_id}"},
+        **{"_": f"on change set #bulk-{neighbor_id}.checked to my.checked"},
     ) if (show_checkbox and can_merge) else None
 
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
@@ -2345,7 +2375,7 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
     if len(mergeable) > 1:
         select_all_script = (
             "on click "
-            "set cbs to <input[name='bulk_ids']/> in closest form "
+            "set cbs to <input[name='bulk_ids']/> in closest <form/> "
             "repeat for cb in cbs set cb.checked to my.checked end"
         )
         bulk_actions = Form(
@@ -2366,17 +2396,20 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
                 cls="",
             ),
             Div(
-                Button("Merge Selected", type="submit",
-                       formaction=f"/api/identity/{identity_id}/bulk-merge",
+                Button("Merge Selected", type="button",
+                       hx_post=f"/api/identity/{identity_id}/bulk-merge",
+                       hx_include="closest form",
+                       hx_target=f"#neighbors-{identity_id}",
+                       hx_swap="innerHTML",
                        cls="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500"),
-                Button("Not Same Selected", type="submit",
-                       formaction=f"/api/identity/{identity_id}/bulk-reject",
+                Button("Not Same Selected", type="button",
+                       hx_post=f"/api/identity/{identity_id}/bulk-reject",
+                       hx_include="closest form",
+                       hx_target=f"#neighbors-{identity_id}",
+                       hx_swap="innerHTML",
                        cls="px-3 py-1.5 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20"),
                 cls="flex gap-2",
             ),
-            hx_post=f"/api/identity/{identity_id}/bulk-merge",
-            hx_target=f"#neighbors-{identity_id}",
-            hx_swap="innerHTML",
             cls="mb-3 p-2 bg-slate-600/50 rounded border border-slate-600",
         )
 
