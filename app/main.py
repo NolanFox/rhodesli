@@ -679,8 +679,22 @@ def _build_caches():
         try:
             from core.photo_registry import PhotoRegistry
             photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+
+            # Build filename -> source fallback for photos with mismatched IDs
+            # (e.g., inbox_* IDs in photo_index.json vs SHA256 IDs in _photo_cache)
+            filename_to_source = {}
+            for pid in photo_registry._photos:
+                path = photo_registry.get_photo_path(pid)
+                source = photo_registry.get_source(pid)
+                if path and source:
+                    filename_to_source[Path(path).name] = source
+
             for photo_id in _photo_cache:
                 source = photo_registry.get_source(photo_id)
+                if not source:
+                    # Fallback: look up by filename
+                    filename = _photo_cache[photo_id].get("filename", "")
+                    source = filename_to_source.get(Path(filename).name, "")
                 _photo_cache[photo_id]["source"] = source
         except FileNotFoundError:
             # No photo_index.json yet, set empty sources
