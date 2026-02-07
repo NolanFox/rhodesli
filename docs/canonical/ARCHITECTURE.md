@@ -1,4 +1,6 @@
-# Rhodesli Architecture
+# Rhodesli Architecture (Legacy)
+
+> **Note:** This file is superseded by `docs/architecture/OVERVIEW.md` and the other files in `docs/architecture/`. It is kept for historical reference only.
 
 ## Core Entities
 - **Photo**: Raw image file, immutable
@@ -13,11 +15,10 @@
 4. MLS uses scalar sigma formula (single log term)
 
 ## Data Flow
-1. Ingest: raw_photos → face detection → embeddings.npy
-2. Cluster: embeddings → identities.json (with centroids)
-3. Serve: identities.json → API → UI
+1. Ingest: raw_photos -> face detection -> embeddings.npy
+2. Cluster: embeddings -> identities.json (with centroids)
+3. Serve: identities.json -> API -> UI
 
 ## Known Limitations
 - Sigma values are heuristic (derived from detection score + face area)
 - Date estimation not yet implemented
-- No upload functionality

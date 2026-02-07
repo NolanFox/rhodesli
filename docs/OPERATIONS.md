@@ -4,7 +4,8 @@ Day-to-day operational guide for managing the deployed Rhodesli application.
 
 **Related docs:**
 - `docs/DEPLOYMENT_GUIDE.md` — Initial Railway setup
-- `docs/SYSTEM_DESIGN_WEB.md` — Architecture decisions
+- `docs/architecture/OVERVIEW.md` — Architecture overview
+- `docs/DECISIONS.md` — Architecture decisions
 - `CLAUDE.md` — Project conventions
 
 ---

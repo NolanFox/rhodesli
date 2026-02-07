@@ -120,3 +120,18 @@
 - **Mistake**: Originally had `_check_login` on upload, which was too permissive without rate limiting or moderation.
 - **Rule**: Default new data-modifying routes to `_check_admin`. Only downgrade to `_check_login` when the moderation queue (pending uploads) is implemented.
 - **Prevention**: The pending upload queue (Phase 3) is the guardrail that allows reverting to `_check_login`.
+
+### Lesson 23: No single doc file should exceed 300 lines
+- **Mistake**: `docs/SYSTEM_DESIGN_WEB.md` grew to 1,373 lines / 47.6k chars. Claude Code warned: "Large docs/SYSTEM_DESIGN_WEB.md will impact performance (47.6k chars > 40.0k)". It wasted context window every session.
+- **Rule**: Split documentation into focused sub-files (<300 lines each). Use progressive disclosure: CLAUDE.md points to docs, doesn't inline them.
+- **Prevention**: Before any doc update, check `wc -l` on the target file. If it's over 250 lines, split before adding content.
+
+### Lesson 24: CLAUDE.md is loaded into every context window — keep it under 80 lines
+- **Mistake**: CLAUDE.md grew with inline architecture details that belonged in separate docs.
+- **Rule**: CLAUDE.md should be a "project constitution" — rules, key pointers, workflow. Details go in `docs/` files referenced by `@` directives.
+- **Prevention**: After editing CLAUDE.md, run `wc -l CLAUDE.md` and verify < 80 lines.
+
+### Lesson 25: Photo ID schemes must be consistent within lookup systems
+- **Mistake**: `_build_caches()` used SHA256(filename)[:16] as photo IDs but tried to look up sources from photo_index.json which used inbox_* IDs. 12 of 13 Betty Capeluto photos silently got empty source strings.
+- **Rule**: When cross-referencing data between systems with different ID schemes, always include a fallback lookup by a shared key (e.g., filename).
+- **Prevention**: Add a test that verifies every photo has a non-empty source after cache building.

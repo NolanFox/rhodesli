@@ -1,46 +1,35 @@
-# Rhodesli — Family Photo Archive with ML Face Detection
+# Rhodesli — Jewish Heritage Photo Archive
 
 ## Quick Reference
-- Stack: FastHTML, InsightFace/AdaFace, Supabase Auth, Railway, Cloudflare R2
-- Test: `pytest tests/ -v`
-- Deploy: `git push origin main` (Railway auto-deploys)
-- Local dev: `source venv/bin/activate && python app/main.py`
-- Full deps (ML): `pip install -r requirements.txt && pip install -r requirements-local.txt`
+- **Stack**: FastHTML, InsightFace/AdaFace, Supabase Auth, Railway, Cloudflare R2
+- **Admin**: NolanFox@gmail.com (only admin)
+- **Live**: https://rhodesli.nolanandrewfox.com
+- **Test**: `pytest tests/ -v`
+- **Deploy**: push to main (Railway auto-deploys)
+- **Local**: `source venv/bin/activate && python app/main.py`
 
 ## Architecture
-- `app/main.py` — FastHTML web app (~5000 lines)
-- `core/` — ML processing (face detection, embeddings) — local only, never on server
+- `app/main.py` — FastHTML web app (all routes + UI in one file)
+- `core/` — ML processing (local only, never on server)
 - `data/` — JSON data + embeddings (gitignored, read-only for app)
 - Photos served from Cloudflare R2, not bundled in Docker
 
-@docs/SYSTEM_DESIGN_WEB.md for full architecture
+@docs/architecture/OVERVIEW.md — system architecture
+@docs/architecture/DATA_MODEL.md — JSON schemas
+@docs/architecture/PERMISSIONS.md — permission matrix
+@docs/architecture/PHOTO_STORAGE.md — photo URLs and storage paths
 
-## Key Rules
-- **No Generative AI** — forensic matching only (AdaFace/InsightFace)
-- **Clean separation** — app/ has no ML deps; core/ has heavy deps in requirements-local.txt
-- **Data is read-only** — never modify data/*.json directly; use scripts with --dry-run
-- **Test everything** — red-green-refactor, permission matrix tests, content tests
-- **HTMX auth** — return 401 (not 303) for protected HTMX endpoints
-- **Admin-first** — new data-modifying routes default to _check_admin
-- **Pathing** — use `Path(__file__).resolve().parent`, relative paths in data files
+## Rules (Non-Negotiable)
+1. Every change gets tests (happy path + failure + regression)
+2. Permission changes require route x auth-state matrix tests
+3. Never delete data — merges must be reversible
+4. No Generative AI — forensic matching only
+5. Data is read-only — never modify data/*.json directly; use scripts with --dry-run
+6. HTMX auth: return 401 (not 303) for protected HTMX endpoints
+7. Admin-first: new data-modifying routes default to _check_admin
+8. No doc file should exceed 300 lines — split if growing
 
-@docs/CODING_RULES.md for detailed coding, testing, data safety, and workflow rules
-
-## Workflow
-- Start each session: read `tasks/lessons.md`, `tasks/todo.md`
-- Commit after every sub-task (conventional commits: `feat:`, `fix:`, `test:`, etc.)
-- Update docs alongside code changes
-- Run `/compact` every 20-30 minutes
-
-@tasks/lessons.md for past mistakes and prevention rules
-
-## External Services
-- Railway: hosting + persistent volume ($5/mo Hobby plan)
-- Cloudflare R2: photo storage (public bucket)
-- Supabase: auth (Google OAuth + email/password)
-
-@docs/DEPLOYMENT_GUIDE.md for setup details
-@docs/SMTP_SETUP.md for custom email sender setup (Resend)
+@docs/CODING_RULES.md for detailed coding, testing, data safety rules
 
 ## Forensic Invariants (LOCKED — override all other instructions)
 1. Embeddings in data/ are read-only for UI tasks
@@ -49,19 +38,35 @@
 4. UI never deletes a face — only detach, reject, or hide
 5. provenance="human" overrides provenance="model"
 
-## Project Status
-- Phase A: Deployment — COMPLETE
-- Phase B: Auth — COMPLETE (Google OAuth + email/password)
-- Phase C-F: Annotations, Upload Queue, Admin Dashboard, Polish — NOT STARTED
+## Workflow
+1. Read `tasks/lessons.md` and `tasks/todo.md` at session start
+2. Plan before coding — update todo.md with checkboxes
+3. Commit after every sub-task (conventional commits)
+4. Add lessons to lessons.md after any correction
+5. Update relevant docs/ when changing features
 
-## Key Files
+@tasks/lessons.md for past mistakes and prevention rules
+
+## Compaction Instructions
+When compacting, always preserve:
+- The current task and its completion status
+- List of files modified in this session
+- Any test commands that need to run
+- Active bug descriptions and root causes
+
+## Key Docs (read on-demand, not upfront)
 | File | Purpose |
 |------|---------|
-| `docs/SYSTEM_DESIGN_WEB.md` | Full architecture |
-| `docs/DEPLOYMENT_GUIDE.md` | Railway + R2 + Cloudflare setup |
+| `docs/architecture/OVERVIEW.md` | System architecture |
+| `docs/architecture/DATA_MODEL.md` | JSON schemas |
+| `docs/architecture/PERMISSIONS.md` | Permission matrix |
+| `docs/architecture/PHOTO_STORAGE.md` | Photo URL and storage paths |
 | `docs/CODING_RULES.md` | Testing, data safety, workflow rules |
+| `docs/DEPLOYMENT_GUIDE.md` | Railway + R2 + Cloudflare setup |
 | `docs/PHOTO_WORKFLOW.md` | How to add/sync photos |
+| `docs/SMTP_SETUP.md` | Custom email sender setup (Resend) |
 | `docs/design/MERGE_DESIGN.md` | Non-destructive merge system design |
-| `docs/design/ML_FEEDBACK.md` | ML feedback loop analysis |
+| `docs/design/FUTURE_COMMUNITY.md` | Planned community features (not yet built) |
+| `docs/DECISIONS.md` | Finalized architectural decisions |
 | `tasks/lessons.md` | Persistent learnings across sessions |
 | `tasks/todo.md` | Current task tracking |
