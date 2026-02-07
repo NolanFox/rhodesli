@@ -1628,6 +1628,17 @@ def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_a
     )
 
 
+def _photo_nav_url(photo_id: str, index: int, photos: list, total: int) -> str:
+    """Build /photo/{id}/partial URL with prev/next navigation context."""
+    from urllib.parse import urlencode
+    params = {"nav_idx": str(index), "nav_total": str(total)}
+    if index > 0:
+        params["prev_id"] = photos[index - 1]["photo_id"]
+    if index < total - 1:
+        params["next_id"] = photos[index + 1]["photo_id"]
+    return f"/photo/{photo_id}/partial?{urlencode(params)}"
+
+
 def render_photos_section(counts: dict, registry, crop_files: set,
                           filter_source: str = "", sort_by: str = "newest") -> Div:
     """
@@ -1746,9 +1757,10 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         cls="flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4"
     )
 
-    # Photo grid
+    # Photo grid — build with navigation context
+    total_photos = len(photos)
     photo_cards = []
-    for photo in photos:
+    for pi, photo in enumerate(photos):
         # Face avatars for identified people
         face_avatars = []
         for i, face in enumerate(photo["identified_faces"][:3]):
@@ -1808,17 +1820,49 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             ),
             cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "
                 "hover:border-slate-500 transition-colors cursor-pointer group",
-            hx_get=f"/photo/{photo['photo_id']}/partial",
+            hx_get=_photo_nav_url(photo['photo_id'], pi, photos, total_photos),
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
-            # Show modal on load
-            **{"_": "on htmx:afterOnLoad remove .hidden from #photo-modal"}
+            # Show modal and set navigation index
+            **{"_": f"on htmx:afterOnLoad remove .hidden from #photo-modal then js window._photoNavIdx={pi} end"}
         )
         photo_cards.append(card)
+
+    # Build ordered photo ID list for client-side navigation
+    import json as _json
+    photo_id_list = [p["photo_id"] for p in photos]
+    photo_nav_script = Script(f"""
+        window._photoNavIds = {_json.dumps(photo_id_list)};
+        window._photoNavIdx = -1;
+        function photoNavTo(idx) {{
+            var ids = window._photoNavIds;
+            if (idx < 0 || idx >= ids.length) return;
+            window._photoNavIdx = idx;
+            var prevId = idx > 0 ? ids[idx-1] : '';
+            var nextId = idx < ids.length-1 ? ids[idx+1] : '';
+            var url = '/photo/' + ids[idx] + '/partial?nav_idx=' + idx + '&nav_total=' + ids.length;
+            if (prevId) url += '&prev_id=' + prevId;
+            if (nextId) url += '&next_id=' + nextId;
+            htmx.ajax('GET', url, {{target:'#photo-modal-content', swap:'innerHTML'}});
+        }}
+        (function() {{
+            function kh(e) {{
+                var modal = document.getElementById('photo-modal');
+                if (!modal || modal.classList.contains('hidden')) return;
+                if (e.key === 'ArrowLeft') {{ photoNavTo(window._photoNavIdx - 1); e.preventDefault(); }}
+                else if (e.key === 'ArrowRight') {{ photoNavTo(window._photoNavIdx + 1); e.preventDefault(); }}
+                else if (e.key === 'Escape') {{ modal.classList.add('hidden'); }}
+            }}
+            if (window._photoNavKb) document.removeEventListener('keydown', window._photoNavKb);
+            window._photoNavKb = kh;
+            document.addEventListener('keydown', kh);
+        }})();
+    """)
 
     # Photo grid layout
     grid = Div(
         *photo_cards,
+        photo_nav_script,
         cls="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
     )
 
@@ -2700,7 +2744,9 @@ def photo_modal() -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-auto p-6 relative border border-slate-700"
         ),
         id="photo-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9999]"
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9999]",
+        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
+        tabindex="-1",
     )
 
 
@@ -4181,9 +4227,17 @@ def photo_view_content(
     photo_id: str,
     selected_face_id: str = None,
     is_partial: bool = False,
+    prev_id: str = None,
+    next_id: str = None,
+    nav_idx: int = -1,
+    nav_total: int = 0,
 ) -> tuple:
     """
     Build the photo view content with face overlays.
+
+    Optional navigation context for prev/next arrows:
+    - prev_id/next_id: Photo IDs for adjacent photos
+    - nav_idx/nav_total: Position counter for "X of Y" display
 
     Returns FastHTML elements for the photo viewer.
     """
@@ -4271,9 +4325,65 @@ def photo_view_content(
             )
             face_overlays.append(overlay)
 
+    # Build navigation buttons (for Photos section browsing)
+    nav_prev = None
+    nav_next = None
+    nav_counter = None
+    nav_keyboard_script = None
+
+    if prev_id or next_id:
+        # Build query params to chain navigation context
+        if prev_id:
+            nav_prev = Button(
+                Span("<", cls="text-2xl"),
+                cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
+                hx_get=f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}",
+                hx_target="#photo-modal-content",
+                hx_swap="innerHTML",
+                type="button",
+                title="Previous photo",
+                id="photo-nav-prev",
+            )
+        if next_id:
+            nav_next = Button(
+                Span(">", cls="text-2xl"),
+                cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
+                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
+                hx_get=f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}",
+                hx_target="#photo-modal-content",
+                hx_swap="innerHTML",
+                type="button",
+                title="Next photo",
+                id="photo-nav-next",
+            )
+        if nav_idx >= 0 and nav_total > 0:
+            nav_counter = Span(
+                f"{nav_idx + 1} / {nav_total}",
+                cls="text-slate-400 text-sm ml-auto"
+            )
+
+        # Keyboard navigation script for prev/next in photo modal
+        prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}" if prev_id else ""
+        next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}" if next_id else ""
+        nav_keyboard_script = Script(f"""(function(){{
+            function pmkh(e){{
+                if(e.key==='ArrowLeft'&&'{prev_url}'){{
+                    htmx.ajax('GET','{prev_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();
+                }}else if(e.key==='ArrowRight'&&'{next_url}'){{
+                    htmx.ajax('GET','{next_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();
+                }}else if(e.key==='Escape'){{
+                    document.getElementById('photo-modal').classList.add('hidden');
+                    document.removeEventListener('keydown',pmkh);
+                }}
+            }}
+            if(window._pmKb)document.removeEventListener('keydown',window._pmKb);
+            window._pmKb=pmkh;document.addEventListener('keydown',pmkh);
+        }})();""")
+
     # Main content
     content = Div(
-        # Photo container with overlays
+        # Photo container with overlays and nav arrows
         Div(
             Img(
                 src=photo_url(photo["filename"]),
@@ -4281,13 +4391,19 @@ def photo_view_content(
                 cls="max-w-full h-auto"
             ),
             *face_overlays,
+            nav_prev,
+            nav_next,
             cls="relative inline-block"
         ),
         # Photo info
         Div(
-            P(
-                photo["filename"],
-                cls="text-slate-300 text-sm font-data font-medium"
+            Div(
+                P(
+                    photo["filename"],
+                    cls="text-slate-300 text-sm font-data font-medium"
+                ),
+                nav_counter,
+                cls="flex items-center gap-2"
             ),
             P(
                 f"{len(photo['faces'])} face{'s' if len(photo['faces']) != 1 else ''} detected",
@@ -4308,6 +4424,7 @@ def photo_view_content(
             ) if photo.get("source") else None,
             cls="mt-4"
         ),
+        nav_keyboard_script,
         cls="photo-viewer p-4"
     )
 
@@ -4356,11 +4473,20 @@ def get(photo_id: str, face: str = None):
 
 
 @rt("/photo/{photo_id}/partial")
-def get(photo_id: str, face: str = None):
+def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = None,
+        nav_idx: int = -1, nav_total: int = 0):
     """
     Render photo view partial for HTMX modal injection.
+
+    Optional navigation context:
+    - prev_id/next_id: Adjacent photo IDs for prev/next buttons
+    - nav_idx/nav_total: Current position for "X of Y" display
     """
-    return photo_view_content(photo_id, selected_face_id=face, is_partial=True)
+    return photo_view_content(
+        photo_id, selected_face_id=face, is_partial=True,
+        prev_id=prev_id, next_id=next_id,
+        nav_idx=nav_idx, nav_total=nav_total,
+    )
 
 
 # =============================================================================
