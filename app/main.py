@@ -1315,6 +1315,19 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 # Neighbors container
                 Div(id=f"neighbors-{identity_id}", cls="mt-4"),
                 actions,
+                # Notes section (loads via HTMX)
+                Div(
+                    Button(
+                        "Notes",
+                        cls="text-xs text-slate-400 hover:text-slate-300 underline",
+                        hx_get=f"/api/identity/{identity_id}/notes",
+                        hx_target=f"#notes-{identity_id}",
+                        hx_swap="innerHTML",
+                        type="button",
+                    ),
+                    Div(id=f"notes-{identity_id}", cls="mt-2"),
+                    cls="mt-4 pt-3 border-t border-slate-700"
+                ),
                 cls="flex-1 min-w-0"
             ),
             cls="flex gap-6"
@@ -5745,6 +5758,304 @@ def post(identity_id: str, name: str = "", sess=None):
     return (
         name_display(identity_id, name),
         toast(f"Renamed to '{name}'", "success"),
+    )
+
+
+# =============================================================================
+# ROUTES - IDENTITY NOTES
+# =============================================================================
+
+@rt("/api/identity/{identity_id}/notes")
+def get(identity_id: str):
+    """Get notes for an identity and show the notes panel."""
+    try:
+        registry = load_registry()
+        notes = registry.get_notes(identity_id)
+    except KeyError:
+        return P("Identity not found.", cls="text-red-400 text-sm")
+
+    note_items = [
+        Div(
+            P(n["text"], cls="text-sm text-slate-200"),
+            Div(
+                Span(n.get("author", ""), cls="text-xs text-slate-500"),
+                Span(n.get("timestamp", "")[:10], cls="text-xs text-slate-500 ml-2"),
+                cls="flex items-center mt-1"
+            ),
+            cls="p-2 bg-slate-700 rounded mb-1"
+        )
+        for n in reversed(notes)  # Newest first
+    ]
+
+    return Div(
+        H5("Notes", cls="text-sm font-semibold text-slate-300 mb-2"),
+        Div(*note_items) if note_items else P("No notes yet.", cls="text-xs text-slate-500 italic"),
+        # Add note form
+        Form(
+            Input(
+                type="text", name="text",
+                placeholder="Add a note...",
+                cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                    "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
+                required=True,
+            ),
+            Button(
+                "Add",
+                type="submit",
+                cls="mt-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
+            ),
+            hx_post=f"/api/identity/{identity_id}/notes",
+            hx_target=f"#notes-{identity_id}",
+            hx_swap="innerHTML",
+            cls="mt-2",
+        ),
+        id=f"notes-{identity_id}",
+    )
+
+
+@rt("/api/identity/{identity_id}/notes")
+def post(identity_id: str, text: str = "", sess=None):
+    """Add a note to an identity. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    text = text.strip()
+    if not text:
+        return toast("Note cannot be empty.", "warning")
+
+    user_email = ""
+    if sess:
+        user = get_current_user(sess)
+        if user:
+            user_email = user.email
+
+    try:
+        registry = load_registry()
+        registry.add_note(identity_id, text, author=user_email)
+        save_registry(registry)
+    except KeyError:
+        return toast("Identity not found.", "error")
+    except Exception as e:
+        return toast(f"Failed to add note: {e}", "error")
+
+    # Re-render the notes panel
+    notes = registry.get_notes(identity_id)
+    note_items = [
+        Div(
+            P(n["text"], cls="text-sm text-slate-200"),
+            Div(
+                Span(n.get("author", ""), cls="text-xs text-slate-500"),
+                Span(n.get("timestamp", "")[:10], cls="text-xs text-slate-500 ml-2"),
+                cls="flex items-center mt-1"
+            ),
+            cls="p-2 bg-slate-700 rounded mb-1"
+        )
+        for n in reversed(notes)
+    ]
+
+    return Div(
+        H5("Notes", cls="text-sm font-semibold text-slate-300 mb-2"),
+        Div(*note_items),
+        Form(
+            Input(
+                type="text", name="text",
+                placeholder="Add a note...",
+                cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                    "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
+                required=True,
+            ),
+            Button(
+                "Add",
+                type="submit",
+                cls="mt-1 px-3 py-1 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500",
+            ),
+            hx_post=f"/api/identity/{identity_id}/notes",
+            hx_target=f"#notes-{identity_id}",
+            hx_swap="innerHTML",
+            cls="mt-2",
+        ),
+        id=f"notes-{identity_id}",
+    )
+
+
+# =============================================================================
+# ROUTES - PROPOSED MATCHES
+# =============================================================================
+
+@rt("/api/identity/{identity_id}/propose-match")
+def post(identity_id: str, target_id: str, note: str = "", sess=None):
+    """Propose a match between two identities without executing it. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    user_email = ""
+    if sess:
+        user = get_current_user(sess)
+        if user:
+            user_email = user.email
+
+    try:
+        registry = load_registry()
+        proposal = registry.add_proposed_match(identity_id, target_id, note=note, author=user_email)
+        save_registry(registry)
+    except KeyError:
+        return toast("Identity not found.", "error")
+    except Exception as e:
+        return toast(f"Failed to propose match: {e}", "error")
+
+    return toast(f"Match proposed!", "success")
+
+
+@rt("/api/proposed-matches")
+def get():
+    """List all pending proposed matches."""
+    try:
+        registry = load_registry()
+    except Exception:
+        return P("Unable to load proposals.", cls="text-red-400")
+
+    proposals = registry.list_proposed_matches()
+    if not proposals:
+        return Div(
+            P("No pending proposals.", cls="text-slate-400 italic text-sm"),
+            cls="text-center py-8"
+        )
+
+    crop_files = get_crop_files()
+    items = []
+    for p in proposals:
+        source_name = ensure_utf8_display(p.get("source_name")) or f"Identity {p['source_id'][:8]}..."
+        target_name = ensure_utf8_display(p.get("target_name")) or f"Identity {p['target_id'][:8]}..."
+
+        items.append(Div(
+            Div(
+                Span(source_name, cls="text-sm font-medium text-slate-200"),
+                Span(" → ", cls="text-slate-500"),
+                Span(target_name, cls="text-sm font-medium text-slate-200"),
+                cls="flex items-center gap-1"
+            ),
+            P(p.get("note", ""), cls="text-xs text-slate-400 mt-1") if p.get("note") else None,
+            Div(
+                Span(f"by {p.get('author', 'unknown')}", cls="text-xs text-slate-500"),
+                Span(p.get("timestamp", "")[:10], cls="text-xs text-slate-500 ml-2"),
+                cls="flex items-center mt-1"
+            ),
+            Div(
+                Button(
+                    "Accept (Merge)",
+                    cls="px-2 py-1 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-500",
+                    hx_post=f"/api/proposed-matches/{p['source_id']}/{p['id']}/accept",
+                    hx_target="#proposed-matches-list",
+                    hx_swap="innerHTML",
+                    type="button",
+                ),
+                Button(
+                    "Reject",
+                    cls="px-2 py-1 text-xs border border-red-400 text-red-400 rounded hover:bg-red-500/20",
+                    hx_post=f"/api/proposed-matches/{p['source_id']}/{p['id']}/reject",
+                    hx_target="#proposed-matches-list",
+                    hx_swap="innerHTML",
+                    type="button",
+                ),
+                cls="flex gap-2 mt-2"
+            ),
+            cls="p-3 bg-slate-800 border border-slate-700 rounded-lg mb-2"
+        ))
+
+    return Div(*items, id="proposed-matches-list")
+
+
+@rt("/api/proposed-matches/{source_id}/{proposal_id}/accept")
+def post(source_id: str, proposal_id: str, sess=None):
+    """Accept a proposed match — execute the merge."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        registry = load_registry()
+        photo_registry = load_photo_registry()
+
+        # Get the proposal to find target_id
+        identity = registry.get_identity(source_id)
+        proposal = None
+        for pm in identity.get("proposed_matches", []):
+            if pm["id"] == proposal_id:
+                proposal = pm
+                break
+
+        if not proposal:
+            return toast("Proposal not found.", "error")
+
+        target_id = proposal["target_id"]
+
+        # Execute the merge
+        result = registry.merge_identities(
+            source_id=source_id,
+            target_id=target_id,
+            user_source="proposed_match",
+            photo_registry=photo_registry,
+        )
+
+        if result["success"]:
+            registry.resolve_proposed_match(source_id, proposal_id, "accepted")
+            save_registry(registry)
+            oob_toast = Div(
+                toast(f"Merged! {result['faces_merged']} face(s) combined.", "success"),
+                hx_swap_oob="beforeend:#toast-container",
+            )
+        else:
+            oob_toast = Div(
+                toast(f"Cannot merge: {result['reason']}", "warning"),
+                hx_swap_oob="beforeend:#toast-container",
+            )
+    except Exception as e:
+        oob_toast = Div(
+            toast(f"Error: {e}", "error"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
+
+    # Re-render the proposals list
+    proposals = registry.list_proposed_matches()
+    if not proposals:
+        return (Div(
+            P("No pending proposals.", cls="text-slate-400 italic text-sm"),
+            cls="text-center py-8", id="proposed-matches-list"
+        ), oob_toast)
+
+    # Return a placeholder that triggers reload of the proposals list
+    return (Div(
+        P("Refreshing...", cls="text-slate-400"),
+        hx_get="/api/proposed-matches",
+        hx_trigger="load",
+        hx_swap="outerHTML",
+        id="proposed-matches-list"
+    ), oob_toast)
+
+
+@rt("/api/proposed-matches/{source_id}/{proposal_id}/reject")
+def post(source_id: str, proposal_id: str, sess=None):
+    """Reject a proposed match."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        registry = load_registry()
+        registry.resolve_proposed_match(source_id, proposal_id, "rejected")
+        save_registry(registry)
+    except Exception as e:
+        return toast(f"Error: {e}", "error")
+
+    # Re-render with reload trigger
+    return Div(
+        P("Refreshing...", cls="text-slate-400"),
+        hx_get="/api/proposed-matches",
+        hx_trigger="load",
+        hx_swap="outerHTML",
+        id="proposed-matches-list"
     )
 
 

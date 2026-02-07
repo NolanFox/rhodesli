@@ -1628,6 +1628,122 @@ class IdentityRegistry:
         return results
 
 
+    def add_note(self, identity_id: str, text: str, author: str = "") -> dict:
+        """
+        Add a note to an identity.
+
+        Args:
+            identity_id: Identity to add note to
+            text: Note text content
+            author: Email of the user adding the note
+
+        Returns:
+            The created note dict with id, text, author, timestamp
+        """
+        if identity_id not in self._identities:
+            raise KeyError(f"Identity not found: {identity_id}")
+        identity = self._identities[identity_id]
+        if "notes" not in identity:
+            identity["notes"] = []
+
+        note = {
+            "id": str(uuid.uuid4())[:8],
+            "text": text,
+            "author": author,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        identity["notes"].append(note)
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+        return note
+
+    def get_notes(self, identity_id: str) -> list:
+        """Get all notes for an identity."""
+        identity = self.get_identity(identity_id)
+        return identity.get("notes", [])
+
+    def add_proposed_match(
+        self, source_id: str, target_id: str, note: str = "", author: str = ""
+    ) -> dict:
+        """
+        Propose a match between two identities without executing it.
+
+        Stores the proposal on the source identity for later review.
+
+        Args:
+            source_id: Identity to propose match for
+            target_id: Identity proposed as match
+            note: Optional user note about the proposal
+            author: Email of the user making the proposal
+
+        Returns:
+            The created proposal dict
+        """
+        # Validate both identities exist
+        self.get_identity(source_id)
+        target = self.get_identity(target_id)
+
+        source = self._identities[source_id]
+        if "proposed_matches" not in source:
+            source["proposed_matches"] = []
+
+        # Don't add duplicate proposals
+        for pm in source["proposed_matches"]:
+            if pm["target_id"] == target_id and pm.get("status") == "pending":
+                return pm
+
+        proposal = {
+            "id": str(uuid.uuid4())[:8],
+            "target_id": target_id,
+            "target_name": target.get("name", ""),
+            "note": note,
+            "author": author,
+            "status": "pending",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        source["proposed_matches"].append(proposal)
+        source["updated_at"] = datetime.now(timezone.utc).isoformat()
+        return proposal
+
+    def list_proposed_matches(self) -> list:
+        """
+        List all pending proposed matches across all identities.
+
+        Returns list of dicts with source identity info + proposal details.
+        """
+        proposals = []
+        for identity in self._identities.values():
+            if identity.get("merged_into"):
+                continue
+            for pm in identity.get("proposed_matches", []):
+                if pm.get("status") == "pending":
+                    proposals.append({
+                        "source_id": identity["identity_id"],
+                        "source_name": identity.get("name", ""),
+                        **pm,
+                    })
+        return proposals
+
+    def resolve_proposed_match(self, source_id: str, proposal_id: str, action: str):
+        """
+        Resolve a proposed match (accept or reject).
+
+        Args:
+            source_id: Identity with the proposal
+            proposal_id: ID of the proposal to resolve
+            action: "accept" or "reject"
+        """
+        if source_id not in self._identities:
+            raise KeyError(f"Identity not found: {source_id}")
+        identity = self._identities[source_id]
+        for pm in identity.get("proposed_matches", []):
+            if pm["id"] == proposal_id:
+                pm["status"] = action
+                pm["resolved_at"] = datetime.now(timezone.utc).isoformat()
+                identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+                return pm
+        raise KeyError(f"Proposal {proposal_id} not found on identity {source_id}")
+
+
 def validate_merge(
     id_a: str,
     id_b: str,
