@@ -28,6 +28,7 @@
 6. HTMX auth: return 401 (not 303) for protected HTMX endpoints
 7. Admin-first: new data-modifying routes default to _check_admin
 8. No doc file should exceed 300 lines — split if growing
+9. Update CHANGELOG.md before ending any session with user-visible changes
 
 @docs/CODING_RULES.md for detailed coding, testing, data safety rules
 

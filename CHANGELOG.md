@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.8.0] - 2026-02-06
+
+### Added
+- **UX Overhaul**: Merge system, redesigned landing page, sidebar navigation, face cards, inbox workflow
+- **Pending Upload Queue**: Admin moderation queue for user-submitted photos
+- **ML Clustering Pipeline**: Golden set evaluation harness and face matching
+- **Landing Page**: Public-facing landing page with project intro
+- **Admin Export**: Data export functionality for admin users
+- **Mobile CSS**: Responsive layout improvements for mobile devices
+- **Design Docs**: `docs/design/MERGE_DESIGN.md`, `docs/design/FUTURE_COMMUNITY.md`
+
+### Fixed
+- **9 pre-existing test failures**: Stale assertions from UI changes (landing page, colors, URL prefixes)
+- **Uploaded photos not rendering in R2 mode**: Photos served from R2 instead of local filesystem
+- **Photo source lookup for inbox IDs**: Added filename-based fallback in `_build_caches()` for inbox-style photo IDs
+
+### Changed
+- Consolidated photo storage to single `raw_photos/` path (removed separate uploads directory)
+- Split `docs/SYSTEM_DESIGN_WEB.md` (1,373 lines) into 4 focused docs under `docs/architecture/`
+- Restructured `CLAUDE.md` to stay under 80 lines with `@` references to docs
+
+## [v0.7.0] - 2026-02-05
+
+### Added
+- **Password Recovery**: Full forgot-password flow with Supabase `/auth/v1/recover`
+- **Google OAuth Social Login**: One-click Google Sign-In via Supabase OAuth
+- **Email Templates**: Branded confirmation and recovery email templates via Supabase Management API
+- **Login Modal**: HTMX-powered login modal for protected actions (no page redirect)
+- **Styled Confirmation Dialog**: Custom confirmation dialog replacing browser `confirm()`
+- **Regression Test Suite**: Comprehensive test harness with permission matrix tests
+- **Testing Requirements**: Mandatory testing rules added to `CLAUDE.md`
+
+### Fixed
+- **Facebook login button removed**: OAuth deferred — Meta requires Business Verification
+- **Email button legibility**: Inline styles instead of `<style>` blocks (stripped by email clients)
+- **Password recovery redirect**: Added `redirect_to` parameter for correct landing page
+- **PKCE code exchange**: Fixed auth hash fragment handling for Supabase PKCE flow
+- **Auth hash fragment errors**: Friendly error messages for malformed auth callbacks
+- **Upload permissions**: Restricted to admin-only until moderation queue exists
+
+### Changed
+- Google Sign-In button uses official branding guidelines
+- All HTMX auth failures return 401 (not 303) with `beforeSwap` handler for login modal
+
 ## [v0.6.0] - 2026-02-05
 
 ### Added

@@ -131,6 +131,11 @@
 - **Rule**: CLAUDE.md should be a "project constitution" — rules, key pointers, workflow. Details go in `docs/` files referenced by `@` directives.
 - **Prevention**: After editing CLAUDE.md, run `wc -l CLAUDE.md` and verify < 80 lines.
 
+### Lesson 26: CHANGELOG must be updated every session, not retroactively
+- **Mistake**: 9+ commits across 3 sessions went without CHANGELOG updates. Had to reconstruct entries retroactively from git log.
+- **Rule**: Update CHANGELOG.md before ending any session that includes user-visible changes. Group by version with Keep a Changelog format.
+- **Prevention**: Added rule #9 to CLAUDE.md Rules section. The rule already existed in CODING_RULES.md but was buried and not enforced.
+
 ### Lesson 25: Photo ID schemes must be consistent within lookup systems
 - **Mistake**: `_build_caches()` used SHA256(filename)[:16] as photo IDs but tried to look up sources from photo_index.json which used inbox_* IDs. 12 of 13 Betty Capeluto photos silently got empty source strings.
 - **Rule**: When cross-referencing data between systems with different ID schemes, always include a fallback lookup by a shared key (e.g., filename).
