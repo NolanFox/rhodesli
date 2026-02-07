@@ -54,3 +54,13 @@ Last updated: 2026-02-07
 - [x] Doc restructure: split SYSTEM_DESIGN_WEB.md into focused docs
 - [x] ML algorithmic decision capture system with path-scoped rules
 - [x] Find Similar 500 error fix in production
+- [x] Bug fix: multi-merge form (HTMX formaction + checkbox toggle)
+- [x] Bug fix: carousel count static after Focus mode actions
+- [x] Bug fix: main face image not clickable in Focus mode
+- [x] Photo navigation: keyboard arrows, prev/next buttons, lightbox
+- [x] Match mode redesign: larger faces, confidence bar, clickable, logging
+- [x] Face tagging: Instagram-style tag dropdown with autocomplete + merge
+- [x] Identity notes system (add/view notes with author tracking)
+- [x] Proposed matches system (propose/list/accept/reject)
+- [x] Collection stats cards and reassignment endpoint
+- [x] Clustering dry-run report (35 matches, Betty Capeluto collection)

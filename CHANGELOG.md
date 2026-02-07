@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.9.0] - 2026-02-07
+
+### Added
+- **Photo Navigation**: Keyboard arrow keys (Left/Right) and prev/next buttons for browsing photos in lightbox; Escape to close
+- **Match Mode Redesign**: Larger face display, confidence percentage bar, clickable faces to view source photo, decision logging to JSONL
+- **Face Tagging**: Instagram-style tag dropdown on face overlays with autocomplete search and one-click merge
+- **Identity Notes**: Add/view notes on identities with author tracking and timestamps
+- **Proposed Matches**: Propose, list, accept/reject match suggestions between identities without immediate merge
+- **Collection Stats Cards**: Per-collection photo/face/identified counts displayed above photo grid, clickable to filter
+- **Collection Reassignment**: Admin endpoint to change a photo's collection (`POST /api/photo/{id}/collection`)
+- **Clustering Report**: Dry-run clustering report for Betty Capeluto collection (35 high-confidence matches found)
+
+### Fixed
+- **Multi-merge form bug**: HTMX ignored `formaction` on buttons; moved `hx_post` to individual buttons with `hx_include`
+- **Checkbox toggle bug**: `toggle @checked` modified HTML attribute, not JS `.checked` property; switched to property assignment
+- **Carousel "+N More" count static**: `get_next_focus_card()` now returns both card and carousel in `#focus-container`
+- **Main face image not clickable**: Wrapped main face in Focus mode with photo modal trigger
+- **Registry shallow-copy bug**: `add_note()` and `resolve_proposed_match()` modified copies from `get_identity()` instead of originals
+
 ## [v0.8.0] - 2026-02-06
 
 ### Added

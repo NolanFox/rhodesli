@@ -179,3 +179,25 @@
 - **Observation**: Some undocumented behaviors (temporal prior penalty values, detection thresholds) exist in code but were never formally decided.
 - **Rule**: Use TODO markers for undocumented code behavior and "Known Unknowns" for things not yet discussed (cluster size limits). Formalize only when modifying.
 - **Prevention**: `docs/ml/ALGORITHMIC_DECISIONS.md` has a "TODO" section for decisions that need code review before formalizing.
+
+## Session 2026-02-07: Overnight Automation Session
+
+### Lesson 34: HTMX ignores formaction — use hx_post on each button
+- **Mistake**: Multi-merge form used `hx_post` on `<form>` and `formaction` on buttons. HTMX always used the form's `hx_post`, ignoring `formaction`.
+- **Rule**: When a form has multiple submit buttons with different URLs, put `hx_post` on each button with `hx_include="closest form"`.
+- **Prevention**: Never use HTML `formaction` attribute with HTMX forms.
+
+### Lesson 35: toggle @checked modifies HTML attribute, not JS property
+- **Mistake**: Hyperscript `toggle @checked on <input/>` toggles the HTML attribute, but `FormData` reads the JS `.checked` property. Checkboxes appeared checked but weren't included in form data.
+- **Rule**: For checkbox state changes, use property assignment: `set el.checked to my.checked`
+- **Prevention**: When controlling checkboxes via Hyperscript, always use property syntax, not attribute syntax.
+
+### Lesson 36: get_identity() returns a shallow copy — mutate _identities directly
+- **Mistake**: `add_note()` and `resolve_proposed_match()` called `get_identity()` which returns `.copy()`. Mutations to the returned dict didn't persist.
+- **Rule**: When adding methods to IdentityRegistry that mutate identity data, access `self._identities[id]` directly, not through `get_identity()`.
+- **Prevention**: Before adding any mutation method to the registry, check whether `get_identity()` returns a copy.
+
+### Lesson 37: Test data must match the actual schema exactly
+- **Mistake**: Test fixtures for IdentityRegistry omitted `"history": []` and used `IdentityRegistry(path)` instead of `IdentityRegistry.load(path)`.
+- **Rule**: When creating test fixtures for data classes, mirror the exact schema including all required fields. Use the same load path the app uses.
+- **Prevention**: Read the `load()` classmethod before writing test fixtures.
