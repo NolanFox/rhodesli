@@ -7330,6 +7330,39 @@ def get(sess=None):
 # =============================================================================
 
 
+def _log_match_decision(identity_a: str, identity_b: str, decision: str,
+                        confidence: int, sess=None):
+    """
+    Log a match decision for audit trail and future ML training.
+
+    Appends to data/match_decisions.jsonl (one JSON object per line).
+    """
+    import json as _json
+    from datetime import datetime, timezone
+
+    user_email = ""
+    if sess:
+        user = get_current_user(sess)
+        if user:
+            user_email = user.email
+
+    entry = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "identity_a": identity_a,
+        "identity_b": identity_b,
+        "decision": decision,
+        "confidence_pct": confidence,
+        "user": user_email,
+    }
+
+    log_path = Path(DATA_DIR) / "match_decisions.jsonl"
+    try:
+        with open(log_path, "a") as f:
+            f.write(_json.dumps(entry) + "\n")
+    except Exception as e:
+        print(f"[match] Failed to log decision: {e}")
+
+
 def _get_best_match_pair():
     """
     Find the best pair of identities to show in match mode.
@@ -7381,8 +7414,8 @@ def get():
     """
     Get the next pair of faces to compare in Match mode.
 
-    Returns an HTMX partial with two face crops side by side
-    and Same Person / Different People buttons.
+    Returns an HTMX partial with two large face crops side by side,
+    confidence bar, clickable photos, and action buttons.
     """
     pair = _get_best_match_pair()
 
@@ -7401,94 +7434,124 @@ def get():
 
     crop_files = get_crop_files()
 
-    # Get first face crop for each identity
-    def _get_face_url(identity_data):
+    # Get face data for both identities
+    def _get_face_info(identity_data):
         face_ids = identity_data.get("anchor_ids", []) + identity_data.get("candidate_ids", [])
         if not face_ids:
-            return None, None
+            return None, None, None
         first = face_ids[0]
         fid = first if isinstance(first, str) else first.get("face_id", "")
-        return fid, resolve_face_image_url(fid, crop_files)
+        crop_url = resolve_face_image_url(fid, crop_files)
+        photo_id = get_photo_id_for_face(fid)
+        return fid, crop_url, photo_id
 
-    face_id_a, crop_url_a = _get_face_url(identity_a)
-    # For neighbor, we need to load the full identity
+    face_id_a, crop_url_a, photo_id_a = _get_face_info(identity_a)
     try:
         registry = load_registry()
         identity_b_full = registry.get_identity(identity_id_b)
-        face_id_b, crop_url_b = _get_face_url(identity_b_full)
+        face_id_b, crop_url_b, photo_id_b = _get_face_info(identity_b_full)
     except KeyError:
-        face_id_b, crop_url_b = None, None
+        face_id_b, crop_url_b, photo_id_b = None, None, None
 
     name_a = ensure_utf8_display(identity_a.get("name")) or f"Person {identity_id_a[:8]}..."
     name_b = ensure_utf8_display(neighbor_b.get("name")) or f"Person {identity_id_b[:8]}..."
+    faces_a = len(identity_a.get("anchor_ids", []) + identity_a.get("candidate_ids", []))
+    faces_b = neighbor_b.get("face_count", 0)
 
-    # Similarity indicator
-    if distance < MATCH_THRESHOLD_HIGH:
-        sim_cls = "text-emerald-400"
-        sim_label = "High similarity"
-    elif distance < MATCH_THRESHOLD_MEDIUM:
-        sim_cls = "text-amber-400"
-        sim_label = "Medium similarity"
+    # Confidence calculation (inverse distance, clamped 0-100)
+    # Distance 0.0 = 100% confidence, distance 2.0 = 0%
+    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+
+    # Color based on confidence
+    if confidence_pct >= 70:
+        bar_color = "bg-emerald-500"
+        conf_label = "High"
+        conf_text_cls = "text-emerald-400"
+    elif confidence_pct >= 40:
+        bar_color = "bg-amber-500"
+        conf_label = "Medium"
+        conf_text_cls = "text-amber-400"
     else:
-        sim_cls = "text-slate-400"
-        sim_label = "Low similarity"
+        bar_color = "bg-red-500"
+        conf_label = "Low"
+        conf_text_cls = "text-red-400"
+
+    # Build clickable face card
+    def _face_card(name, crop_url, face_id, photo_id, face_count):
+        img_el = Img(
+            src=crop_url or "", alt=name,
+            cls="w-full h-full object-cover"
+        ) if crop_url else Span("?", cls="text-6xl text-slate-500")
+
+        # Make clickable to view source photo
+        if photo_id:
+            face_el = Button(
+                Div(
+                    img_el,
+                    cls="w-full aspect-square rounded-xl overflow-hidden bg-slate-700 flex items-center justify-center"
+                ),
+                cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-xl transition-all w-full",
+                hx_get=f"/photo/{photo_id}/partial?face={face_id}" if face_id else f"/photo/{photo_id}/partial",
+                hx_target="#photo-modal-content",
+                **{"_": "on click remove .hidden from #photo-modal"},
+                type="button",
+                title="Click to view source photo",
+            )
+        else:
+            face_el = Div(
+                img_el,
+                cls="w-full aspect-square rounded-xl overflow-hidden bg-slate-700 flex items-center justify-center"
+            )
+
+        return Div(
+            face_el,
+            P(name, cls="text-sm font-medium text-slate-200 mt-3 text-center truncate"),
+            P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-500 text-center"),
+            P("Click to view photo", cls="text-xs text-indigo-400 text-center mt-1") if photo_id else None,
+            cls="flex-1 max-w-[280px]"
+        )
 
     return Div(
-        # Similarity indicator
+        # Confidence bar
         Div(
-            Span(sim_label, cls=f"text-xs font-medium {sim_cls}"),
-            Span(f"(dist: {distance:.2f})", cls="text-xs font-data text-slate-500 ml-2"),
-            cls="text-center mb-4"
-        ),
-        # Side by side faces
-        Div(
-            # Face A
             Div(
-                Div(
-                    Img(src=crop_url_a or "", alt=name_a,
-                        cls="w-full h-full object-cover") if crop_url_a else
-                    Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center mx-auto"
-                ),
-                P(name_a, cls="text-sm text-slate-300 mt-2 text-center truncate"),
-                P(f"{len(identity_a.get('anchor_ids', []) + identity_a.get('candidate_ids', []))} faces",
-                  cls="text-xs text-slate-500 text-center"),
-                cls="flex-1"
+                Span(f"Match Confidence: {confidence_pct}%", cls=f"text-sm font-medium {conf_text_cls}"),
+                Span(f"({conf_label})", cls=f"text-xs {conf_text_cls} ml-1"),
+                Span(f"dist: {distance:.3f}", cls="text-xs font-data text-slate-500 ml-3"),
+                cls="flex items-center justify-center mb-2"
             ),
+            # Progress bar
+            Div(
+                Div(cls=f"{bar_color} h-full rounded-full transition-all", style=f"width: {confidence_pct}%"),
+                cls="w-full max-w-md mx-auto h-2 bg-slate-700 rounded-full overflow-hidden"
+            ),
+            cls="mb-6"
+        ),
+        # Side by side faces — large display
+        Div(
+            _face_card(name_a, crop_url_a, face_id_a, photo_id_a, faces_a),
             # VS divider
             Div(
-                Span("vs", cls="text-slate-500 text-lg font-bold"),
-                cls="flex items-center justify-center px-4"
+                Span("vs", cls="text-slate-500 text-xl font-bold"),
+                cls="flex items-center justify-center px-6 pt-8"
             ),
-            # Face B
-            Div(
-                Div(
-                    Img(src=crop_url_b or "", alt=name_b,
-                        cls="w-full h-full object-cover") if crop_url_b else
-                    Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-40 h-40 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center mx-auto"
-                ),
-                P(name_b, cls="text-sm text-slate-300 mt-2 text-center truncate"),
-                P(f"{neighbor_b.get('face_count', 0)} faces",
-                  cls="text-xs text-slate-500 text-center"),
-                cls="flex-1"
-            ),
-            cls="flex items-start justify-center gap-2 match-pair"
+            _face_card(name_b, crop_url_b, face_id_b, photo_id_b, faces_b),
+            cls="flex items-start justify-center gap-2"
         ),
         # Action buttons
         Div(
             Button(
                 "Same Person",
-                cls="px-6 py-3 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors",
-                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same",
+                cls="px-8 py-3 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors",
+                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
             ),
             Button(
                 "Different People",
-                cls="px-6 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors",
-                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different",
+                cls="px-8 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors",
+                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different&confidence={confidence_pct}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
@@ -7501,25 +7564,29 @@ def get():
                 hx_swap="innerHTML",
                 type="button",
             ),
-            cls="flex items-center justify-center gap-4 mt-6 pt-4 border-t border-slate-700"
+            cls="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-slate-700"
         ),
         cls="match-pair"
     )
 
 
 @rt("/api/match/decide")
-def post(identity_a: str, identity_b: str, decision: str, sess=None):
+def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, sess=None):
     """
-    Record a match decision and return the next pair.
+    Record a match decision, log it, and return the next pair.
 
     Args:
         identity_a: First identity ID
         identity_b: Second identity ID
         decision: "same" (merge) or "different" (reject pair)
+        confidence: Match confidence percentage at time of decision
     """
     denied = _check_admin(sess)
     if denied:
         return denied
+
+    # Log the decision
+    _log_match_decision(identity_a, identity_b, decision, confidence, sess)
 
     if decision == "same":
         # Merge identity_b into identity_a
@@ -7534,7 +7601,6 @@ def post(identity_a: str, identity_b: str, decision: str, sess=None):
             )
             if result["success"]:
                 save_registry(registry)
-                # OOB toast
                 oob_toast = Div(
                     toast(f"Merged! {result['faces_merged']} face(s) combined.", "success"),
                     hx_swap_oob="beforeend:#toast-container",
@@ -7588,8 +7654,6 @@ def post(identity_a: str, identity_b: str, decision: str, sess=None):
         )
         return (next_content, oob_toast, counter_script)
 
-    # Return next pair by redirecting to the GET endpoint
-    # (reuse the rendering logic)
     next_pair_html = Div(
         P("Loading next pair...", cls="text-slate-400 text-center py-4"),
         hx_get="/api/match/next-pair",
