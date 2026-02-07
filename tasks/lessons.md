@@ -140,3 +140,15 @@
 - **Mistake**: `_build_caches()` used SHA256(filename)[:16] as photo IDs but tried to look up sources from photo_index.json which used inbox_* IDs. 12 of 13 Betty Capeluto photos silently got empty source strings.
 - **Rule**: When cross-referencing data between systems with different ID schemes, always include a fallback lookup by a shared key (e.g., filename).
 - **Prevention**: Add a test that verifies every photo has a non-empty source after cache building.
+
+## Session 2026-02-06: ML Decision Capture
+
+### Lesson 27: Algorithmic decisions need a structured decision log
+- **Mistake**: Proposed centroid averaging when multi-anchor was the correct approach. No record existed of past algorithmic decisions or why alternatives were rejected.
+- **Rule**: All ML/algorithmic decisions must be recorded in `docs/ml/ALGORITHMIC_DECISIONS.md` with AD-XXX format: context, decision, rejected alternative, why rejected, affected files.
+- **Prevention**: Path-scoped rules (`.claude/rules/ml-pipeline.md`) auto-load this requirement when touching ML files.
+
+### Lesson 28: Use path-scoped rules for domain-specific context
+- **Observation**: ML rules should load when touching `core/neighbors.py`, but not when working on auth or landing page. Path-scoped rules in `.claude/rules/` achieve this with zero token cost for unrelated work.
+- **Rule**: When a set of rules only applies to specific files/directories, use `.claude/rules/` with YAML frontmatter `paths:` instead of adding to CLAUDE.md.
+- **Prevention**: Before adding rules to CLAUDE.md, ask: "Does this apply to ALL files, or just a subset?" If subset, use path-scoped rules.

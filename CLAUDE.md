@@ -29,6 +29,8 @@
 7. Admin-first: new data-modifying routes default to _check_admin
 8. No doc file should exceed 300 lines — split if growing
 9. Update CHANGELOG.md before ending any session with user-visible changes
+10. ML changes require reading docs/ml/ALGORITHMIC_DECISIONS.md first (enforced by path-scoped rules)
+11. New algorithmic decisions must be documented in AD-XXX format before code is committed
 
 @docs/CODING_RULES.md for detailed coding, testing, data safety rules
 
@@ -68,6 +70,8 @@ When compacting, always preserve:
 | `docs/SMTP_SETUP.md` | Custom email sender setup (Resend) |
 | `docs/design/MERGE_DESIGN.md` | Non-destructive merge system design |
 | `docs/design/FUTURE_COMMUNITY.md` | Planned community features (not yet built) |
+| `docs/ml/ALGORITHMIC_DECISIONS.md` | ML algorithmic decision log (AD-001+) |
+| `docs/ml/MODEL_INVENTORY.md` | Current ML models and upgrade path |
 | `docs/DECISIONS.md` | Finalized architectural decisions |
 | `tasks/lessons.md` | Persistent learnings across sessions |
 | `tasks/todo.md` | Current task tracking |
