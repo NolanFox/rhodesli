@@ -4306,8 +4306,55 @@ def photo_view_content(
             else:
                 overlay_classes += " border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
 
-            # Navigation script: close modal, try scroll if on page, else navigate to section
-            nav_script = f"on click add .hidden to #photo-modal then set target to #identity-{identity_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+            # Tag dropdown for this face (hidden by default)
+            tag_dropdown_id = f"tag-dropdown-{face_id.replace(':', '-').replace(' ', '_')}"
+            tag_results_id = f"tag-results-{face_id.replace(':', '-').replace(' ', '_')}"
+
+            # Click handler: toggle tag dropdown instead of navigating away
+            tag_script = (
+                f"on click halt the event's bubbling "
+                f"then toggle .hidden on #{tag_dropdown_id} "
+                f"then set el to first <input/> in #{tag_dropdown_id} "
+                f"then if el call el.focus()"
+            )
+
+            tag_dropdown = Div(
+                # Search input
+                Input(
+                    type="text",
+                    placeholder="Type name to tag...",
+                    cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                        "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
+                    hx_get=f"/api/face/tag-search?face_id={face_id}",
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target=f"#{tag_results_id}",
+                    hx_include="this",
+                    name="q",
+                    autocomplete="off",
+                ),
+                # Results container
+                Div(id=tag_results_id, cls="mt-1 max-h-48 overflow-y-auto"),
+                # Bottom actions
+                Div(
+                    Button(
+                        "Go to Face Card",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300",
+                        **{"_": f"on click add .hidden to #photo-modal then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"} if identity_id else {},
+                        type="button",
+                    ) if identity_id else None,
+                    Button(
+                        "Close",
+                        cls="text-xs text-slate-400 hover:text-slate-300 ml-auto",
+                        **{"_": f"on click add .hidden to #{tag_dropdown_id}"},
+                        type="button",
+                    ),
+                    cls="flex items-center justify-between mt-2 pt-1 border-t border-slate-700"
+                ),
+                id=tag_dropdown_id,
+                cls="hidden absolute top-full left-0 mt-1 w-64 bg-slate-800 border border-slate-600 "
+                    "rounded-lg shadow-xl p-2 z-20",
+                **{"_": "on click halt the event's bubbling"},  # Prevent clicks inside from closing
+            )
 
             overlay = Div(
                 # Tooltip on hover
@@ -4315,13 +4362,13 @@ def photo_view_content(
                     display_name,
                     cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
                 ),
+                tag_dropdown,
                 cls=f"{overlay_classes} group",
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
                 title=display_name,
                 data_face_id=face_id,
                 data_identity_id=identity_id or "",
-                # Click closes modal and navigates to identity
-                **{"_": nav_script} if identity_id else {},
+                **{"_": tag_script},
             )
             face_overlays.append(overlay)
 
@@ -4674,6 +4721,143 @@ def get(q: str = ""):
             )
         )
     return Div(*items)
+
+
+@rt("/api/face/tag-search")
+def get(face_id: str, q: str = ""):
+    """
+    Search for identities to tag a face with (Instagram-style tagging).
+
+    Returns compact autocomplete results with merge buttons.
+    Each result merges the face's current identity into the selected one.
+    """
+    safe_face_id = face_id.replace(":", "-").replace(" ", "_")
+    results_id = f"tag-results-{safe_face_id}"
+
+    if len(q.strip()) < 2:
+        return Div(id=results_id)
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Div(
+            P("Search unavailable.", cls="text-slate-400 italic text-xs"),
+            id=results_id
+        )
+
+    # Find the identity this face belongs to (to exclude from results)
+    source_identity = get_identity_for_face(registry, face_id)
+    exclude_id = source_identity["identity_id"] if source_identity else None
+
+    # Search all identities (confirmed get priority in search_identities)
+    results = registry.search_identities(q, exclude_id=exclude_id)
+    if not results:
+        return Div(
+            P("No matches found.", cls="text-slate-400 italic text-xs p-1"),
+            id=results_id
+        )
+
+    crop_files = get_crop_files()
+    items = []
+    for r in results[:8]:
+        face_url = resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
+        thumb = Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0") if face_url else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
+        name = ensure_utf8_display(r["name"]) or "Unnamed"
+
+        items.append(
+            Button(
+                thumb,
+                Div(
+                    Span(name, cls="text-sm text-slate-200 truncate"),
+                    Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
+                    cls="flex flex-col min-w-0 text-left"
+                ),
+                cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
+                hx_post=f"/api/face/tag?face_id={face_id}&target_id={r['identity_id']}",
+                hx_target="#photo-modal-content",
+                hx_swap="innerHTML",
+                type="button",
+            )
+        )
+
+    return Div(*items, id=results_id)
+
+
+@rt("/api/face/tag")
+def post(face_id: str, target_id: str, sess=None):
+    """
+    Tag a face with an identity by merging the face's current identity into target.
+
+    This is the one-click merge for Instagram-style face tagging.
+    Returns the updated photo view with a success toast.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        registry = load_registry()
+        photo_registry = load_photo_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Find the source identity (the one the face currently belongs to)
+    source_identity = get_identity_for_face(registry, face_id)
+    if not source_identity:
+        return Response(
+            to_xml(toast("Face not found in any identity.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    source_id = source_identity["identity_id"]
+    if source_id == target_id:
+        return Response(
+            to_xml(toast("Face already belongs to this identity.", "info")),
+            status_code=200,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Get target name for toast
+    try:
+        target = registry.get_identity(target_id)
+        target_name = ensure_utf8_display(target.get("name")) or f"Identity {target_id[:8]}..."
+    except KeyError:
+        target_name = f"Identity {target_id[:8]}..."
+
+    # Merge
+    result = registry.merge_identities(
+        source_id=source_id,
+        target_id=target_id,
+        user_source="face_tag",
+        photo_registry=photo_registry,
+    )
+
+    if result["success"]:
+        save_registry(registry)
+
+        # Find the photo this face is in to re-render the photo view
+        photo_id = get_photo_id_for_face(face_id)
+        if photo_id:
+            # Re-render the photo view to reflect the merge
+            photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True)
+            oob_toast = Div(
+                toast(f"Tagged as {target_name}!", "success"),
+                hx_swap_oob="beforeend:#toast-container",
+            )
+            return (*photo_content, oob_toast)
+        else:
+            return toast(f"Tagged as {target_name}!", "success")
+    else:
+        return Response(
+            to_xml(toast(f"Cannot tag: {result['reason']}", "warning")),
+            status_code=200,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
 
 
 @rt("/api/identity/{identity_id}/rejected")
