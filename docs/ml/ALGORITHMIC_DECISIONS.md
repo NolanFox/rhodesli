@@ -27,7 +27,7 @@ This document records all data science and algorithmic decisions for the Rhodesl
 - **Context**: How to measure similarity between face embeddings?
 - **Decision**: Mutual Likelihood Score (MLS) from Probabilistic Face Embeddings. Each embedding has both a mean vector (mu, 512-dim) and variance (sigma_sq). MLS accounts for uncertainty in the embedding.
 - **Rationale**: MLS is superior to cosine distance for PFE embeddings because it incorporates confidence (sigma). Low-quality faces get wider sigma, naturally down-weighting uncertain matches.
-- **Scalar sigma fix**: When sigma_sq is uniform across dimensions, MLS uses a single-term formula to avoid the log penalty from drowning the discriminative signal. See `docs/adr_006_scalar_sigma_fix.md`.
+- **Scalar sigma fix**: When sigma_sq is uniform across dimensions, MLS uses a single-term formula to avoid the log penalty from drowning the discriminative signal. See `docs/adr/adr_006_scalar_sigma_fix.md`.
 - **Affects**: `core/pfe.py` (MLS computation), `core/neighbors.py` (similarity search), `core/clustering.py` (cluster formation).
 
 ### AD-004: Rejection Memory
@@ -42,7 +42,7 @@ This document records all data science and algorithmic decisions for the Rhodesl
 - **Context**: How should initial identity clusters be formed from detected faces?
 - **Decision**: Agglomerative clustering with complete linkage using MLS distance and temporal priors.
 - **Why complete linkage**: Prevents "chaining" — where two unrelated faces get merged through a chain of intermediate matches. Complete linkage requires ALL pairs in a cluster to be similar.
-- **Temporal priors**: Era-based penalties adjust MLS scores based on photo metadata. See `docs/adr_003_identity_clustering.md`.
+- **Temporal priors**: Era-based penalties adjust MLS scores based on photo metadata. See `docs/adr/adr_003_identity_clustering.md`.
 - **Affects**: `core/clustering.py`, `core/temporal.py`.
 
 ### AD-006: Provenance Hierarchy — Human Overrides Model
@@ -50,6 +50,74 @@ This document records all data science and algorithmic decisions for the Rhodesl
 - **Context**: When a human confirms or rejects a face match, how does this interact with ML-proposed matches?
 - **Decision**: `provenance="human"` always overrides `provenance="model"`. Human decisions are final and cannot be reversed by re-running the ML pipeline.
 - **Affects**: Identity state machine (INBOX → PROPOSED → CONFIRMED), merge/detach operations in `app/main.py`.
+
+### AD-007: Local-Only ML Inference
+- **Date**: 2026-02-06
+- **Context**: Where does face detection and embedding generation run?
+- **Decision**: ALL ML inference runs locally on the developer's machine. Production (Railway) only serves pre-computed results (JSON, NPY, crops).
+- **Rule**: NEVER add heavy ML libraries (torch, tensorflow, dlib, insightface, onnxruntime) to production `requirements.txt`. These would bloat the Docker image and aren't needed at runtime.
+- **Affects**: `requirements.txt`, Dockerfile, any new ML scripts.
+
+### AD-008: Deterministic Crop Naming Convention
+- **Date**: 2026-02-06
+- **Context**: How are face crop filenames generated for R2 storage?
+- **Decision**: Two deterministic patterns coexist:
+  - **Legacy crops**: `{sanitized_stem}_{quality}_{face_index}.jpg` where `sanitized_stem` is the photo filename lowercased with non-alphanumeric chars replaced by underscores, `quality` is the float detection quality score (e.g., `22.17`), and `face_index` is the 0-based face number within the photo.
+  - **Inbox crops**: `{face_id}.jpg` where face_id is the inbox-format ID (e.g., `inbox_739db7ec49ac`).
+- **Why**: R2 URLs are constructed deterministically from these patterns. Changing the naming convention breaks ALL existing crop URLs across the entire archive.
+- **Rule**: This naming convention is a STRICT CONTRACT. Any change requires re-uploading all crops to R2.
+- **Affects**: `scripts/regenerate_crops.py`, `core/crop_faces.py`, `core/storage.py` (URL generation), R2 upload scripts, `app/main.py` (`resolve_face_image_url`).
+- **Cross-reference**: See `docs/architecture/PHOTO_STORAGE.md` for URL generation details.
+
+### AD-010: No Hard Quality Filter
+- **Date**: 2026-02-06
+- **Context**: Should blurry or low-res crops be discarded to improve cluster purity?
+- **Decision**: NO. Retain ALL detected faces.
+- **Mechanism**: We rely on PFE (Probabilistic Face Embeddings). Low-quality faces generate high `sigma` (uncertainty) values, which mathematically prevents them from dominating a cluster or creating false positives via MLS scoring.
+- **Why**: Heritage photos are often scarce and low-quality. A blurry match of a great-grandfather is better than zero matches. PFE handles quality weighting automatically.
+- **Affects**: Face detection pipeline, clustering logic.
+
+### AD-012: Golden Set Methodology
+- **Date**: 2026-02-06
+- **Context**: How do we establish "Ground Truth" for ML regression testing?
+- **Decision**: Dynamic User-Verified Truth. The Golden Set is rebuilt automatically from the live database. Any Identity with >=3 "Confirmed" faces (provenance="human") is treated as a ground-truth cluster.
+- **Why**: Allows the test suite to grow organically as the admin organizes the library, without maintaining a separate lab dataset. Ground truth comes from human verification, not external labels.
+- **Affects**: `scripts/build_golden_set.py`, `scripts/evaluate_golden_set.py`, `data/golden_set.json`.
+
+---
+
+## Detailed ADR Documents
+
+These appendix documents contain mathematical derivations and extended rationale:
+
+| ADR | Title | Referenced By |
+|-----|-------|---------------|
+| `docs/adr/adr_001_mls_math.md` | MLS mathematical derivation | AD-003 |
+| `docs/adr/adr_002_temporal_priors.md` | Temporal prior design | AD-005 |
+| `docs/adr/adr_003_identity_clustering.md` | Identity clustering algorithm | AD-005 |
+| `docs/adr/adr_004_identity_registry.md` | Identity registry design | AD-004 |
+| `docs/adr/adr_006_scalar_sigma_fix.md` | Scalar sigma MLS fix | AD-003 |
+| `docs/adr/adr_007_calibration_adjustment_run2.md` | Calibration adjustment run 2 | AD-003 |
+
+---
+
+## Undocumented Decisions (Require Code Review)
+
+### TODO: AD-009 — Temporal Prior Penalty Values
+- **Status**: Eras (Child, Adult, Elder) are implemented but exact penalty values were never formally decided.
+- **Action**: Review `core/temporal.py` to extract actual penalty multipliers and document them.
+- **Cross-reference**: `docs/adr/adr_002_temporal_priors.md` may contain the values.
+
+### TODO: AD-011 — Face Detection Parameters
+- **Status**: InsightFace `buffalo_l` model selected, but `det_thresh` and `nms_thresh` are likely library defaults (~0.5 confidence).
+- **Action**: Check face detection code. If using defaults, document as "InsightFace defaults" and note the actual values.
+- **Cross-reference**: `docs/ml/MODEL_INVENTORY.md` for model details.
+
+### Known Unknown: Cluster Size Limits
+- **Status**: No discussion or implementation of maximum cluster size or splitting logic.
+- **Action**: Not urgent. May become relevant when identities accumulate 50+ faces. Revisit if clustering produces suspiciously large groups.
+
+---
 
 ## Adding New Decisions
 

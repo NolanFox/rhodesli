@@ -1,37 +1,56 @@
-# Task: Add ML Algorithmic Decision Capture System
+# Rhodesli Project Backlog
 
-**Session**: 2026-02-06 (session 8)
-**Status**: IN PROGRESS
+Last updated: 2026-02-07
 
-## Phase 1: Create ML Docs
-- [x] Create `docs/ml/ALGORITHMIC_DECISIONS.md` with AD-001 through AD-006
-- [x] Create `docs/ml/MODEL_INVENTORY.md` with accurate model info
+## Active Bugs
+- [ ] AD-001 VIOLATION: `scripts/cluster_new_faces.py` uses centroid averaging (line 124). Must fix with golden set testing before and after.
 
-## Phase 2: Path-Scoped Rules
-- [x] Create `.claude/rules/ml-pipeline.md` with paths for all ML files
-- [x] Create `.claude/rules/data-files.md` with paths for data files
-- [x] Verified `.claude/rules/` format is correct (YAML frontmatter + paths)
+## Immediate (This Weekend)
+- [ ] End-to-end test pending upload flow (upload via web -> process_pending.py -> verify)
+- [ ] Run golden set evaluation locally: `scripts/evaluate_golden_set.py`
+- [ ] Run golden set builder locally: `scripts/build_golden_set.py`
+- [ ] Test new UX features (merge undo, sidebar collapse, face carousel, comparison view, Match mode)
+- [ ] Share with 2-3 family members for initial feedback
 
-## Phase 3: Update Project Files
-- [x] Add rules 10-11 to CLAUDE.md
-- [x] Add ML docs to CLAUDE.md Key Docs table
-- [x] Add lessons 27-28 to tasks/lessons.md
+## Near-Term (Next 1-2 Weeks)
+- [ ] ML calibration: tune distance thresholds using golden set precision/recall
+- [ ] Fix AD-001 violation in cluster_new_faces.py (multi-anchor, not centroid)
+- [ ] UX verification: Find Similar auto-scroll, bulk merge/not-same, no-reload HTMX actions, toast notifications
+- [ ] Rejection memory implementation (AD-004 — partially implemented)
+- [ ] Sync production->local script using admin export endpoints
+- [ ] Mobile polish pass (test on real phone)
+- [ ] Verify Resend email notifications fire on pending upload
 
-## Phase 4: Audit ML Code
-- [x] `core/neighbors.py` — CLEAN. Multi-anchor (best-linkage) confirmed. Docstring explicitly says "Avoid centroid poisoning". `sort_faces_by_outlier_score` uses mean but only for intra-identity outlier detection, not cross-identity matching.
-- [x] `core/clustering.py` — CLEAN. Pairwise MLS between all face pairs. Complete linkage. No centroid averaging.
-- [x] `core/fusion.py` — ACCEPTABLE. Uses Bayesian fusion (weighted by inverse variance), NOT naive centroid. Used for variance explosion checks and re-evaluation, not for primary matching.
-- [x] **VIOLATION FOUND**: `scripts/cluster_new_faces.py` — Uses centroid averaging (lines 124-141). `compute_centroid()` does `np.mean(np.vstack(embeddings), axis=0)` and matches new faces against these centroids. This is the exact pattern AD-001 rejects.
+## Medium-Term (Next Month)
+- [ ] Better face detection evaluation (compare current vs alternatives — golden set comparison)
+- [ ] Embedding model evaluation (compare alternatives — golden set comparison)
+- [ ] Postgres migration (identities + photo_index -> Supabase)
+- [ ] Contributor roles (see docs/design/FUTURE_COMMUNITY.md)
+- [ ] Annotation engine (captions, dates, locations, stories)
+- [ ] Upload moderation queue with file size limits and rate limiting
 
-## TODO: Fix AD-001 violation in scripts/cluster_new_faces.py
-- [ ] Replace `compute_centroid()` + `compute_distance_to_centroid()` with multi-anchor matching (min-distance to any anchor)
-- [ ] Requires golden set testing before and after — do NOT fix without running `scripts/evaluate_golden_set.py`
-- [ ] NOT fixing in this session — needs careful testing with ML dependencies
+## Long-Term (Quarter+)
+- [ ] Family tree integration (GEDCOM, relationships)
+- [ ] Auto-processing pipeline (ML on Railway, no local step)
+- [ ] Age-invariant face recognition research
+- [ ] Multi-tenant architecture (other communities)
+- [ ] CI/CD pipeline (automated tests, staging, deploy previews)
 
-## Phase 5: Commit & Push
-- [ ] Commit all changes
-- [ ] Push to main
-
-## Previous Session (2026-02-06, session 7)
-- Photo Bug Fix + Documentation Restructure: COMPLETE
-- 553 tests passing at end of session
+## Completed
+- [x] Phase A: Railway deployment with Docker + persistent volume
+- [x] Phase B: Supabase authentication (Google OAuth + email/password)
+- [x] Role-based permissions with public browsing, admin-only modifications
+- [x] Password recovery, OAuth social login, email templates
+- [x] Login modal for protected actions, styled confirmation dialog
+- [x] Google Sign-In branding, email inline styles
+- [x] Regression test suite + testing requirements
+- [x] Landing page, admin export, mobile CSS, docs overhaul
+- [x] UX overhaul: merge system, sidebar, face cards, inbox workflow
+- [x] Pending upload queue with admin moderation
+- [x] ML clustering pipeline: golden set, evaluation, face matching
+- [x] Photo storage consolidation to single raw_photos/ path
+- [x] R2 photo serving (uploaded photos + inbox photos)
+- [x] Photo source lookup fix for inbox-style photo IDs
+- [x] Doc restructure: split SYSTEM_DESIGN_WEB.md into focused docs
+- [x] ML algorithmic decision capture system with path-scoped rules
+- [x] Find Similar 500 error fix in production

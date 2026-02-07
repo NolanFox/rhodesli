@@ -73,5 +73,6 @@ When compacting, always preserve:
 | `docs/ml/ALGORITHMIC_DECISIONS.md` | ML algorithmic decision log (AD-001+) |
 | `docs/ml/MODEL_INVENTORY.md` | Current ML models and upgrade path |
 | `docs/DECISIONS.md` | Finalized architectural decisions |
+| `docs/ops/OPS_DECISIONS.md` | Deployment, Railway, R2 decisions |
 | `tasks/lessons.md` | Persistent learnings across sessions |
 | `tasks/todo.md` | Current task tracking |

@@ -152,3 +152,30 @@
 - **Observation**: ML rules should load when touching `core/neighbors.py`, but not when working on auth or landing page. Path-scoped rules in `.claude/rules/` achieve this with zero token cost for unrelated work.
 - **Rule**: When a set of rules only applies to specific files/directories, use `.claude/rules/` with YAML frontmatter `paths:` instead of adding to CLAUDE.md.
 - **Prevention**: Before adding rules to CLAUDE.md, ask: "Does this apply to ALL files, or just a subset?" If subset, use path-scoped rules.
+
+## Session 2026-02-07: Harness Buildout
+
+### Lesson 29: Maintain ONE authoritative backlog
+- **Mistake**: Session-scoped todos in `tasks/todo.md` contained only the current session's work, not the full project backlog. Previous sessions' items were lost.
+- **Rule**: `tasks/todo.md` is the SINGLE project backlog. Session-scoped checklists are ephemeral — reconcile them into the backlog after every session.
+- **Prevention**: At session end, move completed items to the "Completed" section and ensure all known open items are captured.
+
+### Lesson 30: Path-scoped rules can include future planning awareness
+- **Observation**: `.claude/rules/planning-awareness.md` triggers when touching `app/main.py` or `core/*.py`, reminding about upcoming Postgres migration and contributor roles.
+- **Rule**: Path-scoped rules aren't just for restrictions — they can include "this code will be affected by X planned change" so Claude considers upcoming work without reading full design docs.
+- **Prevention**: When adding a planned feature that will affect existing code, add a planning-awareness rule so the context loads automatically.
+
+### Lesson 31: Infrastructure decisions are as important as algorithmic ones
+- **Mistake**: The "0 Photos" bug from `.dockerignore` cost more debugging time than any ML issue. Ops decisions weren't documented.
+- **Rule**: Capture ops decisions (OD-XXX format in `docs/ops/OPS_DECISIONS.md`) with the same rigor as ML decisions (AD-XXX format).
+- **Prevention**: Before modifying Dockerfile, railway.toml, or deployment scripts, read `docs/ops/OPS_DECISIONS.md`.
+
+### Lesson 32: .gitignore and .dockerignore serve different purposes
+- **Mistake**: Assumed all ignore files behave the same way.
+- **Rule**: `data/` files belong in `.gitignore` (keep repo light) but NOT in `.dockerignore` (allow CLI deployment to include them).
+- **Prevention**: Rule is now enforced by `.claude/rules/deployment.md` path-scoped rule.
+
+### Lesson 33: Not every decision needs a formal AD entry
+- **Observation**: Some undocumented behaviors (temporal prior penalty values, detection thresholds) exist in code but were never formally decided.
+- **Rule**: Use TODO markers for undocumented code behavior and "Known Unknowns" for things not yet discussed (cluster size limits). Formalize only when modifying.
+- **Prevention**: `docs/ml/ALGORITHMIC_DECISIONS.md` has a "TODO" section for decisions that need code review before formalizing.
