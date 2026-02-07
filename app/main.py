@@ -1722,6 +1722,16 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     elif sort_by == "collection":
         photos = sorted(photos, key=lambda p: (p["source"] or "zzz", p["filename"]))
 
+    # Build per-collection stats
+    collection_stats = {}
+    for p in photos:
+        src = p["source"] or "Uncategorized"
+        if src not in collection_stats:
+            collection_stats[src] = {"photo_count": 0, "face_count": 0, "identified_count": 0}
+        collection_stats[src]["photo_count"] += 1
+        collection_stats[src]["face_count"] += p["face_count"]
+        collection_stats[src]["identified_count"] += p["identified_count"]
+
     # Build subtitle
     subtitle_parts = [f"{len(photos)} photos"]
     if sources:
@@ -1879,9 +1889,39 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         cls="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
     )
 
+    # Collection stats cards (shown when viewing all collections, not filtered)
+    collection_cards = None
+    if not filter_source and len(collection_stats) > 1:
+        stat_cards = []
+        for coll_name in sorted(collection_stats.keys()):
+            stats = collection_stats[coll_name]
+            stat_cards.append(
+                Div(
+                    Div(
+                        P(coll_name, cls="text-sm font-medium text-white truncate"),
+                        cls="mb-2"
+                    ),
+                    Div(
+                        Span(f"{stats['photo_count']} photos", cls="text-xs text-slate-400"),
+                        Span(" \u2022 ", cls="text-xs text-slate-600"),
+                        Span(f"{stats['face_count']} faces", cls="text-xs text-slate-400"),
+                        Span(" \u2022 ", cls="text-xs text-slate-600"),
+                        Span(f"{stats['identified_count']} identified", cls="text-xs text-emerald-400"),
+                    ),
+                    cls="bg-slate-800/50 border border-slate-700 rounded-lg p-3 cursor-pointer "
+                        "hover:border-indigo-500/50 transition-colors",
+                    onclick=f"window.location.href='/?section=photos&filter_source={quote(coll_name)}&sort_by={sort_by}'"
+                )
+            )
+        collection_cards = Div(
+            *stat_cards,
+            cls="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"
+        )
+
     return Div(
         section_header("Photos", subtitle),
         filter_bar,
+        collection_cards,
         grid if photo_cards else Div(
             "No photos found." + (" Clear filter to see all." if filter_source else ""),
             cls="text-center py-12 text-slate-400"
@@ -4234,6 +4274,35 @@ def get(photo_id: str):
         "image_height": height,
         "faces": faces,
     })
+
+
+@rt("/api/photo/{photo_id}/collection")
+def post(photo_id: str, sess, source: str = ""):
+    """
+    Update a photo's collection/source label.
+
+    Admin-only. Updates photo_index.json and invalidates caches.
+    """
+    admin_err = _check_admin(sess)
+    if admin_err:
+        return admin_err
+    photo_reg = load_photo_registry()
+    # Verify photo exists
+    photo_path = photo_reg.get_photo_path(photo_id)
+    if not photo_path:
+        return Response("Photo not found", status_code=404)
+    photo_reg.set_source(photo_id, source.strip())
+    photo_index_path = data_path / "photo_index.json"
+    photo_reg.save(photo_index_path)
+    # Invalidate caches so the new source shows up
+    global _photo_cache, _photo_registry_cache
+    _photo_cache = None
+    _photo_registry_cache = None
+    return Div(
+        Span(f"Collection updated to: {source.strip() or '(none)'}",
+             cls="text-sm text-emerald-400"),
+        id=f"collection-status-{photo_id}",
+    )
 
 
 def photo_view_content(
