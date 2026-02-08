@@ -1,3 +1,11 @@
+## Project Roadmap
+@ROADMAP.md
+
+Always check ROADMAP.md at the start of every session to understand current priorities.
+When completing tasks, update ROADMAP.md: change `[ ]` to `[x]`, add date, move to "Recently Completed".
+When starting tasks, change `[ ]` to `[-]`, add start date.
+For detailed specs on any item, see `docs/BACKLOG.md`.
+
 # Rhodesli — Jewish Heritage Photo Archive
 
 ## Quick Reference
