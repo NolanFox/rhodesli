@@ -157,6 +157,79 @@ class TestPhotoModalEscape:
         assert 'tabindex="-1"' in html
 
 
+class TestArrowButtonsUsePhotoNavTo:
+    """Regression: arrow buttons must call photoNavTo() for continuous browsing."""
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    def test_prev_button_calls_photoNavTo(self, mock_reg, mock_dim, mock_meta):
+        """Prev button uses photoNavTo for client-side navigation chain."""
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [],
+            "source": "Test",
+        }
+        mock_reg.return_value = MagicMock()
+
+        result = photo_view_content(
+            "p1", is_partial=True,
+            prev_id="p0", next_id="p2",
+            nav_idx=1, nav_total=5
+        )
+        html = to_xml(result)
+
+        assert "photoNavTo(0)" in html  # nav_idx - 1 = 0
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    def test_next_button_calls_photoNavTo(self, mock_reg, mock_dim, mock_meta):
+        """Next button uses photoNavTo for client-side navigation chain."""
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [],
+            "source": "Test",
+        }
+        mock_reg.return_value = MagicMock()
+
+        result = photo_view_content(
+            "p1", is_partial=True,
+            prev_id="p0", next_id="p2",
+            nav_idx=1, nav_total=5
+        )
+        html = to_xml(result)
+
+        assert "photoNavTo(2)" in html  # nav_idx + 1 = 2
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    def test_keyboard_script_delegates_to_photoNavTo(self, mock_reg, mock_dim, mock_meta):
+        """Keyboard handler delegates to photoNavTo when available."""
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [],
+        }
+        mock_reg.return_value = MagicMock()
+
+        result = photo_view_content(
+            "p1", is_partial=True,
+            prev_id="p0", next_id="p2",
+            nav_idx=1, nav_total=3
+        )
+        html = to_xml(result)
+
+        # Keyboard handler should check for photoNavTo before using direct URLs
+        assert "typeof photoNavTo" in html
+
+
 class TestPhotosGridNavScript:
     """Tests for the navigation script embedded in the photos grid."""
 

@@ -72,6 +72,51 @@ class TestCollectionStats:
         # When filtered, should show the filtered collection's photos
         assert "1 photos" in html
 
+    def test_filtered_subtitle_shows_collection_name(self):
+        """When filtered to a collection, subtitle shows 'Collection — N photos', not global stats."""
+        from app.main import render_photos_section, to_xml
+        import app.main as main_module
+
+        registry = MagicMock()
+
+        cache = {
+            "p1": {"filename": "img1.jpg", "source": "Betty Miami", "faces": [{"face_id": "f1"}]},
+            "p2": {"filename": "img2.jpg", "source": "Betty Miami", "faces": []},
+            "p3": {"filename": "img3.jpg", "source": "Vida NYC", "faces": []},
+        }
+
+        with patch.object(main_module, "_photo_cache", cache), \
+             patch.object(main_module, "_build_caches"), \
+             patch("app.main.get_identity_for_face", return_value=None):
+            html = to_xml(render_photos_section({}, registry, set(), filter_source="Betty Miami"))
+
+        # Should show scoped subtitle with collection name
+        assert "Betty Miami" in html
+        assert "2 photos" in html
+        # Should NOT show "2 collections" when filtered
+        assert "2 collections" not in html
+
+    def test_unfiltered_subtitle_shows_global_stats(self):
+        """When viewing all photos, subtitle shows 'N photos • M collections'."""
+        from app.main import render_photos_section, to_xml
+        import app.main as main_module
+
+        registry = MagicMock()
+        registry.list_identities.return_value = []
+
+        cache = {
+            "p1": {"filename": "img1.jpg", "source": "Coll A", "faces": []},
+            "p2": {"filename": "img2.jpg", "source": "Coll B", "faces": []},
+        }
+
+        with patch.object(main_module, "_photo_cache", cache), \
+             patch.object(main_module, "_build_caches"), \
+             patch("app.main.get_identity_for_face", return_value=None):
+            html = to_xml(render_photos_section({}, registry, set()))
+
+        assert "2 photos" in html
+        assert "2 collections" in html
+
 
 class TestCollectionFilter:
     """Tests for collection filter and sort in the photo grid."""

@@ -1732,11 +1732,14 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         collection_stats[src]["face_count"] += p["face_count"]
         collection_stats[src]["identified_count"] += p["identified_count"]
 
-    # Build subtitle
-    subtitle_parts = [f"{len(photos)} photos"]
-    if sources:
-        subtitle_parts.append(f"{len(sources)} collections")
-    subtitle = " \u2022 ".join(subtitle_parts)
+    # Build subtitle — scoped to current view
+    if filter_source:
+        subtitle = f"{filter_source} — {len(photos)} photos"
+    else:
+        subtitle_parts = [f"{len(photos)} photos"]
+        if len(sources) > 1:
+            subtitle_parts.append(f"{len(sources)} collections")
+        subtitle = " \u2022 ".join(subtitle_parts)
 
     # Build filter/sort options
     source_options = [Option("All Collections", value="", selected=not filter_source)]
@@ -4467,9 +4470,7 @@ def photo_view_content(
                 Span("<", cls="text-2xl"),
                 cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
                     "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
-                hx_get=f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}",
-                hx_target="#photo-modal-content",
-                hx_swap="innerHTML",
+                onclick=f"if(typeof photoNavTo==='function')photoNavTo({nav_idx - 1}); else htmx.ajax('GET','/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}&prev_id=&next_id=',{{target:'#photo-modal-content',swap:'innerHTML'}});",
                 type="button",
                 title="Previous photo",
                 id="photo-nav-prev",
@@ -4479,9 +4480,7 @@ def photo_view_content(
                 Span(">", cls="text-2xl"),
                 cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
                     "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
-                hx_get=f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}",
-                hx_target="#photo-modal-content",
-                hx_swap="innerHTML",
+                onclick=f"if(typeof photoNavTo==='function')photoNavTo({nav_idx + 1}); else htmx.ajax('GET','/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}&prev_id=&next_id=',{{target:'#photo-modal-content',swap:'innerHTML'}});",
                 type="button",
                 title="Next photo",
                 id="photo-nav-next",
@@ -4492,15 +4491,18 @@ def photo_view_content(
                 cls="text-slate-400 text-sm ml-auto"
             )
 
-        # Keyboard navigation script for prev/next in photo modal
+        # Keyboard navigation script — delegates to photoNavTo when available (Photos grid),
+        # falls back to direct URL navigation for other contexts
         prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}" if prev_id else ""
         next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}" if next_id else ""
         nav_keyboard_script = Script(f"""(function(){{
             function pmkh(e){{
-                if(e.key==='ArrowLeft'&&'{prev_url}'){{
-                    htmx.ajax('GET','{prev_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();
-                }}else if(e.key==='ArrowRight'&&'{next_url}'){{
-                    htmx.ajax('GET','{next_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();
+                if(e.key==='ArrowLeft'){{
+                    if(typeof photoNavTo==='function'&&window._photoNavIdx>0){{photoNavTo(window._photoNavIdx-1);e.preventDefault();}}
+                    else if('{prev_url}'){{htmx.ajax('GET','{prev_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();}}
+                }}else if(e.key==='ArrowRight'){{
+                    if(typeof photoNavTo==='function'&&window._photoNavIdx<(window._photoNavIds||[]).length-1){{photoNavTo(window._photoNavIdx+1);e.preventDefault();}}
+                    else if('{next_url}'){{htmx.ajax('GET','{next_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();}}
                 }}else if(e.key==='Escape'){{
                     document.getElementById('photo-modal').classList.add('hidden');
                     document.removeEventListener('keydown',pmkh);
@@ -5417,7 +5419,7 @@ def post(identity_id: str, sess=None):
 
 
 @rt("/api/identity/{identity_id}/bulk-merge")
-def post(identity_id: str, bulk_ids: list = None, sess=None):
+def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
     """
     Bulk merge multiple identities into one target. Requires admin.
 
@@ -5475,7 +5477,7 @@ def post(identity_id: str, bulk_ids: list = None, sess=None):
 
 
 @rt("/api/identity/{identity_id}/bulk-reject")
-def post(identity_id: str, bulk_ids: list = None, sess=None):
+def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
     """
     Bulk mark multiple identities as Not Same. Requires admin.
     """
