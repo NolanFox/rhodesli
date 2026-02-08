@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.10.0] - 2026-02-08
+
+### Added
+- **Face Overlay Status Colors**: Overlays now use status-based colors instead of all-green
+  - CONFIRMED: green border + ✓ badge
+  - PROPOSED: indigo border (ML suggestion)
+  - SKIPPED: amber border + ⏭ badge
+  - REJECTED: red border + ✗ badge
+  - INBOX/unassigned: dashed gray border (needs attention)
+- **Photo Completion Badges**: Grid cards show progress (green=all done, indigo=partial N/M, dark=none)
+- **Single Tag Dropdown**: Clicking a face overlay now closes other open dropdowns first
+- **Create Identity from Tag**: "+ Create New Identity" button in tag search autocomplete
+- **Keyboard Shortcuts**: Focus mode actions via C=Confirm, S=Skip, R=Reject, F=Find Similar
+- **Proposals Admin Page**: `/admin/proposals` page with sidebar nav link for reviewing proposed matches
+- **Mobile Touch Swipe**: Swipe left/right to navigate photos in the photo modal
+- **AD-013**: Documented cluster_new_faces.py fix from centroid to multi-anchor matching
+
+### Fixed
+- **Multi-merge bug (3rd attempt)**: FastHTML bare `list` annotation splits strings into character lists; fixed to `list[str]`
+- **Lightbox arrows disappearing**: Arrows after photo 2+ broke because prev_id/next_id weren't passed; switched to client-side `photoNavTo()`
+- **Collection stats wrong when filtered**: Subtitle showed global stats instead of filtered collection count
+- **AD-001 violation in cluster_new_faces.py**: Replaced centroid averaging with multi-anchor best-linkage using `scipy.cdist`
+- **Mobile responsive**: Match mode stacks vertically, modals fill screen, 44px touch targets, responsive autocomplete
+
+### Changed
+- Mobile responsive improvements across all workstation pages
+- Focus mode action buttons now have id attributes for keyboard targeting
+- Photo grid face count badge redesigned with completion semantics
+- Golden set rebuilt: 90 faces, 23 identities, threshold analysis saved
+
 ## [v0.9.0] - 2026-02-07
 
 ### Added

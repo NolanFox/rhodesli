@@ -1,25 +1,21 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-07
+Last updated: 2026-02-08
 
 ## Active Bugs
-- [ ] AD-001 VIOLATION: `scripts/cluster_new_faces.py` uses centroid averaging (line 124). Must fix with golden set testing before and after.
+- (none)
 
 ## Immediate (This Weekend)
 - [ ] End-to-end test pending upload flow (upload via web -> process_pending.py -> verify)
-- [ ] Run golden set evaluation locally: `scripts/evaluate_golden_set.py`
-- [ ] Run golden set builder locally: `scripts/build_golden_set.py`
-- [ ] Test new UX features (merge undo, sidebar collapse, face carousel, comparison view, Match mode)
+- [ ] Test new UX features on real phone (mobile responsive, touch swipe, keyboard shortcuts)
 - [ ] Share with 2-3 family members for initial feedback
+- [ ] Review 35 proposed matches from Betty Capeluto clustering report
 
 ## Near-Term (Next 1-2 Weeks)
-- [ ] ML calibration: tune distance thresholds using golden set precision/recall
-- [ ] Fix AD-001 violation in cluster_new_faces.py (multi-anchor, not centroid)
-- [ ] UX verification: Find Similar auto-scroll, bulk merge/not-same, no-reload HTMX actions, toast notifications
-- [ ] Rejection memory implementation (AD-004 — partially implemented)
 - [ ] Sync production->local script using admin export endpoints
-- [ ] Mobile polish pass (test on real phone)
 - [ ] Verify Resend email notifications fire on pending upload
+- [ ] UX verification: Find Similar auto-scroll, bulk merge/not-same, no-reload HTMX actions
+- [ ] Run cluster_new_faces.py --execute on Betty collection after reviewing proposals
 
 ## Medium-Term (Next Month)
 - [ ] Better face detection evaluation (compare current vs alternatives — golden set comparison)
@@ -64,3 +60,14 @@ Last updated: 2026-02-07
 - [x] Proposed matches system (propose/list/accept/reject)
 - [x] Collection stats cards and reassignment endpoint
 - [x] Clustering dry-run report (35 matches, Betty Capeluto collection)
+- [x] v0.10.0: Face overlay status colors + completion badges
+- [x] v0.10.0: Single tag dropdown + Create identity from tag
+- [x] v0.10.0: Keyboard shortcuts (C/S/R/F) in focus mode
+- [x] v0.10.0: Proposals admin page + sidebar link
+- [x] v0.10.0: AD-001 fix in cluster_new_faces.py (multi-anchor)
+- [x] v0.10.0: Multi-merge bug fix (list[str] annotation)
+- [x] v0.10.0: Lightbox arrow navigation fix (photoNavTo)
+- [x] v0.10.0: Collection stats filtered subtitle fix
+- [x] v0.10.0: Mobile responsive pass (touch swipe, stacking, 44px targets)
+- [x] v0.10.0: Golden set rebuild + threshold analysis (1.00=100% precision)
+- [x] v0.10.0: AD-004 rejection memory verified working

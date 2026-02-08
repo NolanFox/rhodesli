@@ -5,6 +5,79 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 17: Overnight Automation v0.10.0 (2026-02-08)
+
+**Goal:** 7-phase overnight automation session covering critical bug fixes, ML calibration, mobile responsive, face overlay visual language, tagging UX, backlog items, and housekeeping.
+
+**Completed:**
+
+Phase 1: Critical Bug Fixes
+- Fixed multi-merge bug (3rd attempt): FastHTML `list` → `list[str]` annotation
+- Fixed lightbox arrows disappearing after photo 2+: switched to client-side `photoNavTo()`
+- Fixed collection stats showing global instead of filtered count
+
+Phase 2: ML Calibration
+- Fixed AD-001 violation: replaced centroid averaging with multi-anchor best-linkage in `cluster_new_faces.py`
+- Rebuilt golden set (90 faces, 23 identities)
+- Ran threshold analysis: 1.00 = 100% precision, 1.20 = 87% precision
+- Documented as AD-013 in ALGORITHMIC_DECISIONS.md
+
+Phase 3: Mobile Responsive
+- Touch swipe on photo modal, responsive stacking, 44px touch targets
+- Modal full-width on mobile, responsive autocomplete dropdown
+
+Phase 4: Face Overlay Visual Language
+- Status-based overlay colors (CONFIRMED=green, PROPOSED=indigo, SKIPPED=amber, REJECTED=red, INBOX=dashed gray)
+- Status badge icons (✓, ⏭, ✗)
+- Photo grid completion badges (green=done, indigo=partial, dark=none)
+
+Phase 5: Face Tagging UX
+- Single tag dropdown (close others on open)
+- "+ Create New Identity" in tag autocomplete with POST endpoint
+- Keyboard shortcuts in focus mode: C=Confirm, S=Skip, R=Reject, F=Find Similar
+
+Phase 6: Backlog Items
+- Verified AD-004 rejection memory already fully implemented
+- Created /admin/proposals page with sidebar nav link
+- Added proposals count to sidebar
+
+Phase 7: Housekeeping
+- Updated CHANGELOG.md for v0.10.0
+- Updated tasks/todo.md
+- 663 tests passing (up from 628)
+- 6 commits pushed to main
+
+**Files created:**
+- `tests/test_face_overlays.py` (10 tests)
+- `tests/test_face_tagging_ux.py` (11 tests)
+- `tests/test_proposals_page.py` (9 tests)
+
+**Files modified:**
+- `app/main.py` (overlay colors, completion badges, tag UX, keyboard shortcuts, proposals page)
+- `scripts/cluster_new_faces.py` (AD-001 fix: centroid → multi-anchor)
+- `tests/test_multi_merge.py`, `tests/test_cluster_new_faces.py`, `tests/test_ml_clustering.py`
+- `tests/test_photo_navigation.py`, `tests/test_collections.py`, `tests/test_mobile.py`
+- `docs/ml/ALGORITHMIC_DECISIONS.md` (AD-013)
+- `CHANGELOG.md`, `tasks/todo.md`, `docs/SESSION_LOG.md`
+
+**Commits:**
+- `50e5dc4` Phase 1: bug fixes (multi-merge, lightbox, stats)
+- `b792859` Phase 2: AD-001 fix + golden set
+- `d1d14c8` Phase 3: mobile responsive
+- `905441e` Phase 4: face overlay status colors + completion badges
+- `bf6a99c` Phase 5: single dropdown, create identity, keyboard shortcuts
+- `8042c85` Phase 6: proposals admin page
+
+**Test count:** 663 passing
+
+---
+
+## Session 16: Harness Buildout (2026-02-07)
+
+(Session 16 committed as v0.9.0 — see CHANGELOG for details)
+
+---
+
 ## Session 15: Overnight Polish & UX Overhaul (2026-02-06)
 
 **Goal:** Major UX overhaul with bug fixes, 5 parallel feature improvements, pending upload queue, ML clustering scripts, and documentation updates.
