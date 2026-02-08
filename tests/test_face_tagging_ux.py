@@ -77,15 +77,14 @@ class TestKeyboardShortcuts:
     """Focus mode includes keyboard shortcut support."""
 
     def test_focus_mode_has_keyboard_script(self, client):
-        """Focus mode includes keyboard shortcut JavaScript."""
+        """Focus mode keyboard shortcuts are handled by the global keydown handler."""
         response = client.get(WORKSTATION_URL)
         assert response.status_code == 200
         text = response.text
-        if "focus-container" in text and "focus-btn-confirm" in text:
-            assert "focusKeyHandler" in text
-            assert "focus-btn-confirm" in text
-            assert "focus-btn-skip" in text
-            assert "focus-btn-reject" in text
+        # Global handler dispatches to focus-btn-* IDs (consolidated from inline handler)
+        assert "focus-btn-confirm" in text
+        assert "focus-btn-skip" in text
+        assert "focus-btn-reject" in text
 
     def test_focus_buttons_have_ids(self, client):
         """Focus mode action buttons have id attributes for keyboard targeting."""

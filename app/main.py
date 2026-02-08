@@ -1477,32 +1477,12 @@ def render_to_review_section(
                     ),
                     cls="mt-6"
                 )
-            # Show one item expanded + queue preview, wrapped in focus-container for HTMX swap
-            keyboard_shortcuts = Script("""
-                (function() {
-                    function focusKeyHandler(e) {
-                        // Don't trigger if typing in an input/textarea
-                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                        // Don't trigger if a modal is open
-                        var modal = document.getElementById('photo-modal');
-                        if (modal && !modal.classList.contains('hidden')) return;
-                        var btn = null;
-                        if (e.key === 'c' || e.key === 'C') btn = document.getElementById('focus-btn-confirm');
-                        else if (e.key === 's' || e.key === 'S') btn = document.getElementById('focus-btn-skip');
-                        else if (e.key === 'r' || e.key === 'R') btn = document.getElementById('focus-btn-reject');
-                        else if (e.key === 'f' || e.key === 'F') btn = document.getElementById('focus-btn-similar');
-                        if (btn) { e.preventDefault(); btn.click(); }
-                    }
-                    // Remove any previous handler, add new one
-                    if (window._focusKeyHandler) document.removeEventListener('keydown', window._focusKeyHandler);
-                    window._focusKeyHandler = focusKeyHandler;
-                    document.addEventListener('keydown', focusKeyHandler);
-                })();
-            """)
+            # Show one item expanded + queue preview, wrapped in focus-container for HTMX swap.
+            # Keyboard shortcuts (C/S/R/F) are handled by the global keydown handler
+            # in the page layout — no per-swap re-registration needed.
             content = Div(
                 identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
                 up_next,
-                keyboard_shortcuts,
                 id="focus-container"
             )
         else:
@@ -2844,7 +2824,8 @@ def identity_card(
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
         cls=f"identity-card bg-slate-800 border border-slate-700 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-lg mb-4",
-        id=f"identity-{identity_id}"
+        id=f"identity-{identity_id}",
+        data_name=(raw_name or "").lower()
     )
 
 
@@ -4176,6 +4157,36 @@ def get(section: str = None, view: str = "focus", current: str = None,
         # Styled confirmation modal (replaces native browser confirm())
         confirm_modal(),
         sidebar_script,
+        # Client-side instant name filter (FE-030/FE-031)
+        Script("""
+            (function() {
+                var filterTimer = null;
+                function sidebarFilterCards(query) {
+                    var cards = document.querySelectorAll('.identity-card');
+                    var q = (query || '').toLowerCase().trim();
+                    for (var i = 0; i < cards.length; i++) {
+                        var name = cards[i].getAttribute('data-name') || '';
+                        if (!q || name.indexOf(q) !== -1) {
+                            cards[i].style.display = '';
+                        } else {
+                            cards[i].style.display = 'none';
+                        }
+                    }
+                }
+                var input = document.getElementById('sidebar-search-input');
+                if (input) {
+                    input.addEventListener('input', function() {
+                        var val = this.value;
+                        clearTimeout(filterTimer);
+                        filterTimer = setTimeout(function() {
+                            sidebarFilterCards(val);
+                        }, 150);
+                    });
+                }
+                // Expose for testing
+                window.sidebarFilterCards = sidebarFilterCards;
+            })();
+        """),
         # Global event delegation for lightbox/photo navigation (BUG-001 fix).
         # ONE listener on document handles all nav clicks and keyboard events.
         # This never needs rebinding because it's on document, not swapped DOM.
@@ -4204,8 +4215,10 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 // extra JS needed. data-action is for keyboard delegation below.
             });
 
-            // Keyboard delegation: one global listener, reads DOM for current state
+            // Keyboard delegation: one global listener, reads DOM for current state.
+            // Priority: modals first, then suppress in text fields, then mode shortcuts.
             document.addEventListener('keydown', function(e) {
+                // --- Modal navigation (highest priority) ---
                 // Photo modal (Photos grid browsing)
                 var photoModal = document.getElementById('photo-modal');
                 if (photoModal && !photoModal.classList.contains('hidden')) {
@@ -4241,6 +4254,24 @@ def get(section: str = None, view: str = "focus", current: str = None,
                     }
                     return;
                 }
+
+                // --- Suppress shortcuts when typing in INPUT or TEXTAREA ---
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                // --- Match mode shortcuts: Y=Same, N=Different, S=Skip ---
+                var matchBtn = null;
+                if (e.key === 'y' || e.key === 'Y') matchBtn = document.getElementById('match-btn-same');
+                else if (e.key === 'n' || e.key === 'N') matchBtn = document.getElementById('match-btn-diff');
+                else if (e.key === 's' || e.key === 'S') matchBtn = document.getElementById('match-btn-skip');
+                if (matchBtn) { e.preventDefault(); matchBtn.click(); return; }
+
+                // --- Focus mode shortcuts: C=Confirm, S=Skip, R=Reject, F=Find Similar ---
+                var focusBtn = null;
+                if (e.key === 'c' || e.key === 'C') focusBtn = document.getElementById('focus-btn-confirm');
+                else if (e.key === 's' || e.key === 'S') focusBtn = document.getElementById('focus-btn-skip');
+                else if (e.key === 'r' || e.key === 'R') focusBtn = document.getElementById('focus-btn-reject');
+                else if (e.key === 'f' || e.key === 'F') focusBtn = document.getElementById('focus-btn-similar');
+                if (focusBtn) { e.preventDefault(); focusBtn.click(); return; }
             });
         """),
         cls="h-full"
@@ -8424,6 +8455,7 @@ def get():
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
+                id="match-btn-same",
             ),
             Button(
                 "Different People",
@@ -8432,6 +8464,7 @@ def get():
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
+                id="match-btn-diff",
             ),
             Button(
                 "Skip",
@@ -8440,6 +8473,12 @@ def get():
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
+                id="match-btn-skip",
+            ),
+            Span(
+                "Keyboard: Y N S",
+                cls="text-xs text-slate-600 hidden sm:inline",
+                title="Y=Same Person, N=Different People, S=Skip"
             ),
             cls="flex flex-wrap items-center justify-center gap-4 mt-8 pt-4 border-t border-slate-700"
         ),

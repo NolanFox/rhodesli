@@ -30,8 +30,8 @@ Goal: Fix all active bugs, get site stable enough to share.
 - [x] BUG-001: Lightbox arrow fix with 16 regression tests, event delegation (2026-02-08)
 - [x] BUG-002: Face count label matches visible boxes (FE-025, QA-003) (2026-02-08)
 - [x] BUG-004: Collection stats denominator fix — canonical _compute_sidebar_counts() (2026-02-08)
-- [ ] FE-002: Keyboard arrow navigation in Match Mode
-- [ ] FE-003: Universal keyboard shortcuts across all photo views
+- [x] FE-002: Keyboard shortcuts in Match Mode — Y/N/S for same/different/skip (2026-02-08)
+- [x] FE-003: Universal keyboard shortcuts — consolidated global handler for all views (2026-02-08)
 - [ ] FE-004: Consistent lightbox component across sections
 - [ ] Smoke test all fixes on live site
 
@@ -42,8 +42,8 @@ Goal: Landing page, search, mobile — ready for family members.
 - [ ] FE-051: Interactive hero with real archive photos
 - [ ] FE-052: First-time user guided tour
 - [ ] FE-053: Progress dashboard ("23 of 181 faces identified")
-- [ ] FE-030: Global search improvements
-- [ ] FE-031: Fast name lookup with typeahead
+- [x] FE-030: Global search improvements (2026-02-08)
+- [x] FE-031: Fast name lookup with typeahead (2026-02-08)
 - [ ] FE-010: Mobile sidebar — hamburger menu or slide-over
 - [ ] FE-011: Bottom tab navigation on mobile
 - [ ] FE-014: Responsive photo grid (2-col mobile, 4-col desktop)
@@ -99,6 +99,8 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-08: FE-002/FE-003 — universal keyboard shortcuts (match mode Y/N/S, consolidated global handler)
+- [x] 2026-02-08: FE-030/FE-031 — client-side instant name search with 150ms debounce filtering
 - [x] 2026-02-08: BUG-004 fix — canonical _compute_sidebar_counts() replaces 4 inline computations, 11 regression tests
 - [x] 2026-02-08: BUG-001 fix — lightbox arrows via event delegation, 16 regression tests
 - [x] 2026-02-08: BUG-002 fix — face count label now matches displayed face boxes, not raw detection count
