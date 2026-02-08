@@ -1687,6 +1687,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
 
         # Get identified faces in this photo
         identified_faces = []
+        confirmed_count = 0
         for face in photo_data.get("faces", []):
             face_id = face["face_id"]
             identity = get_identity_for_face(registry, face_id)
@@ -1696,13 +1697,17 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     "face_id": face_id,
                     "identity_id": identity.get("identity_id"),
                 })
+                if identity.get("state") == "CONFIRMED":
+                    confirmed_count += 1
 
+        face_count = len(photo_data.get("faces", []))
         photos.append({
             "photo_id": photo_id,
             "filename": photo_data.get("filename", "unknown"),
             "source": source,
-            "face_count": len(photo_data.get("faces", [])),
+            "face_count": face_count,
             "identified_count": len(identified_faces),
+            "confirmed_count": confirmed_count,
             "identified_faces": identified_faces[:4],  # Max 4 for display
         })
 
@@ -1822,11 +1827,15 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                     loading="lazy"
                 ),
-                # Face count badge
+                # Face count badge with completion indicator
                 Div(
-                    f"{photo['face_count']} faces",
-                    cls="absolute top-2 right-2 bg-black/70 text-white text-xs font-data "
-                        "px-2 py-1 rounded-full backdrop-blur-sm"
+                    Span("\u2713 ", cls="text-emerald-400") if photo["face_count"] > 0 and photo["confirmed_count"] == photo["face_count"] else None,
+                    f"{photo['confirmed_count']}/{photo['face_count']}" if photo["confirmed_count"] > 0 else f"{photo['face_count']} faces",
+                    cls="absolute top-2 right-2 text-white text-xs font-data "
+                        "px-2 py-1 rounded-full backdrop-blur-sm "
+                        + ("bg-emerald-600/80" if photo["face_count"] > 0 and photo["confirmed_count"] == photo["face_count"]
+                           else "bg-black/70" if photo["confirmed_count"] == 0
+                           else "bg-indigo-600/70")
                 ),
                 # Identified faces indicator
                 Div(
@@ -4394,17 +4403,31 @@ def photo_view_content(
                 else:  # INBOX, PROPOSED
                     nav_section = "to_review"
             else:
+                state = None
                 nav_section = "to_review"
 
             # Determine if this face is selected
             is_selected = face_id == selected_face_id
 
-            # Build the overlay div
-            overlay_classes = "face-overlay absolute border-2 cursor-pointer transition-all hover:border-amber-400"
+            # Build the overlay div with status-based colors
+            overlay_classes = "face-overlay absolute cursor-pointer transition-all"
+            status_badge = None
             if is_selected:
-                overlay_classes += " border-amber-500 bg-amber-500/20"
+                overlay_classes += " border-2 border-amber-500 bg-amber-500/20"
+            elif state == "CONFIRMED":
+                overlay_classes += " border-2 border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 hover:border-emerald-300"
+                status_badge = Span("\u2713", cls="absolute -top-1.5 -right-1.5 w-4 h-4 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center pointer-events-none")
+            elif state == "SKIPPED":
+                overlay_classes += " border-2 border-amber-500 bg-amber-500/10 hover:bg-amber-500/20 hover:border-amber-300"
+                status_badge = Span("\u23ed", cls="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 text-white text-[8px] rounded-full flex items-center justify-center pointer-events-none")
+            elif state in ("REJECTED", "CONTESTED"):
+                overlay_classes += " border-2 border-red-500 bg-red-500/10 hover:bg-red-500/20 hover:border-red-300"
+                status_badge = Span("\u2717", cls="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center pointer-events-none")
+            elif state == "PROPOSED":
+                overlay_classes += " border-2 border-indigo-400 bg-indigo-400/10 hover:bg-indigo-400/20 hover:border-indigo-300"
             else:
-                overlay_classes += " border-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20"
+                # INBOX or unassigned — dashed border signals "needs attention"
+                overlay_classes += " border-2 border-dashed border-slate-400 bg-slate-400/5 hover:bg-slate-400/15 hover:border-white"
 
             # Tag dropdown for this face (hidden by default)
             tag_dropdown_id = f"tag-dropdown-{face_id.replace(':', '-').replace(' ', '_')}"
@@ -4462,6 +4485,7 @@ def photo_view_content(
                     display_name,
                     cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
                 ),
+                status_badge,
                 tag_dropdown,
                 cls=f"{overlay_classes} group",
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
