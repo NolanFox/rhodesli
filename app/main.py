@@ -1080,6 +1080,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/admin/pending", "📋", "Pending Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
+                nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
                 cls="mb-3"
             ) if (user and user.is_admin) else None,
             cls="flex-1 px-2 py-2 space-y-0 overflow-y-auto"
@@ -3896,6 +3897,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
     photo_count = len(_photo_cache) if _photo_cache else 0
 
     # Calculate counts for sidebar
+    proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, 'list_proposed_matches') else 0
     counts = {
         "to_review": len(to_review),
         "confirmed": len(confirmed_list),
@@ -3903,6 +3905,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
         "rejected": len(dismissed),
         "photos": photo_count,
         "pending_uploads": _count_pending_uploads(),
+        "proposals": proposal_count,
     }
 
     # Validate section parameter
@@ -6441,6 +6444,7 @@ def get(sess=None):
         "rejected": len(dismissed),
         "photos": photo_count,
         "pending_uploads": _count_pending_uploads(),
+        "proposals": 0,
     }
 
     # Load existing sources for autocomplete
@@ -6929,6 +6933,7 @@ def get(sess=None):
         "rejected": len(dismissed),
         "photos": photo_count,
         "pending_uploads": _count_pending_uploads(),
+        "proposals": 0,
     }
 
     # Load pending uploads
@@ -7102,6 +7107,144 @@ def get(sess=None):
                 ),
                 pending_section,
                 reviewed_section if reviewed_section else "",
+                cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
+            ),
+            cls="main-content min-h-screen"
+        ),
+        sidebar_script,
+        cls="h-full"
+    )
+
+
+@rt("/admin/proposals")
+def get(sess=None):
+    """
+    Admin page to review proposed identity matches.
+    Requires admin when auth is enabled.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    user = get_current_user(sess or {})
+
+    style = Style("""
+        html, body { height: 100%; margin: 0; }
+        body { background-color: #0f172a; }
+    """)
+
+    # Build sidebar counts (reuse from other admin pages)
+    registry = load_registry()
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
+    rejected_ids = registry.list_identities(state=IdentityState.REJECTED)
+    contested = registry.list_identities(state=IdentityState.CONTESTED)
+    to_review = inbox + proposed
+    dismissed = rejected_ids + contested
+    _build_caches()
+    photo_count = len(_photo_cache) if _photo_cache else 0
+    proposals = registry.list_proposed_matches() if hasattr(registry, 'list_proposed_matches') else []
+
+    counts = {
+        "to_review": len(to_review),
+        "confirmed": len(confirmed_list),
+        "skipped": len(skipped_list),
+        "rejected": len(dismissed),
+        "photos": photo_count,
+        "pending_uploads": _count_pending_uploads(),
+        "proposals": len(proposals),
+    }
+
+    # Sidebar styles (reuse)
+    page_style = Style("""
+        .sidebar-container { width: 15rem; transition: width 0.2s ease, transform 0.3s ease; }
+        .sidebar-container.collapsed { width: 3.5rem; }
+        .sidebar-container.collapsed .sidebar-label,
+        .sidebar-container.collapsed .sidebar-search,
+        .sidebar-container.collapsed .sidebar-search-results { display: none; }
+        .sidebar-container.collapsed .sidebar-nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-container.collapsed .sidebar-icon { margin: 0; }
+        .sidebar-container.collapsed .sidebar-chevron { transform: rotate(180deg); }
+        .sidebar-container.collapsed .sidebar-collapse-btn { margin: 0 auto; }
+        .sidebar-search-results:not(:empty) { position: absolute; left: 0.75rem; right: 0.75rem; top: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; max-height: 300px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        @media (max-width: 767px) {
+            #sidebar { width: 15rem !important; transform: translateX(-100%); transition: transform 0.3s ease; }
+            #sidebar.open { transform: translateX(0); }
+            #sidebar .sidebar-label { display: inline !important; }
+            #sidebar .sidebar-search { display: block !important; }
+            .main-content { margin-left: 0 !important; }
+        }
+        @media (min-width: 768px) { #sidebar { transform: translateX(0); } }
+        @media (min-width: 1024px) { .main-content { margin-left: 15rem; transition: margin-left 0.2s ease; } .main-content.sidebar-collapsed { margin-left: 3.5rem; } }
+    """)
+    mobile_header = Div(
+        Button(
+            Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                     d="M4 6h16M4 12h16M4 18h16"),
+                cls="w-6 h-6", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+            onclick="toggleSidebar()",
+            cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+        ),
+        Span("Proposals", cls="text-lg font-bold text-white"),
+        cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30"
+    )
+    sidebar_overlay = Div(onclick="closeSidebar()",
+                          cls="sidebar-overlay fixed inset-0 bg-black/50 z-30 hidden lg:hidden")
+    sidebar_script = Script("""
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.toggle('open');
+            sb.classList.toggle('-translate-x-full');
+            ov.classList.toggle('hidden');
+        }
+        function closeSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.remove('open');
+            sb.classList.add('-translate-x-full');
+            ov.classList.add('hidden');
+        }
+        function toggleSidebarCollapse() {
+            var sb = document.getElementById('sidebar');
+            var mc = document.querySelector('.main-content');
+            var isCollapsed = sb.classList.toggle('collapsed');
+            if (mc) mc.classList.toggle('sidebar-collapsed', isCollapsed);
+            try { localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(e) {}
+        }
+        (function() {
+            try {
+                var collapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+                if (collapsed && window.innerWidth >= 1024) {
+                    var sb = document.getElementById('sidebar');
+                    var mc = document.querySelector('.main-content');
+                    if (sb) sb.classList.add('collapsed');
+                    if (mc) mc.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    """)
+
+    return Title("Proposals - Rhodesli"), style, page_style, Div(
+        toast_container(),
+        mobile_header,
+        sidebar_overlay,
+        sidebar(counts, current_section="proposals", user=user),
+        Main(
+            Div(
+                Div(
+                    H2("Proposed Matches", cls="text-2xl font-bold text-white"),
+                    P(f"{len(proposals)} pending proposal{'s' if len(proposals) != 1 else ''}", cls="text-sm text-slate-400 mt-1"),
+                    cls="mb-6"
+                ),
+                # Load proposals list via HTMX on page load
+                Div(
+                    id="proposed-matches-list",
+                    hx_get="/api/proposed-matches",
+                    hx_trigger="load",
+                    hx_swap="innerHTML",
+                ),
                 cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
             cls="main-content min-h-screen"
