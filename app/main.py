@@ -1638,12 +1638,21 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
 
 
 def render_skipped_section(skipped: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
-    """Render the Skipped section."""
-    cards = [
-        identity_card(identity, crop_files, lane_color="stone", show_actions=False, is_admin=is_admin)
-        for identity in skipped
-    ]
-    cards = [c for c in cards if c]
+    """Render the Skipped section with ML hints for re-evaluation."""
+    cards = []
+    for identity in skipped:
+        card = identity_card(identity, crop_files, lane_color="stone", show_actions=False, is_admin=is_admin)
+        if card:
+            # Add lazy-loaded ML hint below each skipped card
+            identity_id = identity["identity_id"]
+            hint = Div(
+                id=f"skip-hint-{identity_id}",
+                hx_get=f"/api/identity/{identity_id}/skip-hints",
+                hx_trigger="revealed",
+                hx_swap="innerHTML",
+                cls="ml-4 mt-1 mb-3",
+            )
+            cards.append(Div(card, hint))
 
     if cards:
         content = Div(*cards)
@@ -2369,6 +2378,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     # Get values directly (no more negative scaling)
     distance = neighbor["distance"]
     percentile = neighbor.get("percentile", 1.0)
+    confidence_gap = neighbor.get("confidence_gap", 0.0)
 
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
@@ -2428,8 +2438,10 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
             A(thumbnail_img, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
             Div(Div(A(name, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="font-medium text-slate-200 truncate hover:text-blue-400 hover:underline cursor-pointer", **{"_": nav_script}),
                     Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
-                # EXPLAINABILITY: We show both. Distance tells you "Is it him?", Percentile tells you "Is it the best we have?"
-                Div(Span(f"Dist: {distance:.2f} (p={percentile:.2f})", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"), cls="flex items-center"),
+                # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
+                Div(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"),
+                    Span(f"+{confidence_gap}% gap", cls="text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded") if confidence_gap > 0 else None,
+                    cls="flex items-center"),
                 cls="flex-1 min-w-0 ml-3"),
             Div(compare_btn, merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                                   hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML"),
@@ -4906,6 +4918,54 @@ def get(identity_id: str):
             id=f"neighbors-loading-{identity_id}",
             cls="htmx-indicator text-slate-400 text-sm",
         ),
+    )
+
+
+@rt("/api/identity/{identity_id}/skip-hints")
+def get(identity_id: str):
+    """
+    Lazy-loaded ML hints for skipped identities.
+
+    Shows top 3 similar confirmed/named identities to help re-evaluate.
+    """
+    try:
+        registry = load_registry()
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Span()
+
+    face_data = get_face_data()
+    photo_registry = load_photo_registry()
+
+    try:
+        from core.neighbors import find_nearest_neighbors
+        neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=3
+        )
+    except Exception:
+        return Span()
+
+    if not neighbors:
+        return Span("No similar identities found.", cls="text-xs text-slate-500 italic")
+
+    # Build hint text: "Might be: Leon Capeluto (dist 0.82), Betty Capeluto (dist 0.95)"
+    hints = []
+    for n in neighbors:
+        name = ensure_utf8_display(n.get("name", "Unknown"))
+        dist = n.get("distance", 0)
+        gap = n.get("confidence_gap", 0)
+        gap_text = f", +{gap}% gap" if gap > 0 else ""
+        hints.append(Span(
+            f"{name} ",
+            Span(f"(dist {dist:.2f}{gap_text})", cls="text-slate-500"),
+            cls="text-amber-300/80",
+        ))
+
+    return Div(
+        Span("Might be: ", cls="text-xs text-slate-400 font-medium"),
+        *[Span(h, Span(" · ", cls="text-slate-600") if i < len(hints) - 1 else None)
+          for i, h in enumerate(hints)],
+        cls="text-xs flex flex-wrap items-center gap-1",
     )
 
 

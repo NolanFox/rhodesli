@@ -89,11 +89,35 @@ def find_nearest_neighbors(target_id, registry, photo_registry, face_data, limit
 
     # 3. Sort & Rank
     candidates.sort(key=lambda x: x["distance"])
-    
+
     total = len(candidates)
     for idx, c in enumerate(candidates):
         c["rank"] = idx + 1
         c["percentile"] = (idx + 1) / total if total > 0 else 1.0
+
+    # 4. Confidence Gap: how much closer is #1 vs #2?
+    # margin = (dist_2nd - dist_1st) / dist_1st
+    # Higher margin = more distinctive match = easier for humans to adjudicate
+    if len(candidates) >= 2:
+        d1 = candidates[0]["distance"]
+        d2 = candidates[1]["distance"]
+        if d1 > 0:
+            candidates[0]["confidence_gap"] = round((d2 - d1) / d1 * 100, 1)
+        else:
+            candidates[0]["confidence_gap"] = 100.0
+        # For non-top candidates, gap is vs the next one
+        for i in range(1, len(candidates)):
+            if i + 1 < len(candidates):
+                di = candidates[i]["distance"]
+                di_next = candidates[i + 1]["distance"]
+                if di > 0:
+                    candidates[i]["confidence_gap"] = round((di_next - di) / di * 100, 1)
+                else:
+                    candidates[i]["confidence_gap"] = 0.0
+            else:
+                candidates[i]["confidence_gap"] = 0.0
+    elif len(candidates) == 1:
+        candidates[0]["confidence_gap"] = 100.0
 
     results = candidates[:limit]
 
