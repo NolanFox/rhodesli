@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Cluster newly detected faces against confirmed identity centroids.
+"""Cluster newly detected faces against confirmed identities using multi-anchor matching.
 
-For each new face (from INBOX/PROPOSED identities), compute distance to
-each CONFIRMED identity's centroid and suggest matches.
+For each new face (from INBOX/PROPOSED identities), compute min-distance to
+each CONFIRMED identity's face embeddings (best-linkage / AD-001 compliant).
 
 IMPORTANT: This script NEVER auto-merges. It only creates PROPOSED matches
 that require human review. Per the forensic invariants:
   provenance="human" overrides provenance="model"
 
 The script works by:
-1. Loading confirmed identities and computing their centroid embeddings
-2. For each unresolved face (INBOX/PROPOSED), finding the closest centroid
+1. Loading confirmed identities and collecting ALL their face embeddings
+2. For each unresolved face (INBOX/PROPOSED), finding the closest match using
+   min-distance to any face in each confirmed identity (multi-anchor / AD-001)
 3. If distance < threshold, suggesting a match
 4. In --execute mode, updating identities.json to move matched faces
    as candidates (NOT anchors) on the target identity, with provenance="model"
@@ -121,35 +122,39 @@ def get_photo_id(face_id: str) -> str | None:
     return None
 
 
-def compute_centroid(face_ids: list[str], face_data: dict):
-    """Compute mean embedding (centroid) for a set of faces.
+def collect_identity_embeddings(face_ids: list[str], face_data: dict):
+    """Collect all face embeddings for an identity (multi-anchor, AD-001 compliant).
 
-    Uses deferred numpy import.
-
-    Returns numpy array or None if no valid faces.
+    Returns numpy matrix of embeddings or None if no valid faces.
+    Does NOT average — each face embedding is preserved as a separate anchor.
     """
     import numpy as np
 
     embeddings = []
+    valid_fids = []
     for fid in face_ids:
         if fid in face_data:
             embeddings.append(face_data[fid]["mu"])
+            valid_fids.append(fid)
 
     if not embeddings:
-        return None
+        return None, []
 
-    return np.mean(np.vstack(embeddings), axis=0)
+    return np.vstack(embeddings), valid_fids
 
 
-def compute_distance_to_centroid(face_embedding, centroid) -> float:
-    """Compute Euclidean distance from face embedding to centroid.
+def compute_min_distance(face_embedding, identity_embeddings) -> float:
+    """Compute min Euclidean distance from a face to any face in an identity.
 
-    Uses same metric as core/neighbors.py.
+    This is the best-linkage / single-linkage approach per AD-001.
+    Uses the same metric as core/neighbors.py (Euclidean distance via cdist).
     """
     import numpy as np
+    from scipy.spatial.distance import cdist
 
-    diff = face_embedding - centroid
-    return float(np.sqrt(np.sum(diff ** 2)))
+    face_matrix = face_embedding.reshape(1, -1)
+    dists = cdist(face_matrix, identity_embeddings, metric='euclidean')
+    return float(np.min(dists))
 
 
 def find_matches(
@@ -163,8 +168,8 @@ def find_matches(
     """
     identities = identities_data.get("identities", {})
 
-    # Step 1: Build confirmed identity centroids
-    confirmed_centroids = {}
+    # Step 1: Build confirmed identity face embeddings (multi-anchor, AD-001)
+    confirmed_identities = {}
     confirmed_photos = {}  # identity_id -> set of photo_ids (for co-occurrence check)
 
     for identity_id, identity in identities.items():
@@ -177,29 +182,29 @@ def find_matches(
         if not face_ids:
             continue
 
-        centroid = compute_centroid(face_ids, face_data)
-        if centroid is None:
+        emb_matrix, valid_fids = collect_identity_embeddings(face_ids, face_data)
+        if emb_matrix is None:
             continue
 
-        confirmed_centroids[identity_id] = {
-            "centroid": centroid,
+        confirmed_identities[identity_id] = {
+            "embeddings": emb_matrix,
             "name": identity.get("name", f"Unknown ({identity_id[:8]})"),
-            "face_count": len(face_ids),
+            "face_count": len(valid_fids),
         }
 
         # Track photos for co-occurrence check
         photos = set()
-        for fid in face_ids:
+        for fid in valid_fids:
             photo_id = get_photo_id(fid)
             if photo_id:
                 photos.add(photo_id)
         confirmed_photos[identity_id] = photos
 
-    if not confirmed_centroids:
+    if not confirmed_identities:
         print("WARNING: No confirmed identities with embeddings found.")
         return []
 
-    print(f"Confirmed identity centroids: {len(confirmed_centroids)}")
+    print(f"Confirmed identities (multi-anchor): {len(confirmed_identities)}")
 
     # Step 2: Find unresolved identities (INBOX or PROPOSED)
     unresolved_states = {"INBOX", "PROPOSED"}
@@ -222,7 +227,8 @@ def find_matches(
             if photo_id:
                 source_photos.add(photo_id)
 
-        # For each face in this identity, find closest confirmed centroid
+        # For each face in this identity, find closest confirmed identity
+        # using min-distance to any face (best-linkage / AD-001)
         for face_id in face_ids:
             if face_id not in face_data:
                 continue
@@ -231,14 +237,14 @@ def find_matches(
             best_match = None
             best_distance = float("inf")
 
-            for conf_id, conf_info in confirmed_centroids.items():
+            for conf_id, conf_info in confirmed_identities.items():
                 # Co-occurrence check: skip if face's photo appears in confirmed identity
                 face_photo = get_photo_id(face_id)
                 if face_photo and face_photo in confirmed_photos.get(conf_id, set()):
                     continue
 
-                distance = compute_distance_to_centroid(
-                    face_embedding, conf_info["centroid"]
+                distance = compute_min_distance(
+                    face_embedding, conf_info["embeddings"]
                 )
 
                 if distance < best_distance:
@@ -253,9 +259,9 @@ def find_matches(
                         "name", f"Unknown ({identity_id[:8]})"
                     ),
                     "target_identity_id": best_match,
-                    "target_identity_name": confirmed_centroids[best_match]["name"],
+                    "target_identity_name": confirmed_identities[best_match]["name"],
                     "distance": best_distance,
-                    "target_face_count": confirmed_centroids[best_match]["face_count"],
+                    "target_face_count": confirmed_identities[best_match]["face_count"],
                 })
 
     # Sort by distance (best matches first)

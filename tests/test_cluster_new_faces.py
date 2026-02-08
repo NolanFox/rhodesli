@@ -1,0 +1,220 @@
+"""Tests for scripts/cluster_new_faces.py — AD-001 compliance."""
+
+import numpy as np
+import pytest
+from unittest.mock import patch
+
+
+def _make_face_data(face_id: str, mu_vals=None):
+    """Helper: create face_data entry with given mu vector."""
+    if mu_vals is None:
+        mu_vals = np.random.randn(512).astype(np.float32)
+    return {
+        "mu": np.asarray(mu_vals, dtype=np.float32),
+        "sigma_sq": np.full(512, 0.5, dtype=np.float32),
+    }
+
+
+class TestMultiAnchorMatching:
+    """AD-001: cluster_new_faces must use min-distance, not centroid averaging."""
+
+    def test_uses_min_distance_not_centroid(self):
+        """Verify find_matches uses best-linkage (min distance to any face)."""
+        from scripts.cluster_new_faces import find_matches
+
+        # Create a confirmed identity with 2 very different faces
+        # Face A at position [1, 0, 0, ...], Face B at position [-1, 0, 0, ...]
+        face_a = np.zeros(512, dtype=np.float32)
+        face_a[0] = 1.0
+        face_b = np.zeros(512, dtype=np.float32)
+        face_b[0] = -1.0
+
+        # Create an inbox face near Face A
+        inbox_face = np.zeros(512, dtype=np.float32)
+        inbox_face[0] = 0.9  # Very close to face_a, far from face_b
+
+        face_data = {
+            "face_a": _make_face_data("face_a", face_a),
+            "face_b": _make_face_data("face_b", face_b),
+            "inbox_test": _make_face_data("inbox_test", inbox_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "confirmed-1": {
+                    "identity_id": "confirmed-1",
+                    "name": "Test Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face_a", "face_b"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified Person 1",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_test"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+
+        # With centroid: centroid = mean(face_a, face_b) = [0, 0, ...]
+        # Distance inbox_test to centroid = |[0.9, 0, ...] - [0, 0, ...]| = 0.9
+        # With multi-anchor: min(dist to face_a, dist to face_b)
+        # dist to face_a = |[0.9, 0, ...] - [1, 0, ...]| = 0.1
+        # dist to face_b = |[0.9, 0, ...] - [-1, 0, ...]| = 1.9
+        # Multi-anchor distance = 0.1
+
+        suggestions = find_matches(identities_data, face_data, threshold=0.5)
+
+        # With centroid (0.9), this would NOT match at threshold 0.5
+        # With multi-anchor (0.1), this SHOULD match at threshold 0.5
+        assert len(suggestions) == 1
+        assert suggestions[0]["face_id"] == "inbox_test"
+        assert suggestions[0]["target_identity_id"] == "confirmed-1"
+        assert suggestions[0]["distance"] < 0.5  # Should be ~0.1, not ~0.9
+
+    def test_respects_threshold(self):
+        """Only matches below threshold are proposed."""
+        from scripts.cluster_new_faces import find_matches
+
+        # Face far from confirmed identity
+        confirmed_face = np.zeros(512, dtype=np.float32)
+        confirmed_face[0] = 1.0
+
+        far_face = np.zeros(512, dtype=np.float32)
+        far_face[0] = -1.0  # Distance = 2.0
+
+        face_data = {
+            "cf1": _make_face_data("cf1", confirmed_face),
+            "inbox_far": _make_face_data("inbox_far", far_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "confirmed-1": {
+                    "identity_id": "confirmed-1",
+                    "name": "Test Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified Person 1",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_far"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+
+        suggestions = find_matches(identities_data, face_data, threshold=1.0)
+        assert len(suggestions) == 0  # Distance 2.0 > threshold 1.0
+
+    def test_no_centroid_function_called(self):
+        """Verify compute_centroid is not used in find_matches."""
+        import scripts.cluster_new_faces as module
+
+        # After the fix, compute_centroid should not exist or not be used
+        # Check that find_matches doesn't call it
+        assert not hasattr(module, "compute_centroid"), \
+            "compute_centroid should be removed — AD-001 violation"
+
+    def test_co_occurrence_check(self):
+        """Faces from the same photo as a confirmed face are excluded."""
+        from scripts.cluster_new_faces import find_matches
+
+        # Two faces from the same photo (same filename prefix)
+        face_1 = np.zeros(512, dtype=np.float32)
+        face_1[0] = 1.0
+
+        # Very close face but from same photo
+        close_face = np.zeros(512, dtype=np.float32)
+        close_face[0] = 0.99
+
+        face_data = {
+            "photo1:face0": _make_face_data("photo1:face0", face_1),
+            "photo1:face1": _make_face_data("photo1:face1", close_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "confirmed-1": {
+                    "identity_id": "confirmed-1",
+                    "name": "Test Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["photo1:face0"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified Person 1",
+                    "state": "INBOX",
+                    "anchor_ids": ["photo1:face1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+
+        suggestions = find_matches(identities_data, face_data, threshold=1.0)
+        # Same photo faces should be excluded by co-occurrence check
+        assert len(suggestions) == 0
+
+    def test_picks_closest_identity(self):
+        """When face matches multiple identities, pick the closest one."""
+        from scripts.cluster_new_faces import find_matches
+
+        # Two confirmed identities at different distances
+        face_near = np.zeros(512, dtype=np.float32)
+        face_near[0] = 0.8
+        face_far = np.zeros(512, dtype=np.float32)
+        face_far[0] = -0.5
+
+        inbox_face = np.zeros(512, dtype=np.float32)
+        inbox_face[0] = 0.75  # Closer to face_near
+
+        face_data = {
+            "near_cf": _make_face_data("near_cf", face_near),
+            "far_cf": _make_face_data("far_cf", face_far),
+            "inbox_test": _make_face_data("inbox_test", inbox_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "near-id": {
+                    "identity_id": "near-id",
+                    "name": "Near Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["near_cf"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "far-id": {
+                    "identity_id": "far-id",
+                    "name": "Far Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["far_cf"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified Person 1",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_test"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+
+        suggestions = find_matches(identities_data, face_data, threshold=2.0)
+        assert len(suggestions) == 1
+        assert suggestions[0]["target_identity_id"] == "near-id"

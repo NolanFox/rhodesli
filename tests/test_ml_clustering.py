@@ -26,8 +26,8 @@ from scripts.evaluate_golden_set import (
     generate_face_id,
 )
 from scripts.cluster_new_faces import (
-    compute_centroid,
-    compute_distance_to_centroid,
+    collect_identity_embeddings,
+    compute_min_distance,
     find_matches,
     apply_suggestions,
     get_photo_id,
@@ -397,29 +397,32 @@ class TestClusterNewFaces:
         assert get_photo_id("photo_A:face3") == "photo_A"
         assert get_photo_id("no_colon") is None
 
-    def test_compute_centroid(self, data_dir):
+    def test_collect_identity_embeddings(self, data_dir):
         from scripts.cluster_new_faces import load_face_data
 
         face_data = load_face_data(data_dir)
-        centroid = compute_centroid(
+        emb_matrix, valid_fids = collect_identity_embeddings(
             ["photo_A:face0", "photo_B:face0"], face_data
         )
-        assert centroid is not None
-        assert centroid.shape == (512,)
+        assert emb_matrix is not None
+        assert emb_matrix.shape == (2, 512)
+        assert len(valid_fids) == 2
 
-    def test_compute_centroid_empty(self, data_dir):
+    def test_collect_identity_embeddings_empty(self, data_dir):
         from scripts.cluster_new_faces import load_face_data
 
         face_data = load_face_data(data_dir)
-        centroid = compute_centroid([], face_data)
-        assert centroid is None
+        emb_matrix, valid_fids = collect_identity_embeddings([], face_data)
+        assert emb_matrix is None
+        assert valid_fids == []
 
-    def test_compute_centroid_missing_faces(self, data_dir):
+    def test_collect_identity_embeddings_missing_faces(self, data_dir):
         from scripts.cluster_new_faces import load_face_data
 
         face_data = load_face_data(data_dir)
-        centroid = compute_centroid(["nonexistent:face0"], face_data)
-        assert centroid is None
+        emb_matrix, valid_fids = collect_identity_embeddings(["nonexistent:face0"], face_data)
+        assert emb_matrix is None
+        assert valid_fids == []
 
     def test_find_matches_returns_suggestions(self, data_dir):
         from scripts.cluster_new_faces import load_face_data

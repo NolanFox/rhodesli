@@ -99,6 +99,15 @@ These appendix documents contain mathematical derivations and extended rationale
 | `docs/adr/adr_006_scalar_sigma_fix.md` | Scalar sigma MLS fix | AD-003 |
 | `docs/adr/adr_007_calibration_adjustment_run2.md` | Calibration adjustment run 2 | AD-003 |
 
+### AD-013: cluster_new_faces.py Fixed to Multi-Anchor (AD-001 Compliance)
+- **Date**: 2026-02-08
+- **Context**: `scripts/cluster_new_faces.py` used centroid averaging (`compute_centroid()` + `compute_distance_to_centroid()`) to match inbox faces to confirmed identities. This violates AD-001.
+- **Decision**: Replaced centroid matching with multi-anchor best-linkage: `collect_identity_embeddings()` retains all face embeddings, `compute_min_distance()` uses `scipy.cdist` with Euclidean metric to find the minimum distance from the inbox face to ANY face in the confirmed identity.
+- **Rejected Alternative**: Centroid averaging — averaging a 4-year-old and 24-year-old produces a 14-year-old that matches neither. A face close to one anchor (distance 0.1) could be far from the centroid (distance 0.9) and be missed.
+- **Test**: `tests/test_cluster_new_faces.py` — 5 tests verify multi-anchor behavior, threshold compliance, and co-occurrence exclusion.
+- **Affects**: `scripts/cluster_new_faces.py` (fixed), `core/neighbors.py` (verified correct, FROZEN).
+- **Threshold note**: The default threshold (1.0) remains uncalibrated. Calibration requires user feedback on proposed matches. Once the admin reviews the 35 proposed matches from the Betty Capeluto collection, calibration can proceed.
+
 ---
 
 ## Undocumented Decisions (Require Code Review)
