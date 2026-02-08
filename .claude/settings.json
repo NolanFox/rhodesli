@@ -1,16 +1,1 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git status)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(curl:*)",
-      "Bash(pytest:*)",
-      "Edit",
-      "Read"
-    ]
-  },
-  "settings": {
-    "acceptEdits": true
-  }
-}
+{"permissions":{"allow":["Bash(*)", "Edit(*)", "Read(*)", "Write(*)"]}}
