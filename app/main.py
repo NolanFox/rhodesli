@@ -1233,6 +1233,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
                 type="button",
+                id="focus-btn-confirm",
             ),
             Button(
                 "⏸ Skip",
@@ -1241,6 +1242,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
                 type="button",
+                id="focus-btn-skip",
             ),
             Button(
                 "✗ Reject",
@@ -1249,6 +1251,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
                 type="button",
+                id="focus-btn-reject",
             ),
             Button(
                 "Find Similar",
@@ -1257,7 +1260,13 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
+                id="focus-btn-similar",
                 **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
+            ),
+            Span(
+                "Keyboard: C S R F",
+                cls="text-xs text-slate-600 hidden sm:inline ml-2",
+                title="C=Confirm, S=Skip, R=Reject, F=Find Similar"
             ),
             cls="flex flex-wrap items-center gap-3 mt-6"
         )
@@ -1438,9 +1447,31 @@ def render_to_review_section(
                     cls="mt-6"
                 )
             # Show one item expanded + queue preview, wrapped in focus-container for HTMX swap
+            keyboard_shortcuts = Script("""
+                (function() {
+                    function focusKeyHandler(e) {
+                        // Don't trigger if typing in an input/textarea
+                        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                        // Don't trigger if a modal is open
+                        var modal = document.getElementById('photo-modal');
+                        if (modal && !modal.classList.contains('hidden')) return;
+                        var btn = null;
+                        if (e.key === 'c' || e.key === 'C') btn = document.getElementById('focus-btn-confirm');
+                        else if (e.key === 's' || e.key === 'S') btn = document.getElementById('focus-btn-skip');
+                        else if (e.key === 'r' || e.key === 'R') btn = document.getElementById('focus-btn-reject');
+                        else if (e.key === 'f' || e.key === 'F') btn = document.getElementById('focus-btn-similar');
+                        if (btn) { e.preventDefault(); btn.click(); }
+                    }
+                    // Remove any previous handler, add new one
+                    if (window._focusKeyHandler) document.removeEventListener('keydown', window._focusKeyHandler);
+                    window._focusKeyHandler = focusKeyHandler;
+                    document.addEventListener('keydown', focusKeyHandler);
+                })();
+            """)
             content = Div(
                 identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
                 up_next,
+                keyboard_shortcuts,
                 id="focus-container"
             )
         else:
@@ -4433,9 +4464,13 @@ def photo_view_content(
             tag_dropdown_id = f"tag-dropdown-{face_id.replace(':', '-').replace(' ', '_')}"
             tag_results_id = f"tag-results-{face_id.replace(':', '-').replace(' ', '_')}"
 
-            # Click handler: toggle tag dropdown instead of navigating away
+            # Click handler: close all other dropdowns, then toggle this one
             tag_script = (
                 f"on click halt the event's bubbling "
+                f"then set dropdowns to <div.tag-dropdown/> in closest .photo-viewer "
+                f"then for dd in dropdowns "
+                f"  if dd.id is not '{tag_dropdown_id}' add .hidden to dd end "
+                f"end "
                 f"then toggle .hidden on #{tag_dropdown_id} "
                 f"then set el to first <input/> in #{tag_dropdown_id} "
                 f"then if el call el.focus()"
@@ -4474,7 +4509,7 @@ def photo_view_content(
                     cls="flex items-center justify-between mt-2 pt-1 border-t border-slate-700"
                 ),
                 id=tag_dropdown_id,
-                cls="hidden absolute top-full left-0 mt-1 w-56 sm:w-64 bg-slate-800 border border-slate-600 "
+                cls="hidden tag-dropdown absolute top-full left-0 mt-1 w-56 sm:w-64 bg-slate-800 border border-slate-600 "
                     "rounded-lg shadow-xl p-2 z-20",
                 **{"_": "on click halt the event's bubbling"},  # Prevent clicks inside from closing
             )
@@ -4874,11 +4909,6 @@ def get(face_id: str, q: str = ""):
 
     # Search all identities (confirmed get priority in search_identities)
     results = registry.search_identities(q, exclude_id=exclude_id)
-    if not results:
-        return Div(
-            P("No matches found.", cls="text-slate-400 italic text-xs p-1"),
-            id=results_id
-        )
 
     crop_files = get_crop_files()
     items = []
@@ -4901,6 +4931,32 @@ def get(face_id: str, q: str = ""):
                 hx_swap="innerHTML",
                 type="button",
             )
+        )
+
+    # "+ Create New Identity" option — renames the face's current identity with the typed name
+    from urllib.parse import quote as _url_quote
+    create_btn = Button(
+        Div("+", cls="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg"),
+        Div(
+            Span(f'Create "{q.strip()}"', cls="text-sm text-indigo-300 truncate"),
+            Span("New identity", cls="text-xs text-slate-500"),
+            cls="flex flex-col min-w-0 text-left"
+        ),
+        cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
+            "border-t border-slate-700 mt-1 pt-1",
+        hx_post=f"/api/face/create-identity?face_id={face_id}&name={_url_quote(q.strip())}",
+        hx_target="#photo-modal-content",
+        hx_swap="innerHTML",
+        type="button",
+    )
+    items.append(create_btn)
+
+    if not results:
+        # Show only the create button with a "no matches" message
+        return Div(
+            P("No existing matches.", cls="text-slate-500 italic text-xs p-1"),
+            create_btn,
+            id=results_id,
         )
 
     return Div(*items, id=results_id)
@@ -4981,6 +5037,60 @@ def post(face_id: str, target_id: str, sess=None):
             status_code=200,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+
+@rt("/api/face/create-identity")
+def post(face_id: str, name: str, sess=None):
+    """
+    Create a named identity for a face by renaming its current identity.
+
+    Used from the tag dropdown "+ Create" button. Renames the face's current
+    identity (typically an INBOX singleton) to the user-provided name.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    name = name.strip()
+    if not name:
+        return Response(
+            to_xml(toast("Name cannot be empty.", "warning")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    source_identity = get_identity_for_face(registry, face_id)
+    if not source_identity:
+        return Response(
+            to_xml(toast("Face not found in any identity.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    identity_id = source_identity["identity_id"]
+    registry.rename_identity(identity_id, name)
+    save_registry(registry)
+
+    # Re-render the photo view to show the new name
+    photo_id = get_photo_id_for_face(face_id)
+    if photo_id:
+        photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True)
+        oob_toast = Div(
+            toast(f'Named as "{name}"!', "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
+        return (*photo_content, oob_toast)
+    else:
+        return toast(f'Named as "{name}"!', "success")
 
 
 @rt("/api/identity/{identity_id}/rejected")
