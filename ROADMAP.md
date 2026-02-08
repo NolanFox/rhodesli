@@ -12,24 +12,24 @@ Current: v0.10.0 · 663 tests · 148 photos · 181 faces · 23 confirmed
 
 ## Current State & Key Risks
 - **Merge direction bug (BUG-003) is CRITICAL** — Focus Mode's primary workflow is destructive
-- Lightbox arrows have been "fixed" 3 times and still break — needs tests-first approach
+- ~~Lightbox arrows~~ FIXED (4th attempt) — event delegation pattern with 16 regression tests
 - Server-side tests can't catch HTMX/JS bugs — recurring pattern of false "fixed" claims
 - JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
 - Only 1 admin (NolanFox@gmail.com) — no contributor roles yet
 
 ## Active Bugs (P0)
-- [ ] BUG-001: Lightbox arrows disappear after first photo (3rd fix attempt — write tests FIRST)
-- [ ] BUG-002: Face count label shows detection count, not displayed/tagged count
+- [x] BUG-001: Lightbox arrows disappear after first photo — fixed with event delegation (2026-02-08)
+- [x] BUG-002: Face count label shows detection count, not displayed/tagged count (2026-02-08)
 - [ ] BUG-003: Merge direction overwrites named identity with unnamed (CRITICAL)
-- [ ] BUG-004: Collection stats inconsistency (3rd fix attempt)
+- [x] BUG-004: Collection stats inconsistency — canonical _compute_sidebar_counts() (2026-02-08)
 
 ## Phase A: Stabilization (Next Session)
 Goal: Fix all active bugs, get site stable enough to share.
 
 - [ ] BUG-003: Direction-aware merge — preserve richer identity (BE-001)
-- [ ] BUG-001: Lightbox arrow fix with 5+ regression tests (FE-001, QA-001)
-- [ ] BUG-002: Face count label matches visible boxes (FE-025, QA-003)
-- [ ] BUG-004: Collection stats denominator fix (QA-003)
+- [x] BUG-001: Lightbox arrow fix with 16 regression tests, event delegation (2026-02-08)
+- [x] BUG-002: Face count label matches visible boxes (FE-025, QA-003) (2026-02-08)
+- [x] BUG-004: Collection stats denominator fix — canonical _compute_sidebar_counts() (2026-02-08)
 - [ ] FE-002: Keyboard arrow navigation in Match Mode
 - [ ] FE-003: Universal keyboard shortcuts across all photo views
 - [ ] FE-004: Consistent lightbox component across sections
@@ -99,6 +99,9 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-08: BUG-004 fix — canonical _compute_sidebar_counts() replaces 4 inline computations, 11 regression tests
+- [x] 2026-02-08: BUG-001 fix — lightbox arrows via event delegation, 16 regression tests
+- [x] 2026-02-08: BUG-002 fix — face count label now matches displayed face boxes, not raw detection count
 - [x] 2026-02-08: v0.10.0 release — face overlay colors, completion badges, tag dropdown, keyboard shortcuts
 - [x] 2026-02-07: Proposals admin page + sidebar nav link
 - [x] 2026-02-07: AD-001 fix in cluster_new_faces.py (multi-anchor, not centroid)

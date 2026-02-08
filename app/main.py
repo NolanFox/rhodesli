@@ -298,6 +298,36 @@ def _count_pending_uploads() -> int:
     return sum(1 for u in data["uploads"].values() if u["status"] == "pending")
 
 
+def _compute_sidebar_counts(registry) -> dict:
+    """Compute sidebar navigation counts from a loaded registry.
+
+    This is the SINGLE canonical source for sidebar counts.
+    All pages with a sidebar MUST call this instead of computing counts inline.
+    """
+    _build_caches()
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
+    rejected = registry.list_identities(state=IdentityState.REJECTED)
+    contested = registry.list_identities(state=IdentityState.CONTESTED)
+
+    to_review = inbox + proposed
+    dismissed = rejected + contested
+    photo_count = len(_photo_cache) if _photo_cache else 0
+    proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, 'list_proposed_matches') else 0
+
+    return {
+        "to_review": len(to_review),
+        "confirmed": len(confirmed_list),
+        "skipped": len(skipped_list),
+        "rejected": len(dismissed),
+        "photos": photo_count,
+        "pending_uploads": _count_pending_uploads(),
+        "proposals": proposal_count,
+    }
+
+
 async def _notify_admin_upload(uploader_email: str, job_id: str, file_count: int, source: str) -> None:
     """Send email notification to admins about a new pending upload.
 
@@ -3252,7 +3282,7 @@ def _get_featured_photos(limit: int = 8) -> list:
             "url": photo_url(filename),
             "width": w,
             "height": h,
-            "face_count": len(faces),
+            "face_count": len(face_boxes),
             "face_boxes": face_boxes,
         })
     return results
@@ -3892,21 +3922,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
     skipped_list.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
     dismissed.sort(key=lambda x: x.get("updated_at", ""), reverse=True)
 
-    # Get photo count for sidebar
-    _build_caches()
-    photo_count = len(_photo_cache) if _photo_cache else 0
-
-    # Calculate counts for sidebar
-    proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, 'list_proposed_matches') else 0
-    counts = {
-        "to_review": len(to_review),
-        "confirmed": len(confirmed_list),
-        "skipped": len(skipped_list),
-        "rejected": len(dismissed),
-        "photos": photo_count,
-        "pending_uploads": _count_pending_uploads(),
-        "proposals": proposal_count,
-    }
+    # Canonical sidebar counts (single source of truth)
+    counts = _compute_sidebar_counts(registry)
 
     # Validate section parameter
     valid_sections = ("to_review", "confirmed", "skipped", "rejected", "photos")
@@ -4159,6 +4176,73 @@ def get(section: str = None, view: str = "focus", current: str = None,
         # Styled confirmation modal (replaces native browser confirm())
         confirm_modal(),
         sidebar_script,
+        # Global event delegation for lightbox/photo navigation (BUG-001 fix).
+        # ONE listener on document handles all nav clicks and keyboard events.
+        # This never needs rebinding because it's on document, not swapped DOM.
+        Script("""
+            // --- Global event delegation for photo/lightbox navigation ---
+            // Click delegation: dispatch based on data-action attribute
+            document.addEventListener('click', function(e) {
+                var btn = e.target.closest('[data-action]');
+                if (!btn) return;
+                var action = btn.getAttribute('data-action');
+
+                // Photo modal prev/next (Photos grid browsing)
+                if (action === 'photo-nav-prev' || action === 'photo-nav-next') {
+                    e.preventDefault();
+                    var idx = parseInt(btn.getAttribute('data-nav-idx'), 10);
+                    if (typeof photoNavTo === 'function' && !isNaN(idx)) {
+                        photoNavTo(idx);
+                    } else {
+                        var url = btn.getAttribute('data-nav-url');
+                        if (url) htmx.ajax('GET', url, {target:'#photo-modal-content', swap:'innerHTML'});
+                    }
+                    return;
+                }
+
+                // Lightbox prev/next — HTMX handles these via hx-get, so no
+                // extra JS needed. data-action is for keyboard delegation below.
+            });
+
+            // Keyboard delegation: one global listener, reads DOM for current state
+            document.addEventListener('keydown', function(e) {
+                // Photo modal (Photos grid browsing)
+                var photoModal = document.getElementById('photo-modal');
+                if (photoModal && !photoModal.classList.contains('hidden')) {
+                    if (e.key === 'ArrowLeft') {
+                        var prev = document.querySelector('[data-action="photo-nav-prev"]');
+                        if (prev) { prev.click(); e.preventDefault(); }
+                        else if (typeof photoNavTo === 'function' && window._photoNavIdx > 0) {
+                            photoNavTo(window._photoNavIdx - 1); e.preventDefault();
+                        }
+                    } else if (e.key === 'ArrowRight') {
+                        var next = document.querySelector('[data-action="photo-nav-next"]');
+                        if (next) { next.click(); e.preventDefault(); }
+                        else if (typeof photoNavTo === 'function' && window._photoNavIdx < (window._photoNavIds||[]).length - 1) {
+                            photoNavTo(window._photoNavIdx + 1); e.preventDefault();
+                        }
+                    } else if (e.key === 'Escape') {
+                        photoModal.classList.add('hidden'); e.preventDefault();
+                    }
+                    return;
+                }
+
+                // Identity lightbox
+                var lightbox = document.getElementById('photo-lightbox');
+                if (lightbox && !lightbox.classList.contains('hidden')) {
+                    if (e.key === 'ArrowLeft') {
+                        var lbPrev = document.querySelector('[data-action="lightbox-prev"]');
+                        if (lbPrev) { lbPrev.click(); e.preventDefault(); }
+                    } else if (e.key === 'ArrowRight') {
+                        var lbNext = document.querySelector('[data-action="lightbox-next"]');
+                        if (lbNext) { lbNext.click(); e.preventDefault(); }
+                    } else if (e.key === 'Escape') {
+                        lightbox.classList.add('hidden'); e.preventDefault();
+                    }
+                    return;
+                }
+            });
+        """),
         cls="h-full"
     )
 
@@ -4541,53 +4625,44 @@ def photo_view_content(
     nav_keyboard_script = None
 
     if prev_id or next_id:
-        # Build query params to chain navigation context
+        # Build navigation buttons with data-action attributes for event delegation.
+        # The global delegation handler (in the page layout) reads data-action,
+        # data-nav-idx, and data-nav-url to dispatch navigation. This pattern
+        # survives HTMX content swaps because the listener is on document, not
+        # on the swapped DOM nodes.
         if prev_id:
+            prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}"
             nav_prev = Button(
                 Span("<", cls="text-2xl"),
                 cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
                     "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
-                onclick=f"if(typeof photoNavTo==='function')photoNavTo({nav_idx - 1}); else htmx.ajax('GET','/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}&prev_id=&next_id=',{{target:'#photo-modal-content',swap:'innerHTML'}});",
                 type="button",
                 title="Previous photo",
                 id="photo-nav-prev",
+                data_action="photo-nav-prev",
+                data_nav_idx=str(nav_idx - 1),
+                data_nav_url=prev_url,
             )
         if next_id:
+            next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}"
             nav_next = Button(
                 Span(">", cls="text-2xl"),
                 cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
                     "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
-                onclick=f"if(typeof photoNavTo==='function')photoNavTo({nav_idx + 1}); else htmx.ajax('GET','/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}&prev_id=&next_id=',{{target:'#photo-modal-content',swap:'innerHTML'}});",
                 type="button",
                 title="Next photo",
                 id="photo-nav-next",
+                data_action="photo-nav-next",
+                data_nav_idx=str(nav_idx + 1),
+                data_nav_url=next_url,
             )
         if nav_idx >= 0 and nav_total > 0:
             nav_counter = Span(
                 f"{nav_idx + 1} / {nav_total}",
                 cls="text-slate-400 text-sm ml-auto"
             )
-
-        # Keyboard navigation script — delegates to photoNavTo when available (Photos grid),
-        # falls back to direct URL navigation for other contexts
-        prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}" if prev_id else ""
-        next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}" if next_id else ""
-        nav_keyboard_script = Script(f"""(function(){{
-            function pmkh(e){{
-                if(e.key==='ArrowLeft'){{
-                    if(typeof photoNavTo==='function'&&window._photoNavIdx>0){{photoNavTo(window._photoNavIdx-1);e.preventDefault();}}
-                    else if('{prev_url}'){{htmx.ajax('GET','{prev_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();}}
-                }}else if(e.key==='ArrowRight'){{
-                    if(typeof photoNavTo==='function'&&window._photoNavIdx<(window._photoNavIds||[]).length-1){{photoNavTo(window._photoNavIdx+1);e.preventDefault();}}
-                    else if('{next_url}'){{htmx.ajax('GET','{next_url}',{{target:'#photo-modal-content',swap:'innerHTML'}});e.preventDefault();}}
-                }}else if(e.key==='Escape'){{
-                    document.getElementById('photo-modal').classList.add('hidden');
-                    document.removeEventListener('keydown',pmkh);
-                }}
-            }}
-            if(window._pmKb)document.removeEventListener('keydown',window._pmKb);
-            window._pmKb=pmkh;document.addEventListener('keydown',pmkh);
-        }})();""")
+        # No per-swap keyboard script needed — the global event delegation
+        # handler in the page layout handles ArrowLeft/ArrowRight/Escape.
 
     # Main content
     content = Div(
@@ -5795,12 +5870,17 @@ def get(identity_id: str, index: int = 0):
                 lb = Span(dn or "Unknown", cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none") if dn else None
             face_overlays.append(Div(lb, cls=oc, style=f"left: {lp:.2f}%; top: {tp:.2f}%; width: {wp:.2f}%; height: {hp:.2f}%;"))
 
+    # Lightbox prev/next buttons use data-action for event delegation.
+    # The global handler reads data-action and hx-get to dispatch navigation.
     prev_btn = Button(Span("<", cls="text-3xl"), cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
-        hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}", hx_target="#lightbox-content", hx_swap="innerHTML", type="button") if index > 0 else None
+        hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}", hx_target="#lightbox-content", hx_swap="innerHTML",
+        type="button", data_action="lightbox-prev") if index > 0 else None
     next_btn = Button(Span(">", cls="text-3xl"), cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
-        hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}", hx_target="#lightbox-content", hx_swap="innerHTML", type="button") if index < total - 1 else None
+        hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}", hx_target="#lightbox-content", hx_swap="innerHTML",
+        type="button", data_action="lightbox-next") if index < total - 1 else None
 
-    nav_script = Script(f"""(function(){{var el=document.getElementById('lightbox-photo-container');if(!el)return;var sx=0;el.addEventListener('touchstart',function(e){{sx=e.touches[0].clientX}});el.addEventListener('touchend',function(e){{var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){{if(d>0&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(d<0&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}})}}}});function kh(e){{if(e.key==='ArrowLeft'&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(e.key==='ArrowRight'&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(e.key==='Escape'){{document.getElementById('photo-lightbox').classList.add('hidden');document.removeEventListener('keydown',kh)}}}}if(window._lbKb)document.removeEventListener('keydown',window._lbKb);window._lbKb=kh;document.addEventListener('keydown',kh)}})();""")
+    # Touch swipe script only — keyboard is handled by global event delegation
+    nav_script = Script(f"""(function(){{var el=document.getElementById('lightbox-photo-container');if(!el)return;var sx=0;el.addEventListener('touchstart',function(e){{sx=e.touches[0].clientX}});el.addEventListener('touchend',function(e){{var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){{if(d>0&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(d<0&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}})}}}});}})();""")
 
     return Div(
         Div(Img(src=photo_url(photo["filename"]), alt=photo["filename"], cls="max-h-[80vh] max-w-full object-contain"),
@@ -6421,31 +6501,9 @@ def get(sess=None):
         }
     """)
 
-    # Get counts for sidebar
+    # Canonical sidebar counts
     registry = load_registry()
-    inbox = registry.list_identities(state=IdentityState.INBOX)
-    proposed = registry.list_identities(state=IdentityState.PROPOSED)
-    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
-    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
-    rejected = registry.list_identities(state=IdentityState.REJECTED)
-    contested = registry.list_identities(state=IdentityState.CONTESTED)
-
-    to_review = inbox + proposed
-    dismissed = rejected + contested
-
-    # Get photo count
-    _build_caches()
-    photo_count = len(_photo_cache) if _photo_cache else 0
-
-    counts = {
-        "to_review": len(to_review),
-        "confirmed": len(confirmed_list),
-        "skipped": len(skipped_list),
-        "rejected": len(dismissed),
-        "photos": photo_count,
-        "pending_uploads": _count_pending_uploads(),
-        "proposals": 0,
-    }
+    counts = _compute_sidebar_counts(registry)
 
     # Load existing sources for autocomplete
     existing_sources = []
@@ -6913,28 +6971,9 @@ def get(sess=None):
         body { background-color: #0f172a; }
     """)
 
-    # Build sidebar counts
+    # Canonical sidebar counts
     registry = load_registry()
-    inbox = registry.list_identities(state=IdentityState.INBOX)
-    proposed = registry.list_identities(state=IdentityState.PROPOSED)
-    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
-    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
-    rejected = registry.list_identities(state=IdentityState.REJECTED)
-    contested = registry.list_identities(state=IdentityState.CONTESTED)
-    to_review = inbox + proposed
-    dismissed = rejected + contested
-    _build_caches()
-    photo_count = len(_photo_cache) if _photo_cache else 0
-
-    counts = {
-        "to_review": len(to_review),
-        "confirmed": len(confirmed_list),
-        "skipped": len(skipped_list),
-        "rejected": len(dismissed),
-        "photos": photo_count,
-        "pending_uploads": _count_pending_uploads(),
-        "proposals": 0,
-    }
+    counts = _compute_sidebar_counts(registry)
 
     # Load pending uploads
     pending = _load_pending_uploads()
@@ -7132,29 +7171,9 @@ def get(sess=None):
         body { background-color: #0f172a; }
     """)
 
-    # Build sidebar counts (reuse from other admin pages)
+    # Canonical sidebar counts
     registry = load_registry()
-    inbox = registry.list_identities(state=IdentityState.INBOX)
-    proposed = registry.list_identities(state=IdentityState.PROPOSED)
-    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
-    skipped_list = registry.list_identities(state=IdentityState.SKIPPED)
-    rejected_ids = registry.list_identities(state=IdentityState.REJECTED)
-    contested = registry.list_identities(state=IdentityState.CONTESTED)
-    to_review = inbox + proposed
-    dismissed = rejected_ids + contested
-    _build_caches()
-    photo_count = len(_photo_cache) if _photo_cache else 0
-    proposals = registry.list_proposed_matches() if hasattr(registry, 'list_proposed_matches') else []
-
-    counts = {
-        "to_review": len(to_review),
-        "confirmed": len(confirmed_list),
-        "skipped": len(skipped_list),
-        "rejected": len(dismissed),
-        "photos": photo_count,
-        "pending_uploads": _count_pending_uploads(),
-        "proposals": len(proposals),
-    }
+    counts = _compute_sidebar_counts(registry)
 
     # Sidebar styles (reuse)
     page_style = Style("""
@@ -7235,7 +7254,7 @@ def get(sess=None):
             Div(
                 Div(
                     H2("Proposed Matches", cls="text-2xl font-bold text-white"),
-                    P(f"{len(proposals)} pending proposal{'s' if len(proposals) != 1 else ''}", cls="text-sm text-slate-400 mt-1"),
+                    P(f"{counts['proposals']} pending proposal{'s' if counts['proposals'] != 1 else ''}", cls="text-sm text-slate-400 mt-1"),
                     cls="mb-6"
                 ),
                 # Load proposals list via HTMX on page load

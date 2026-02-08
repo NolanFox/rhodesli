@@ -99,8 +99,8 @@ class TestPhotoViewNavigation:
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     @patch("app.main.load_registry")
-    def test_keyboard_script_included(self, mock_reg, mock_dim, mock_meta):
-        """Keyboard navigation script included when nav context present."""
+    def test_nav_buttons_have_data_action(self, mock_reg, mock_dim, mock_meta):
+        """Nav buttons have data-action attributes for global event delegation."""
         from app.main import photo_view_content, to_xml
 
         mock_meta.return_value = {
@@ -116,9 +116,9 @@ class TestPhotoViewNavigation:
         )
         html = to_xml(result)
 
-        assert "ArrowLeft" in html
-        assert "ArrowRight" in html
-        assert "Escape" in html
+        # Buttons carry data-action for the global delegation handler
+        assert 'data-action="photo-nav-prev"' in html
+        assert 'data-action="photo-nav-next"' in html
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
@@ -157,14 +157,14 @@ class TestPhotoModalEscape:
         assert 'tabindex="-1"' in html
 
 
-class TestArrowButtonsUsePhotoNavTo:
-    """Regression: arrow buttons must call photoNavTo() for continuous browsing."""
+class TestArrowButtonsUseEventDelegation:
+    """Regression: arrow buttons must use data-action for event delegation (BUG-001)."""
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     @patch("app.main.load_registry")
-    def test_prev_button_calls_photoNavTo(self, mock_reg, mock_dim, mock_meta):
-        """Prev button uses photoNavTo for client-side navigation chain."""
+    def test_prev_button_has_data_action_and_index(self, mock_reg, mock_dim, mock_meta):
+        """Prev button uses data-action and data-nav-idx for delegation."""
         from app.main import photo_view_content, to_xml
 
         mock_meta.return_value = {
@@ -181,13 +181,14 @@ class TestArrowButtonsUsePhotoNavTo:
         )
         html = to_xml(result)
 
-        assert "photoNavTo(0)" in html  # nav_idx - 1 = 0
+        assert 'data-action="photo-nav-prev"' in html
+        assert 'data-nav-idx="0"' in html  # nav_idx - 1 = 0
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     @patch("app.main.load_registry")
-    def test_next_button_calls_photoNavTo(self, mock_reg, mock_dim, mock_meta):
-        """Next button uses photoNavTo for client-side navigation chain."""
+    def test_next_button_has_data_action_and_index(self, mock_reg, mock_dim, mock_meta):
+        """Next button uses data-action and data-nav-idx for delegation."""
         from app.main import photo_view_content, to_xml
 
         mock_meta.return_value = {
@@ -204,13 +205,14 @@ class TestArrowButtonsUsePhotoNavTo:
         )
         html = to_xml(result)
 
-        assert "photoNavTo(2)" in html  # nav_idx + 1 = 2
+        assert 'data-action="photo-nav-next"' in html
+        assert 'data-nav-idx="2"' in html  # nav_idx + 1 = 2
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     @patch("app.main.load_registry")
-    def test_keyboard_script_delegates_to_photoNavTo(self, mock_reg, mock_dim, mock_meta):
-        """Keyboard handler delegates to photoNavTo when available."""
+    def test_no_inline_onclick_on_arrows(self, mock_reg, mock_dim, mock_meta):
+        """Arrow buttons must NOT use inline onclick (dies on HTMX swap)."""
         from app.main import photo_view_content, to_xml
 
         mock_meta.return_value = {
@@ -226,8 +228,8 @@ class TestArrowButtonsUsePhotoNavTo:
         )
         html = to_xml(result)
 
-        # Keyboard handler should check for photoNavTo before using direct URLs
-        assert "typeof photoNavTo" in html
+        # No inline onclick that calls photoNavTo — delegation handles it
+        assert 'onclick="if(typeof photoNavTo' not in html
 
 
 class TestPhotosGridNavScript:
