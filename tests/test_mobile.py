@@ -196,10 +196,10 @@ class TestModalResponsiveness:
     """Modals must be usable on mobile viewports."""
 
     def test_photo_modal_has_full_width(self, client):
-        """Photo modal content uses w-full to fill mobile screens."""
+        """Photo modal content uses w-full with responsive max-width for mobile."""
         response = client.get(WORKSTATION_URL)
         text = response.text
-        assert "w-full max-w-5xl" in text
+        assert "w-full max-w-full sm:max-w-5xl" in text
 
     def test_login_modal_has_full_width(self, client):
         """Login modal uses w-full to fill mobile screens."""

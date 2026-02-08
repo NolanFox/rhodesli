@@ -1259,7 +1259,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 type="button",
                 **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
             ),
-            cls="flex items-center gap-3 mt-6"
+            cls="flex flex-wrap items-center gap-3 mt-6"
         )
     else:
         actions = Div(
@@ -1286,7 +1286,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                             alt=name,
                             cls="w-full h-full object-cover"
                         ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                        cls="w-48 h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                        cls="w-32 h-32 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
                     hx_get=f"/photo/{main_photo_id}/partial?face={face_id}" if main_photo_id else None,
@@ -1296,7 +1296,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                     title="Click to view photo",
                 ) if main_photo_id else Div(
                     Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-48 h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                    cls="w-32 h-32 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                 ),
                 cls="flex-shrink-0"
             ),
@@ -1330,9 +1330,9 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 ),
                 cls="flex-1 min-w-0"
             ),
-            cls="flex gap-6"
+            cls="flex flex-col sm:flex-row gap-4 sm:gap-6"
         ),
-        cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6",
+        cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6",
         id="focus-card"
     )
 
@@ -1882,6 +1882,21 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             if (window._photoNavKb) document.removeEventListener('keydown', window._photoNavKb);
             window._photoNavKb = kh;
             document.addEventListener('keydown', kh);
+        }})();
+        // Touch swipe for photo modal navigation
+        (function() {{
+            var mc = document.getElementById('photo-modal-content');
+            if (!mc) return;
+            var sx = 0, sy = 0;
+            mc.addEventListener('touchstart', function(e) {{ sx = e.touches[0].clientX; sy = e.touches[0].clientY; }}, {{passive: true}});
+            mc.addEventListener('touchend', function(e) {{
+                var dx = e.changedTouches[0].clientX - sx;
+                var dy = e.changedTouches[0].clientY - sy;
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {{
+                    if (dx > 0) photoNavTo(window._photoNavIdx - 1);
+                    else photoNavTo(window._photoNavIdx + 1);
+                }}
+            }});
         }})();
     """)
 
@@ -2797,10 +2812,10 @@ def photo_modal() -> Div:
                 P("Loading...", cls="text-slate-400 text-center py-8"),
                 id="photo-modal-content",
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-auto p-6 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-5xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700"
         ),
         id="photo-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9999]",
+        cls="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[9999]",
         **{"_": "on keydown[key=='Escape'] add .hidden to me"},
         tabindex="-1",
     )
@@ -2875,10 +2890,10 @@ def compare_modal() -> Div:
                 P("Loading...", cls="text-slate-400 text-center py-8"),
                 id="compare-modal-content",
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-auto p-6 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700"
         ),
         id="compare-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[10000]",
+        cls="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[10000]",
         **{"_": "on keydown[key=='Escape'] add .hidden to me"},
     )
 
@@ -4436,7 +4451,7 @@ def photo_view_content(
                     cls="flex items-center justify-between mt-2 pt-1 border-t border-slate-700"
                 ),
                 id=tag_dropdown_id,
-                cls="hidden absolute top-full left-0 mt-1 w-64 bg-slate-800 border border-slate-600 "
+                cls="hidden absolute top-full left-0 mt-1 w-56 sm:w-64 bg-slate-800 border border-slate-600 "
                     "rounded-lg shadow-xl p-2 z-20",
                 **{"_": "on click halt the event's bubbling"},  # Prevent clicks inside from closing
             )
@@ -5714,8 +5729,8 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                 Div(Img(src=n_url or "", alt=n_name, cls="max-w-full max-h-[50vh] object-contain rounded") if n_url else Div(Span("?", cls="text-6xl text-slate-500"), cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
                     cls="flex justify-center bg-slate-700/50 rounded p-2"),
                 _cn("n", neighbor_idx, len(nf), target_idx), cls="flex-1 min-w-0"),
-            cls="flex gap-4 items-start"),
-        Div(m_btn, ns_btn, cl_btn, cls="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700"))
+            cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start"),
+        Div(m_btn, ns_btn, cl_btn, cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700"))
 
 
 @rt("/api/identity/{identity_id}/rename-form")
@@ -8102,13 +8117,13 @@ def get():
                 cls="flex items-center justify-center px-6 pt-8"
             ),
             _face_card(name_b, crop_url_b, face_id_b, photo_id_b, faces_b),
-            cls="flex items-start justify-center gap-2"
+            cls="flex flex-col sm:flex-row items-center sm:items-start justify-center gap-2"
         ),
         # Action buttons
         Div(
             Button(
                 "Same Person",
-                cls="px-8 py-3 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors",
+                cls="px-8 py-3 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px]",
                 hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
@@ -8116,7 +8131,7 @@ def get():
             ),
             Button(
                 "Different People",
-                cls="px-8 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors",
+                cls="px-8 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors min-h-[44px]",
                 hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different&confidence={confidence_pct}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
@@ -8124,13 +8139,13 @@ def get():
             ),
             Button(
                 "Skip",
-                cls="px-4 py-3 text-sm text-slate-400 hover:text-slate-300 transition-colors",
+                cls="px-4 py-3 text-sm text-slate-400 hover:text-slate-300 transition-colors min-h-[44px]",
                 hx_get="/api/match/next-pair",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
             ),
-            cls="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-slate-700"
+            cls="flex flex-wrap items-center justify-center gap-4 mt-8 pt-4 border-t border-slate-700"
         ),
         cls="match-pair"
     )
