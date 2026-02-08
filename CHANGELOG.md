@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.11.0] - 2026-02-08
+
+### Added
+- **Merge Direction Tests**: 18 tests covering auto-correction (named identity always survives), undo safety, state promotion, name conflict resolution, and tiebreakers
+- **Event Delegation Lightbox** (BUG-001 permanent fix): All photo navigation uses data-action attributes with ONE global click/keydown listener. No more HTMX swap breakage. 16 regression tests.
+- **Universal Keyboard Shortcuts** (FE-002/FE-003): Match mode (Y/N/S), Focus mode (C/S/R/F), and photo navigation all consolidated in one global keydown handler with input field suppression. 10 tests.
+- **Client-side Instant Search** (FE-030/FE-031): Sidebar identity list has data-name attributes and 150ms debounced client-side filter. Server-side search preserved as fallback. 13 tests.
+- **Skip Hints**: Skipped section lazy-loads ML suggestions showing top 3 similar confirmed identities ("Might be: Leon Capeluto (dist 0.82, +15% gap)"). 6 tests.
+- **Confidence Gap**: Neighbor results now show relative ranking — how much closer the best match is vs next-best, as a percentage margin. Helps humans adjudicate comparative evidence.
+- **Smoke Tests**: 21 tests verifying all major routes return 200, required scripts are loaded, interactive elements have correct attributes.
+- **Canonical Collection Stats** (BUG-004 fix): `_compute_sidebar_counts()` replaces 4 inline stats computations. 11 regression tests.
+
+### Fixed
+- **BUG-001**: Lightbox arrows disappear after HTMX swap — permanent fix with event delegation (4th and final attempt)
+- **BUG-002**: Face count label now shows displayed face boxes, not raw detection count
+- **BUG-003**: Merge direction already fixed in v0.10.0 code; now has 18 direction-specific tests confirming correctness
+- **BUG-004**: Collection stats inconsistency — single canonical function
+
+### Changed
+- Test count: 663 → 766 (103 new tests)
+- Neighbor cards show confidence gap instead of raw percentile
+- Focus mode keyboard handler removed (consolidated into global handler)
+
 ## [v0.10.0] - 2026-02-08
 
 ### Added

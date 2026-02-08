@@ -201,3 +201,25 @@
 - **Mistake**: Test fixtures for IdentityRegistry omitted `"history": []` and used `IdentityRegistry(path)` instead of `IdentityRegistry.load(path)`.
 - **Rule**: When creating test fixtures for data classes, mirror the exact schema including all required fields. Use the same load path the app uses.
 - **Prevention**: Read the `load()` classmethod before writing test fixtures.
+
+## Session 2026-02-08: Stabilization Session 3
+
+### Lesson 38: Read the code before assuming a bug exists
+- **Observation**: BUG-003 (merge direction) was listed as CRITICAL but was already fully fixed in code. `resolve_merge_direction()`, undo_merge, state promotion, and name conflict resolution were all implemented. The only gap was test coverage.
+- **Rule**: Before planning a fix, read the actual implementation code. The bug may already be fixed.
+- **Prevention**: Start every bug investigation with `grep -n` to find the actual code, not just the design doc.
+
+### Lesson 39: Event delegation is the ONLY stable pattern for HTMX apps
+- **Observation**: Lightbox arrows broke 3 times because each fix re-bound to DOM nodes that HTMX later swapped. The permanent fix uses ONE global listener on `document` with `data-action` dispatch.
+- **Rule**: ALL JS event handlers in HTMX apps MUST use global event delegation via `data-action` attributes. NEVER bind directly to DOM nodes that HTMX may swap.
+- **Prevention**: Added to CLAUDE.md as a non-negotiable rule. Smoke tests verify `data-action` attributes exist.
+
+### Lesson 40: Parallel subagents work well for independent DOM fixes
+- **Observation**: 3 subagents fixed BUG-001, BUG-002, and BUG-004 simultaneously, each touching different functions in the same file. All changes merged cleanly. Combined test count went from 663 to 716.
+- **Rule**: When UI bugs are in distinct functions, launch parallel subagents. Each should write tests first, then implement, then verify no regression.
+- **Prevention**: Use this pattern for future independent UI fixes.
+
+### Lesson 41: Confidence gap > absolute distance for human decision-making
+- **Observation**: Showing "15% closer than next-best" is more useful for humans than showing "distance: 0.82". Relative comparisons help adjudicate truth better than absolute scores.
+- **Rule**: When displaying ML results to non-technical users, prefer comparative metrics over absolute ones.
+- **Prevention**: The confidence_gap pattern can be reused for any ranked list.

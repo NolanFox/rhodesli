@@ -11,27 +11,28 @@ Current: v0.10.0 · 663 tests · 148 photos · 181 faces · 23 confirmed
 - When starting a task, update checkbox and add start date
 
 ## Current State & Key Risks
-- **Merge direction bug (BUG-003) is CRITICAL** — Focus Mode's primary workflow is destructive
+- ~~Merge direction bug (BUG-003)~~ FIXED — auto-correction + 18 direction tests
 - ~~Lightbox arrows~~ FIXED (4th attempt) — event delegation pattern with 16 regression tests
-- Server-side tests can't catch HTMX/JS bugs — recurring pattern of false "fixed" claims
+- ~~Face count / collection stats~~ FIXED — canonical functions, 19 regression tests
 - JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
 - Only 1 admin (NolanFox@gmail.com) — no contributor roles yet
 
 ## Active Bugs (P0)
 - [x] BUG-001: Lightbox arrows disappear after first photo — fixed with event delegation (2026-02-08)
 - [x] BUG-002: Face count label shows detection count, not displayed/tagged count (2026-02-08)
-- [ ] BUG-003: Merge direction overwrites named identity with unnamed (CRITICAL)
+- [x] BUG-003: Merge direction — already fixed in code, 18 direction-specific tests added (2026-02-08)
 - [x] BUG-004: Collection stats inconsistency — canonical _compute_sidebar_counts() (2026-02-08)
 
-## Phase A: Stabilization (Next Session)
+## Phase A: Stabilization — COMPLETE
 Goal: Fix all active bugs, get site stable enough to share.
 
-- [ ] BUG-003: Direction-aware merge — preserve richer identity (BE-001)
+- [x] BUG-003: Direction-aware merge — already implemented with 18 tests (2026-02-08)
 - [x] BUG-001: Lightbox arrow fix with 16 regression tests, event delegation (2026-02-08)
 - [x] BUG-002: Face count label matches visible boxes (FE-025, QA-003) (2026-02-08)
 - [x] BUG-004: Collection stats denominator fix — canonical _compute_sidebar_counts() (2026-02-08)
 - [x] FE-002: Keyboard shortcuts in Match Mode — Y/N/S for same/different/skip (2026-02-08)
 - [x] FE-003: Universal keyboard shortcuts — consolidated global handler for all views (2026-02-08)
+- [x] Smoke tests: 21 tests covering all routes, scripts, interactive elements (2026-02-08)
 - [ ] FE-004: Consistent lightbox component across sections
 - [ ] Smoke test all fixes on live site
 
@@ -99,6 +100,10 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-08: v0.11.0 — Phase A stabilization: all 4 P0 bugs fixed, 103 new tests (663→766)
+- [x] 2026-02-08: Skip hints + confidence gap — ML suggestions for skipped identities, relative ranking
+- [x] 2026-02-08: Smoke tests — 21 tests covering all routes, scripts, interactive elements
+- [x] 2026-02-08: BUG-003 — 18 merge direction tests confirming auto-correction is working
 - [x] 2026-02-08: FE-002/FE-003 — universal keyboard shortcuts (match mode Y/N/S, consolidated global handler)
 - [x] 2026-02-08: FE-030/FE-031 — client-side instant name search with 150ms debounce filtering
 - [x] 2026-02-08: BUG-004 fix — canonical _compute_sidebar_counts() replaces 4 inline computations, 11 regression tests
