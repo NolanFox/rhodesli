@@ -3860,13 +3860,131 @@ def landing_page(stats, featured_photos):
                   cls="text-amber-200/40 text-sm text-center font-semibold tracking-wide"),
                 P("Preserving the photographic heritage of the Jewish Community of Rhodes",
                   cls="text-amber-100/25 text-xs text-center mt-1"),
-                P("Built with care. No generative AI -- only forensic face matching.",
+                P(A("About Rhodesli", href="/about", cls="text-amber-200/40 hover:text-amber-200 underline"),
+                  " · Built with care. No generative AI -- only forensic face matching.",
                   cls="text-amber-100/20 text-xs text-center mt-3"),
                 cls="max-w-6xl mx-auto px-6 py-8"
             ),
             cls="border-t border-amber-900/20"
         ),
         cls="min-h-screen landing-bg"
+    )
+
+
+@rt("/about")
+def get():
+    """About page: what Rhodesli is, how to help, FAQ."""
+    stats = _compute_landing_stats()
+
+    return (
+        Title("About Rhodesli"),
+        Style("""
+            .about-bg { background: linear-gradient(180deg, #1a1511 0%, #1e1a15 40%, #1a1511 100%); }
+            .about-section { max-width: 48rem; margin: 0 auto; }
+            .faq-q { cursor: pointer; }
+            .faq-q:hover { color: #fbbf24; }
+        """),
+        Main(
+            # Back nav
+            Div(
+                A("< Back to Archive", href="/", cls="text-amber-300/70 hover:text-amber-200 text-sm"),
+                cls="max-w-3xl mx-auto px-6 pt-8"
+            ),
+            # Title
+            Div(
+                H1("About Rhodesli", cls="text-3xl font-serif font-bold text-amber-100 mb-2"),
+                Div(cls="w-16 h-0.5 bg-amber-400/40 mb-6"),
+                cls="max-w-3xl mx-auto px-6 pt-4"
+            ),
+            # What is Rhodesli
+            Div(
+                H2("What is Rhodesli?", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                P(
+                    "Rhodesli is a digital archive preserving photographs from the Jewish community of Rhodes (Rodosli). "
+                    "For centuries, a vibrant Sephardic Jewish community thrived on the island of Rhodes. Their photographs "
+                    "-- family portraits, community events, newspaper clippings -- are scattered across descendants in "
+                    "New York, Miami, Tampa, Seattle, and beyond.",
+                    cls="text-slate-300 leading-relaxed mb-4"
+                ),
+                P(
+                    "This project uses forensic face matching (not generative AI) to help identify the people in these "
+                    "historical photographs. Machine learning proposes hypotheses about who appears in each photo, and "
+                    "human community members confirm or correct those proposals.",
+                    cls="text-slate-300 leading-relaxed mb-4"
+                ),
+                P(
+                    f"So far, the archive contains {stats['photo_count']} photographs with {stats['total_faces']} faces detected. "
+                    f"Of these, {stats['named_count']} people have been positively identified.",
+                    cls="text-slate-400 leading-relaxed italic"
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # How to help
+            Div(
+                H2("How to Help", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                Div(
+                    Div(
+                        Span("1", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("Browse the archive", cls="text-slate-200 font-medium"),
+                        P("Visit the Photos section to see all photographs. Hover over faces to see who has been identified.", cls="text-slate-400 text-sm mt-1"),
+                        cls="flex items-start mb-4"
+                    ),
+                    Div(
+                        Span("2", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("Review the inbox", cls="text-slate-200 font-medium"),
+                        P("The 'To Review' section shows faces that need identification. The ML system suggests possible matches -- you confirm or reject.", cls="text-slate-400 text-sm mt-1"),
+                        cls="flex items-start mb-4"
+                    ),
+                    Div(
+                        Span("3", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("Confirm identities", cls="text-slate-200 font-medium"),
+                        P("When you recognize someone, click 'Confirm' to mark the identification as correct. This helps the system learn.", cls="text-slate-400 text-sm mt-1"),
+                        cls="flex items-start mb-4"
+                    ),
+                    Div(
+                        Span("4", cls="text-amber-400 font-bold text-lg mr-3"),
+                        Span("Skip what you don't know", cls="text-slate-200 font-medium"),
+                        P("It's perfectly fine to skip faces you don't recognize. Skipped items can be revisited later when more context is available.", cls="text-slate-400 text-sm mt-1"),
+                        cls="flex items-start mb-4"
+                    ),
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # FAQ
+            Div(
+                H2("Frequently Asked Questions", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                Div(
+                    Div(
+                        H3("What does 'Skip' mean?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("Skip means 'I don't know right now.' The face goes to the Skipped section where it can be revisited later. Nothing is lost.", cls="text-slate-400 text-sm mb-4"),
+                    ),
+                    Div(
+                        H3("What happens when I merge two identities?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("Merging combines all face photos from both identities into one. The named identity always survives. If both have names, you'll be asked to choose. Merges can be undone.", cls="text-slate-400 text-sm mb-4"),
+                    ),
+                    Div(
+                        H3("Can I undo mistakes?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("Yes. Confirmations, rejections, and merges can all be undone. The system keeps full history. No data is ever permanently deleted.", cls="text-slate-400 text-sm mb-4"),
+                    ),
+                    Div(
+                        H3("How does the face matching work?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("The system uses InsightFace/AdaFace to detect faces and create mathematical embeddings (512-dimensional vectors). It compares these vectors to find similar faces. It never generates or invents -- only matches.", cls="text-slate-400 text-sm mb-4"),
+                    ),
+                    Div(
+                        H3("Who can modify data?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("Currently, only the admin can confirm, reject, merge, or rename identities. Community members can browse freely. Contributor roles are planned for the future.", cls="text-slate-400 text-sm mb-4"),
+                    ),
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # Footer
+            Div(
+                P("Built with care. No generative AI -- only forensic face matching.", cls="text-amber-100/30 text-xs text-center"),
+                A("Back to Archive", href="/", cls="text-amber-300/60 hover:text-amber-200 text-sm block text-center mt-3"),
+                cls="about-section px-6 py-8 border-t border-amber-900/20"
+            ),
+            cls="min-h-screen about-bg"
+        ),
     )
 
 

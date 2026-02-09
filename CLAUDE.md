@@ -39,6 +39,7 @@ For detailed specs on any item, see `docs/BACKLOG.md`.
 9. Update CHANGELOG.md before ending any session with user-visible changes
 10. ML changes require reading docs/ml/ALGORITHMIC_DECISIONS.md first (enforced by path-scoped rules)
 11. New algorithmic decisions must be documented in AD-XXX format before code is committed
+12. JS event handlers MUST use global event delegation via data-action attributes — NEVER bind directly to DOM nodes that HTMX may swap
 
 @docs/CODING_RULES.md for detailed coding, testing, data safety rules
 
