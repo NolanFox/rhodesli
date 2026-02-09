@@ -19,7 +19,7 @@ Rhodesli uses a hybrid architecture that separates heavy AI processing from the 
 │                         ▼                                   │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │                  DATA STORE (data/)                  │   │
-│  │  • SQLite database (.db)                             │   │
+│  │  • JSON data (identities.json, photo_index.json)      │   │
 │  │  • NumPy embeddings (.npy)                           │   │
 │  └──────────────────────┬──────────────────────────────┘   │
 │                         │                                   │
@@ -55,7 +55,7 @@ rhodesli/
 │   ├── test_app.py        # Web application tests
 │   └── test_crop.py       # Face cropping logic tests
 ├── data/                   # Generated embeddings & database
-│   └── (*.npy, *.db - gitignored)
+│   └── (*.json, *.npy - gitignored)
 ├── notebooks/              # Experimental research
 ├── requirements.txt        # Web dependencies (lightweight)
 └── requirements-local.txt  # Ingestion dependencies (heavy)

@@ -342,13 +342,13 @@ class TestModalCloseButton:
         assert 'aria-label="Close modal"' in html
         assert "photo-modal" in html
 
-    def test_lightbox_close_button(self):
-        """Photo lightbox has a close button."""
-        from app.main import photo_lightbox, to_xml
-        html = to_xml(photo_lightbox())
+    def test_unified_modal_close_button(self):
+        """Unified photo modal has a close button (replaces old photo_lightbox)."""
+        from app.main import photo_modal, to_xml
+        html = to_xml(photo_modal())
 
-        assert 'aria-label="Close lightbox"' in html
-        assert "photo-lightbox" in html
+        assert 'aria-label="Close modal"' in html
+        assert "photo-modal" in html
 
 
 # ---------------------------------------------------------------------------

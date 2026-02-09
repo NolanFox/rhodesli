@@ -2765,14 +2765,14 @@ def identity_card(
         hx_trigger="change",
     )
 
-    # View All Photos button (opens lightbox)
+    # View All Photos button (opens photo modal)
     view_all_photos_btn = Button(
         "View All Photos",
         cls="text-sm text-amber-400 hover:text-amber-300 underline",
         hx_get=f"/api/identity/{identity_id}/photos?index=0",
-        hx_target="#lightbox-content",
+        hx_target="#photo-modal-content",
         hx_swap="innerHTML",
-        **{"_": "on click remove .hidden from #photo-lightbox"},
+        **{"_": "on click remove .hidden from #photo-modal"},
         type="button",
     ) if total_faces > 0 else None
 
@@ -2884,44 +2884,6 @@ def photo_modal() -> Div:
         tabindex="-1",
     )
 
-
-def photo_lightbox() -> Div:
-    """
-    Fullscreen photo lightbox for browsing all photos of an identity.
-    Supports keyboard navigation (left/right arrows, Escape to close)
-    and touch swipe on mobile.
-    """
-    return Div(
-        # Backdrop
-        Div(
-            cls="absolute inset-0 bg-black/90",
-            **{"_": "on click add .hidden to #photo-lightbox"},
-        ),
-        # Content
-        Div(
-            # Close button
-            Button(
-                "X",
-                cls="absolute top-4 right-4 text-white hover:text-slate-300 text-2xl font-bold z-10",
-                **{"_": "on click add .hidden to #photo-lightbox"},
-                type="button",
-                aria_label="Close lightbox",
-            ),
-            # Lightbox content (populated by HTMX)
-            Div(
-                P("Loading...", cls="text-slate-400 text-center py-8"),
-                id="lightbox-content",
-                cls="w-full h-full flex items-center justify-center",
-            ),
-            cls="relative w-full h-full flex items-center justify-center p-4",
-        ),
-        id="photo-lightbox",
-        cls="hidden fixed inset-0 z-[10000]",
-        **{"_": "on keydown[key=='Escape'] add .hidden to me "
-               "on keydown[key=='ArrowLeft'] send lightbox-prev to me "
-               "on keydown[key=='ArrowRight'] send lightbox-next to me"},
-        tabindex="-1",
-    )
 
 
 def compare_modal() -> Div:
@@ -4276,10 +4238,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
             ),
             cls="main-content min-h-screen"
         ),
-        # Photo context modal (hidden by default)
+        # Photo modal (unified lightbox for all photo viewing)
         photo_modal(),
-        # Photo lightbox for browsing all photos of an identity
-        photo_lightbox(),
         # Side-by-side comparison modal for merge evaluation
         compare_modal(),
         # Login modal (shown when unauthenticated user triggers protected action)
@@ -4341,46 +4301,40 @@ def get(section: str = None, view: str = "focus", current: str = None,
                     return;
                 }
 
-                // Lightbox prev/next — HTMX handles these via hx-get, so no
-                // extra JS needed. data-action is for keyboard delegation below.
+                // Identity photo lightbox prev/next — HTMX handles these via
+                // hx-get. data-action is for keyboard delegation below.
             });
 
             // Keyboard delegation: one global listener, reads DOM for current state.
             // Priority: modals first, then suppress in text fields, then mode shortcuts.
             document.addEventListener('keydown', function(e) {
                 // --- Modal navigation (highest priority) ---
-                // Photo modal (Photos grid browsing)
+                // Unified photo modal (handles both photo grid browsing and identity photo browsing)
                 var photoModal = document.getElementById('photo-modal');
                 if (photoModal && !photoModal.classList.contains('hidden')) {
                     if (e.key === 'ArrowLeft') {
+                        // Try photo grid nav first, then identity lightbox nav
                         var prev = document.querySelector('[data-action="photo-nav-prev"]');
                         if (prev) { prev.click(); e.preventDefault(); }
-                        else if (typeof photoNavTo === 'function' && window._photoNavIdx > 0) {
-                            photoNavTo(window._photoNavIdx - 1); e.preventDefault();
+                        else {
+                            var lbPrev = document.querySelector('[data-action="lightbox-prev"]');
+                            if (lbPrev) { lbPrev.click(); e.preventDefault(); }
+                            else if (typeof photoNavTo === 'function' && window._photoNavIdx > 0) {
+                                photoNavTo(window._photoNavIdx - 1); e.preventDefault();
+                            }
                         }
                     } else if (e.key === 'ArrowRight') {
                         var next = document.querySelector('[data-action="photo-nav-next"]');
                         if (next) { next.click(); e.preventDefault(); }
-                        else if (typeof photoNavTo === 'function' && window._photoNavIdx < (window._photoNavIds||[]).length - 1) {
-                            photoNavTo(window._photoNavIdx + 1); e.preventDefault();
+                        else {
+                            var lbNext = document.querySelector('[data-action="lightbox-next"]');
+                            if (lbNext) { lbNext.click(); e.preventDefault(); }
+                            else if (typeof photoNavTo === 'function' && window._photoNavIdx < (window._photoNavIds||[]).length - 1) {
+                                photoNavTo(window._photoNavIdx + 1); e.preventDefault();
+                            }
                         }
                     } else if (e.key === 'Escape') {
                         photoModal.classList.add('hidden'); e.preventDefault();
-                    }
-                    return;
-                }
-
-                // Identity lightbox
-                var lightbox = document.getElementById('photo-lightbox');
-                if (lightbox && !lightbox.classList.contains('hidden')) {
-                    if (e.key === 'ArrowLeft') {
-                        var lbPrev = document.querySelector('[data-action="lightbox-prev"]');
-                        if (lbPrev) { lbPrev.click(); e.preventDefault(); }
-                    } else if (e.key === 'ArrowRight') {
-                        var lbNext = document.querySelector('[data-action="lightbox-next"]');
-                        if (lbNext) { lbNext.click(); e.preventDefault(); }
-                    } else if (e.key === 'Escape') {
-                        lightbox.classList.add('hidden'); e.preventDefault();
                     }
                     return;
                 }
@@ -6082,14 +6036,14 @@ def get(identity_id: str, index: int = 0):
     # Lightbox prev/next buttons use data-action for event delegation.
     # The global handler reads data-action and hx-get to dispatch navigation.
     prev_btn = Button(Span("<", cls="text-3xl"), cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
-        hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}", hx_target="#lightbox-content", hx_swap="innerHTML",
+        hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}", hx_target="#photo-modal-content", hx_swap="innerHTML",
         type="button", data_action="lightbox-prev") if index > 0 else None
     next_btn = Button(Span(">", cls="text-3xl"), cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
-        hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}", hx_target="#lightbox-content", hx_swap="innerHTML",
+        hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}", hx_target="#photo-modal-content", hx_swap="innerHTML",
         type="button", data_action="lightbox-next") if index < total - 1 else None
 
     # Touch swipe script only — keyboard is handled by global event delegation
-    nav_script = Script(f"""(function(){{var el=document.getElementById('lightbox-photo-container');if(!el)return;var sx=0;el.addEventListener('touchstart',function(e){{sx=e.touches[0].clientX}});el.addEventListener('touchend',function(e){{var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){{if(d>0&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#lightbox-content',swap:'innerHTML'}});else if(d<0&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#lightbox-content',swap:'innerHTML'}})}}}});}})();""")
+    nav_script = Script(f"""(function(){{var el=document.getElementById('lightbox-photo-container');if(!el)return;var sx=0;el.addEventListener('touchstart',function(e){{sx=e.touches[0].clientX}});el.addEventListener('touchend',function(e){{var d=e.changedTouches[0].clientX-sx;if(Math.abs(d)>50){{if(d>0&&{index}>0)htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index-1}',{{target:'#photo-modal-content',swap:'innerHTML'}});else if(d<0&&{index}<{total-1})htmx.ajax('GET','/api/identity/{identity_id}/photos?index={index+1}',{{target:'#photo-modal-content',swap:'innerHTML'}})}}}});}})();""")
 
     return Div(
         Div(Img(src=photo_url(photo["filename"]), alt=photo["filename"], cls="max-h-[80vh] max-w-full object-contain"),

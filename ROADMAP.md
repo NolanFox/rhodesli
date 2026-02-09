@@ -33,7 +33,7 @@ Goal: Fix all active bugs, get site stable enough to share.
 - [x] FE-002: Keyboard shortcuts in Match Mode — Y/N/S for same/different/skip (2026-02-08)
 - [x] FE-003: Universal keyboard shortcuts — consolidated global handler for all views (2026-02-08)
 - [x] Smoke tests: 21 tests covering all routes, scripts, interactive elements (2026-02-08)
-- [ ] FE-004: Consistent lightbox component across sections
+- [x] FE-004: Consistent lightbox component — consolidated #photo-lightbox into #photo-modal (2026-02-08)
 - [ ] Smoke test all fixes on live site
 
 ## Phase B: Share-Ready Polish

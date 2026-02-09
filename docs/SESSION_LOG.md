@@ -5,6 +5,39 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 18: Stabilization Session 3 — v0.11.0 (2026-02-08)
+
+**Goal:** Fix all P0 bugs, add comprehensive test coverage, stabilize for sharing with family.
+
+**Completed:**
+
+Phase 1: Merge Safety
+- Confirmed BUG-003 already fixed in code; added 18 direction-specific tests
+- Tests cover: auto-correction, undo, state promotion, name conflict, tiebreakers
+
+Phase 2: UI Trust Fixes (3 parallel subagents)
+- BUG-001: Permanent lightbox fix via event delegation (16 tests)
+- BUG-002: Face count matches displayed boxes (8 tests)
+- BUG-004: Canonical _compute_sidebar_counts() (11 tests)
+
+Phase 3: Navigation & Search (2 parallel subagents)
+- FE-002/FE-003: Universal keyboard shortcuts — Y/N/S match, C/S/R/F focus (10 tests)
+- FE-030/FE-031: Client-side instant name search with debounce (13 tests)
+
+Phase 5: ML Features
+- Confidence gap: relative ranking in neighbor results
+- Skip hints: lazy-loaded ML suggestions for skipped identities (6 tests)
+
+Phase 6: Hardening
+- 21 smoke tests, about page (10 tests), event delegation rule in CLAUDE.md
+- FE-004: Lightbox consolidation (if completed by parallel agent)
+
+**Test count:** 663 → 776+ tests
+**Commits:** 8+
+**Key insight:** BUG-003 was already fixed — the gap was test coverage, not code.
+
+---
+
 ## Session 17: Overnight Automation v0.10.0 (2026-02-08)
 
 **Goal:** 7-phase overnight automation session covering critical bug fixes, ML calibration, mobile responsive, face overlay visual language, tagging UX, backlog items, and housekeeping.
