@@ -4748,6 +4748,7 @@ def photo_view_content(
     nav_idx: int = -1,
     nav_total: int = 0,
     identity_id: str = None,
+    is_admin: bool = False,
 ) -> tuple:
     """
     Build the photo view content with face overlays.
@@ -4924,6 +4925,54 @@ def photo_view_content(
                 **{"_": "on click halt the event's bubbling"},  # Prevent clicks inside from closing
             )
 
+            # Build inline quick-action buttons for admin users
+            # Only for actionable states (INBOX, PROPOSED, SKIPPED)
+            quick_actions = None
+            if is_admin and identity_id and state in ("INBOX", "PROPOSED", "SKIPPED"):
+                action_btns = []
+                # Confirm button
+                action_btns.append(Button(
+                    "\u2713",
+                    cls="w-6 h-6 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs "
+                        "flex items-center justify-center",
+                    hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=confirm&photo_id={photo_id}",
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    title="Confirm",
+                    type="button",
+                    **{"_": "on click halt the event's bubbling"},
+                ))
+                # Skip button (not for SKIPPED state)
+                if state in ("INBOX", "PROPOSED"):
+                    action_btns.append(Button(
+                        "\u23f8",
+                        cls="w-6 h-6 rounded-full bg-amber-500 hover:bg-amber-400 text-white text-xs "
+                            "flex items-center justify-center",
+                        hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=skip&photo_id={photo_id}",
+                        hx_target="#photo-modal-content",
+                        hx_swap="innerHTML",
+                        title="Skip",
+                        type="button",
+                        **{"_": "on click halt the event's bubbling"},
+                    ))
+                # Reject button
+                action_btns.append(Button(
+                    "\u2717",
+                    cls="w-6 h-6 rounded-full bg-red-600 hover:bg-red-500 text-white text-xs "
+                        "flex items-center justify-center",
+                    hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=reject&photo_id={photo_id}",
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    title="Reject",
+                    type="button",
+                    **{"_": "on click halt the event's bubbling"},
+                ))
+                quick_actions = Div(
+                    *action_btns,
+                    cls="quick-actions absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 "
+                        "opacity-0 group-hover:opacity-100 transition-opacity z-10",
+                )
+
             overlay = Div(
                 # Tooltip on hover
                 Span(
@@ -4931,6 +4980,7 @@ def photo_view_content(
                     cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
                 ),
                 status_badge,
+                quick_actions,
                 tag_dropdown,
                 cls=f"{overlay_classes} group",
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
@@ -5070,19 +5120,20 @@ def photo_view_content(
 
 
 @rt("/photo/{photo_id}")
-def get(photo_id: str, face: str = None):
+def get(photo_id: str, face: str = None, sess=None):
     """
     Render photo view with face overlays.
 
     Query params:
     - face: Optional face_id to highlight
     """
-    return photo_view_content(photo_id, selected_face_id=face)
+    user_is_admin = (get_current_user(sess or {}).is_admin if get_current_user(sess or {}) else False) if is_auth_enabled() else True
+    return photo_view_content(photo_id, selected_face_id=face, is_admin=user_is_admin)
 
 
 @rt("/photo/{photo_id}/partial")
 def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = None,
-        nav_idx: int = -1, nav_total: int = 0, identity_id: str = None):
+        nav_idx: int = -1, nav_total: int = 0, identity_id: str = None, sess=None):
     """
     Render photo view partial for HTMX modal injection.
 
@@ -5091,11 +5142,13 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
     - nav_idx/nav_total: Current position for "X of Y" display
     - identity_id: Identity context for computing prev/next from identity's photos
     """
+    user_is_admin = (get_current_user(sess or {}).is_admin if get_current_user(sess or {}) else False) if is_auth_enabled() else True
     return photo_view_content(
         photo_id, selected_face_id=face, is_partial=True,
         prev_id=prev_id, next_id=next_id,
         nav_idx=nav_idx, nav_total=nav_total,
         identity_id=identity_id,
+        is_admin=user_is_admin,
     )
 
 
@@ -5481,7 +5534,7 @@ def post(face_id: str, target_id: str, sess=None):
         photo_id = get_photo_id_for_face(face_id)
         if photo_id:
             # Re-render the photo view to reflect the merge
-            photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True)
+            photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True, is_admin=True)
             oob_toast = Div(
                 toast(f"Tagged as {target_name}!", "success"),
                 hx_swap_oob="beforeend:#toast-container",
@@ -5495,6 +5548,66 @@ def post(face_id: str, target_id: str, sess=None):
             status_code=200,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+
+@rt("/api/face/quick-action")
+def post(identity_id: str, action: str, photo_id: str, sess=None):
+    """
+    Quick inline action on a face overlay: confirm, skip, or reject.
+
+    Returns a refreshed photo view with updated overlay colors.
+    Admin-only.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if action not in ("confirm", "skip", "reject"):
+        return Response("Invalid action. Must be confirm, skip, or reject.", status_code=400)
+
+    try:
+        registry = load_registry()
+    except Exception:
+        return Response(
+            to_xml(toast("System busy. Please try again.", "warning")),
+            status_code=423,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    state = identity.get("state", "INBOX")
+    action_name = action.capitalize()
+
+    try:
+        if action == "confirm":
+            registry.confirm_identity(identity_id, user_source="quick_action")
+        elif action == "skip":
+            registry.skip_identity(identity_id, user_source="quick_action")
+        elif action == "reject":
+            registry.contest_identity(identity_id, user_source="quick_action", reason="Rejected via quick action")
+        save_registry(registry)
+    except (ValueError, Exception) as e:
+        return Response(
+            to_xml(toast(f"Cannot {action}: {str(e)}", "error")),
+            status_code=409,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    # Re-render the photo view with updated overlay colors
+    photo_content = photo_view_content(photo_id, is_partial=True, is_admin=True)
+    oob_toast = Div(
+        toast(f"{action_name}ed identity!", "success"),
+        hx_swap_oob="beforeend:#toast-container",
+    )
+    return (*photo_content, oob_toast)
 
 
 @rt("/api/face/create-identity")
@@ -5541,7 +5654,7 @@ def post(face_id: str, name: str, sess=None):
     # Re-render the photo view to show the new name
     photo_id = get_photo_id_for_face(face_id)
     if photo_id:
-        photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True)
+        photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True, is_admin=True)
         oob_toast = Div(
             toast(f'Named as "{name}"!', "success"),
             hx_swap_oob="beforeend:#toast-container",
