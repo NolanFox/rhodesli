@@ -1278,7 +1278,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                             alt=f"Face {face_id[:8]}"
                         ),
                         cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
-                        hx_get=f"/photo/{face_photo_id}/partial?face={face_id}",
+                        hx_get=f"/photo/{face_photo_id}/partial?face={face_id}&identity_id={identity_id}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
                         type="button",
@@ -1375,7 +1375,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                         cls="w-32 h-32 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                    hx_get=f"/photo/{main_photo_id}/partial?face={face_id}" if main_photo_id else None,
+                    hx_get=f"/photo/{main_photo_id}/partial?face={face_id}&identity_id={identity_id}" if main_photo_id else None,
                     hx_target="#photo-modal-content",
                     **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
                     type="button",
@@ -2356,12 +2356,16 @@ def face_card(
         quality = parse_quality_from_filename(crop_url)
 
     # View Photo button (only if photo_id is available)
+    # Pass identity_id for navigation context between identity's photos
     view_photo_btn = None
     if photo_id:
+        _vp_url = f"/photo/{photo_id}/partial?face={face_id}"
+        if identity_id:
+            _vp_url += f"&identity_id={identity_id}"
         view_photo_btn = Button(
             "View Photo",
             cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1",
-            hx_get=f"/photo/{photo_id}/partial?face={face_id}",
+            hx_get=_vp_url,
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             # Show the modal when clicked
@@ -4636,6 +4640,7 @@ def photo_view_content(
     next_id: str = None,
     nav_idx: int = -1,
     nav_total: int = 0,
+    identity_id: str = None,
 ) -> tuple:
     """
     Build the photo view content with face overlays.
@@ -4643,6 +4648,7 @@ def photo_view_content(
     Optional navigation context for prev/next arrows:
     - prev_id/next_id: Photo IDs for adjacent photos
     - nav_idx/nav_total: Position counter for "X of Y" display
+    - identity_id: Compute navigation from identity's unique photos
 
     Returns FastHTML elements for the photo viewer.
     """
@@ -4664,6 +4670,30 @@ def photo_view_content(
     has_dimensions = width > 0 and height > 0
 
     registry = load_registry()
+
+    # Identity-based navigation: when identity_id is provided and no explicit
+    # prev/next, compute navigation from the identity's unique photo list.
+    if identity_id and not prev_id and not next_id:
+        try:
+            identity_nav = registry.get_identity(identity_id)
+            all_faces = identity_nav.get("anchor_ids", []) + identity_nav.get("candidate_ids", [])
+            # Build ordered list of unique photo IDs from identity's faces
+            seen_pids = []
+            for f in all_faces:
+                fid = f if isinstance(f, str) else f.get("face_id", "")
+                pid = get_photo_id_for_face(fid)
+                if pid and pid not in seen_pids:
+                    seen_pids.append(pid)
+            if photo_id in seen_pids:
+                idx = seen_pids.index(photo_id)
+                if idx > 0:
+                    prev_id = seen_pids[idx - 1]
+                if idx < len(seen_pids) - 1:
+                    next_id = seen_pids[idx + 1]
+                nav_idx = idx
+                nav_total = len(seen_pids)
+        except KeyError:
+            pass
 
     # Build face overlays with CSS percentages for responsive scaling
     # Only if we have dimensions (needed for percentage calculations)
@@ -4729,17 +4759,25 @@ def photo_view_content(
             tag_dropdown_id = f"tag-dropdown-{face_id.replace(':', '-').replace(' ', '_')}"
             tag_results_id = f"tag-results-{face_id.replace(':', '-').replace(' ', '_')}"
 
-            # Click handler: close all other dropdowns, then toggle this one
-            tag_script = (
-                f"on click halt the event's bubbling "
-                f"then set dropdowns to <div.tag-dropdown/> in closest .photo-viewer "
-                f"then for dd in dropdowns "
-                f"  if dd.id is not '{tag_dropdown_id}' add .hidden to dd end "
-                f"end "
-                f"then toggle .hidden on #{tag_dropdown_id} "
-                f"then set el to first <input/> in #{tag_dropdown_id} "
-                f"then if el call el.focus()"
-            )
+            # Click handler: confirmed faces navigate to identity card;
+            # all other faces open the tag dropdown.
+            if state == "CONFIRMED" and identity_id:
+                tag_script = (
+                    f"on click halt the event's bubbling "
+                    f"then add .hidden to #photo-modal "
+                    f"then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+                )
+            else:
+                tag_script = (
+                    f"on click halt the event's bubbling "
+                    f"then set dropdowns to <div.tag-dropdown/> in closest .photo-viewer "
+                    f"then for dd in dropdowns "
+                    f"  if dd.id is not '{tag_dropdown_id}' add .hidden to dd end "
+                    f"end "
+                    f"then toggle .hidden on #{tag_dropdown_id} "
+                    f"then set el to first <input/> in #{tag_dropdown_id} "
+                    f"then if el call el.focus()"
+                )
 
             tag_dropdown = Div(
                 # Search input
@@ -4808,12 +4846,14 @@ def photo_view_content(
         # data-nav-idx, and data-nav-url to dispatch navigation. This pattern
         # survives HTMX content swaps because the listener is on document, not
         # on the swapped DOM nodes.
+        # Build URL suffix for identity context continuity
+        _id_suffix = f"&identity_id={identity_id}" if identity_id else ""
         if prev_id:
-            prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}"
+            prev_url = f"/photo/{prev_id}/partial?nav_idx={nav_idx - 1}&nav_total={nav_total}{_id_suffix}"
             nav_prev = Button(
-                Span("<", cls="text-2xl"),
-                cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
+                Span("\u25C0", cls="text-xl"),
+                cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white "
+                    "w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
                 type="button",
                 title="Previous photo",
                 id="photo-nav-prev",
@@ -4822,11 +4862,11 @@ def photo_view_content(
                 data_nav_url=prev_url,
             )
         if next_id:
-            next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}"
+            next_url = f"/photo/{next_id}/partial?nav_idx={nav_idx + 1}&nav_total={nav_total}{_id_suffix}"
             nav_next = Button(
-                Span(">", cls="text-2xl"),
-                cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white "
-                    "w-10 h-10 rounded-full flex items-center justify-center transition-colors z-10",
+                Span("\u25B6", cls="text-xl"),
+                cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white "
+                    "w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
                 type="button",
                 title="Next photo",
                 id="photo-nav-next",
@@ -4935,18 +4975,20 @@ def get(photo_id: str, face: str = None):
 
 @rt("/photo/{photo_id}/partial")
 def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = None,
-        nav_idx: int = -1, nav_total: int = 0):
+        nav_idx: int = -1, nav_total: int = 0, identity_id: str = None):
     """
     Render photo view partial for HTMX modal injection.
 
     Optional navigation context:
     - prev_id/next_id: Adjacent photo IDs for prev/next buttons
     - nav_idx/nav_total: Current position for "X of Y" display
+    - identity_id: Identity context for computing prev/next from identity's photos
     """
     return photo_view_content(
         photo_id, selected_face_id=face, is_partial=True,
         prev_id=prev_id, next_id=next_id,
         nav_idx=nav_idx, nav_total=nav_total,
+        identity_id=identity_id,
     )
 
 
@@ -6098,10 +6140,10 @@ def get(identity_id: str, index: int = 0):
 
     # Lightbox prev/next buttons use data-action for event delegation.
     # The global handler reads data-action and hx-get to dispatch navigation.
-    prev_btn = Button(Span("<", cls="text-3xl"), cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+    prev_btn = Button(Span("\u25C0", cls="text-xl"), cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
         hx_get=f"/api/identity/{identity_id}/photos?index={index - 1}", hx_target="#photo-modal-content", hx_swap="innerHTML",
         type="button", data_action="lightbox-prev") if index > 0 else None
-    next_btn = Button(Span(">", cls="text-3xl"), cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors",
+    next_btn = Button(Span("\u25B6", cls="text-xl"), cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white w-12 h-12 rounded-full flex items-center justify-center transition-colors z-10",
         hx_get=f"/api/identity/{identity_id}/photos?index={index + 1}", hx_target="#photo-modal-content", hx_swap="innerHTML",
         type="button", data_action="lightbox-next") if index < total - 1 else None
 
@@ -8580,21 +8622,24 @@ def get():
         conf_text_cls = "text-red-400"
 
     # Build clickable face card
-    def _face_card(name, crop_url, face_id, photo_id, face_count):
+    def _face_card(name, crop_url, face_id, photo_id, face_count, iid=None):
         img_el = Img(
             src=crop_url or "", alt=name,
             cls="w-full h-full object-cover"
         ) if crop_url else Span("?", cls="text-6xl text-slate-500")
 
-        # Make clickable to view source photo
+        # Make clickable to view source photo (with identity nav context)
         if photo_id:
+            _fc_url = f"/photo/{photo_id}/partial?face={face_id}" if face_id else f"/photo/{photo_id}/partial"
+            if iid:
+                _fc_url += f"&identity_id={iid}"
             face_el = Button(
                 Div(
                     img_el,
                     cls="w-full aspect-square rounded-xl overflow-hidden bg-slate-700 flex items-center justify-center"
                 ),
                 cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-xl transition-all w-full",
-                hx_get=f"/photo/{photo_id}/partial?face={face_id}" if face_id else f"/photo/{photo_id}/partial",
+                hx_get=_fc_url,
                 hx_target="#photo-modal-content",
                 **{"_": "on click remove .hidden from #photo-modal"},
                 type="button",
@@ -8632,13 +8677,13 @@ def get():
         ),
         # Side by side faces — large display
         Div(
-            _face_card(name_a, crop_url_a, face_id_a, photo_id_a, faces_a),
+            _face_card(name_a, crop_url_a, face_id_a, photo_id_a, faces_a, iid=identity_id_a),
             # VS divider
             Div(
                 Span("vs", cls="text-slate-500 text-xl font-bold"),
                 cls="flex items-center justify-center px-6 pt-8"
             ),
-            _face_card(name_b, crop_url_b, face_id_b, photo_id_b, faces_b),
+            _face_card(name_b, crop_url_b, face_id_b, photo_id_b, faces_b, iid=identity_id_b),
             cls="flex flex-col sm:flex-row items-center sm:items-start justify-center gap-2"
         ),
         # Action buttons
