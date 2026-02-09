@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 - **Confidence Gap**: Neighbor results now show relative ranking — how much closer the best match is vs next-best, as a percentage margin. Helps humans adjudicate comparative evidence.
 - **Smoke Tests**: 21 tests verifying all major routes return 200, required scripts are loaded, interactive elements have correct attributes.
 - **Canonical Collection Stats** (BUG-004 fix): `_compute_sidebar_counts()` replaces 4 inline stats computations. 11 regression tests.
+- **About Page** (`/about`): Heritage context, how-to-help guide, FAQ (Skip, Merge, Undo), live archive stats. 10 tests.
 
 ### Fixed
 - **BUG-001**: Lightbox arrows disappear after HTMX swap — permanent fix with event delegation (4th and final attempt)
@@ -21,7 +22,8 @@ All notable changes to this project will be documented in this file.
 - **BUG-004**: Collection stats inconsistency — single canonical function
 
 ### Changed
-- Test count: 663 → 766 (103 new tests)
+- Test count: 663 → 776 (113 new tests)
+- CLAUDE.md rule #12: event delegation mandatory for HTMX apps
 - Neighbor cards show confidence gap instead of raw percentile
 - Focus mode keyboard handler removed (consolidated into global handler)
 
