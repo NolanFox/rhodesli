@@ -139,6 +139,50 @@ class TestMobileNavigation:
 
 
 # ---------------------------------------------------------------------------
+# Mobile bottom tab navigation
+# ---------------------------------------------------------------------------
+
+class TestMobileBottomTabs:
+    """Bottom tab navigation must be present on mobile."""
+
+    def test_bottom_tabs_present(self, client):
+        """Workstation includes mobile bottom tab navigation."""
+        response = client.get(WORKSTATION_URL)
+        assert 'id="mobile-tabs"' in response.text
+
+    def test_bottom_tabs_has_four_links(self, client):
+        """Bottom tabs have Photos, Confirmed, Inbox, Search links."""
+        response = client.get(WORKSTATION_URL)
+        text = response.text
+        assert "Photos" in text
+        assert "Confirmed" in text
+        assert "Inbox" in text
+        assert "Search" in text
+
+    def test_bottom_tabs_hidden_on_desktop(self, client):
+        """Bottom tabs use lg:hidden to be invisible on desktop."""
+        response = client.get(WORKSTATION_URL)
+        assert "lg:hidden" in response.text
+
+    def test_bottom_tabs_touch_targets(self, client):
+        """Bottom tab items have minimum 44px touch targets."""
+        response = client.get(WORKSTATION_URL)
+        # mobile-tabs links should have min-h-[44px]
+        assert "min-h-[44px]" in response.text
+
+    def test_bottom_tabs_highlight_active_section(self, client):
+        """Active section tab should be highlighted."""
+        response = client.get("/?section=photos")
+        # Photos tab should be indigo (active)
+        assert "text-indigo-400" in response.text
+
+    def test_main_content_has_bottom_padding_for_tabs(self, client):
+        """Main content area has extra bottom padding for mobile tabs."""
+        response = client.get(WORKSTATION_URL)
+        assert "pb-20" in response.text
+
+
+# ---------------------------------------------------------------------------
 # Upload page mobile tests
 # ---------------------------------------------------------------------------
 

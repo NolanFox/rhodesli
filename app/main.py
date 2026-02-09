@@ -4271,6 +4271,56 @@ def get(section: str = None, view: str = "focus", current: str = None,
         })();
     """)
 
+    # Mobile bottom tab navigation (lg:hidden)
+    mobile_tabs = Nav(
+        A(
+            Svg(
+                Path(d="M4 6h16M4 10h16M4 14h16M4 18h16"),
+                cls="w-5 h-5", fill="none", stroke="currentColor", viewBox="0 0 24 24",
+                stroke_width="2", stroke_linecap="round",
+            ),
+            Span("Photos", cls="text-[10px]"),
+            href="/?section=photos",
+            cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
+                f"{'text-indigo-400' if section == 'photos' else 'text-slate-400 hover:text-slate-200'}",
+        ),
+        A(
+            Svg(
+                Path(d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"),
+                cls="w-5 h-5", fill="none", stroke="currentColor", viewBox="0 0 24 24",
+                stroke_width="2", stroke_linecap="round", stroke_linejoin="round",
+            ),
+            Span("Confirmed", cls="text-[10px]"),
+            href="/?section=confirmed&view=browse",
+            cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
+                f"{'text-emerald-400' if section == 'confirmed' else 'text-slate-400 hover:text-slate-200'}",
+        ),
+        A(
+            Svg(
+                Path(d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"),
+                cls="w-5 h-5", fill="none", stroke="currentColor", viewBox="0 0 24 24",
+                stroke_width="2", stroke_linecap="round", stroke_linejoin="round",
+            ),
+            Span("Inbox", cls="text-[10px]"),
+            href="/?section=to_review&view=focus",
+            cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
+                f"{'text-amber-400' if section == 'to_review' else 'text-slate-400 hover:text-slate-200'}",
+        ),
+        A(
+            Svg(
+                Path(d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"),
+                cls="w-5 h-5", fill="none", stroke="currentColor", viewBox="0 0 24 24",
+                stroke_width="2", stroke_linecap="round", stroke_linejoin="round",
+            ),
+            Span("Search", cls="text-[10px]"),
+            href="/?section=confirmed&view=browse",
+            cls="flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] text-slate-400 hover:text-slate-200",
+            onclick="toggleSidebar(); setTimeout(function() { var s = document.querySelector('#sidebar input[type=search]'); if (s) s.focus(); }, 300); return false;",
+        ),
+        cls="fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 flex items-center justify-around py-1 z-40 lg:hidden",
+        id="mobile-tabs",
+    )
+
     return Title("Rhodesli Identity System"), style, Div(
         # Toast container for notifications
         toast_container(),
@@ -4280,16 +4330,18 @@ def get(section: str = None, view: str = "focus", current: str = None,
         sidebar_overlay,
         # Sidebar (fixed)
         sidebar(counts, section, user=user),
-        # Main content (offset for sidebar)
+        # Main content (offset for sidebar, bottom padding for mobile tabs)
         Main(
             # Admin dashboard banner (only for admins)
             _admin_dashboard_banner(counts, section) if user_is_admin else None,
             Div(
                 main_content,
-                cls="max-w-6xl mx-auto px-4 sm:px-8 py-6"
+                cls="max-w-6xl mx-auto px-4 sm:px-8 py-6 pb-20 lg:pb-6"
             ),
             cls="main-content min-h-screen"
         ),
+        # Mobile bottom tabs
+        mobile_tabs,
         # Photo modal (unified lightbox for all photo viewing)
         photo_modal(),
         # Side-by-side comparison modal for merge evaluation
