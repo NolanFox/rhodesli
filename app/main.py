@@ -978,6 +978,52 @@ def toast_with_undo(
     )
 
 
+def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
+    """Admin-only dashboard summary banner at the top of the workstation.
+
+    Shows inbox count, skipped count, and quick links to Focus Mode.
+    Only rendered when user is admin.
+    """
+    to_review = counts.get("to_review", 0)
+    skipped = counts.get("skipped", 0)
+    confirmed = counts.get("confirmed", 0)
+    proposals = counts.get("proposals", 0)
+    photo_count = counts.get("photo_count", 0)
+
+    stat_items = [
+        ("To Review", to_review, "/?section=to_review&view=focus", "text-amber-400"),
+        ("Confirmed", confirmed, "/?section=confirmed", "text-emerald-400"),
+        ("Skipped", skipped, "/?section=skipped", "text-yellow-400"),
+    ]
+    if proposals > 0:
+        stat_items.append(("Proposals", proposals, "/admin/proposals", "text-blue-400"))
+
+    stats_row = [
+        A(
+            Span(str(count), cls=f"font-bold text-lg {color}"),
+            Span(f" {label}", cls="text-slate-400 text-xs"),
+            href=link,
+            cls="hover:bg-slate-700/50 px-3 py-1 rounded transition-colors",
+        )
+        for label, count, link, color in stat_items
+    ]
+
+    return Div(
+        Div(
+            *stats_row,
+            # Quick action: go to Focus Mode
+            A(
+                "Focus Mode",
+                href="/?section=to_review&view=focus",
+                cls="ml-auto text-xs font-medium px-3 py-1 bg-indigo-600/80 text-white rounded hover:bg-indigo-500 transition-colors",
+            ) if current_section != "to_review" else None,
+            cls="max-w-6xl mx-auto px-4 sm:px-8 flex items-center gap-4 flex-wrap",
+        ),
+        id="admin-dashboard-banner",
+        cls="py-2 border-b border-slate-700/50 bg-slate-800/30",
+    )
+
+
 def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
     """
     Collapsible sidebar navigation for the Command Center.
@@ -3972,7 +4018,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
             return landing_page(stats, featured_photos)
 
 
-    user_is_admin = user.is_admin if user else False
+    user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
 
     registry = load_registry()
     crop_files = get_crop_files()
@@ -4232,6 +4278,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
         sidebar(counts, section, user=user),
         # Main content (offset for sidebar)
         Main(
+            # Admin dashboard banner (only for admins)
+            _admin_dashboard_banner(counts, section) if user_is_admin else None,
             Div(
                 main_content,
                 cls="max-w-6xl mx-auto px-4 sm:px-8 py-6"
