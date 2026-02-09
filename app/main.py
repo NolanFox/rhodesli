@@ -4325,6 +4325,21 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 window.sidebarFilterCards = sidebarFilterCards;
             })();
         """),
+        # Hash-based scroll + highlight for search result navigation
+        Script("""
+            (function() {
+                if (window.location.hash) {
+                    var target = document.querySelector(window.location.hash);
+                    if (target) {
+                        target.scrollIntoView({behavior: 'smooth', block: 'center'});
+                        target.classList.add('ring-2', 'ring-blue-400');
+                        setTimeout(function() {
+                            target.classList.remove('ring-2', 'ring-blue-400');
+                        }, 2000);
+                    }
+                }
+            })();
+        """),
         # Global event delegation for lightbox/photo navigation (BUG-001 fix).
         # ONE listener on document handles all nav clicks and keyboard events.
         # This never needs rebinding because it's on document, not swapped DOM.
@@ -5163,7 +5178,7 @@ def get(q: str = ""):
                     Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
                     cls="flex flex-col min-w-0"
                 ),
-                href=f"/?section=confirmed&current={r['identity_id']}",
+                href=f"/?section=confirmed#identity-{r['identity_id']}",
                 cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer"
             )
         )

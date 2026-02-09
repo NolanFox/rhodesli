@@ -146,3 +146,51 @@ class TestServerSideSearchBackwardCompat:
         """GET /api/search with empty query returns empty."""
         response = client.get("/api/search?q=")
         assert response.status_code == 200
+
+
+class TestSearchResultNavigation:
+    """Search results must navigate to the correct identity card."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def test_search_result_links_use_hash_fragment(self, client):
+        """Clicking a search result should navigate via hash fragment to the identity card.
+
+        Regression test: previously used ?current= param which was ignored by render_confirmed_section.
+        """
+        response = client.get("/api/search?q=capeluto")
+        if "No matches" in response.text:
+            pytest.skip("No confirmed 'capeluto' identities in test data")
+        # Links must use #identity-{id} for browser auto-scroll, not ?current=
+        assert "#identity-" in response.text, "Search result links must use hash fragment for navigation"
+        assert "current=" not in response.text, "Search results should not use ignored ?current= param"
+
+    def test_search_result_links_to_confirmed_section(self, client):
+        """Search results should link to the confirmed section."""
+        response = client.get("/api/search?q=capeluto")
+        if "No matches" in response.text:
+            pytest.skip("No confirmed 'capeluto' identities in test data")
+        assert "section=confirmed" in response.text
+
+    def test_search_result_identity_id_matches_card_id(self, client):
+        """The hash fragment identity ID in search results must match an actual identity card ID."""
+        import re
+        response = client.get("/api/search?q=capeluto")
+        if "No matches" in response.text:
+            pytest.skip("No confirmed 'capeluto' identities in test data")
+        # Extract identity IDs from hash fragments
+        hash_ids = re.findall(r'#identity-([a-f0-9-]+)', response.text)
+        assert len(hash_ids) > 0, "Should find at least one identity hash link"
+        # Verify these IDs exist in the confirmed section
+        confirmed_page = client.get("/?section=confirmed")
+        for identity_id in hash_ids:
+            assert f'id="identity-{identity_id}"' in confirmed_page.text, \
+                f"Identity card for {identity_id} not found in confirmed section"
+
+    def test_page_includes_hash_highlight_script(self, client):
+        """Main page includes JS to highlight the hash-targeted identity card."""
+        response = client.get("/?section=confirmed")
+        assert "location.hash" in response.text, "Page must include hash-based highlight script"
