@@ -120,6 +120,39 @@ class TestLandingPageStats:
         assert "data-count=" in response.text
 
 
+class TestProgressDashboard:
+    """FE-053: Progress dashboard with identification bar."""
+
+    def test_progress_bar_present(self, client):
+        """Landing page shows a progress bar for identification."""
+        response = client.get("/")
+        assert "faces identified" in response.text
+
+    def test_progress_bar_shows_named_count(self, client):
+        """Progress text includes the actual named count."""
+        from app.main import _compute_landing_stats
+        stats = _compute_landing_stats()
+        response = client.get("/")
+        assert str(stats["named_count"]) in response.text
+
+    def test_progress_bar_shows_total(self, client):
+        """Progress text includes the total face count."""
+        from app.main import _compute_landing_stats
+        stats = _compute_landing_stats()
+        response = client.get("/")
+        assert str(stats["total_faces"]) in response.text
+
+    def test_progress_percentage_shown(self, client):
+        """Progress bar shows a percentage."""
+        response = client.get("/")
+        assert "% complete" in response.text
+
+    def test_help_message_present(self, client):
+        """Progress section includes a call to help."""
+        response = client.get("/")
+        assert "help" in response.text.lower() or "Help" in response.text
+
+
 class TestLandingPagePhotos:
     """Hero section should feature actual photos from the archive."""
 

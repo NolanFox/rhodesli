@@ -3716,6 +3716,40 @@ def landing_page(stats, featured_photos):
             cls="py-6 px-4 border-y border-amber-900/20"
         ) if named_people else None,
 
+        # Progress dashboard (FE-053) — prominent identification progress
+        Section(
+            Div(
+                # Progress headline
+                Div(
+                    H2(
+                        Span(str(stats["named_count"]), cls="text-amber-200"),
+                        " of ",
+                        Span(str(stats["total_faces"]), cls="text-amber-100/80"),
+                        " faces identified",
+                        cls="text-xl md:text-2xl font-bold text-amber-50 text-center"
+                    ),
+                    P("Help us name the rest \u2014 every identification preserves irreplaceable history.",
+                      cls="text-amber-100/40 text-center text-sm mt-2"),
+                    cls="mb-6"
+                ),
+                # Progress bar
+                Div(
+                    Div(
+                        cls="h-full bg-gradient-to-r from-amber-600 to-amber-400 rounded-full transition-all duration-1000",
+                        style=f"width: {min(100, int(stats['named_count'] / max(1, stats['total_faces']) * 100))}%",
+                    ),
+                    cls="w-full max-w-lg mx-auto h-3 bg-amber-900/30 rounded-full overflow-hidden border border-amber-900/40"
+                ),
+                Div(
+                    Span(f"{min(100, int(stats['named_count'] / max(1, stats['total_faces']) * 100))}% complete",
+                         cls="text-amber-400/60 text-xs"),
+                    cls="text-center mt-2"
+                ),
+                cls="max-w-4xl mx-auto animate-fade-in-up"
+            ),
+            cls="py-8 md:py-10 px-4 md:px-6"
+        ),
+
         # Stats section
         Section(
             Div(
