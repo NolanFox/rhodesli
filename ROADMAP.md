@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.10.0 · 663 tests · 148 photos · 181 faces · 23 confirmed
+Current: v0.12.0 · 847 tests · 148 photos · 181 faces · 23 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -41,18 +41,19 @@ Goal: Fix all active bugs, get site stable enough to share.
 ## Phase B: Share-Ready Polish
 Goal: Landing page, search, mobile — ready for family members.
 
-- [ ] FE-050: Welcome/about landing page with heritage photos
-- [ ] FE-051: Interactive hero with real archive photos
+- [x] FE-050: Welcome/about landing page with heritage photos (2026-02-06)
+- [x] FE-051: Interactive hero with real archive photos (2026-02-06)
 - [ ] FE-052: First-time user guided tour
-- [ ] FE-053: Progress dashboard ("23 of 181 faces identified")
+- [x] FE-053: Progress dashboard ("23 of 181 faces identified") (2026-02-08)
 - [x] FE-030: Global search improvements (2026-02-08)
 - [x] FE-031: Fast name lookup with typeahead (2026-02-08)
-- [ ] FE-010: Mobile sidebar — hamburger menu or slide-over
-- [ ] FE-011: Bottom tab navigation on mobile
-- [ ] FE-014: Responsive photo grid (2-col mobile, 4-col desktop)
-- [ ] FE-015: Mobile match mode — vertical stacking with swipe
+- [x] FE-033: Fuzzy name search with Levenshtein distance (2026-02-08)
+- [x] FE-010: Mobile sidebar — hamburger menu or slide-over (2026-02-06)
+- [x] FE-011: Bottom tab navigation on mobile (2026-02-08)
+- [x] FE-014: Responsive photo grid (2-col mobile, 4-col desktop) (2026-02-06)
+- [x] FE-015: Mobile match mode — vertical stacking with swipe (2026-02-06)
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
-- [ ] BE-020: Admin data export endpoint
+- [x] BE-020: Admin data export endpoint (2026-02-06)
 - [ ] BE-021: Production-to-local sync script
 
 ## Phase C: Annotation Engine
@@ -66,7 +67,7 @@ Goal: Make the archive meaningful beyond face matching.
 - [ ] AN-001–AN-006: Photo-level annotations (captions, dates, locations, stories)
 - [ ] AN-010–AN-014: Identity-level annotations (bio, relationships, generation)
 - [ ] BE-001–BE-006: Non-destructive merge system with full history
-- [ ] FE-033: Fuzzy name search with canonical names
+- [x] FE-033: Fuzzy name search with Levenshtein distance (2026-02-08)
 
 ## Phase D: ML Feedback & Intelligence
 Goal: Make the system learn from user actions.
@@ -102,6 +103,12 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-08: v0.12.0 — Session 4: photo nav, mobile tabs, search polish, inline actions (847 tests)
+- [x] 2026-02-08: Inline face actions — hover confirm/skip/reject buttons on photo overlays, 17 tests
+- [x] 2026-02-08: FE-033 — Fuzzy search with Levenshtein distance + match highlighting, 11 tests
+- [x] 2026-02-08: FE-053 — Progress dashboard with identification bar, 5 tests
+- [x] 2026-02-08: FE-011 — Mobile bottom tab navigation (Photos/Confirmed/Inbox/Search), 6 tests
+- [x] 2026-02-08: Identity-context photo navigation — arrows from face cards/search, 11 tests
 - [x] 2026-02-08: FE-032 — Search result navigation fix (hash fragment + highlight animation, 4 tests)
 - [x] 2026-02-08: DATA-001 — Backfill merge_history for 24 pre-existing merged identities
 - [x] 2026-02-08: v0.11.0 — Phase A stabilization: all 4 P0 bugs fixed, 103 new tests (663→766)

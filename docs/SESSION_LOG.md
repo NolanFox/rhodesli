@@ -5,6 +5,43 @@ Update this at the END of every implementation session.
 
 ---
 
+## Session 19: Overnight Session 4 — v0.12.0 (2026-02-08)
+
+**Goal:** Photo navigation, mobile polish, search improvements, inline face actions.
+
+**Completed:**
+
+Phase 1: Photo Navigation
+- Identity-context navigation: face card clicks compute prev/next from identity's photo list
+- Confirmed face overlays navigate to identity card (not tag dialog)
+- Arrow button styling upgrade (unicode symbols, larger touch targets)
+- 11 new tests
+
+Phase 2: Mobile
+- Bottom tab navigation (Photos, Confirmed, Inbox, Search) with active highlighting
+- Hidden on desktop (lg:hidden), 44px touch targets
+- 6 new tests
+
+Phase 3: Landing Page
+- FE-053: Progress dashboard with identification progress bar
+- 5 new tests
+
+Phase 5: Search Polish
+- FE-033: Fuzzy name search with Levenshtein edit distance fallback
+- Search match highlighting (amber text on matched portion)
+- 11 new tests
+
+Phase 4: Inline Face Actions
+- Hover-visible confirm/skip/reject icon buttons on face overlays
+- New `/api/face/quick-action` endpoint for inline state changes
+- Admin-only, state-appropriate buttons per identity state
+- 17 new tests
+
+**Test count:** 799 → 847 (+48 tests)
+**Commits:** 6 (photo nav, mobile tabs, landing progress, search fuzzy, inline actions, docs)
+
+---
+
 ## Session 18: Stabilization Session 3 — v0.11.0 (2026-02-08)
 
 **Goal:** Fix all P0 bugs, add comprehensive test coverage, stabilize for sharing with family.

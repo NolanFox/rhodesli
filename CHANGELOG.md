@@ -2,14 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [v0.12.0] - 2026-02-08
+
+### Added
+- **Identity-Context Photo Navigation**: Face card and search result clicks now compute prev/next arrows from the identity's photo list. No more "no arrows" dead ends. 11 tests.
+- **Mobile Bottom Tabs** (FE-011): Fixed bottom tab bar with Photos, Confirmed, Inbox, Search tabs. Hidden on desktop (lg:hidden). Active section highlighting. 6 tests.
+- **Progress Dashboard** (FE-053): Landing page identification progress bar showing "X of Y faces identified" with percentage and help CTA. 5 tests.
+- **Fuzzy Name Search** (FE-033): Levenshtein edit distance fallback when exact substring match returns no results. "Capeluto" finds "Capelouto" (distance 1). 6 tests.
+- **Search Match Highlighting**: Matched portion of names highlighted in amber in search results. 5 tests.
+- **Inline Face Actions**: Admin users see hover-visible confirm/skip/reject icon buttons on face overlays in photo view. New `/api/face/quick-action` endpoint. 17 tests.
+- **Confirmed Face Click**: Clicking a confirmed face overlay in photo view navigates to the identity card instead of opening the tag dialog.
 
 ### Fixed
 - **Search Navigation**: Search results now navigate to the correct identity via hash fragment scrolling + 2s highlight ring animation (was silently ignoring `?current=` param)
 - **Merge History Backfill**: Added `scripts/backfill_merge_history.py` to populate stub merge_history entries for 24 pre-existing merges. Undo UI no longer shows empty state unexpectedly.
 
 ### Changed
-- Test count: 787 → 803 (4 new search navigation tests + 12 existing)
+- Test count: 799 → 847 (48 new tests across 5 test files)
+- Photo view routes now pass admin status for conditional inline actions
+- All `photo_view_content()` callers updated with `is_admin` parameter
 
 ## [v0.11.0] - 2026-02-08
 

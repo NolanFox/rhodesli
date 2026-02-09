@@ -1,6 +1,6 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-08 (Session 3)
+Last updated: 2026-02-08 (Session 4)
 
 ## Active Bugs
 - (none — all P0 bugs fixed in v0.11.0)
@@ -71,3 +71,8 @@ Last updated: 2026-02-08 (Session 3)
 - [x] v0.10.0: Mobile responsive pass (touch swipe, stacking, 44px targets)
 - [x] v0.10.0: Golden set rebuild + threshold analysis (1.00=100% precision)
 - [x] v0.10.0: AD-004 rejection memory verified working
+- [x] v0.12.0: Identity-context photo navigation (arrows from face cards/search)
+- [x] v0.12.0: FE-011 — Mobile bottom tab navigation
+- [x] v0.12.0: FE-053 — Progress dashboard with identification bar
+- [x] v0.12.0: FE-033 — Fuzzy name search (Levenshtein) + match highlighting
+- [x] v0.12.0: Inline face actions (hover confirm/skip/reject on overlays)
