@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+- **Search Navigation**: Search results now navigate to the correct identity via hash fragment scrolling + 2s highlight ring animation (was silently ignoring `?current=` param)
+- **Merge History Backfill**: Added `scripts/backfill_merge_history.py` to populate stub merge_history entries for 24 pre-existing merges. Undo UI no longer shows empty state unexpectedly.
+
+### Changed
+- Test count: 787 → 803 (4 new search navigation tests + 12 existing)
+
 ## [v0.11.0] - 2026-02-08
 
 ### Added

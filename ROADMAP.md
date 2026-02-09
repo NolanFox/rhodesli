@@ -34,6 +34,8 @@ Goal: Fix all active bugs, get site stable enough to share.
 - [x] FE-003: Universal keyboard shortcuts — consolidated global handler for all views (2026-02-08)
 - [x] Smoke tests: 21 tests covering all routes, scripts, interactive elements (2026-02-08)
 - [x] FE-004: Consistent lightbox component — consolidated #photo-lightbox into #photo-modal (2026-02-08)
+- [x] FE-032: Fix search result navigation — hash fragment scroll + highlight (2026-02-08)
+- [x] DATA-001: Backfill merge_history for 24 pre-existing merges (2026-02-08)
 - [ ] Smoke test all fixes on live site
 
 ## Phase B: Share-Ready Polish
@@ -100,6 +102,8 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-08: FE-032 — Search result navigation fix (hash fragment + highlight animation, 4 tests)
+- [x] 2026-02-08: DATA-001 — Backfill merge_history for 24 pre-existing merged identities
 - [x] 2026-02-08: v0.11.0 — Phase A stabilization: all 4 P0 bugs fixed, 103 new tests (663→766)
 - [x] 2026-02-08: Skip hints + confidence gap — ML suggestions for skipped identities, relative ranking
 - [x] 2026-02-08: Smoke tests — 21 tests covering all routes, scripts, interactive elements
