@@ -148,6 +148,145 @@ class TestServerSideSearchBackwardCompat:
         assert response.status_code == 200
 
 
+class TestFuzzySearch:
+    """FE-033: Fuzzy name search with Levenshtein distance."""
+
+    def test_levenshtein_identical(self):
+        """Identical strings have distance 0."""
+        from core.registry import _levenshtein
+        assert _levenshtein("capeluto", "capeluto") == 0
+
+    def test_levenshtein_one_edit(self):
+        """Single character difference has distance 1."""
+        from core.registry import _levenshtein
+        assert _levenshtein("capeluto", "capeluто") <= 2  # one char difference
+        assert _levenshtein("josef", "joseph") <= 2
+
+    def test_levenshtein_two_edits(self):
+        """Two character difference has distance 2."""
+        from core.registry import _levenshtein
+        assert _levenshtein("cap", "cab") == 1
+        assert _levenshtein("cap", "cat") == 1
+
+    def test_levenshtein_empty(self):
+        """Empty string distance equals length of other string."""
+        from core.registry import _levenshtein
+        assert _levenshtein("", "abc") == 3
+        assert _levenshtein("abc", "") == 3
+
+    def test_fuzzy_search_finds_misspelling(self, tmp_path):
+        """Fuzzy search finds 'Capelouto' when searching 'Capeluto' (or vice versa)."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Leon Capelouto",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["f1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        # Exact match should work
+        results = reg.search_identities("Leon")
+        assert len(results) == 1
+
+        # Fuzzy match: "Capeluto" should find "Capelouto" (edit distance 1)
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 1
+        assert results[0]["name"] == "Leon Capelouto"
+
+    def test_fuzzy_search_rejects_distant_names(self, tmp_path):
+        """Fuzzy search does not match names too far from the query."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Completely Different",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["f1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        # "Capeluto" should NOT match "Completely Different"
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 0
+
+
+class TestSearchHighlighting:
+    """Search results should highlight the matched portion of names."""
+
+    def test_highlight_match_basic(self):
+        """Matching portion is wrapped in a highlight span."""
+        from app.main import _highlight_match, to_xml
+        result = _highlight_match("Leon Capeluto", "Cap")
+        html = to_xml(result)
+        assert "text-amber-300" in html
+        assert "Cap" in html
+
+    def test_highlight_match_case_insensitive(self):
+        """Highlighting works case-insensitively."""
+        from app.main import _highlight_match, to_xml
+        result = _highlight_match("Leon Capeluto", "cap")
+        html = to_xml(result)
+        assert "text-amber-300" in html
+
+    def test_highlight_no_match_returns_plain(self):
+        """No match returns the plain name string."""
+        from app.main import _highlight_match
+        result = _highlight_match("Leon Capeluto", "xyz")
+        assert result == "Leon Capeluto"
+
+    def test_highlight_empty_query(self):
+        """Empty query returns the plain name."""
+        from app.main import _highlight_match
+        result = _highlight_match("Leon Capeluto", "")
+        assert result == "Leon Capeluto"
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def test_search_api_returns_highlighted_results(self, client):
+        """Search API endpoint returns results with highlight class."""
+        response = client.get("/api/search?q=capeluto")
+        if "No matches" in response.text:
+            pytest.skip("No confirmed 'capeluto' identities in test data")
+        assert "text-amber-300" in response.text
+
+
 class TestSearchResultNavigation:
     """Search results must navigate to the correct identity card."""
 

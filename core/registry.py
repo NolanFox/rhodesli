@@ -29,6 +29,26 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+def _levenshtein(s: str, t: str) -> int:
+    """Compute Levenshtein edit distance between two strings."""
+    if len(s) < len(t):
+        return _levenshtein(t, s)
+    if len(t) == 0:
+        return len(s)
+    prev_row = list(range(len(t) + 1))
+    for i, sc in enumerate(s):
+        curr_row = [i + 1]
+        for j, tc in enumerate(t):
+            cost = 0 if sc == tc else 1
+            curr_row.append(min(
+                curr_row[j] + 1,       # insert
+                prev_row[j + 1] + 1,   # delete
+                prev_row[j] + cost,     # substitute
+            ))
+        prev_row = curr_row
+    return prev_row[-1]
+
+
 SCHEMA_VERSION = 1
 
 
@@ -1578,6 +1598,7 @@ class IdentityRegistry:
 
         query_lower = query.lower()
         results = []
+        fuzzy_candidates = []
 
         for identity in self._identities.values():
             # Skip merged identities
@@ -1592,38 +1613,52 @@ class IdentityRegistry:
             if exclude_id and identity["identity_id"] == exclude_id:
                 continue
 
-            # Case-insensitive substring match on name
             name = identity.get("name") or ""
-            if query_lower not in name.lower():
-                continue
 
-            # Get face count (anchors + candidates)
-            anchor_ids = identity.get("anchor_ids", [])
-            candidate_ids = identity.get("candidate_ids", [])
-            face_count = len(anchor_ids) + len(candidate_ids)
+            # Build summary dict (shared between exact and fuzzy paths)
+            def _build_summary():
+                anchor_ids = identity.get("anchor_ids", [])
+                candidate_ids = identity.get("candidate_ids", [])
+                face_count = len(anchor_ids) + len(candidate_ids)
+                preview_face_id = None
+                for face_list in [anchor_ids, candidate_ids]:
+                    if face_list:
+                        first_face = face_list[0]
+                        if isinstance(first_face, str):
+                            preview_face_id = first_face
+                        elif isinstance(first_face, dict):
+                            preview_face_id = first_face.get("face_id")
+                        if preview_face_id:
+                            break
+                return {
+                    "identity_id": identity["identity_id"],
+                    "name": name,
+                    "face_count": face_count,
+                    "preview_face_id": preview_face_id,
+                }
 
-            # Get preview face (first anchor, fall back to candidate)
-            preview_face_id = None
-            for face_list in [anchor_ids, candidate_ids]:
-                if face_list:
-                    first_face = face_list[0]
-                    if isinstance(first_face, str):
-                        preview_face_id = first_face
-                    elif isinstance(first_face, dict):
-                        preview_face_id = first_face.get("face_id")
-                    if preview_face_id:
+            # Case-insensitive substring match on name (exact match priority)
+            if query_lower in name.lower():
+                results.append(_build_summary())
+                if len(results) >= limit:
+                    break
+            else:
+                # Track for fuzzy fallback
+                fuzzy_candidates.append((name, _build_summary))
+
+        # Fuzzy fallback: if exact match found nothing, try Levenshtein
+        if not results and fuzzy_candidates:
+            scored = []
+            for name, builder in fuzzy_candidates:
+                # Check each word in the name against the query
+                for word in name.lower().split():
+                    dist = _levenshtein(query_lower, word)
+                    threshold = 2 if len(query_lower) <= 8 else 3
+                    if dist <= threshold:
+                        scored.append((dist, builder()))
                         break
-
-            results.append({
-                "identity_id": identity["identity_id"],
-                "name": name,
-                "face_count": face_count,
-                "preview_face_id": preview_face_id,
-            })
-
-            # Respect limit
-            if len(results) >= limit:
-                break
+            scored.sort(key=lambda x: x[0])
+            results = [s[1] for s in scored[:limit]]
 
         return results
 

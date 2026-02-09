@@ -744,6 +744,27 @@ def get_photo_id_for_face(face_id: str) -> str:
     return _face_to_photo_cache.get(face_id)
 
 
+def _highlight_match(name: str, query: str):
+    """Return FastHTML elements with the matched portion highlighted.
+
+    Case-insensitive substring match. Returns a tuple of Span elements,
+    or just a plain string if no match found.
+    """
+    if not query:
+        return name
+    idx = name.lower().find(query.lower())
+    if idx == -1:
+        return name
+    before = name[:idx]
+    match = name[idx:idx + len(query)]
+    after = name[idx + len(query):]
+    return (
+        Span(before) if before else None,
+        Span(match, cls="text-amber-300 font-semibold"),
+        Span(after) if after else None,
+    )
+
+
 def parse_quality_from_filename(filename: str) -> float:
     """Extract quality score from filename like 'brass_rail_21.98_0.jpg'."""
     match = re.search(r'_(\d+\.\d+)_\d+\.jpg$', filename)
@@ -5294,15 +5315,20 @@ def get(q: str = ""):
 
     crop_files = get_crop_files()
     items = []
+    query_stripped = q.strip()
     for r in results[:10]:
         face_url = resolve_face_image_url(r["preview_face_id"], crop_files) if r.get("preview_face_id") else None
         thumb = Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0") if face_url else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
         name = ensure_utf8_display(r["name"]) or "Unnamed"
+
+        # Highlight matched portion in name (case-insensitive)
+        name_display = _highlight_match(name, query_stripped)
+
         items.append(
             A(
                 thumb,
                 Div(
-                    Span(name, cls="text-sm text-slate-200 truncate"),
+                    Span(name_display, cls="text-sm text-slate-200 truncate"),
                     Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
                     cls="flex flex-col min-w-0"
                 ),
