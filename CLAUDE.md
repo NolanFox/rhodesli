@@ -12,7 +12,8 @@ For detailed specs on any item, see `docs/BACKLOG.md`.
 - **Stack**: FastHTML, InsightFace/AdaFace, Supabase Auth, Railway, Cloudflare R2
 - **Admin**: NolanFox@gmail.com (only admin)
 - **Live**: https://rhodesli.nolanandrewfox.com
-- **Test**: `pytest tests/ -v`
+- **Test**: `pytest tests/ -v --ignore=tests/e2e/`
+- **E2E Test**: `pytest tests/e2e/ -v` (requires Playwright + Chromium)
 - **Deploy**: push to main (Railway auto-deploys)
 - **Local**: `source venv/bin/activate && python app/main.py`
 

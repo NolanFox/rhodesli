@@ -96,7 +96,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] OPS-002: CI/CD pipeline (automated tests, staging, deploy previews)
 - [ ] OPS-004: Error tracking (Sentry)
 - [ ] ML-030–ML-032: Model evaluation (ArcFace, ensemble, fine-tuning)
-- [ ] QA-004: End-to-end browser tests (Playwright)
+- [x] QA-004: End-to-end browser tests (Playwright) (2026-02-08)
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed

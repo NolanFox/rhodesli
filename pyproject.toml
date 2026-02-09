@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+markers = [
+    "e2e: end-to-end browser tests (require running server + Playwright)",
+]
