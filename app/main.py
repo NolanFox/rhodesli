@@ -2104,6 +2104,14 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             ),
             cls="flex items-center"
         ),
+        # Select toggle button
+        Button(
+            "Select",
+            id="photo-select-toggle",
+            cls="px-3 py-1.5 text-sm border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors",
+            type="button",
+            data_action="toggle-photo-select",
+        ),
         # Result count
         Span(f"{len(photos)} photos", cls="text-sm text-slate-500 ml-auto"),
         cls="filter-bar flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4"
@@ -2147,6 +2155,17 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     src=photo_url(photo["filename"]),
                     cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                     loading="lazy"
+                ),
+                # Select mode checkbox (hidden by default)
+                Div(
+                    Input(
+                        type="checkbox",
+                        name="photo_ids",
+                        value=photo["photo_id"],
+                        cls="w-5 h-5 rounded border-slate-500 bg-slate-700/80 text-indigo-500 focus:ring-indigo-500 cursor-pointer",
+                        data_action="photo-select-check",
+                    ),
+                    cls="photo-select-checkbox absolute top-2 left-2 z-10 hidden",
                 ),
                 # Face count badge with completion indicator
                 Div(
@@ -2258,6 +2277,105 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             cls="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"
         )
 
+    # Bulk action bar (hidden until selections exist)
+    source_options_bulk = [Option("Select collection...", value="", disabled=True, selected=True)]
+    for s in sources:
+        source_options_bulk.append(Option(s, value=s))
+
+    bulk_action_bar = Div(
+        Div(
+            Span("0 selected", id="photo-select-count", cls="text-sm font-medium text-white"),
+            Button("Select All", type="button", data_action="photo-select-all",
+                   cls="px-3 py-1 text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700"),
+            Button("Clear", type="button", data_action="photo-select-clear",
+                   cls="px-3 py-1 text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700"),
+            Div(
+                Select(
+                    *source_options_bulk,
+                    id="bulk-move-collection",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                ),
+                Button("Move", type="button", data_action="photo-bulk-move",
+                       cls="px-4 py-1.5 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500"),
+                cls="flex items-center gap-2",
+            ),
+            Button("Cancel", type="button", data_action="toggle-photo-select",
+                   cls="px-3 py-1 text-xs text-slate-400 hover:text-white"),
+            cls="flex items-center gap-4 max-w-3xl mx-auto px-4"
+        ),
+        id="photo-bulk-bar",
+        cls="hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 py-3 z-40",
+    )
+
+    # Select mode script using event delegation (CLAUDE.md rule #12)
+    select_script = Script("""
+        (function() {
+            var selectMode = false;
+
+            document.addEventListener('click', function(e) {
+                var action = e.target.closest('[data-action]');
+                if (!action) return;
+                var act = action.getAttribute('data-action');
+
+                if (act === 'toggle-photo-select') {
+                    selectMode = !selectMode;
+                    var cbs = document.querySelectorAll('.photo-select-checkbox');
+                    var bar = document.getElementById('photo-bulk-bar');
+                    var toggle = document.getElementById('photo-select-toggle');
+                    cbs.forEach(function(cb) { cb.classList.toggle('hidden', !selectMode); });
+                    if (bar) bar.classList.toggle('hidden', !selectMode);
+                    if (toggle) {
+                        toggle.textContent = selectMode ? 'Cancel' : 'Select';
+                        toggle.classList.toggle('bg-indigo-600', selectMode);
+                        toggle.classList.toggle('text-white', selectMode);
+                        toggle.classList.toggle('border-indigo-600', selectMode);
+                    }
+                    if (!selectMode) {
+                        cbs.forEach(function(cb) { var inp = cb.querySelector('input'); if (inp) inp.checked = false; });
+                        updateSelectCount();
+                    }
+                }
+                else if (act === 'photo-select-check') {
+                    updateSelectCount();
+                }
+                else if (act === 'photo-select-all') {
+                    document.querySelectorAll('.photo-select-checkbox input').forEach(function(cb) { cb.checked = true; });
+                    updateSelectCount();
+                }
+                else if (act === 'photo-select-clear') {
+                    document.querySelectorAll('.photo-select-checkbox input').forEach(function(cb) { cb.checked = false; });
+                    updateSelectCount();
+                }
+                else if (act === 'photo-bulk-move') {
+                    var sel = document.getElementById('bulk-move-collection');
+                    var collection = sel ? sel.value : '';
+                    if (!collection) { alert('Please select a collection.'); return; }
+                    var ids = [];
+                    document.querySelectorAll('.photo-select-checkbox input:checked').forEach(function(cb) { ids.push(cb.value); });
+                    if (ids.length === 0) { alert('No photos selected.'); return; }
+                    htmx.ajax('POST', '/api/photos/bulk-update-source', {
+                        values: { photo_ids: JSON.stringify(ids), source: collection },
+                        target: '#toast-container',
+                        swap: 'beforeend'
+                    });
+                }
+            });
+
+            // Also handle change events for checkboxes
+            document.addEventListener('change', function(e) {
+                if (e.target.closest('[data-action="photo-select-check"]')) {
+                    updateSelectCount();
+                }
+            });
+
+            function updateSelectCount() {
+                var count = document.querySelectorAll('.photo-select-checkbox input:checked').length;
+                var el = document.getElementById('photo-select-count');
+                if (el) el.textContent = count + ' selected';
+            }
+        })();
+    """)
+
     return Div(
         section_header("Photos", subtitle),
         filter_bar,
@@ -2266,6 +2384,8 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             "No photos found." + (" Clear filter to see all." if filter_source else ""),
             cls="text-center py-12 text-slate-400"
         ),
+        bulk_action_bar,
+        select_script,
         cls="space-y-6"
     )
 
@@ -7518,6 +7638,39 @@ def post(photo_id: str, date_taken: str = "", location: str = "",
 
     return toast(f"Photo metadata updated ({len(metadata)} field(s)).", "success")
 
+
+@rt("/api/photos/bulk-update-source")
+def post(photo_ids: str = "[]", source: str = "", sess=None):
+    """Bulk update collection/source for multiple photos. Admin-only."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if not source.strip():
+        return toast("Please select a collection.", "warning")
+
+    try:
+        ids = json.loads(photo_ids)
+    except (json.JSONDecodeError, TypeError):
+        return toast("Invalid photo selection.", "error")
+
+    if not ids:
+        return toast("No photos selected.", "warning")
+
+    photo_registry = load_photo_registry()
+    updated = 0
+    for pid in ids:
+        photo_registry.set_source(pid, source.strip())
+        updated += 1
+    save_photo_registry(photo_registry)
+
+    # Invalidate photo cache so grid reflects changes
+    global _photo_cache
+    _photo_cache = None
+
+    log_user_action("BULK_UPDATE_SOURCE", count=updated, source=source.strip())
+
+    return toast(f"Moved {updated} photo(s) to {source.strip()}.", "success")
 
 
 # =============================================================================
