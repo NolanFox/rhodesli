@@ -5504,12 +5504,10 @@ def post(photo_id: str, sess, source: str = ""):
     if not photo_path:
         return Response("Photo not found", status_code=404)
     photo_reg.set_source(photo_id, source.strip())
-    photo_index_path = data_path / "photo_index.json"
-    photo_reg.save(photo_index_path)
-    # Invalidate caches so the new source shows up
-    global _photo_cache, _photo_registry_cache
+    save_photo_registry(photo_reg)
+    # Invalidate photo cache so the new source shows up
+    global _photo_cache
     _photo_cache = None
-    _photo_registry_cache = None
     return Div(
         Span(f"Collection updated to: {source.strip() or '(none)'}",
              cls="text-sm text-emerald-400"),
