@@ -499,6 +499,14 @@ def load_photo_registry():
     return _photo_registry_cache
 
 
+def save_photo_registry(registry):
+    """Save photo registry to disk and invalidate cache."""
+    global _photo_registry_cache
+    photo_index_path = data_path / "photo_index.json"
+    registry.save(photo_index_path)
+    _photo_registry_cache = registry
+
+
 # =============================================================================
 # PHOTO CONTEXT HELPERS
 # =============================================================================
@@ -776,6 +784,11 @@ def _build_caches():
                 if not source:
                     source = filename_to_source.get(fname, "")
                 _photo_cache[photo_id]["source"] = source
+
+                # Merge photo metadata (BE-012)
+                metadata = photo_registry.get_metadata(photo_id)
+                if metadata:
+                    _photo_cache[photo_id].update(metadata)
         except FileNotFoundError:
             # No photo_index.json yet, set empty sources
             for photo_id in _photo_cache:
@@ -5431,6 +5444,8 @@ def photo_view_content(
                 f"Source: {photo.get('source', 'Unknown')}",
                 cls="text-slate-400 text-xs mt-1"
             ) if photo.get("source") else None,
+            # Stored photo metadata (BE-012)
+            _photo_metadata_display(photo),
             # Photo annotations display + form (AN-002–AN-006)
             _photo_annotations_section(photo_id, is_admin),
             cls="mt-4"
@@ -7136,6 +7151,41 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
         return toast("Identity not found.", "error")
 
     return toast(f"Metadata updated ({len(metadata)} field(s)).", "success")
+
+
+@rt("/api/photo/{photo_id}/metadata")
+def post(photo_id: str, date_taken: str = "", location: str = "",
+         caption: str = "", occasion: str = "", donor: str = "",
+         notes: str = "", sess=None):
+    """Update photo metadata. Admin-only (BE-012)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    metadata = {}
+    if date_taken.strip():
+        metadata["date_taken"] = date_taken.strip()
+    if location.strip():
+        metadata["location"] = location.strip()
+    if caption.strip():
+        metadata["caption"] = caption.strip()
+    if occasion.strip():
+        metadata["occasion"] = occasion.strip()
+    if donor.strip():
+        metadata["donor"] = donor.strip()
+    if notes.strip():
+        metadata["notes"] = notes.strip()
+
+    if not metadata:
+        return toast("No metadata provided.", "warning")
+
+    photo_registry = load_photo_registry()
+    if not photo_registry.set_metadata(photo_id, metadata):
+        return toast("Photo not found.", "error")
+    save_photo_registry(photo_registry)
+
+    return toast(f"Photo metadata updated ({len(metadata)} field(s)).", "success")
+
 
 
 # =============================================================================
@@ -9451,6 +9501,30 @@ def _invalidate_annotations_cache():
     """Clear annotations cache after write."""
     global _annotations_cache
     _annotations_cache = None
+
+
+def _photo_metadata_display(photo: dict):
+    """Display stored photo metadata fields (BE-012)."""
+    metadata_fields = {
+        "date_taken": "Date",
+        "location": "Location",
+        "caption": "Caption",
+        "occasion": "Occasion",
+        "donor": "Donor",
+        "camera": "Camera",
+    }
+    items = []
+    for key, label in metadata_fields.items():
+        value = photo.get(key)
+        if value:
+            items.append(P(
+                Span(f"{label}: ", cls="text-slate-500"),
+                Span(str(value), cls="text-slate-300"),
+                cls="text-xs"
+            ))
+    if not items:
+        return Span()
+    return Div(*items, cls="mt-2 space-y-0.5")
 
 
 def _photo_annotations_section(photo_id: str, is_admin: bool = False):

@@ -123,6 +123,47 @@ class PhotoRegistry:
                 photo_ids.add(photo_id)
         return photo_ids
 
+    def set_metadata(self, photo_id: str, metadata: dict) -> bool:
+        """
+        Set metadata fields on a photo (BE-012).
+
+        Only allowlisted keys are accepted; others are silently ignored.
+
+        Args:
+            photo_id: Photo identifier
+            metadata: Dict of key-value pairs to set
+
+        Returns:
+            True if photo exists and metadata was set, False otherwise
+        """
+        if photo_id not in self._photos:
+            return False
+
+        valid_keys = {
+            "date_taken", "date_estimate", "location", "caption",
+            "occasion", "photographer", "donor", "notes",
+        }
+        for key, value in metadata.items():
+            if key in valid_keys:
+                self._photos[photo_id][key] = value
+        return True
+
+    def get_metadata(self, photo_id: str) -> dict:
+        """
+        Get metadata fields for a photo.
+
+        Returns:
+            Dict of metadata fields (excluding path, face_ids, source, width, height)
+        """
+        if photo_id not in self._photos:
+            return {}
+
+        skip_keys = {"path", "face_ids", "source", "width", "height"}
+        return {
+            k: v for k, v in self._photos[photo_id].items()
+            if k not in skip_keys and v
+        }
+
     def get_photo_path(self, photo_id: str) -> str | None:
         """
         Get the file path for a photo.
@@ -150,14 +191,19 @@ class PhotoRegistry:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Convert sets to lists for JSON serialization
+        # Convert sets to lists for JSON serialization, preserve metadata
         photos_serializable = {}
         for photo_id, photo_data in self._photos.items():
-            photos_serializable[photo_id] = {
+            entry = {
                 "path": photo_data["path"],
                 "face_ids": sorted(photo_data["face_ids"]),  # sorted for determinism
                 "source": photo_data.get("source", ""),
             }
+            # Preserve all extra metadata fields (BE-012)
+            for key, value in photo_data.items():
+                if key not in ("path", "face_ids", "source") and value is not None:
+                    entry[key] = value
+            photos_serializable[photo_id] = entry
 
         data = {
             "schema_version": 1,
@@ -197,13 +243,18 @@ class PhotoRegistry:
 
         registry = cls()
 
-        # Restore photos with face_ids as sets
+        # Restore photos with face_ids as sets, preserve metadata fields
         for photo_id, photo_data in data["photos"].items():
-            registry._photos[photo_id] = {
+            entry = {
                 "path": photo_data["path"],
                 "face_ids": set(photo_data["face_ids"]),
                 "source": photo_data.get("source", ""),  # Backward compatible
             }
+            # Restore all extra metadata fields (BE-012)
+            for key, value in photo_data.items():
+                if key not in ("path", "face_ids", "source"):
+                    entry[key] = value
+            registry._photos[photo_id] = entry
 
         # Restore face_to_photo mapping
         registry._face_to_photo = data["face_to_photo"]
