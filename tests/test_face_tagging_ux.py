@@ -118,3 +118,15 @@ class TestKeyboardShortcuts:
         text = response.text
         if "focusKeyHandler" in text:
             assert "photo-modal" in text
+
+    def test_keyboard_handler_ignores_modifier_keys(self, client):
+        """Keyboard shortcuts must not fire when Cmd/Ctrl/Alt is held (e.g. Cmd+R)."""
+        response = client.get(WORKSTATION_URL)
+        text = response.text
+        # The global keydown handler must check modifier keys before dispatching
+        assert "e.metaKey" in text or "event.metaKey" in text, \
+            "Keyboard handler must check metaKey to avoid Cmd+R triggering Reject"
+        assert "e.ctrlKey" in text or "event.ctrlKey" in text, \
+            "Keyboard handler must check ctrlKey to avoid Ctrl+R triggering Reject"
+        assert "e.altKey" in text or "event.altKey" in text, \
+            "Keyboard handler must check altKey"

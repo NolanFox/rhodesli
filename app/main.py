@@ -5437,6 +5437,9 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 // --- Suppress shortcuts when typing in INPUT or TEXTAREA ---
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
+                // --- Ignore when modifier keys are held (Cmd+R, Ctrl+S, etc.) ---
+                if (e.metaKey || e.ctrlKey || e.altKey) return;
+
                 // --- Match mode shortcuts: Y=Same, N=Different, S=Skip ---
                 var matchBtn = null;
                 if (e.key === 'y' || e.key === 'Y') matchBtn = document.getElementById('match-btn-same');
