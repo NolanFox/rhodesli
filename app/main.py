@@ -118,7 +118,17 @@ app, rt = fast_app(
                 if (evt.detail.xhr.status === 401) {
                     evt.detail.shouldSwap = false;
                     var modal = document.getElementById('login-modal');
-                    if (modal) modal.classList.remove('hidden');
+                    if (modal) {
+                        // Update the modal message based on the triggering element
+                        var trigger = evt.detail.elt;
+                        var msgEl = document.getElementById('login-modal-message');
+                        if (msgEl && trigger) {
+                            var action = trigger.getAttribute('data-auth-action') ||
+                                         trigger.innerText.trim() || 'do that';
+                            msgEl.textContent = 'You need to sign in to ' + action.toLowerCase() + '.';
+                        }
+                        modal.classList.remove('hidden');
+                    }
                 }
             });
         """),
@@ -3195,7 +3205,7 @@ def login_modal() -> Div:
                        type="button", aria_label="Close"),
                 cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700"
             ),
-            P("Sign in to confirm identities and make changes.", cls="text-slate-400 mb-6 text-sm"),
+            P("Sign in to contribute to the archive.", id="login-modal-message", cls="text-slate-400 mb-6 text-sm"),
             Form(
                 Div(
                     Label("Email", fr="modal-email", cls="block text-sm mb-1 text-slate-300"),
@@ -3230,9 +3240,17 @@ def login_modal() -> Div:
                       "font-family: 'Roboto', Arial, sans-serif; font-size: 14px; color: #3c4043; "
                       "font-weight: 500; text-decoration: none; justify-content: center; width: 100%;",
             ) if google_url else None,
-            P(
-                A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"),
-                cls="mt-4 text-center text-sm"
+            Div(
+                P(
+                    A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"),
+                    cls="text-sm"
+                ),
+                P(
+                    "No account? ",
+                    A("Sign up with invite code", href="/signup", cls="text-blue-400 hover:underline"),
+                    cls="text-sm text-slate-400"
+                ),
+                cls="mt-4 text-center space-y-1"
             ),
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-8 relative border border-slate-700"
         ),
@@ -8851,12 +8869,17 @@ def post(identity_id: str, sess=None):
 # =============================================================================
 
 @rt("/login")
-def get(sess):
+def get(sess, next: str = ""):
     """Login page. Redirects to home if already authenticated or auth disabled."""
     if not is_auth_enabled():
         return RedirectResponse('/', status_code=303)
     if sess.get('auth'):
-        return RedirectResponse('/', status_code=303)
+        return RedirectResponse(next or '/', status_code=303)
+
+    # Build POST action with ?next= if provided
+    post_action = "/login"
+    if next:
+        post_action = f"/login?next={next}"
 
     return Html(
         Head(
@@ -8884,7 +8907,7 @@ def get(sess):
                     ),
                     Button("Sign In", type="submit",
                            cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
-                    method="post", action="/login", cls="space-y-2"
+                    method="post", action=post_action, cls="space-y-2"
                 ),
                 Div(
                     Div(cls="flex-grow border-t border-gray-600"),
@@ -8918,7 +8941,7 @@ def get(sess):
 
 
 @rt("/login")
-async def post(email: str, password: str, sess):
+async def post(email: str, password: str, sess, next: str = ""):
     """Handle login form submission."""
     user, error = await login_with_supabase(email, password)
     if error:
@@ -8948,7 +8971,9 @@ async def post(email: str, password: str, sess):
             ),
         )
     sess['auth'] = user
-    return RedirectResponse('/', status_code=303)
+    # Redirect to the page they were trying to reach, or home
+    redirect_to = next if next and next.startswith('/') else '/'
+    return RedirectResponse(redirect_to, status_code=303)
 
 
 @rt("/login/modal")
