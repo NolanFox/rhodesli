@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 3.0 — February 10, 2026
-**Status**: 943 tests passing, v0.15.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
+**Version**: 4.0 — February 10, 2026
+**Status**: 969 tests passing, v0.16.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -106,7 +106,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | FE-050 | Welcome/about landing page | DONE | Heritage photos, community explanation (2026-02-06) |
 | FE-051 | Interactive hero with real archive photos | DONE | Carousel with real archive photos (2026-02-06) |
-| FE-052 | First-time user guided tour | OPEN | Step-by-step overlay highlighting: browse photos, see faces, help identify, upload your own. |
+| FE-052 | First-time user welcome modal | DONE | Session-based welcome modal with archive overview and "Got it" dismiss (2026-02-10) |
 | FE-053 | Progress dashboard | DONE | "X of Y faces identified" with percentage and help CTA, 5 tests (2026-02-08) |
 
 ### 2.7 Workflow Speed & First-Time Value (HIGH Priority)
@@ -147,8 +147,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| BE-010 | Structured identity names | OPEN | Currently single `name` string. Need: `{first_name, last_name, display_name, aliases[], canonical_last_name}`. |
-| BE-011 | Identity metadata | OPEN | Birth date/place, death date/place, maiden name, relationships, generation. |
+| BE-010 | Structured identity names | DONE | `rename_identity()` auto-parses first_name/last_name from display name (2026-02-10) |
+| BE-011 | Identity metadata | DONE | `set_metadata()` with allowlisted keys (birth_year, death_year, birth_place, maiden_name, bio, etc.) + API endpoint (2026-02-10) |
 | BE-012 | Photo metadata | OPEN | Date taken (exact or estimated range), location, occasion/event, photographer, original source/donor, caption, story/notes. |
 | BE-013 | EXIF extraction | OPEN | Auto-extract date, camera, GPS from uploaded photos where available. |
 | BE-014 | Canonical name registry | OPEN | Backend table mapping variant spellings to canonical forms: `{capeluto, capelouto, capelluto} → Capeluto`. Same for first names: `{joseph, giuseppe, jose, joe} → Joseph`. |
@@ -194,8 +194,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ML-002 | Rejection memory (AD-004) | VERIFIED | "Not Same" pairs are stored and excluded from future suggestions. Commit 8042c85 verified working. |
 | ML-003 | Confirmed matches → golden set | PARTIAL | Golden set exists but needs automated rebuild when new confirmations happen. |
 | ML-004 | Dynamic threshold calibration | DONE | AD-013: four-tier system (VERY_HIGH/HIGH/MODERATE/LOW) from golden set evaluation (2026-02-09) |
-| ML-005 | Reclustering after merges | OPEN | When identities are merged, the new multi-anchor representation should trigger re-evaluation of nearby unidentified faces. |
-| ML-006 | Family resemblance handling | OPEN | Capelutos matching other Capelutos is a known problem. Consider relative distance (is face A closer to identity X than to any other identity?) rather than absolute threshold. |
+| ML-005 | Post-merge re-evaluation | DONE | After merge, nearby HIGH+ faces shown inline for immediate review (2026-02-10) |
+| ML-006 | Ambiguity detection | DONE | Margin-based flagging when top two matches within 15% distance. Family resemblance surfaced as ambiguous (2026-02-10) |
 
 ### 4.2 Golden Set & Evaluation (MEDIUM-HIGH Priority)
 
@@ -204,7 +204,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ML-010 | Golden set rebuild | DONE | 90 mappings, 23 identities (2026-02-09) |
 | ML-011 | Golden set diversity | OPEN | Need representation across: ages (child vs adult), photo quality (sharp vs blurry), decades (1940s vs 1970s), lighting conditions. |
 | ML-012 | Golden set evaluation | DONE | 4005 pairwise comparisons, distance sweep 0.50-2.00 (2026-02-09) |
-| ML-013 | Evaluation metrics dashboard | OPEN | Web UI for evaluation results. Track over time to catch regressions. |
+| ML-013 | Evaluation metrics dashboard | DONE | `/admin/ml-dashboard` — identity stats, golden set results, calibrated thresholds, recent actions (2026-02-10) |
 
 ### 4.3 Clustering & Matching (MEDIUM Priority)
 
@@ -232,7 +232,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| AN-001 | Photo captions | OPEN | Free-text caption field on each photo. |
+| AN-001 | Annotation system core | DONE | Submit/review/approve/reject workflow with name suggestions and confidence levels (2026-02-10) |
 | AN-002 | Date metadata | OPEN | Date taken, with support for approximate dates ("circa 1945", "1950s"). |
 | AN-003 | Location metadata | OPEN | Where the photo was taken. Structured + free-text. |
 | AN-004 | Event/occasion | OPEN | "Wedding", "Passover Seder", "Beach outing", etc. |
@@ -244,8 +244,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| AN-010 | Structured name fields | OPEN | First, last, maiden, display name, aliases. See BE-010. |
-| AN-011 | Birth/death dates and places | OPEN | See BE-011. |
+| AN-010 | Structured name fields | DONE | See BE-010 (2026-02-10) |
+| AN-011 | Birth/death dates and places | DONE | See BE-011 (2026-02-10) |
 | AN-012 | Biographical notes | OPEN | Free-text bio for each identity. |
 | AN-013 | Relationships | OPEN | "Married to Victoria Cukran", "Father of Betty", etc. |
 | AN-014 | Generation tracking | OPEN | Which generation in the family tree (for sorting/display). |
@@ -288,7 +288,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### 7.1 Current Test Coverage
 
-900 tests passing (v0.14.1) across:
+969 tests passing (v0.16.0) across:
 - `tests/test_auth.py` — auth flow tests
 - `tests/test_permissions.py` — permission matrix tests
 - `tests/test_ui_elements.py` — UI content tests
@@ -377,7 +377,7 @@ Based on research of latest Claude Code patterns (Feb 2026):
 | ROLE-002 | Contributor role | OPEN | Can propose identifications (admin reviews). Can add annotations. Cannot merge/detach. |
 | ROLE-003 | Trusted contributor | OPEN | Can confirm identifications directly (no admin review). Earned after N correct proposals. |
 | ROLE-004 | Family member self-identification | OPEN | "That's me!" button on face cards. Special trust level for self-ID. |
-| ROLE-005 | Activity feed | OPEN | Show recent identifications, uploads, merges to encourage participation. |
+| ROLE-005 | Activity feed | DONE | `/activity` route with action log + approved annotations (2026-02-10) |
 | ROLE-006 | Email notifications | OPEN | "Someone identified a face in your uploaded photo", "New photos added to the archive." |
 
 ---

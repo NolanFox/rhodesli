@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.16.0] - 2026-02-10
+
+### Added
+- **ML Pipeline Improvements**:
+  - Post-merge re-evaluation: after merging identities, nearby HIGH+ confidence faces are shown inline for immediate review
+  - Rejection memory in clustering: `cluster_new_faces.py` now checks `negative_ids` before matching, preventing re-suggestion of explicitly rejected pairs
+  - Ambiguity detection: margin-based flagging when top two matches are within 15% distance of each other
+- **ML Evaluation Dashboard** (ML-013): Admin page at `/admin/ml-dashboard` showing identity stats, golden set results, calibrated thresholds, and recent actions
+- **Annotation System** (AN-001–AN-005): Full submit/review/approve/reject workflow
+  - `POST /api/annotations/submit` — logged-in users submit name suggestions with confidence levels
+  - `GET /my-contributions` — user's annotation history with status tracking
+  - `GET /admin/approvals` — admin review queue for pending annotations
+  - `POST /admin/approvals/{id}/approve` and `/reject` — annotation moderation
+- **Structured Names** (BE-010): `rename_identity()` auto-parses first_name/last_name from display name
+- **Identity Metadata** (BE-011): `set_metadata()` on IdentityRegistry with allowlisted keys (birth_year, death_year, birth_place, maiden_name, bio, etc.)
+  - `POST /api/identity/{id}/metadata` — admin endpoint for editing metadata fields
+- **Suggest Name UX**: Non-admin users see "Suggest Name" button on identity focus cards, submitting via annotation system
+- **Activity Feed** (ROLE-005): `/activity` route showing recent identifications and approved annotations
+- **Welcome Modal** (FE-052): First-time visitor welcome with archive overview, dismissed via session flag
+- **43 new tests** across 5 new test files (test_post_merge, test_cluster_new_faces additions, test_ml_dashboard, test_annotations, test_metadata, test_activity_feed)
+- Test count: 926 → 969
+
 ## [v0.15.0] - 2026-02-10
 
 ### Added

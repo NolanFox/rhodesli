@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.14.1 · 900 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.16.0 · 969 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -47,7 +47,7 @@ Goal: Landing page, search, mobile — ready for family members.
 
 - [x] FE-050: Welcome/about landing page with heritage photos (2026-02-06)
 - [x] FE-051: Interactive hero with real archive photos (2026-02-06)
-- [ ] FE-052: First-time user guided tour
+- [x] FE-052: First-time user welcome modal (2026-02-10)
 - [x] FE-053: Progress dashboard ("23 of 181 faces identified") (2026-02-08)
 - [x] FE-030: Global search improvements (2026-02-08)
 - [x] FE-031: Fast name lookup with typeahead (2026-02-08)
@@ -64,12 +64,13 @@ Goal: Landing page, search, mobile — ready for family members.
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
 
-- [ ] BE-010: Structured identity names (first, last, maiden, aliases)
-- [ ] BE-011: Identity metadata (birth/death dates, places)
+- [x] BE-010: Structured identity names — auto-parse first/last from display name (2026-02-10)
+- [x] BE-011: Identity metadata — set_metadata() with allowlisted keys + API endpoint (2026-02-10)
 - [ ] BE-012: Photo metadata (date, location, occasion, source)
 - [ ] BE-013: EXIF extraction from uploaded photos
 - [ ] BE-014: Canonical name registry (variant spellings)
-- [ ] AN-001–AN-006: Photo-level annotations (captions, dates, locations, stories)
+- [x] AN-001: Annotation system core — submit/review/approve/reject workflow (2026-02-10)
+- [ ] AN-002–AN-006: Photo-level annotations (captions, dates, locations, stories, source)
 - [ ] AN-010–AN-014: Identity-level annotations (bio, relationships, generation)
 - [ ] BE-001–BE-006: Non-destructive merge system with full history
 - [x] FE-033: Fuzzy name search with Levenshtein distance (2026-02-08)
@@ -79,12 +80,12 @@ Goal: Make the system learn from user actions.
 
 - [ ] ML-001: User actions feed back to ML predictions
 - [x] ML-004: Dynamic threshold calibration from confirmed/rejected pairs (2026-02-09, AD-013)
-- [ ] ML-005: Reclustering after merges (re-evaluate nearby faces)
-- [ ] ML-006: Family resemblance handling (relative vs absolute distance)
+- [x] ML-005: Post-merge re-evaluation — inline suggestions for nearby faces after merge (2026-02-10)
+- [x] ML-006: Ambiguity detection — margin-based flagging when top matches are within 15% (2026-02-10)
 - [x] ML-010: Golden set rebuild (90 mappings, 23 identities) (2026-02-09)
 - [x] ML-012: Golden set evaluation (4005 pairs, sweep 0.50-2.00) (2026-02-09)
 - [ ] ML-011: Golden set diversity analysis (quality, temporal)
-- [ ] ML-013: Evaluation dashboard (web UI)
+- [x] ML-013: Evaluation dashboard — /admin/ml-dashboard with stats, thresholds, golden set (2026-02-10)
 - [x] ML-021: Calibrated confidence labels (VERY HIGH/HIGH/MODERATE/LOW) (2026-02-09)
 - [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
 
@@ -96,7 +97,7 @@ Goal: Enable family members to contribute, not just browse.
 - [ ] FE-041: "Help Identify" mode for non-admin users
 - [ ] FE-070–FE-073: Client-side analytics and admin dashboard
 - [ ] BE-031–BE-033: Upload moderation queue with rate limiting
-- [ ] ROLE-005: Activity feed (recent identifications, uploads, merges)
+- [x] ROLE-005: Activity feed — /activity route with action log + approved annotations (2026-02-10)
 - [ ] ROLE-006: Email notifications for contributors
 
 ## Phase F: Scale & Generalize
@@ -111,6 +112,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.16.0 — ML pipeline + annotation engine + collaboration: post-merge suggestions, rejection memory in clustering, ambiguity detection, ML dashboard, annotation system (submit/approve/reject), structured names, identity metadata, activity feed, welcome modal (969 tests)
 - [x] 2026-02-10: v0.15.0 — Upload processing pipeline: staged file sync API, download script, end-to-end orchestrator (943 tests)
 - [x] 2026-02-10: v0.14.1 — Skipped faces fix: clustering includes 192 skipped faces, clickable lightbox overlays, correct section routing, stats denominator fix (900 tests)
 - [x] 2026-02-10: v0.14.0 — Sync infrastructure: token-authenticated sync API, reliable sync script, backup automation, ML refresh pipeline (891 tests)

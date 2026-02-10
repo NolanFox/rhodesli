@@ -1,9 +1,9 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-10 (Session 7 — Skipped Faces Fix)
+Last updated: 2026-02-10 (Session 8 — ML Pipeline + Annotation Engine + Collaboration)
 
 ## Active Bugs
-- (none — skipped faces bugs fixed in v0.14.1)
+- (none)
 
 ## Setup Required (ONE TIME)
 - [ ] Generate sync token: `python scripts/generate_sync_token.py`
@@ -20,26 +20,28 @@ Last updated: 2026-02-10 (Session 7 — Skipped Faces Fix)
 - [ ] After applying, sync to production and confirm in web UI
 
 ## Immediate (This Weekend)
-- [x] Build token-authenticated sync API (2026-02-10)
-- [x] Build reliable sync script (2026-02-10)
 - [ ] Re-run validation after sync to check if admin tagging created signal
-- [x] End-to-end staged upload pipeline (API + download script + orchestrator) (2026-02-10)
 - [ ] Test new UX features on real phone (mobile responsive, touch swipe, keyboard shortcuts)
 - [ ] Share with 2-3 family members for initial feedback
+- [ ] Smoke test all fixes on live site
 
 ## Near-Term (Next 1-2 Weeks)
-- [ ] Verify Resend email notifications fire on pending upload
-- [ ] UX verification: Find Similar auto-scroll, bulk merge/not-same, no-reload HTMX actions
-- [ ] Collect 50+ admin-validated clustering proposals for re-calibration
-- [ ] Re-run calibration after batch 2 upload (more diverse data)
+- [ ] BE-012: Photo metadata (date, location, occasion, source)
+- [ ] BE-013: EXIF extraction from uploaded photos
+- [ ] BE-014: Canonical name registry (variant spellings)
+- [ ] AN-006: Photo-level annotations (captions, dates, locations, stories)
+- [ ] AN-012–AN-014: Identity-level annotations (bio, relationships, generation)
+- [ ] BE-001–BE-006: Non-destructive merge system verification/extension
+- [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
+- [ ] ML-011: Golden set diversity analysis (quality, temporal)
 
 ## Medium-Term (Next Month)
-- [ ] Better face detection evaluation (compare current vs alternatives — golden set comparison)
-- [ ] Embedding model evaluation (compare alternatives — golden set comparison)
+- [ ] ROLE-002: Contributor role (propose identifications, add annotations)
+- [ ] ROLE-003: Trusted contributor (direct confirmation after N correct proposals)
+- [ ] FE-041: "Help Identify" mode for non-admin users
+- [ ] BE-031–BE-033: Upload moderation queue with rate limiting
+- [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
 - [ ] Postgres migration (identities + photo_index -> Supabase)
-- [ ] Contributor roles (see docs/design/FUTURE_COMMUNITY.md)
-- [ ] Annotation engine (captions, dates, locations, stories)
-- [ ] Upload moderation queue with file size limits and rate limiting
 
 ## Long-Term (Quarter+)
 - [ ] Family tree integration (GEDCOM, relationships)
@@ -49,46 +51,17 @@ Last updated: 2026-02-10 (Session 7 — Skipped Faces Fix)
 - [ ] CI/CD pipeline (automated tests, staging, deploy previews)
 
 ## Completed
-- [x] Phase A: Railway deployment with Docker + persistent volume
-- [x] Phase B: Supabase authentication (Google OAuth + email/password)
-- [x] Role-based permissions with public browsing, admin-only modifications
-- [x] Password recovery, OAuth social login, email templates
-- [x] Login modal for protected actions, styled confirmation dialog
-- [x] Google Sign-In branding, email inline styles
-- [x] Regression test suite + testing requirements
-- [x] Landing page, admin export, mobile CSS, docs overhaul
-- [x] UX overhaul: merge system, sidebar, face cards, inbox workflow
-- [x] Pending upload queue with admin moderation
-- [x] ML clustering pipeline: golden set, evaluation, face matching
-- [x] Photo storage consolidation to single raw_photos/ path
-- [x] R2 photo serving (uploaded photos + inbox photos)
-- [x] Photo source lookup fix for inbox-style photo IDs
-- [x] Doc restructure: split SYSTEM_DESIGN_WEB.md into focused docs
-- [x] ML algorithmic decision capture system with path-scoped rules
-- [x] Find Similar 500 error fix in production
-- [x] Bug fix: multi-merge form (HTMX formaction + checkbox toggle)
-- [x] Bug fix: carousel count static after Focus mode actions
-- [x] Bug fix: main face image not clickable in Focus mode
-- [x] Photo navigation: keyboard arrows, prev/next buttons, lightbox
-- [x] Match mode redesign: larger faces, confidence bar, clickable, logging
-- [x] Face tagging: Instagram-style tag dropdown with autocomplete + merge
-- [x] Identity notes system (add/view notes with author tracking)
-- [x] Proposed matches system (propose/list/accept/reject)
-- [x] Collection stats cards and reassignment endpoint
-- [x] Clustering dry-run report (35 matches, Betty Capeluto collection)
-- [x] v0.10.0: Face overlay status colors + completion badges
-- [x] v0.10.0: Single tag dropdown + Create identity from tag
-- [x] v0.10.0: Keyboard shortcuts (C/S/R/F) in focus mode
-- [x] v0.10.0: Proposals admin page + sidebar link
-- [x] v0.10.0: AD-001 fix in cluster_new_faces.py (multi-anchor)
-- [x] v0.10.0: Multi-merge bug fix (list[str] annotation)
-- [x] v0.10.0: Lightbox arrow navigation fix (photoNavTo)
-- [x] v0.10.0: Collection stats filtered subtitle fix
-- [x] v0.10.0: Mobile responsive pass (touch swipe, stacking, 44px targets)
-- [x] v0.10.0: Golden set rebuild + threshold analysis (1.00=100% precision)
-- [x] v0.10.0: AD-004 rejection memory verified working
-- [x] v0.12.0: Identity-context photo navigation (arrows from face cards/search)
-- [x] v0.12.0: FE-011 — Mobile bottom tab navigation
-- [x] v0.12.0: FE-053 — Progress dashboard with identification bar
-- [x] v0.12.0: FE-033 — Fuzzy name search (Levenshtein) + match highlighting
-- [x] v0.12.0: Inline face actions (hover confirm/skip/reject on overlays)
+- [x] Phase A: Railway deployment + Supabase auth + permission model
+- [x] Phase A stabilization: all 8 P0 bugs fixed, event delegation pattern
+- [x] Phase B: Landing page, search, mobile, sync infrastructure
+- [x] v0.10.0–v0.12.1: Face overlays, inline actions, fuzzy search, photo nav
+- [x] v0.13.0: ML validation — threshold calibration, golden set, clustering validation
+- [x] v0.14.0: Token-authenticated sync API + reliable sync script
+- [x] v0.14.1: Skipped faces fix — clustering includes 192 skipped faces
+- [x] v0.15.0: Upload processing pipeline — staged file sync API, download, orchestrator
+- [x] v0.16.0: ML pipeline + annotation engine + collaboration (969 tests)
+  - Post-merge suggestions, rejection memory in clustering, ambiguity detection
+  - ML evaluation dashboard (/admin/ml-dashboard)
+  - Annotation system (submit/approve/reject + my-contributions)
+  - Structured names (BE-010), identity metadata (BE-011)
+  - Activity feed (/activity), welcome modal (FE-052)
