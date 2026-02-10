@@ -57,18 +57,20 @@ class PhotoRegistry:
 
     def set_source(self, photo_id: str, source: str) -> None:
         """
-        Set or update the source/collection label for a photo.
+        Set or update the source/provenance label for a photo.
+
+        Source = where the photo came from (e.g., "Newspapers.com", "Betty Capeluto's Album").
 
         Args:
             photo_id: Photo identifier
-            source: Collection/provenance label
+            source: Provenance/origin label
         """
         if photo_id in self._photos:
             self._photos[photo_id]["source"] = source
 
     def get_source(self, photo_id: str) -> str:
         """
-        Get the source/collection label for a photo.
+        Get the source/provenance label for a photo.
 
         Args:
             photo_id: Photo identifier
@@ -79,6 +81,59 @@ class PhotoRegistry:
         if photo_id not in self._photos:
             return ""
         return self._photos[photo_id].get("source", "")
+
+    def set_collection(self, photo_id: str, collection: str) -> None:
+        """
+        Set or update the collection/classification label for a photo.
+
+        Collection = how the archive organizes it (e.g., "Immigration Records", "Wedding Photos").
+        Separate from source (provenance/origin).
+
+        Args:
+            photo_id: Photo identifier
+            collection: Classification label
+        """
+        if photo_id in self._photos:
+            self._photos[photo_id]["collection"] = collection
+
+    def get_collection(self, photo_id: str) -> str:
+        """
+        Get the collection/classification label for a photo.
+
+        Args:
+            photo_id: Photo identifier
+
+        Returns:
+            Collection string, or empty string if photo unknown or no collection set
+        """
+        if photo_id not in self._photos:
+            return ""
+        return self._photos[photo_id].get("collection", "")
+
+    def set_source_url(self, photo_id: str, source_url: str) -> None:
+        """
+        Set or update the source URL (citation link) for a photo.
+
+        Args:
+            photo_id: Photo identifier
+            source_url: URL where the photo was found
+        """
+        if photo_id in self._photos:
+            self._photos[photo_id]["source_url"] = source_url
+
+    def get_source_url(self, photo_id: str) -> str:
+        """
+        Get the source URL for a photo.
+
+        Args:
+            photo_id: Photo identifier
+
+        Returns:
+            Source URL string, or empty string if not set
+        """
+        if photo_id not in self._photos:
+            return ""
+        return self._photos[photo_id].get("source_url", "")
 
     def get_faces_in_photo(self, photo_id: str) -> set[str]:
         """
@@ -158,7 +213,7 @@ class PhotoRegistry:
         if photo_id not in self._photos:
             return {}
 
-        skip_keys = {"path", "face_ids", "source", "width", "height"}
+        skip_keys = {"path", "face_ids", "source", "collection", "source_url", "width", "height"}
         return {
             k: v for k, v in self._photos[photo_id].items()
             if k not in skip_keys and v
@@ -198,10 +253,12 @@ class PhotoRegistry:
                 "path": photo_data["path"],
                 "face_ids": sorted(photo_data["face_ids"]),  # sorted for determinism
                 "source": photo_data.get("source", ""),
+                "collection": photo_data.get("collection", ""),
+                "source_url": photo_data.get("source_url", ""),
             }
             # Preserve all extra metadata fields (BE-012)
             for key, value in photo_data.items():
-                if key not in ("path", "face_ids", "source") and value is not None:
+                if key not in ("path", "face_ids", "source", "collection", "source_url") and value is not None:
                     entry[key] = value
             photos_serializable[photo_id] = entry
 
@@ -256,10 +313,12 @@ class PhotoRegistry:
                     "path": photo_data["path"],
                     "face_ids": set(photo_data["face_ids"]),
                     "source": photo_data.get("source", ""),  # Backward compatible
+                    "collection": photo_data.get("collection", ""),
+                    "source_url": photo_data.get("source_url", ""),
                 }
                 # Restore all extra metadata fields (BE-012)
                 for key, value in photo_data.items():
-                    if key not in ("path", "face_ids", "source"):
+                    if key not in ("path", "face_ids", "source", "collection", "source_url"):
                         entry[key] = value
                 registry._photos[photo_id] = entry
 
