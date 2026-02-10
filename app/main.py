@@ -222,9 +222,17 @@ REGISTRY_PATH = data_path / "identities.json"
 
 
 def load_registry():
-    """Load the identity registry (backend authority)."""
+    """Load the identity registry (backend authority).
+
+    Returns an empty registry if the file is missing or corrupted,
+    so the server never crashes on bad data.
+    """
     if REGISTRY_PATH.exists():
-        return IdentityRegistry.load(REGISTRY_PATH)
+        try:
+            return IdentityRegistry.load(REGISTRY_PATH)
+        except (ValueError, OSError) as e:
+            logging.error(f"Failed to load identity registry from {REGISTRY_PATH}: {e}")
+            return IdentityRegistry()
     return IdentityRegistry()
 
 
@@ -505,13 +513,21 @@ def get_face_data() -> dict[str, dict]:
 
 
 def load_photo_registry():
-    """Load the photo registry for merge validation."""
+    """Load the photo registry for merge validation.
+
+    Returns an empty registry if the file is missing or corrupted,
+    so the server never crashes on bad data.
+    """
     global _photo_registry_cache
     if _photo_registry_cache is None:
         from core.photo_registry import PhotoRegistry
         photo_index_path = data_path / "photo_index.json"
         if photo_index_path.exists():
-            _photo_registry_cache = PhotoRegistry.load(photo_index_path)
+            try:
+                _photo_registry_cache = PhotoRegistry.load(photo_index_path)
+            except (ValueError, OSError) as e:
+                logging.error(f"Failed to load photo registry from {photo_index_path}: {e}")
+                _photo_registry_cache = PhotoRegistry()
         else:
             _photo_registry_cache = PhotoRegistry()
     return _photo_registry_cache
@@ -9520,17 +9536,26 @@ def _load_recent_actions(limit: int = 10) -> list:
 _annotations_cache = None
 
 def _load_annotations() -> dict:
-    """Load annotations from data file."""
+    """Load annotations from data file.
+
+    Returns default empty structure if file is missing or corrupted,
+    so the server never crashes on bad annotation data.
+    """
     global _annotations_cache
     if _annotations_cache is not None:
         return _annotations_cache
     ann_path = data_path / "annotations.json"
+    default = {"schema_version": 1, "annotations": {}}
     if ann_path.exists():
         import json as _json
-        with open(ann_path) as f:
-            _annotations_cache = _json.load(f)
+        try:
+            with open(ann_path) as f:
+                _annotations_cache = _json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            logging.error(f"Failed to load annotations from {ann_path}: {e}")
+            _annotations_cache = default
     else:
-        _annotations_cache = {"schema_version": 1, "annotations": {}}
+        _annotations_cache = default
     return _annotations_cache
 
 

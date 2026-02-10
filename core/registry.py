@@ -1554,11 +1554,21 @@ class IdentityRegistry:
 
     @classmethod
     def load(cls, path: Path) -> "IdentityRegistry":
-        """Load registry from JSON file."""
+        """Load registry from JSON file.
+
+        Raises:
+            ValueError: If the file contains invalid JSON or is missing required keys.
+        """
         path = Path(path)
 
-        with open(path) as f:
-            data = json.load(f)
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error(f"IdentityRegistry: corrupted JSON in {path}: {e}")
+            raise ValueError(
+                f"IdentityRegistry file is corrupted ({path}): {e}"
+            ) from e
 
         if data.get("schema_version") != SCHEMA_VERSION:
             raise ValueError(
@@ -1566,9 +1576,15 @@ class IdentityRegistry:
                 f"got {data.get('schema_version')}"
             )
 
-        registry = cls()
-        registry._identities = data["identities"]
-        registry._history = data["history"]
+        try:
+            registry = cls()
+            registry._identities = data["identities"]
+            registry._history = data["history"]
+        except KeyError as e:
+            logger.error(f"IdentityRegistry: missing required key {e} in {path}")
+            raise ValueError(
+                f"IdentityRegistry file is missing required key {e} ({path})"
+            ) from e
 
         return registry
 
