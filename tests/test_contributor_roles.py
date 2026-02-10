@@ -167,6 +167,78 @@ class TestTrustedContributor:
         assert is_trusted_contributor("mixed@test.com", mock_annotations) is False
 
 
+class TestContributorPermissionBoundary:
+    """V1 safety: contributors suggest, admins decide. No exceptions."""
+
+    @pytest.fixture
+    def contributor_client(self):
+        """Client authenticated as a contributor (not admin)."""
+        from app.main import app
+        from app.auth import User
+        client = TestClient(app)
+        # Patch auth to return a contributor user
+        self._patches = [
+            patch("app.main.is_auth_enabled", return_value=True),
+            patch("app.main.get_current_user", return_value=User(
+                id="contrib-1", email="helper@test.com",
+                is_admin=False, role="contributor")),
+        ]
+        for p in self._patches:
+            p.start()
+        yield client
+        for p in self._patches:
+            p.stop()
+
+    def test_contributor_cannot_merge(self, contributor_client):
+        """Contributors cannot merge identities — admin only."""
+        response = contributor_client.post(
+            "/api/identity/target-id/merge/source-id",
+            headers={"HX-Request": "true"})
+        assert response.status_code == 403
+
+    def test_contributor_cannot_confirm(self, contributor_client):
+        """Contributors cannot confirm identities — admin only."""
+        response = contributor_client.post(
+            "/confirm/some-id",
+            headers={"HX-Request": "true"})
+        assert response.status_code == 403
+
+    def test_contributor_cannot_reject(self, contributor_client):
+        """Contributors cannot reject identities — admin only."""
+        response = contributor_client.post(
+            "/reject/some-id",
+            headers={"HX-Request": "true"})
+        assert response.status_code == 403
+
+    def test_contributor_cannot_approve_annotations(self, contributor_client):
+        """Contributors cannot approve other users' annotations — admin only."""
+        response = contributor_client.post(
+            "/admin/approvals/ann-1/approve",
+            headers={"HX-Request": "true"})
+        assert response.status_code == 403
+
+    def test_contributor_cannot_skip(self, contributor_client):
+        """Contributors cannot skip faces — admin only."""
+        response = contributor_client.post(
+            "/identity/some-id/skip",
+            headers={"HX-Request": "true"})
+        assert response.status_code == 403
+
+    def test_auto_promotion_threshold_is_documented(self):
+        """Auto-promotion criteria exist as a named constant, not a magic number."""
+        from app.auth import TRUSTED_CONTRIBUTOR_THRESHOLD
+        assert isinstance(TRUSTED_CONTRIBUTOR_THRESHOLD, int)
+        assert TRUSTED_CONTRIBUTOR_THRESHOLD >= 1
+
+    def test_trusted_contributor_has_no_extra_route_powers(self):
+        """is_trusted_contributor() is a utility only — not wired into any route guard."""
+        import inspect
+        from app import main
+        source = inspect.getsource(main)
+        # Verify is_trusted_contributor is not called in route handlers
+        assert "is_trusted_contributor" not in source
+
+
 class TestContributorUI:
     """ROLE-002: Contributors see appropriate UI elements."""
 
