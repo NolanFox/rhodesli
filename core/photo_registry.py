@@ -178,6 +178,24 @@ class PhotoRegistry:
                 photo_ids.add(photo_id)
         return photo_ids
 
+    def set_dimensions(self, photo_id: str, width: int, height: int) -> bool:
+        """
+        Set image dimensions for a photo.
+
+        Args:
+            photo_id: Photo identifier
+            width: Image width in pixels
+            height: Image height in pixels
+
+        Returns:
+            True if photo exists and dimensions were set, False otherwise
+        """
+        if photo_id not in self._photos:
+            return False
+        self._photos[photo_id]["width"] = width
+        self._photos[photo_id]["height"] = height
+        return True
+
     def set_metadata(self, photo_id: str, metadata: dict) -> bool:
         """
         Set metadata fields on a photo (BE-012).

@@ -221,7 +221,8 @@ def extract_faces(filepath: Path) -> list[dict]:
     if img is None:
         raise ValueError(f"Could not read image: {filepath}")
 
-    image_shape = img.shape[:2]
+    image_height, image_width = img.shape[:2]
+    image_shape = (image_height, image_width)
 
     # Initialize InsightFace
     app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
@@ -248,7 +249,7 @@ def extract_faces(filepath: Path) -> list[dict]:
         pfe = create_pfe(face_data, image_shape)
         results.append(pfe)
 
-    return results
+    return results, image_width, image_height
 
 
 def generate_crop(
@@ -359,7 +360,13 @@ def process_single_image(
             }
 
     # Extract faces
-    faces = extract_faces(filepath)
+    result = extract_faces(filepath)
+    if isinstance(result, tuple):
+        faces, image_width, image_height = result
+    else:
+        # Backward compatibility if extract_faces returns just a list
+        faces = result
+        image_width, image_height = 0, 0
 
     if not faces:
         return {
@@ -383,6 +390,10 @@ def process_single_image(
 
     for face in faces:
         photo_registry.register_face(photo_id, str(filepath), face["face_id"], source=source)
+
+    # Store image dimensions for face overlay positioning (critical for R2 mode)
+    if image_width > 0 and image_height > 0:
+        photo_registry.set_dimensions(photo_id, image_width, image_height)
 
     photo_registry.save(photo_index_path)
 

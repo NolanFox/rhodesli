@@ -1644,7 +1644,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:43:16"
+      "date_taken": "2019-11-29 20:43:16",
+      "width": 2120,
+      "height": 3000
     },
     "inbox_staged-20260210-182610_1_596771174.533589": {
       "path": "raw_photos/596771174.533589.jpg",
@@ -1658,7 +1660,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:46:14"
+      "date_taken": "2019-11-29 20:46:14",
+      "width": 3000,
+      "height": 2250
     },
     "inbox_staged-20260210-182610_2_596771023.203463": {
       "path": "raw_photos/596771023.203463.jpg",
@@ -1668,7 +1672,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:43:43"
+      "date_taken": "2019-11-29 20:43:43",
+      "width": 3000,
+      "height": 2250
     },
     "inbox_staged-20260210-182610_3_596770938.488977": {
       "path": "raw_photos/596770938.488977.jpg",
@@ -1691,7 +1697,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:42:18"
+      "date_taken": "2019-11-29 20:42:18",
+      "width": 3000,
+      "height": 1883
     },
     "inbox_staged-20260210-182610_4_596771234.564304": {
       "path": "raw_photos/596771234.564304.jpg",
@@ -1702,7 +1710,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:47:14"
+      "date_taken": "2019-11-29 20:47:14",
+      "width": 2250,
+      "height": 3000
     },
     "inbox_staged-20260210-182610_5_757557421.130308": {
       "path": "raw_photos/757557421.130308.jpg",
@@ -1713,7 +1723,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2025-01-02 19:37:01"
+      "date_taken": "2025-01-02 19:37:01",
+      "width": 3500,
+      "height": 2866
     },
     "inbox_staged-20260210-182610_6_596771293.674187": {
       "path": "raw_photos/596771293.674187.jpg",
@@ -1723,7 +1735,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:48:13"
+      "date_taken": "2019-11-29 20:48:13",
+      "width": 2250,
+      "height": 3000
     },
     "inbox_staged-20260210-182610_7_596771420.719238": {
       "path": "raw_photos/596771420.719238.jpg",
@@ -1736,7 +1750,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:50:20"
+      "date_taken": "2019-11-29 20:50:20",
+      "width": 3000,
+      "height": 2000
     },
     "inbox_staged-20260210-182610_8_596771351.496458": {
       "path": "raw_photos/596771351.496458.jpg",
@@ -1747,7 +1763,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:49:11"
+      "date_taken": "2019-11-29 20:49:11",
+      "width": 3000,
+      "height": 2250
     },
     "inbox_staged-20260210-182610_11_596771054.717436": {
       "path": "raw_photos/596771054.717436.jpg",
@@ -1764,7 +1782,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:44:14"
+      "date_taken": "2019-11-29 20:44:14",
+      "width": 3000,
+      "height": 2250
     },
     "inbox_staged-20260210-182610_12_Image_567": {
       "path": "raw_photos/Image_567.jpg",
@@ -1774,7 +1794,9 @@
       ],
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
-      "source_url": ""
+      "source_url": "",
+      "width": 1603,
+      "height": 2498
     },
     "inbox_staged-20260210-182610_13_596771481.064027": {
       "path": "raw_photos/596771481.064027.jpg",
@@ -1786,7 +1808,9 @@
       "source": "personal photos",
       "collection": "Nace Capeluto Tampa Collection",
       "source_url": "",
-      "date_taken": "2019-11-29 20:51:21"
+      "date_taken": "2019-11-29 20:51:21",
+      "width": 2000,
+      "height": 3000
     }
   },
   "face_to_photo": {

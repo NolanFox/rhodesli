@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.20.4] - 2026-02-10
+
+### Fixed
+- **Face overlay boxes missing on Nace Collection photos**: 12 photos uploaded via pipeline had no bounding box overlays because width/height was never stored during ingestion. Root cause: `extract_faces()` loaded the image but didn't return dimensions, and `process_single_image()` never stored them.
+- **Ingestion pipeline now stores image dimensions**: `extract_faces()` returns `(faces, width, height)` tuple; `process_single_image()` calls `PhotoRegistry.set_dimensions()` to persist them in `photo_index.json`
+
+### Added
+- `PhotoRegistry.set_dimensions()` method for storing width/height on photo records
+- `scripts/backfill_dimensions.py` — backfill script with `--dry-run`/`--execute` for photos missing dimensions
+- 7 new tests: dimension storage in ingestion, PhotoRegistry.set_dimensions(), backfill script (happy path, skip, dry-run)
+- Test count: 1299 → 1306
+
 ## [v0.20.3] - 2026-02-10
 
 ### Fixed

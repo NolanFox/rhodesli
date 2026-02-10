@@ -35,19 +35,23 @@ class TestProcessUploadedFile:
             # Create mock status function
             job_id = "test_job_001"
 
-            # Mock the heavy processing
+            # Mock the heavy processing — extract_faces returns (faces, width, height)
             with patch("core.ingest_inbox.extract_faces") as mock_extract:
-                mock_extract.return_value = [
-                    {
-                        "face_id": "face_001",
-                        "mu": [0.1] * 512,
-                        "sigma_sq": [0.5] * 512,
-                        "det_score": 0.95,
-                        "bbox": [10, 20, 100, 150],
-                        "filename": "test.jpg",
-                        "filepath": str(tmpdir / "test.jpg"),
-                    }
-                ]
+                mock_extract.return_value = (
+                    [
+                        {
+                            "face_id": "face_001",
+                            "mu": [0.1] * 512,
+                            "sigma_sq": [0.5] * 512,
+                            "det_score": 0.95,
+                            "bbox": [10, 20, 100, 150],
+                            "filename": "test.jpg",
+                            "filepath": str(tmpdir / "test.jpg"),
+                        }
+                    ],
+                    800,  # width
+                    600,  # height
+                )
 
                 result = process_uploaded_file(
                     filepath=tmpdir / "test.jpg",
@@ -66,6 +70,59 @@ class TestProcessUploadedFile:
             with open(status_path) as f:
                 status = json.load(f)
             assert status["status"] == "success"
+
+
+    def test_process_single_image_stores_dimensions(self):
+        """Processing should store image width/height in photo_index.json."""
+        from core.ingest_inbox import process_uploaded_file
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+
+            data_dir = tmpdir / "data"
+            inbox_dir = data_dir / "inbox"
+            data_dir.mkdir()
+            inbox_dir.mkdir()
+
+            job_id = "test_dims_001"
+
+            with patch("core.ingest_inbox.extract_faces") as mock_extract:
+                mock_extract.return_value = (
+                    [
+                        {
+                            "face_id": "face_001",
+                            "mu": [0.1] * 512,
+                            "sigma_sq": [0.5] * 512,
+                            "det_score": 0.95,
+                            "bbox": [10, 20, 100, 150],
+                            "filename": "test.jpg",
+                            "filepath": str(tmpdir / "test.jpg"),
+                        }
+                    ],
+                    1920,  # width
+                    1080,  # height
+                )
+
+                result = process_uploaded_file(
+                    filepath=tmpdir / "test.jpg",
+                    job_id=job_id,
+                    data_dir=data_dir,
+                )
+
+            assert result["status"] == "success"
+
+            # Verify dimensions were written to photo_index.json
+            photo_index_path = data_dir / "photo_index.json"
+            with open(photo_index_path) as f:
+                photo_data = json.load(f)
+
+            photos = photo_data.get("photos", {})
+            assert len(photos) > 0
+
+            # Find the photo entry and check dimensions
+            photo = list(photos.values())[0]
+            assert photo["width"] == 1920
+            assert photo["height"] == 1080
 
 
 class TestCreateInboxIdentities:
@@ -152,6 +209,170 @@ class TestGenerateFaceId:
         )
 
         assert face_id_1 != face_id_2
+
+
+class TestPhotoRegistryDimensions:
+    """Tests for PhotoRegistry.set_dimensions()."""
+
+    def test_set_dimensions_on_existing_photo(self):
+        """set_dimensions should store width/height on an existing photo."""
+        from core.photo_registry import PhotoRegistry
+
+        reg = PhotoRegistry()
+        reg.register_face("photo_1", "raw_photos/test.jpg", "face_1")
+        assert reg.set_dimensions("photo_1", 1920, 1080) is True
+
+        # Verify via save/load round-trip
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "photo_index.json"
+            reg.save(path)
+
+            loaded = PhotoRegistry.load(path)
+            photo = loaded._photos["photo_1"]
+            assert photo["width"] == 1920
+            assert photo["height"] == 1080
+
+    def test_set_dimensions_on_unknown_photo(self):
+        """set_dimensions should return False for unknown photos."""
+        from core.photo_registry import PhotoRegistry
+
+        reg = PhotoRegistry()
+        assert reg.set_dimensions("nonexistent", 100, 100) is False
+
+    def test_dimensions_survive_save_load(self):
+        """Dimensions should persist through save/load cycle."""
+        from core.photo_registry import PhotoRegistry
+
+        reg = PhotoRegistry()
+        reg.register_face("p1", "raw_photos/a.jpg", "f1")
+        reg.register_face("p2", "raw_photos/b.jpg", "f2")
+        reg.set_dimensions("p1", 800, 600)
+        # p2 intentionally has no dimensions
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "photo_index.json"
+            reg.save(path)
+            loaded = PhotoRegistry.load(path)
+
+            assert loaded._photos["p1"]["width"] == 800
+            assert loaded._photos["p1"]["height"] == 600
+            assert loaded._photos["p2"].get("width") is None
+
+
+class TestBackfillDimensions:
+    """Tests for the backfill_dimensions script."""
+
+    def test_backfill_fixes_missing_dimensions(self):
+        """Backfill should add width/height from local image files."""
+        from PIL import Image
+
+        from scripts.backfill_dimensions import backfill_dimensions
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+
+            # Create a small test image
+            photos_dir = tmpdir / "raw_photos"
+            photos_dir.mkdir()
+            img = Image.new("RGB", (640, 480))
+            img.save(photos_dir / "test_photo.jpg")
+
+            # Create photo_index with missing dimensions
+            photo_index = {
+                "schema_version": 1,
+                "photos": {
+                    "photo_1": {
+                        "path": "raw_photos/test_photo.jpg",
+                        "face_ids": ["f1"],
+                        "source": "",
+                        "collection": "",
+                        "source_url": "",
+                    }
+                },
+                "face_to_photo": {"f1": "photo_1"},
+            }
+            index_path = tmpdir / "photo_index.json"
+            with open(index_path, "w") as f:
+                json.dump(photo_index, f)
+
+            # Execute backfill
+            fixed = backfill_dimensions(index_path, photos_dir, dry_run=False)
+            assert fixed == 1
+
+            # Verify dimensions were written
+            with open(index_path) as f:
+                data = json.load(f)
+            assert data["photos"]["photo_1"]["width"] == 640
+            assert data["photos"]["photo_1"]["height"] == 480
+
+    def test_backfill_skips_photos_with_dimensions(self):
+        """Backfill should not modify photos that already have dimensions."""
+        from scripts.backfill_dimensions import backfill_dimensions
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            photos_dir = tmpdir / "raw_photos"
+            photos_dir.mkdir()
+
+            photo_index = {
+                "schema_version": 1,
+                "photos": {
+                    "photo_1": {
+                        "path": "raw_photos/existing.jpg",
+                        "face_ids": ["f1"],
+                        "source": "",
+                        "collection": "",
+                        "source_url": "",
+                        "width": 1920,
+                        "height": 1080,
+                    }
+                },
+                "face_to_photo": {"f1": "photo_1"},
+            }
+            index_path = tmpdir / "photo_index.json"
+            with open(index_path, "w") as f:
+                json.dump(photo_index, f)
+
+            fixed = backfill_dimensions(index_path, photos_dir, dry_run=False)
+            assert fixed == 0
+
+    def test_backfill_dry_run_does_not_modify(self):
+        """Dry run should not write any changes."""
+        from PIL import Image
+
+        from scripts.backfill_dimensions import backfill_dimensions
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+            photos_dir = tmpdir / "raw_photos"
+            photos_dir.mkdir()
+            img = Image.new("RGB", (640, 480))
+            img.save(photos_dir / "test.jpg")
+
+            photo_index = {
+                "schema_version": 1,
+                "photos": {
+                    "p1": {
+                        "path": "raw_photos/test.jpg",
+                        "face_ids": ["f1"],
+                        "source": "",
+                        "collection": "",
+                        "source_url": "",
+                    }
+                },
+                "face_to_photo": {"f1": "p1"},
+            }
+            index_path = tmpdir / "photo_index.json"
+            with open(index_path, "w") as f:
+                json.dump(photo_index, f)
+
+            fixed = backfill_dimensions(index_path, photos_dir, dry_run=True)
+            assert fixed == 1
+
+            # Verify file was NOT modified
+            with open(index_path) as f:
+                data = json.load(f)
+            assert "width" not in data["photos"]["p1"]
 
 
 class TestWriteStatusFile:
