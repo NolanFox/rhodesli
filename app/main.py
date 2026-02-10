@@ -4421,16 +4421,43 @@ def get(section: str = None, view: str = "focus", current: str = None,
         # Styled confirmation modal (replaces native browser confirm())
         confirm_modal(),
         sidebar_script,
-        # Client-side instant name filter (FE-030/FE-031)
+        # Client-side instant name filter with fuzzy matching (FE-030/FE-031/FE-033)
         Script("""
             (function() {
+                // Levenshtein edit distance for fuzzy name matching
+                function levenshtein(a, b) {
+                    if (a.length < b.length) return levenshtein(b, a);
+                    if (b.length === 0) return a.length;
+                    var prev = [];
+                    for (var j = 0; j <= b.length; j++) prev[j] = j;
+                    for (var i = 1; i <= a.length; i++) {
+                        var curr = [i];
+                        for (var j = 1; j <= b.length; j++) {
+                            var cost = a[i-1] === b[j-1] ? 0 : 1;
+                            curr[j] = Math.min(curr[j-1] + 1, prev[j] + 1, prev[j-1] + cost);
+                        }
+                        prev = curr;
+                    }
+                    return prev[b.length];
+                }
+                // Fuzzy match: exact substring OR Levenshtein distance <= threshold per word
+                function fuzzyMatch(query, name) {
+                    if (!query) return true;
+                    if (name.indexOf(query) !== -1) return true;
+                    var words = name.split(/\\s+/);
+                    var maxDist = query.length <= 8 ? 2 : 3;
+                    for (var w = 0; w < words.length; w++) {
+                        if (levenshtein(query, words[w]) <= maxDist) return true;
+                    }
+                    return false;
+                }
                 var filterTimer = null;
                 function sidebarFilterCards(query) {
                     var cards = document.querySelectorAll('.identity-card');
                     var q = (query || '').toLowerCase().trim();
                     for (var i = 0; i < cards.length; i++) {
                         var name = cards[i].getAttribute('data-name') || '';
-                        if (!q || name.indexOf(q) !== -1) {
+                        if (fuzzyMatch(q, name)) {
                             cards[i].style.display = '';
                         } else {
                             cards[i].style.display = 'none';
