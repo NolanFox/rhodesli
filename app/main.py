@@ -9048,6 +9048,511 @@ def get(sess=None):
     )
 
 
+# =============================================================================
+# ML EVALUATION DASHBOARD (admin-only)
+# =============================================================================
+
+@rt("/admin/ml-dashboard")
+def get(sess=None):
+    """ML evaluation dashboard. Shows golden set stats, thresholds, identity counts."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    registry = load_registry()
+
+    # Identity stats by state
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    skipped = registry.list_identities(state=IdentityState.SKIPPED)
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    rejected = registry.list_identities(state=IdentityState.REJECTED)
+
+    total_identities = len(confirmed) + len(skipped) + len(inbox) + len(proposed) + len(rejected)
+    total_faces = sum(
+        len(i.get("anchor_ids", [])) + len(i.get("candidate_ids", []))
+        for i in confirmed + skipped + inbox + proposed
+    )
+
+    # Golden set stats
+    gs_stats = _load_golden_set_stats()
+    eval_stats = _load_evaluation_stats()
+
+    # Recent actions from event log
+    recent_actions = _load_recent_actions(limit=10)
+
+    # Build stat cards
+    stat_cards = Div(
+        _stat_card("Confirmed", str(len(confirmed)), "emerald"),
+        _stat_card("Skipped", str(len(skipped)), "amber"),
+        _stat_card("Inbox", str(len(inbox) + len(proposed)), "blue"),
+        _stat_card("Rejected", str(len(rejected)), "red"),
+        _stat_card("Total Faces", str(total_faces), "slate"),
+        _stat_card("Identities", str(total_identities), "indigo"),
+        cls="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8"
+    )
+
+    # Golden set section
+    if gs_stats:
+        gs_section = Div(
+            H3("Golden Set", cls="text-lg font-semibold text-white mb-3"),
+            Div(
+                _stat_card("Mappings", str(gs_stats.get("total_mappings", 0)), "purple"),
+                _stat_card("Identities", str(gs_stats.get("unique_identities", 0)), "purple"),
+                _stat_card("Photos", str(gs_stats.get("unique_photos", 0)), "purple"),
+                cls="grid grid-cols-3 gap-4"
+            ),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+    else:
+        gs_section = Div(
+            H3("Golden Set", cls="text-lg font-semibold text-white mb-3"),
+            P("No golden set data available. Run: python scripts/build_golden_set.py",
+              cls="text-slate-400 text-sm"),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+
+    # Threshold section
+    threshold_section = Div(
+        H3("Calibrated Thresholds (AD-013)", cls="text-lg font-semibold text-white mb-3"),
+        Div(
+            _threshold_row("VERY HIGH", MATCH_THRESHOLD_VERY_HIGH, "100%", "~13%", "emerald"),
+            _threshold_row("HIGH", MATCH_THRESHOLD_HIGH, "100%", "~63%", "green"),
+            _threshold_row("MODERATE", MATCH_THRESHOLD_MODERATE, "~94%", "~81%", "amber"),
+            _threshold_row("MEDIUM", MATCH_THRESHOLD_MEDIUM, "~87%", "~87%", "orange"),
+            cls="space-y-2"
+        ),
+        cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+    )
+
+    # Evaluation results
+    if eval_stats:
+        eval_section = Div(
+            H3("Last Evaluation", cls="text-lg font-semibold text-white mb-3"),
+            P(f"Zero-FP ceiling: {eval_stats.get('zero_fp_ceiling', 'N/A')}",
+              cls="text-sm text-slate-300"),
+            P(f"Optimal F1 threshold: {eval_stats.get('optimal_f1_threshold', 'N/A')}",
+              cls="text-sm text-slate-300"),
+            P(eval_stats.get("statistical_note", ""), cls="text-xs text-slate-400 mt-2"),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+    else:
+        eval_section = Div(
+            H3("Evaluation", cls="text-lg font-semibold text-white mb-3"),
+            P("No evaluation data. Run: python scripts/evaluate_golden_set.py",
+              cls="text-slate-400 text-sm"),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+
+    # Recent actions
+    if recent_actions:
+        action_rows = [
+            Div(
+                Span(a.get("action", "?"), cls="text-xs font-mono bg-slate-700 px-2 py-0.5 rounded text-slate-300"),
+                Span(a.get("timestamp", "")[:19], cls="text-xs text-slate-500 ml-2"),
+                Span(a.get("detail", ""), cls="text-xs text-slate-400 ml-2"),
+                cls="flex items-center gap-1"
+            )
+            for a in recent_actions
+        ]
+        actions_section = Div(
+            H3("Recent Actions", cls="text-lg font-semibold text-white mb-3"),
+            Div(*action_rows, cls="space-y-1"),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+    else:
+        actions_section = Div(
+            H3("Recent Actions", cls="text-lg font-semibold text-white mb-3"),
+            P("No recent actions logged.", cls="text-slate-400 text-sm"),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+
+    return Title("ML Dashboard — Rhodesli"), Div(
+        Div(
+            H1("ML Evaluation Dashboard", cls="text-2xl font-bold text-white"),
+            A("Back to Dashboard", href="/?section=to_review",
+              cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            cls="flex items-center justify-between mb-6"
+        ),
+        stat_cards,
+        gs_section,
+        threshold_section,
+        eval_section,
+        actions_section,
+        cls="max-w-5xl mx-auto p-6"
+    )
+
+
+def _stat_card(label: str, value: str, color: str) -> Div:
+    """Small stat card for the ML dashboard."""
+    color_map = {
+        "emerald": "border-emerald-500 text-emerald-400",
+        "amber": "border-amber-500 text-amber-400",
+        "blue": "border-blue-500 text-blue-400",
+        "red": "border-red-500 text-red-400",
+        "slate": "border-slate-500 text-slate-300",
+        "indigo": "border-indigo-500 text-indigo-400",
+        "purple": "border-purple-500 text-purple-400",
+        "green": "border-green-500 text-green-400",
+        "orange": "border-orange-500 text-orange-400",
+    }
+    cls = color_map.get(color, "border-slate-500 text-slate-300")
+    return Div(
+        Div(value, cls=f"text-2xl font-bold {cls.split()[-1]}"),
+        Div(label, cls="text-xs text-slate-400 mt-1"),
+        cls=f"bg-slate-800 rounded-lg p-4 border-l-4 {cls.split()[0]}"
+    )
+
+
+def _threshold_row(label: str, value: float, precision: str, recall: str, color: str) -> Div:
+    """Single threshold row in the dashboard."""
+    return Div(
+        Span(label, cls=f"text-sm font-medium text-{color}-400 w-24"),
+        Span(f"< {value}", cls="text-sm font-mono text-white w-16"),
+        Span(f"Precision: {precision}", cls="text-xs text-slate-400 w-28"),
+        Span(f"Recall: {recall}", cls="text-xs text-slate-400"),
+        cls="flex items-center gap-4"
+    )
+
+
+def _load_golden_set_stats() -> dict:
+    """Load golden set stats from data file."""
+    gs_path = data_path / "golden_set.json"
+    if not gs_path.exists():
+        return {}
+    try:
+        import json as _json
+        with open(gs_path) as f:
+            gs = _json.load(f)
+        return gs.get("stats", {})
+    except Exception:
+        return {}
+
+
+def _load_evaluation_stats() -> dict:
+    """Load the most recent evaluation results."""
+    # Find the most recent evaluation file
+    eval_files = sorted(data_path.glob("golden_set_evaluation_*.json"), reverse=True)
+    if not eval_files:
+        return {}
+    try:
+        import json as _json
+        with open(eval_files[0]) as f:
+            return _json.load(f)
+    except Exception:
+        return {}
+
+
+def _load_recent_actions(limit: int = 10) -> list:
+    """Load recent user actions from the event log."""
+    log_path = data_path / "event_log.jsonl"
+    if not log_path.exists():
+        return []
+    try:
+        lines = log_path.read_text().strip().split("\n")
+        recent = lines[-limit:] if len(lines) > limit else lines
+        recent.reverse()  # Most recent first
+        import json as _json
+        actions = []
+        for line in recent:
+            if not line.strip():
+                continue
+            try:
+                event = _json.load(io.StringIO(line))
+                actions.append({
+                    "action": event.get("event_type", event.get("action", "?")),
+                    "timestamp": event.get("timestamp", ""),
+                    "detail": event.get("identity_id", event.get("target_id", ""))[:12],
+                })
+            except Exception:
+                continue
+        return actions
+    except Exception:
+        return []
+
+
+# =============================================================================
+# ANNOTATION SYSTEM (contributor submissions + admin review)
+# =============================================================================
+
+# Annotation data stored in data/annotations.json
+_annotations_cache = None
+
+def _load_annotations() -> dict:
+    """Load annotations from data file."""
+    global _annotations_cache
+    if _annotations_cache is not None:
+        return _annotations_cache
+    ann_path = data_path / "annotations.json"
+    if ann_path.exists():
+        import json as _json
+        with open(ann_path) as f:
+            _annotations_cache = _json.load(f)
+    else:
+        _annotations_cache = {"schema_version": 1, "annotations": {}}
+    return _annotations_cache
+
+
+def _save_annotations(data: dict):
+    """Save annotations atomically."""
+    global _annotations_cache
+    ann_path = data_path / "annotations.json"
+    import json as _json
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(data_path), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            _json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_path, str(ann_path))
+        _annotations_cache = data
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+
+def _invalidate_annotations_cache():
+    """Clear annotations cache after write."""
+    global _annotations_cache
+    _annotations_cache = None
+
+
+@rt("/api/annotations/submit")
+def post(target_type: str, target_id: str, annotation_type: str,
+         value: str, confidence: str = "likely", reason: str = "", sess=None):
+    """
+    Submit an annotation. Requires login (not admin — any logged-in user can suggest).
+    Types: name_suggestion, caption, date, location, story, relationship
+    """
+    denied = _check_login(sess)
+    if denied:
+        return denied
+
+    user = get_current_user(sess)
+    if not user:
+        return Response("", status_code=401)
+
+    if not value or not value.strip():
+        return Response(
+            to_xml(toast("Please provide a value.", "warning")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    import uuid
+    from datetime import datetime, timezone
+    ann_id = str(uuid.uuid4())
+
+    annotations = _load_annotations()
+    annotations["annotations"][ann_id] = {
+        "annotation_id": ann_id,
+        "type": annotation_type,
+        "target_type": target_type,  # "identity" or "photo"
+        "target_id": target_id,
+        "value": value.strip(),
+        "confidence": confidence,
+        "reason": reason.strip() if reason else "",
+        "submitted_by": user.email,
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "status": "pending",
+        "reviewed_by": None,
+        "reviewed_at": None,
+    }
+    _save_annotations(annotations)
+
+    return Response(
+        to_xml(toast("Thanks! Your suggestion is pending admin review.", "success")),
+        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+    )
+
+
+@rt("/my-contributions")
+def get(sess=None):
+    """User's annotation history."""
+    denied = _check_login(sess)
+    if denied:
+        return RedirectResponse("/login", status_code=303)
+
+    user = get_current_user(sess)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+
+    annotations = _load_annotations()
+    my_anns = [
+        a for a in annotations["annotations"].values()
+        if a.get("submitted_by") == user.email
+    ]
+    my_anns.sort(key=lambda a: a.get("submitted_at", ""), reverse=True)
+
+    rows = []
+    for a in my_anns:
+        status_cls = {
+            "pending": "text-amber-400 bg-amber-900/30",
+            "approved": "text-emerald-400 bg-emerald-900/30",
+            "rejected": "text-red-400 bg-red-900/30",
+        }.get(a["status"], "text-slate-400")
+
+        rows.append(Div(
+            Div(
+                Span(a["type"].replace("_", " ").title(), cls="text-sm font-medium text-white"),
+                Span(a["status"].upper(), cls=f"text-xs px-2 py-0.5 rounded ml-2 {status_cls}"),
+                cls="flex items-center"
+            ),
+            P(f'"{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
+            P(f'Submitted {a["submitted_at"][:10]}', cls="text-xs text-slate-500"),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700"
+        ))
+
+    if not rows:
+        rows = [Div(
+            P("No contributions yet.", cls="text-slate-400"),
+            P("Visit a photo or identity page to suggest names, dates, or stories.",
+              cls="text-sm text-slate-500 mt-2"),
+            cls="text-center py-12"
+        )]
+
+    return Title("My Contributions — Rhodesli"), Div(
+        Div(
+            H1("My Contributions", cls="text-2xl font-bold text-white"),
+            A("Back to Dashboard", href="/?section=to_review",
+              cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            cls="flex items-center justify-between mb-6"
+        ),
+        Div(*rows, cls="space-y-3"),
+        cls="max-w-3xl mx-auto p-6"
+    )
+
+
+@rt("/admin/approvals")
+def get(sess=None):
+    """Admin page for reviewing pending annotations."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    annotations = _load_annotations()
+    pending = [
+        a for a in annotations["annotations"].values()
+        if a.get("status") == "pending"
+    ]
+    pending.sort(key=lambda a: a.get("submitted_at", ""), reverse=True)
+
+    rows = []
+    for a in pending:
+        ann_id = a["annotation_id"]
+        rows.append(Div(
+            Div(
+                Span(a["type"].replace("_", " ").title(), cls="text-sm font-bold text-white"),
+                Span(f"for {a['target_type']} {a['target_id'][:12]}...",
+                      cls="text-xs text-slate-400 ml-2"),
+                cls="flex items-center"
+            ),
+            P(f'Suggestion: "{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
+            P(f'Confidence: {a["confidence"]} | By: {a["submitted_by"]}',
+              cls="text-xs text-slate-500"),
+            P(f'Reason: {a.get("reason", "none")}', cls="text-xs text-slate-500") if a.get("reason") else None,
+            Div(
+                Button("Approve",
+                       hx_post=f"/admin/approvals/{ann_id}/approve",
+                       hx_target=f"#annotation-{ann_id}",
+                       hx_swap="outerHTML",
+                       cls="px-3 py-1 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-500"),
+                Button("Reject",
+                       hx_post=f"/admin/approvals/{ann_id}/reject",
+                       hx_target=f"#annotation-{ann_id}",
+                       hx_swap="outerHTML",
+                       cls="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-500"),
+                cls="flex gap-2 mt-3"
+            ),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700",
+            id=f"annotation-{ann_id}"
+        ))
+
+    if not rows:
+        rows = [Div(
+            P("No pending annotations to review.", cls="text-slate-400"),
+            cls="text-center py-12"
+        )]
+
+    return Title("Annotation Approvals — Rhodesli"), Div(
+        Div(
+            H1("Pending Approvals", cls="text-2xl font-bold text-white"),
+            A("Back to Dashboard", href="/?section=to_review",
+              cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            cls="flex items-center justify-between mb-6"
+        ),
+        Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
+        Div(*rows, cls="space-y-3"),
+        cls="max-w-3xl mx-auto p-6"
+    )
+
+
+@rt("/admin/approvals/{ann_id}/approve")
+def post(ann_id: str, sess=None):
+    """Approve an annotation. Updates target record."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    user = get_current_user(sess)
+    annotations = _load_annotations()
+    ann = annotations["annotations"].get(ann_id)
+    if not ann:
+        return Response(to_xml(toast("Annotation not found.", "error")), status_code=404,
+                        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"})
+
+    from datetime import datetime, timezone
+    ann["status"] = "approved"
+    ann["reviewed_by"] = user.email if user else "admin"
+    ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+
+    # Apply the annotation to the target
+    if ann["type"] == "name_suggestion" and ann["target_type"] == "identity":
+        registry = load_registry()
+        identity = registry._identities.get(ann["target_id"])
+        if identity:
+            identity["name"] = ann["value"]
+            identity["updated_at"] = datetime.now(timezone.utc).isoformat()
+            save_registry(registry)
+
+    _save_annotations(annotations)
+
+    return Div(
+        Span("APPROVED", cls="text-sm font-bold text-emerald-400"),
+        Span(f' — "{ann["value"]}" by {ann["submitted_by"]}', cls="text-sm text-slate-400"),
+        cls="bg-emerald-900/20 rounded-lg p-4 border border-emerald-700",
+        id=f"annotation-{ann_id}"
+    )
+
+
+@rt("/admin/approvals/{ann_id}/reject")
+def post(ann_id: str, sess=None):
+    """Reject an annotation. No data change."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    user = get_current_user(sess)
+    annotations = _load_annotations()
+    ann = annotations["annotations"].get(ann_id)
+    if not ann:
+        return Response(to_xml(toast("Annotation not found.", "error")), status_code=404,
+                        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"})
+
+    from datetime import datetime, timezone
+    ann["status"] = "rejected"
+    ann["reviewed_by"] = user.email if user else "admin"
+    ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    _save_annotations(annotations)
+
+    return Div(
+        Span("REJECTED", cls="text-sm font-bold text-red-400"),
+        Span(f' — "{ann["value"]}" by {ann["submitted_by"]}', cls="text-sm text-slate-400"),
+        cls="bg-red-900/20 rounded-lg p-4 border border-red-700",
+        id=f"annotation-{ann_id}"
+    )
+
+
 # --- Sync API Endpoints (token-authenticated, for scripts/sync_from_production.py) ---
 
 def _check_sync_token(request):
