@@ -1457,6 +1457,12 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 type="button",
                 **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
             ),
+            Button(
+                "Suggest Name",
+                cls="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
+                **{"_": f"on click toggle .hidden on #suggest-name-{identity_id}"},
+                type="button",
+            ),
             cls="flex items-center gap-3 mt-6"
         )
 
@@ -1500,6 +1506,8 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 # Neighbors container
                 Div(id=f"neighbors-{identity_id}", cls="mt-4"),
                 actions,
+                # Suggest Name form (hidden by default, shown via Hyperscript toggle)
+                _suggest_name_form(identity_id),
                 # Notes section (loads via HTMX)
                 Div(
                     Button(
@@ -1519,6 +1527,45 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
         ),
         cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6",
         id="focus-card"
+    )
+
+
+def _suggest_name_form(identity_id: str) -> Div:
+    """Hidden form for suggesting a name for an unidentified person."""
+    return Div(
+        H4("Suggest a Name", cls="text-sm font-medium text-white mb-2"),
+        Form(
+            Input(type="hidden", name="target_type", value="identity"),
+            Input(type="hidden", name="target_id", value=identity_id),
+            Input(type="hidden", name="annotation_type", value="name_suggestion"),
+            Input(
+                name="value", placeholder="Enter name...",
+                cls="w-full bg-slate-700 border border-slate-600 rounded px-3 py-2 text-sm text-white placeholder-slate-400",
+                required=True,
+            ),
+            Select(
+                Option("I'm certain", value="certain"),
+                Option("Likely", value="likely", selected=True),
+                Option("Just a guess", value="guess"),
+                name="confidence",
+                cls="w-full mt-2 bg-slate-700 border border-slate-600 rounded px-3 py-1.5 text-sm text-white",
+            ),
+            Input(
+                name="reason", placeholder="How do you know? (optional)",
+                cls="w-full mt-2 bg-slate-700 border border-slate-600 rounded px-3 py-2 text-sm text-white placeholder-slate-400",
+            ),
+            Button(
+                "Submit Suggestion",
+                type="submit",
+                cls="mt-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-500",
+            ),
+            hx_post="/api/annotations/submit",
+            hx_swap="beforeend",
+            hx_target="#toast-container",
+            cls="space-y-0"
+        ),
+        cls="hidden mt-4 p-4 bg-slate-900/50 border border-indigo-500/30 rounded-lg",
+        id=f"suggest-name-{identity_id}",
     )
 
 
@@ -7000,6 +7047,48 @@ def post(identity_id: str, text: str = "", sess=None):
         ),
         id=f"notes-{identity_id}",
     )
+
+
+@rt("/api/identity/{identity_id}/metadata")
+def post(identity_id: str, birth_year: str = "", death_year: str = "",
+         birth_place: str = "", maiden_name: str = "",
+         relationship_notes: str = "", bio: str = "", sess=None):
+    """Update identity metadata. Admin-only (BE-011)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    metadata = {}
+    if birth_year.strip():
+        try:
+            metadata["birth_year"] = int(birth_year.strip())
+        except ValueError:
+            pass
+    if death_year.strip():
+        try:
+            metadata["death_year"] = int(death_year.strip())
+        except ValueError:
+            pass
+    if birth_place.strip():
+        metadata["birth_place"] = birth_place.strip()
+    if maiden_name.strip():
+        metadata["maiden_name"] = maiden_name.strip()
+    if relationship_notes.strip():
+        metadata["relationship_notes"] = relationship_notes.strip()
+    if bio.strip():
+        metadata["bio"] = bio.strip()
+
+    if not metadata:
+        return toast("No metadata provided.", "warning")
+
+    try:
+        registry = load_registry()
+        registry.set_metadata(identity_id, metadata, user_source="admin_web")
+        save_registry(registry)
+    except KeyError:
+        return toast("Identity not found.", "error")
+
+    return toast(f"Metadata updated ({len(metadata)} field(s)).", "success")
 
 
 # =============================================================================

@@ -953,6 +953,14 @@ class IdentityRegistry:
         previous_version = identity["version_id"]
 
         identity["name"] = new_name
+        # Auto-parse structured name fields (BE-010)
+        parts = new_name.rsplit(" ", 1)
+        if len(parts) == 2:
+            identity["first_name"] = parts[0]
+            identity["last_name"] = parts[1]
+        else:
+            identity["first_name"] = new_name
+            identity["last_name"] = ""
         identity["version_id"] += 1
         identity["updated_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -969,6 +977,37 @@ class IdentityRegistry:
         )
 
         return previous_name
+
+    def set_metadata(
+        self,
+        identity_id: str,
+        metadata: dict,
+        user_source: str,
+    ) -> None:
+        """
+        Set metadata fields on an identity (BE-011).
+
+        All metadata fields are optional. Only provided keys are updated.
+        Valid keys: birth_year, death_year, birth_place, maiden_name,
+                    alternate_names, relationship_notes, bio, name_source.
+
+        Args:
+            identity_id: Identity ID
+            metadata: Dict of metadata fields to set
+            user_source: Who initiated this action
+        """
+        identity = self._identities[identity_id]
+        valid_keys = {
+            "birth_year", "death_year", "birth_place", "maiden_name",
+            "alternate_names", "relationship_notes", "bio", "name_source",
+            "first_name", "last_name",
+        }
+        for key, value in metadata.items():
+            if key in valid_keys:
+                identity[key] = value
+
+        identity["version_id"] += 1
+        identity["updated_at"] = datetime.now(timezone.utc).isoformat()
 
     def detach_face(
         self,
