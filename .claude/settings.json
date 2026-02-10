@@ -1,1 +1,1 @@
-{"permissions":{"allow":["Bash(*)", "Edit(*)", "Read(*)", "Write(*)"]}}
+{"permissions":{"defaultMode":"bypassPermissions"}}
