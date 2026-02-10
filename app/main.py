@@ -9106,8 +9106,8 @@ def get(request):
     return {"files": files, "total_files": len(files), "total_size_bytes": total_size}
 
 
-@rt("/api/sync/staged/download/{filepath:path}")
-def get(request, filepath: str):
+@app.get("/api/sync/staged/download/{filepath:path}")
+async def download_staged_file(request, filepath: str):
     """Download a single staged file. Path is relative to staging root."""
     denied = _check_sync_token(request)
     if denied:
@@ -9132,6 +9132,15 @@ def get(request, filepath: str):
         filename=target.name,
         media_type="application/octet-stream",
     )
+
+# Move staged download route before FastHTML's catch-all static route
+# (same issue as /photos/{filename:path} — the /{fname:path}.{ext:static}
+# catch-all would intercept .jpg/.png paths before our handler)
+for i, route in enumerate(app.routes):
+    if getattr(route, "path", None) == "/api/sync/staged/download/{filepath:path}":
+        _staged_route = app.routes.pop(i)
+        app.routes.insert(0, _staged_route)
+        break
 
 
 @rt("/api/sync/staged/clear")
