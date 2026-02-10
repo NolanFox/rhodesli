@@ -887,6 +887,26 @@ def get_photo_id_for_face(face_id: str) -> str:
     return _face_to_photo_cache.get(face_id)
 
 
+def get_face_quality(face_id: str) -> float:
+    """Look up face quality score from embeddings cache.
+
+    Returns the quality score stored in embeddings.npy for this face,
+    or None if not found. This is needed because inbox-style crop
+    filenames don't encode quality in the filename.
+    """
+    photo_id = get_photo_id_for_face(face_id)
+    if not photo_id:
+        return None
+    photo = _photo_cache.get(photo_id)
+    if not photo:
+        return None
+    for face in photo.get("faces", []):
+        if face.get("face_id") == face_id:
+            q = face.get("quality", 0)
+            return q if q > 0 else None
+    return None
+
+
 def _highlight_match(name: str, query: str):
     """Return FastHTML elements with the matched portion highlighted.
 
@@ -1579,7 +1599,11 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                     type="button",
                     title="Click to view photo",
                 ) if main_photo_id else Div(
-                    Span("?", cls="text-6xl text-slate-500"),
+                    Img(
+                        src=main_crop_url,
+                        alt=name,
+                        cls="w-full h-full object-cover"
+                    ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
                     cls="w-32 h-32 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                 ),
                 cls="flex-shrink-0"
@@ -2803,6 +2827,11 @@ def face_card(
     if quality is None:
         # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
         quality = parse_quality_from_filename(crop_url)
+    if quality == 0.0:
+        # Inbox crops don't encode quality in filename — look up from embeddings
+        emb_quality = get_face_quality(face_id)
+        if emb_quality is not None:
+            quality = emb_quality
 
     # View Photo button (only if photo_id is available)
     # Pass identity_id for navigation context between identity's photos

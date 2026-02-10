@@ -1621,7 +1621,9 @@
       ],
       "source": "Newspapers.com",
       "collection": "Newspapers.com",
-      "source_url": ""
+      "source_url": "",
+      "width": 977,
+      "height": 1219
     },
     "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens": {
       "path": "raw_photos/zeb_capuano_New_Lido_Opens.jpg",
@@ -1630,7 +1632,9 @@
       ],
       "source": "Newspapers.com",
       "collection": "Newspapers.com",
-      "source_url": ""
+      "source_url": "",
+      "width": 4550,
+      "height": 1892
     }
   },
   "face_to_photo": {

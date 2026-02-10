@@ -46,7 +46,7 @@ else:
 BUNDLED_DATA = Path("/app/data_bundle")
 
 # Critical files that MUST exist for valid initialization
-REQUIRED_DATA_FILES = ["identities.json", "photo_index.json"]
+REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
 
 
 def volume_is_valid(data_dir: Path) -> bool:
