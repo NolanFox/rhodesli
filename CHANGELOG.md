@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.19.2] - 2026-02-10
+
+### Added
+- **Pipeline Orchestrator** (`scripts/process_uploads.py`): Single-command upload processing pipeline — backup, download, ML processing, clustering, R2 upload, push to production, clear staging. Three modes: interactive (default), `--auto` (no prompts except clustering), `--dry-run` (preview only). Clustering step always pauses for human review. 15 new tests.
+- **Pipeline Documentation** (`docs/ops/PIPELINE.md`): Quick start, step-by-step guide, manual commands, common issues, backup restoration.
+
+### Changed
+- Updated `.claude/rules/photo-workflow.md` to reference orchestrator as canonical pipeline command.
+- Test count: 1245 → 1260 (15 new pipeline orchestrator tests)
+
 ## [v0.19.1] - 2026-02-10
 
 ### Added

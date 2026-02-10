@@ -77,7 +77,7 @@ When compacting, always preserve:
 - `docs/architecture/` — OVERVIEW, DATA_MODEL, PERMISSIONS, PHOTO_STORAGE
 - `docs/design/` — MERGE_DESIGN, FUTURE_COMMUNITY
 - `docs/ml/` — ALGORITHMIC_DECISIONS (AD-001+), MODEL_INVENTORY
-- `docs/ops/` — OPS_DECISIONS (OD-001+)
+- `docs/ops/` — OPS_DECISIONS (OD-001+), PIPELINE (upload processing)
 - `docs/ROLES.md` — permission matrix (contributors suggest, admins decide)
 - `docs/CODING_RULES.md`, `docs/DEPLOYMENT_GUIDE.md`, `docs/DECISIONS.md`
 - `tasks/lessons.md` — persistent learnings | `tasks/todo.md` — task tracking
