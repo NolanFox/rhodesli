@@ -252,3 +252,10 @@
 - **Mistake**: `neighbor_card` and `identity_card_mini` hardcoded `section=to_review` in all links. When skipped faces used Find Similar, clicking a neighbor routed to the empty Inbox instead of the skipped section.
 - **Rule**: Use `_section_for_state(identity.get("state"))` for all identity navigation links. Never hardcode a section.
 - **Prevention**: Created canonical `_section_for_state()` helper. Grep for `section=to_review` periodically to catch new hardcoded links.
+
+## Session 2026-02-10: Harness Improvement
+
+### Lesson 47: Documentation drift is invisible until it's severe
+- **Mistake**: `docs/BACKLOG.md` fell 6 versions behind (v0.10.0 → v0.14.1, 663 → 900 tests) because CLAUDE.md only instructed updating ROADMAP.md. The reference "see `docs/BACKLOG.md`" read as "go look at it", not "keep it current."
+- **Rule**: When maintaining parallel tracking documents, the update rule must explicitly name EVERY file. "Update ROADMAP.md" does NOT imply "also update BACKLOG.md."
+- **Prevention**: CLAUDE.md now has explicit triple-update rule (ROADMAP + BACKLOG + CHANGELOG). `scripts/verify_docs_sync.py` and `tests/test_docs_sync.py` catch drift automatically.

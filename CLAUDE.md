@@ -2,9 +2,14 @@
 @ROADMAP.md
 
 Always check ROADMAP.md at the start of every session to understand current priorities.
-When completing tasks, update ROADMAP.md: change `[ ]` to `[x]`, add date, move to "Recently Completed".
-When starting tasks, change `[ ]` to `[-]`, add start date.
-For detailed specs on any item, see `docs/BACKLOG.md`.
+When starting tasks: ROADMAP.md — change `[ ]` to `[-]`, add start date.
+When completing ANY task, update ALL THREE:
+1. **ROADMAP.md** — check the box `[x]`, add date, move to "Recently Completed"
+2. **docs/BACKLOG.md** — find the matching item ID, change Status to DONE, add date in Notes
+3. **CHANGELOG.md** — add entry under current version (create new section if needed)
+
+A task is NOT complete until all three files are updated.
+After updating docs, run: `python scripts/verify_docs_sync.py`
 
 # Rhodesli — Jewish Heritage Photo Archive
 
@@ -68,21 +73,9 @@ When compacting, always preserve:
 - Active bug descriptions and root causes
 
 ## Key Docs (read on-demand, not upfront)
-| File | Purpose |
-|------|---------|
-| `docs/architecture/OVERVIEW.md` | System architecture |
-| `docs/architecture/DATA_MODEL.md` | JSON schemas |
-| `docs/architecture/PERMISSIONS.md` | Permission matrix |
-| `docs/architecture/PHOTO_STORAGE.md` | Photo URL and storage paths |
-| `docs/CODING_RULES.md` | Testing, data safety, workflow rules |
-| `docs/DEPLOYMENT_GUIDE.md` | Railway + R2 + Cloudflare setup |
-| `docs/PHOTO_WORKFLOW.md` | How to add/sync photos |
-| `docs/SMTP_SETUP.md` | Custom email sender setup (Resend) |
-| `docs/design/MERGE_DESIGN.md` | Non-destructive merge system design |
-| `docs/design/FUTURE_COMMUNITY.md` | Planned community features (not yet built) |
-| `docs/ml/ALGORITHMIC_DECISIONS.md` | ML algorithmic decision log (AD-001+) |
-| `docs/ml/MODEL_INVENTORY.md` | Current ML models and upgrade path |
-| `docs/DECISIONS.md` | Finalized architectural decisions |
-| `docs/ops/OPS_DECISIONS.md` | Deployment, Railway, R2 decisions |
-| `tasks/lessons.md` | Persistent learnings across sessions |
-| `tasks/todo.md` | Current task tracking |
+- `docs/architecture/` — OVERVIEW, DATA_MODEL, PERMISSIONS, PHOTO_STORAGE
+- `docs/design/` — MERGE_DESIGN, FUTURE_COMMUNITY
+- `docs/ml/` — ALGORITHMIC_DECISIONS (AD-001+), MODEL_INVENTORY
+- `docs/ops/` — OPS_DECISIONS (OD-001+)
+- `docs/CODING_RULES.md`, `docs/DEPLOYMENT_GUIDE.md`, `docs/DECISIONS.md`
+- `tasks/lessons.md` — persistent learnings | `tasks/todo.md` — task tracking
