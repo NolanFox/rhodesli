@@ -117,6 +117,25 @@ These appendix documents contain mathematical derivations and extended rationale
 - **Action**: Review `core/temporal.py` to extract actual penalty multipliers and document them.
 - **Cross-reference**: `docs/adr/adr_002_temporal_priors.md` may contain the values.
 
+### AD-013: Distance Threshold Calibration (Feb 2026)
+- **Date**: 2026-02-09
+- **Context**: Clustering used a single HIGH threshold (1.00) for all matches. No tiered confidence labels. Need evidence-based calibration.
+- **Decision**: Four-tier threshold system based on golden set evaluation (90 faces, 23 identities, 4005 pairwise comparisons).
+- **Evidence**:
+  - Golden set: 100% precision up to 1.05 (zero FP across 3713 negative pairs)
+  - First FP at distance 1.0502 (Rosa Sedikaro vs Sol Sedikaro — same photo, likely couple)
+  - Family resemblance dominates FPs above 1.05 (Big Leon vs Victor Capeluto: ~50% of FPs)
+  - Optimal F1=0.871 at threshold 1.15
+- **Thresholds**:
+  - `VERY_HIGH` (< 0.80): ~100% precision, ~13% recall. Slam-dunk matches.
+  - `HIGH` (< 1.05): 100% precision, ~63% recall. Raised from 1.00 — zero-FP ceiling.
+  - `MODERATE` (< 1.15): ~94% precision, ~81% recall. FPs are family resemblance only.
+  - `LOW` (< 1.25): ~69% precision, ~91% recall. Deep search only.
+- **Rejected Alternative**: Keeping single 1.00 threshold. Loses 10pp recall with no precision gain.
+- **Statistical Caveat**: No real-world clustering validation yet (admin didn't review proposals). Re-calibrate after 50+ validated proposals.
+- **Affects**: `core/config.py`, `scripts/cluster_new_faces.py`, future UI confidence labels.
+- **Harness**: `scripts/evaluate_golden_set.py --sweep`, `scripts/calibrate_thresholds.py`
+
 ### TODO: AD-011 — Face Detection Parameters
 - **Status**: InsightFace `buffalo_l` model selected, but `det_thresh` and `nms_thresh` are likely library defaults (~0.5 confidence).
 - **Action**: Check face detection code. If using defaults, document as "InsightFace defaults" and note the actual values.

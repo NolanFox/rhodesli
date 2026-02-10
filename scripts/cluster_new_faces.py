@@ -34,7 +34,12 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
-from core.config import MATCH_THRESHOLD_HIGH, MATCH_THRESHOLD_MEDIUM
+from core.config import (
+    MATCH_THRESHOLD_HIGH,
+    MATCH_THRESHOLD_MEDIUM,
+    MATCH_THRESHOLD_MODERATE,
+    MATCH_THRESHOLD_VERY_HIGH,
+)
 
 
 def load_face_data(data_path: Path) -> dict:
@@ -155,6 +160,21 @@ def compute_min_distance(face_embedding, identity_embeddings) -> float:
     face_matrix = face_embedding.reshape(1, -1)
     dists = cdist(face_matrix, identity_embeddings, metric='euclidean')
     return float(np.min(dists))
+
+
+def confidence_label(distance: float) -> str:
+    """Return a calibrated confidence label for a match distance.
+
+    Based on AD-013 threshold calibration (2026-02-09).
+    """
+    if distance < MATCH_THRESHOLD_VERY_HIGH:
+        return "VERY HIGH"
+    elif distance < MATCH_THRESHOLD_HIGH:
+        return "HIGH"
+    elif distance < MATCH_THRESHOLD_MODERATE:
+        return "MODERATE"
+    else:
+        return "LOW"
 
 
 def find_matches(
@@ -429,7 +449,7 @@ def main():
         if len(target_display) > 24:
             target_display = target_display[:21] + "..."
 
-        confidence = "HIGH" if s["distance"] < MATCH_THRESHOLD_HIGH else "MEDIUM"
+        confidence = confidence_label(s["distance"])
         print(f"  {face_display:<34} -> {target_display:<24} "
               f"{s['distance']:>8.4f}  [{confidence}]")
 

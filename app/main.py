@@ -36,6 +36,8 @@ from core.registry import IdentityRegistry, IdentityState
 from core.config import (
     MATCH_THRESHOLD_HIGH,
     MATCH_THRESHOLD_MEDIUM,
+    MATCH_THRESHOLD_MODERATE,
+    MATCH_THRESHOLD_VERY_HIGH,
     HOST,
     PORT,
     DEBUG,
@@ -2469,13 +2471,18 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
 
-    # --- CALIBRATION: THE LEON STANDARD (ADR 007) ---
-    # Thresholds from core.config (derived from forensic evaluation)
-    if distance < MATCH_THRESHOLD_HIGH:
+    # --- CALIBRATION: AD-013 Evidence-Based Thresholds (2026-02-09) ---
+    if distance < MATCH_THRESHOLD_VERY_HIGH:
+        similarity_class = "bg-emerald-500/30 text-emerald-300"
+        similarity_label = "Very High"
+    elif distance < MATCH_THRESHOLD_HIGH:
         similarity_class = "bg-emerald-500/20 text-emerald-400"
         similarity_label = "High"
-    elif distance < MATCH_THRESHOLD_MEDIUM:
+    elif distance < MATCH_THRESHOLD_MODERATE:
         similarity_class = "bg-amber-500/20 text-amber-400"
+        similarity_label = "Moderate"
+    elif distance < MATCH_THRESHOLD_MEDIUM:
+        similarity_class = "bg-amber-500/15 text-amber-500"
         similarity_label = "Medium"
     else:
         similarity_class = "bg-slate-600 text-slate-400"
