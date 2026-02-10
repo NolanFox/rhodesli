@@ -6341,10 +6341,51 @@ def post(target_id: str, source_id: str, source: str = "web",
         actual_target_id,
     )
 
+    # Post-merge re-evaluation: suggest nearby unmatched faces (ML-005)
+    suggestion_panel = _post_merge_suggestions(actual_target_id, registry, crop_files)
+
     return (
         identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
         *oob_elements,
         merge_toast,
+        suggestion_panel,
+    )
+
+
+def _post_merge_suggestions(target_id: str, registry, crop_files: set, max_suggestions: int = 3):
+    """
+    After a merge, find nearby unmatched faces and suggest them for review.
+    Uses multi-anchor best-linkage (AD-001 compliant). Only shows HIGH+ matches.
+    """
+    try:
+        from core.neighbors import find_nearest_neighbors
+        face_data = get_face_data()
+        photo_registry = load_photo_registry()
+        neighbors = find_nearest_neighbors(
+            target_id, registry, photo_registry, face_data, limit=max_suggestions
+        )
+    except Exception:
+        return Span()
+
+    # Filter to HIGH confidence or better
+    high_matches = [n for n in neighbors if n["distance"] < MATCH_THRESHOLD_HIGH]
+    if not high_matches:
+        return Span()
+
+    cards = []
+    for n in high_matches:
+        cards.append(neighbor_card(n, target_id, crop_files, show_checkbox=False))
+
+    return Div(
+        Div(
+            H4("You might also want to review:", cls="text-sm font-medium text-amber-400"),
+            P(f"{len(high_matches)} similar face(s) found after merge", cls="text-xs text-slate-400"),
+            cls="mb-2"
+        ),
+        Div(*cards, cls="space-y-2"),
+        cls="mt-4 p-4 bg-slate-800/50 border border-amber-500/30 rounded-lg",
+        id="post-merge-suggestions",
+        hx_swap_oob="beforeend:#toast-container",
     )
 
 

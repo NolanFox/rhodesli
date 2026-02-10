@@ -259,8 +259,16 @@ def find_matches(
             face_embedding = face_data[face_id]["mu"]
             best_match = None
             best_distance = float("inf")
+            second_best_distance = float("inf")
+
+            # Get rejection pairs for this identity
+            source_negative_ids = set(identity.get("negative_ids", []))
 
             for conf_id, conf_info in confirmed_identities.items():
+                # Rejection memory: skip if this pair was explicitly rejected (AD-004)
+                if f"identity:{conf_id}" in source_negative_ids:
+                    continue
+
                 # Co-occurrence check: skip if face's photo appears in confirmed identity
                 face_photo = get_photo_id(face_id)
                 if face_photo and face_photo in confirmed_photos.get(conf_id, set()):
@@ -271,10 +279,18 @@ def find_matches(
                 )
 
                 if distance < best_distance:
+                    second_best_distance = best_distance
                     best_distance = distance
                     best_match = conf_id
+                elif distance < second_best_distance:
+                    second_best_distance = distance
 
             if best_match and best_distance < threshold:
+                # Margin-based ambiguity detection (ML-006 / family resemblance)
+                # If best and second-best are too close, the match is ambiguous
+                margin = (second_best_distance - best_distance) / best_distance if best_distance > 0 else float("inf")
+                is_ambiguous = margin < 0.15 and second_best_distance < threshold
+
                 suggestions.append({
                     "face_id": face_id,
                     "source_identity_id": identity_id,
@@ -285,6 +301,8 @@ def find_matches(
                     "target_identity_name": confirmed_identities[best_match]["name"],
                     "distance": best_distance,
                     "target_face_count": confirmed_identities[best_match]["face_count"],
+                    "margin": round(margin, 3),
+                    "ambiguous": is_ambiguous,
                 })
 
     # Sort by distance (best matches first)

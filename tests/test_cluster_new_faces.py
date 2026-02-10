@@ -220,6 +220,198 @@ class TestMultiAnchorMatching:
         assert suggestions[0]["target_identity_id"] == "near-id"
 
 
+class TestRejectionMemory:
+    """AD-004: clustering must exclude rejected pairs."""
+
+    def test_clustering_excludes_rejected_pairs(self):
+        """Clustering does not propose matches between rejected pairs."""
+        from scripts.cluster_new_faces import find_matches
+
+        # Create a confirmed identity and a close inbox face
+        conf_face = np.zeros(512, dtype=np.float32)
+        conf_face[0] = 1.0
+        inbox_face = np.zeros(512, dtype=np.float32)
+        inbox_face[0] = 0.95  # Very close (distance ~0.05)
+
+        face_data = {
+            "cf1": _make_face_data("cf1", conf_face),
+            "inbox_1": _make_face_data("inbox_1", inbox_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "confirmed-1": {
+                    "identity_id": "confirmed-1",
+                    "name": "Person A",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_1"],
+                    "candidate_ids": [],
+                    "negative_ids": ["identity:confirmed-1"],  # REJECTED
+                },
+            }
+        }
+
+        suggestions = find_matches(identities_data, face_data, threshold=1.05)
+        assert len(suggestions) == 0  # Rejected pair excluded
+
+    def test_clustering_allows_non_rejected_pairs(self):
+        """Non-rejected pairs still get proposed when close enough."""
+        from scripts.cluster_new_faces import find_matches
+
+        conf_face = np.zeros(512, dtype=np.float32)
+        conf_face[0] = 1.0
+        inbox_face = np.zeros(512, dtype=np.float32)
+        inbox_face[0] = 0.95
+
+        face_data = {
+            "cf1": _make_face_data("cf1", conf_face),
+            "inbox_1": _make_face_data("inbox_1", inbox_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "confirmed-1": {
+                    "identity_id": "confirmed-1",
+                    "name": "Person A",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],  # No rejections
+                },
+            }
+        }
+
+        suggestions = find_matches(identities_data, face_data, threshold=1.05)
+        assert len(suggestions) == 1
+
+
+class TestAmbiguityDetection:
+    """ML-006: margin-based confidence for ambiguous family matches."""
+
+    def test_ambiguous_match_flagged(self):
+        """Face equidistant to two identities gets ambiguous=True."""
+        from scripts.cluster_new_faces import find_matches
+
+        # Two confirmed identities nearly equidistant from inbox face
+        face_a = np.zeros(512, dtype=np.float32)
+        face_a[0] = 1.0
+        face_b = np.zeros(512, dtype=np.float32)
+        face_b[0] = -1.0
+        # Inbox face slightly closer to A (distance ~0.1) than B (distance ~0.12)
+        inbox_face = np.zeros(512, dtype=np.float32)
+        inbox_face[0] = 0.9
+
+        face_data = {
+            "cf_a": _make_face_data("cf_a", face_a),
+            "cf_b": _make_face_data("cf_b", face_b),
+            "inbox_1": _make_face_data("inbox_1", inbox_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "id-a": {
+                    "identity_id": "id-a",
+                    "name": "Person A",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf_a"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "id-b": {
+                    "identity_id": "id-b",
+                    "name": "Person B",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf_b"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+
+        # High threshold to catch both
+        suggestions = find_matches(identities_data, face_data, threshold=2.0)
+        assert len(suggestions) == 1
+        # Should have margin and ambiguous fields
+        assert "margin" in suggestions[0]
+        assert "ambiguous" in suggestions[0]
+
+    def test_clear_match_not_ambiguous(self):
+        """Face much closer to one identity is not flagged as ambiguous."""
+        from scripts.cluster_new_faces import find_matches
+
+        face_close = np.zeros(512, dtype=np.float32)
+        face_close[0] = 1.0
+        face_far = np.zeros(512, dtype=np.float32)
+        face_far[0] = -10.0  # Very far away
+
+        inbox_face = np.zeros(512, dtype=np.float32)
+        inbox_face[0] = 0.95  # Very close to face_close
+
+        face_data = {
+            "cf_close": _make_face_data("cf_close", face_close),
+            "cf_far": _make_face_data("cf_far", face_far),
+            "inbox_1": _make_face_data("inbox_1", inbox_face),
+        }
+
+        identities_data = {
+            "identities": {
+                "close-id": {
+                    "identity_id": "close-id",
+                    "name": "Close Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf_close"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "far-id": {
+                    "identity_id": "far-id",
+                    "name": "Far Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["cf_far"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+                "inbox-1": {
+                    "identity_id": "inbox-1",
+                    "name": "Unidentified",
+                    "state": "INBOX",
+                    "anchor_ids": ["inbox_1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                },
+            }
+        }
+
+        suggestions = find_matches(identities_data, face_data, threshold=2.0)
+        assert len(suggestions) == 1
+        assert suggestions[0]["ambiguous"] is False
+        assert suggestions[0]["margin"] > 0.15
+
+
 class TestConfidenceLabel:
     """Tests for AD-013 calibrated confidence labels."""
 
