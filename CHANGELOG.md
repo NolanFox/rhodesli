@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.20.0] - 2026-02-10
+
+### Added
+- **Photo Provenance Model**: Separated `source` (origin/provenance), `collection` (archive classification), and `source_url` (citation link) as distinct fields on photos. Previously `source` served dual duty. Migration script (`scripts/migrate_photo_metadata.py`) copies existing source values to collection.
+- **Upload UX Overhaul**: Upload form now has separate fields for collection, source, and source URL — each with autocomplete from existing values. Clear helper text distinguishes the concepts.
+- **Photo Source & Source URL Routes**: `POST /api/photo/{id}/source` and `POST /api/photo/{id}/source-url` for admin editing. `POST /api/photo/{id}/collection` now uses `collection` param (breaking: previously used `source` param).
+- **Dual Photo Filters**: Photos page has separate Collection and Source filter dropdowns that can be combined. Collection stats cards link to collection filter.
+- **Bulk Metadata Editing**: Bulk action bar supports setting collection, source, and source URL simultaneously on selected photos.
+- **PhotoRegistry Methods**: `set_collection()`/`get_collection()`, `set_source_url()`/`get_source_url()` on PhotoRegistry. Save/load roundtrip preserves all three fields. Backward compatible with data lacking new fields.
+- 22 new provenance tests (registry, routes, migration, filters)
+
+### Changed
+- Collection stats on photos page now group by `collection` field (not `source`)
+- Bulk update route `/api/photos/bulk-update-source` accepts `collection`, `source`, and `source_url` params (previously only `source`)
+- Test count: 1260 → 1282 (22 new provenance tests)
+
 ## [v0.19.2] - 2026-02-10
 
 ### Added

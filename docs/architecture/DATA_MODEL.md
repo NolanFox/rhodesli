@@ -61,7 +61,9 @@ Each photo record:
 |-------|------|-------------|
 | `path` | string | Filename relative to `raw_photos/` (e.g., `"Image 001_compress.jpg"`) |
 | `face_ids` | list[string] | All face IDs detected in this photo |
-| `source` | string | Collection name (e.g., `"Vida Capeluto NYC Collection"`) |
+| `source` | string | Provenance/origin (e.g., `"Newspapers.com"`, `"Betty's Album"`) |
+| `collection` | string | Archive classification (e.g., `"Immigration Records"`, `"Wedding Photos"`) |
+| `source_url` | string | Citation URL (e.g., `"https://newspapers.com/article/..."`) |
 | `width` | integer | Photo width in pixels |
 | `height` | integer | Photo height in pixels |
 

@@ -13,6 +13,22 @@ This is the primary workflow today. It runs entirely on the admin's local machin
 
 The heavy AI work (face detection, embedding generation, clustering) happens locally via InsightFace/AdaFace. The web server never runs ML inference.
 
+## 1b. Photo Metadata Model
+
+Every photo has three distinct provenance/classification fields:
+
+| Field | Purpose | Example |
+|-------|---------|---------|
+| `collection` | How the archive classifies it | "Immigration Records", "Wedding Photos" |
+| `source` | Where the photo came from (provenance) | "Newspapers.com", "Betty's Album" |
+| `source_url` | Specific citation link | "https://newspapers.com/article/..." |
+
+- **Collection** and **source** are separate concepts. A photo from "Rhodes Facebook Group" (source) might be classified under "Immigration Records" (collection).
+- Both are free-text with autocomplete from existing values.
+- `source_url` is optional.
+- A photo can have a source but no collection (defaults to source value via migration).
+- All three are editable after upload, individually or in bulk.
+
 ## 2. Web App Uploads
 
 The web upload endpoint (`/upload`) supports two roles:

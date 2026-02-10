@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 5.3 — February 10, 2026
-**Status**: 1221 tests passing, v0.18.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
+**Version**: 5.4 — February 10, 2026
+**Status**: 1282 tests passing, v0.20.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -157,6 +157,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | BE-011 | Identity metadata | DONE | `set_metadata()` with allowlisted keys (birth_year, death_year, birth_place, maiden_name, bio, etc.) + API endpoint (2026-02-10) |
 | BE-012 | Photo metadata | DONE | PhotoRegistry set_metadata/get_metadata, display on photo view, admin endpoint (2026-02-10) |
 | BE-013 | EXIF extraction | DONE | core/exif.py — extract_exif() for date, camera, GPS with deferred PIL imports (2026-02-10) |
+| BE-023 | Photo provenance model | DONE | Separate source/collection/source_url fields, migration script, dual filters, 22 tests (2026-02-10) |
+| FE-064 | Upload UX overhaul | DONE | Separate collection/source/URL fields with autocomplete, bulk metadata editing extended (2026-02-10) |
 | BE-014 | Canonical name registry | OPEN | Backend table mapping variant spellings to canonical forms: `{capeluto, capelouto, capelluto} → Capeluto`. Same for first names: `{joseph, giuseppe, jose, joe} → Joseph`. |
 | BE-015 | Geographic data model | OPEN | Locations as structured data: `{city, region, country, coordinates}` with fuzzy matching. "Rhodesli" = Rhodes, Greece. "Salonika" = Thessaloniki, Greece. |
 | BE-016 | Temporal data handling | OPEN | Support approximate dates: "circa 1945", "1950s", "between 1948-1952". Not just ISO dates. |

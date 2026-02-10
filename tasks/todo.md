@@ -1,6 +1,6 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-10 (Session 10 — UX Overhaul + Content + Contributor Flow)
+Last updated: 2026-02-10 (Session 11 — Upload Flow + Photo Metadata Model Overhaul)
 
 ## Active Bugs
 - (none)

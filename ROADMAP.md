@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.19.0 · 1235 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.20.0 · 1282 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -74,6 +74,8 @@ Goal: Make the archive meaningful beyond face matching.
 - [x] BE-011: Identity metadata — set_metadata() with allowlisted keys + API endpoint (2026-02-10)
 - [x] BE-012: Photo metadata — set_metadata/get_metadata + display + admin endpoint (2026-02-10)
 - [x] BE-013: EXIF extraction — core/exif.py with date, camera, GPS (2026-02-10)
+- [x] BE-023: Photo provenance model — separate source/collection/source_url, migration, dual filters (2026-02-10)
+- [x] FE-064: Upload UX overhaul — separate collection/source/URL fields, autocomplete, bulk metadata (2026-02-10)
 - [ ] BE-014: Canonical name registry (variant spellings)
 - [x] AN-001: Annotation system core — submit/review/approve/reject workflow (2026-02-10)
 - [x] AN-002–AN-006: Photo-level annotations display + submission form (2026-02-10)
@@ -120,6 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.20.0 — Upload Flow + Photo Metadata Model Overhaul: separate source/collection/source_url fields, upload UX with autocomplete, dual photo filters, bulk metadata editing, migration script, 22 new tests (1282 tests)
 - [x] 2026-02-10: v0.19.0 — Anonymous Guest Contributions: guest-or-login modal, guest-submit endpoint, stash-and-login flow, admin Guest badge, pending_unverified status (1235 tests)
 - [x] 2026-02-10: v0.18.0 — UX Overhaul + Contributor Flow: landing page rewrite, login prompt modals, section rename (Confirmed→People, Skipped→Needs Help), button prominence, compare faces UX, contributor merge suggestions, bulk photo select mode (1221 tests)
 - [x] 2026-02-10: v0.17.2 — Quality & hardening: EXIF ingestion integration, graceful error handling for corrupted data, 93 route permission boundary tests (1152 tests)
