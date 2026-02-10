@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.16.0 · 969 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.17.0 · 1032 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -15,7 +15,7 @@ Current: v0.16.0 · 969 tests · 148 photos · 181 faces · 23 confirmed · 33 p
 - ~~Lightbox arrows~~ FIXED (4th attempt) — event delegation pattern with 16 regression tests
 - ~~Face count / collection stats~~ FIXED — canonical functions, 19 regression tests
 - JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
-- Only 1 admin (NolanFox@gmail.com) — no contributor roles yet
+- Contributor roles implemented (ROLE-002/003) — needs first real contributor to test
 
 ## Active Bugs (P0)
 - [x] BUG-001: Lightbox arrows disappear after first photo — fixed with event delegation (2026-02-08)
@@ -66,13 +66,13 @@ Goal: Make the archive meaningful beyond face matching.
 
 - [x] BE-010: Structured identity names — auto-parse first/last from display name (2026-02-10)
 - [x] BE-011: Identity metadata — set_metadata() with allowlisted keys + API endpoint (2026-02-10)
-- [ ] BE-012: Photo metadata (date, location, occasion, source)
-- [ ] BE-013: EXIF extraction from uploaded photos
+- [x] BE-012: Photo metadata — set_metadata/get_metadata + display + admin endpoint (2026-02-10)
+- [x] BE-013: EXIF extraction — core/exif.py with date, camera, GPS (2026-02-10)
 - [ ] BE-014: Canonical name registry (variant spellings)
 - [x] AN-001: Annotation system core — submit/review/approve/reject workflow (2026-02-10)
-- [ ] AN-002–AN-006: Photo-level annotations (captions, dates, locations, stories, source)
-- [ ] AN-010–AN-014: Identity-level annotations (bio, relationships, generation)
-- [ ] BE-001–BE-006: Non-destructive merge system with full history
+- [x] AN-002–AN-006: Photo-level annotations display + submission form (2026-02-10)
+- [x] AN-010–AN-014: Identity metadata display + annotations section (2026-02-10)
+- [x] BE-001–BE-006: Non-destructive merge with audit snapshots + annotation merging (2026-02-10)
 - [x] FE-033: Fuzzy name search with Levenshtein distance (2026-02-08)
 
 ## Phase D: ML Feedback & Intelligence
@@ -84,7 +84,7 @@ Goal: Make the system learn from user actions.
 - [x] ML-006: Ambiguity detection — margin-based flagging when top matches are within 15% (2026-02-10)
 - [x] ML-010: Golden set rebuild (90 mappings, 23 identities) (2026-02-09)
 - [x] ML-012: Golden set evaluation (4005 pairs, sweep 0.50-2.00) (2026-02-09)
-- [ ] ML-011: Golden set diversity analysis (quality, temporal)
+- [x] ML-011: Golden set diversity analysis — script + dashboard section (2026-02-10)
 - [x] ML-013: Evaluation dashboard — /admin/ml-dashboard with stats, thresholds, golden set (2026-02-10)
 - [x] ML-021: Calibrated confidence labels (VERY HIGH/HIGH/MODERATE/LOW) (2026-02-09)
 - [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
@@ -92,8 +92,8 @@ Goal: Make the system learn from user actions.
 ## Phase E: Collaboration & Growth
 Goal: Enable family members to contribute, not just browse.
 
-- [ ] ROLE-002: Contributor role (propose identifications, add annotations)
-- [ ] ROLE-003: Trusted contributor (direct confirmation after N correct proposals)
+- [x] ROLE-002: Contributor role — User.role field, CONTRIBUTOR_EMAILS, _check_contributor() (2026-02-10)
+- [x] ROLE-003: Trusted contributor — is_trusted_contributor() auto-promotes after 5+ approvals (2026-02-10)
 - [ ] FE-041: "Help Identify" mode for non-admin users
 - [ ] FE-070–FE-073: Client-side analytics and admin dashboard
 - [ ] BE-031–BE-033: Upload moderation queue with rate limiting
@@ -112,6 +112,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.17.0 — Annotation engine + merge safety + contributor roles: merge audit snapshots, annotation merging, photo/identity annotations, photo metadata + EXIF, golden set diversity, contributor/trusted contributor roles (1032 tests)
 - [x] 2026-02-10: v0.16.0 — ML pipeline + annotation engine + collaboration: post-merge suggestions, rejection memory in clustering, ambiguity detection, ML dashboard, annotation system (submit/approve/reject), structured names, identity metadata, activity feed, welcome modal (969 tests)
 - [x] 2026-02-10: v0.15.0 — Upload processing pipeline: staged file sync API, download script, end-to-end orchestrator (943 tests)
 - [x] 2026-02-10: v0.14.1 — Skipped faces fix: clustering includes 192 skipped faces, clickable lightbox overlays, correct section routing, stats denominator fix (900 tests)

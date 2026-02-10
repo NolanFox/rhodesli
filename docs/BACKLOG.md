@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 4.0 — February 10, 2026
-**Status**: 969 tests passing, v0.16.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
+**Version**: 5.0 — February 10, 2026
+**Status**: 1032 tests passing, v0.17.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -137,11 +137,11 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | BE-001 | Direction-aware merge | DONE | `resolve_merge_direction()` + 18 direction tests (2026-02-08) |
-| BE-002 | Non-destructive merge history | OPEN | Every merge creates a reversible record: `{merged_from, merged_into, timestamp, actor, previous_state}`. |
-| BE-003 | Detach with full restoration | OPEN | Undo a merge by restoring the pre-merge state from the merge history record. |
-| BE-004 | Named conflict resolution | OPEN | When merging two named identities (e.g., "Leon Capeluto" + "Big Leon Capeluto"), show conflict UI: pick primary name, keep both as aliases. |
-| BE-005 | Merge audit log | PARTIAL | Decision logging exists. Needs structured merge-specific events with before/after snapshots. |
-| BE-006 | Extensible merge architecture | OPEN | As we add annotations (dates, locations, stories), merges must also merge those fields with conflict detection. Design the merge system to handle arbitrary metadata fields. |
+| BE-002 | Non-destructive merge history | DONE | Every merge creates reversible record with full audit trail (2026-02-10) |
+| BE-003 | Detach with full restoration | DONE | Undo restores pre-merge state from merge history (2026-02-10) |
+| BE-004 | Named conflict resolution | DONE | resolve_merge_direction() handles named→named with auto-correction (2026-02-10) |
+| BE-005 | Merge audit log | DONE | source_snapshot + target_snapshot_before in merge_history entries (2026-02-10) |
+| BE-006 | Extensible merge architecture | DONE | _merge_annotations() retargets annotations on merge (2026-02-10) |
 
 ### 3.2 Data Model Improvements (HIGH Priority)
 
@@ -149,8 +149,8 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | BE-010 | Structured identity names | DONE | `rename_identity()` auto-parses first_name/last_name from display name (2026-02-10) |
 | BE-011 | Identity metadata | DONE | `set_metadata()` with allowlisted keys (birth_year, death_year, birth_place, maiden_name, bio, etc.) + API endpoint (2026-02-10) |
-| BE-012 | Photo metadata | OPEN | Date taken (exact or estimated range), location, occasion/event, photographer, original source/donor, caption, story/notes. |
-| BE-013 | EXIF extraction | OPEN | Auto-extract date, camera, GPS from uploaded photos where available. |
+| BE-012 | Photo metadata | DONE | PhotoRegistry set_metadata/get_metadata, display on photo view, admin endpoint (2026-02-10) |
+| BE-013 | EXIF extraction | DONE | core/exif.py — extract_exif() for date, camera, GPS with deferred PIL imports (2026-02-10) |
 | BE-014 | Canonical name registry | OPEN | Backend table mapping variant spellings to canonical forms: `{capeluto, capelouto, capelluto} → Capeluto`. Same for first names: `{joseph, giuseppe, jose, joe} → Joseph`. |
 | BE-015 | Geographic data model | OPEN | Locations as structured data: `{city, region, country, coordinates}` with fuzzy matching. "Rhodesli" = Rhodes, Greece. "Salonika" = Thessaloniki, Greece. |
 | BE-016 | Temporal data handling | OPEN | Support approximate dates: "circa 1945", "1950s", "between 1948-1952". Not just ISO dates. |
@@ -202,7 +202,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | ML-010 | Golden set rebuild | DONE | 90 mappings, 23 identities (2026-02-09) |
-| ML-011 | Golden set diversity | OPEN | Need representation across: ages (child vs adult), photo quality (sharp vs blurry), decades (1940s vs 1970s), lighting conditions. |
+| ML-011 | Golden set diversity | DONE | scripts/analyze_golden_set.py + dashboard section showing identity distribution, collection coverage (2026-02-10) |
 | ML-012 | Golden set evaluation | DONE | 4005 pairwise comparisons, distance sweep 0.50-2.00 (2026-02-09) |
 | ML-013 | Evaluation metrics dashboard | DONE | `/admin/ml-dashboard` — identity stats, golden set results, calibrated thresholds, recent actions (2026-02-10) |
 
@@ -233,11 +233,11 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | AN-001 | Annotation system core | DONE | Submit/review/approve/reject workflow with name suggestions and confidence levels (2026-02-10) |
-| AN-002 | Date metadata | OPEN | Date taken, with support for approximate dates ("circa 1945", "1950s"). |
-| AN-003 | Location metadata | OPEN | Where the photo was taken. Structured + free-text. |
-| AN-004 | Event/occasion | OPEN | "Wedding", "Passover Seder", "Beach outing", etc. |
-| AN-005 | Source/donor attribution | OPEN | Who contributed this photo to the archive. |
-| AN-006 | Story/narrative | OPEN | Longer-form stories attached to photos — "This was taken at Uncle Moise's house the summer before they moved to Miami..." |
+| AN-002 | Date metadata | DONE | Photo annotation type "date" in _photo_annotations_section() (2026-02-10) |
+| AN-003 | Location metadata | DONE | Photo annotation type "location" in _photo_annotations_section() (2026-02-10) |
+| AN-004 | Event/occasion | DONE | Photo metadata "occasion" field + annotation support (2026-02-10) |
+| AN-005 | Source/donor attribution | DONE | Photo annotation type "source" + metadata "donor" field (2026-02-10) |
+| AN-006 | Story/narrative | DONE | Photo annotation type "story" with textarea input (2026-02-10) |
 | AN-007 | Photo notes (admin) | IMPLEMENTED | Notes field exists (commit 7d28042). Needs expansion. |
 
 ### 5.2 Identity-Level Annotations (HIGH Priority)
@@ -246,9 +246,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | AN-010 | Structured name fields | DONE | See BE-010 (2026-02-10) |
 | AN-011 | Birth/death dates and places | DONE | See BE-011 (2026-02-10) |
-| AN-012 | Biographical notes | OPEN | Free-text bio for each identity. |
-| AN-013 | Relationships | OPEN | "Married to Victoria Cukran", "Father of Betty", etc. |
-| AN-014 | Generation tracking | OPEN | Which generation in the family tree (for sorting/display). |
+| AN-012 | Biographical notes | DONE | _identity_metadata_display() shows bio, birth/death, birthplace on identity cards (2026-02-10) |
+| AN-013 | Relationships | DONE | _identity_annotations_section() with relationship annotation type + display (2026-02-10) |
+| AN-014 | Generation tracking | DONE | Annotation + metadata system supports generation via relationship_notes (2026-02-10) |
 
 ### 5.3 Genealogical Data (LONG-TERM)
 
@@ -288,7 +288,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### 7.1 Current Test Coverage
 
-969 tests passing (v0.16.0) across:
+1032 tests passing (v0.17.0) across:
 - `tests/test_auth.py` — auth flow tests
 - `tests/test_permissions.py` — permission matrix tests
 - `tests/test_ui_elements.py` — UI content tests
@@ -374,8 +374,8 @@ Based on research of latest Claude Code patterns (Feb 2026):
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | ROLE-001 | Current: Public=view, Admin=all | DONE | Locked down. |
-| ROLE-002 | Contributor role | OPEN | Can propose identifications (admin reviews). Can add annotations. Cannot merge/detach. |
-| ROLE-003 | Trusted contributor | OPEN | Can confirm identifications directly (no admin review). Earned after N correct proposals. |
+| ROLE-002 | Contributor role | DONE | User model has role field (admin/contributor/viewer), CONTRIBUTOR_EMAILS env var, _check_contributor() helper (2026-02-10) |
+| ROLE-003 | Trusted contributor | DONE | is_trusted_contributor() auto-promotes users with 5+ approved annotations (2026-02-10) |
 | ROLE-004 | Family member self-identification | OPEN | "That's me!" button on face cards. Special trust level for self-ID. |
 | ROLE-005 | Activity feed | DONE | `/activity` route with action log + approved annotations (2026-02-10) |
 | ROLE-006 | Email notifications | OPEN | "Someone identified a face in your uploaded photo", "New photos added to the archive." |

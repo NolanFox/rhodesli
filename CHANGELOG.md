@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.17.0] - 2026-02-10
+
+### Added
+- **Merge Audit Snapshots** (BE-005): `source_snapshot` and `target_snapshot_before` saved in every merge_history entry for full reversibility
+- **Annotation Merging** (BE-006): `_merge_annotations()` retargets identity annotations when identities are merged
+- **Photo-Level Annotations** (AN-002–AN-006): `_photo_annotations_section()` displays approved annotations and provides submission form for captions, dates, locations, stories, and source attributions
+- **Photo Metadata** (BE-012): `set_metadata()`/`get_metadata()` on PhotoRegistry with allowlisted fields (date_taken, location, caption, occasion, donor, camera). Admin endpoint `POST /api/photo/{id}/metadata`. Display integrated into photo viewer.
+- **EXIF Extraction** (BE-013): `core/exif.py` extracts date, camera, GPS from uploaded photos with deferred PIL imports for testability
+- **Golden Set Diversity Analysis** (ML-011): `scripts/analyze_golden_set.py` examines identity distribution, pairwise potential, collection coverage. Dashboard section shows key metrics.
+- **Identity Metadata Display** (AN-012): `_identity_metadata_display()` shows bio, birth/death years, birthplace, maiden name, relationships on identity cards
+- **Identity Annotations Section** (AN-013/AN-014): `_identity_annotations_section()` with approved annotation display and contributor submission form for bio, relationship, story types
+- **Contributor Role** (ROLE-002): `User.role` field (admin/contributor/viewer), `CONTRIBUTOR_EMAILS` env var, `_check_contributor()` permission helper
+- **Trusted Contributor** (ROLE-003): `is_trusted_contributor()` auto-promotes users with 5+ approved annotations
+- **63 new tests** across 5 new test files (test_merge_enhancements, test_photo_annotations, test_photo_metadata, test_identity_annotations, test_contributor_roles)
+- Test count: 969 → 1032
+
 ## [v0.16.0] - 2026-02-10
 
 ### Added
