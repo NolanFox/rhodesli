@@ -3,7 +3,7 @@
 Last updated: 2026-02-08 (Session 4)
 
 ## Active Bugs
-- (none — all P0 bugs fixed in v0.11.0)
+- (none — all P0 bugs fixed through v0.12.1)
 
 ## Immediate (This Weekend)
 - [ ] End-to-end test pending upload flow (upload via web -> process_pending.py -> verify)

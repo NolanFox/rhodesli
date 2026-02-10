@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.12.0 · 847 tests · 148 photos · 181 faces · 23 confirmed
+Current: v0.12.1 · 864 tests · 148 photos · 181 faces · 23 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -22,6 +22,10 @@ Current: v0.12.0 · 847 tests · 148 photos · 181 faces · 23 confirmed
 - [x] BUG-002: Face count label shows detection count, not displayed/tagged count (2026-02-08)
 - [x] BUG-003: Merge direction — already fixed in code, 18 direction-specific tests added (2026-02-08)
 - [x] BUG-004: Collection stats inconsistency — canonical _compute_sidebar_counts() (2026-02-08)
+- [x] BUG-005: Face count badges wildly wrong (63 for 3-person photo) — filter to registered faces (2026-02-09)
+- [x] BUG-006: Photo nav dies after few clicks — duplicate keydown handler removed (2026-02-09)
+- [x] BUG-007: Logo doesn't link home — wrapped in `<a href="/">` (2026-02-09)
+- [x] BUG-008: Client-side fuzzy search not working — JS Levenshtein added (2026-02-09)
 
 ## Phase A: Stabilization — COMPLETE
 Goal: Fix all active bugs, get site stable enough to share.
@@ -103,6 +107,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-09: v0.12.1 — 4 live-site bug fixes: face count badges, nav persistence, logo link, fuzzy search (864 tests)
 - [x] 2026-02-08: v0.12.0 — Session 4: photo nav, mobile tabs, search polish, inline actions (847 tests)
 - [x] 2026-02-08: Inline face actions — hover confirm/skip/reject buttons on photo overlays, 17 tests
 - [x] 2026-02-08: FE-033 — Fuzzy search with Levenshtein distance + match highlighting, 11 tests

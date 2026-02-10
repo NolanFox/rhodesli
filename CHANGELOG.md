@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.12.1] - 2026-02-09
+
+### Fixed
+- **BUG-005: Face count badges wildly wrong**: Badge denominator used raw embedding detection count (e.g., 63 for a 3-person newspaper photo). Now filters to only registered faces from photo_index.json. Also fixes lightbox "N faces detected" and removes noise face overlays. 5 tests.
+- **BUG-006: Photo navigation dies after few clicks**: Duplicate keydown listeners (one in photo_nav_script, one in global delegation) caused double navigation per key press. Removed the per-section handler. 6 tests.
+- **BUG-007: Rhodesli logo doesn't link home**: Sidebar header "Rhodesli / Identity System" wrapped in `<a href="/">`. 2 tests.
+- **BUG-008: Client-side fuzzy search not working**: Sidebar filter used `indexOf` (exact substring). Now includes JS Levenshtein distance with threshold-based fuzzy matching per word. "Capeluto" matches "Capelluto". 4 tests.
+
+### Changed
+- Test count: 847 → 864 (17 new tests across 4 test files)
+- `_build_caches()` restructured: loads photo_index.json first, filters faces, then builds reverse mapping
+
 ## [v0.12.0] - 2026-02-08
 
 ### Added
