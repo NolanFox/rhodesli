@@ -695,41 +695,63 @@ _face_to_photo_cache = None
 
 
 def _build_caches():
-    """Build photo and face-to-photo caches."""
+    """Build photo and face-to-photo caches.
+
+    Loads raw detections from embeddings.npy, then filters each photo's
+    face list to only include faces registered in photo_index.json.
+    This removes noise detections (e.g., a newspaper photo might have
+    63 raw detections but only 21 real registered faces).
+    """
     global _photo_cache, _face_to_photo_cache
     if _photo_cache is None:
         _photo_cache = load_embeddings_for_photos()
-        # Build reverse mapping: face_id -> photo_id
-        _face_to_photo_cache = {}
-        for photo_id, photo_data in _photo_cache.items():
-            for face in photo_data["faces"]:
-                _face_to_photo_cache[face["face_id"]] = photo_id
 
-        # Merge source data from photo_index.json
+        # Merge source data and filter faces using photo_index.json
         try:
             from core.photo_registry import PhotoRegistry
             photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
 
-            # Build filename -> source fallback for photos with mismatched IDs
+            # Build filename-based fallback maps for photos with mismatched IDs
             # (e.g., inbox_* IDs in photo_index.json vs SHA256 IDs in _photo_cache)
             filename_to_source = {}
+            filename_to_face_ids = {}
             for pid in photo_registry._photos:
                 path = photo_registry.get_photo_path(pid)
                 source = photo_registry.get_source(pid)
-                if path and source:
-                    filename_to_source[Path(path).name] = source
+                face_ids = photo_registry.get_faces_in_photo(pid)
+                if path:
+                    fname = Path(path).name
+                    if source:
+                        filename_to_source[fname] = source
+                    filename_to_face_ids[fname] = face_ids
 
             for photo_id in _photo_cache:
+                filename = _photo_cache[photo_id].get("filename", "")
+                fname = Path(filename).name
+
+                # Filter faces to only registered ones from photo_index
+                registered_ids = filename_to_face_ids.get(fname)
+                if registered_ids:
+                    _photo_cache[photo_id]["faces"] = [
+                        f for f in _photo_cache[photo_id]["faces"]
+                        if f["face_id"] in registered_ids
+                    ]
+
+                # Set source
                 source = photo_registry.get_source(photo_id)
                 if not source:
-                    # Fallback: look up by filename
-                    filename = _photo_cache[photo_id].get("filename", "")
-                    source = filename_to_source.get(Path(filename).name, "")
+                    source = filename_to_source.get(fname, "")
                 _photo_cache[photo_id]["source"] = source
         except FileNotFoundError:
             # No photo_index.json yet, set empty sources
             for photo_id in _photo_cache:
                 _photo_cache[photo_id]["source"] = ""
+
+        # Build reverse mapping AFTER filtering: face_id -> photo_id
+        _face_to_photo_cache = {}
+        for photo_id, photo_data in _photo_cache.items():
+            for face in photo_data["faces"]:
+                _face_to_photo_cache[face["face_id"]] = photo_id
 
 
 def get_photo_metadata(photo_id: str) -> dict:
