@@ -1,17 +1,27 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-09 (Session 5 — ML Validation)
+Last updated: 2026-02-10 (Session 6 — Sync Infrastructure)
 
 ## Active Bugs
 - (none — all P0 bugs fixed through v0.12.1)
 
-## Ready to Apply
+## Setup Required (ONE TIME)
+- [ ] Generate sync token: `python scripts/generate_sync_token.py`
+- [ ] Set RHODESLI_SYNC_TOKEN on Railway: `railway variables set RHODESLI_SYNC_TOKEN=<token>`
+- [ ] Set RHODESLI_SYNC_TOKEN in .env: `echo 'RHODESLI_SYNC_TOKEN=<token>' >> .env`
+- [ ] Deploy (push to main or Railway auto-deploy)
+- [ ] Test sync: `python scripts/sync_from_production.py --dry-run`
+
+## Ready to Apply (after sync)
+- [ ] Sync production data: `python scripts/sync_from_production.py`
+- [ ] Re-run ML pipeline: `bash scripts/full_ml_refresh.sh`
 - [ ] Apply 19 VERY_HIGH matches: `python scripts/apply_cluster_matches.py --execute --tier very_high`
 - [ ] Apply 33 HIGH matches: `python scripts/apply_cluster_matches.py --execute --tier high`
 - [ ] After applying, sync to production and confirm in web UI
 
 ## Immediate (This Weekend)
-- [ ] Sync production data locally (need cookies.txt from browser session)
+- [x] Build token-authenticated sync API (2026-02-10)
+- [x] Build reliable sync script (2026-02-10)
 - [ ] Re-run validation after sync to check if admin tagging created signal
 - [ ] End-to-end test pending upload flow (upload via web -> process_pending.py -> verify)
 - [ ] Test new UX features on real phone (mobile responsive, touch swipe, keyboard shortcuts)

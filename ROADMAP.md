@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.13.0 · 879 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.14.0 · 891 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -58,7 +58,7 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] FE-015: Mobile match mode — vertical stacking with swipe (2026-02-06)
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
 - [x] BE-020: Admin data export endpoint (2026-02-06)
-- [ ] BE-021: Production-to-local sync script
+- [x] BE-021: Production-to-local sync script (2026-02-10)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -110,6 +110,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.14.0 — Sync infrastructure: token-authenticated sync API, reliable sync script, backup automation, ML refresh pipeline (891 tests)
 - [x] 2026-02-09: v0.13.0 — ML validation session: AD-013 threshold calibration, golden set evaluation, clustering validation, 33 match proposals ready (879 tests)
 - [x] 2026-02-09: v0.12.1 — 4 live-site bug fixes: face count badges, nav persistence, logo link, fuzzy search (864 tests)
 - [x] 2026-02-08: v0.12.0 — Session 4: photo nav, mobile tabs, search polish, inline actions (847 tests)

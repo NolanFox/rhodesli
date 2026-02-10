@@ -223,3 +223,15 @@
 - **Observation**: Showing "15% closer than next-best" is more useful for humans than showing "distance: 0.82". Relative comparisons help adjudicate truth better than absolute scores.
 - **Rule**: When displaying ML results to non-technical users, prefer comparative metrics over absolute ones.
 - **Prevention**: The confidence_gap pattern can be reused for any ranked list.
+
+## Session 2026-02-10: Sync Infrastructure
+
+### Lesson 42: Token-based API auth is simpler than session cookie sync for machine-to-machine
+- **Mistake**: Previous sync approach required exporting browser session cookies as cookies.txt. This never worked because it required manual browser interaction and cookies expire.
+- **Rule**: For machine-to-machine data sync, use a simple Bearer token (RHODESLI_SYNC_TOKEN). Set it once on both sides, never expires.
+- **Prevention**: When building script-to-server communication, always prefer API tokens over session cookies.
+
+### Lesson 43: Production and local JSON files are completely separate
+- **Observation**: Railway has its own copy of identities.json on the persistent volume. Local dev has a separate copy. Admin tagging on the live site does NOT update local data.
+- **Rule**: Every ML session MUST start with `python scripts/sync_from_production.py` to get fresh data.
+- **Prevention**: `scripts/full_ml_refresh.sh` runs sync as step 1. Never skip it.

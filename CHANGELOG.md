@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.14.0] - 2026-02-10
+
+### Added
+- **Token-Authenticated Sync API**: Three new endpoints — `/api/sync/status` (public stats), `/api/sync/identities` and `/api/sync/photo-index` (Bearer token auth). Replaces cookie-based export that never worked for scripts.
+- **Sync Script** (`scripts/sync_from_production.py`): Python script with `--dry-run`, `--from-zip` fallback, auto-backup before overwrite, diff summary. Uses `RHODESLI_SYNC_TOKEN` env var.
+- **Token Generator** (`scripts/generate_sync_token.py`): Generates secure token with Railway + local setup instructions.
+- **Backup Script** (`scripts/backup_production.sh`): Timestamped backups of data files, auto-cleans to keep last 10.
+- **ML Refresh Pipeline** (`scripts/full_ml_refresh.sh`): One-command sync -> backup -> golden set -> evaluate -> validate -> dry-run apply.
+- **12 new tests** for sync API permission matrix (token validation, 503 on unconfigured, public status endpoint).
+
+### Changed
+- `SYNC_API_TOKEN` added to `core/config.py` (from `RHODESLI_SYNC_TOKEN` env var)
+- Test count: 879 → 891
+
 ## [v0.13.0] - 2026-02-09
 
 ### Added
