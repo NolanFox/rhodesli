@@ -1521,6 +1521,10 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 actions,
                 # Suggest Name form (hidden by default, shown via Hyperscript toggle)
                 _suggest_name_form(identity_id),
+                # Identity metadata (AN-012)
+                _identity_metadata_display(identity),
+                # Identity annotations (AN-013/AN-014)
+                _identity_annotations_section(identity_id, is_admin=is_admin),
                 # Notes section (loads via HTMX)
                 Div(
                     Button(
@@ -3041,6 +3045,8 @@ def identity_card(
             pagination,
             id=f"faces-{identity_id}",
         ),
+        # Identity metadata (AN-012)
+        _identity_metadata_display(identity),
         # Action buttons based on state (admin only)
         review_action_buttons(identity_id, state, is_admin=is_admin),
         # Neighbors container (shown when "Find Similar" is clicked)
@@ -9664,6 +9670,139 @@ def _photo_annotations_section(photo_id: str, is_admin: bool = False):
         form,
         pending_badge,
         id=f"photo-annotations-{photo_id}",
+        cls="mt-3 border-t border-slate-700 pt-2" if ann_items else "mt-2",
+    )
+
+
+def _identity_metadata_display(identity: dict):
+    """AN-012: Display identity metadata fields (bio, birth/death, relationships)."""
+    metadata_fields = {
+        "bio": "Bio",
+        "birth_year": "Born",
+        "death_year": "Died",
+        "birth_place": "Birthplace",
+        "maiden_name": "Maiden Name",
+        "relationship_notes": "Relationships",
+    }
+    items = []
+    for key, label in metadata_fields.items():
+        value = identity.get(key)
+        if value:
+            items.append(P(
+                Span(f"{label}: ", cls="text-slate-500"),
+                Span(str(value), cls="text-slate-300"),
+                cls="text-xs"
+            ))
+    if not items:
+        return Span()
+    return Div(*items, cls="mt-2 space-y-0.5")
+
+
+def _identity_annotations_section(identity_id: str, is_admin: bool = False):
+    """
+    AN-013/AN-014: Show approved identity annotations and submission form.
+    Displays bio, relationship, story, and other identity-level annotations.
+    """
+    try:
+        annotations = _load_annotations()
+    except Exception:
+        annotations = {"annotations": {}}
+
+    # Get approved annotations for this identity
+    identity_anns = [
+        ann for ann in annotations.get("annotations", {}).values()
+        if ann.get("target_type") == "identity"
+        and ann.get("target_id") == identity_id
+        and ann.get("status") == "approved"
+    ]
+
+    # Pending count for admin badge
+    pending_count = sum(
+        1 for ann in annotations.get("annotations", {}).values()
+        if ann.get("target_type") == "identity"
+        and ann.get("target_id") == identity_id
+        and ann.get("status") == "pending"
+    )
+
+    # Display approved annotations grouped by type
+    type_labels = {
+        "bio": "Bio",
+        "relationship": "Relationship",
+        "story": "Story",
+        "name_suggestion": "Name Suggestion",
+        "caption": "Caption",
+    }
+    ann_items = []
+    for ann in sorted(identity_anns, key=lambda a: a.get("submitted_at", "")):
+        label = type_labels.get(ann["type"], ann["type"].title())
+        ann_items.append(Div(
+            Span(f"{label}: ", cls="text-slate-400 text-xs font-medium"),
+            Span(ann["value"], cls="text-slate-300 text-xs"),
+            cls="py-1"
+        ))
+
+    # Annotation submission form
+    form = Div(
+        Details(
+            Summary("Add annotation", cls="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer"),
+            Form(
+                Input(type="hidden", name="target_type", value="identity"),
+                Input(type="hidden", name="target_id", value=identity_id),
+                Div(
+                    Select(
+                        Option("Bio", value="bio"),
+                        Option("Relationship", value="relationship"),
+                        Option("Story", value="story"),
+                        Option("Caption", value="caption"),
+                        name="annotation_type",
+                        cls="bg-slate-700 text-white text-xs rounded px-2 py-1 w-full",
+                    ),
+                    cls="mt-2"
+                ),
+                Div(
+                    Textarea(
+                        name="value",
+                        placeholder="Enter annotation...",
+                        cls="bg-slate-700 text-white text-xs rounded px-2 py-1 w-full h-16 resize-none",
+                        required=True,
+                    ),
+                    cls="mt-1"
+                ),
+                Div(
+                    Select(
+                        Option("Certain", value="certain"),
+                        Option("Likely", value="likely", selected=True),
+                        Option("Guess", value="guess"),
+                        name="confidence",
+                        cls="bg-slate-700 text-white text-xs rounded px-2 py-1",
+                    ),
+                    Button(
+                        "Submit",
+                        type="submit",
+                        cls="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1 rounded",
+                    ),
+                    cls="mt-1 flex gap-2 items-center"
+                ),
+                hx_post="/api/annotations/submit",
+                hx_target=f"#identity-annotations-{identity_id}",
+                hx_swap="outerHTML",
+                cls="mt-2",
+            ),
+            cls="mt-2",
+        ),
+        cls="mt-2"
+    )
+
+    pending_badge = Span(
+        f" ({pending_count} pending)",
+        cls="text-amber-400 text-xs"
+    ) if pending_count and is_admin else None
+
+    return Div(
+        *ann_items,
+        form,
+        pending_badge,
+        id=f"identity-annotations-{identity_id}",
         cls="mt-3 border-t border-slate-700 pt-2" if ann_items else "mt-2",
     )
 
