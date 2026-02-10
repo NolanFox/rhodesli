@@ -9298,6 +9298,36 @@ def get(sess=None):
             cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
         )
 
+    # Golden set diversity section (ML-011)
+    diversity_path = data_path / "golden_set_diversity.json"
+    if diversity_path.exists():
+        try:
+            import json as _json
+            with open(diversity_path) as f:
+                diversity = _json.load(f)
+            diversity_section = Div(
+                H3("Golden Set Diversity (ML-011)", cls="text-lg font-semibold text-white mb-3"),
+                Div(
+                    _stat_card("Multi-face", str(diversity.get("multi_face_identities", 0)), "blue"),
+                    _stat_card("Single-face", str(diversity.get("single_face_identities", 0)), "amber"),
+                    _stat_card("Same Pairs", str(diversity.get("same_person_pairs", 0)), "green"),
+                    _stat_card("Collections", str(diversity.get("collections", 0)), "purple"),
+                    cls="grid grid-cols-4 gap-4"
+                ),
+                P(f"Same-person pairs: {diversity.get('same_person_pairs', 0)} | "
+                  f"Different-person pairs: {diversity.get('different_person_pairs', 0)}",
+                  cls="text-xs text-slate-400 mt-2"),
+                cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+            )
+        except Exception:
+            diversity_section = Span()
+    else:
+        diversity_section = Div(
+            H3("Golden Set Diversity", cls="text-lg font-semibold text-white mb-3"),
+            P("Run: python scripts/analyze_golden_set.py", cls="text-slate-400 text-sm"),
+            cls="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6"
+        )
+
     # Threshold section
     threshold_section = Div(
         H3("Calibrated Thresholds (AD-013)", cls="text-lg font-semibold text-white mb-3"),
@@ -9362,6 +9392,7 @@ def get(sess=None):
         ),
         stat_cards,
         gs_section,
+        diversity_section,
         threshold_section,
         eval_section,
         actions_section,

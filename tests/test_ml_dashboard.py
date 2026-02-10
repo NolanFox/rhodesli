@@ -48,3 +48,10 @@ class TestMLDashboard:
         """ML dashboard shows golden set stats if available."""
         response = client.get("/admin/ml-dashboard")
         assert "Golden Set" in response.text
+
+    def test_ml_dashboard_shows_diversity(self, client):
+        """ML dashboard shows golden set diversity analysis (ML-011)."""
+        response = client.get("/admin/ml-dashboard")
+        assert response.status_code == 200
+        # Diversity section should show identity distribution info
+        assert "Diversity" in response.text or "diversity" in response.text
