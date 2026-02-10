@@ -157,6 +157,94 @@ class TestPhotoRegistrySerialization:
         assert "face2" in loaded.get_faces_in_photo("photo2")
 
 
+class TestProvenanceRoutes:
+    """Tests for photo provenance API routes."""
+
+    @pytest.fixture
+    def client(self):
+        from starlette.testclient import TestClient
+        from app.main import app
+        return TestClient(app)
+
+    @pytest.fixture
+    def auth_disabled(self):
+        from unittest.mock import patch
+        with patch("app.main.is_auth_enabled", return_value=False):
+            yield
+
+    def test_set_source_route(self, client, auth_disabled):
+        """POST /api/photo/{id}/source sets provenance."""
+        from unittest.mock import patch, MagicMock
+        with patch("app.main.load_photo_registry") as mock_reg:
+            reg = MagicMock()
+            reg.get_photo_path.return_value = "raw_photos/test.jpg"
+            mock_reg.return_value = reg
+
+            resp = client.post(
+                "/api/photo/test-id/source",
+                data={"source": "Newspapers.com"}
+            )
+            assert resp.status_code == 200
+            assert "Newspapers.com" in resp.text
+            reg.set_source.assert_called_once_with("test-id", "Newspapers.com")
+
+    def test_set_source_url_route(self, client, auth_disabled):
+        """POST /api/photo/{id}/source-url sets citation URL."""
+        from unittest.mock import patch, MagicMock
+        with patch("app.main.load_photo_registry") as mock_reg:
+            reg = MagicMock()
+            reg.get_photo_path.return_value = "raw_photos/test.jpg"
+            mock_reg.return_value = reg
+
+            resp = client.post(
+                "/api/photo/test-id/source-url",
+                data={"source_url": "https://newspapers.com/article/123"}
+            )
+            assert resp.status_code == 200
+            assert "https://newspapers.com/article/123" in resp.text
+            reg.set_source_url.assert_called_once_with("test-id", "https://newspapers.com/article/123")
+
+    def test_source_route_admin_only(self, client):
+        """POST /api/photo/{id}/source requires admin."""
+        from unittest.mock import patch
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=None):
+            resp = client.post(
+                "/api/photo/test-id/source",
+                data={"source": "Test"},
+                headers={"HX-Request": "true"}
+            )
+            assert resp.status_code == 401
+
+    def test_source_url_route_admin_only(self, client):
+        """POST /api/photo/{id}/source-url requires admin."""
+        from unittest.mock import patch
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=None):
+            resp = client.post(
+                "/api/photo/test-id/source-url",
+                data={"source_url": "https://example.com"},
+                headers={"HX-Request": "true"}
+            )
+            assert resp.status_code == 401
+
+    def test_collection_filter_param(self, client, auth_disabled):
+        """Photos page accepts filter_collection parameter."""
+        from unittest.mock import patch
+        with patch("app.main._build_caches"):
+            resp = client.get("/?section=photos&filter_collection=Newspapers.com")
+            assert resp.status_code == 200
+
+    def test_upload_form_has_separate_fields(self, client, auth_disabled):
+        """Upload page shows separate collection, source, and source_url fields."""
+        resp = client.get("/upload")
+        assert resp.status_code == 200
+        html = resp.text
+        assert 'name="collection"' in html
+        assert 'name="source"' in html
+        assert 'name="source_url"' in html
+
+
 class TestMigrationScript:
     """Tests for scripts/migrate_photo_metadata.py logic."""
 

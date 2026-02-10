@@ -105,8 +105,8 @@ class TestCollectionStats:
         registry.list_identities.return_value = []
 
         cache = {
-            "p1": {"filename": "img1.jpg", "source": "Coll A", "faces": []},
-            "p2": {"filename": "img2.jpg", "source": "Coll B", "faces": []},
+            "p1": {"filename": "img1.jpg", "source": "Coll A", "collection": "Coll A", "faces": []},
+            "p2": {"filename": "img2.jpg", "source": "Coll B", "collection": "Coll B", "faces": []},
         }
 
         with patch.object(main_module, "_photo_cache", cache), \
@@ -170,7 +170,7 @@ class TestCollectionReassignment:
         """POST /api/photo/{id}/collection requires admin."""
         resp = client.post(
             "/api/photo/test-id/collection",
-            data={"source": "New Collection"},
+            data={"collection": "New Collection"},
             headers={"HX-Request": "true"}
         )
         assert resp.status_code in (401, 403)
@@ -184,12 +184,11 @@ class TestCollectionReassignment:
 
             resp = client.post(
                 "/api/photo/test-id/collection",
-                data={"source": "New Collection"}
+                data={"collection": "New Collection"}
             )
             assert resp.status_code == 200
             assert "New Collection" in resp.text
-            photo_reg.set_source.assert_called_once_with("test-id", "New Collection")
-            photo_reg.save.assert_called_once()
+            photo_reg.set_collection.assert_called_once_with("test-id", "New Collection")
 
     def test_reassign_photo_not_found(self, client, auth_disabled):
         """Reassigning collection for nonexistent photo returns 404."""
@@ -200,7 +199,7 @@ class TestCollectionReassignment:
 
             resp = client.post(
                 "/api/photo/nonexistent/collection",
-                data={"source": "X"}
+                data={"collection": "X"}
             )
             assert resp.status_code == 404
 
@@ -213,11 +212,11 @@ class TestCollectionReassignment:
 
             resp = client.post(
                 "/api/photo/test-id/collection",
-                data={"source": ""}
+                data={"collection": ""}
             )
             assert resp.status_code == 200
             assert "(none)" in resp.text
-            photo_reg.set_source.assert_called_once_with("test-id", "")
+            photo_reg.set_collection.assert_called_once_with("test-id", "")
 
 
 class TestCollectionInUpload:

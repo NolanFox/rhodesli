@@ -810,15 +810,23 @@ def _build_caches():
             # Build filename-based fallback maps for photos with mismatched IDs
             # (e.g., inbox_* IDs in photo_index.json vs SHA256 IDs in _photo_cache)
             filename_to_source = {}
+            filename_to_collection = {}
+            filename_to_source_url = {}
             filename_to_face_ids = {}
             for pid in photo_registry._photos:
                 path = photo_registry.get_photo_path(pid)
                 source = photo_registry.get_source(pid)
+                collection = photo_registry.get_collection(pid)
+                source_url = photo_registry.get_source_url(pid)
                 face_ids = photo_registry.get_faces_in_photo(pid)
                 if path:
                     fname = Path(path).name
                     if source:
                         filename_to_source[fname] = source
+                    if collection:
+                        filename_to_collection[fname] = collection
+                    if source_url:
+                        filename_to_source_url[fname] = source_url
                     filename_to_face_ids[fname] = face_ids
 
             for photo_id in _photo_cache:
@@ -833,11 +841,23 @@ def _build_caches():
                         if f["face_id"] in registered_ids
                     ]
 
-                # Set source
+                # Set source (provenance)
                 source = photo_registry.get_source(photo_id)
                 if not source:
                     source = filename_to_source.get(fname, "")
                 _photo_cache[photo_id]["source"] = source
+
+                # Set collection (classification)
+                collection = photo_registry.get_collection(photo_id)
+                if not collection:
+                    collection = filename_to_collection.get(fname, "")
+                _photo_cache[photo_id]["collection"] = collection
+
+                # Set source_url (citation)
+                source_url = photo_registry.get_source_url(photo_id)
+                if not source_url:
+                    source_url = filename_to_source_url.get(fname, "")
+                _photo_cache[photo_id]["source_url"] = source_url
 
                 # Merge photo metadata (BE-012)
                 metadata = photo_registry.get_metadata(photo_id)
@@ -1974,7 +1994,8 @@ def _photo_nav_url(photo_id: str, index: int, photos: list, total: int) -> str:
 
 
 def render_photos_section(counts: dict, registry, crop_files: set,
-                          filter_source: str = "", sort_by: str = "newest") -> Div:
+                          filter_source: str = "", sort_by: str = "newest",
+                          filter_collection: str = "") -> Div:
     """
     Render the Photos section - a grid view of all photos.
 
@@ -1984,8 +2005,9 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         counts: Sidebar counts dict
         registry: Identity registry
         crop_files: Set of available crop filenames
-        filter_source: Filter to show only this collection (empty = all)
+        filter_source: Filter by source/provenance (empty = all)
         sort_by: Sort order (newest, oldest, most_faces, collection)
+        filter_collection: Filter by collection/classification (empty = all)
     """
     _build_caches()
     if not _photo_cache:
@@ -2001,10 +2023,14 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     # Get all photos with metadata
     photos = []
     sources_set = set()
+    collections_set = set()
     for photo_id, photo_data in _photo_cache.items():
         source = photo_data.get("source", "")
+        collection = photo_data.get("collection", "")
         if source:
             sources_set.add(source)
+        if collection:
+            collections_set.add(collection)
 
         # Get identified faces in this photo
         identified_faces = []
@@ -2026,6 +2052,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             "photo_id": photo_id,
             "filename": photo_data.get("filename", "unknown"),
             "source": source,
+            "collection": collection,
             "face_count": face_count,
             "identified_count": len(identified_faces),
             "confirmed_count": confirmed_count,
@@ -2033,10 +2060,13 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         })
 
     sources = sorted(sources_set)
+    collections = sorted(collections_set)
 
-    # Apply filter
+    # Apply filters
     if filter_source:
         photos = [p for p in photos if p["source"] == filter_source]
+    if filter_collection:
+        photos = [p for p in photos if p["collection"] == filter_collection]
 
     # Apply sorting
     if sort_by == "oldest":
@@ -2046,29 +2076,42 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     elif sort_by == "most_faces":
         photos = sorted(photos, key=lambda p: p["face_count"], reverse=True)
     elif sort_by == "collection":
-        photos = sorted(photos, key=lambda p: (p["source"] or "zzz", p["filename"]))
+        photos = sorted(photos, key=lambda p: (p["collection"] or p["source"] or "zzz", p["filename"]))
 
     # Build per-collection stats
     collection_stats = {}
     for p in photos:
-        src = p["source"] or "Uncategorized"
-        if src not in collection_stats:
-            collection_stats[src] = {"photo_count": 0, "face_count": 0, "identified_count": 0}
-        collection_stats[src]["photo_count"] += 1
-        collection_stats[src]["face_count"] += p["face_count"]
-        collection_stats[src]["identified_count"] += p["identified_count"]
+        coll = p["collection"] or p["source"] or "Uncategorized"
+        if coll not in collection_stats:
+            collection_stats[coll] = {"photo_count": 0, "face_count": 0, "identified_count": 0}
+        collection_stats[coll]["photo_count"] += 1
+        collection_stats[coll]["face_count"] += p["face_count"]
+        collection_stats[coll]["identified_count"] += p["identified_count"]
 
     # Build subtitle — scoped to current view
+    active_filters = []
+    if filter_collection:
+        active_filters.append(filter_collection)
     if filter_source:
-        subtitle = f"{filter_source} — {len(photos)} photos"
+        active_filters.append(f"from {filter_source}")
+    if active_filters:
+        subtitle = f"{' '.join(active_filters)} \u2014 {len(photos)} photos"
     else:
         subtitle_parts = [f"{len(photos)} photos"]
-        if len(sources) > 1:
-            subtitle_parts.append(f"{len(sources)} collections")
+        if len(collections) > 1:
+            subtitle_parts.append(f"{len(collections)} collections")
         subtitle = " \u2022 ".join(subtitle_parts)
 
     # Build filter/sort options
-    source_options = [Option("All Collections", value="", selected=not filter_source)]
+    from urllib.parse import quote
+    _fc = quote(filter_collection)
+    _fs = quote(filter_source)
+
+    collection_options = [Option("All Collections", value="", selected=not filter_collection)]
+    for c in collections:
+        collection_options.append(Option(c, value=c, selected=(filter_collection == c)))
+
+    source_options = [Option("All Sources", value="", selected=not filter_source)]
     for s in sources:
         source_options.append(Option(s, value=s, selected=(filter_source == s)))
 
@@ -2080,16 +2123,26 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     ]
 
     # Filter/sort controls
-    from urllib.parse import quote
     filter_bar = Div(
         # Collection filter
         Div(
             Label("Collection:", cls="text-sm text-slate-400 mr-2"),
             Select(
+                *collection_options,
+                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
+                    "focus:ring-2 focus:ring-indigo-500",
+                onchange=f"window.location.href='/?section=photos&filter_collection=' + encodeURIComponent(this.value) + '&filter_source={_fs}&sort_by={sort_by}'"
+            ),
+            cls="flex items-center"
+        ),
+        # Source filter
+        Div(
+            Label("Source:", cls="text-sm text-slate-400 mr-2"),
+            Select(
                 *source_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
                     "focus:ring-2 focus:ring-indigo-500",
-                onchange=f"window.location.href='/?section=photos&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}'"
+                onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}'"
             ),
             cls="flex items-center"
         ),
@@ -2100,7 +2153,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                 *sort_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
                     "focus:ring-2 focus:ring-indigo-500",
-                onchange=f"window.location.href='/?section=photos&filter_source={quote(filter_source)}&sort_by=' + this.value"
+                onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by=' + this.value"
             ),
             cls="flex items-center"
         ),
@@ -2250,7 +2303,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
 
     # Collection stats cards (shown when viewing all collections, not filtered)
     collection_cards = None
-    if not filter_source and len(collection_stats) > 1:
+    if not filter_collection and not filter_source and len(collection_stats) > 1:
         stat_cards = []
         for coll_name in sorted(collection_stats.keys()):
             stats = collection_stats[coll_name]
@@ -2269,7 +2322,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     ),
                     cls="bg-slate-800/50 border border-slate-700 rounded-lg p-3 cursor-pointer "
                         "hover:border-indigo-500/50 transition-colors",
-                    onclick=f"window.location.href='/?section=photos&filter_source={quote(coll_name)}&sort_by={sort_by}'"
+                    onclick=f"window.location.href='/?section=photos&filter_collection={quote(coll_name)}&sort_by={sort_by}'"
                 )
             )
         collection_cards = Div(
@@ -2278,7 +2331,11 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         )
 
     # Bulk action bar (hidden until selections exist)
-    source_options_bulk = [Option("Select collection...", value="", disabled=True, selected=True)]
+    collection_options_bulk = [Option("Set collection...", value="", disabled=True, selected=True)]
+    for c in collections:
+        collection_options_bulk.append(Option(c, value=c))
+
+    source_options_bulk = [Option("Set source...", value="", disabled=True, selected=True)]
     for s in sources:
         source_options_bulk.append(Option(s, value=s))
 
@@ -2291,17 +2348,28 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                    cls="px-3 py-1 text-xs border border-slate-600 text-slate-300 rounded hover:bg-slate-700"),
             Div(
                 Select(
-                    *source_options_bulk,
+                    *collection_options_bulk,
                     id="bulk-move-collection",
-                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 py-1.5",
                 ),
-                Button("Move", type="button", data_action="photo-bulk-move",
+                Select(
+                    *source_options_bulk,
+                    id="bulk-move-source",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 py-1.5",
+                ),
+                Input(
+                    type="url",
+                    id="bulk-source-url",
+                    placeholder="Source URL...",
+                    cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-2 py-1.5 w-40",
+                ),
+                Button("Apply", type="button", data_action="photo-bulk-move",
                        cls="px-4 py-1.5 text-sm font-bold bg-indigo-600 text-white rounded hover:bg-indigo-500"),
-                cls="flex items-center gap-2",
+                cls="flex items-center gap-2 flex-wrap",
             ),
             Button("Cancel", type="button", data_action="toggle-photo-select",
                    cls="px-3 py-1 text-xs text-slate-400 hover:text-white"),
-            cls="flex items-center gap-4 max-w-3xl mx-auto px-4"
+            cls="flex items-center gap-4 max-w-5xl mx-auto px-4 flex-wrap"
         ),
         id="photo-bulk-bar",
         cls="hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 py-3 z-40",
@@ -2347,14 +2415,18 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     updateSelectCount();
                 }
                 else if (act === 'photo-bulk-move') {
-                    var sel = document.getElementById('bulk-move-collection');
-                    var collection = sel ? sel.value : '';
-                    if (!collection) { alert('Please select a collection.'); return; }
+                    var collSel = document.getElementById('bulk-move-collection');
+                    var srcSel = document.getElementById('bulk-move-source');
+                    var urlInp = document.getElementById('bulk-source-url');
+                    var collection = collSel ? collSel.value : '';
+                    var source = srcSel ? srcSel.value : '';
+                    var sourceUrl = urlInp ? urlInp.value : '';
+                    if (!collection && !source && !sourceUrl) { alert('Please set at least one field.'); return; }
                     var ids = [];
                     document.querySelectorAll('.photo-select-checkbox input:checked').forEach(function(cb) { ids.push(cb.value); });
                     if (ids.length === 0) { alert('No photos selected.'); return; }
                     htmx.ajax('POST', '/api/photos/bulk-update-source', {
-                        values: { photo_ids: JSON.stringify(ids), source: collection },
+                        values: { photo_ids: JSON.stringify(ids), collection: collection, source: source, source_url: sourceUrl },
                         target: '#toast-container',
                         swap: 'beforeend'
                     });
@@ -2381,7 +2453,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         filter_bar,
         collection_cards,
         grid if photo_cards else Div(
-            "No photos found." + (" Clear filter to see all." if filter_source else ""),
+            "No photos found." + (" Clear filter to see all." if (filter_source or filter_collection) else ""),
             cls="text-center py-12 text-slate-400"
         ),
         bulk_action_bar,
@@ -2461,50 +2533,91 @@ def get_next_focus_card(exclude_id: str = None):
         )
 
 
-def upload_area(existing_sources: list[str] = None) -> Div:
+def upload_area(existing_sources: list[str] = None, existing_collections: list[str] = None) -> Div:
     """
-    Drag-and-drop file upload area with source/collection field.
+    Drag-and-drop file upload area with separate collection, source, and source URL fields.
     UX Intent: Easy bulk ingestion into inbox with provenance tracking.
 
     Args:
         existing_sources: List of existing source labels for autocomplete
+        existing_collections: List of existing collection labels for autocomplete
     """
     if existing_sources is None:
         existing_sources = []
+    if existing_collections is None:
+        existing_collections = []
 
     return Div(
-        # Source/Collection input field
+        # Metadata fields — optional, can be filled before or after upload
         Div(
-            Label(
-                "Collection / Source",
-                cls="block text-sm font-medium text-slate-300 mb-2"
+            P("Categorize your photos (optional — you can do this later)",
+              cls="text-sm text-slate-400 mb-3"),
+            # Collection field
+            Div(
+                Label("Collection", cls="block text-xs font-medium text-slate-400 mb-1"),
+                Input(
+                    type="text",
+                    name="collection",
+                    id="upload-collection",
+                    placeholder="e.g., Immigration Records, Wedding Photos",
+                    list="collection-suggestions",
+                    cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg "
+                        "text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 "
+                        "focus:border-transparent"
+                ),
+                Datalist(
+                    *[Option(value=c) for c in existing_collections],
+                    id="collection-suggestions"
+                ) if existing_collections else None,
+                P("How you want to organize these in the archive",
+                  cls="text-xs text-slate-500 mt-0.5"),
+                cls="mb-3"
             ),
-            Input(
-                type="text",
-                name="source",
-                id="upload-source",
-                placeholder="e.g., Betty Capeluto Miami Collection, Ancestry, Newspapers.com",
-                list="source-suggestions",
-                cls="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg "
-                    "text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 "
-                    "focus:border-transparent"
+            # Source field
+            Div(
+                Label("Source", cls="block text-xs font-medium text-slate-400 mb-1"),
+                Input(
+                    type="text",
+                    name="source",
+                    id="upload-source",
+                    placeholder="e.g., Newspapers.com, Betty's Album, Rhodes Facebook Group",
+                    list="source-suggestions",
+                    cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg "
+                        "text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 "
+                        "focus:border-transparent"
+                ),
+                Datalist(
+                    *[Option(value=s) for s in existing_sources],
+                    id="source-suggestions"
+                ) if existing_sources else None,
+                P("Where did these photos come from?",
+                  cls="text-xs text-slate-500 mt-0.5"),
+                cls="mb-3"
             ),
-            Datalist(
-                *[Option(value=s) for s in existing_sources],
-                id="source-suggestions"
-            ) if existing_sources else None,
-            P(
-                "Where did these photos come from? This helps track provenance.",
-                cls="text-xs text-slate-500 mt-1"
+            # Source URL field
+            Div(
+                Label("Source URL", cls="block text-xs font-medium text-slate-400 mb-1"),
+                Input(
+                    type="url",
+                    name="source_url",
+                    id="upload-source-url",
+                    placeholder="https://...",
+                    cls="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg "
+                        "text-white placeholder-slate-400 text-sm focus:ring-2 focus:ring-indigo-500 "
+                        "focus:border-transparent"
+                ),
+                P("Link to the original (for citation)",
+                  cls="text-xs text-slate-500 mt-0.5"),
+                cls="mb-3"
             ),
-            cls="mb-4"
+            cls="mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700"
         ),
         # File upload area
         Form(
             Div(
                 Span("\u2191", cls="text-4xl text-slate-500"),
-                P("Drop photos here or click to upload (multiple allowed)", cls="text-slate-400 mt-2"),
-                P("Faces will be added to your Inbox for review", cls="text-xs text-slate-500 mt-1"),
+                P("Drop photos here or click to upload", cls="text-slate-300 mt-2 font-medium"),
+                P("Multiple files allowed \u2022 JPG, PNG, or ZIP", cls="text-xs text-slate-500 mt-1"),
                 cls="text-center py-8"
             ),
             Input(
@@ -2517,13 +2630,13 @@ def upload_area(existing_sources: list[str] = None) -> Div:
                 hx_encoding="multipart/form-data",
                 hx_target="#upload-status",
                 hx_swap="innerHTML",
-                hx_include="#upload-source",  # Include source field with upload
+                hx_include="#upload-source,#upload-collection,#upload-source-url",
             ),
             cls="relative",
             enctype="multipart/form-data",
         ),
         Div(id="upload-status", cls="mt-2"),
-        cls="border-2 border-dashed border-slate-600 rounded-lg p-4 hover:border-slate-500 hover:bg-slate-800 transition-colors mb-4",
+        cls="border-2 border-dashed border-slate-600 rounded-lg p-4 hover:border-slate-500 hover:bg-slate-800/50 transition-colors mb-4",
     )
 
 
@@ -4804,7 +4917,8 @@ def get():
 
 @rt("/")
 def get(section: str = None, view: str = "focus", current: str = None,
-        filter_source: str = "", sort_by: str = "newest", sess=None):
+        filter_source: str = "", filter_collection: str = "",
+        sort_by: str = "newest", sess=None):
     """
     Landing page (no section) or Command Center (with section parameter).
     Public access -- anyone can view. Action buttons shown only to admins.
@@ -4867,7 +4981,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
     elif section == "skipped":
         main_content = render_skipped_section(skipped_list, crop_files, counts, is_admin=user_is_admin)
     elif section == "photos":
-        main_content = render_photos_section(counts, registry, crop_files, filter_source, sort_by)
+        main_content = render_photos_section(counts, registry, crop_files, filter_source, sort_by, filter_collection)
     else:  # rejected
         main_content = render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin)
 
@@ -5489,9 +5603,9 @@ def get(photo_id: str):
 
 
 @rt("/api/photo/{photo_id}/collection")
-def post(photo_id: str, sess, source: str = ""):
+def post(photo_id: str, sess, collection: str = ""):
     """
-    Update a photo's collection/source label.
+    Update a photo's collection (classification) label.
 
     Admin-only. Updates photo_index.json and invalidates caches.
     """
@@ -5499,19 +5613,73 @@ def post(photo_id: str, sess, source: str = ""):
     if admin_err:
         return admin_err
     photo_reg = load_photo_registry()
-    # Verify photo exists
+    photo_path = photo_reg.get_photo_path(photo_id)
+    if not photo_path:
+        return Response("Photo not found", status_code=404)
+    photo_reg.set_collection(photo_id, collection.strip())
+    save_photo_registry(photo_reg)
+    global _photo_cache
+    _photo_cache = None
+    return Div(
+        Span(f"Collection updated to: {collection.strip() or '(none)'}",
+             cls="text-sm text-emerald-400"),
+        id=f"collection-status-{photo_id}",
+    )
+
+
+@rt("/api/photo/{photo_id}/source")
+def post(photo_id: str, sess, source: str = ""):
+    """
+    Update a photo's source (provenance/origin) label.
+
+    Admin-only. Updates photo_index.json and invalidates caches.
+    """
+    admin_err = _check_admin(sess)
+    if admin_err:
+        return admin_err
+    photo_reg = load_photo_registry()
     photo_path = photo_reg.get_photo_path(photo_id)
     if not photo_path:
         return Response("Photo not found", status_code=404)
     photo_reg.set_source(photo_id, source.strip())
     save_photo_registry(photo_reg)
-    # Invalidate photo cache so the new source shows up
     global _photo_cache
     _photo_cache = None
     return Div(
-        Span(f"Collection updated to: {source.strip() or '(none)'}",
+        Span(f"Source updated to: {source.strip() or '(none)'}",
              cls="text-sm text-emerald-400"),
-        id=f"collection-status-{photo_id}",
+        id=f"source-status-{photo_id}",
+    )
+
+
+@rt("/api/photo/{photo_id}/source-url")
+def post(photo_id: str, sess, source_url: str = ""):
+    """
+    Update a photo's source URL (citation link).
+
+    Admin-only. Updates photo_index.json and invalidates caches.
+    """
+    admin_err = _check_admin(sess)
+    if admin_err:
+        return admin_err
+    photo_reg = load_photo_registry()
+    photo_path = photo_reg.get_photo_path(photo_id)
+    if not photo_path:
+        return Response("Photo not found", status_code=404)
+    photo_reg.set_source_url(photo_id, source_url.strip())
+    save_photo_registry(photo_reg)
+    global _photo_cache
+    _photo_cache = None
+    if source_url.strip():
+        return Div(
+            Span("Source URL: ", cls="text-slate-500 text-sm"),
+            A(source_url.strip(), href=source_url.strip(), target="_blank",
+              rel="noopener", cls="text-indigo-400 hover:text-indigo-300 underline text-sm"),
+            id=f"source-url-status-{photo_id}",
+        )
+    return Div(
+        Span("Source URL cleared", cls="text-sm text-emerald-400"),
+        id=f"source-url-status-{photo_id}",
     )
 
 
@@ -5844,11 +6012,27 @@ def photo_view_content(
                 "(Face overlays require cached dimensions)",
                 cls="text-slate-600 text-xs italic"
             ) if not has_dimensions and photo["faces"] else None,
-            # Source/collection info (if available)
-            P(
-                f"Source: {photo.get('source', 'Unknown')}",
-                cls="text-slate-400 text-xs mt-1"
-            ) if photo.get("source") else None,
+            # Collection / Source / Source URL display
+            Div(
+                P(
+                    Span("Collection: ", cls="text-slate-500"),
+                    Span(photo.get("collection", ""), cls="text-slate-300"),
+                    cls="text-xs"
+                ) if photo.get("collection") else None,
+                P(
+                    Span("Source: ", cls="text-slate-500"),
+                    Span(photo.get("source", ""), cls="text-slate-300"),
+                    cls="text-xs"
+                ) if photo.get("source") else None,
+                P(
+                    Span("Source URL: ", cls="text-slate-500"),
+                    A(photo.get("source_url", ""), href=photo.get("source_url", ""),
+                      target="_blank", rel="noopener",
+                      cls="text-indigo-400 hover:text-indigo-300 underline"),
+                    cls="text-xs"
+                ) if photo.get("source_url") else None,
+                cls="mt-1 space-y-0.5"
+            ) if photo.get("collection") or photo.get("source") or photo.get("source_url") else None,
             # Stored photo metadata (BE-012)
             _photo_metadata_display(photo),
             # Photo annotations display + form (AN-002–AN-006)
@@ -7706,14 +7890,15 @@ def post(photo_id: str, date_taken: str = "", location: str = "",
 
 
 @rt("/api/photos/bulk-update-source")
-def post(photo_ids: str = "[]", source: str = "", sess=None):
-    """Bulk update collection/source for multiple photos. Admin-only."""
+def post(photo_ids: str = "[]", collection: str = "", source: str = "",
+         source_url: str = "", sess=None):
+    """Bulk update collection/source/source_url for multiple photos. Admin-only."""
     denied = _check_admin(sess)
     if denied:
         return denied
 
-    if not source.strip():
-        return toast("Please select a collection.", "warning")
+    if not collection.strip() and not source.strip() and not source_url.strip():
+        return toast("Please provide collection, source, or source URL.", "warning")
 
     try:
         ids = json.loads(photo_ids)
@@ -7726,7 +7911,12 @@ def post(photo_ids: str = "[]", source: str = "", sess=None):
     photo_registry = load_photo_registry()
     updated = 0
     for pid in ids:
-        photo_registry.set_source(pid, source.strip())
+        if collection.strip():
+            photo_registry.set_collection(pid, collection.strip())
+        if source.strip():
+            photo_registry.set_source(pid, source.strip())
+        if source_url.strip():
+            photo_registry.set_source_url(pid, source_url.strip())
         updated += 1
     save_photo_registry(photo_registry)
 
@@ -7734,9 +7924,17 @@ def post(photo_ids: str = "[]", source: str = "", sess=None):
     global _photo_cache
     _photo_cache = None
 
-    log_user_action("BULK_UPDATE_SOURCE", count=updated, source=source.strip())
+    fields = []
+    if collection.strip():
+        fields.append(f"collection={collection.strip()}")
+    if source.strip():
+        fields.append(f"source={source.strip()}")
+    if source_url.strip():
+        fields.append("source_url")
 
-    return toast(f"Moved {updated} photo(s) to {source.strip()}.", "success")
+    log_user_action("BULK_UPDATE_METADATA", count=updated, fields=", ".join(fields))
+
+    return toast(f"Updated {updated} photo(s): {', '.join(fields)}.", "success")
 
 
 # =============================================================================
@@ -8077,17 +8275,23 @@ def get(sess=None):
     registry = load_registry()
     counts = _compute_sidebar_counts(registry)
 
-    # Load existing sources for autocomplete
+    # Load existing sources and collections for autocomplete
     existing_sources = []
+    existing_collections = []
     try:
         from core.photo_registry import PhotoRegistry
         photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
         sources_set = set()
+        collections_set = set()
         for photo_id in photo_registry._photos:
             source = photo_registry.get_source(photo_id)
             if source:
                 sources_set.add(source)
+            collection = photo_registry.get_collection(photo_id)
+            if collection:
+                collections_set.add(collection)
         existing_sources = sorted(sources_set)
+        existing_collections = sorted(collections_set)
     except FileNotFoundError:
         pass  # No photos yet
 
@@ -8180,7 +8384,7 @@ def get(sess=None):
                     cls="mb-6"
                 ),
                 # Upload form
-                upload_area(existing_sources=existing_sources),
+                upload_area(existing_sources=existing_sources, existing_collections=existing_collections),
                 cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
             cls="main-content min-h-screen"
@@ -8191,7 +8395,8 @@ def get(sess=None):
 
 
 @rt("/upload")
-async def post(files: list[UploadFile], source: str = "", sess=None):
+async def post(files: list[UploadFile], source: str = "", collection: str = "",
+               source_url: str = "", sess=None):
     """
     Accept file upload(s) and optionally spawn subprocess for processing.
     Requires login. Non-admin uploads go to moderation queue.
@@ -8216,7 +8421,9 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
 
     Args:
         files: Uploaded image files or ZIPs
-        source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
+        source: Provenance/origin label (e.g., "Newspapers.com")
+        collection: Classification label (e.g., "Immigration Records")
+        source_url: Citation URL (e.g., "https://newspapers.com/article/123")
 
     Returns HTML partial with upload status.
     """
@@ -8267,6 +8474,8 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
     metadata = {
         "job_id": job_id,
         "source": source or "Unknown",
+        "collection": collection or "",
+        "source_url": source_url or "",
         "files": saved_files,
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
         "processing_enabled": PROCESSING_ENABLED,
@@ -8283,6 +8492,8 @@ async def post(files: list[UploadFile], source: str = "", sess=None):
             "job_id": job_id,
             "uploader_email": uploader_email,
             "source": source or "Unknown",
+            "collection": collection or "",
+            "source_url": source_url or "",
             "files": saved_files,
             "file_count": len(saved_files),
             "submitted_at": datetime.now(timezone.utc).isoformat(),

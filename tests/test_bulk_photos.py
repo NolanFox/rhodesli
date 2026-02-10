@@ -74,16 +74,16 @@ class TestBulkUpdateSource:
             )
             assert response.status_code == 401
 
-    def test_requires_source(self, client):
-        """Empty source returns warning."""
+    def test_requires_at_least_one_field(self, client):
+        """Empty collection/source/source_url returns warning."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.post(
                 "/api/photos/bulk-update-source",
-                data={"photo_ids": '["id1"]', "source": ""},
+                data={"photo_ids": '["id1"]', "collection": "", "source": "", "source_url": ""},
                 headers={"HX-Request": "true"},
             )
             assert response.status_code == 200
-            assert "select a collection" in response.text.lower()
+            assert "provide collection" in response.text.lower()
 
     def test_requires_photo_ids(self, client):
         """Empty photo_ids returns warning."""
@@ -112,7 +112,7 @@ class TestBulkUpdateSource:
                 headers={"HX-Request": "true"},
             )
             assert response.status_code == 200
-            assert "Moved" in response.text
+            assert "Updated" in response.text
 
     def test_invalid_json_returns_error(self, client):
         """Invalid JSON for photo_ids returns error."""
