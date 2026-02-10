@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.14.1] - 2026-02-10
+
+### Fixed
+- **Clustering ignores skipped faces**: `cluster_new_faces.py` now includes SKIPPED identities (192 faces) as candidates alongside INBOX and PROPOSED. Previously reported "0 new proposals" for the largest pool of unresolved work.
+- **Lightbox face overlays not clickable**: Face overlays in the identity-card lightbox now have click handlers — clicking navigates to the identity's face card in the correct section.
+- **Identity links route to wrong section**: `neighbor_card`, `identity_card_mini`, and lightbox face overlays now route to the correct section based on identity state (confirmed/skipped/to_review/rejected) instead of hardcoding `section=to_review`.
+- **Footer stats exclude skipped**: Sidebar footer "X of Y identified" now includes skipped faces in denominator (was "23 of 23" → "23 of 215 identified").
+
+### Added
+- `_section_for_state()` helper in `app/main.py` — canonical mapping from identity state to sidebar section.
+- 9 new tests in `tests/test_skipped_faces.py` covering all 4 bugs.
+- Test count: 891 → 900
+
 ## [v0.14.0] - 2026-02-10
 
 ### Added

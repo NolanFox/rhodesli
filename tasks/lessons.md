@@ -235,3 +235,20 @@
 - **Observation**: Railway has its own copy of identities.json on the persistent volume. Local dev has a separate copy. Admin tagging on the live site does NOT update local data.
 - **Rule**: Every ML session MUST start with `python scripts/sync_from_production.py` to get fresh data.
 - **Prevention**: `scripts/full_ml_refresh.sh` runs sync as step 1. Never skip it.
+
+## Session 2026-02-10: Skipped Faces Fix
+
+### Lesson 44: "Skipped" is a deferral, not a resolution
+- **Mistake**: Clustering script only included INBOX and PROPOSED faces as candidates. SKIPPED faces (192 — the largest pool of unresolved work) were silently excluded. The script reported "0 candidates" while 192 faces remained unidentified.
+- **Rule**: SKIPPED means "I don't recognize this person right now." It is NOT a terminal state. ML pipelines, UI navigation, and stats must all treat skipped faces as active work items.
+- **Prevention**: When adding state-based filters, always list what's EXCLUDED (confirmed, dismissed, rejected) rather than what's included. The default should be to include faces, not exclude them.
+
+### Lesson 45: Every identity state must have a defined click behavior
+- **Mistake**: Lightbox face overlays were plain `<div>` elements for non-highlighted faces — no click handler, no cursor change. Confirmed faces worked because the main photo viewer had logic, but the lightbox used a simpler renderer that skipped interactivity.
+- **Rule**: Every face overlay in every view (photo viewer, lightbox, grid card) must have: (1) cursor-pointer, (2) a click handler appropriate for its state, (3) a tooltip showing the identity name.
+- **Prevention**: When creating a new face overlay rendering path, copy the interaction pattern from the canonical `_build_photo_view_content()`, don't simplify.
+
+### Lesson 46: Navigation links must derive section from identity state, not hardcode
+- **Mistake**: `neighbor_card` and `identity_card_mini` hardcoded `section=to_review` in all links. When skipped faces used Find Similar, clicking a neighbor routed to the empty Inbox instead of the skipped section.
+- **Rule**: Use `_section_for_state(identity.get("state"))` for all identity navigation links. Never hardcode a section.
+- **Prevention**: Created canonical `_section_for_state()` helper. Grep for `section=to_review` periodically to catch new hardcoded links.

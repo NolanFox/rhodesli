@@ -1,9 +1,9 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-10 (Session 6 — Sync Infrastructure)
+Last updated: 2026-02-10 (Session 7 — Skipped Faces Fix)
 
 ## Active Bugs
-- (none — all P0 bugs fixed through v0.12.1)
+- (none — skipped faces bugs fixed in v0.14.1)
 
 ## Setup Required (ONE TIME)
 - [ ] Generate sync token: `python scripts/generate_sync_token.py`
