@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.20.2] - 2026-02-10
+
+### Fixed
+- **Production Display Bugs (5 fixes)**: Traced from rendered HTML back to root causes
+  - **Photo count 124→126**: `embeddings.npy` was gitignored and never included in Docker bundles. Added to git tracking + `REQUIRED_DATA_FILES` for production sync.
+  - **Inbox "?" placeholder**: Focus card showed "?" when `main_photo_id` was None (stale embeddings). Now shows crop image when URL is resolvable even without photo link.
+  - **Quality 0.00**: Inbox crop filenames don't encode quality. Added `get_face_quality()` fallback to look up from embeddings cache.
+  - **"No similar identities"**: Fixed by syncing embeddings.npy to production.
+  - **Newspapers.com filter empty**: Fixed by syncing embeddings.npy (photos built from embeddings cache).
+- **Photo dimensions**: Backfilled width/height for 2 new staged photos in photo_index.json
+
+### Added
+- `get_face_quality()` helper — looks up face quality from embeddings cache for inbox crops
+- 9 regression tests for all 5 production display bugs
+- Test count: 1288 → 1297
+
 ## [v0.20.1] - 2026-02-10
 
 ### Fixed

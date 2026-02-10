@@ -288,3 +288,20 @@
 - **Mistake**: `test_rename_identity` used a try/finally to rename Victoria Cukran Capeluto to "Test Person Name" and back. The test "worked" but added 2 history entries and bumped version_id from 76 to 79 every run.
 - **Rule**: Don't use "rename and restore" patterns for test isolation. The side effects (history, version_id, updated_at) still accumulate. Use mock registries instead.
 - **Prevention**: Tests must use `MagicMock()` or in-memory registries with test data, never touch production registries.
+
+## Session 2026-02-10: Production HTML Verification
+
+### Lesson 53: Verify production bugs by fetching rendered HTML, not checking local data
+- **Mistake**: Multiple previous sessions claimed to fix production issues by checking local JSON files and API responses. But the live site still showed 5 bugs because the data never actually reached the production rendering pipeline.
+- **Rule**: For EVERY production fix, verification means `curl -s https://rhodesli.nolanandrewfox.com/[page] | grep [expected content]`. Checking local data files is necessary but NOT sufficient.
+- **Prevention**: Every deployment fix must end with HTML-based verification.
+
+### Lesson 54: ALL essential data files must be in BOTH git tracking AND REQUIRED_DATA_FILES
+- **Mistake**: `embeddings.npy` was gitignored (so not in Docker builds) AND not in `REQUIRED_DATA_FILES` (so not synced to volume). The init script had nothing to sync FROM.
+- **Rule**: For a data file to reach production: (1) it must be tracked in git (or the Docker image won't have it), (2) it must be in `REQUIRED_DATA_FILES` (or `_sync_essential_files` won't update the volume copy), (3) the init script must handle binary files correctly.
+- **Prevention**: Added `embeddings.npy` to `.gitignore` whitelist and `REQUIRED_DATA_FILES`. Any new data file for production needs BOTH.
+
+### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
+- **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
+- **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse → embeddings cache → default.
+- **Prevention**: `get_face_quality()` helper provides the fallback. `face_card()` now falls back to embeddings when filename parse returns 0.
