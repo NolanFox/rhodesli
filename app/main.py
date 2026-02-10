@@ -11258,6 +11258,87 @@ async def post(request):
     return {"removed": removed, "errors": errors, "count": len(removed)}
 
 
+# --- Push API (for pushing locally-processed data back to production) ---
+
+
+@rt("/api/sync/push")
+async def post(request):
+    """Push updated identities.json and/or photo_index.json to production.
+
+    Accepts JSON body with keys:
+        identities: full identities.json content (optional)
+        photo_index: full photo_index.json content (optional)
+
+    Creates timestamped backups before overwriting.
+    Protected by sync token (same as pull endpoints).
+    """
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    import shutil
+    import time
+
+    body = await request.json()
+
+    if not body.get("identities") and not body.get("photo_index"):
+        return Response(
+            "Must provide 'identities' and/or 'photo_index' in request body",
+            status_code=400,
+        )
+
+    results = {}
+    ts = int(time.time())
+
+    # Push identities.json
+    if body.get("identities"):
+        identities_data = body["identities"]
+        # Basic validation: must have identities key or be a dict of identities
+        if not isinstance(identities_data, dict):
+            return Response("identities must be a JSON object", status_code=400)
+
+        fpath = data_path / "identities.json"
+        backup_path = data_path / f"identities.json.bak.{ts}"
+
+        if fpath.exists():
+            shutil.copy2(fpath, backup_path)
+
+        with open(fpath, "w") as f:
+            json.dump(identities_data, f, indent=2)
+
+        # Count what we received
+        id_data = identities_data.get("identities", identities_data)
+        results["identities"] = {
+            "status": "written",
+            "count": len(id_data),
+            "backup": backup_path.name,
+        }
+
+    # Push photo_index.json
+    if body.get("photo_index"):
+        photo_data = body["photo_index"]
+        if not isinstance(photo_data, dict):
+            return Response("photo_index must be a JSON object", status_code=400)
+
+        fpath = data_path / "photo_index.json"
+        backup_path = data_path / f"photo_index.json.bak.{ts}"
+
+        if fpath.exists():
+            shutil.copy2(fpath, backup_path)
+
+        with open(fpath, "w") as f:
+            json.dump(photo_data, f, indent=2)
+
+        photos = photo_data.get("photos", {})
+        results["photo_index"] = {
+            "status": "written",
+            "count": len(photos),
+            "backup": backup_path.name,
+        }
+
+    return {"status": "ok", "results": results, "timestamp": ts}
+
+
 # =============================================================================
 # ROUTES - MATCH MODE (Gamified Pairing)
 # =============================================================================
