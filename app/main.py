@@ -2020,18 +2020,10 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             if (nextId) url += '&next_id=' + nextId;
             htmx.ajax('GET', url, {{target:'#photo-modal-content', swap:'innerHTML'}});
         }}
-        (function() {{
-            function kh(e) {{
-                var modal = document.getElementById('photo-modal');
-                if (!modal || modal.classList.contains('hidden')) return;
-                if (e.key === 'ArrowLeft') {{ photoNavTo(window._photoNavIdx - 1); e.preventDefault(); }}
-                else if (e.key === 'ArrowRight') {{ photoNavTo(window._photoNavIdx + 1); e.preventDefault(); }}
-                else if (e.key === 'Escape') {{ modal.classList.add('hidden'); }}
-            }}
-            if (window._photoNavKb) document.removeEventListener('keydown', window._photoNavKb);
-            window._photoNavKb = kh;
-            document.addEventListener('keydown', kh);
-        }})();
+        // NOTE: Keyboard navigation is handled by the global event delegation
+        // handler (data-action dispatch on document). Do NOT add a per-script
+        // keydown listener here — it would double-fire with the global one,
+        // causing 2 navigations per key press. (BUG-006 fix)
         // Touch swipe for photo modal navigation
         (function() {{
             var mc = document.getElementById('photo-modal-content');

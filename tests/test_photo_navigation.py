@@ -516,7 +516,12 @@ class TestPhotosGridNavScript:
     @patch("app.main.get_identity_for_face", return_value=None)
     @patch("app.main.photo_url", side_effect=lambda f: f"/photos/{f}")
     def test_photos_section_includes_nav_script(self, mock_url, mock_id, mock_cache):
-        """Photos section embeds JS with photo ID list for keyboard navigation."""
+        """Photos section embeds JS with photo ID list and photoNavTo function.
+
+        NOTE: Keyboard handling (ArrowLeft/ArrowRight) is in the global
+        delegation handler, NOT in the per-section script. This prevents
+        double-fire bugs (BUG-006).
+        """
         from app.main import render_photos_section, to_xml
 
         registry = MagicMock()
@@ -526,5 +531,3 @@ class TestPhotosGridNavScript:
 
         assert "window._photoNavIds" in html
         assert "photoNavTo" in html
-        assert "ArrowLeft" in html
-        assert "ArrowRight" in html
