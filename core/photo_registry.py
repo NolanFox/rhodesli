@@ -141,7 +141,7 @@ class PhotoRegistry:
 
         valid_keys = {
             "date_taken", "date_estimate", "location", "caption",
-            "occasion", "photographer", "donor", "notes",
+            "occasion", "photographer", "donor", "notes", "camera",
         }
         for key, value in metadata.items():
             if key in valid_keys:
@@ -232,8 +232,14 @@ class PhotoRegistry:
 
         path = Path(path)
 
-        with open(path) as f:
-            data = json.load(f)
+        try:
+            with open(path) as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            logger.error(f"PhotoRegistry: corrupted JSON in {path}: {e}")
+            raise ValueError(
+                f"PhotoRegistry file is corrupted ({path}): {e}"
+            ) from e
 
         if data.get("schema_version") != 1:
             raise ValueError(
@@ -241,23 +247,29 @@ class PhotoRegistry:
                 f"got {data.get('schema_version')}"
             )
 
-        registry = cls()
+        try:
+            registry = cls()
 
-        # Restore photos with face_ids as sets, preserve metadata fields
-        for photo_id, photo_data in data["photos"].items():
-            entry = {
-                "path": photo_data["path"],
-                "face_ids": set(photo_data["face_ids"]),
-                "source": photo_data.get("source", ""),  # Backward compatible
-            }
-            # Restore all extra metadata fields (BE-012)
-            for key, value in photo_data.items():
-                if key not in ("path", "face_ids", "source"):
-                    entry[key] = value
-            registry._photos[photo_id] = entry
+            # Restore photos with face_ids as sets, preserve metadata fields
+            for photo_id, photo_data in data["photos"].items():
+                entry = {
+                    "path": photo_data["path"],
+                    "face_ids": set(photo_data["face_ids"]),
+                    "source": photo_data.get("source", ""),  # Backward compatible
+                }
+                # Restore all extra metadata fields (BE-012)
+                for key, value in photo_data.items():
+                    if key not in ("path", "face_ids", "source"):
+                        entry[key] = value
+                registry._photos[photo_id] = entry
 
-        # Restore face_to_photo mapping
-        registry._face_to_photo = data["face_to_photo"]
+            # Restore face_to_photo mapping
+            registry._face_to_photo = data["face_to_photo"]
+        except KeyError as e:
+            logger.error(f"PhotoRegistry: missing required key {e} in {path}")
+            raise ValueError(
+                f"PhotoRegistry file is missing required key {e} ({path})"
+            ) from e
 
         logger.info(f"PhotoRegistry loaded from {path} ({len(registry._photos)} photos, {len(registry._face_to_photo)} faces)")
 

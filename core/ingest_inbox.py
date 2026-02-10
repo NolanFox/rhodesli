@@ -386,6 +386,32 @@ def process_single_image(
 
     photo_registry.save(photo_index_path)
 
+    # Extract EXIF metadata and store on the photo record
+    try:
+        from core.exif import extract_exif
+
+        exif_data = extract_exif(filepath)
+        if exif_data:
+            exif_metadata = {}
+            if "date_taken" in exif_data:
+                exif_metadata["date_taken"] = exif_data["date_taken"]
+            if "camera" in exif_data:
+                exif_metadata["camera"] = exif_data["camera"]
+            if "gps_lat" in exif_data and "gps_lon" in exif_data:
+                exif_metadata["location"] = (
+                    f"{exif_data['gps_lat']}, {exif_data['gps_lon']}"
+                )
+            if exif_metadata:
+                photo_registry.set_metadata(photo_id, exif_metadata)
+                photo_registry.save(photo_index_path)
+                logger.info(
+                    f"EXIF metadata stored for {filepath.name}: "
+                    f"{list(exif_metadata.keys())}"
+                )
+    except Exception as e:
+        # EXIF extraction is best-effort — never fail ingestion for it
+        logger.debug(f"EXIF extraction skipped for {filepath.name}: {e}")
+
     # Create INBOX identities
     try:
         identity_registry = IdentityRegistry.load(identity_path)
