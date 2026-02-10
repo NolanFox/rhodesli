@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.20.3] - 2026-02-10
+
+### Fixed
+- **Keyboard shortcuts ignore modifier keys**: Cmd+R no longer triggers Reject; added metaKey/ctrlKey/altKey guard to global keydown handler
+- **Upload feedback**: Admin uploads on production now show clear success panel with collection/source info and link to Pending Uploads
+- **Pending uploads visibility**: Admin uploads on production now create "staged" entries in pending_uploads.json — appear on Pending Uploads page with badge count
+
+### Added
+- 12 new Nace Capeluto Tampa Collection photos processed (45 faces detected, 14 match proposals)
+- Staged upload status type for admin uploads on production
+- 2 new tests (modifier keys, staged admin upload, pending page staged items)
+- Test count: 1297 → 1299 | Photos: 126 → 138 | Faces: 375 → 420
+
 ## [v0.20.2] - 2026-02-10
 
 ### Fixed
