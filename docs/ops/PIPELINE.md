@@ -37,7 +37,7 @@ python scripts/process_uploads.py --auto
 | 3. ML Processing | Runs face detection and embedding generation on new photos | `core.ingest_inbox` |
 | 4. Clustering | Finds matches against confirmed identities (always pauses for review) | `cluster_new_faces.py` |
 | 5. R2 Upload | Uploads new photos and face crops to Cloudflare R2 | `upload_to_r2.py` |
-| 6. Push Data | Pushes updated identities.json and photo_index.json to production | `push_to_production.py` |
+| 6. Push Data | Commits data files and git pushes to trigger Railway redeploy | `push_to_production.py` |
 | 7. Clear Staging | Removes processed files from production staging area | `download_staged.py --clear-after` |
 
 ---

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "annotations": {
+    "ann-approved": {
+      "annotation_id": "ann-approved",
+      "type": "name_suggestion",
+      "target_type": "identity",
+      "target_id": "target-id",
+      "value": "Victoria",
+      "confidence": "certain",
+      "reason": "",
+      "submitted_by": "user@test.com",
+      "submitted_at": "2026-02-10T00:00:00Z",
+      "status": "approved",
+      "reviewed_by": "admin@test.com",
+      "reviewed_at": "2026-02-10T01:00:00Z"
+    },
+    "3dfa9a0d-24c1-47ad-99ea-26dcc767453f": {
+      "annotation_id": "3dfa9a0d-24c1-47ad-99ea-26dcc767453f",
+      "type": "merge_suggestion",
+      "target_type": "identity",
+      "target_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "value": "{\"source_id\": \"28cc579b-512c-4b4f-98f9-a5479ed43a09\", \"target_id\": \"2cf08b25-075c-41a8-a20d-d03686aafd06\"}",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "anonymous",
+      "submitted_at": "2026-02-10T22:16:57.251015+00:00",
+      "status": "pending",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "922bed79-75b8-4859-b6e6-e57d1084a966": {
+      "annotation_id": "922bed79-75b8-4859-b6e6-e57d1084a966",
+      "type": "merge_suggestion",
+      "target_type": "identity",
+      "target_id": "target-123",
+      "value": "{\"source_id\": \"source-456\", \"target_id\": \"target-123\"}",
+      "confidence": "likely",
+      "reason": "They look similar",
+      "submitted_by": "test@test.com",
+      "submitted_at": "2026-02-10T22:16:57.263298+00:00",
+      "status": "pending",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "a4a5a7f6-f0a3-492a-9e19-8f1588abe052": {
+      "annotation_id": "a4a5a7f6-f0a3-492a-9e19-8f1588abe052",
+      "type": "merge_suggestion",
+      "target_type": "identity",
+      "target_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "value": "{\"source_id\": \"28cc579b-512c-4b4f-98f9-a5479ed43a09\", \"target_id\": \"2cf08b25-075c-41a8-a20d-d03686aafd06\"}",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "test@test.com",
+      "submitted_at": "2026-02-10T22:16:57.465746+00:00",
+      "status": "pending",
+      "reviewed_by": null,
+      "reviewed_at": null
+    },
+    "21916ef8-e975-4c7b-a04b-41c9ee0da82d": {
+      "annotation_id": "21916ef8-e975-4c7b-a04b-41c9ee0da82d",
+      "type": "merge_suggestion",
+      "target_type": "identity",
+      "target_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "value": "{\"source_id\": \"28cc579b-512c-4b4f-98f9-a5479ed43a09\", \"target_id\": \"2cf08b25-075c-41a8-a20d-d03686aafd06\"}",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "test@test.com",
+      "submitted_at": "2026-02-10T22:16:57.481227+00:00",
+      "status": "approved",
+      "reviewed_by": "admin",
+      "reviewed_at": "2026-02-10T22:16:57.483763+00:00"
+    }
+  }
+}

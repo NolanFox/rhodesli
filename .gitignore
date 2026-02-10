@@ -41,10 +41,6 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Large data files (embeddings)
-data/*.npy
-data/*.db
-
 # OS
 .DS_Store
 Thumbs.db
@@ -53,37 +49,26 @@ Thumbs.db
 *.log
 
 # --- AI & Genealogy Project Specifics ---
-# Ignore all raw photos to prevent "RPC failed" errors
+
+# Raw photos (too large for git)
 raw_photos/*
-# Keep the folder structure on GitHub, but not the images
 !raw_photos/.gitkeep
 
-# Ignore large ML data files
-data/*.npy
-data/*.db
-
-# Generated face crops (regenerate with: python core/crop_faces.py)
-app/static/crops/*.jpg.sesskey
+# Generated face crops
 app/static/crops/
 .sesskey
-data/*.json
-data/*.lock
-data/backups/
+
+# Data directory: ignore everything, then whitelist essentials
+data/*
+# Essential deployment files (tracked in git for Railway)
+!data/.gitkeep
+!data/identities.json
+!data/photo_index.json
+!data/annotations.json
+!data/file_hashes.json
+!data/golden_set.json
 
 # Scientific Instrumentation Runtime
-data/current_run_id.txt
 logs/
 evaluation/run_log.jsonl
 uploads/
-app/static/crops/
-data/embeddings.npy
-data/registry.json
-data/inbox/
-data/uploads/
-data/staging/
-data/cleanup_backups/
-data/.initialized
-data/photo_index.json.bak
-data/*.bak.*
-data/*.bak.*
-data/*.preflight

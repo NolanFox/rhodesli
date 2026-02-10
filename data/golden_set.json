@@ -1,0 +1,762 @@
+{
+  "version": 1,
+  "created_at": "2026-02-10T05:22:12.150995+00:00",
+  "description": "Ground truth face-to-identity mappings from confirmed identities",
+  "mappings": [
+    {
+      "face_id": "inbox_41be72d02213",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_5fe924cc7312",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_b83a54f77681",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_f8f9e756c2f1",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_22727c6fa23b",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_d743d5617ed3",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_17c9782e14c6",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_239bd7e40c01",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_3ef6ffeae1e6",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_9e1bd5920f3a",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "Image 923_compress:face1",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 929_compress:face0",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 924_compress:face4",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 928_compress:face2",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 930_compress:face3",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 922_compress:face0",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "603569530.803296 (1):face0",
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 037_compress:face0",
+      "identity_id": "35f38086-bc81-412e-9470-93a3d04b40d5",
+      "identity_name": "Rosa Sedikaro",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 956_compress:face0",
+      "identity_id": "35f38086-bc81-412e-9470-93a3d04b40d5",
+      "identity_name": "Rosa Sedikaro",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 037_compress:face1",
+      "identity_id": "5a72fba6-6a9f-4be5-bc2d-688a38de0555",
+      "identity_name": "Sol Sedikaro",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "inbox_b8349a40998b",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_7a8a10d192e0",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_8233584e7a32",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_691f8bc05a58",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_59795e83f750",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "Image 923_compress:face4",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 928_compress:face3",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 929_compress:face1",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 924_compress:face5",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 930_compress:face5",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 001_compress:face0",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 026_compress:face0",
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 917_compress:face1",
+      "identity_id": "fa0152dd-a2eb-4044-b70b-fdb10a61d18b",
+      "identity_name": "Arlene Kessler Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 917_compress:face0",
+      "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "identity_name": "Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 986_compress:face0",
+      "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "identity_name": "Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 920_compress:face1",
+      "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "identity_name": "Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 921_compress:face0",
+      "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "identity_name": "Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 962_compress:face1",
+      "identity_id": "e955bef9-8456-4870-8642-9ff68554f707",
+      "identity_name": "Matilda Tillie Moussafer Louza",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 962_compress:face0",
+      "identity_id": "8b98cc1a-026c-4663-b335-87b462a5d646",
+      "identity_name": "Isaac Louza",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "596771324.500867:face1",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "identity_name": "Selma Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 983_compress:face6",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "identity_name": "Selma Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face9",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "identity_name": "Selma Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 978_compress:face0",
+      "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "identity_name": "Betty Capeluto Fox",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 983_compress:face2",
+      "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "identity_name": "Betty Capeluto Fox",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 983_compress:face1",
+      "identity_id": "1547d786-4349-41ed-abb4-02e63b2ba313",
+      "identity_name": "Anita Capeluto Franco",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face2",
+      "identity_id": "1547d786-4349-41ed-abb4-02e63b2ba313",
+      "identity_name": "Anita Capeluto Franco",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 024_compress:face0",
+      "identity_id": "35963375-7f31-482f-89da-908cf115aa61",
+      "identity_name": "Abraham Moussafer",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 912_compress:face0",
+      "identity_id": "553cb710-eb89-4fce-8169-8eb25dde285a",
+      "identity_name": "Morris Mazal",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 948_compress:face2",
+      "identity_id": "553cb710-eb89-4fce-8169-8eb25dde285a",
+      "identity_name": "Morris Mazal",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 983_compress:face0",
+      "identity_id": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "identity_name": "Nace Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face6",
+      "identity_id": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "identity_name": "Nace Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "inbox_209af5bffddc",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_98e4a65502b3",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_e581364d9e28",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "Image 032_compress:face0",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 039_compress:face0",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face5",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "603569530.803296 (1):face1",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 980_compress:face0",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 983_compress:face3",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 961_compress:face0",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 031_compress:face0",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 978_compress:face1",
+      "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+      "identity_name": "Roland Fox",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "inbox_acff04fd8c48",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_9ad05c2fe404",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_e57332256894",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_96aab0451fc0",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_7dac7a474419",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_8c2472e103aa",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "596771324.500867:face0",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "603569530.803296 (1):face3",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 980_compress:face1",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 983_compress:face4",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face7",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "757557325.971675:face0",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 964_compress:face1",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 992_compress:face0",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Brass_Rail_Restaurant_with_Leon_Capeluto_Picture:face0",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 032_compress:face1",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 039_compress:face1",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 031_compress:face1",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 922_compress:face1",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 923_compress:face2",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 924_compress:face3",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 927_compress:face0",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 928_compress:face1",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 930_compress:face2",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 001_compress:face2",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 932_compress:face7",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 933_compress:face0",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 948_compress:face8",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 968_compress:face11",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 969_compress:face3",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 972_compress:face12",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 975_compress:face3",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face1",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "identity_name": "Vida Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 007_compress:face0",
+      "identity_id": "58565113-b749-4f0f-a75b-994b725a1248",
+      "identity_name": "Esther Brenda Israel",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 951_compress:face0",
+      "identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
+      "identity_name": "Rica Moussafer Pizante",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "inbox_847f0c97be49",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_1b81c4ae42d2",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_ed0f53e3087c",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_b41d713437f9",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_f554b2a8d0fb",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_b54c466dde94",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_c6ec1ebc4d1d",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_cb9a9683e540",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_9ad3be48d89d",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_93205568b261",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "inbox_93dcfe2afde2",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_anchor"
+    },
+    {
+      "face_id": "603569530.803296 (1):face2",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face0",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 923_compress:face0",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 924_compress:face0",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 927_compress:face1",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 928_compress:face0",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 930_compress:face4",
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 001_compress:face1",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "identity_name": "Victor Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 028_compress:face5",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "identity_name": "Victor Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 969_compress:face2",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "identity_name": "Victor Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 972_compress:face2",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "identity_name": "Victor Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face4",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "identity_name": "Victor Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 969_compress:face1",
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "identity_name": "Laura Franco Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 972_compress:face11",
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "identity_name": "Laura Franco Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 984_compress:face8",
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "identity_name": "Laura Franco Capelluto",
+      "source": "confirmed_candidate"
+    },
+    {
+      "face_id": "Image 028_compress:face2",
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "identity_name": "Laura Franco Capelluto",
+      "source": "confirmed_candidate"
+    }
+  ],
+  "stats": {
+    "total_mappings": 125,
+    "unique_identities": 23,
+    "unique_photos": 42
+  }
+}

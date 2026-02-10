@@ -11545,6 +11545,11 @@ async def post(request):
             "backup": backup_path.name,
         }
 
+    # Invalidate in-memory caches so subsequent requests see the new data
+    global _photo_registry_cache, _face_data_cache
+    _photo_registry_cache = None
+    _face_data_cache = None
+
     return {"status": "ok", "results": results, "timestamp": ts}
 
 
