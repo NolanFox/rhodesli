@@ -528,13 +528,28 @@ class IdentityRegistry:
         target["version_id"] += 1
         target["updated_at"] = now
 
-        # Record merge_history on target for undo capability
+        # Record merge_history on target for undo capability (BE-005: full audit)
         merge_history_entry = {
             "merge_event_id": str(uuid.uuid4()),
             "timestamp": now,
             "source_id": actual_source_id,
             "source_name": source.get("name"),
             "source_state": source.get("state"),
+            "source_snapshot": {
+                "anchor_ids": list(source.get("anchor_ids", [])),
+                "candidate_ids": list(source.get("candidate_ids", [])),
+                "negative_ids": list(source.get("negative_ids", [])),
+                "name": source.get("name"),
+                "state": source.get("state"),
+                "first_name": source.get("first_name", ""),
+                "last_name": source.get("last_name", ""),
+            },
+            "target_snapshot_before": {
+                "anchor_count": len(target.get("anchor_ids", [])) - len(anchors_added),
+                "candidate_count": len(target.get("candidate_ids", [])) - len(candidates_added),
+                "name": target.get("name"),
+                "state": target.get("state"),
+            },
             "faces_added": {
                 "anchors": anchors_added,
                 "candidates": candidates_added,

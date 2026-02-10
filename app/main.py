@@ -6397,6 +6397,9 @@ def post(target_id: str, source_id: str, source: str = "web",
     actual_target_id = result["target_id"]
     actual_source_id = result["source_id"]
 
+    # BE-006: Retarget annotations from source to target
+    _merge_annotations(actual_source_id, actual_target_id)
+
     crop_files = get_crop_files()
     updated_identity = registry.get_identity(actual_target_id)
     target_name = ensure_utf8_display(updated_identity.get("name")) or "identity"
@@ -9446,6 +9449,26 @@ def _invalidate_annotations_cache():
     """Clear annotations cache after write."""
     global _annotations_cache
     _annotations_cache = None
+
+
+def _merge_annotations(source_id: str, target_id: str):
+    """
+    BE-006: When identities merge, retarget annotations from source to target.
+    Annotations that targeted the source identity are updated to point at the target.
+    This preserves contributor work across merges.
+    """
+    try:
+        annotations = _load_annotations()
+        changed = False
+        for ann in annotations.get("annotations", {}).values():
+            if ann.get("target_type") == "identity" and ann.get("target_id") == source_id:
+                ann["target_id"] = target_id
+                changed = True
+        if changed:
+            _save_annotations(annotations)
+    except Exception:
+        # Non-critical — don't block the merge
+        pass
 
 
 @rt("/api/annotations/submit")
