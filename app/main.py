@@ -1126,8 +1126,8 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
 
     stat_items = [
         ("To Review", to_review, "/?section=to_review&view=focus", "text-amber-400"),
-        ("Confirmed", confirmed, "/?section=confirmed", "text-emerald-400"),
-        ("Skipped", skipped, "/?section=skipped", "text-yellow-400"),
+        ("People", confirmed, "/?section=confirmed", "text-emerald-400"),
+        ("Needs Help", skipped, "/?section=skipped", "text-yellow-400"),
     ]
     if proposals > 0:
         stat_items.append(("Proposals", proposals, "/admin/proposals", "text-blue-400"))
@@ -1283,7 +1283,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=to_review", "📥", "Inbox", counts["to_review"], "to_review", "blue"),
-                nav_item("/?section=skipped", "⏸", "Skipped", counts["skipped"], "skipped", "yellow"),
+                nav_item("/?section=skipped", "❓", "Needs Help", counts["skipped"], "skipped", "yellow"),
                 cls="mb-3"
             ),
             # Library Section
@@ -1292,7 +1292,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     "Library",
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
-                nav_item("/?section=confirmed", "✓", "Confirmed", counts["confirmed"], "confirmed", "green"),
+                nav_item("/?section=confirmed", "✓", "People", counts["confirmed"], "confirmed", "green"),
                 nav_item("/?section=rejected", "🗑️", "Dismissed", counts["rejected"], "rejected", "gray"),
                 cls="mb-3"
             ),
@@ -1817,14 +1817,14 @@ def render_to_review_section(
             content = Div(*cards)
         else:
             content = Div(
-                "No items to review.",
+                "All caught up! No new faces to review right now.",
                 cls="text-center py-12 text-slate-400"
             )
 
     # Build header with optional sort controls (browse mode only)
     header = section_header(
         "Inbox",
-        f"{counts['to_review']} items need your attention",
+        f"{counts['to_review']} items need your attention \u2014 faces the AI has detected but no one has identified yet",
         view_mode=view_mode,
         section="to_review"
     )
@@ -1882,13 +1882,13 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
         content = Div(*cards)
     else:
         content = Div(
-            "No confirmed identities yet.",
+            "No confirmed identities yet. Browse the inbox to help identify faces.",
             cls="text-center py-12 text-slate-400"
         )
 
     return Div(
         Div(
-            section_header("Confirmed", f"{counts['confirmed']} people identified"),
+            section_header("People", f"{counts['confirmed']} identified \u2014 click anyone to see all their photos"),
             _sort_control("confirmed", sort_by),
             cls="flex items-center justify-between flex-wrap gap-2 mb-6"
         ),
@@ -1918,12 +1918,12 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict, is_admi
         content = Div(*cards)
     else:
         content = Div(
-            "No skipped items.",
+            "No unresolved faces right now. Check the inbox for new arrivals.",
             cls="text-center py-12 text-slate-400"
         )
 
     return Div(
-        section_header("Skipped", f"{counts['skipped']} items deferred"),
+        section_header("Needs Help", f"{counts['skipped']} faces we haven't been able to identify yet \u2014 your family knowledge could be the key"),
         content,
         cls="space-y-6"
     )
@@ -1941,7 +1941,7 @@ def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_a
         content = Div(*cards)
     else:
         content = Div(
-            "No dismissed items.",
+            "No dismissed items. Rejected matches will appear here.",
             cls="text-center py-12 text-slate-400"
         )
 
@@ -4879,7 +4879,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 cls="w-5 h-5", fill="none", stroke="currentColor", viewBox="0 0 24 24",
                 stroke_width="2", stroke_linecap="round", stroke_linejoin="round",
             ),
-            Span("Confirmed", cls="text-[10px]"),
+            Span("People", cls="text-[10px]"),
             href="/?section=confirmed&view=browse",
             cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
                 f"{'text-emerald-400' if section == 'confirmed' else 'text-slate-400 hover:text-slate-200'}",

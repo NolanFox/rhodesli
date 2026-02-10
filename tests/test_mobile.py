@@ -151,11 +151,11 @@ class TestMobileBottomTabs:
         assert 'id="mobile-tabs"' in response.text
 
     def test_bottom_tabs_has_four_links(self, client):
-        """Bottom tabs have Photos, Confirmed, Inbox, Search links."""
+        """Bottom tabs have Photos, People, Inbox, Search links."""
         response = client.get(WORKSTATION_URL)
         text = response.text
         assert "Photos" in text
-        assert "Confirmed" in text
+        assert "People" in text
         assert "Inbox" in text
         assert "Search" in text
 
