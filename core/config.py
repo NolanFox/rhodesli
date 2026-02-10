@@ -46,6 +46,10 @@ else:
 # Set to False in production (Railway) where ML deps aren't installed
 PROCESSING_ENABLED = os.getenv("PROCESSING_ENABLED", "true").lower() == "true"
 
+# Sync API token for machine-to-machine data sync (scripts/sync_from_production.py)
+# Set on both Railway and local .env. Empty string = sync API disabled.
+SYNC_API_TOKEN = os.getenv("RHODESLI_SYNC_TOKEN", "")
+
 # =============================================================================
 # Recognition Thresholds (calibrated values - do not change without evaluation)
 # Source: AD-013 Threshold Calibration (2026-02-09)

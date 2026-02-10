@@ -84,3 +84,4 @@ data/staging/
 data/cleanup_backups/
 data/.initialized
 data/photo_index.json.bak
+data/*.bak.*

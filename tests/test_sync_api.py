@@ -1,0 +1,155 @@
+"""Tests for sync API endpoints.
+
+Tests the permission matrix and response format for:
+- GET /api/sync/status (public)
+- GET /api/sync/identities (token-authenticated)
+- GET /api/sync/photo-index (token-authenticated)
+"""
+
+import json
+
+import pytest
+from unittest.mock import patch
+
+
+# ---------------------------------------------------------------------------
+# /api/sync/status — public, no auth needed
+# ---------------------------------------------------------------------------
+
+class TestSyncStatus:
+    """Status endpoint is public and returns data stats."""
+
+    def test_status_returns_200(self, client):
+        """Status endpoint is accessible without any auth."""
+        response = client.get("/api/sync/status")
+        assert response.status_code == 200
+
+    def test_status_contains_expected_fields(self, client):
+        """Status response includes identity and photo counts."""
+        response = client.get("/api/sync/status")
+        data = response.json()
+        assert "identities" in data
+        assert "confirmed" in data
+        assert "proposed" in data
+        assert "inbox" in data
+        assert "photos" in data
+        assert "timestamp" in data
+
+    def test_status_works_with_auth_enabled(self, client, auth_enabled, no_user):
+        """Status endpoint works even when auth is enabled and no user is logged in."""
+        response = client.get("/api/sync/status")
+        assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# /api/sync/identities — requires valid RHODESLI_SYNC_TOKEN
+# ---------------------------------------------------------------------------
+
+class TestSyncIdentities:
+    """Identities endpoint requires a valid sync token."""
+
+    def test_rejects_without_token(self, client):
+        """Request without Authorization header gets 401."""
+        with patch("app.main.SYNC_API_TOKEN", "valid-token"):
+            response = client.get("/api/sync/identities")
+        assert response.status_code == 401
+
+    def test_rejects_wrong_token(self, client):
+        """Request with wrong token gets 401."""
+        with patch("app.main.SYNC_API_TOKEN", "valid-token"):
+            response = client.get(
+                "/api/sync/identities",
+                headers={"Authorization": "Bearer wrong-token"},
+            )
+        assert response.status_code == 401
+
+    def test_returns_503_when_token_not_configured(self, client):
+        """When RHODESLI_SYNC_TOKEN is empty, returns 503."""
+        with patch("app.main.SYNC_API_TOKEN", ""):
+            response = client.get(
+                "/api/sync/identities",
+                headers={"Authorization": "Bearer some-token"},
+            )
+        assert response.status_code == 503
+
+    def test_returns_data_with_valid_token(self, client, tmp_path):
+        """Valid token returns identities JSON."""
+        test_data = {
+            "schema_version": 1,
+            "identities": {"id-1": {"name": "Test Person", "state": "CONFIRMED"}},
+        }
+        (tmp_path / "identities.json").write_text(json.dumps(test_data))
+
+        with patch("app.main.SYNC_API_TOKEN", "test-token-123"), \
+             patch("app.main.data_path", tmp_path):
+            response = client.get(
+                "/api/sync/identities",
+                headers={"Authorization": "Bearer test-token-123"},
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["schema_version"] == 1
+        assert "id-1" in data["identities"]
+
+    def test_returns_404_when_file_missing(self, client, tmp_path):
+        """Returns 404 when identities.json doesn't exist."""
+        with patch("app.main.SYNC_API_TOKEN", "test-token-123"), \
+             patch("app.main.data_path", tmp_path):
+            response = client.get(
+                "/api/sync/identities",
+                headers={"Authorization": "Bearer test-token-123"},
+            )
+        assert response.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# /api/sync/photo-index — requires valid RHODESLI_SYNC_TOKEN
+# ---------------------------------------------------------------------------
+
+class TestSyncPhotoIndex:
+    """Photo index endpoint requires a valid sync token."""
+
+    def test_rejects_without_token(self, client):
+        """Request without Authorization header gets 401."""
+        with patch("app.main.SYNC_API_TOKEN", "valid-token"):
+            response = client.get("/api/sync/photo-index")
+        assert response.status_code == 401
+
+    def test_rejects_wrong_token(self, client):
+        """Request with wrong token gets 401."""
+        with patch("app.main.SYNC_API_TOKEN", "valid-token"):
+            response = client.get(
+                "/api/sync/photo-index",
+                headers={"Authorization": "Bearer wrong-token"},
+            )
+        assert response.status_code == 401
+
+    def test_returns_data_with_valid_token(self, client, tmp_path):
+        """Valid token returns photo index JSON."""
+        test_data = {
+            "schema_version": 1,
+            "photos": {"photo-1": {"path": "test.jpg", "face_ids": []}},
+            "face_to_photo": {},
+        }
+        (tmp_path / "photo_index.json").write_text(json.dumps(test_data))
+
+        with patch("app.main.SYNC_API_TOKEN", "test-token-123"), \
+             patch("app.main.data_path", tmp_path):
+            response = client.get(
+                "/api/sync/photo-index",
+                headers={"Authorization": "Bearer test-token-123"},
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert "photos" in data
+        assert "photo-1" in data["photos"]
+
+    def test_returns_404_when_file_missing(self, client, tmp_path):
+        """Returns 404 when photo_index.json doesn't exist."""
+        with patch("app.main.SYNC_API_TOKEN", "test-token-123"), \
+             patch("app.main.data_path", tmp_path):
+            response = client.get(
+                "/api/sync/photo-index",
+                headers={"Authorization": "Bearer test-token-123"},
+            )
+        assert response.status_code == 404

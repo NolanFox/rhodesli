@@ -44,6 +44,7 @@ from core.config import (
     PROCESSING_ENABLED,
     DATA_DIR,
     PHOTOS_DIR,
+    SYNC_API_TOKEN,
 )
 from core.ui_safety import ensure_utf8_display
 from core import storage
@@ -8742,6 +8743,73 @@ def get(sess=None):
         media_type="application/zip",
         headers={"Content-Disposition": "attachment; filename=rhodesli-data-export.zip"},
     )
+
+
+# --- Sync API Endpoints (token-authenticated, for scripts/sync_from_production.py) ---
+
+def _check_sync_token(request):
+    """Validate Bearer token for sync API. Returns None if valid, Response if not."""
+    if not SYNC_API_TOKEN:
+        return Response("Sync API not configured (RHODESLI_SYNC_TOKEN not set)", status_code=503)
+    auth_header = request.headers.get("authorization", "")
+    token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+    if token != SYNC_API_TOKEN:
+        return Response("Unauthorized", status_code=401)
+    return None
+
+
+@rt("/api/sync/status")
+def get(request):
+    """Public endpoint — shows data stats without requiring auth."""
+    registry = load_registry()
+    identities = registry.list_identities()
+    confirmed = sum(1 for i in identities if i.get("state") == "CONFIRMED")
+    proposed = sum(1 for i in identities if i.get("state") == "PROPOSED")
+    inbox = sum(1 for i in identities if i.get("state") == "INBOX")
+
+    photo_count = 0
+    photo_index_path = data_path / "photo_index.json"
+    if photo_index_path.exists():
+        with open(photo_index_path) as f:
+            index = json.load(f)
+            photo_count = len(index.get("photos", {}))
+
+    return {
+        "identities": len(identities),
+        "confirmed": confirmed,
+        "proposed": proposed,
+        "inbox": inbox,
+        "photos": photo_count,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+@rt("/api/sync/identities")
+def get(request):
+    """Download identities.json via sync token. For scripts/sync_from_production.py."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+    fpath = data_path / "identities.json"
+    if not fpath.exists():
+        return Response("File not found", status_code=404)
+    with open(fpath) as f:
+        data = json.load(f)
+    return data
+
+
+@rt("/api/sync/photo-index")
+def get(request):
+    """Download photo_index.json via sync token. For scripts/sync_from_production.py."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+    fpath = data_path / "photo_index.json"
+    if not fpath.exists():
+        return Response("File not found", status_code=404)
+    with open(fpath) as f:
+        data = json.load(f)
+    return data
 
 
 # =============================================================================
