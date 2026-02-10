@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.15.0] - 2026-02-10
+
+### Added
+- **Staged File Sync API**: Three new endpoints for downloading uploaded photos from production to local machine for ML processing:
+  - `GET /api/sync/staged` — list all staged upload files with metadata
+  - `GET /api/sync/staged/download/{path}` — download individual staged files (path traversal protected)
+  - `POST /api/sync/staged/clear` — remove staged files after processing
+- **Download Script** (`scripts/download_staged.py`): Pull staged uploads from production with `--dry-run`, `--clear-after`, and `--dest` flags.
+- **Upload Processing Orchestrator** (`scripts/process_uploads.sh`): End-to-end pipeline — download → ingest → cluster → R2 upload → deploy → clear staging. Supports `--dry-run`.
+- **18 new tests** for staged sync endpoints (auth, listing, download, path traversal, clearing).
+- Test count: 925 → 943
+
+### Changed
+- Updated `docs/PHOTO_WORKFLOW.md` with complete upload processing pipeline documentation.
+
 ## [v0.14.1] - 2026-02-10
 
 ### Fixed

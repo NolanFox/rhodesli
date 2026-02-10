@@ -45,35 +45,84 @@ Contributor uploads → data/staging/{job_id}/ + pending_uploads.json
                     Approved files processed through ML pipeline
 ```
 
-## 3. Syncing Data
+## 3. Processing Staged Uploads (End-to-End)
 
-Admin export endpoints allow downloading the canonical data files from production:
+When someone uploads photos on the live site, files land in `data/staging/` on the Railway volume. The ML pipeline runs locally — here's the full flow:
 
-| Endpoint | Returns |
-|----------|---------|
-| `GET /admin/export/identities` | `identities.json` as a download |
-| `GET /admin/export/photo-index` | `photo_index.json` as a download |
-| `GET /admin/export/all` | ZIP containing both files |
-
-All endpoints require admin authentication.
-
-### Using the sync script
-
-```bash
-# Set up cookies (one-time, after logging in via browser)
-# Export your session cookie to cookies.txt
-
-# Sync production data to local repo
-./scripts/sync_from_production.sh
-
-# Review changes
-git diff data/
+```
+Contributor uploads on rhodesli.nolanandrewfox.com
+         ↓
+Files land in data/staging/{job_id}/ on Railway
+         ↓
+Admin runs: ./scripts/process_uploads.sh (or step-by-step below)
+         ↓
+1. Download staged photos to raw_photos/pending/
+2. Run face detection + embedding generation
+3. Run clustering to match faces to known identities
+4. Upload photos + crops to R2
+5. Push updated data to production (git push → Railway redeploy)
+6. Clear staging on production
+         ↓
+Photos appear on the site with detected faces
 ```
 
-You can override the production URL:
+### One-Command Pipeline
 
 ```bash
-SITE_URL=https://staging.example.com ./scripts/sync_from_production.sh
+# Full pipeline (interactive, confirms before destructive steps)
+./scripts/process_uploads.sh
+
+# Preview mode — download + ML only, no R2 upload or deploy
+./scripts/process_uploads.sh --dry-run
+```
+
+### Step-by-Step (Manual)
+
+```bash
+# 1. Download staged photos from production
+python scripts/download_staged.py              # download to raw_photos/pending/
+python scripts/download_staged.py --dry-run    # list what's staged without downloading
+
+# 2. Face detection + embeddings
+python -m core.ingest_inbox --directory raw_photos/pending/ --job-id staged-$(date +%Y%m%d)
+
+# 3. Clustering (find matches)
+python scripts/cluster_new_faces.py --dry-run   # review proposals
+python scripts/cluster_new_faces.py --execute   # apply matches
+
+# 4. Upload to R2
+python scripts/upload_to_r2.py --dry-run       # preview
+python scripts/upload_to_r2.py --execute       # upload
+
+# 5. Commit + deploy
+git add data/ && git commit -m "data: process staged uploads"
+git push  # triggers Railway auto-deploy
+
+# 6. Clear staging on production
+python scripts/download_staged.py --clear-after
+```
+
+### Sync API Endpoints
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `GET /api/sync/status` | None | Server stats (public) |
+| `GET /api/sync/identities` | Bearer token | Download identities.json |
+| `GET /api/sync/photo-index` | Bearer token | Download photo_index.json |
+| `GET /api/sync/staged` | Bearer token | List staged upload files |
+| `GET /api/sync/staged/download/{path}` | Bearer token | Download a staged file |
+| `POST /api/sync/staged/clear` | Bearer token | Remove processed staged files |
+
+All token-authenticated endpoints use `RHODESLI_SYNC_TOKEN` via Bearer header.
+
+### Syncing Data Only (No Uploads)
+
+```bash
+# Pull latest identities.json + photo_index.json from production
+python scripts/sync_from_production.py
+
+# Dry run (compare without writing)
+python scripts/sync_from_production.py --dry-run
 ```
 
 ## 4. ML Clustering Scripts

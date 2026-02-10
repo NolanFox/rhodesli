@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
 **Version**: 3.0 — February 10, 2026
-**Status**: 900 tests passing, v0.14.1, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
+**Status**: 943 tests passing, v0.15.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -161,7 +161,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | BE-020 | Admin data export endpoint | DONE | Token-authenticated sync API `/api/sync/*` (2026-02-10, v0.14.0) |
 | BE-021 | Production → Local sync script | DONE | `scripts/sync_from_production.py` with --dry-run, auto-backup, diff summary (2026-02-10) |
-| BE-022 | Local → Production sync (data seeding) | EXISTS | `railway up` pushes data. But needs conflict detection if production data has diverged. |
+| BE-022 | Staged upload download pipeline | DONE | `GET /api/sync/staged`, download/{path}, `POST clear`. `scripts/download_staged.py`, `scripts/process_uploads.sh` (2026-02-10, v0.15.0) |
 | BE-023 | Backup automation | DONE | `scripts/backup_production.sh` — timestamped backups, auto-cleans to last 10 (2026-02-10) |
 
 ### 3.4 Photo Upload Pipeline (MEDIUM Priority)
@@ -411,7 +411,7 @@ Based on research of latest Claude Code patterns (Feb 2026):
 All 8 bugs fixed (BUG-001 through BUG-008). 103+ new tests. Event delegation pattern established.
 
 ### Phase B: Share-Ready Polish — MOSTLY COMPLETE (2026-02-06 → 2026-02-10)
-**Done**: FE-050/051/053 (landing page), FE-030/031/033/034 (search), FE-010/011/014/015 (mobile), BE-020/021/023 (sync).
+**Done**: FE-050/051/053 (landing page), FE-030/031/033/034 (search), FE-010/011/014/015 (mobile), BE-020/021/022/023 (sync + staged upload pipeline).
 **Remaining**: FE-052 (guided tour), OPS-001 (branded email).
 
 ### Phase C: Annotation Engine (2-3 sessions)

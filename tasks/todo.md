@@ -23,7 +23,7 @@ Last updated: 2026-02-10 (Session 7 — Skipped Faces Fix)
 - [x] Build token-authenticated sync API (2026-02-10)
 - [x] Build reliable sync script (2026-02-10)
 - [ ] Re-run validation after sync to check if admin tagging created signal
-- [ ] End-to-end test pending upload flow (upload via web -> process_pending.py -> verify)
+- [x] End-to-end staged upload pipeline (API + download script + orchestrator) (2026-02-10)
 - [ ] Test new UX features on real phone (mobile responsive, touch swipe, keyboard shortcuts)
 - [ ] Share with 2-3 family members for initial feedback
 

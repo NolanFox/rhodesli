@@ -59,6 +59,7 @@ Goal: Landing page, search, mobile — ready for family members.
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
 - [x] BE-020: Admin data export endpoint (2026-02-06)
 - [x] BE-021: Production-to-local sync script (2026-02-10)
+- [x] BE-022: Staged upload download API + processing pipeline (2026-02-10)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -110,6 +111,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.15.0 — Upload processing pipeline: staged file sync API, download script, end-to-end orchestrator (943 tests)
 - [x] 2026-02-10: v0.14.1 — Skipped faces fix: clustering includes 192 skipped faces, clickable lightbox overlays, correct section routing, stats denominator fix (900 tests)
 - [x] 2026-02-10: v0.14.0 — Sync infrastructure: token-authenticated sync API, reliable sync script, backup automation, ML refresh pipeline (891 tests)
 - [x] 2026-02-09: v0.13.0 — ML validation session: AD-013 threshold calibration, golden set evaluation, clustering validation, 33 match proposals ready (879 tests)
