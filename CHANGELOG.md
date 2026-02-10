@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.17.1] - 2026-02-10
+
+### Added
+- **Golden Set Analysis Improvements** (ML-011): Refactored `analyze_golden_set.py` into testable `analyze_golden_set()` function, auto-generates from confirmed identities when golden set is missing, graceful empty-set handling. 15 new tests.
+- **Contributor Permission Boundary Tests**: 7 safety tests confirming contributors cannot merge, confirm, reject, skip, or approve annotations. Verified `is_trusted_contributor()` is not wired into any route guard.
+- **Role Permissions Documentation**: `docs/ROLES.md` with complete permission matrix for viewer/contributor/trusted/admin roles.
+- **Undo Merge Route Tests**: 5 route-level HTTP tests covering undo button in toast, contributor rejection, identity restoration, and error paths (no history, nonexistent identity).
+- Test count: 1032 → 1059
+
 ## [v0.17.0] - 2026-02-10
 
 ### Added

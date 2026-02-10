@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.17.0 · 1032 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.17.1 · 1059 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -112,6 +112,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.17.1 — Verification pass: golden set analysis refactor + auto-generation, contributor permission boundary tests, undo merge route tests, docs/ROLES.md (1059 tests)
 - [x] 2026-02-10: v0.17.0 — Annotation engine + merge safety + contributor roles: merge audit snapshots, annotation merging, photo/identity annotations, photo metadata + EXIF, golden set diversity, contributor/trusted contributor roles (1032 tests)
 - [x] 2026-02-10: v0.16.0 — ML pipeline + annotation engine + collaboration: post-merge suggestions, rejection memory in clustering, ambiguity detection, ML dashboard, annotation system (submit/approve/reject), structured names, identity metadata, activity feed, welcome modal (969 tests)
 - [x] 2026-02-10: v0.15.0 — Upload processing pipeline: staged file sync API, download script, end-to-end orchestrator (943 tests)
