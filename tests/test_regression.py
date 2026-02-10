@@ -438,47 +438,75 @@ class TestMergeRemovesSourceCard:
 
     Verifies that merge response includes OOB swap to remove
     the source identity card from the DOM.
+
+    Uses mock registries with Unidentified Person names to avoid
+    name conflict modals, sends HTMX headers for partial responses,
+    and disables auth to bypass admin checks.
     """
 
-    def test_merge_response_includes_oob_delete(self, test_client, registry):
+    @pytest.fixture
+    def merge_setup(self):
+        """Create mock registries with two mergeable identities."""
+        from unittest.mock import patch
+        from core.registry import IdentityRegistry, IdentityState
+        from core.photo_registry import PhotoRegistry
+
+        photo_reg = PhotoRegistry()
+        photo_reg.register_face("photo_1", "/path/photo_1.jpg", "face_a")
+        photo_reg.register_face("photo_2", "/path/photo_2.jpg", "face_b")
+
+        identity_reg = IdentityRegistry()
+        target_id = identity_reg.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+            state=IdentityState.PROPOSED,
+        )
+        source_id = identity_reg.create_identity(
+            anchor_ids=["face_b"],
+            user_source="test",
+            state=IdentityState.PROPOSED,
+        )
+
+        with patch("app.main.load_registry", return_value=identity_reg), \
+             patch("app.main.save_registry"), \
+             patch("app.main.load_photo_registry", return_value=photo_reg), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._merge_annotations"), \
+             patch("app.main._post_merge_suggestions", return_value=""), \
+             patch("app.main.is_auth_enabled", return_value=False):
+            from app.main import app
+            from starlette.testclient import TestClient
+            client = TestClient(app)
+            yield client, target_id, source_id
+
+    def test_merge_response_includes_oob_delete(self, merge_setup):
         """After merge, response should include hx-swap-oob=delete for source."""
-        identities = registry.list_identities()
-        if len(identities) < 2:
-            pytest.skip("Need at least 2 identities to test merge")
+        client, target_id, source_id = merge_setup
 
-        # Find two identities that can be merged (different photo sets)
-        # For this test, we just check the response format
-        target_id = identities[0]["identity_id"]
-        source_id = identities[1]["identity_id"]
-
-        response = test_client.post(
-            f"/api/identity/{target_id}/merge/{source_id}"
+        response = client.post(
+            f"/api/identity/{target_id}/merge/{source_id}",
+            headers={"HX-Request": "true"},
         )
 
-        # If merge succeeded, check for OOB delete
-        if response.status_code == 200:
-            # Response should include hx-swap-oob="delete" for source card
-            assert 'hx-swap-oob="delete"' in response.text or \
-                   'hx_swap_oob="delete"' in response.text, \
-                   "Merge response missing OOB delete for source card"
-            assert f'id="identity-{source_id}"' in response.text, \
-                   "Merge response missing source identity ID in OOB element"
+        assert response.status_code == 200, \
+            f"Expected 200 but got {response.status_code}: {response.text[:500]}"
+        # Response should include hx-swap-oob="delete" for source card
+        assert 'hx-swap-oob="delete"' in response.text, \
+            "Merge response missing OOB delete for source card"
+        assert f'id="identity-{source_id}"' in response.text, \
+            "Merge response missing source identity ID in OOB element"
 
-    def test_merge_updates_target_card(self, test_client, registry):
+    def test_merge_updates_target_card(self, merge_setup):
         """After merge, response should include updated target card."""
-        identities = registry.list_identities()
-        if len(identities) < 2:
-            pytest.skip("Need at least 2 identities to test merge")
+        client, target_id, source_id = merge_setup
 
-        target_id = identities[0]["identity_id"]
-        source_id = identities[1]["identity_id"]
-
-        response = test_client.post(
-            f"/api/identity/{target_id}/merge/{source_id}"
+        response = client.post(
+            f"/api/identity/{target_id}/merge/{source_id}",
+            headers={"HX-Request": "true"},
         )
 
-        # If merge succeeded (not blocked by co-occurrence)
-        if response.status_code == 200:
-            # Response should include the target identity card
-            assert f'id="identity-{target_id}"' in response.text, \
-                   "Merge response missing updated target card"
+        assert response.status_code == 200, \
+            f"Expected 200 but got {response.status_code}: {response.text[:500]}"
+        # Response should include the target identity card
+        assert f'id="identity-{target_id}"' in response.text, \
+            "Merge response missing updated target card"
