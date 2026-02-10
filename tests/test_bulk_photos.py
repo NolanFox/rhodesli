@@ -98,17 +98,20 @@ class TestBulkUpdateSource:
 
     def test_updates_source_successfully(self, client):
         """Valid request updates photo sources."""
-        # Get a real photo ID from the registry
-        from app.main import load_photo_registry
-        photo_registry = load_photo_registry()
-        photo_ids = list(photo_registry._photos.keys())[:2]
-        if not photo_ids:
-            pytest.skip("No photos available")
+        from core.photo_registry import PhotoRegistry
+        mock_registry = PhotoRegistry()
+        mock_registry._photos = {
+            "test_photo_1": {"path": "test1.jpg", "face_ids": [], "source": "Old", "collection": "Old"},
+            "test_photo_2": {"path": "test2.jpg", "face_ids": [], "source": "Old", "collection": "Old"},
+        }
+        photo_ids = ["test_photo_1", "test_photo_2"]
 
-        with patch("app.main.is_auth_enabled", return_value=False):
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_photo_registry", return_value=mock_registry), \
+             patch("app.main.save_photo_registry"):
             response = client.post(
                 "/api/photos/bulk-update-source",
-                data={"photo_ids": json.dumps(photo_ids), "source": "Test Collection"},
+                data={"photo_ids": json.dumps(photo_ids), "collection": "New Collection"},
                 headers={"HX-Request": "true"},
             )
             assert response.status_code == 200

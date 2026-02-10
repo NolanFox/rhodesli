@@ -359,47 +359,51 @@ class TestRenameIdentity:
     3. Name persists after rename
     """
 
-    def test_rename_identity(self, test_client, registry):
-        """Rename endpoint updates identity name (non-destructive: restores original)."""
-        identities = registry.list_identities()
-        if not identities:
-            pytest.skip("No identities in registry")
+    def _make_mock_registry(self):
+        """Create a mock registry with a test identity for rename tests."""
+        from unittest.mock import MagicMock
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Original Name",
+            "state": "CONFIRMED",
+        }
+        mock_reg.rename_identity.return_value = "Original Name"
+        mock_reg.list_identities.return_value = [
+            {"identity_id": "test-id-001", "name": "Original Name", "state": "CONFIRMED"}
+        ]
+        return mock_reg
 
-        identity_id = identities[0]["identity_id"]
-        original_name = identities[0].get("name", "")
+    def test_rename_identity(self, test_client):
+        """Rename endpoint updates identity name."""
+        from unittest.mock import patch
+        mock_reg = self._make_mock_registry()
 
-        try:
-            # Rename it
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
             response = test_client.post(
-                f"/api/identity/{identity_id}/rename",
+                "/api/identity/test-id-001/rename",
                 data={"name": "Test Person Name"}
             )
             assert response.status_code == 200
-
-            # Response should contain the new name
-            assert "Test Person Name" in response.text
-        finally:
-            # ALWAYS restore the original name to prevent data corruption
-            test_client.post(
-                f"/api/identity/{identity_id}/rename",
-                data={"name": original_name}
+            mock_reg.rename_identity.assert_called_once_with(
+                "test-id-001", "Test Person Name", user_source="web"
             )
 
-    def test_rename_empty_rejected(self, test_client, registry):
+    def test_rename_empty_rejected(self, test_client):
         """Empty names should be rejected."""
-        identities = registry.list_identities()
-        if not identities:
-            pytest.skip("No identities in registry")
+        from unittest.mock import patch
+        mock_reg = self._make_mock_registry()
 
-        identity_id = identities[0]["identity_id"]
-
-        # Try to rename with whitespace-only name
-        response = test_client.post(
-            f"/api/identity/{identity_id}/rename",
-            data={"name": "   "}
-        )
-        # Should reject with 400
-        assert response.status_code == 400
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
+            response = test_client.post(
+                "/api/identity/test-id-001/rename",
+                data={"name": "   "}
+            )
+            assert response.status_code == 400
 
     def test_rename_form_endpoint(self, test_client, registry):
         """Rename form endpoint returns editable form."""

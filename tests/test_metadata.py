@@ -135,20 +135,23 @@ class TestMetadataEndpoint:
 
     def test_metadata_update_success(self, client):
         """Admin can update metadata successfully."""
-        from app.main import load_registry
-        registry = load_registry()
-        confirmed = registry.list_identities(state=None)
-        if not confirmed:
-            pytest.skip("No identities available for testing")
+        from unittest.mock import MagicMock
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
 
-        # Find an identity to test with
-        test_id = confirmed[0]["identity_id"]
-
-        response = client.post(
-            f"/api/identity/{test_id}/metadata",
-            data={"birth_place": "Rhodes, Greece"}
-        )
-        assert response.status_code == 200
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
+            response = client.post(
+                "/api/identity/test-id-001/metadata",
+                data={"birth_place": "Rhodes, Greece"}
+            )
+            assert response.status_code == 200
+            mock_reg.set_metadata.assert_called_once()
 
 
 class TestSuggestNameForm:
