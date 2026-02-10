@@ -173,6 +173,123 @@
       ],
       "job_id": "staged-20260210",
       "filename": "zeb_capuano_New_Lido_Opens.jpg"
+    },
+    "52c9d77a5392b252b7c0d9f271d84b598ab66080478957919154c4f215ed4334": {
+      "face_ids": [
+        "inbox_2ac19090ecaf"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596770996.415863.jpg"
+    },
+    "8985bb07a5ea4490d79c1d5087e0905910f21ed4d0f779c4c17cb8a2c3f04eec": {
+      "face_ids": [
+        "inbox_8eb57b4397c4",
+        "inbox_8a8b7e4eb0bf",
+        "inbox_7410ed3d601e",
+        "inbox_4ca8098ff1d5",
+        "inbox_efa182f997c9"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771174.533589.jpg"
+    },
+    "353aaadc78002395697c784da7a2928ba3c30ba5cca1f0176759af8405d5dbda": {
+      "face_ids": [
+        "inbox_6286072a106a"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771023.203463.jpg"
+    },
+    "641392188d81799ef3b231c4071e95b37803412afa9675ff9d32b3bd9ad192ce": {
+      "face_ids": [
+        "inbox_a5915ae18524",
+        "inbox_934175276bd3",
+        "inbox_22788aa3c61b",
+        "inbox_f04360035919",
+        "inbox_e060efab2231",
+        "inbox_1433cf765261",
+        "inbox_f855c874323d",
+        "inbox_b3743ea8ca63",
+        "inbox_20225d8a84c5",
+        "inbox_4b7ba617b460",
+        "inbox_97f174702917",
+        "inbox_4abdc5064791",
+        "inbox_c4e77d3791ae",
+        "inbox_33923f52d7ff"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596770938.488977.jpg"
+    },
+    "c7b90df49d6dc357e322ea96c9102fc3251c5c117d4e704c0f3304eef7b5c3d1": {
+      "face_ids": [
+        "inbox_197decf08f7c",
+        "inbox_61c4952679a7"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771234.564304.jpg"
+    },
+    "ed23db77cb84cdbb6e6ea2d8bce6e266cf95d9f1b932c722c89ff5d48b1448da": {
+      "face_ids": [
+        "inbox_6e7b13515ac3",
+        "inbox_aa674bb2d16f"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "757557421.130308.jpg"
+    },
+    "33cef785f81554f111f8061d284881931ee609db251e6ec7723fc192fb8ff7c4": {
+      "face_ids": [
+        "inbox_e8842bcd8c1a"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771293.674187.jpg"
+    },
+    "8adc294d13a86dfd2dd8db78445cc8fc317e0362daafbc74ba48a76f72bb3a66": {
+      "face_ids": [
+        "inbox_7a6bee77eb84",
+        "inbox_de99078f4995",
+        "inbox_de6c29f39e6d",
+        "inbox_22d81a2ed078"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771420.719238.jpg"
+    },
+    "4af7f7b1b33bd0a13acc75a9a832d7ed49e4c11661196dd1372883a28e8da1e0": {
+      "face_ids": [
+        "inbox_a01016d743d0",
+        "inbox_dd93163579df"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771351.496458.jpg"
+    },
+    "07107254036371703b9820ac9c8e7a59c48f35db1993442848b9a5edf6685389": {
+      "face_ids": [
+        "inbox_441f60c145fb",
+        "inbox_915993027357",
+        "inbox_e10a963df79c",
+        "inbox_251a55eeaedc",
+        "inbox_3b59588cdc20",
+        "inbox_6e43a0d7994d",
+        "inbox_4dfa4db09642",
+        "inbox_ac66e78396bf"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771054.717436.jpg"
+    },
+    "013971cfa1504b4ec1b3612a7ee5957ab33b8d9b7368543cfbb78de72a362aee": {
+      "face_ids": [
+        "inbox_08cde0472d2f",
+        "inbox_0b5fd3625bbe"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "Image_567.jpg"
+    },
+    "6c35581fbeb386ecb8d7a53dfb1963d3cbda3f9de0cd00c939c330e826d48d26": {
+      "face_ids": [
+        "inbox_ac1d0ecf8a8d",
+        "inbox_25087d5a153c",
+        "inbox_37feea05cf40"
+      ],
+      "job_id": "staged-20260210-182610",
+      "filename": "596771481.064027.jpg"
     }
   }
 }
