@@ -91,7 +91,7 @@ class TestLandingPageStats:
     def test_stats_unidentified_present(self, client):
         """Landing page shows unidentified faces count."""
         response = client.get("/")
-        assert "still unidentified" in response.text
+        assert "awaiting identification" in response.text
 
     def test_stats_are_not_all_zero(self, client):
         """Stats reflect actual data -- not all zeros."""

@@ -1293,6 +1293,12 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
+                A(
+                    Span("📖", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("About", cls="sidebar-label ml-2"),
+                    href="/about",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
                 cls="mb-3"
             ),
             # Admin Section (admin-only, with pending uploads badge)
@@ -3472,9 +3478,10 @@ def _compute_landing_stats() -> dict:
         len(i.get("anchor_ids", [])) + len(i.get("candidate_ids", []))
         for i in all_identities
     )
+    skipped = registry.list_identities(state=IdentityState.SKIPPED)
     needs_help = sum(
         len(i.get("anchor_ids", [])) + len(i.get("candidate_ids", []))
-        for i in inbox + proposed
+        for i in inbox + proposed + skipped
     )
     # Collect confirmed names for display
     named_people = [
@@ -3682,6 +3689,7 @@ def landing_page(stats, featured_photos):
         A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("Help Identify", href="/?section=to_review", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("About", href="/about", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
     ]
     if auth_enabled:
         nav_items.append(
@@ -4174,7 +4182,7 @@ def landing_page(stats, featured_photos):
                     ),
                     Div(
                         Div("0", cls="stat-number", **{"data-count": str(stats["needs_help"])}),
-                        Div("still unidentified", cls="stat-label"),
+                        Div("awaiting identification", cls="stat-label"),
                         cls="stat-card animate-fade-in-up delay-3"
                     ),
                     cls="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4"
@@ -4262,21 +4270,32 @@ def landing_page(stats, featured_photos):
                 Div(cls="ornament mb-8"),
                 H2("About This Archive", cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-6"),
                 Div(
-                    P("The Jewish community of Rhodes, known as ",
-                      Em("La Komunita Djudia de Rodes"),
-                      " in Ladino, thrived for centuries on this Aegean island at the crossroads of "
-                      "East and West. A vibrant Sephardic culture of scholars, merchants, and artisans "
-                      "built a unique tradition blending Ottoman, Italian, and Mediterranean influences.",
+                    P("For over two thousand years, a Jewish community flourished on the island of Rhodes, "
+                      "at the crossroads of the Aegean. After the expulsion from Spain in 1492, Sephardic families "
+                      "settled in the walled quarter known as ",
+                      Em("La Juderia"),
+                      ", bringing with them the Ladino language, rabbinical traditions, and a vibrant culture of "
+                      "merchants, craftsmen, and scholars. By the late 19th century, the community numbered several "
+                      "thousand. Six synagogues stood in La Juderia, and the narrow arched streets rang with "
+                      "Judeo-Spanish songs and the bustle of the ",
+                      Em("cortijos"),
+                      ", the shared courtyards where families gathered.",
                       cls="text-amber-100/60 leading-relaxed mb-4"),
-                    P("Rhodesli is a digital preservation project using machine learning to "
-                      "reconnect the faces and stories scattered across family photo collections. "
-                      "By combining AI face detection with the living memory of community members, "
-                      "we are building a searchable archive that connects generations.",
+                    P("Beginning in the early 20th century, Rhodesli Jews emigrated in waves \u2014 first to nearby "
+                      "communities, then further abroad as the Italian occupation of 1912 and later the racial laws "
+                      "of 1938 uprooted families. Chain migration carried them to specific cities worldwide: Seattle "
+                      "and Los Angeles, Montgomery, Atlanta, and New York, Buenos Aires and S\u00e3o Paulo, "
+                      "communities in Africa, the Middle East, and beyond. The Holocaust of July 1944 devastated "
+                      "those who remained \u2014 of the 1,673 Jews deported from Rhodes and Kos to Auschwitz, "
+                      "only 151 survived.",
                       cls="text-amber-100/60 leading-relaxed mb-4"),
-                    P("The photographs in this archive come from multiple family collections" +
-                      (f" including the {', '.join(stats.get('sources', []))}" if stats.get('sources') else "") +
-                      ". Each identification you make helps future generations understand where they came from.",
-                      cls="text-amber-100/60 leading-relaxed"),
+                    P("Rhodesli is a digital preservation project that uses machine learning to reconnect faces "
+                      "and stories scattered across family collections worldwide. The photographs come from "
+                      "descendants around the world. Every identification you make \u2014 every name you recognize, "
+                      "every story you share \u2014 helps preserve this heritage.",
+                      cls="text-amber-100/60 leading-relaxed mb-4"),
+                    A("Read more about the project \u2192", href="/about",
+                      cls="text-amber-300/70 hover:text-amber-200 text-sm inline-block"),
                     cls="max-w-2xl mx-auto text-center"
                 ),
                 cls="max-w-5xl mx-auto"
@@ -4289,7 +4308,7 @@ def landing_page(stats, featured_photos):
             Div(
                 H2("Every name matters",
                    cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-3"),
-                P(f"{stats['needs_help']} faces are waiting to be identified. Your family knowledge can bring them home.",
+                P(f"{stats['needs_help']} faces are awaiting identification. Your family knowledge can bring them home.",
                   cls="text-amber-100/50 text-center mb-8 max-w-lg mx-auto"),
                 Div(
                     A("Start Exploring", href="/?section=photos", cls="btn-primary"),
@@ -4322,7 +4341,7 @@ def landing_page(stats, featured_photos):
 
 @rt("/about")
 def get():
-    """About page: what Rhodesli is, how to help, FAQ."""
+    """About page: history, how to help, how it works, roles, dynamic stats."""
     stats = _compute_landing_stats()
 
     return (
@@ -4336,7 +4355,7 @@ def get():
         Main(
             # Back nav
             Div(
-                A("< Back to Archive", href="/", cls="text-amber-300/70 hover:text-amber-200 text-sm"),
+                A("\u2190 Back to Archive", href="/", cls="text-amber-300/70 hover:text-amber-200 text-sm"),
                 cls="max-w-3xl mx-auto px-6 pt-8"
             ),
             # Title
@@ -4345,56 +4364,165 @@ def get():
                 Div(cls="w-16 h-0.5 bg-amber-400/40 mb-6"),
                 cls="max-w-3xl mx-auto px-6 pt-4"
             ),
-            # What is Rhodesli
+            # The Community
             Div(
-                H2("What is Rhodesli?", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                H2("The Community", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
                 P(
-                    "Rhodesli is a digital archive preserving photographs from the Jewish community of Rhodes (Rodosli). "
-                    "For centuries, a vibrant Sephardic Jewish community thrived on the island of Rhodes. Their photographs "
-                    "-- family portraits, community events, newspaper clippings -- are scattered across descendants in "
-                    "New York, Miami, Tampa, Seattle, and beyond.",
+                    "For over two thousand years, a Jewish community flourished on the island of Rhodes, "
+                    "at the crossroads of the Aegean. After the expulsion from Spain in 1492, Sephardic families "
+                    "settled in the walled quarter known as ",
+                    Em("La Juderia"),
+                    ", bringing with them the Ladino language, rabbinical traditions, and a vibrant culture of "
+                    "merchants, craftsmen, and scholars. By the late 19th century, the community numbered several "
+                    "thousand \u2014 the second largest religious group on the island. Six synagogues stood in "
+                    "La Juderia, and the narrow arched streets rang with Judeo-Spanish songs and the bustle "
+                    "of the ",
+                    Em("cortijos"),
+                    ", the shared courtyards where families gathered.",
+                    cls="text-slate-300 leading-relaxed mb-4"
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # The Diaspora
+            Div(
+                H2("The Diaspora", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                P(
+                    "Beginning in the early 20th century, Rhodesli Jews emigrated in waves \u2014 first to the "
+                    "nearby communities of Kos, Milas, and Bodrum, then further abroad as the Italian occupation "
+                    "of 1912 and later the racial laws of 1938 uprooted families. Chain migration carried them "
+                    "to specific cities worldwide: Seattle and Los Angeles on the American West Coast; Montgomery, "
+                    "Atlanta, and New York in the East; Buenos Aires and S\u00e3o Paulo in South America; "
+                    "Elizabethville and Salisbury in Central and Southern Africa; Alexandria and Cairo; and "
+                    "communities in Havana, Asheville, Israel, Brussels, and Miami.",
                     cls="text-slate-300 leading-relaxed mb-4"
                 ),
                 P(
-                    "This project uses forensic face matching (not generative AI) to help identify the people in these "
-                    "historical photographs. Machine learning proposes hypotheses about who appears in each photo, and "
-                    "human community members confirm or correct those proposals.",
+                    "The Holocaust of July 1944 devastated those who remained \u2014 of the 1,673 Jews deported "
+                    "from Rhodes and Kos to Auschwitz, only 151 survived.",
+                    cls="text-slate-300 leading-relaxed"
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # The Project
+            Div(
+                H2("The Project", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                P(
+                    "Rhodesli is a digital preservation project that uses machine learning to reconnect faces "
+                    "and stories scattered across family collections worldwide. By combining AI face detection "
+                    "with the living memory of community descendants, we are building a searchable archive that "
+                    "bridges generations. Every identification you make \u2014 every name you recognize, every "
+                    "story you share \u2014 helps preserve this heritage.",
                     cls="text-slate-300 leading-relaxed mb-4"
                 ),
                 P(
-                    f"So far, the archive contains {stats['photo_count']} photographs with {stats['total_faces']} faces detected. "
-                    f"Of these, {stats['named_count']} people have been positively identified.",
+                    f"The archive currently contains {stats['photo_count']} photographs with "
+                    f"{stats['total_faces']} faces detected by AI. {stats['named_count']} people have "
+                    f"been positively identified so far, with {stats['needs_help']} faces still awaiting "
+                    f"identification.",
                     cls="text-slate-400 leading-relaxed italic"
                 ),
                 cls="about-section px-6 mb-10"
             ),
-            # How to help
+            # How to Help
             Div(
                 H2("How to Help", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
                 Div(
                     Div(
                         Span("1", cls="text-amber-400 font-bold text-lg mr-3"),
-                        Span("Browse the archive", cls="text-slate-200 font-medium"),
-                        P("Visit the Photos section to see all photographs. Hover over faces to see who has been identified.", cls="text-slate-400 text-sm mt-1"),
+                        Div(
+                            Span("Browse and identify", cls="text-slate-200 font-medium"),
+                            P("Look through the photo archive. If you recognize a face, suggest a name. "
+                              "Your family knowledge is irreplaceable.",
+                              cls="text-slate-400 text-sm mt-1"),
+                        ),
                         cls="flex items-start mb-4"
                     ),
                     Div(
                         Span("2", cls="text-amber-400 font-bold text-lg mr-3"),
-                        Span("Review the inbox", cls="text-slate-200 font-medium"),
-                        P("The 'To Review' section shows faces that need identification. The ML system suggests possible matches -- you confirm or reject.", cls="text-slate-400 text-sm mt-1"),
+                        Div(
+                            Span("Suggest names", cls="text-slate-200 font-medium"),
+                            P("Use the 'Suggest Name' button on any unidentified face. Even partial "
+                              "information helps \u2014 a last name, a family branch, or a generation.",
+                              cls="text-slate-400 text-sm mt-1"),
+                        ),
                         cls="flex items-start mb-4"
                     ),
                     Div(
                         Span("3", cls="text-amber-400 font-bold text-lg mr-3"),
-                        Span("Confirm identities", cls="text-slate-200 font-medium"),
-                        P("When you recognize someone, click 'Confirm' to mark the identification as correct. This helps the system learn.", cls="text-slate-400 text-sm mt-1"),
+                        Div(
+                            Span("Upload family photos", cls="text-slate-200 font-medium"),
+                            P("If you have photographs from the Rhodesli community, upload them to grow "
+                              "the archive. All uploads are reviewed before being added.",
+                              cls="text-slate-400 text-sm mt-1"),
+                        ),
                         cls="flex items-start mb-4"
                     ),
                     Div(
                         Span("4", cls="text-amber-400 font-bold text-lg mr-3"),
-                        Span("Skip what you don't know", cls="text-slate-200 font-medium"),
-                        P("It's perfectly fine to skip faces you don't recognize. Skipped items can be revisited later when more context is available.", cls="text-slate-400 text-sm mt-1"),
+                        Div(
+                            Span("Add context", cls="text-slate-200 font-medium"),
+                            P("Add dates, locations, occasions, and stories to photographs and identities. "
+                              "Context turns a photograph into a piece of history.",
+                              cls="text-slate-400 text-sm mt-1"),
+                        ),
                         cls="flex items-start mb-4"
+                    ),
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # How It Works
+            Div(
+                H2("How It Works", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                Div(
+                    Div(
+                        Span("Detect", cls="text-amber-400 font-semibold"),
+                        P(" \u2014 AI scans uploaded photographs and detects every face, creating a "
+                          "mathematical fingerprint for each one.",
+                          cls="text-slate-400 text-sm inline"),
+                        cls="mb-3"
+                    ),
+                    Div(
+                        Span("Group", cls="text-amber-400 font-semibold"),
+                        P(" \u2014 The system compares fingerprints across all photos and proposes "
+                          "clusters: faces that likely belong to the same person.",
+                          cls="text-slate-400 text-sm inline"),
+                        cls="mb-3"
+                    ),
+                    Div(
+                        Span("Verify", cls="text-amber-400 font-semibold"),
+                        P(" \u2014 Community members review these proposals. Confirmations strengthen "
+                          "the system. Corrections help it learn. Nothing is permanent \u2014 every "
+                          "decision can be undone.",
+                          cls="text-slate-400 text-sm inline"),
+                        cls="mb-3"
+                    ),
+                ),
+                cls="about-section px-6 mb-10"
+            ),
+            # Roles
+            Div(
+                H2("Roles", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
+                Div(
+                    Div(
+                        Span("Visitors", cls="text-slate-200 font-medium"),
+                        P(" can browse the entire archive freely without an account \u2014 every photograph, "
+                          "every identified person, every face detection.",
+                          cls="text-slate-400 text-sm inline"),
+                        cls="mb-3"
+                    ),
+                    Div(
+                        Span("Contributors", cls="text-slate-200 font-medium"),
+                        P(" can suggest names, upload photos, and add annotations. All suggestions "
+                          "are reviewed by an admin before being applied.",
+                          cls="text-slate-400 text-sm inline"),
+                        cls="mb-3"
+                    ),
+                    Div(
+                        Span("Admins", cls="text-slate-200 font-medium"),
+                        P(" review community suggestions, confirm identities, merge duplicates, "
+                          "and manage the archive.",
+                          cls="text-slate-400 text-sm inline"),
+                        cls="mb-3"
                     ),
                 ),
                 cls="about-section px-6 mb-10"
@@ -4404,32 +4532,38 @@ def get():
                 H2("Frequently Asked Questions", cls="text-xl font-serif font-semibold text-amber-200 mb-4"),
                 Div(
                     Div(
-                        H3("What does 'Skip' mean?", cls="text-slate-200 font-medium faq-q mb-1"),
-                        P("Skip means 'I don't know right now.' The face goes to the Skipped section where it can be revisited later. Nothing is lost.", cls="text-slate-400 text-sm mb-4"),
-                    ),
-                    Div(
-                        H3("What happens when I merge two identities?", cls="text-slate-200 font-medium faq-q mb-1"),
-                        P("Merging combines all face photos from both identities into one. The named identity always survives. If both have names, you'll be asked to choose. Merges can be undone.", cls="text-slate-400 text-sm mb-4"),
+                        H3("Is this generative AI?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("No. Rhodesli uses forensic face matching only \u2014 it compares mathematical "
+                          "fingerprints of real faces. It never generates, invents, or fabricates anything.",
+                          cls="text-slate-400 text-sm mb-4"),
                     ),
                     Div(
                         H3("Can I undo mistakes?", cls="text-slate-200 font-medium faq-q mb-1"),
-                        P("Yes. Confirmations, rejections, and merges can all be undone. The system keeps full history. No data is ever permanently deleted.", cls="text-slate-400 text-sm mb-4"),
+                        P("Yes. Confirmations, rejections, and merges can all be undone. The system keeps "
+                          "full history. No data is ever permanently deleted.",
+                          cls="text-slate-400 text-sm mb-4"),
                     ),
                     Div(
-                        H3("How does the face matching work?", cls="text-slate-200 font-medium faq-q mb-1"),
-                        P("The system uses InsightFace/AdaFace to detect faces and create mathematical embeddings (512-dimensional vectors). It compares these vectors to find similar faces. It never generates or invents -- only matches.", cls="text-slate-400 text-sm mb-4"),
+                        H3("Do I need an account to browse?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("No. The entire archive is publicly browsable. An account is only needed to "
+                          "submit suggestions, upload photos, or add annotations.",
+                          cls="text-slate-400 text-sm mb-4"),
                     ),
                     Div(
-                        H3("Who can modify data?", cls="text-slate-200 font-medium faq-q mb-1"),
-                        P("Currently, only the admin can confirm, reject, merge, or rename identities. Community members can browse freely. Contributor roles are planned for the future.", cls="text-slate-400 text-sm mb-4"),
+                        H3("How can I contribute photos?", cls="text-slate-200 font-medium faq-q mb-1"),
+                        P("Sign up with an invite code, then use the Upload page to add photographs. "
+                          "All uploads are reviewed before being added to the archive.",
+                          cls="text-slate-400 text-sm mb-4"),
                     ),
                 ),
                 cls="about-section px-6 mb-10"
             ),
             # Footer
             Div(
-                P("Built with care. No generative AI -- only forensic face matching.", cls="text-amber-100/30 text-xs text-center"),
-                A("Back to Archive", href="/", cls="text-amber-300/60 hover:text-amber-200 text-sm block text-center mt-3"),
+                P("Built with care. No generative AI \u2014 only forensic face matching.",
+                  cls="text-amber-100/30 text-xs text-center"),
+                A("\u2190 Back to Archive", href="/",
+                  cls="text-amber-300/60 hover:text-amber-200 text-sm block text-center mt-3"),
                 cls="about-section px-6 py-8 border-t border-amber-900/20"
             ),
             cls="min-h-screen about-bg"

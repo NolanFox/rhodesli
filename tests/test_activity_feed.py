@@ -94,8 +94,9 @@ class TestActivityFeed:
 
         _invalidate_annotations_cache()
 
+        # Use a large limit so real action log entries don't push out the annotation
         with patch("app.main.data_path", tmp_path):
-            result = _load_activity_feed(limit=10)
+            result = _load_activity_feed(limit=500)
             approved = [a for a in result if a["type"] == "annotation_approved"]
             assert len(approved) == 1
             assert "Leon Capeluto" in approved[0]["description"]

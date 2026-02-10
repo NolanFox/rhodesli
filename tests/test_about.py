@@ -14,9 +14,9 @@ class TestAboutPage:
         response = client.get("/about")
         assert "About Rhodesli" in response.text
 
-    def test_about_has_what_is_section(self, client, auth_disabled):
+    def test_about_has_community_section(self, client, auth_disabled):
         response = client.get("/about")
-        assert "What is Rhodesli" in response.text
+        assert "The Community" in response.text
 
     def test_about_has_how_to_help(self, client, auth_disabled):
         response = client.get("/about")
@@ -31,10 +31,10 @@ class TestAboutPage:
         response = client.get("/about")
         assert "undo" in response.text.lower() or "Undo" in response.text
 
-    def test_about_has_skip_explanation(self, client, auth_disabled):
-        """FAQ should explain what Skip means."""
+    def test_about_has_account_info(self, client, auth_disabled):
+        """FAQ should explain account requirements."""
         response = client.get("/about")
-        assert "Skip" in response.text
+        assert "account" in response.text.lower()
 
     def test_about_has_back_link(self, client, auth_disabled):
         """About page should link back to the archive."""
