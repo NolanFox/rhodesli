@@ -22,6 +22,13 @@ INVITE_CODES = [c.strip() for c in os.getenv("INVITE_CODES", "").split(",") if c
 # Admin emails — users with these emails get admin privileges
 ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
 
+# Contributor emails — users with these emails get contributor role
+CONTRIBUTOR_EMAILS = {e.strip().lower() for e in os.getenv("CONTRIBUTOR_EMAILS", "").split(",") if e.strip()}
+
+# ROLE-003: Trusted contributor threshold — number of approved annotations
+# needed before a user auto-qualifies as a contributor
+TRUSTED_CONTRIBUTOR_THRESHOLD = int(os.getenv("TRUSTED_CONTRIBUTOR_THRESHOLD", "5"))
+
 
 def is_auth_enabled() -> bool:
     """Check if authentication is configured."""
@@ -33,16 +40,26 @@ class User:
     id: str
     email: str
     is_admin: bool = False
+    role: str = "viewer"  # "admin", "contributor", or "viewer"
 
     @classmethod
     def from_session(cls, session_data: dict) -> "User | None":
         if not session_data:
             return None
         email = session_data.get("email", "")
+        email_lower = email.lower()
+        is_admin = email_lower in ADMIN_EMAILS
+        if is_admin:
+            role = "admin"
+        elif email_lower in CONTRIBUTOR_EMAILS:
+            role = "contributor"
+        else:
+            role = "viewer"
         return cls(
             id=session_data.get("id", ""),
             email=email,
-            is_admin=email.lower() in ADMIN_EMAILS,
+            is_admin=is_admin,
+            role=role,
         )
 
 
@@ -82,6 +99,20 @@ def require_admin(func):
             return Response("Forbidden", status_code=403)
         return func(*args, sess=sess, **kwargs)
     return wrapper
+
+
+def is_trusted_contributor(email: str, annotations: dict) -> bool:
+    """
+    ROLE-003: Check if a user qualifies as a trusted contributor.
+    Users with TRUSTED_CONTRIBUTOR_THRESHOLD or more approved annotations
+    automatically qualify as contributors.
+    """
+    approved_count = sum(
+        1 for ann in annotations.get("annotations", {}).values()
+        if ann.get("submitted_by", "").lower() == email.lower()
+        and ann.get("status") == "approved"
+    )
+    return approved_count >= TRUSTED_CONTRIBUTOR_THRESHOLD
 
 
 def validate_invite_code(code: str) -> bool:

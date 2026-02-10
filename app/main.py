@@ -271,6 +271,24 @@ def _check_login(sess) -> Response | None:
     return None
 
 
+def _check_contributor(sess) -> Response | None:
+    """ROLE-002: Return 401/403 if user is not at least a contributor, else None.
+    Allows admin and contributor roles. Rejects viewers and anonymous users.
+    When auth is disabled, always allows access."""
+    if not is_auth_enabled():
+        return None
+    user = get_current_user(sess or {})
+    if not user:
+        return Response("", status_code=401)
+    if user.role in ("admin", "contributor"):
+        return None
+    return Response(
+        to_xml(toast("Contributor access required.", "error")),
+        status_code=403,
+        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
+    )
+
+
 def log_user_action(action: str, **kwargs) -> None:
     """
     Log a user action to the append-only user_actions.log.
