@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.20.1] - 2026-02-10
+
+### Fixed
+- **Data Integrity**: Restored 2 photos (Image 001, Image 054) from "Test Collection" to "Vida Capeluto NYC Collection" — test contamination from unpatched `save_photo_registry()` call
+- **Test Isolation**: Fixed 3 tests that wrote to real data files without mocking save functions (`test_bulk_photos.py`, `test_regression.py`, `test_metadata.py`)
+
+### Added
+- **Data Integrity Checker** (`scripts/check_data_integrity.py`): Detects test contamination, invalid states, orphaned references. Fast (<1s), exit code 0/1.
+- **Test Isolation Rule** (`.claude/rules/test-isolation.md`): Path-scoped rule enforcing mock-both-load-and-save pattern for all data-modifying test routes
+- 6 new data integrity tests (checker validation + real data verification)
+- CLAUDE.md Rule #14: test isolation requirement
+- Test count: 1282 → 1288
+
 ## [v0.20.0] - 2026-02-10
 
 ### Added

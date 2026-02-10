@@ -47,6 +47,7 @@ After updating docs, run: `python scripts/verify_docs_sync.py`
 11. New algorithmic decisions must be documented in AD-XXX format before code is committed
 12. JS event handlers MUST use global event delegation via data-action attributes — NEVER bind directly to DOM nodes that HTMX may swap
 13. New reference docs in `docs/` that define rules code must follow MUST get a corresponding path-scoped rule in `.claude/rules/` in the same commit (see `ml-pipeline.md` + `ALGORITHMIC_DECISIONS.md` as the pattern)
+14. Test isolation: tests that POST to data-modifying routes MUST mock both load and save functions. See `.claude/rules/test-isolation.md`. Run `python scripts/check_data_integrity.py` after test changes.
 
 @docs/CODING_RULES.md for detailed coding, testing, data safety rules
 

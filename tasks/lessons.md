@@ -276,3 +276,15 @@
 - **Mistake**: `docs/BACKLOG.md` fell 6 versions behind (v0.10.0 → v0.14.1, 663 → 900 tests) because CLAUDE.md only instructed updating ROADMAP.md. The reference "see `docs/BACKLOG.md`" read as "go look at it", not "keep it current."
 - **Rule**: When maintaining parallel tracking documents, the update rule must explicitly name EVERY file. "Update ROADMAP.md" does NOT imply "also update BACKLOG.md."
 - **Prevention**: CLAUDE.md now has explicit triple-update rule (ROADMAP + BACKLOG + CHANGELOG). `scripts/verify_docs_sync.py` and `tests/test_docs_sync.py` catch drift automatically.
+
+## Session 2026-02-10: Data Integrity Fix
+
+### Lesson 51: Tests that POST to data-modifying routes MUST mock BOTH load AND save
+- **Mistake**: `test_bulk_photos.py::test_updates_source_successfully` called the real `load_photo_registry()` and the real `save_photo_registry()`. It picked the first 2 photos (Image 001, Image 054) and wrote "Test Collection" to production `data/photo_index.json`. Similarly, `test_regression.py::test_rename_identity` renamed a real identity and `test_metadata.py::test_metadata_update_success` wrote metadata to a real identity.
+- **Rule**: Any test that calls a route handler (via TestClient POST) that modifies data MUST patch both the load function (to return mock data) and the save function (to prevent disk writes). Patching only one is insufficient.
+- **Prevention**: `.claude/rules/test-isolation.md` enforces this for all tests. `scripts/check_data_integrity.py` detects contamination. CLAUDE.md Rule #14 codifies the requirement. Verify with `md5 data/*.json` before/after test runs.
+
+### Lesson 52: "Restore original" is not isolation — history and version still change
+- **Mistake**: `test_rename_identity` used a try/finally to rename Victoria Cukran Capeluto to "Test Person Name" and back. The test "worked" but added 2 history entries and bumped version_id from 76 to 79 every run.
+- **Rule**: Don't use "rename and restore" patterns for test isolation. The side effects (history, version_id, updated_at) still accumulate. Use mock registries instead.
+- **Prevention**: Tests must use `MagicMock()` or in-memory registries with test data, never touch production registries.
