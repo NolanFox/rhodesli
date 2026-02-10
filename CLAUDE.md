@@ -48,6 +48,7 @@ After updating docs, run: `python scripts/verify_docs_sync.py`
 12. JS event handlers MUST use global event delegation via data-action attributes — NEVER bind directly to DOM nodes that HTMX may swap
 13. New reference docs in `docs/` that define rules code must follow MUST get a corresponding path-scoped rule in `.claude/rules/` in the same commit (see `ml-pipeline.md` + `ALGORITHMIC_DECISIONS.md` as the pattern)
 14. Test isolation: tests that POST to data-modifying routes MUST mock both load and save functions. See `.claude/rules/test-isolation.md`. Run `python scripts/check_data_integrity.py` after test changes.
+15. Deployment file tracking: when ANY new data file is added to `data/` that the app reads at runtime, it MUST be (a) whitelisted in `.gitignore`, (b) added to `REQUIRED_DATA_FILES` in `scripts/init_railway_volume.py`, (c) committed to git — all in the same commit. See `.claude/rules/deployment.md`.
 
 @docs/CODING_RULES.md for detailed coding, testing, data safety rules
 

@@ -40,3 +40,11 @@ with patch("app.main.load_photo_registry", return_value=mock_reg), \
 
 Run `python scripts/check_data_integrity.py` after any test changes.
 Run `md5 data/*.json` before and after `pytest` to verify no writes.
+
+## Post-Fix Production Verification
+
+When fixing production bugs, verification MUST include fetching rendered HTML from the live site:
+```bash
+curl -s https://rhodesli.nolanandrewfox.com/[page] | grep [expected]
+```
+Checking local JSON files or API responses is NOT sufficient verification.

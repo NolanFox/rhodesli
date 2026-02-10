@@ -108,6 +108,39 @@ def check_face_to_photo_consistency():
         warnings.append(f"  ... and {orphaned - 5} more orphaned face references")
 
 
+def check_deployment_readiness():
+    """Verify all required data files are tracked by git and will deploy."""
+    import subprocess
+
+    # Must match REQUIRED_DATA_FILES in scripts/init_railway_volume.py
+    required_files = ["identities.json", "photo_index.json", "embeddings.npy"]
+
+    for filename in required_files:
+        filepath = data_dir / filename
+
+        # Check exists
+        if not filepath.exists():
+            errors.append(f"DEPLOY: required file missing: data/{filename}")
+            continue
+
+        # Check not empty
+        if filepath.stat().st_size == 0:
+            errors.append(f"DEPLOY: required file is empty: data/{filename}")
+            continue
+
+        # Check tracked by git (not gitignored)
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", str(filepath)],
+            capture_output=True,
+            cwd=project_root,
+        )
+        if result.returncode == 0:
+            # Exit 0 means the file IS ignored
+            errors.append(
+                f"DEPLOY: data/{filename} is gitignored — add '!data/{filename}' to .gitignore"
+            )
+
+
 def main():
     print("Rhodesli Data Integrity Check")
     print("=" * 40)
@@ -116,6 +149,7 @@ def main():
     check_identity_integrity()
     check_photo_count_consistency()
     check_face_to_photo_consistency()
+    check_deployment_readiness()
 
     if errors:
         print(f"\nERRORS ({len(errors)}):")
