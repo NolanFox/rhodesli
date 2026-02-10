@@ -1110,10 +1110,11 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
     return Aside(
         # Header with collapse toggle
         Div(
-            Div(
+            A(
                 H1("Rhodesli", cls="sidebar-label text-lg font-bold text-white leading-tight"),
                 P("Identity System", cls="sidebar-label text-xs text-slate-400 mt-0.5"),
-                cls="flex-1 min-w-0"
+                href="/",
+                cls="flex-1 min-w-0 no-underline hover:opacity-80 transition-opacity"
             ),
             Button(
                 Svg(
