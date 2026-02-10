@@ -84,9 +84,44 @@ For evaluating and improving ML accuracy:
 |--------|---------|
 | `scripts/build_golden_set.py` | Extract ground truth from confirmed identities |
 | `scripts/evaluate_golden_set.py` | Measure precision/recall/F1 at various thresholds |
-| `scripts/cluster_new_faces.py` | Match new faces against confirmed identity centroids |
+| `scripts/cluster_new_faces.py` | Match new faces against confirmed identities (multi-anchor, AD-001) |
+| `scripts/validate_clustering.py` | Compare clustering proposals against admin tagging decisions |
+| `scripts/calibrate_thresholds.py` | Combine golden set + validation evidence for threshold calibration |
+| `scripts/apply_cluster_matches.py` | Apply approved matches with tiered confidence (--tier very_high\|high\|moderate) |
 
 All scripts support `--dry-run` (default) and `--execute` flags.
+
+### Clustering Workflow
+
+```bash
+# 1. Rebuild golden set from current confirmed identities
+python scripts/build_golden_set.py --execute
+
+# 2. Evaluate precision/recall across thresholds
+python scripts/evaluate_golden_set.py --sweep
+
+# 3. Find new matches (dry-run to review)
+python scripts/cluster_new_faces.py --dry-run
+
+# 4. Validate proposals against admin's manual tagging
+python scripts/validate_clustering.py
+
+# 5. Apply only slam-dunk matches (VERY_HIGH tier, <0.80 distance)
+python scripts/apply_cluster_matches.py --dry-run --tier very_high
+python scripts/apply_cluster_matches.py --execute --tier very_high
+
+# 6. Apply confident matches (HIGH tier, <1.05, zero FP in golden set)
+python scripts/apply_cluster_matches.py --execute --tier high
+```
+
+### Confidence Tiers (AD-013, calibrated 2026-02-09)
+
+| Tier | Distance | Precision | Action |
+|------|----------|-----------|--------|
+| VERY HIGH | < 0.80 | ~100% | Safe to auto-apply as candidates |
+| HIGH | < 1.05 | 100% | Zero FP in golden set (3713 negative pairs) |
+| MODERATE | < 1.15 | ~94% | Show with caution — FPs are family resemblance |
+| LOW | < 1.25 | ~69% | Deep search only |
 
 ## 5. Future Vision
 

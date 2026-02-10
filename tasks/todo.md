@@ -1,21 +1,27 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-08 (Session 4)
+Last updated: 2026-02-09 (Session 5 — ML Validation)
 
 ## Active Bugs
 - (none — all P0 bugs fixed through v0.12.1)
 
+## Ready to Apply
+- [ ] Apply 19 VERY_HIGH matches: `python scripts/apply_cluster_matches.py --execute --tier very_high`
+- [ ] Apply 33 HIGH matches: `python scripts/apply_cluster_matches.py --execute --tier high`
+- [ ] After applying, sync to production and confirm in web UI
+
 ## Immediate (This Weekend)
+- [ ] Sync production data locally (need cookies.txt from browser session)
+- [ ] Re-run validation after sync to check if admin tagging created signal
 - [ ] End-to-end test pending upload flow (upload via web -> process_pending.py -> verify)
 - [ ] Test new UX features on real phone (mobile responsive, touch swipe, keyboard shortcuts)
 - [ ] Share with 2-3 family members for initial feedback
-- [ ] Review 35 proposed matches from Betty Capeluto clustering report
 
 ## Near-Term (Next 1-2 Weeks)
-- [ ] Sync production->local script using admin export endpoints
 - [ ] Verify Resend email notifications fire on pending upload
 - [ ] UX verification: Find Similar auto-scroll, bulk merge/not-same, no-reload HTMX actions
-- [ ] Run cluster_new_faces.py --execute on Betty collection after reviewing proposals
+- [ ] Collect 50+ admin-validated clustering proposals for re-calibration
+- [ ] Re-run calibration after batch 2 upload (more diverse data)
 
 ## Medium-Term (Next Month)
 - [ ] Better face detection evaluation (compare current vs alternatives — golden set comparison)

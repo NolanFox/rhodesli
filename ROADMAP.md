@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.12.1 · 864 tests · 148 photos · 181 faces · 23 confirmed
+Current: v0.13.0 · 879 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -77,11 +77,14 @@ Goal: Make the archive meaningful beyond face matching.
 Goal: Make the system learn from user actions.
 
 - [ ] ML-001: User actions feed back to ML predictions
-- [ ] ML-004: Dynamic threshold calibration from confirmed/rejected pairs
+- [x] ML-004: Dynamic threshold calibration from confirmed/rejected pairs (2026-02-09, AD-013)
 - [ ] ML-005: Reclustering after merges (re-evaluate nearby faces)
 - [ ] ML-006: Family resemblance handling (relative vs absolute distance)
-- [ ] ML-010–ML-013: Golden set expansion and evaluation dashboard
-- [ ] ML-021: Calibrated confidence labels (VERY HIGH/HIGH/MODERATE/LOW)
+- [x] ML-010: Golden set rebuild (90 mappings, 23 identities) (2026-02-09)
+- [x] ML-012: Golden set evaluation (4005 pairs, sweep 0.50-2.00) (2026-02-09)
+- [ ] ML-011: Golden set diversity analysis (quality, temporal)
+- [ ] ML-013: Evaluation dashboard (web UI)
+- [x] ML-021: Calibrated confidence labels (VERY HIGH/HIGH/MODERATE/LOW) (2026-02-09)
 - [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
 
 ## Phase E: Collaboration & Growth
@@ -107,6 +110,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-09: v0.13.0 — ML validation session: AD-013 threshold calibration, golden set evaluation, clustering validation, 33 match proposals ready (879 tests)
 - [x] 2026-02-09: v0.12.1 — 4 live-site bug fixes: face count badges, nav persistence, logo link, fuzzy search (864 tests)
 - [x] 2026-02-08: v0.12.0 — Session 4: photo nav, mobile tabs, search polish, inline actions (847 tests)
 - [x] 2026-02-08: Inline face actions — hover confirm/skip/reject buttons on photo overlays, 17 tests

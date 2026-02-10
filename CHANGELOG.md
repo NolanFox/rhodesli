@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.13.0] - 2026-02-09
+
+### Added
+- **AD-013: Evidence-Based Threshold Calibration**: Four-tier confidence system (VERY_HIGH/HIGH/MODERATE/LOW) based on golden set evaluation (90 faces, 23 identities, 4005 pairwise comparisons). Zero false positives up to distance 1.05.
+- **Clustering Validation Script** (`scripts/validate_clustering.py`): Compares clustering proposals against admin tagging decisions. Reports agreed/disagreed/skipped/rejected with per-distance-band analysis.
+- **Threshold Calibration Script** (`scripts/calibrate_thresholds.py`): Combines golden set evaluation + clustering validation to recommend evidence-based thresholds.
+- **Cluster Match Application** (`scripts/apply_cluster_matches.py`): Tiered application of clustering matches with --tier very_high|high|moderate and mandatory dry-run default. 33 matches ready at HIGH tier.
+- **15 new tests**: confidence_label boundaries (7), apply_suggestions safety (4), threshold config ordering (4).
+
+### Changed
+- `MATCH_THRESHOLD_HIGH` raised from 1.00 to 1.05 (zero false positives, +10pp recall)
+- New thresholds: `MATCH_THRESHOLD_VERY_HIGH=0.80`, `MATCH_THRESHOLD_MODERATE=1.15`, `MATCH_THRESHOLD_LOW=1.25`
+- UI confidence labels now show 5 tiers: Very High, High, Moderate, Medium, Low
+- `cluster_new_faces.py` uses calibrated `confidence_label()` function
+- Test count: 864 → 879
+
 ## [v0.12.1] - 2026-02-09
 
 ### Fixed
