@@ -125,8 +125,50 @@ def _migrate_photo_dimensions(data_dir: Path) -> None:
         # Non-fatal - volume still works, just without face overlays
 
 
+def _sync_essential_files(data_dir: Path) -> int:
+    """Update essential data files from bundle if they differ.
+
+    Git-tracked data files are the source of truth. When the Docker image
+    bundles newer data (from a git push), overwrite the volume copy.
+    Creates a timestamped backup of the volume copy before overwriting.
+
+    Returns the number of files updated.
+    """
+    import hashlib
+    import time
+
+    updated = 0
+    ts = int(time.time())
+
+    for filename in REQUIRED_DATA_FILES:
+        bundle_file = BUNDLED_DATA / filename
+        volume_file = data_dir / filename
+
+        if not bundle_file.exists() or not volume_file.exists():
+            continue
+
+        # Compare by content hash — skip if identical
+        bundle_hash = hashlib.md5(bundle_file.read_bytes()).hexdigest()
+        volume_hash = hashlib.md5(volume_file.read_bytes()).hexdigest()
+
+        if bundle_hash == volume_hash:
+            continue
+
+        # Bundle differs from volume — update volume from bundle
+        backup = data_dir / f"{filename}.bak.{ts}"
+        shutil.copy2(volume_file, backup)
+        shutil.copy2(bundle_file, volume_file)
+        updated += 1
+        print(f"[init] Updated {filename} from bundle (backup: {backup.name})")
+
+    return updated
+
+
 def init_volume():
     """Copy bundled data to volume if it doesn't exist yet.
+
+    On existing volumes, syncs essential data files from the Docker bundle
+    when they differ (i.e., when a git push included updated data).
 
     Returns True if volume is ready to use, False if seeding failed.
     """
@@ -142,9 +184,14 @@ def init_volume():
     # SANITY CHECK: If marker exists but data is missing, we have a corrupted state
     if marker.exists():
         if volume_is_valid(data_dir):
-            # Volume is valid, but check for missing optional files (like embeddings.npy)
-            # These might be added in later deploys
             if BUNDLED_DATA.exists():
+                # Sync essential data files from bundle if they differ
+                # (this is how git-pushed data reaches the production volume)
+                updated = _sync_essential_files(data_dir)
+                if updated:
+                    print(f"[init] Synced {updated} essential file(s) from bundle.")
+
+                # Add any missing optional files
                 for item in BUNDLED_DATA.iterdir():
                     if item.name == ".gitkeep":
                         continue
@@ -159,7 +206,7 @@ def init_volume():
             # MIGRATION: Update photo_index.json with dimensions if bundle has them
             _migrate_photo_dimensions(data_dir)
 
-            print("[init] Volume already initialized and valid, skipping seed.")
+            print("[init] Volume already initialized and valid.")
             print(f"[init] Data dir: {data_dir}")
             print("[init] Photos served from R2 (STORAGE_MODE=r2, R2_PUBLIC_URL)")
             return True
