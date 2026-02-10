@@ -6,6 +6,8 @@ paths:
   - ".gitignore"
   - "requirements.txt"
   - "scripts/init_*.py"
+  - "scripts/upload_to_r2.py"
+  - "core/storage.py"
   - "Procfile"
 ---
 

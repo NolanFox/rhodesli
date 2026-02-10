@@ -46,6 +46,7 @@ After updating docs, run: `python scripts/verify_docs_sync.py`
 10. ML changes require reading docs/ml/ALGORITHMIC_DECISIONS.md first (enforced by path-scoped rules)
 11. New algorithmic decisions must be documented in AD-XXX format before code is committed
 12. JS event handlers MUST use global event delegation via data-action attributes — NEVER bind directly to DOM nodes that HTMX may swap
+13. New reference docs in `docs/` that define rules code must follow MUST get a corresponding path-scoped rule in `.claude/rules/` in the same commit (see `ml-pipeline.md` + `ALGORITHMIC_DECISIONS.md` as the pattern)
 
 @docs/CODING_RULES.md for detailed coding, testing, data safety rules
 
@@ -77,5 +78,6 @@ When compacting, always preserve:
 - `docs/design/` — MERGE_DESIGN, FUTURE_COMMUNITY
 - `docs/ml/` — ALGORITHMIC_DECISIONS (AD-001+), MODEL_INVENTORY
 - `docs/ops/` — OPS_DECISIONS (OD-001+)
+- `docs/ROLES.md` — permission matrix (contributors suggest, admins decide)
 - `docs/CODING_RULES.md`, `docs/DEPLOYMENT_GUIDE.md`, `docs/DECISIONS.md`
 - `tasks/lessons.md` — persistent learnings | `tasks/todo.md` — task tracking
