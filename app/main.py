@@ -9074,6 +9074,124 @@ def get(request):
     return data
 
 
+# --- Staged Files API (for downloading uploads from production to local ML) ---
+
+@rt("/api/sync/staged")
+def get(request):
+    """List all staged upload files awaiting local ML processing."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    staging_dir = data_path / "staging"
+    if not staging_dir.exists():
+        return {"files": [], "total_files": 0, "total_size_bytes": 0}
+
+    files = []
+    total_size = 0
+    for fpath in staging_dir.rglob("*"):
+        if not fpath.is_file():
+            continue
+        rel = fpath.relative_to(staging_dir)
+        size = fpath.stat().st_size
+        mtime = datetime.fromtimestamp(fpath.stat().st_mtime, tz=timezone.utc).isoformat()
+        files.append({
+            "filename": fpath.name,
+            "path": str(rel),
+            "size_bytes": size,
+            "uploaded_at": mtime,
+        })
+        total_size += size
+
+    return {"files": files, "total_files": len(files), "total_size_bytes": total_size}
+
+
+@rt("/api/sync/staged/download/{filepath:path}")
+def get(request, filepath: str):
+    """Download a single staged file. Path is relative to staging root."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    # Security: block path traversal
+    if ".." in filepath or filepath.startswith("/"):
+        return Response("Invalid path", status_code=400)
+
+    staging_dir = data_path / "staging"
+    target = (staging_dir / filepath).resolve()
+
+    # Ensure resolved path is still inside staging dir
+    if not str(target).startswith(str(staging_dir.resolve())):
+        return Response("Invalid path", status_code=400)
+
+    if not target.exists() or not target.is_file():
+        return Response("File not found", status_code=404)
+
+    return FileResponse(
+        str(target),
+        filename=target.name,
+        media_type="application/octet-stream",
+    )
+
+
+@rt("/api/sync/staged/clear")
+async def post(request):
+    """Remove staged files after successful download and processing."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    import shutil
+
+    body = await request.json()
+    staging_dir = data_path / "staging"
+
+    if body.get("all"):
+        # Clear entire staging directory
+        removed = []
+        if staging_dir.exists():
+            for item in list(staging_dir.iterdir()):
+                if item.is_dir():
+                    shutil.rmtree(item, ignore_errors=True)
+                else:
+                    item.unlink(missing_ok=True)
+                removed.append(str(item.relative_to(staging_dir)))
+        return {"cleared": "all", "removed": removed, "count": len(removed)}
+
+    file_list = body.get("files", [])
+    if not file_list:
+        return Response("No files specified", status_code=400)
+
+    removed = []
+    errors = []
+    for rel_path in file_list:
+        if ".." in rel_path or rel_path.startswith("/"):
+            errors.append({"path": rel_path, "error": "invalid path"})
+            continue
+        target = (staging_dir / rel_path).resolve()
+        if not str(target).startswith(str(staging_dir.resolve())):
+            errors.append({"path": rel_path, "error": "invalid path"})
+            continue
+        if target.exists():
+            if target.is_dir():
+                shutil.rmtree(target, ignore_errors=True)
+            else:
+                target.unlink(missing_ok=True)
+            removed.append(rel_path)
+            # Clean up empty parent directories
+            parent = target.parent
+            while parent != staging_dir and parent.exists():
+                if not any(parent.iterdir()):
+                    parent.rmdir()
+                    parent = parent.parent
+                else:
+                    break
+        else:
+            errors.append({"path": rel_path, "error": "not found"})
+
+    return {"removed": removed, "errors": errors, "count": len(removed)}
+
+
 # =============================================================================
 # ROUTES - MATCH MODE (Gamified Pairing)
 # =============================================================================
