@@ -218,3 +218,213 @@ class TestMultiAnchorMatching:
         suggestions = find_matches(identities_data, face_data, threshold=2.0)
         assert len(suggestions) == 1
         assert suggestions[0]["target_identity_id"] == "near-id"
+
+
+class TestConfidenceLabel:
+    """Tests for AD-013 calibrated confidence labels."""
+
+    def test_very_high_label(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(0.50) == "VERY HIGH"
+        assert confidence_label(0.79) == "VERY HIGH"
+
+    def test_high_label(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(0.80) == "HIGH"
+        assert confidence_label(1.04) == "HIGH"
+
+    def test_moderate_label(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(1.05) == "MODERATE"
+        assert confidence_label(1.14) == "MODERATE"
+
+    def test_low_label(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(1.15) == "LOW"
+        assert confidence_label(2.00) == "LOW"
+
+    def test_boundary_very_high_to_high(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(0.80) == "HIGH"
+
+    def test_boundary_high_to_moderate(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(1.05) == "MODERATE"
+
+    def test_boundary_moderate_to_low(self):
+        from scripts.cluster_new_faces import confidence_label
+        assert confidence_label(1.15) == "LOW"
+
+
+class TestApplySuggestions:
+    """Tests for apply_suggestions safety."""
+
+    def test_moves_face_to_target(self):
+        from scripts.cluster_new_faces import apply_suggestions
+
+        identities_data = {
+            "identities": {
+                "target": {
+                    "identity_id": "target",
+                    "name": "Target",
+                    "state": "CONFIRMED",
+                    "anchor_ids": [],
+                    "candidate_ids": ["existing_face"],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+                "source": {
+                    "identity_id": "source",
+                    "name": "Source",
+                    "state": "INBOX",
+                    "anchor_ids": [],
+                    "candidate_ids": ["move_me"],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+            }
+        }
+
+        suggestions = [{
+            "face_id": "move_me",
+            "source_identity_id": "source",
+            "target_identity_id": "target",
+        }]
+
+        updated, count = apply_suggestions(identities_data, suggestions)
+        assert count == 1
+        assert "move_me" in updated["identities"]["target"]["candidate_ids"]
+        assert "move_me" not in updated["identities"]["source"]["candidate_ids"]
+
+    def test_empty_source_gets_merged(self):
+        from scripts.cluster_new_faces import apply_suggestions
+
+        identities_data = {
+            "identities": {
+                "target": {
+                    "identity_id": "target",
+                    "state": "CONFIRMED",
+                    "anchor_ids": [],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+                "source": {
+                    "identity_id": "source",
+                    "state": "INBOX",
+                    "anchor_ids": [],
+                    "candidate_ids": ["only_face"],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+            }
+        }
+
+        suggestions = [{
+            "face_id": "only_face",
+            "source_identity_id": "source",
+            "target_identity_id": "target",
+        }]
+
+        updated, _ = apply_suggestions(identities_data, suggestions)
+        assert updated["identities"]["source"]["merged_into"] == "target"
+
+    def test_does_not_modify_original(self):
+        from scripts.cluster_new_faces import apply_suggestions
+
+        identities_data = {
+            "identities": {
+                "target": {
+                    "identity_id": "target",
+                    "state": "CONFIRMED",
+                    "anchor_ids": [],
+                    "candidate_ids": ["existing"],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+                "source": {
+                    "identity_id": "source",
+                    "state": "INBOX",
+                    "anchor_ids": [],
+                    "candidate_ids": ["move_me"],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+            }
+        }
+
+        original_target_cands = list(identities_data["identities"]["target"]["candidate_ids"])
+
+        suggestions = [{
+            "face_id": "move_me",
+            "source_identity_id": "source",
+            "target_identity_id": "target",
+        }]
+
+        apply_suggestions(identities_data, suggestions)
+        assert identities_data["identities"]["target"]["candidate_ids"] == original_target_cands
+
+    def test_skips_already_merged_source(self):
+        from scripts.cluster_new_faces import apply_suggestions
+
+        identities_data = {
+            "identities": {
+                "target": {
+                    "identity_id": "target",
+                    "state": "CONFIRMED",
+                    "anchor_ids": [],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                },
+                "source": {
+                    "identity_id": "source",
+                    "state": "INBOX",
+                    "anchor_ids": [],
+                    "candidate_ids": ["face1"],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "merged_into": "other",
+                },
+            }
+        }
+
+        suggestions = [{
+            "face_id": "face1",
+            "source_identity_id": "source",
+            "target_identity_id": "target",
+        }]
+
+        _, count = apply_suggestions(identities_data, suggestions)
+        assert count == 0
+
+
+class TestThresholdConfig:
+    """Tests for AD-013 threshold values in config."""
+
+    def test_threshold_ordering(self):
+        from core.config import (
+            MATCH_THRESHOLD_HIGH,
+            MATCH_THRESHOLD_LOW,
+            MATCH_THRESHOLD_MEDIUM,
+            MATCH_THRESHOLD_MODERATE,
+            MATCH_THRESHOLD_VERY_HIGH,
+        )
+
+        assert MATCH_THRESHOLD_VERY_HIGH < MATCH_THRESHOLD_HIGH
+        assert MATCH_THRESHOLD_HIGH < MATCH_THRESHOLD_MODERATE
+        assert MATCH_THRESHOLD_MODERATE < MATCH_THRESHOLD_MEDIUM
+        assert MATCH_THRESHOLD_MEDIUM < MATCH_THRESHOLD_LOW
+
+    def test_grouping_below_high(self):
+        from core.config import GROUPING_THRESHOLD, MATCH_THRESHOLD_HIGH
+
+        assert GROUPING_THRESHOLD <= MATCH_THRESHOLD_HIGH
+
+    def test_very_high_value(self):
+        from core.config import MATCH_THRESHOLD_VERY_HIGH
+        assert MATCH_THRESHOLD_VERY_HIGH == 0.80
+
+    def test_high_is_zero_fp_ceiling(self):
+        from core.config import MATCH_THRESHOLD_HIGH
+        assert MATCH_THRESHOLD_HIGH == 1.05
