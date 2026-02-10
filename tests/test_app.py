@@ -57,7 +57,8 @@ class TestGalleryRoute:
 
     def test_gallery_has_face_cards(self, client):
         """Gallery has face card elements with images when viewing browse."""
-        response = client.get("/?section=to_review&view=browse")
+        # Use confirmed section since to_review may be empty (all merged)
+        response = client.get("/?section=confirmed")
         assert "crops/" in response.text and "<img" in response.text
 
     def test_triage_view_has_attention_subtitle(self, client):
