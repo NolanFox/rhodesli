@@ -139,6 +139,25 @@ app, rt = fast_app(
                 };
             });
         """),
+        # Mobile sidebar toggle
+        Script("""
+            function toggleSidebar() {
+                var sidebar = document.getElementById('sidebar');
+                var overlay = document.getElementById('sidebar-overlay');
+                if (sidebar && overlay) {
+                    sidebar.classList.toggle('-translate-x-full');
+                    overlay.classList.toggle('hidden');
+                }
+            }
+            function closeSidebar() {
+                var sidebar = document.getElementById('sidebar');
+                var overlay = document.getElementById('sidebar-overlay');
+                if (sidebar && overlay) {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                }
+            }
+        """),
     ),
     static_path=str(static_path),
 )
@@ -1082,6 +1101,26 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
     )
 
 
+def mobile_header() -> Div:
+    """
+    Mobile top bar with hamburger menu button.
+    Hidden on desktop (lg+), shown on smaller screens.
+    """
+    return Div(
+        Button(
+            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>'),
+            cls="text-white p-2 -ml-2",
+            onclick="toggleSidebar()",
+            type="button",
+            aria_label="Open menu",
+        ),
+        Span("Rhodesli", cls="text-lg font-bold text-white"),
+        cls="mobile-header fixed top-0 left-0 right-0 h-14 bg-slate-800 border-b border-slate-700 "
+            "flex items-center gap-3 px-4 z-20",
+        id="mobile-header",
+    )
+
+
 def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
     """
     Collapsible sidebar navigation for the Command Center.
@@ -1119,7 +1158,8 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
             ),
             href=href,
             title=f"{label} ({count})",
-            cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[40px] {container_cls}"
+            onclick="closeSidebar()",
+            cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {container_cls}"
         )
 
     return Aside(
@@ -1290,7 +1330,7 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
 
     return Div(
         *header_content,
-        cls="flex items-center justify-between mb-6"
+        cls="section-header flex items-center justify-between mb-6"
     )
 
 
@@ -1364,7 +1404,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
         actions = Div(
             Button(
                 "✓ Confirm",
-                cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors",
+                cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
                 hx_post=confirm_url,
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
@@ -1373,7 +1413,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             ),
             Button(
                 "⏸ Skip",
-                cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors",
+                cls="px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors min-h-[44px]",
                 hx_post=skip_url,
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
@@ -1382,7 +1422,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             ),
             Button(
                 "✗ Reject",
-                cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors",
+                cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors min-h-[44px]",
                 hx_post=reject_url,
                 hx_target="#focus-container",
                 hx_swap="outerHTML",
@@ -1391,7 +1431,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             ),
             Button(
                 "Find Similar",
-                cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors ml-auto",
+                cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors ml-auto min-h-[44px]",
                 hx_get=f"/api/identity/{identity_id}/neighbors",
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
@@ -1942,7 +1982,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
         ),
         # Result count
         Span(f"{len(photos)} photos", cls="text-sm text-slate-500 ml-auto"),
-        cls="flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4"
+        cls="filter-bar flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4"
     )
 
     # Photo grid — build with navigation context
@@ -2283,7 +2323,7 @@ def review_action_buttons(identity_id: str, state: str, is_admin: bool = True) -
         confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
         buttons.append(Button(
             "\u2713 Confirm",
-            cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors",
+            cls="px-3 py-1.5 text-sm font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors min-h-[44px]",
             hx_post=confirm_url,
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
@@ -2296,7 +2336,7 @@ def review_action_buttons(identity_id: str, state: str, is_admin: bool = True) -
     if state in ("INBOX", "PROPOSED"):
         buttons.append(Button(
             "\u23f8 Skip",
-            cls="px-3 py-1.5 text-sm font-bold bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors",
+            cls="px-3 py-1.5 text-sm font-bold bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors min-h-[44px]",
             hx_post=f"/identity/{identity_id}/skip",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
@@ -2311,7 +2351,7 @@ def review_action_buttons(identity_id: str, state: str, is_admin: bool = True) -
         reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
         buttons.append(Button(
             "\u2717 Reject",
-            cls="px-3 py-1.5 text-sm font-bold border-2 border-red-500 text-red-500 rounded hover:bg-red-500/20 transition-colors",
+            cls="px-3 py-1.5 text-sm font-bold border-2 border-red-500 text-red-500 rounded hover:bg-red-500/20 transition-colors min-h-[44px]",
             hx_post=reject_url,
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
@@ -2324,7 +2364,7 @@ def review_action_buttons(identity_id: str, state: str, is_admin: bool = True) -
     if state in ("CONFIRMED", "SKIPPED", "REJECTED", "CONTESTED"):
         buttons.append(Button(
             "\u21a9 Return to Inbox",
-            cls="px-3 py-1.5 text-sm font-bold border border-slate-500 text-slate-400 rounded hover:bg-slate-700 transition-colors",
+            cls="px-3 py-1.5 text-sm font-bold border border-slate-500 text-slate-400 rounded hover:bg-slate-700 transition-colors min-h-[44px]",
             hx_post=f"/identity/{identity_id}/reset",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
@@ -2922,7 +2962,7 @@ def identity_card(
                     f"{total_faces} face{'s' if total_faces != 1 else ''}",
                     cls="text-xs text-slate-400 ml-2"
                 ),
-                cls="flex items-center gap-3"
+                cls="flex items-center gap-3 flex-wrap"
             ),
             Div(
                 sort_dropdown,
@@ -2930,7 +2970,7 @@ def identity_card(
                 find_similar_btn,
                 cls="flex items-center gap-3"
             ),
-            cls="flex items-center justify-between mb-3"
+            cls="identity-card-header flex items-center justify-between mb-3"
         ),
         # Face grid (paginated)
         Div(
@@ -3088,7 +3128,7 @@ def login_modal() -> Div:
                 A("Forgot password?", href="/forgot-password", cls="text-blue-400 hover:underline"),
                 cls="mt-4 text-center text-sm"
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md p-8 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-8 relative border border-slate-700"
         ),
         id="login-modal",
         cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9998]"
@@ -3110,7 +3150,7 @@ def confirm_modal() -> Div:
                        cls="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 font-bold"),
                 cls="flex justify-end gap-3"
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md p-6 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-6 relative border border-slate-700"
         ),
         id="confirm-modal",
         cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9997]"
@@ -3196,6 +3236,84 @@ def health():
         "photos": photo_count,
         "processing_enabled": PROCESSING_ENABLED,
     }
+
+
+# =============================================================================
+# LANDING PAGE
+# =============================================================================
+
+
+def _compute_landing_stats() -> dict:
+    """Compute live stats for the landing page from actual data."""
+    registry = load_registry()
+    photo_count = 0
+    total_faces = 0
+    photo_index_path = data_path / "photo_index.json"
+    if photo_index_path.exists():
+        with open(photo_index_path) as f:
+            pi = json.load(f)
+        photo_count = len(pi.get("photos", {}))
+        for p in pi.get("photos", {}).values():
+            total_faces += len(p.get("face_ids", []))
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    named_count = len([i for i in confirmed if not i.get("name", "").startswith("Unidentified")])
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    needs_help = len([i for i in (inbox + proposed) if not i.get("merged_into")])
+    return {"photo_count": photo_count, "named_count": named_count,
+            "needs_help": needs_help, "total_faces": total_faces}
+
+
+LANDING_HERO_PHOTOS = [
+    "Image 930_compress.jpg",
+    "Image 931_compress.jpg",
+    "Image 924_compress.jpg",
+    "Image 964_compress.jpg",
+    "Image 001_compress.jpg",
+    "Image 013_compress.jpg",
+    "Image 006_compress.jpg",
+    "Image 046_compress.jpg",
+]
+
+
+def landing_page(user=None) -> tuple:
+    """Welcoming landing page for the Rhodes-Capeluto family archive."""
+    stats = _compute_landing_stats()
+    hero_photos = []
+    for i, filename in enumerate(LANDING_HERO_PHOTOS):
+        size_cls = "col-span-2 row-span-2" if i in (0, 3, 5) else "col-span-1 row-span-1"
+        hero_photos.append(Div(Img(src=photo_url(filename), alt="Rhodes-Capeluto family photo", cls="w-full h-full object-cover", loading="lazy"), cls=f"{size_cls} overflow-hidden rounded-lg"))
+    if user:
+        primary_cta = A("Continue Reviewing", href="/?section=to_review", cls="inline-block px-8 py-4 bg-indigo-600 text-white text-lg font-semibold rounded-xl hover:bg-indigo-500 transition-colors shadow-lg hover:shadow-xl")
+        secondary_cta = A("Browse Photos", href="/?section=photos", cls="inline-block px-8 py-4 border-2 border-slate-500 text-slate-200 text-lg font-semibold rounded-xl hover:border-slate-300 hover:text-white transition-colors")
+    else:
+        primary_cta = A("Start Exploring", href="/?section=photos", cls="inline-block px-8 py-4 bg-indigo-600 text-white text-lg font-semibold rounded-xl hover:bg-indigo-500 transition-colors shadow-lg hover:shadow-xl")
+        secondary_cta = A("Join the Project", href="/signup", cls="inline-block px-8 py-4 border-2 border-slate-500 text-slate-200 text-lg font-semibold rounded-xl hover:border-slate-300 hover:text-white transition-colors") if is_auth_enabled() else A("Browse People", href="/?section=confirmed", cls="inline-block px-8 py-4 border-2 border-slate-500 text-slate-200 text-lg font-semibold rounded-xl hover:border-slate-300 hover:text-white transition-colors")
+    def step_card(icon_svg, title, description):
+        return Div(Div(NotStr(icon_svg), cls="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400"), H3(title, cls="text-lg font-semibold text-white mb-2"), P(description, cls="text-slate-400 text-sm leading-relaxed"), cls="text-center px-4")
+    browse_icon = '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>'
+    identify_icon = '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>'
+    connect_icon = '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>'
+    arrow_svg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>'
+    style = Style("html, body { height: 100%; margin: 0; } body { background-color: #0f172a; } .hero-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 120px; gap: 0.5rem; } @media (min-width: 768px) { .hero-grid { grid-auto-rows: 140px; } } @media (min-width: 1024px) { .hero-grid { grid-auto-rows: 160px; } } .hero-overlay { background: linear-gradient(to bottom, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.6) 50%, rgba(15,23,42,0.95) 100%); } .stat-card { transition: transform 0.2s ease; } .stat-card:hover { transform: translateY(-2px); } @keyframes landing-fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .landing-animate { animation: landing-fade-in 0.6s ease-out both; } .landing-animate-delay-1 { animation-delay: 0.1s; } .landing-animate-delay-2 { animation-delay: 0.2s; }")
+    nav_links = [
+        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Review", href="/?section=to_review", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4"))
+    if user:
+        nav_links.append(Span(user.email.split("@")[0], cls="text-xs text-slate-500 ml-4"))
+    return Title("Rhodesli - Rhodes-Capeluto Family Archive"), style, Div(
+        Nav(Div(A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"), Div(*nav_links, cls="flex items-center gap-6"), cls="max-w-6xl mx-auto px-6 flex items-center justify-between"), cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50", id="landing-nav"),
+        Section(Div(*hero_photos, cls="hero-grid"), Div(cls="hero-overlay absolute inset-0"), Div(H1("Preserving the faces and stories of the Rhodes-Capeluto family", cls="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6 landing-animate max-w-3xl"), P("A living archive of our shared history, brought together by family and powered by careful research. Every photo tells a story. Every face is a connection.", cls="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl landing-animate landing-animate-delay-1"), Div(primary_cta, secondary_cta, cls="flex flex-wrap gap-4 landing-animate landing-animate-delay-2"), cls="absolute inset-0 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 md:pb-16"), cls="relative overflow-hidden pt-16", id="hero"),
+        Section(Div(P("The archive so far", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-8 text-center"), Div(Div(Div(str(stats["photo_count"]), cls="text-4xl md:text-5xl font-bold text-white mb-1"), Div("photos preserved", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["named_count"]), cls="text-4xl md:text-5xl font-bold text-emerald-400 mb-1"), Div("people identified", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["total_faces"]), cls="text-4xl md:text-5xl font-bold text-amber-400 mb-1"), Div("faces detected", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["needs_help"]), cls="text-4xl md:text-5xl font-bold text-blue-400 mb-1"), Div("faces need your help", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), cls="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"), cls="max-w-4xl mx-auto px-6"), cls="py-16 md:py-20", id="stats"),
+        Section(Div(P("How it works", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-4 text-center"), H2("Help us piece together our family history", cls="text-2xl md:text-3xl font-bold text-white text-center mb-12"), Div(step_card(browse_icon, "Browse Photos", "Explore our growing collection of family photographs spanning generations and continents -- from Rhodes to New York and beyond."), Div(NotStr(arrow_svg), cls="hidden md:flex items-center justify-center"), step_card(identify_icon, "Help Identify People", "Do you recognize someone? Your knowledge of the family is invaluable. Confirm names, suggest identifications, or note who you remember."), Div(NotStr(arrow_svg), cls="hidden md:flex items-center justify-center"), step_card(connect_icon, "Connect with History", "Each identification connects a face to a story, strengthening our family tree and preserving memories for future generations."), cls="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4 items-start"), cls="max-w-5xl mx-auto px-6"), cls="py-16 md:py-20 border-t border-slate-800", id="how-it-works"),
+        Section(Div(H2(f"{stats['needs_help']} faces are waiting to be recognized", cls="text-2xl md:text-3xl font-bold text-white mb-4"), P("If you grew up hearing stories about the family, you might be the one who can put a name to a face. Every identification helps.", cls="text-slate-300 mb-8 max-w-xl mx-auto"), Div(primary_cta, cls="flex justify-center"), cls="text-center max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 bg-gradient-to-b from-slate-800/50 to-transparent border-t border-slate-800", id="cta"),
+        Section(Div(H2("About this project", cls="text-xl font-bold text-white mb-4"), P("Rhodesli is a community effort to preserve the photographic heritage of the Rhodes-Capeluto family and the broader Sephardic community of Rhodes. These photos, spanning decades of family life across continents, represent irreplaceable memories that connect us to our shared roots.", cls="text-slate-400 leading-relaxed mb-4"), P("Using careful face detection technology, we have begun the work of identifying the people in these photographs. But technology can only do so much -- we need family members who remember these faces and their stories to help complete the picture.", cls="text-slate-400 leading-relaxed"), cls="max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 border-t border-slate-800", id="about"),
+        Footer(Div(Div(Span("Rhodesli", cls="text-lg font-bold text-white"), Span(" -- A family heritage project", cls="text-sm text-slate-500"), cls="flex items-baseline gap-1 flex-wrap"), Div(A("Photos", href="/?section=photos", cls="text-xs text-slate-500 hover:text-slate-300"), Span("|", cls="text-slate-700"), A("People", href="/?section=confirmed", cls="text-xs text-slate-500 hover:text-slate-300"), Span("|", cls="text-slate-700"), A("Review Inbox", href="/?section=to_review", cls="text-xs text-slate-500 hover:text-slate-300"), cls="flex items-center gap-2"), cls="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4"), cls="py-8 border-t border-slate-800"),
+        cls="min-h-screen bg-slate-900")
 
 
 # =============================================================================
@@ -3662,6 +3780,91 @@ def landing_page(stats, featured_photos):
         @media (max-width: 640px) {
             .stat-number { font-size: 1.75rem; }
             .stat-card { padding: 1rem 0.5rem; }
+        }
+
+        /* ============================================================
+           MOBILE RESPONSIVE STYLES
+           ============================================================ */
+        @media (max-width: 767px) {
+            .main-content {
+                margin-left: 0 !important;
+                padding-top: 56px;
+            }
+            .main-content .main-inner {
+                padding-left: 1rem;
+                padding-right: 1rem;
+                padding-top: 1rem;
+            }
+            .focus-card-layout {
+                flex-direction: column !important;
+                gap: 1rem !important;
+            }
+            .focus-card-layout .focus-thumbnail {
+                width: 100% !important;
+            }
+            .focus-card-layout .focus-thumbnail > div {
+                width: 100% !important;
+                height: auto !important;
+                aspect-ratio: 1 / 1;
+                max-width: 200px;
+                margin: 0 auto;
+            }
+            .focus-actions {
+                flex-wrap: wrap !important;
+            }
+            .focus-actions button {
+                flex: 1 1 auto;
+                min-width: 80px;
+            }
+            .section-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.75rem;
+            }
+            .filter-bar {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.5rem !important;
+            }
+            .filter-bar .ml-auto {
+                margin-left: 0;
+            }
+            .identity-card-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.5rem;
+            }
+            .neighbors-sidebar .flex.items-center {
+                flex-wrap: wrap;
+            }
+            #toast-container {
+                left: 1rem;
+                right: 1rem;
+                max-width: none;
+            }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .main-content {
+                margin-left: 0 !important;
+                padding-top: 56px;
+            }
+            .main-content .main-inner {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+        }
+        @media (max-width: 1023px) {
+            .mobile-header {
+                display: flex !important;
+            }
+        }
+        @media (min-width: 1024px) {
+            .mobile-header {
+                display: none !important;
+            }
+            .main-content {
+                margin-left: 16rem;
+            }
         }
     """)
 
@@ -5110,7 +5313,7 @@ def photo_view_content(
             *face_overlays,
             nav_prev,
             nav_next,
-            cls="relative inline-block"
+            cls="relative inline-block max-w-full"
         ),
         # Photo info
         Div(
@@ -5142,7 +5345,7 @@ def photo_view_content(
             cls="mt-4"
         ),
         nav_keyboard_script,
-        cls="photo-viewer p-4"
+        cls="photo-viewer p-2 sm:p-4 overflow-x-hidden"
     )
 
     if is_partial:
@@ -7075,6 +7278,21 @@ def get(sess=None):
         body {
             background-color: #0f172a;
         }
+        /* Mobile responsive layout */
+        @media (max-width: 767px) {
+            .mobile-header { display: flex !important; }
+            .main-content { margin-left: 0 !important; padding-top: 3.5rem; }
+            .main-content .main-inner { padding: 1rem; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+            .mobile-header { display: flex !important; }
+            .main-content { margin-left: 0 !important; padding-top: 3.5rem; }
+            .main-content .main-inner { padding: 1.5rem; }
+        }
+        @media (min-width: 1024px) {
+            .mobile-header { display: none !important; }
+            .main-content { margin-left: 16rem; }
+        }
     """)
 
     # Canonical sidebar counts
@@ -7169,6 +7387,12 @@ def get(sess=None):
         mobile_header,
         sidebar_overlay,
         sidebar(counts, current_section=None, user=user),
+        # Sidebar overlay for mobile
+        Div(
+            cls="fixed inset-0 bg-black bg-opacity-50 z-30 hidden",
+            id="sidebar-overlay",
+            onclick="closeSidebar()",
+        ),
         Main(
             Div(
                 # Header
@@ -8237,6 +8461,7 @@ def get(sess):
         Head(
             Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Title("Login - Rhodesli"),
+            Meta(name="viewport", content="width=device-width, initial-scale=1"),
             Script(src="https://cdn.tailwindcss.com"),
         ),
         Body(
@@ -8297,7 +8522,11 @@ async def post(email: str, password: str, sess):
     user, error = await login_with_supabase(email, password)
     if error:
         return Html(
-            Head(Meta(name="viewport", content="width=device-width, initial-scale=1"), Title("Login - Rhodesli"), Script(src="https://cdn.tailwindcss.com")),
+            Head(
+                Meta(name="viewport", content="width=device-width, initial-scale=1"),
+                Title("Login - Rhodesli"),
+                Script(src="https://cdn.tailwindcss.com"),
+            ),
             Body(
                 Div(
                     H1("Rhodesli", cls="text-2xl font-bold mb-2"),

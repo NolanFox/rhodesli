@@ -35,18 +35,18 @@ class TestGalleryRoute:
         """Create test client for the FastHTML app."""
         return TestClient(app)
 
-    def test_gallery_returns_200(self, client):
-        """GET / returns 200 OK."""
+    def test_landing_returns_200(self, client):
+        """GET / returns 200 OK (landing page)."""
         response = client.get("/")
         assert response.status_code == 200
 
-    def test_gallery_contains_title(self, client):
-        """Gallery page contains the title."""
+    def test_landing_contains_title(self, client):
+        """Landing page contains the title."""
         response = client.get("/")
         assert "Rhodesli" in response.text
 
-    def test_gallery_has_css_grid(self, client):
-        """Gallery uses CSS grid layout."""
+    def test_landing_has_css_grid(self, client):
+        """Landing page uses CSS grid layout."""
         response = client.get("/")
         assert "grid" in response.text  # Tailwind grid classes
 
@@ -64,6 +64,21 @@ class TestGalleryRoute:
         """Triage section shows items needing attention."""
         response = client.get("/?section=to_review")
         assert "need your attention" in response.text
+
+    def test_workstation_has_keyboard_shortcuts(self, client):
+        """Workstation displays keyboard shortcut hints."""
+        response = client.get("/?section=to_review")
+        assert "Keyboard" in response.text or "keyboard" in response.text
+
+    def test_workstation_has_focus_mode(self, client):
+        """Workstation to_review section has focus mode elements."""
+        response = client.get("/?section=to_review")
+        assert "focus" in response.text.lower()
+
+    def test_workstation_has_sidebar(self, client):
+        """Workstation has sidebar navigation."""
+        response = client.get("/?section=to_review")
+        assert "sidebar" in response.text.lower()
 
 
 class TestNeighborCardThumbnail:
