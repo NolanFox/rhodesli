@@ -1,6 +1,6 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-10 (Session 8 — ML Pipeline + Annotation Engine + Collaboration)
+Last updated: 2026-02-10 (Session 10 — UX Overhaul + Content + Contributor Flow)
 
 ## Active Bugs
 - (none)
@@ -26,21 +26,15 @@ Last updated: 2026-02-10 (Session 8 — ML Pipeline + Annotation Engine + Collab
 - [ ] Smoke test all fixes on live site
 
 ## Near-Term (Next 1-2 Weeks)
-- [ ] BE-012: Photo metadata (date, location, occasion, source)
-- [ ] BE-013: EXIF extraction from uploaded photos
 - [ ] BE-014: Canonical name registry (variant spellings)
-- [ ] AN-006: Photo-level annotations (captions, dates, locations, stories)
-- [ ] AN-012–AN-014: Identity-level annotations (bio, relationships, generation)
-- [ ] BE-001–BE-006: Non-destructive merge system verification/extension
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
-- [ ] ML-011: Golden set diversity analysis (quality, temporal)
+- [ ] FE-041: "Help Identify" mode for non-admin users
+- [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
 
 ## Medium-Term (Next Month)
-- [ ] ROLE-002: Contributor role (propose identifications, add annotations)
-- [ ] ROLE-003: Trusted contributor (direct confirmation after N correct proposals)
-- [ ] FE-041: "Help Identify" mode for non-admin users
+- [ ] FE-070–FE-073: Client-side analytics and admin dashboard
 - [ ] BE-031–BE-033: Upload moderation queue with rate limiting
-- [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
+- [ ] ROLE-006: Email notifications for contributors
 - [ ] Postgres migration (identities + photo_index -> Supabase)
 
 ## Long-Term (Quarter+)
@@ -60,8 +54,14 @@ Last updated: 2026-02-10 (Session 8 — ML Pipeline + Annotation Engine + Collab
 - [x] v0.14.1: Skipped faces fix — clustering includes 192 skipped faces
 - [x] v0.15.0: Upload processing pipeline — staged file sync API, download, orchestrator
 - [x] v0.16.0: ML pipeline + annotation engine + collaboration (969 tests)
-  - Post-merge suggestions, rejection memory in clustering, ambiguity detection
-  - ML evaluation dashboard (/admin/ml-dashboard)
-  - Annotation system (submit/approve/reject + my-contributions)
-  - Structured names (BE-010), identity metadata (BE-011)
-  - Activity feed (/activity), welcome modal (FE-052)
+- [x] v0.17.0: Annotation engine + merge safety + contributor roles (1032 tests)
+- [x] v0.17.1: Verification pass — golden set, permission tests, ROLES.md (1059 tests)
+- [x] v0.17.2: Quality hardening — EXIF ingestion, error handling, permission tests (1152 tests)
+- [x] v0.18.0: UX Overhaul + Contributor Flow (1221 tests)
+  - Landing page rewrite with historical Rhodes content
+  - Login prompt modals with action context
+  - Section rename: Confirmed→People, Skipped→Needs Help
+  - Button prominence: View All Photos + Find Similar
+  - Compare faces UX: face/photo toggle, clickable names
+  - Contributor merge suggestions with admin approval
+  - Bulk photo select mode with collection reassignment

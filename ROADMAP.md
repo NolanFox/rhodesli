@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.17.2 · 1152 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.18.0 · 1221 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -56,6 +56,12 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] FE-011: Bottom tab navigation on mobile (2026-02-08)
 - [x] FE-014: Responsive photo grid (2-col mobile, 4-col desktop) (2026-02-06)
 - [x] FE-015: Mobile match mode — vertical stacking with swipe (2026-02-06)
+- [x] FE-054: Landing page stats fix + historical Rhodes content rewrite (2026-02-10)
+- [x] FE-055: UI clarity — section descriptions, Skipped→Needs Help, Confirmed→People, empty states (2026-02-10)
+- [x] FE-056: Button prominence — View All Photos + Find Similar as styled buttons (2026-02-10)
+- [x] FE-057: Compare faces UX overhaul — face/photo toggle, clickable names, sizing (2026-02-10)
+- [x] FE-058: Login prompt modal with action context for unauthenticated users (2026-02-10)
+- [x] FE-059: Bulk photo select mode with collection reassignment (2026-02-10)
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
 - [x] BE-020: Admin data export endpoint (2026-02-06)
 - [x] BE-021: Production-to-local sync script (2026-02-10)
@@ -97,6 +103,7 @@ Goal: Enable family members to contribute, not just browse.
 - [ ] FE-041: "Help Identify" mode for non-admin users
 - [ ] FE-070–FE-073: Client-side analytics and admin dashboard
 - [ ] BE-031–BE-033: Upload moderation queue with rate limiting
+- [x] ROLE-007: Contributor merge suggestions — role-aware buttons, suggest-merge endpoint, admin approval with merge execution (2026-02-10)
 - [x] ROLE-005: Activity feed — /activity route with action log + approved annotations (2026-02-10)
 - [ ] ROLE-006: Email notifications for contributors
 
@@ -112,6 +119,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-10: v0.18.0 — UX Overhaul + Contributor Flow: landing page rewrite, login prompt modals, section rename (Confirmed→People, Skipped→Needs Help), button prominence, compare faces UX, contributor merge suggestions, bulk photo select mode (1221 tests)
 - [x] 2026-02-10: v0.17.2 — Quality & hardening: EXIF ingestion integration, graceful error handling for corrupted data, 93 route permission boundary tests (1152 tests)
 - [x] 2026-02-10: v0.17.1 — Verification pass: golden set analysis refactor + auto-generation, contributor permission boundary tests, undo merge route tests, docs/ROLES.md (1059 tests)
 - [x] 2026-02-10: v0.17.0 — Annotation engine + merge safety + contributor roles: merge audit snapshots, annotation merging, photo/identity annotations, photo metadata + EXIF, golden set diversity, contributor/trusted contributor roles (1032 tests)

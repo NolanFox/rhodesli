@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 5.2 — February 10, 2026
-**Status**: 1152 tests passing, v0.17.2, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
+**Version**: 5.3 — February 10, 2026
+**Status**: 1221 tests passing, v0.18.0, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -108,6 +108,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-051 | Interactive hero with real archive photos | DONE | Carousel with real archive photos (2026-02-06) |
 | FE-052 | First-time user welcome modal | DONE | Session-based welcome modal with archive overview and "Got it" dismiss (2026-02-10) |
 | FE-053 | Progress dashboard | DONE | "X of Y faces identified" with percentage and help CTA, 5 tests (2026-02-08) |
+| FE-054 | Landing page stats + historical content | DONE | Fixed unidentified stat to include SKIPPED, rewrote About section with Rhodes history (2026-02-10) |
+| FE-055 | UI clarity pass | DONE | Section rename Confirmed→People, Skipped→Needs Help, section descriptions, empty states (2026-02-10) |
+| FE-056 | Button prominence | DONE | View All Photos + Find Similar as styled buttons with icons (2026-02-10) |
+| FE-057 | Compare faces UX overhaul | DONE | Face/photo toggle, clickable names, 1-of-N navigation, max-w-5xl (2026-02-10) |
+| FE-058 | Login prompt modal | DONE | HTMX 401 interceptor with contextual action messages, signup link (2026-02-10) |
+| FE-059 | Bulk photo select mode | DONE | Select toggle, checkboxes, floating action bar, collection reassignment (2026-02-10) |
 
 ### 2.7 Workflow Speed & First-Time Value (HIGH Priority)
 
@@ -379,6 +385,7 @@ Based on research of latest Claude Code patterns (Feb 2026):
 | ROLE-004 | Family member self-identification | OPEN | "That's me!" button on face cards. Special trust level for self-ID. |
 | ROLE-005 | Activity feed | DONE | `/activity` route with action log + approved annotations (2026-02-10) |
 | ROLE-006 | Email notifications | OPEN | "Someone identified a face in your uploaded photo", "New photos added to the archive." |
+| ROLE-007 | Contributor merge suggestions | DONE | Role-aware merge buttons, suggest-merge endpoint, admin approval with face comparison (2026-02-10) |
 
 ---
 

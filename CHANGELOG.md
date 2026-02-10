@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.18.0] - 2026-02-10
+
+### Added
+- **Contributor Merge Suggestions** (Phase 3): Role-aware merge buttons — admins see "Merge", contributors see "Suggest Merge". New `POST /api/identity/{target}/suggest-merge/{source}` endpoint creates `merge_suggestion` annotations. Admin approvals page shows merge suggestions with face thumbnails and "Execute Merge" button. Match mode shows "Suggest Same" for contributors. 18 new tests.
+- **Bulk Photo Select Mode** (Phase 7): Select toggle in photo grid filter bar, checkboxes on photo cards, floating action bar with Select All/Clear/Move to Collection. `POST /api/photos/bulk-update-source` endpoint for admin bulk collection reassignment. Event delegation for all interactions. 13 new tests.
+- **Login Prompt Modal** (Phase 1): HTMX 401 interceptor extracts `data-auth-action` from trigger element for contextual login messages. Signup link in login modal. `?next=` redirect parameter on login page.
+- **Compare Faces UX Overhaul** (Phase 4): Face/photo toggle view, clickable identity names, "1 of N" navigation counter, max-w-5xl modal sizing. 7 new tests.
+- **Button Prominence** (Phase 6): View All Photos and Find Similar promoted from underline links to styled buttons with icons. 3 new tests.
+
+### Changed
+- **UI Clarity** (Phase 8): "Confirmed" → "People" in sidebar, mobile tabs, stat bar. "Skipped" → "Needs Help" in sidebar and stat bar. Section descriptions added to Inbox, People, Needs Help headers. Empty states rewritten with friendly guidance messages. 9 new tests.
+- **Landing Page** (Phase 5): Fixed unidentified stat to include SKIPPED faces. Rewrote About section with historical Rhodes community content (La Juderia, 1492, diaspora). Dynamic `/about` page with community/diaspora/project/FAQ sections. 11 new tests.
+- Test count: 1152 → 1221 (69 new tests across 6 new test files)
+
 ## [v0.17.2] - 2026-02-10
 
 ### Added
