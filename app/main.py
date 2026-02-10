@@ -3031,8 +3031,8 @@ def identity_card(
 
     # View All Photos button (opens photo modal)
     view_all_photos_btn = Button(
-        "View All Photos",
-        cls="text-sm text-amber-400 hover:text-amber-300 underline",
+        "\U0001f4f7 View All Photos",
+        cls="px-3 py-1.5 text-sm font-medium bg-amber-600/20 text-amber-300 border border-amber-500/30 rounded-lg hover:bg-amber-600/30 hover:border-amber-400/50 transition-colors",
         hx_get=f"/api/identity/{identity_id}/photos?index=0",
         hx_target="#photo-modal-content",
         hx_swap="innerHTML",
@@ -3042,8 +3042,8 @@ def identity_card(
 
     # Find Similar button (loads neighbors via HTMX) -- scrolls into view after swap
     find_similar_btn = Button(
-        "Find Similar",
-        cls="text-sm text-indigo-400 hover:text-indigo-300 underline",
+        "\U0001f50d Find Similar",
+        cls="px-3 py-1.5 text-sm font-medium bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-lg hover:bg-indigo-600/30 hover:border-indigo-400/50 transition-colors",
         hx_get=f"/api/identity/{identity_id}/neighbors",
         hx_target=f"#neighbors-{identity_id}",
         hx_swap="innerHTML",
