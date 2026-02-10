@@ -1,43 +1,49 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 2.0 — February 8, 2026
-**Status**: 663 tests passing, v0.10.0, 148 photos, 23 confirmed identities, 181 total faces
+**Version**: 3.0 — February 10, 2026
+**Status**: 900 tests passing, v0.14.1, 148 photos, 23 confirmed identities, 181 faces, 33 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
 
 ## Current State Summary
 
-Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). Auth is complete with Google OAuth, invite codes, and a locked-down permission model (public=view, admin=everything else). Two overnight Claude Code sessions have delivered the core UX, ML pipeline, and testing infrastructure.
+Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). Auth is complete with Google OAuth, invite codes, and a locked-down permission model (public=view, admin=everything else). Seven sessions have delivered deployment, auth, core UX, ML pipeline, stabilization (Phase A complete), share-ready polish (Phase B mostly complete), ML validation, sync infrastructure, and 900 tests.
 
 ---
 
-## 1. ACTIVE BUGS (Fix Immediately)
+## 1. BUGS
 
-### BUG-001: Lightbox Arrow Buttons Disappear After First Photo
-**Reported**: Sessions 10, 11 (twice)
-**Status**: Claimed fixed in Phase 2 (commit 55fea1e) and again in Phase 1 (commit 50e5dc4), but still broken per user testing today
-**Symptom**: First photo in gallery shows right arrow. All subsequent photos lack left/right arrows for mouse navigation. Only keyboard arrows (← →) work.
-**Impact**: HIGH — mouse users (older family members especially) have no way to navigate between photos after the first one.
-**Root cause hypothesis**: The lightbox JS likely binds arrow buttons to the initial photo element but fails to re-render or re-bind after HTMX swaps the photo content. Needs investigation of the `photoNavTo` function and HTMX swap lifecycle.
+**Status**: All P0 bugs resolved. No active P0 bugs as of v0.14.1.
 
-### BUG-002: Face Count Label Incorrect in Photo View
-**Reported**: This session (Feb 8)
-**Screenshot evidence**: Photo `603575393.720025.jpg` shows "6 faces detected" but only 2 face boxes are visible, and user has confirmed all faces are tagged.
-**Impact**: MEDIUM — confusing label undermines trust in the system
-**Root cause hypothesis**: The face count is likely reading from the original detection results (which may have found 6 low-confidence faces) rather than the number of faces actually displayed after filtering. The display filters by detection confidence, but the count label doesn't apply the same filter.
+### BUG-001: Lightbox Arrow Buttons Disappear After First Photo — FIXED
+**Fixed**: 2026-02-08 (v0.11.0) — event delegation pattern, 16 regression tests
+**Root cause**: JS event handlers bound directly to DOM nodes that HTMX swapped out. Fix: global event delegation via `data-action` attributes on `document`.
 
-### BUG-003: Merge Direction Bug (Unidentified → Named Overwrites Named Data)
-**Reported**: Session 10, confirmed still present
-**Status**: Discussed extensively but never fixed
-**Symptom**: When merging from Focus Mode (which always starts with an unidentified person), doing Find Similar → Merge to a named identity overwrites the named person's data with the unidentified person's data. This makes Focus Mode effectively broken for its primary use case.
-**Impact**: CRITICAL — makes the primary tagging workflow destructive
-**Required fix**: Merge must always preserve the richer identity's data. When merging A into B, the result should keep whichever has a name, more faces, more metadata. If both have names, prompt for conflict resolution.
+### BUG-002: Face Count Label Incorrect in Photo View — FIXED
+**Fixed**: 2026-02-08 (v0.11.0)
+**Root cause**: Count read from raw detection results, not filtered/displayed faces. Fix: count matches visible face boxes.
 
-### BUG-004: Collection Stats Inconsistency
-**Reported**: Sessions 10, 11 (three times)
-**Status**: Claimed fixed but persists
-**Symptom**: Photo gallery shows inconsistent collection statistics — denominator mismatches, incorrect photo counts.
+### BUG-003: Merge Direction Bug — FIXED
+**Fixed**: 2026-02-08 (v0.11.0) — `resolve_merge_direction()` with 18 direction-specific tests
+**Root cause**: Already fixed in code before investigation. Tests confirmed auto-correction working.
+
+### BUG-004: Collection Stats Inconsistency — FIXED
+**Fixed**: 2026-02-08 (v0.11.0) — canonical `_compute_sidebar_counts()`, 11 regression tests
+**Root cause**: 4 inline computations with inconsistent logic. Fix: single canonical function.
+
+### BUG-005: Face Count Badges Wildly Wrong — FIXED
+**Fixed**: 2026-02-09 (v0.12.1) — filter to registered faces from photo_index.json, 5 tests
+**Root cause**: Badge denominator used raw embedding count (63 for a 3-person newspaper photo).
+
+### BUG-006: Photo Navigation Dies After Few Clicks — FIXED
+**Fixed**: 2026-02-09 (v0.12.1) — removed duplicate keydown handler, 6 tests
+
+### BUG-007: Logo Doesn't Link Home — FIXED
+**Fixed**: 2026-02-09 (v0.12.1) — wrapped in `<a href="/">`, 2 tests
+
+### BUG-008: Client-Side Fuzzy Search Not Working — FIXED
+**Fixed**: 2026-02-09 (v0.12.1) — JS Levenshtein distance added, 4 tests
 
 ---
 
@@ -47,22 +53,22 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| FE-001 | Fix lightbox arrows (BUG-001) | OPEN | Third attempt needed. Write 5 regression tests BEFORE fixing. |
-| FE-002 | Keyboard arrow navigation in Match Mode | OPEN | Should switch between the two photos being compared. Currently only works in photo gallery. |
-| FE-003 | Universal keyboard shortcuts | PARTIAL | C/S/R/F work in Focus Mode. Need ← → everywhere photos appear (Match, Focus, Photo view, Inbox face cards). |
-| FE-004 | Consistent lightbox across all sections | PARTIAL | Photos section has it. Inbox face cards, Focus Mode, Match Mode need the same component. |
+| FE-001 | Fix lightbox arrows (BUG-001) | DONE | Fixed 2026-02-08 via event delegation + 16 regression tests |
+| FE-002 | Keyboard arrow navigation in Match Mode | DONE | Y/N/S for same/different/skip (2026-02-08) |
+| FE-003 | Universal keyboard shortcuts | DONE | Consolidated global handler for all views (2026-02-08) |
+| FE-004 | Consistent lightbox across all sections | DONE | Consolidated #photo-lightbox into #photo-modal (2026-02-08) |
 | FE-005 | Swipe navigation on mobile | IMPLEMENTED | Phase 3 (commit d1d14c8). Needs real-device testing. |
 
 ### 2.2 Mobile Experience (HIGH Priority)
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| FE-010 | Sidebar hidden in mobile portrait | REPORTED | Session 10 — no hamburger menu or slide-over. |
-| FE-011 | Bottom tab navigation on mobile | OPEN | Replace sidebar with bottom tabs: Inbox, Photos, Confirmed, Search. |
+| FE-010 | Mobile sidebar — hamburger menu or slide-over | DONE | Fixed 2026-02-06 |
+| FE-011 | Bottom tab navigation on mobile | DONE | Photos/Confirmed/Inbox/Search tabs, 6 tests (2026-02-08) |
 | FE-012 | Touch targets ≥44px | IMPLEMENTED | Phase 3. Needs real-device verification. |
 | FE-013 | Mobile-optimized face cards | IMPLEMENTED | Stacked layout. Needs testing. |
-| FE-014 | Responsive photo grid | OPEN | 2-column on mobile, 4-column on desktop. Currently shrinks desktop grid. |
-| FE-015 | Mobile match mode | OPEN | Side-by-side comparison doesn't work on narrow screens. Stack vertically with swipe. |
+| FE-014 | Responsive photo grid | DONE | 2-col mobile, 4-col desktop (2026-02-06) |
+| FE-015 | Mobile match mode — vertical stacking with swipe | DONE | 2026-02-06 |
 
 ### 2.3 Face Tagging & Overlays (MEDIUM-HIGH Priority)
 
@@ -70,20 +76,20 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | FE-020 | Face overlay color system | IMPLEMENTED | Green=confirmed, indigo=proposed, amber=skipped, red=rejected, dashed=unreviewed (commit 905441e). |
 | FE-021 | Photo completion badges on gallery thumbnails | IMPLEMENTED | Green "✓ N", amber "M/N", red "N ⚠" (commit 905441e). |
-| FE-022 | Inline confirm/skip/reject from photo view | OPEN | Currently must go to face card. Should be able to act directly on face overlays. |
-| FE-023 | Single tag dropdown (no multiple simultaneous) | IMPLEMENTED | Commit bf6a99c. |
-| FE-024 | "+ Create New Identity" in autocomplete | IMPLEMENTED | Commit bf6a99c. |
-| FE-025 | Face count label bug (BUG-002) | OPEN | Shows detection count, not displayed/tagged count. |
+| FE-022 | Inline confirm/skip/reject from photo view | DONE | Hover-visible icon buttons on face overlays, 17 tests (2026-02-08) |
+| FE-023 | Single tag dropdown (no multiple simultaneous) | DONE | Commit bf6a99c. |
+| FE-024 | "+ Create New Identity" in autocomplete | DONE | Commit bf6a99c. |
+| FE-025 | Face count label bug (BUG-002) | DONE | Fixed 2026-02-08, count matches visible boxes |
 
 ### 2.4 Search & Discoverability (HIGH Priority)
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| FE-030 | Global search across all surfaces | PARTIAL | "Search names..." exists in sidebar but behavior unclear across sections. |
-| FE-031 | Fast name lookup in Confirmed section | OPEN | Need instant-filter / typeahead. With 23 identities it's manageable; at 100+ it's critical. |
-| FE-032 | Search by collection, date, location | OPEN | Currently only filter by collection in Photos URL params. |
-| FE-033 | Fuzzy name search | OPEN | "Capeluto" should match "Capelouto", "Capelluto". "Joseph" should match "Giuseppe", "Jose", "Joe". Requires canonical name backend (see DATA-010). |
-| FE-034 | Search results highlighting | OPEN | Show which part of the name matched and why. |
+| FE-030 | Global search improvements | DONE | Client-side instant name search with 150ms debounce (2026-02-08) |
+| FE-031 | Fast name lookup with typeahead | DONE | Instant-filter in sidebar (2026-02-08) |
+| FE-032 | Search result navigation | DONE | Hash fragment scroll + 2s highlight animation (2026-02-08) |
+| FE-033 | Fuzzy name search | DONE | Levenshtein edit distance, "Capeluto" finds "Capelouto", 11 tests (2026-02-08) |
+| FE-034 | Search results highlighting | DONE | Matched portion highlighted in amber (2026-02-08) |
 
 ### 2.5 Skipped Faces Workflow (MEDIUM-HIGH Priority)
 
@@ -98,10 +104,10 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| FE-050 | Welcome/about landing page | OPEN | Currently dumps users into Inbox. Needs a page explaining what Rhodesli is, showing sample photos, and guiding users to start. |
-| FE-051 | Creative use of heritage photos | OPEN | Interactive hero with real archive photos — carousel, fade transitions, or mosaic. Make the landing emotionally compelling. |
+| FE-050 | Welcome/about landing page | DONE | Heritage photos, community explanation (2026-02-06) |
+| FE-051 | Interactive hero with real archive photos | DONE | Carousel with real archive photos (2026-02-06) |
 | FE-052 | First-time user guided tour | OPEN | Step-by-step overlay highlighting: browse photos, see faces, help identify, upload your own. |
-| FE-053 | Progress dashboard | OPEN | "23 of 181 faces identified" is buried in footer. Make it a prominent community progress indicator. |
+| FE-053 | Progress dashboard | DONE | "X of Y faces identified" with percentage and help CTA, 5 tests (2026-02-08) |
 
 ### 2.7 Workflow Speed & First-Time Value (HIGH Priority)
 
@@ -130,7 +136,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| BE-001 | Direction-aware merge | OPEN | Always preserve richer identity. Never overwrite named with unnamed. See BUG-003. |
+| BE-001 | Direction-aware merge | DONE | `resolve_merge_direction()` + 18 direction tests (2026-02-08) |
 | BE-002 | Non-destructive merge history | OPEN | Every merge creates a reversible record: `{merged_from, merged_into, timestamp, actor, previous_state}`. |
 | BE-003 | Detach with full restoration | OPEN | Undo a merge by restoring the pre-merge state from the merge history record. |
 | BE-004 | Named conflict resolution | OPEN | When merging two named identities (e.g., "Leon Capeluto" + "Big Leon Capeluto"), show conflict UI: pick primary name, keep both as aliases. |
@@ -153,10 +159,10 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| BE-020 | Admin data export endpoint | OPEN | GET /admin/export → download current identities.json, photo_index.json. Required for local backup and sync. |
-| BE-021 | Production → Local sync script | OPEN | `python scripts/sync_from_production.py` — downloads current data files from Railway. |
+| BE-020 | Admin data export endpoint | DONE | Token-authenticated sync API `/api/sync/*` (2026-02-10, v0.14.0) |
+| BE-021 | Production → Local sync script | DONE | `scripts/sync_from_production.py` with --dry-run, auto-backup, diff summary (2026-02-10) |
 | BE-022 | Local → Production sync (data seeding) | EXISTS | `railway up` pushes data. But needs conflict detection if production data has diverged. |
-| BE-023 | Backup automation | OPEN | Scheduled daily backup of production data to R2 or local. |
+| BE-023 | Backup automation | DONE | `scripts/backup_production.sh` — timestamped backups, auto-cleans to last 10 (2026-02-10) |
 
 ### 3.4 Photo Upload Pipeline (MEDIUM Priority)
 
@@ -187,7 +193,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ML-001 | User actions don't improve predictions | OPEN | Merges, rejects, confirms generate no signal back to the ML pipeline. The system generates embeddings once and never learns from human corrections. |
 | ML-002 | Rejection memory (AD-004) | VERIFIED | "Not Same" pairs are stored and excluded from future suggestions. Commit 8042c85 verified working. |
 | ML-003 | Confirmed matches → golden set | PARTIAL | Golden set exists but needs automated rebuild when new confirmations happen. |
-| ML-004 | Dynamic threshold calibration | OPEN | As more matches are confirmed/rejected, the system should learn the optimal MLS distance threshold for this specific archive (family resemblance is high). |
+| ML-004 | Dynamic threshold calibration | DONE | AD-013: four-tier system (VERY_HIGH/HIGH/MODERATE/LOW) from golden set evaluation (2026-02-09) |
 | ML-005 | Reclustering after merges | OPEN | When identities are merged, the new multi-anchor representation should trigger re-evaluation of nearby unidentified faces. |
 | ML-006 | Family resemblance handling | OPEN | Capelutos matching other Capelutos is a known problem. Consider relative distance (is face A closer to identity X than to any other identity?) rather than absolute threshold. |
 
@@ -195,17 +201,17 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| ML-010 | Expand golden set beyond Big Leon | OPEN | Currently built from identities with ≥3 confirmed faces. As confirmations grow, the golden set should be richer and more representative. |
+| ML-010 | Golden set rebuild | DONE | 90 mappings, 23 identities (2026-02-09) |
 | ML-011 | Golden set diversity | OPEN | Need representation across: ages (child vs adult), photo quality (sharp vs blurry), decades (1940s vs 1970s), lighting conditions. |
-| ML-012 | Automated golden set rebuild | PARTIAL | `scripts/build_golden_set.py` exists. Should run automatically after N new confirmations. |
-| ML-013 | Evaluation metrics dashboard | OPEN | After each golden set rebuild, report: precision, recall, F1 by distance band. Track over time to catch regressions. |
+| ML-012 | Golden set evaluation | DONE | 4005 pairwise comparisons, distance sweep 0.50-2.00 (2026-02-09) |
+| ML-013 | Evaluation metrics dashboard | OPEN | Web UI for evaluation results. Track over time to catch regressions. |
 
 ### 4.3 Clustering & Matching (MEDIUM Priority)
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
 | ML-020 | AD-001 violation fixed | DONE | `cluster_new_faces.py` now uses multi-anchor (commit b792859). |
-| ML-021 | Confidence labeling | OPEN | Clustering report marks everything [HIGH]. Need calibrated labels: [VERY HIGH] <0.70, [HIGH] 0.70-0.80, [MODERATE] 0.80-0.90, [LOW] 0.90-1.00. |
+| ML-021 | Confidence labeling | DONE | Four-tier calibrated labels: VERY_HIGH/HIGH/MODERATE/LOW (2026-02-09, AD-013) |
 | ML-022 | Temporal priors | EXISTS | Code has temporal priors but undocumented. Need AD entry and validation. |
 | ML-023 | Age-aware matching | OPEN | Same person as child vs adult is the hardest case in heritage archives. Consider embedding augmentation or age-estimation preprocessing. |
 | ML-024 | Photo quality weighting | EXISTS | PFE sigma handles quality automatically (AD-010). Verify it's working as expected on damaged/faded photos. |
@@ -282,22 +288,28 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### 7.1 Current Test Coverage
 
-663 tests passing across:
-- `tests/test_auth.py` — 23 auth flow tests
-- `tests/test_permissions.py` — 19 permission matrix tests
-- `tests/test_ui_elements.py` — 17 UI content tests
+900 tests passing (v0.14.1) across:
+- `tests/test_auth.py` — auth flow tests
+- `tests/test_permissions.py` — permission matrix tests
+- `tests/test_ui_elements.py` — UI content tests
 - `tests/test_photo_context.py` — photo display tests
 - `tests/test_regression.py` — regression guards
-- Plus ~585 tests across other files
+- `tests/test_lightbox.py` — 16 lightbox regression tests (BUG-001)
+- `tests/test_merge_direction.py` — 18 merge direction tests (BUG-003)
+- `tests/test_face_count.py` — face count accuracy tests (BUG-002, BUG-005)
+- `tests/test_skipped_faces.py` — 9 skipped face tests (v0.14.1)
+- `tests/test_sync_api.py` — 12 sync API permission matrix tests (v0.14.0)
+- `tests/e2e/` — Playwright E2E tests (19 critical path tests)
+- Plus many more across ~30 test files
 
 ### 7.2 Testing Improvements (HIGH Priority)
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| QA-001 | Lightbox regression tests | OPEN | After 3 failed fixes, need comprehensive tests: arrow rendering on photo 1, photo 2, last photo. HTMX swap lifecycle. |
-| QA-002 | Merge direction tests | OPEN | Test: unnamed→named preserves name. Named→unnamed preserves name. Named→named prompts conflict. |
-| QA-003 | Face count accuracy tests | OPEN | Verify displayed count matches visible face boxes, not raw detection count. |
-| QA-004 | End-to-end browser tests | OPEN | Playwright or Selenium for actual browser testing. Current tests are server-side only. |
+| QA-001 | Lightbox regression tests | DONE | 16 tests covering arrow rendering, HTMX swaps, event delegation (2026-02-08) |
+| QA-002 | Merge direction tests | DONE | 18 tests: unnamed→named, named→unnamed, named→named (2026-02-08) |
+| QA-003 | Face count accuracy tests | DONE | Count matches visible boxes, not raw detection (2026-02-08) |
+| QA-004 | End-to-end browser tests | DONE | Playwright + Chromium, 19 critical path tests (2026-02-08) |
 | QA-005 | Mobile viewport tests | OPEN | Test at 375px, 414px, 768px widths. Verify sidebar hidden, bottom tabs visible, touch targets adequate. |
 | QA-006 | Claude Code UX walkthrough | OPEN | Use Claude Code with browser plugin to simulate user workflows and identify friction. |
 | QA-007 | Performance benchmarking | OPEN | Automate page load measurements, set thresholds, fail tests if degraded. |
@@ -328,8 +340,8 @@ We've been battling the same bugs repeatedly (lightbox arrows fixed 3 times, mul
 | DOC-002 | Path-scoped rules review | DONE | `.claude/rules/` for ML, data, deployment, planning. |
 | DOC-003 | ALGORITHMIC_DECISIONS.md up to date | PARTIAL | AD-001 through AD-012. AD-001 violation fixed. Need entries for temporal priors, detection threshold. |
 | DOC-004 | OPS_DECISIONS.md up to date | DONE | OD-001 through OD-005. |
-| DOC-005 | Auto-update documentation rule | OPEN | Add to CLAUDE.md: "When any change affects user-facing behavior, update relevant docs (CHANGELOG, README, in-app help)." |
-| DOC-006 | Living lessons.md | DONE | 33 lessons. Keep adding. |
+| DOC-005 | Auto-update documentation rule | DONE | CLAUDE.md now has dual-update rule for ROADMAP + BACKLOG + CHANGELOG (2026-02-10) |
+| DOC-006 | Living lessons.md | DONE | 46+ lessons. Keep adding. |
 
 ### 8.2 User-Facing Documentation (MEDIUM Priority)
 
@@ -395,24 +407,12 @@ Based on research of latest Claude Code patterns (Feb 2026):
 
 ## 11. PRIORITIZED EXECUTION PLAN
 
-### Phase A: Stabilization (Next Session — ~2-3 hours)
-**Goal**: Fix all active bugs, get site stable enough to share.
+### Phase A: Stabilization — COMPLETE (2026-02-08)
+All 8 bugs fixed (BUG-001 through BUG-008). 103+ new tests. Event delegation pattern established.
 
-1. BUG-001: Lightbox arrows (tests-first approach)
-2. BUG-002: Face count label
-3. BUG-003: Merge direction (CRITICAL — blocks Focus Mode workflow)
-4. BUG-004: Collection stats
-5. FE-001–FE-004: Navigation consistency
-6. Smoke test all fixes on live site
-
-### Phase B: Share-Ready Polish (Following Session — ~2-3 hours)
-**Goal**: Landing page, search, mobile — make it ready for family members.
-
-1. FE-050–FE-053: Landing page and onboarding
-2. FE-030–FE-031: Search improvements
-3. FE-010–FE-015: Mobile responsive polish
-4. OPS-001: Branded email
-5. BE-020–BE-021: Admin data export/sync
+### Phase B: Share-Ready Polish — MOSTLY COMPLETE (2026-02-06 → 2026-02-10)
+**Done**: FE-050/051/053 (landing page), FE-030/031/033/034 (search), FE-010/011/014/015 (mobile), BE-020/021/023 (sync).
+**Remaining**: FE-052 (guided tour), OPS-001 (branded email).
 
 ### Phase C: Annotation Engine (2-3 sessions)
 **Goal**: Make the archive meaningful beyond face matching.
@@ -453,16 +453,16 @@ Based on research of latest Claude Code patterns (Feb 2026):
 
 | File | Purpose |
 |------|---------|
-| `CLAUDE.md` | Claude Code harness (~78 lines) |
+| `CLAUDE.md` | Claude Code harness (with dual-update rules) |
 | `.claude/rules/*.md` | Path-scoped rules (ML, data, deployment, planning) |
 | `docs/ml/ALGORITHMIC_DECISIONS.md` | AD-001 through AD-012 |
 | `docs/ml/MODEL_INVENTORY.md` | Current model stack |
 | `docs/ops/OPS_DECISIONS.md` | OD-001 through OD-005 |
-| `tasks/todo.md` | Authoritative backlog (superseded by this document) |
-| `tasks/lessons.md` | 33 accumulated lessons |
+| `tasks/todo.md` | Session-level task tracking |
+| `tasks/lessons.md` | 46+ accumulated lessons |
 | `data/identities.json` | Identity data (Railway volume) |
 | `data/photo_index.json` | Photo metadata |
-| `data/embeddings.npy` | Face embeddings (547 faces) |
+| `data/embeddings.npy` | Face embeddings (~550 faces) |
 | `data/golden_set.json` | ML evaluation baseline |
 | `data/clustering_report_2026-02-07.txt` | 35 proposed matches |
 
