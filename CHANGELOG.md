@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.17.2] - 2026-02-10
+
+### Added
+- **EXIF Ingestion Integration** (BE-013): `extract_exif()` now runs during `process_single_image()`, storing date_taken, camera, and GPS location on photo records. Camera added to PhotoRegistry metadata allowlist. Best-effort — EXIF failures never break ingestion. 9 new tests.
+- **Route Permission Boundary Tests**: 61 tests covering 14 admin data-modification routes (confirm, reject, merge, undo-merge, detach, rename, skip, reset, bulk-merge, bulk-reject, collection, identity/photo metadata). Each route tested for anonymous(401), non-admin(403), admin(success), auth-disabled(pass). Cross-cutting tests for 401 empty body, 403 toast, no 303 redirects.
+
+### Fixed
+- **Graceful Error Handling**: `IdentityRegistry.load()` and `PhotoRegistry.load()` now catch `JSONDecodeError` and `KeyError` with descriptive messages. `load_registry()`, `load_photo_registry()`, and `_load_annotations()` degrade to empty defaults instead of crashing the server. 23 new tests.
+
+### Changed
+- Test count: 1059 → 1152 (93 new tests across 3 new test files)
+
 ## [v0.17.1] - 2026-02-10
 
 ### Added
