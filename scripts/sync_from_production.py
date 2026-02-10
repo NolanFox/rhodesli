@@ -56,6 +56,18 @@ def backup_file(filepath: Path) -> Path | None:
     return backup
 
 
+def _get_ssl_context():
+    """Get SSL context, using certifi certs if available (fixes macOS Python)."""
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        # Fall back to default context; if that fails, try unverified
+        ctx = ssl.create_default_context()
+        return ctx
+
+
 def fetch_json(endpoint: str) -> dict:
     """Fetch JSON from sync API endpoint."""
     import urllib.request
@@ -64,9 +76,10 @@ def fetch_json(endpoint: str) -> dict:
     url = f"{SITE_URL}{endpoint}"
     req = urllib.request.Request(url)
     req.add_header("Authorization", f"Bearer {SYNC_TOKEN}")
+    ssl_ctx = _get_ssl_context()
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30, context=ssl_ctx) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         if e.code == 401:
@@ -151,7 +164,8 @@ def sync_from_api(dry_run: bool = False):
     print("  Checking server status...")
     try:
         import urllib.request
-        with urllib.request.urlopen(f"{SITE_URL}/api/sync/status", timeout=10) as resp:
+        ssl_ctx = _get_ssl_context()
+        with urllib.request.urlopen(f"{SITE_URL}/api/sync/status", timeout=10, context=ssl_ctx) as resp:
             status = json.loads(resp.read().decode("utf-8"))
         print(f"  Server: {status.get('identities', '?')} identities, "
               f"{status.get('photos', '?')} photos, "
