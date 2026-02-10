@@ -301,6 +301,18 @@ def _count_pending_uploads() -> int:
     return sum(1 for u in data["uploads"].values() if u["status"] == "pending")
 
 
+def _section_for_state(state: str) -> str:
+    """Map identity state to the correct sidebar section for navigation links."""
+    if state == "CONFIRMED":
+        return "confirmed"
+    elif state == "SKIPPED":
+        return "skipped"
+    elif state in ("REJECTED", "CONTESTED"):
+        return "rejected"
+    else:  # INBOX, PROPOSED
+        return "to_review"
+
+
 def _compute_sidebar_counts(registry) -> dict:
     """Compute sidebar navigation counts from a loaded registry.
 
@@ -1223,7 +1235,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 cls="mb-1"
             ),
             Div(
-                f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed']} identified",
+                f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed'] + counts['skipped']} identified",
                 cls="sidebar-label text-xs text-slate-500 font-data"
             ),
             Div("v0.6.0", cls="sidebar-label text-xs text-slate-600 mt-0.5"),
@@ -1495,13 +1507,14 @@ def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False)
     ) if crop_url else Span("?", cls="text-2xl text-slate-500")
 
     if clickable:
-        # Wrap in a link that loads this identity in focus mode
+        # Wrap in a link that loads this identity in focus mode (correct section)
+        section = _section_for_state(identity.get("state", "INBOX"))
         return A(
             Div(
                 img_element,
                 cls="w-full aspect-square rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center hover:ring-2 hover:ring-indigo-400 transition-all"
             ),
-            href=f"/?section=to_review&view=focus&current={identity_id}",
+            href=f"/?section={section}&view=focus&current={identity_id}",
             cls="w-24 flex-shrink-0 cursor-pointer",
             title="Click to review this identity"
         )
@@ -2524,13 +2537,16 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
         **{"_": f"on change set #bulk-{neighbor_id}.checked to my.checked"},
     ) if (show_checkbox and can_merge) else None
 
+    # Determine the correct section for this neighbor based on its state
+    neighbor_section = _section_for_state(neighbor.get("state", "INBOX"))
+
     # Navigation script: try to scroll if element exists, otherwise navigate to browse mode
-    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section=to_review&view=browse#identity-{neighbor_id}'"
+    nav_script = f"on click set target to #identity-{neighbor_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target else go to url '/?section={neighbor_section}&view=browse#identity-{neighbor_id}'"
 
     return Div(
         Div(checkbox,
-            A(thumbnail_img, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
-            Div(Div(A(name, href=f"/?section=to_review&view=browse#identity-{neighbor_id}", cls="font-medium text-slate-200 truncate hover:text-blue-400 hover:underline cursor-pointer", **{"_": nav_script}),
+            A(thumbnail_img, href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
+            Div(Div(A(name, href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}", cls="font-medium text-slate-200 truncate hover:text-blue-400 hover:underline cursor-pointer", **{"_": nav_script}),
                     Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
                 # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
                 Div(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"),
@@ -4878,14 +4894,7 @@ def photo_view_content(
             # Determine section based on identity state for navigation
             if identity:
                 state = identity.get("state", "INBOX")
-                if state == "CONFIRMED":
-                    nav_section = "confirmed"
-                elif state == "SKIPPED":
-                    nav_section = "skipped"
-                elif state in ("REJECTED", "CONTESTED"):
-                    nav_section = "rejected"
-                else:  # INBOX, PROPOSED
-                    nav_section = "to_review"
+                nav_section = _section_for_state(state)
             else:
                 state = None
                 nav_section = "to_review"
@@ -5265,6 +5274,12 @@ def get(identity_id: str, limit: int = 5, offset: int = 0):
         # First try anchors, then fallback to candidates for PROPOSED identities
         n["anchor_face_ids"] = registry.get_anchor_face_ids(n["identity_id"])
         n["candidate_face_ids"] = registry.get_candidate_face_ids(n["identity_id"])
+        # Add state for correct section routing in neighbor_card links
+        try:
+            n_identity = registry.get_identity(n["identity_id"])
+            n["state"] = n_identity.get("state", "INBOX")
+        except KeyError:
+            n["state"] = "INBOX"
 
         # Enhance blocked merge reason with photo filename
         if not n["can_merge"] and n["merge_blocked_reason"] == "co_occurrence":
@@ -6405,13 +6420,31 @@ def get(identity_id: str, index: int = 0):
             fi = get_identity_for_face(registry, fid)
             is_t = fi and fi["identity_id"] == identity_id
             if is_t:
-                oc = "absolute border-2 border-amber-500 bg-amber-500/20"
+                oc = "absolute border-2 border-amber-500 bg-amber-500/20 cursor-pointer"
                 lb = Span(identity_name, cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-amber-600 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap pointer-events-none")
             else:
                 dn = ensure_utf8_display(fi.get("name", "")) if fi else ""
-                oc = "absolute border border-emerald-500/50 bg-emerald-500/5 group"
+                oc = "absolute border border-emerald-500/50 bg-emerald-500/5 group cursor-pointer hover:bg-emerald-500/15"
                 lb = Span(dn or "Unknown", cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none") if dn else None
-            face_overlays.append(Div(lb, cls=oc, style=f"left: {lp:.2f}%; top: {tp:.2f}%; width: {wp:.2f}%; height: {hp:.2f}%;"))
+
+            # Determine the correct section for navigation based on identity state
+            fi_id = fi["identity_id"] if fi else None
+            fi_section = _section_for_state(fi.get("state", "INBOX")) if fi else "to_review"
+
+            # Click handler: navigate to the identity's face card in the correct section
+            click_script = None
+            if fi_id:
+                click_script = (
+                    f"on click halt the event's bubbling "
+                    f"then add .hidden to #photo-modal "
+                    f"then go to url '/?section={fi_section}&view=browse#identity-{fi_id}'"
+                )
+
+            face_overlays.append(Div(
+                lb, cls=oc,
+                style=f"left: {lp:.2f}%; top: {tp:.2f}%; width: {wp:.2f}%; height: {hp:.2f}%;",
+                **{"_": click_script} if click_script else {},
+            ))
 
     # Lightbox prev/next buttons use data-action for event delegation.
     # The global handler reads data-action and hx-get to dispatch navigation.

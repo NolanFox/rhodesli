@@ -226,8 +226,11 @@ def find_matches(
 
     print(f"Confirmed identities (multi-anchor): {len(confirmed_identities)}")
 
-    # Step 2: Find unresolved identities (INBOX or PROPOSED)
-    unresolved_states = {"INBOX", "PROPOSED"}
+    # Step 2: Find unresolved identities (INBOX, PROPOSED, or SKIPPED)
+    # SKIPPED means "deferred, not recognized yet" — NOT a terminal state.
+    # These faces are the largest pool of unresolved work and must be
+    # re-evaluated against confirmed identities.
+    unresolved_states = {"INBOX", "PROPOSED", "SKIPPED"}
     suggestions = []
 
     for identity_id, identity in identities.items():
