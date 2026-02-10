@@ -5431,6 +5431,8 @@ def photo_view_content(
                 f"Source: {photo.get('source', 'Unknown')}",
                 cls="text-slate-400 text-xs mt-1"
             ) if photo.get("source") else None,
+            # Photo annotations display + form (AN-002–AN-006)
+            _photo_annotations_section(photo_id, is_admin),
             cls="mt-4"
         ),
         nav_keyboard_script,
@@ -9449,6 +9451,116 @@ def _invalidate_annotations_cache():
     """Clear annotations cache after write."""
     global _annotations_cache
     _annotations_cache = None
+
+
+def _photo_annotations_section(photo_id: str, is_admin: bool = False):
+    """
+    AN-002–AN-006: Show approved photo annotations and a form to add new ones.
+    Displays captions, dates, locations, stories, source attributions.
+    """
+    try:
+        annotations = _load_annotations()
+    except Exception:
+        annotations = {"annotations": {}}
+
+    # Get approved annotations for this photo
+    photo_anns = [
+        ann for ann in annotations.get("annotations", {}).values()
+        if ann.get("target_type") == "photo"
+        and ann.get("target_id") == photo_id
+        and ann.get("status") == "approved"
+    ]
+
+    # Also get pending count for admin badge
+    pending_count = sum(
+        1 for ann in annotations.get("annotations", {}).values()
+        if ann.get("target_type") == "photo"
+        and ann.get("target_id") == photo_id
+        and ann.get("status") == "pending"
+    )
+
+    # Display approved annotations grouped by type
+    type_labels = {
+        "caption": "Caption",
+        "date": "Date",
+        "location": "Location",
+        "story": "Story",
+        "source": "Source",
+    }
+    ann_items = []
+    for ann in sorted(photo_anns, key=lambda a: a.get("submitted_at", "")):
+        label = type_labels.get(ann["type"], ann["type"].title())
+        ann_items.append(Div(
+            Span(f"{label}: ", cls="text-slate-400 text-xs font-medium"),
+            Span(ann["value"], cls="text-slate-300 text-xs"),
+            cls="py-1"
+        ))
+
+    # Annotation submission form (available to any logged-in user)
+    form = Div(
+        Details(
+            Summary("Add annotation", cls="text-xs text-indigo-400 hover:text-indigo-300 cursor-pointer"),
+            Form(
+                Input(type="hidden", name="target_type", value="photo"),
+                Input(type="hidden", name="target_id", value=photo_id),
+                Div(
+                    Select(
+                        Option("Caption", value="caption"),
+                        Option("Date", value="date"),
+                        Option("Location", value="location"),
+                        Option("Story", value="story"),
+                        Option("Source/Donor", value="source"),
+                        name="annotation_type",
+                        cls="bg-slate-700 text-white text-xs rounded px-2 py-1 w-full",
+                    ),
+                    cls="mt-2"
+                ),
+                Div(
+                    Textarea(
+                        name="value",
+                        placeholder="Enter annotation...",
+                        cls="bg-slate-700 text-white text-xs rounded px-2 py-1 w-full h-16 resize-none",
+                        required=True,
+                    ),
+                    cls="mt-1"
+                ),
+                Div(
+                    Select(
+                        Option("Certain", value="certain"),
+                        Option("Likely", value="likely", selected=True),
+                        Option("Guess", value="guess"),
+                        name="confidence",
+                        cls="bg-slate-700 text-white text-xs rounded px-2 py-1",
+                    ),
+                    Button(
+                        "Submit",
+                        type="submit",
+                        cls="bg-indigo-600 hover:bg-indigo-500 text-white text-xs px-3 py-1 rounded",
+                    ),
+                    cls="mt-1 flex gap-2 items-center"
+                ),
+                hx_post="/api/annotations/submit",
+                hx_target=f"#photo-annotations-{photo_id}",
+                hx_swap="outerHTML",
+                cls="mt-2",
+            ),
+            cls="mt-2",
+        ),
+        cls="mt-2"
+    )
+
+    pending_badge = Span(
+        f" ({pending_count} pending)",
+        cls="text-amber-400 text-xs"
+    ) if pending_count and is_admin else None
+
+    return Div(
+        *ann_items,
+        form,
+        pending_badge,
+        id=f"photo-annotations-{photo_id}",
+        cls="mt-3 border-t border-slate-700 pt-2" if ann_items else "mt-2",
+    )
 
 
 def _merge_annotations(source_id: str, target_id: str):
