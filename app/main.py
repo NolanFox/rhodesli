@@ -361,9 +361,9 @@ def _save_pending_uploads(data: dict) -> None:
 
 
 def _count_pending_uploads() -> int:
-    """Count pending uploads awaiting review."""
+    """Count pending uploads awaiting review or processing."""
     data = _load_pending_uploads()
-    return sum(1 for u in data["uploads"].values() if u["status"] == "pending")
+    return sum(1 for u in data["uploads"].values() if u["status"] in ("pending", "staged"))
 
 
 def _section_for_state(state: str) -> str:
@@ -8557,24 +8557,49 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
             cls="p-3 bg-green-900/20 border border-green-500/30 rounded"
         )
 
-    # Admin flow: If processing is disabled (production), return staged message
+    # Admin flow: If processing is disabled (production), stage for local processing
     if not PROCESSING_ENABLED:
         file_count = len(saved_files)
-        if file_count == 1:
-            file_msg = f"1 photo"
-        else:
-            file_msg = f"{file_count} photos"
+        file_msg = f"1 photo" if file_count == 1 else f"{file_count} photos"
+
+        # Create a pending upload record so it appears on the admin pending page
+        pending = _load_pending_uploads()
+        pending["uploads"][job_id] = {
+            "job_id": job_id,
+            "uploader_email": uploader_email,
+            "source": source or "Unknown",
+            "collection": collection or "",
+            "source_url": source_url or "",
+            "files": saved_files,
+            "file_count": file_count,
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "status": "staged",
+        }
+        _save_pending_uploads(pending)
+
+        # Build metadata detail line
+        detail_parts = []
+        if collection:
+            detail_parts.append(f"Collection: {collection}")
+        if source:
+            detail_parts.append(f"Source: {source}")
+        detail_line = " · ".join(detail_parts) if detail_parts else ""
 
         return Div(
             Div(
                 Span("✓", cls="text-green-400 text-lg"),
-                P(f"Received {file_msg}", cls="text-slate-200 font-medium"),
+                P(f"{file_msg} uploaded successfully", cls="text-slate-200 font-medium"),
                 cls="flex items-center gap-2"
             ),
+            P(detail_line, cls="text-slate-300 text-sm mt-1") if detail_line else None,
             P(
-                "Pending admin review and processing. "
-                "Photos will appear after the next data sync.",
+                "Staged for processing. Run the local pipeline to detect faces and push to production.",
                 cls="text-slate-400 text-sm mt-1"
+            ),
+            A(
+                "View in Pending Uploads →",
+                href="/admin/pending",
+                cls="inline-block text-blue-400 hover:text-blue-300 text-sm mt-2 underline"
             ),
             P(f"Reference: {job_id}", cls="text-slate-500 text-xs mt-2 font-mono"),
             cls="p-3 bg-green-900/20 border border-green-500/30 rounded"
@@ -8796,9 +8821,9 @@ def get(sess=None):
     registry = load_registry()
     counts = _compute_sidebar_counts(registry)
 
-    # Load pending uploads
+    # Load pending uploads (both contributor "pending" and admin "staged")
     pending = _load_pending_uploads()
-    pending_items = [u for u in pending["uploads"].values() if u["status"] == "pending"]
+    pending_items = [u for u in pending["uploads"].values() if u["status"] in ("pending", "staged")]
     # Sort by submitted_at descending (newest first)
     pending_items.sort(key=lambda x: x.get("submitted_at", ""), reverse=True)
 
@@ -8814,33 +8839,53 @@ def get(sess=None):
             job_id = item["job_id"]
             file_count = item.get("file_count", len(item.get("files", [])))
             file_msg = f"1 file" if file_count == 1 else f"{file_count} files"
+            is_staged = item.get("status") == "staged"
+            collection_label = item.get("collection", "")
+            source_label = item.get("source", "Unknown")
+            detail_parts = [file_msg]
+            if collection_label:
+                detail_parts.append(f"Collection: {collection_label}")
+            if source_label and source_label != "Unknown":
+                detail_parts.append(f"Source: {source_label}")
+            detail_line = " · ".join(detail_parts)
+
+            # Staged items (admin uploads) show status badge, no approve/reject
+            # Pending items (contributor uploads) show approve/reject buttons
+            if is_staged:
+                actions = Div(
+                    Span("Staged", cls="px-2 py-1 bg-blue-600/30 text-blue-300 text-xs font-bold rounded uppercase"),
+                    cls="flex gap-2 items-start"
+                )
+            else:
+                actions = Div(
+                    Button(
+                        "Approve",
+                        hx_post=f"/admin/pending/{job_id}/approve",
+                        hx_target=f"#pending-card-{job_id}",
+                        hx_swap="outerHTML",
+                        cls="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-500 transition-colors"
+                    ),
+                    Button(
+                        "Reject",
+                        hx_post=f"/admin/pending/{job_id}/reject",
+                        hx_target=f"#pending-card-{job_id}",
+                        hx_swap="outerHTML",
+                        cls="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-500 transition-colors"
+                    ),
+                    cls="flex gap-2 items-start"
+                )
+
             pending_cards.append(
                 Div(
                     Div(
                         Div(
                             P(item.get("uploader_email", "Unknown"), cls="text-slate-200 font-medium text-sm"),
-                            P(f"{file_msg} | Source: {item.get('source', 'Unknown')}", cls="text-slate-400 text-xs"),
+                            P(detail_line, cls="text-slate-400 text-xs"),
                             P(f"Submitted: {item.get('submitted_at', 'Unknown')[:19].replace('T', ' ')}", cls="text-slate-500 text-xs mt-0.5"),
                             P(f"Job ID: {job_id}", cls="text-slate-600 text-xs font-mono"),
                             cls="flex-1"
                         ),
-                        Div(
-                            Button(
-                                "Approve",
-                                hx_post=f"/admin/pending/{job_id}/approve",
-                                hx_target=f"#pending-card-{job_id}",
-                                hx_swap="outerHTML",
-                                cls="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-500 transition-colors"
-                            ),
-                            Button(
-                                "Reject",
-                                hx_post=f"/admin/pending/{job_id}/reject",
-                                hx_target=f"#pending-card-{job_id}",
-                                hx_swap="outerHTML",
-                                cls="px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded hover:bg-red-500 transition-colors"
-                            ),
-                            cls="flex gap-2 items-start"
-                        ),
+                        actions,
                         cls="flex items-start justify-between gap-4"
                     ),
                     id=f"pending-card-{job_id}",

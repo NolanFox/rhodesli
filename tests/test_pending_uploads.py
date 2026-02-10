@@ -46,8 +46,8 @@ class TestPendingUploadsHelpers:
             from app.main import _count_pending_uploads
             assert _count_pending_uploads() == 0
 
-    def test_count_pending_uploads_counts_only_pending(self, tmp_path):
-        """_count_pending_uploads counts only uploads with status='pending'."""
+    def test_count_pending_uploads_counts_pending_and_staged(self, tmp_path):
+        """_count_pending_uploads counts uploads with status='pending' or 'staged'."""
         with patch("app.main.data_path", tmp_path):
             from app.main import _save_pending_uploads, _count_pending_uploads
             data = {
@@ -56,10 +56,11 @@ class TestPendingUploadsHelpers:
                     "b": {"status": "pending"},
                     "c": {"status": "approved"},
                     "d": {"status": "rejected"},
+                    "e": {"status": "staged"},
                 }
             }
             _save_pending_uploads(data)
-            assert _count_pending_uploads() == 2
+            assert _count_pending_uploads() == 3  # 2 pending + 1 staged
 
     def test_save_is_atomic(self, tmp_path):
         """_save_pending_uploads uses atomic write (no .tmp file left behind)."""
@@ -108,8 +109,8 @@ class TestNonAdminUploadCreatesPending:
             assert upload["source"] == "Test Collection"
             assert upload["file_count"] == 1
 
-    def test_admin_upload_does_not_create_pending_record(self, client, auth_enabled, admin_user, tmp_path):
-        """POST /upload by admin does NOT create a pending upload record."""
+    def test_admin_upload_creates_staged_record(self, client, auth_enabled, admin_user, tmp_path):
+        """POST /upload by admin on production creates a 'staged' pending record."""
         with patch("app.main.data_path", tmp_path), \
              patch("app.main.PROCESSING_ENABLED", False):
             # Create staging dir
@@ -120,20 +121,25 @@ class TestNonAdminUploadCreatesPending:
             response = client.post(
                 "/upload",
                 files={"files": ("test_photo.jpg", io.BytesIO(file_content), "image/jpeg")},
-                data={"source": "Admin Collection"},
+                data={"source": "personal photos", "collection": "Nace Capeluto Tampa Collection"},
             )
             assert response.status_code == 200
 
-            # Response should mention "Received" (admin staging flow), not "submitted for review"
-            assert "received" in response.text.lower() or "pending admin" in response.text.lower()
+            # Response should show success message with collection/source info
+            assert "uploaded successfully" in response.text.lower()
+            assert "Nace Capeluto Tampa Collection" in response.text
+            assert "Pending Uploads" in response.text  # link to pending page
 
-            # pending_uploads.json should NOT exist (admin flow doesn't create it)
+            # pending_uploads.json should have a staged record
             pending_path = tmp_path / "pending_uploads.json"
-            if pending_path.exists():
-                with open(pending_path) as f:
-                    pending = json.load(f)
-                # If it exists, it should have no uploads
-                assert len(pending["uploads"]) == 0
+            assert pending_path.exists()
+            with open(pending_path) as f:
+                pending = json.load(f)
+            assert len(pending["uploads"]) == 1
+            upload = list(pending["uploads"].values())[0]
+            assert upload["status"] == "staged"
+            assert upload["collection"] == "Nace Capeluto Tampa Collection"
+            assert upload["source"] == "personal photos"
 
 
 class TestAdminPendingPage:
@@ -163,6 +169,34 @@ class TestAdminPendingPage:
             assert "Family Album" in response.text
             assert "Approve" in response.text
             assert "Reject" in response.text
+
+    def test_pending_page_shows_staged_admin_uploads(self, client, auth_enabled, admin_user, tmp_path):
+        """GET /admin/pending shows staged admin uploads with 'Staged' badge."""
+        with patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job2": {
+                        "job_id": "job2",
+                        "uploader_email": "admin@rhodesli.test",
+                        "source": "personal photos",
+                        "collection": "Nace Capeluto Tampa Collection",
+                        "files": ["photo1.jpg", "photo2.jpg"],
+                        "file_count": 2,
+                        "submitted_at": "2026-02-10T00:00:00+00:00",
+                        "status": "staged",
+                    }
+                }
+            })
+
+            response = client.get("/admin/pending")
+            assert response.status_code == 200
+            assert "admin@rhodesli.test" in response.text
+            assert "Nace Capeluto Tampa Collection" in response.text
+            assert "Staged" in response.text
+            # Staged items should NOT have approve/reject buttons
+            assert "Approve" not in response.text
+            assert "Reject" not in response.text
 
     def test_pending_page_shows_empty_state(self, client, auth_enabled, admin_user, tmp_path):
         """GET /admin/pending shows empty state when no pending uploads."""
