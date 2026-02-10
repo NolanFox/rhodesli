@@ -253,6 +253,23 @@
 - **Rule**: Use `_section_for_state(identity.get("state"))` for all identity navigation links. Never hardcode a section.
 - **Prevention**: Created canonical `_section_for_state()` helper. Grep for `section=to_review` periodically to catch new hardcoded links.
 
+## Session 2026-02-10: Upload Pipeline Stress Test
+
+### Lesson 48: Route handlers must use canonical save functions, not direct .save()
+- **Mistake**: `/api/photo/{id}/collection` called `photo_reg.save(photo_index_path)` directly instead of `save_photo_registry(photo_reg)`. Tests patched `save_photo_registry` but the route bypassed it, causing test fixture data to overwrite real `data/photo_index.json` on every test run.
+- **Rule**: All data-modifying route handlers MUST use the canonical save functions (`save_registry()`, `save_photo_registry()`, etc.), never call `.save()` directly on registry objects.
+- **Prevention**: Grep for `.save(` in route handlers. Any direct `.save(path)` call outside of canonical save functions is a bug.
+
+### Lesson 49: A push-to-production API is essential for the ML pipeline
+- **Mistake**: `process_uploads.sh` attempted `git add data/` but data/ is gitignored. There was no way to push locally-processed data back to Railway.
+- **Rule**: Any two-stage pipeline (local processing -> remote deployment) needs a push mechanism. Don't rely on git for pushing gitignored data.
+- **Prevention**: `POST /api/sync/push` + `scripts/push_to_production.py` now handle this. Token-authenticated, creates backups.
+
+### Lesson 50: Downloaded files should match the existing directory convention
+- **Mistake**: `download_staged.py` puts files in `raw_photos/pending/` but the photo_index path recorded `raw_photos/pending/filename.jpg`. All 124 existing photos are at `raw_photos/filename.jpg` (no subdirectory).
+- **Rule**: After downloading, move files to match the canonical location before registering them.
+- **Prevention**: The `process_uploads.sh` script should move files from pending/ to raw_photos/ root after download.
+
 ## Session 2026-02-10: Harness Improvement
 
 ### Lesson 47: Documentation drift is invisible until it's severe

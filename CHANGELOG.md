@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.19.1] - 2026-02-10
+
+### Added
+- **Sync Push API** (`POST /api/sync/push`): Token-authenticated endpoint for pushing locally-processed data (identities.json, photo_index.json) back to production. Creates timestamped backups before overwriting. Companion CLI: `scripts/push_to_production.py`. 9 new tests.
+- **Upload Pipeline Stress Test**: End-to-end test of the full upload pipeline — download staged, ML processing, clustering, R2 upload, push to production, clear staging. Pipeline report: `docs/sessions/pipeline-test-report-20260210.md`.
+
+### Fixed
+- **Data corruption during test suite**: `/api/photo/{id}/collection` route called `photo_reg.save()` directly instead of `save_photo_registry()`, bypassing test mocks and overwriting real `data/photo_index.json` with fixture data on every test run.
+
+### Changed
+- Test count: 1235 → 1245 (9 new sync push tests, 1 data corruption fix)
+
 ## [v0.19.0] - 2026-02-10
 
 ### Added
