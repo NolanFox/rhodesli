@@ -85,3 +85,5 @@ data/cleanup_backups/
 data/.initialized
 data/photo_index.json.bak
 data/*.bak.*
+data/*.bak.*
+data/*.preflight
