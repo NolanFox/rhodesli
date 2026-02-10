@@ -3182,7 +3182,7 @@ def compare_modal() -> Div:
                 P("Loading...", cls="text-slate-400 text-center py-8"),
                 id="compare-modal-content",
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-4xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-5xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700"
         ),
         id="compare-modal",
         cls="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[10000]",
@@ -7013,7 +7013,7 @@ def get(identity_id: str, index: int = 0):
 
 
 @rt("/api/identity/{target_id}/compare/{neighbor_id}")
-def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0):
+def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces"):
     """Side-by-side comparison view for evaluating merge candidates."""
     try:
         registry = load_registry()
@@ -7028,26 +7028,71 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
         return P("No faces available for comparison", cls="text-slate-400")
     target_idx = max(0, min(target_idx, len(tf) - 1))
     neighbor_idx = max(0, min(neighbor_idx, len(nf) - 1))
+
     def _rf(entries, idx):
         e = entries[idx]
         fid = e if isinstance(e, str) else e.get("face_id", "")
         return fid, resolve_face_image_url(fid, crop_files)
-    _, t_url = _rf(tf, target_idx)
-    _, n_url = _rf(nf, neighbor_idx)
+
+    t_fid, t_url = _rf(tf, target_idx)
+    n_fid, n_url = _rf(nf, neighbor_idx)
     t_name = ensure_utf8_display(tgt.get("name")) or f"Identity {target_id[:8]}..."
     n_name = ensure_utf8_display(nbr.get("name")) or f"Identity {neighbor_id[:8]}..."
+
+    # Resolve full photo URLs for photo view mode
+    t_photo_url = None
+    n_photo_url = None
+    if view == "photos":
+        _build_caches()
+        t_photo_id = _face_to_photo_cache.get(t_fid, "")
+        n_photo_id = _face_to_photo_cache.get(n_fid, "")
+        if t_photo_id and _photo_cache and t_photo_id in _photo_cache:
+            t_photo_url = storage.get_photo_url(_photo_cache[t_photo_id].get("path", ""))
+        if n_photo_id and _photo_cache and n_photo_id in _photo_cache:
+            n_photo_url = storage.get_photo_url(_photo_cache[n_photo_id].get("path", ""))
+
+    # Determine which image URLs to show
+    t_display_url = t_photo_url if view == "photos" and t_photo_url else t_url
+    n_display_url = n_photo_url if view == "photos" and n_photo_url else n_url
+
+    # Section routing for clickable names
+    t_section = _section_for_state(tgt.get("state", "INBOX"))
+    n_section = _section_for_state(nbr.get("state", "INBOX"))
+
     def _cn(side, cur, tot, oth):
-        if tot <= 1: return None
+        if tot <= 1:
+            return None
         b = f"/api/identity/{target_id}/compare/{neighbor_id}"
         if side == "t":
-            pu = f"{b}?target_idx={cur-1}&neighbor_idx={oth}"
-            nu = f"{b}?target_idx={cur+1}&neighbor_idx={oth}"
+            pu = f"{b}?target_idx={cur-1}&neighbor_idx={oth}&view={view}"
+            nu = f"{b}?target_idx={cur+1}&neighbor_idx={oth}&view={view}"
         else:
-            pu = f"{b}?target_idx={oth}&neighbor_idx={cur-1}"
-            nu = f"{b}?target_idx={oth}&neighbor_idx={cur+1}"
-        pb = Button("<", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm", hx_get=pu, hx_target="#compare-modal-content", hx_swap="innerHTML", type="button") if cur > 0 else Button("<", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
-        nb = Button(">", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm", hx_get=nu, hx_target="#compare-modal-content", hx_swap="innerHTML", type="button") if cur < tot - 1 else Button(">", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
-        return Div(pb, Span(f"{cur+1}/{tot}", cls="text-xs text-slate-400 mx-1"), nb, cls="flex items-center justify-center gap-1 mt-2")
+            pu = f"{b}?target_idx={oth}&neighbor_idx={cur-1}&view={view}"
+            nu = f"{b}?target_idx={oth}&neighbor_idx={cur+1}&view={view}"
+        pb = Button("\u2190", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
+                    hx_get=pu, hx_target="#compare-modal-content", hx_swap="innerHTML",
+                    type="button") if cur > 0 else Button(
+                    "\u2190", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
+        nb = Button("\u2192", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
+                    hx_get=nu, hx_target="#compare-modal-content", hx_swap="innerHTML",
+                    type="button") if cur < tot - 1 else Button(
+                    "\u2192", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
+        return Div(pb, Span(f"{cur+1} of {tot}", cls="text-xs text-slate-400 mx-2"), nb,
+                   cls="flex items-center justify-center gap-1 mt-2")
+
+    # Face/Photo toggle
+    base_url = f"/api/identity/{target_id}/compare/{neighbor_id}?target_idx={target_idx}&neighbor_idx={neighbor_idx}"
+    toggle = Div(
+        Button("Faces",
+               cls=f"px-3 py-1 text-xs font-medium rounded-l {'bg-amber-600 text-white' if view == 'faces' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
+               hx_get=f"{base_url}&view=faces", hx_target="#compare-modal-content", hx_swap="innerHTML", type="button"),
+        Button("Photos",
+               cls=f"px-3 py-1 text-xs font-medium rounded-r {'bg-amber-600 text-white' if view == 'photos' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
+               hx_get=f"{base_url}&view=photos", hx_target="#compare-modal-content", hx_swap="innerHTML", type="button"),
+        cls="flex justify-center mb-4"
+    )
+
+    # Action buttons
     m_btn = Button("Merge", cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
         hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_id}", hx_swap="outerHTML",
         **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
@@ -7056,19 +7101,40 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
         **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
     cl_btn = Button("Close", cls="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-600 rounded",
         **{"_": "on click add .hidden to #compare-modal"}, type="button")
+
+    img_h = "max-h-[60vh]" if view == "photos" else "max-h-[50vh]"
+
     return Div(
+        toggle,
         Div(
-            Div(P(t_name, cls="text-sm font-medium text-amber-400 mb-2 text-center truncate"),
-                Div(Img(src=t_url or "", alt=t_name, cls="max-w-full max-h-[50vh] object-contain rounded") if t_url else Div(Span("?", cls="text-6xl text-slate-500"), cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+            Div(
+                A(t_name, href=f"/?section={t_section}&current={target_id}",
+                  cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
+                  **{"_": "on click add .hidden to #compare-modal"}),
+                Div(
+                    Img(src=t_display_url or "", alt=t_name,
+                        cls=f"max-w-full {img_h} object-contain rounded") if t_display_url else Div(
+                        Span("?", cls="text-6xl text-slate-500"),
+                        cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
                     cls="flex justify-center bg-slate-700/50 rounded p-2"),
-                _cn("t", target_idx, len(tf), neighbor_idx), cls="flex-1 min-w-0"),
+                _cn("t", target_idx, len(tf), neighbor_idx),
+                cls="flex-1 min-w-0"),
             Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
-            Div(P(n_name, cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate"),
-                Div(Img(src=n_url or "", alt=n_name, cls="max-w-full max-h-[50vh] object-contain rounded") if n_url else Div(Span("?", cls="text-6xl text-slate-500"), cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+            Div(
+                A(n_name, href=f"/?section={n_section}&current={neighbor_id}",
+                  cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
+                  **{"_": "on click add .hidden to #compare-modal"}),
+                Div(
+                    Img(src=n_display_url or "", alt=n_name,
+                        cls=f"max-w-full {img_h} object-contain rounded") if n_display_url else Div(
+                        Span("?", cls="text-6xl text-slate-500"),
+                        cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
                     cls="flex justify-center bg-slate-700/50 rounded p-2"),
-                _cn("n", neighbor_idx, len(nf), target_idx), cls="flex-1 min-w-0"),
+                _cn("n", neighbor_idx, len(nf), target_idx),
+                cls="flex-1 min-w-0"),
             cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start"),
-        Div(m_btn, ns_btn, cl_btn, cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700"))
+        Div(m_btn, ns_btn, cl_btn,
+            cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700"))
 
 
 @rt("/api/identity/{identity_id}/rename-form")
