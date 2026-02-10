@@ -3182,6 +3182,46 @@ def login_modal() -> Div:
     )
 
 
+def _welcome_modal(sess) -> Div:
+    """
+    First-time user welcome modal (FE-052).
+    Shows once per session. Dismissed via 'Got it' button.
+    """
+    if sess and sess.get("welcomed"):
+        return Span()  # Already welcomed
+
+    # Mark as welcomed for this session
+    if sess is not None:
+        sess["welcomed"] = True
+
+    return Div(
+        Div(
+            Div(
+                H2("Welcome to Rhodesli", cls="text-xl font-bold text-white mb-3"),
+                P(
+                    "Rhodesli is a heritage photo archive for the Sephardic Jewish community "
+                    "of Rhodes. Browse photos, help identify faces, and preserve family history.",
+                    cls="text-sm text-slate-300 mb-3"
+                ),
+                P(
+                    "You can browse all photos and identities freely. "
+                    "If you recognize someone, use the 'Suggest Name' button to help identify them.",
+                    cls="text-sm text-slate-400 mb-4"
+                ),
+                Button(
+                    "Got it!",
+                    cls="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 w-full",
+                    **{"_": "on click add .hidden to #welcome-modal"},
+                    type="button",
+                ),
+                cls="bg-slate-800 rounded-xl p-6 border border-slate-700 max-w-md w-full mx-4"
+            ),
+            cls="fixed inset-0 bg-black/60 flex items-center justify-center z-[9998]",
+            id="welcome-modal",
+        ),
+    )
+
+
 def confirm_modal() -> Div:
     """Styled confirmation modal replacing native browser confirm().
     Shown by htmx:confirm event handler."""
@@ -4694,6 +4734,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
         login_modal(),
         # Styled confirmation modal (replaces native browser confirm())
         confirm_modal(),
+        # First-time welcome modal (FE-052)
+        _welcome_modal(sess),
         sidebar_script,
         # Client-side instant name filter with fuzzy matching (FE-030/FE-031/FE-033)
         Script("""
@@ -9612,6 +9654,110 @@ def post(ann_id: str, sess=None):
         cls="bg-emerald-900/20 rounded-lg p-4 border border-emerald-700",
         id=f"annotation-{ann_id}"
     )
+
+
+@rt("/activity")
+def get(sess=None):
+    """
+    Public activity feed showing recent identifications and contributions.
+    Shows what's happening in the archive — motivates contributors.
+    """
+    actions = _load_activity_feed(limit=50)
+
+    rows = []
+    for a in actions:
+        icon = {
+            "MERGE": "🔗",
+            "CONFIRM": "✓",
+            "RENAME": "✏️",
+            "SKIP": "⏭",
+            "annotation_approved": "📝",
+        }.get(a["type"], "•")
+
+        rows.append(Div(
+            Span(icon, cls="text-lg mr-2"),
+            Span(a["description"], cls="text-sm text-slate-300"),
+            Span(a["timestamp"][:10], cls="text-xs text-slate-500 ml-auto"),
+            cls="flex items-center gap-2 py-2 border-b border-slate-800"
+        ))
+
+    if not rows:
+        rows = [Div(
+            P("No activity yet. Be the first to identify someone!",
+              cls="text-slate-400 text-center py-12"),
+        )]
+
+    return Title("Activity — Rhodesli"), Div(
+        Div(
+            H1("Recent Activity", cls="text-2xl font-bold text-white"),
+            A("Back to Archive", href="/",
+              cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            cls="flex items-center justify-between mb-6"
+        ),
+        Div(*rows, cls="space-y-0"),
+        cls="max-w-3xl mx-auto p-6"
+    )
+
+
+def _load_activity_feed(limit: int = 50) -> list:
+    """Load activity from user_actions.log and annotations."""
+    activities = []
+
+    # Load from user action log
+    action_log = Path(__file__).resolve().parent.parent / "logs" / "user_actions.log"
+    if action_log.exists():
+        try:
+            lines = action_log.read_text().strip().split("\n")
+            for line in lines[-limit:]:
+                parts = line.split(" | ", 2)
+                if len(parts) >= 2:
+                    timestamp = parts[0].strip()
+                    action_type = parts[1].strip()
+                    detail = parts[2].strip() if len(parts) > 2 else ""
+
+                    # Skip internal actions
+                    if action_type in ("SKIP",):
+                        continue
+
+                    desc_map = {
+                        "MERGE": "Two identities were merged",
+                        "CONFIRM": "An identity was confirmed",
+                        "RENAME": "An identity was renamed",
+                        "REJECT_IDENTITY": "A match was rejected",
+                        "DETACH": "A face was detached",
+                    }
+                    description = desc_map.get(action_type, f"Action: {action_type}")
+                    if "target_identity_id=" in detail:
+                        # Extract a readable fragment
+                        for kv in detail.split():
+                            if kv.startswith("target_identity_id="):
+                                description += f" ({kv.split('=')[1][:8]}...)"
+                                break
+
+                    activities.append({
+                        "type": action_type,
+                        "description": description,
+                        "timestamp": timestamp,
+                    })
+        except Exception:
+            pass
+
+    # Load from approved annotations
+    try:
+        annotations = _load_annotations()
+        for ann in annotations.get("annotations", {}).values():
+            if ann.get("status") == "approved":
+                activities.append({
+                    "type": "annotation_approved",
+                    "description": f'Name suggestion approved: "{ann["value"]}"',
+                    "timestamp": ann.get("reviewed_at", ann.get("submitted_at", "")),
+                })
+    except Exception:
+        pass
+
+    # Sort by timestamp, newest first
+    activities.sort(key=lambda a: a.get("timestamp", ""), reverse=True)
+    return activities[:limit]
 
 
 @rt("/admin/approvals/{ann_id}/reject")
