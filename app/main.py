@@ -289,6 +289,16 @@ def _check_login(sess) -> Response | None:
     return None
 
 
+def _get_user_role(sess) -> str:
+    """Get the user's role string for UI rendering. Returns 'admin' when auth disabled."""
+    if not is_auth_enabled():
+        return "admin"
+    user = get_current_user(sess or {})
+    if not user:
+        return "viewer"
+    return user.role
+
+
 def _check_contributor(sess) -> Response | None:
     """ROLE-002: Return 401/403 if user is not at least a contributor, else None.
     Allows admin and contributor roles. Rejects viewers and anonymous users.
@@ -2627,7 +2637,7 @@ def face_card(
     )
 
 
-def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True) -> Div:
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin") -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
@@ -2657,11 +2667,17 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
         similarity_label = "Low"
     # -----------------------------------------------
 
-    # Merge button -- no confirm dialog; undo available via toast
-    merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-                       hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_identity_id}",
-                       hx_swap="outerHTML") if can_merge else \
-                Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
+    # Merge button -- role-aware: admin merges directly, contributor suggests
+    if not can_merge:
+        merge_btn = Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
+    elif user_role == "contributor":
+        merge_btn = Button("Suggest Merge", cls="px-3 py-1 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+                           hx_post=f"/api/identity/{target_identity_id}/suggest-merge/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}",
+                           hx_swap="outerHTML", data_auth_action="suggest a merge")
+    else:
+        merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+                           hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_identity_id}",
+                           hx_swap="outerHTML", data_auth_action="merge these identities")
 
     # Compare button -- opens side-by-side comparison modal
     compare_btn = Button(
@@ -2714,7 +2730,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
         id=f"neighbor-{neighbor_id}", cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg"
     )
 
-def search_result_card(result: dict, target_identity_id: str, crop_files: set) -> Div:
+def search_result_card(result: dict, target_identity_id: str, crop_files: set, user_role: str = "admin") -> Div:
     """
     Card for a manual search result.
     Similar styling to neighbor_card but simpler (no distance/percentile).
@@ -2737,14 +2753,25 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set) -
                 cls="w-10 h-10 object-cover rounded border border-slate-600"
             )
 
-    # Merge button with manual_search source -- no confirm dialog; undo via toast
-    merge_btn = Button(
-        "Merge",
-        cls="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-        hx_post=f"/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
-        hx_target=f"#identity-{target_identity_id}",
-        hx_swap="outerHTML",
-    )
+    # Merge button -- role-aware: admin merges directly, contributor suggests
+    if user_role == "contributor":
+        merge_btn = Button(
+            "Suggest Merge",
+            cls="px-2 py-1 text-xs font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+            hx_post=f"/api/identity/{target_identity_id}/suggest-merge/{result_id}",
+            hx_target=f"#search-result-{result_id}",
+            hx_swap="outerHTML",
+            data_auth_action="suggest a merge",
+        )
+    else:
+        merge_btn = Button(
+            "Merge",
+            cls="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+            hx_post=f"/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
+            hx_target=f"#identity-{target_identity_id}",
+            hx_swap="outerHTML",
+            data_auth_action="merge these identities",
+        )
 
     # Navigation hyperscript (same as neighbor_card)
     nav_script = f"on click set target to #identity-{result_id} then if target exists call target.scrollIntoView({{behavior: 'smooth', block: 'center'}}) then add .ring-2 .ring-blue-400 to target then wait 1.5s then remove .ring-2 .ring-blue-400 from target"
@@ -2765,7 +2792,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set) -
     )
 
 
-def search_results_panel(results: list, target_identity_id: str, crop_files: set) -> Div:
+def search_results_panel(results: list, target_identity_id: str, crop_files: set, user_role: str = "admin") -> Div:
     """Panel showing manual search results."""
     if not results:
         return Div(
@@ -2773,7 +2800,7 @@ def search_results_panel(results: list, target_identity_id: str, crop_files: set
             id=f"search-results-{target_identity_id}"
         )
 
-    cards = [search_result_card(r, target_identity_id, crop_files) for r in results]
+    cards = [search_result_card(r, target_identity_id, crop_files, user_role=user_role) for r in results]
     return Div(
         *cards,
         id=f"search-results-{target_identity_id}"
@@ -2802,13 +2829,13 @@ def manual_search_section(identity_id: str) -> Div:
     )
 
 
-def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0) -> Div:
+def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin") -> Div:
     close_btn = Button("Close", cls="text-sm text-slate-400 hover:text-slate-300", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
     if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), close_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
     # Mergeable neighbors get checkboxes for bulk operations
     mergeable = [n for n in neighbors if n.get("can_merge")]
-    cards = [neighbor_card(n, identity_id, crop_files) for n in neighbors]
+    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role) for n in neighbors]
     load_more = Button("Load More", cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
                        hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
 
@@ -5717,7 +5744,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
 # =============================================================================
 
 @rt("/api/identity/{identity_id}/neighbors")
-def get(identity_id: str, limit: int = 5, offset: int = 0):
+def get(identity_id: str, limit: int = 5, offset: int = 0, sess=None):
     """
     Get nearest neighbor identities for potential merge.
 
@@ -5804,6 +5831,7 @@ def get(identity_id: str, limit: int = 5, offset: int = 0):
         offset=offset + limit,  # Next offset for Load More
         has_more=has_more,
         rejected_count=rejected_count,
+        user_role=_get_user_role(sess),
     )
 
 
@@ -5873,7 +5901,7 @@ def get(identity_id: str):
 
 
 @rt("/api/identity/{identity_id}/search")
-def get(identity_id: str, q: str = ""):
+def get(identity_id: str, q: str = "", sess=None):
     """
     Search for identities by name for manual merge.
 
@@ -5901,7 +5929,7 @@ def get(identity_id: str, q: str = ""):
     results = registry.search_identities(q, exclude_id=identity_id)
 
     crop_files = get_crop_files()
-    return search_results_panel(results, identity_id, crop_files)
+    return search_results_panel(results, identity_id, crop_files, user_role=_get_user_role(sess))
 
 
 @rt("/api/search")
@@ -6690,6 +6718,46 @@ def _post_merge_suggestions(target_id: str, registry, crop_files: set, max_sugge
     )
 
 
+@rt("/api/identity/{target_id}/suggest-merge/{source_id}")
+def post(target_id: str, source_id: str, confidence: str = "likely", reason: str = "", sess=None):
+    """
+    Contributor endpoint: suggest merging source into target. Creates a
+    merge_suggestion annotation for admin review instead of executing the merge.
+    """
+    denied = _check_contributor(sess)
+    if denied:
+        return denied
+
+    user = get_current_user(sess)
+    submitted_by = user.email if user else "anonymous"
+
+    # Validate both identities exist
+    try:
+        registry = load_registry()
+        registry.get_identity(target_id)
+        registry.get_identity(source_id)
+    except KeyError:
+        return Response(
+            to_xml(toast("Identity not found.", "error")),
+            status_code=404,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    _create_merge_suggestion(
+        target_id=target_id, source_id=source_id,
+        submitted_by=submitted_by,
+        confidence=confidence,
+        reason=reason,
+    )
+
+    log_user_action("SUGGEST_MERGE", target=target_id, source=source_id, user=submitted_by)
+
+    return Response(
+        to_xml(toast("Merge suggestion submitted for admin review.", "success")),
+        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+    )
+
+
 @rt("/api/identity/{identity_id}/undo-merge")
 def post(identity_id: str, sess=None):
     """
@@ -7013,7 +7081,7 @@ def get(identity_id: str, index: int = 0):
 
 
 @rt("/api/identity/{target_id}/compare/{neighbor_id}")
-def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces"):
+def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces", sess=None):
     """Side-by-side comparison view for evaluating merge candidates."""
     try:
         registry = load_registry()
@@ -7092,10 +7160,16 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
         cls="flex justify-center mb-4"
     )
 
-    # Action buttons
-    m_btn = Button("Merge", cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-        hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_id}", hx_swap="outerHTML",
-        **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
+    # Action buttons -- role-aware
+    _role = _get_user_role(sess)
+    if _role == "contributor":
+        m_btn = Button("Suggest Merge", cls="px-4 py-2 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+            hx_post=f"/api/identity/{target_id}/suggest-merge/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
+            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
+    else:
+        m_btn = Button("Merge", cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+            hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_id}", hx_swap="outerHTML",
+            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
     ns_btn = Button("Not Same", cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
         hx_post=f"/api/identity/{target_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
         **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
@@ -9808,6 +9882,31 @@ def _invalidate_annotations_cache():
     _annotations_cache = None
 
 
+def _create_merge_suggestion(target_id: str, source_id: str, submitted_by: str,
+                             confidence: str = "likely", reason: str = "") -> str:
+    """Create a merge_suggestion annotation. Returns the annotation ID."""
+    import uuid
+    from datetime import datetime, timezone
+    ann_id = str(uuid.uuid4())
+    annotations = _load_annotations()
+    annotations["annotations"][ann_id] = {
+        "annotation_id": ann_id,
+        "type": "merge_suggestion",
+        "target_type": "identity",
+        "target_id": target_id,
+        "value": json.dumps({"source_id": source_id, "target_id": target_id}),
+        "confidence": confidence,
+        "reason": reason,
+        "submitted_by": submitted_by,
+        "submitted_at": datetime.now(timezone.utc).isoformat(),
+        "status": "pending",
+        "reviewed_by": None,
+        "reviewed_at": None,
+    }
+    _save_annotations(annotations)
+    return ann_id
+
+
 def _photo_metadata_display(photo: dict):
     """Display stored photo metadata fields (BE-012)."""
     metadata_fields = {
@@ -10216,8 +10315,83 @@ def get(sess=None):
     pending.sort(key=lambda a: a.get("submitted_at", ""), reverse=True)
 
     rows = []
+    crop_files = get_crop_files()
+    registry = load_registry()
     for a in pending:
         ann_id = a["annotation_id"]
+
+        # Merge suggestions get special rendering with face thumbnails
+        if a["type"] == "merge_suggestion":
+            try:
+                merge_data = json.loads(a["value"])
+                t_id = merge_data.get("target_id", a["target_id"])
+                s_id = merge_data.get("source_id", "")
+                t_identity = registry.get_identity(t_id)
+                s_identity = registry.get_identity(s_id)
+                t_name = ensure_utf8_display(t_identity.get("name", "")) or f"Identity {t_id[:8]}"
+                s_name = ensure_utf8_display(s_identity.get("name", "")) or f"Identity {s_id[:8]}"
+                # Get face thumbnails
+                t_faces = t_identity.get("anchor_ids", []) + t_identity.get("candidate_ids", [])
+                s_faces = s_identity.get("anchor_ids", []) + s_identity.get("candidate_ids", [])
+                t_thumb = None
+                s_thumb = None
+                for fid in t_faces:
+                    url = resolve_face_image_url(fid, crop_files)
+                    if url:
+                        t_thumb = Img(src=url, alt=t_name, cls="w-16 h-16 object-cover rounded border border-slate-600")
+                        break
+                for fid in s_faces:
+                    url = resolve_face_image_url(fid, crop_files)
+                    if url:
+                        s_thumb = Img(src=url, alt=s_name, cls="w-16 h-16 object-cover rounded border border-slate-600")
+                        break
+                if not t_thumb:
+                    t_thumb = Div(cls="w-16 h-16 bg-slate-600 rounded")
+                if not s_thumb:
+                    s_thumb = Div(cls="w-16 h-16 bg-slate-600 rounded")
+
+                rows.append(Div(
+                    Div(
+                        Span("Merge Suggestion", cls="text-sm font-bold text-purple-400"),
+                        Span(f"by {a['submitted_by']}", cls="text-xs text-slate-400 ml-2"),
+                        cls="flex items-center mb-3"
+                    ),
+                    # Side-by-side face comparison
+                    Div(
+                        Div(t_thumb, P(t_name, cls="text-xs text-slate-300 mt-1 text-center truncate w-16"), cls="flex flex-col items-center"),
+                        Span("→", cls="text-slate-500 text-xl font-bold mx-4 self-center"),
+                        Div(s_thumb, P(s_name, cls="text-xs text-slate-300 mt-1 text-center truncate w-16"), cls="flex flex-col items-center"),
+                        cls="flex items-start justify-center mb-3"
+                    ),
+                    P(f'Confidence: {a["confidence"]}', cls="text-xs text-slate-500"),
+                    P(f'Reason: {a.get("reason", "none")}', cls="text-xs text-slate-500") if a.get("reason") else None,
+                    Div(
+                        Button("Execute Merge",
+                               hx_post=f"/admin/approvals/{ann_id}/approve",
+                               hx_target=f"#annotation-{ann_id}",
+                               hx_swap="outerHTML",
+                               cls="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-500"),
+                        Button("Compare",
+                               hx_get=f"/api/identity/{t_id}/compare/{s_id}",
+                               hx_target="#compare-modal-content",
+                               hx_swap="innerHTML",
+                               cls="px-3 py-1 text-sm border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
+                               **{"_": "on click remove .hidden from #compare-modal"},
+                               type="button"),
+                        Button("Skip",
+                               hx_post=f"/admin/approvals/{ann_id}/reject",
+                               hx_target=f"#annotation-{ann_id}",
+                               hx_swap="outerHTML",
+                               cls="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-500"),
+                        cls="flex gap-2 mt-3"
+                    ),
+                    cls="bg-slate-800 rounded-lg p-4 border border-purple-500/30",
+                    id=f"annotation-{ann_id}"
+                ))
+                continue
+            except (json.JSONDecodeError, KeyError):
+                pass  # Fall through to generic rendering
+
         rows.append(Div(
             Div(
                 Span(a["type"].replace("_", " ").title(), cls="text-sm font-bold text-white"),
@@ -10292,12 +10466,56 @@ def post(ann_id: str, sess=None):
             identity["name"] = ann["value"]
             identity["updated_at"] = datetime.now(timezone.utc).isoformat()
             save_registry(registry)
+    elif ann["type"] == "merge_suggestion":
+        # Execute the merge
+        try:
+            merge_data = json.loads(ann["value"])
+            t_id = merge_data.get("target_id", ann["target_id"])
+            s_id = merge_data.get("source_id", "")
+            registry = load_registry()
+            photo_registry = load_photo_registry()
+            result = registry.merge_identities(
+                source_id=s_id, target_id=t_id,
+                user_source="approved_suggestion",
+                photo_registry=photo_registry,
+            )
+            if result["success"]:
+                save_registry(registry)
+                actual_target = result.get("actual_target_id") or t_id
+                _merge_annotations(s_id, actual_target)
+                log_user_action("APPROVE_MERGE_SUGGESTION", target=t_id, source=s_id,
+                                suggested_by=ann["submitted_by"],
+                                admin=user.email if user else "admin")
+            else:
+                _save_annotations(annotations)
+                return Div(
+                    Span("MERGE FAILED", cls="text-sm font-bold text-red-400"),
+                    Span(f' — {result["reason"]}', cls="text-sm text-slate-400"),
+                    cls="bg-red-900/20 rounded-lg p-4 border border-red-700",
+                    id=f"annotation-{ann_id}"
+                )
+        except (json.JSONDecodeError, KeyError) as e:
+            _save_annotations(annotations)
+            return Div(
+                Span("ERROR", cls="text-sm font-bold text-red-400"),
+                Span(f' — Invalid merge data: {e}', cls="text-sm text-slate-400"),
+                cls="bg-red-900/20 rounded-lg p-4 border border-red-700",
+                id=f"annotation-{ann_id}"
+            )
 
     _save_annotations(annotations)
 
+    merge_label = ""
+    if ann["type"] == "merge_suggestion":
+        try:
+            merge_data = json.loads(ann["value"])
+            merge_label = f"Merged {merge_data.get('source_id', '')[:8]} into {merge_data.get('target_id', '')[:8]}"
+        except (json.JSONDecodeError, KeyError):
+            merge_label = "Merge executed"
+
     return Div(
-        Span("APPROVED", cls="text-sm font-bold text-emerald-400"),
-        Span(f' — "{ann["value"]}" by {ann["submitted_by"]}', cls="text-sm text-slate-400"),
+        Span("APPROVED" if ann["type"] != "merge_suggestion" else "MERGED", cls="text-sm font-bold text-emerald-400"),
+        Span(f' — {merge_label or ann["value"]} (suggested by {ann["submitted_by"]})', cls="text-sm text-slate-400"),
         cls="bg-emerald-900/20 rounded-lg p-4 border border-emerald-700",
         id=f"annotation-{ann_id}"
     )
@@ -10714,7 +10932,7 @@ def _get_best_match_pair():
 
 
 @rt("/api/match/next-pair")
-def get():
+def get(sess=None):
     """
     Get the next pair of faces to compare in Match mode.
 
@@ -10845,16 +11063,17 @@ def get():
             _face_card(name_b, crop_url_b, face_id_b, photo_id_b, faces_b, iid=identity_id_b),
             cls="flex flex-col sm:flex-row items-center sm:items-start justify-center gap-2"
         ),
-        # Action buttons
+        # Action buttons -- role-aware
         Div(
             Button(
-                "Same Person",
-                cls="px-8 py-3 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px]",
+                "Suggest Same" if _get_user_role(sess) == "contributor" else "Same Person",
+                cls=f"px-8 py-3 text-sm font-bold {'bg-purple-600 hover:bg-purple-500' if _get_user_role(sess) == 'contributor' else 'bg-emerald-600 hover:bg-emerald-500'} text-white rounded-lg transition-colors min-h-[44px]",
                 hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
                 id="match-btn-same",
+                data_auth_action="identify these faces",
             ),
             Button(
                 "Different People",
@@ -10896,12 +11115,47 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, s
         decision: "same" (merge) or "different" (reject pair)
         confidence: Match confidence percentage at time of decision
     """
-    denied = _check_admin(sess)
+    # Allow contributors to suggest (they can't merge but can say "same")
+    user_role = _get_user_role(sess)
+    if user_role == "contributor":
+        denied = _check_contributor(sess)
+    else:
+        denied = _check_admin(sess)
     if denied:
         return denied
 
     # Log the decision
     _log_match_decision(identity_a, identity_b, decision, confidence, sess)
+
+    # Contributors create merge suggestions instead of executing merges
+    if decision == "same" and user_role == "contributor":
+        user = get_current_user(sess)
+        _create_merge_suggestion(
+            target_id=identity_a, source_id=identity_b,
+            submitted_by=user.email if user else "contributor",
+            confidence="certain" if confidence >= 80 else "likely" if confidence >= 50 else "guess",
+            reason=f"Matched in match mode (confidence: {confidence}%)",
+        )
+        oob_toast = Div(
+            toast("Suggestion recorded! An admin will review it.", "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
+        counter_script = Div(
+            Script("if (typeof incrementMatchCount === 'function') incrementMatchCount();"),
+            hx_swap_oob="beforeend:body",
+        )
+        pair = _get_best_match_pair()
+        if pair is None:
+            return (Div(
+                H3("No more pairs!", cls="text-lg font-medium text-white"),
+                P("You have reviewed all available pairs.", cls="text-slate-400 mt-2"),
+                cls="text-center py-12"
+            ), oob_toast, counter_script)
+        next_pair_html = Div(
+            P("Loading next pair...", cls="text-slate-400 text-center py-4"),
+            hx_get="/api/match/next-pair", hx_trigger="load", hx_swap="outerHTML",
+        )
+        return (next_pair_html, oob_toast, counter_script)
 
     if decision == "same":
         # Merge identity_b into identity_a

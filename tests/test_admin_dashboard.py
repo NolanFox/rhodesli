@@ -17,15 +17,15 @@ class TestAdminDashboardBanner:
         response = client.get("/?section=to_review")
         assert "To Review" in response.text
 
-    def test_banner_shows_confirmed_count(self, client, auth_disabled):
-        """Banner should show the Confirmed count."""
+    def test_banner_shows_people_count(self, client, auth_disabled):
+        """Banner should show the People count (renamed from Confirmed)."""
         response = client.get("/?section=confirmed")
-        assert "Confirmed" in response.text
+        assert "People" in response.text
 
-    def test_banner_shows_skipped_count(self, client, auth_disabled):
-        """Banner should show the Skipped count."""
+    def test_banner_shows_needs_help_count(self, client, auth_disabled):
+        """Banner should show the Needs Help count (renamed from Skipped)."""
         response = client.get("/?section=to_review")
-        assert "Skipped" in response.text
+        assert "Needs Help" in response.text
 
     def test_banner_has_focus_mode_link(self, client, auth_disabled):
         """Banner should have a Focus Mode quick link when not in to_review."""
