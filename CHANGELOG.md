@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.19.0] - 2026-02-10
+
+### Added
+- **Anonymous Guest Contributions**: Visitors can suggest names and annotations without creating an account. `POST /api/annotations/submit` now shows a guest-or-login modal (not 401) for anonymous users, preserving typed input. New `POST /api/annotations/guest-submit` saves annotations as `anonymous` with `pending_unverified` status. New `POST /api/annotations/stash-and-login` stores annotation in session, shows inline login form, and auto-submits after authentication. OAuth callback also submits stashed annotations. Admin approvals page shows guest annotations with amber "Guest" badge, sorted after authenticated submissions. 12 new tests.
+
+### Changed
+- Test count: 1221 → 1235 (14 new/updated tests)
+
 ## [v0.18.0] - 2026-02-10
 
 ### Added

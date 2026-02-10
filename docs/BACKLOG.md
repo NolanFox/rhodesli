@@ -119,7 +119,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| FE-060 | Time-to-first-value for new users | OPEN | A new visitor should be able to do something meaningful (browse, identify a face they recognize) within 30 seconds. |
+| FE-060 | Anonymous guest contributions | DONE | Guest-or-login modal, guest-submit endpoint, stash-and-login flow, admin Guest badge. 2026-02-10 |
 | FE-061 | Quick Compare from Find Similar | OPEN | Side-by-side view with [Merge] [Not Same] buttons. Currently too many clicks. |
 | FE-062 | Batch confirmation for obvious matches | OPEN | When ML is >95% confident across multiple matches, show them as a reviewable batch. |
 | FE-063 | Browser performance audit | OPEN | Use Claude Code with browser plugin to stress test page load, navigation speed, HTMX swap latency. |

@@ -35,8 +35,8 @@ def annotations_file(tmp_path):
 class TestAnnotationSubmit:
     """Tests for POST /api/annotations/submit."""
 
-    def test_annotation_submit_requires_login(self, client):
-        """Anonymous users cannot submit annotations."""
+    def test_annotation_submit_anonymous_shows_guest_modal(self, client):
+        """Anonymous users get guest-or-login modal instead of 401."""
         with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
             response = client.post(
@@ -48,7 +48,8 @@ class TestAnnotationSubmit:
                     "value": "Leon Capeluto",
                 }
             )
-            assert response.status_code == 401
+            assert response.status_code == 200
+            assert "guest-or-login-modal" in response.text
 
     def test_annotation_submit_creates_record(self, client, tmp_path):
         """Logged-in user can submit a name suggestion."""
