@@ -490,8 +490,31 @@ def main():
 
     print()
 
+    # Always persist proposals to data/proposals.json for the web UI
+    proposals_path = data_path / "proposals.json"
+    proposals_data = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "threshold": args.threshold,
+        "proposals": [],
+    }
+    for s in suggestions:
+        proposals_data["proposals"].append({
+            "source_identity_id": s["source_identity_id"],
+            "source_identity_name": s["source_identity_name"],
+            "target_identity_id": s["target_identity_id"],
+            "target_identity_name": s["target_identity_name"],
+            "face_id": s["face_id"],
+            "distance": round(s["distance"], 4),
+            "confidence": confidence_label(s["distance"]),
+            "margin": s.get("margin", 0),
+            "ambiguous": s.get("ambiguous", False),
+        })
+    with open(proposals_path, "w") as f:
+        json.dump(proposals_data, f, indent=2)
+    print(f"\nWrote {len(suggestions)} proposals to {proposals_path}")
+
     if args.dry_run:
-        print("[DRY RUN] No changes made.")
+        print("[DRY RUN] No changes made to identities.json.")
         print("Run with --execute to apply these suggestions.")
     else:
         print("Applying suggestions...")

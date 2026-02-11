@@ -58,6 +58,7 @@ DATA_FILES = [
     "data/annotations.json",
     "data/file_hashes.json",
     "data/golden_set.json",
+    "data/proposals.json",
 ]
 
 
