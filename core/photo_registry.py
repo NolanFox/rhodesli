@@ -21,6 +21,21 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
+# Fields every photo entry must have with a truthy value before persistence.
+# "path" = relative filename, "width"/"height" = pixel dimensions, "collection" = archive grouping.
+REQUIRED_PHOTO_FIELDS = ["path", "width", "height", "collection"]
+
+
+def validate_photo_entry(photo_id: str, entry: dict) -> None:
+    """Raise ValueError if a photo entry is missing required fields.
+
+    Called automatically by PhotoRegistry.save() to prevent incomplete
+    entries from reaching disk.
+    """
+    missing = [f for f in REQUIRED_PHOTO_FIELDS if not entry.get(f)]
+    if missing:
+        raise ValueError(f"Photo {photo_id} missing required fields: {missing}")
+
 
 class PhotoRegistry:
     """
@@ -263,6 +278,10 @@ class PhotoRegistry:
 
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Validate all entries before writing
+        for photo_id, photo_data in self._photos.items():
+            validate_photo_entry(photo_id, photo_data)
 
         # Convert sets to lists for JSON serialization, preserve metadata
         photos_serializable = {}

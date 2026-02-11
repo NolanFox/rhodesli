@@ -108,6 +108,28 @@ def check_face_to_photo_consistency():
         warnings.append(f"  ... and {orphaned - 5} more orphaned face references")
 
 
+def check_photo_entry_completeness():
+    """Every photo entry must have all required fields."""
+    # Mirror REQUIRED_PHOTO_FIELDS from core/photo_registry.py
+    required = ["path", "width", "height", "collection"]
+
+    pi_path = data_dir / "photo_index.json"
+    if not pi_path.exists():
+        return
+
+    pi = json.loads(pi_path.read_text())
+    photos = pi.get("photos", pi)
+
+    for pid, p in photos.items():
+        if not isinstance(p, dict):
+            continue
+        missing = [f for f in required if not p.get(f)]
+        if missing:
+            errors.append(
+                f"INCOMPLETE PHOTO: {pid} missing required fields: {missing}"
+            )
+
+
 def check_deployment_readiness():
     """Verify all required data files are tracked by git and will deploy."""
     import subprocess
@@ -149,6 +171,7 @@ def main():
     check_identity_integrity()
     check_photo_count_consistency()
     check_face_to_photo_consistency()
+    check_photo_entry_completeness()
     check_deployment_readiness()
 
     if errors:
