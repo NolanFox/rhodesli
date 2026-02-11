@@ -181,6 +181,20 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Hypothesis**: MLS may improve matching for low-quality heritage photos where sigma_sq should down-weight uncertain embeddings. But since all sigma_sq values are scalar-uniform (not per-dimension), the benefit may be minimal.
 - **Affects**: `core/neighbors.py` (if MLS proves better), `scripts/cluster_new_faces.py`, `core/grouping.py`.
 
+### AD-028: Surname Variant Matching — Bidirectional Lookup via Data Registry
+- **Date**: 2026-02-11
+- **Context**: Rhodes Jewish family names have many transliterations (Ladino/Turkish/Greek/Hebrew). "Capeluto", "Capelouto", "Capuano" are the same family. Search must bridge these variants.
+- **Decision**: Maintain `data/surname_variants.json` with curated variant groups. Search expands query terms bidirectionally: searching any variant finds all members of the group. 13 groups covering ~50 variants.
+- **Rejected**: (1) Fuzzy matching only (Levenshtein) — false positives for unrelated names within edit distance 2, false negatives when variants differ by >2 edits (e.g., "Capeluto" → "Capuano" is 4 edits). (2) Phonetic algorithms (Soundex, Metaphone) — designed for English; poor on Sephardic/Ladino names where pronunciation maps inconsistently to Latin script. (3) Database trigram matching — adds query latency for a static dataset.
+- **Affects**: `core/registry.py` (search_identities expansion), `data/surname_variants.json`.
+
+### AD-029: Search Ranking — State-Based Priority with Variant Expansion
+- **Date**: 2026-02-11
+- **Context**: Search must return identities across ALL states (CONFIRMED, PROPOSED, INBOX, SKIPPED) with useful ranking. Previously only CONFIRMED were searchable.
+- **Decision**: Rank by state priority (CONFIRMED > PROPOSED > INBOX > SKIPPED > CONTESTED > REJECTED), then alphabetically. Variant expansion and alias search run before ranking. Fuzzy fallback (Levenshtein) only activates when exact + variant matching returns nothing.
+- **Rejected**: (1) Chronological ranking — abandons semantic relevance. (2) Fuzzy-first — adds false positives to every search; better to only fuzzy when exact fails. (3) CONFIRMED-only filtering — hides 95% of identities from search, making the tool useless for identification work.
+- **Affects**: `core/registry.py` (search_identities), `app/main.py` (/api/search, /api/tag-search).
+
 ---
 
 ## Detailed ADR Documents
@@ -223,7 +237,7 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-028)
+1. Add a new entry with AD-XXX format (next: AD-030)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

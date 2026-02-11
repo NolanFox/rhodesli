@@ -416,3 +416,81 @@ class TestMarkProcessedEndpoint:
             # Processed job should NOT show as a pending/staged item
             assert "Processed Job" not in response.text
             assert "No pending uploads" in response.text
+
+
+class TestUploadSafetyChecks:
+    """Upload endpoints enforce file size limits, file type validation, and batch limits."""
+
+    def test_rejects_disallowed_file_extension(self, client, auth_enabled, admin_user, tmp_path):
+        """Upload rejects files with non-image extensions."""
+        with patch("app.main.data_path", tmp_path):
+            (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+            response = client.post(
+                "/upload",
+                files={"files": ("malware.exe", io.BytesIO(b"fake"), "application/octet-stream")},
+                data={"source": "Test"},
+            )
+            assert response.status_code == 200
+            assert "not allowed" in response.text.lower()
+
+    def test_rejects_oversized_file(self, client, auth_enabled, admin_user, tmp_path):
+        """Upload rejects files exceeding 50 MB."""
+        with patch("app.main.data_path", tmp_path):
+            (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+            # Create a 51 MB file
+            big_content = b"x" * (51 * 1024 * 1024)
+            response = client.post(
+                "/upload",
+                files={"files": ("huge.jpg", io.BytesIO(big_content), "image/jpeg")},
+                data={"source": "Test"},
+            )
+            assert response.status_code == 200
+            assert "too large" in response.text.lower()
+
+    def test_rejects_too_many_files(self, client, auth_enabled, admin_user, tmp_path):
+        """Upload rejects batches with more than 50 files."""
+        with patch("app.main.data_path", tmp_path):
+            (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+            files = [("files", (f"photo_{i}.jpg", io.BytesIO(b"x"), "image/jpeg"))
+                     for i in range(51)]
+            response = client.post("/upload", files=files, data={"source": "Test"})
+            assert response.status_code == 200
+            assert "too many" in response.text.lower()
+
+    def test_accepts_valid_image_upload(self, client, auth_enabled, admin_user, tmp_path):
+        """Upload accepts valid image files within limits."""
+        with patch("app.main.data_path", tmp_path), \
+             patch("app.main.PROCESSING_ENABLED", False):
+            (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+            response = client.post(
+                "/upload",
+                files={"files": ("photo.jpg", io.BytesIO(b"fake image"), "image/jpeg")},
+                data={"source": "Test"},
+            )
+            assert response.status_code == 200
+            assert "not allowed" not in response.text.lower()
+            assert "too large" not in response.text.lower()
+
+    def test_accepts_zip_upload(self, client, auth_enabled, admin_user, tmp_path):
+        """Upload accepts .zip files."""
+        with patch("app.main.data_path", tmp_path), \
+             patch("app.main.PROCESSING_ENABLED", False):
+            (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+            response = client.post(
+                "/upload",
+                files={"files": ("photos.zip", io.BytesIO(b"PK\x03\x04"), "application/zip")},
+                data={"source": "Test"},
+            )
+            assert response.status_code == 200
+            assert "not allowed" not in response.text.lower()
+
+    def test_rejects_batch_exceeding_total_size(self, client, auth_enabled, admin_user, tmp_path):
+        """Upload rejects batch when total size exceeds 500 MB."""
+        with patch("app.main.data_path", tmp_path):
+            (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+            # 11 files x 49 MB each = 539 MB > 500 MB limit
+            files = [("files", (f"photo_{i}.jpg", io.BytesIO(b"x" * (49 * 1024 * 1024)), "image/jpeg"))
+                     for i in range(11)]
+            response = client.post("/upload", files=files, data={"source": "Test"})
+            assert response.status_code == 200
+            assert "500 mb" in response.text.lower() or "too large" in response.text.lower()

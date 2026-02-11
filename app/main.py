@@ -9174,6 +9174,27 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
             cls="p-2"
         )
 
+    # --- Upload safety checks ---
+    MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB per file
+    MAX_BATCH_SIZE = 500 * 1024 * 1024  # 500 MB per batch
+    MAX_FILES_PER_UPLOAD = 50
+    ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tiff", ".tif", ".zip"}
+
+    if len(valid_files) > MAX_FILES_PER_UPLOAD:
+        return Div(
+            P(f"Too many files. Maximum {MAX_FILES_PER_UPLOAD} per upload.", cls="text-red-400 text-sm"),
+            cls="p-2"
+        )
+
+    # Validate file extensions before reading content
+    for f in valid_files:
+        ext = Path(f.filename).suffix.lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            return Div(
+                P(f"File type '{ext}' not allowed. Accepted: images and .zip archives.", cls="text-red-400 text-sm"),
+                cls="p-2"
+            )
+
     # Determine if current user is admin
     user = get_current_user(sess or {})
     user_is_admin = user and user.is_admin if is_auth_enabled() else True
@@ -9187,15 +9208,37 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
 
     job_dir.mkdir(parents=True, exist_ok=True)
 
-    # Save all files to job directory
+    # Save all files to job directory with size checks
     saved_files = []
+    total_size = 0
     for f in valid_files:
         # Sanitize filename
         safe_filename = f.filename.replace(" ", "_").replace("/", "_")
         upload_path = job_dir / safe_filename
 
-        # Write file content
+        # Read and check file size
         content = await f.read()
+        file_size = len(content)
+
+        if file_size > MAX_FILE_SIZE:
+            # Clean up job dir on failure
+            import shutil
+            shutil.rmtree(job_dir, ignore_errors=True)
+            mb = file_size / (1024 * 1024)
+            return Div(
+                P(f"File '{safe_filename}' is too large ({mb:.1f} MB). Maximum is 50 MB per file.", cls="text-red-400 text-sm"),
+                cls="p-2"
+            )
+
+        total_size += file_size
+        if total_size > MAX_BATCH_SIZE:
+            import shutil
+            shutil.rmtree(job_dir, ignore_errors=True)
+            return Div(
+                P("Total batch size exceeds 500 MB limit.", cls="text-red-400 text-sm"),
+                cls="p-2"
+            )
+
         with open(upload_path, "wb") as out:
             out.write(content)
         saved_files.append(safe_filename)
