@@ -22,6 +22,7 @@ class TestPhotoRegistryMetadata:
                     "path": "img1.jpg",
                     "face_ids": ["face-a"],
                     "source": "Test Collection",
+                    "collection": "Test Collection",
                 },
             },
             "face_to_photo": {"face-a": "photo-1"},

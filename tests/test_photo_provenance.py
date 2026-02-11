@@ -33,9 +33,9 @@ class TestPhotoRegistryCollectionField:
         # Source unchanged
         assert registry.get_source("photo1") == "Newspapers.com"
 
-    def test_get_collection_default_empty(self, registry):
-        """Photos without collection return empty string."""
-        assert registry.get_collection("photo1") == ""
+    def test_get_collection_defaults_to_source(self, registry):
+        """Photos without explicit collection default to source value."""
+        assert registry.get_collection("photo1") == "Newspapers.com"
 
     def test_get_collection_unknown_photo(self, registry):
         """Unknown photo returns empty string for collection."""

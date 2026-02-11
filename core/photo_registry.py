@@ -22,8 +22,9 @@ from typing import Optional
 logger = logging.getLogger(__name__)
 
 # Fields every photo entry must have with a truthy value before persistence.
-# "path" = relative filename, "width"/"height" = pixel dimensions, "collection" = archive grouping.
-REQUIRED_PHOTO_FIELDS = ["path", "width", "height", "collection"]
+# "path" = relative filename, "collection" = archive grouping.
+# width/height are strongly recommended but not required (set during face detection).
+REQUIRED_PHOTO_FIELDS = ["path", "collection"]
 
 
 def validate_photo_entry(photo_id: str, entry: dict) -> None:
@@ -50,7 +51,7 @@ class PhotoRegistry:
         self._photos: dict[str, dict] = {}
         self._face_to_photo: dict[str, str] = {}
 
-    def register_face(self, photo_id: str, path: str, face_id: str, source: str = "") -> None:
+    def register_face(self, photo_id: str, path: str, face_id: str, source: str = "", collection: str = "") -> None:
         """
         Register a face as appearing in a photo.
 
@@ -58,13 +59,15 @@ class PhotoRegistry:
             photo_id: Stable identifier for the photo
             path: File path (metadata only, not primary key)
             face_id: Identifier for the detected face
-            source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
+            source: Provenance/origin label (e.g., "Betty Capeluto's Album")
+            collection: Archive classification (e.g., "Betty Capeluto Miami Collection")
         """
         if photo_id not in self._photos:
             self._photos[photo_id] = {
                 "path": path,
                 "face_ids": set(),
                 "source": source,
+                "collection": collection or source or "Uncategorized",
             }
 
         self._photos[photo_id]["face_ids"].add(face_id)

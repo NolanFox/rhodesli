@@ -308,6 +308,7 @@ def process_single_image(
     crops_dir: Path,
     file_hash_path: Path = None,
     source: str = "",
+    collection: str = "",
 ) -> dict:
     """
     Process a single image file (internal helper).
@@ -321,7 +322,8 @@ def process_single_image(
         identity_path: Path to identities.json
         crops_dir: Path to crops directory
         file_hash_path: Path to file_hashes.json (for idempotency)
-        source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
+        source: Provenance/origin label (e.g., "Betty Capeluto's Album")
+        collection: Archive classification (e.g., "Betty Capeluto Miami Collection"). Defaults to source if empty.
 
     Returns:
         Result dict with faces_extracted, identity_ids, skipped_duplicate, or error
@@ -395,6 +397,10 @@ def process_single_image(
     if image_width > 0 and image_height > 0:
         photo_registry.set_dimensions(photo_id, image_width, image_height)
 
+    # Set collection (defaults to source if not explicitly provided)
+    effective_collection = collection or source or "Uncategorized"
+    photo_registry.set_collection(photo_id, effective_collection)
+
     photo_registry.save(photo_index_path)
 
     # Extract EXIF metadata and store on the photo record
@@ -464,6 +470,7 @@ def process_uploaded_file(
     data_dir: Path = None,
     crops_dir: Path = None,
     source: str = "",
+    collection: str = "",
 ) -> dict:
     """
     Main entry point for processing an uploaded file.
@@ -476,7 +483,8 @@ def process_uploaded_file(
         job_id: Unique job identifier
         data_dir: Data directory (default: project/data)
         crops_dir: Crops output directory (default: project/app/static/crops)
-        source: Collection/provenance label (e.g., "Betty Capeluto Miami Collection")
+        source: Provenance/origin label (e.g., "Betty Capeluto's Album")
+        collection: Archive classification. Defaults to source if empty.
 
     Returns:
         Result dict with status, faces_extracted, identities_created
@@ -513,6 +521,7 @@ def process_uploaded_file(
             crops_dir=crops_dir,
             file_hash_path=file_hash_path,
             source=source,
+            collection=collection,
         )
 
     # Single image processing
@@ -528,6 +537,7 @@ def process_uploaded_file(
             crops_dir=crops_dir,
             file_hash_path=file_hash_path,
             source=source,
+            collection=collection,
         )
 
         logger.info(f"Found {result['faces_extracted']} face(s)")
@@ -573,6 +583,7 @@ def _process_zip_file(
     crops_dir: Path,
     file_hash_path: Path = None,
     source: str = "",
+    collection: str = "",
 ) -> dict:
     """
     Process a ZIP archive containing multiple images.
@@ -589,7 +600,8 @@ def _process_zip_file(
         identity_path: Path to identities.json
         crops_dir: Path to crops directory
         file_hash_path: Path to file_hashes.json (for idempotency)
-        source: Collection/provenance label
+        source: Provenance/origin label
+        collection: Archive classification. Defaults to source if empty.
 
     Returns:
         Result dict with aggregated status
@@ -669,6 +681,7 @@ def _process_zip_file(
                             crops_dir=crops_dir,
                             file_hash_path=file_hash_path,
                             source=source,
+                            collection=collection,
                         )
 
                         total_faces += result["faces_extracted"]
@@ -745,6 +758,7 @@ def process_directory(
     data_dir: Path = None,
     crops_dir: Path = None,
     source: str = "",
+    collection: str = "",
 ) -> dict:
     """
     Process a directory of uploaded files (images and/or ZIPs).
@@ -757,7 +771,8 @@ def process_directory(
         job_id: Unique job identifier
         data_dir: Data directory (default: project/data)
         crops_dir: Crops output directory (default: project/app/static/crops)
-        source: Collection/provenance label
+        source: Provenance/origin label
+        collection: Archive classification. Defaults to source if empty.
 
     Returns:
         Result dict with aggregated status
@@ -852,6 +867,7 @@ def process_directory(
                 crops_dir=crops_dir,
                 file_hash_path=file_hash_path,
                 source=source,
+                collection=collection,
             )
 
             total_faces += result["faces_extracted"]
@@ -910,6 +926,7 @@ def process_directory(
                                 crops_dir=crops_dir,
                                 file_hash_path=file_hash_path,
                                 source=source,
+                                collection=collection,
                             )
 
                             total_faces += result["faces_extracted"]
@@ -993,14 +1010,20 @@ def main():
         "--source",
         type=str,
         default="",
-        help="Collection/provenance label (e.g., 'Betty Capeluto Miami Collection')",
+        help="Provenance/origin label (e.g., 'Betty Capeluto\\'s Album')",
+    )
+    parser.add_argument(
+        "--collection",
+        type=str,
+        default="",
+        help="Archive classification (e.g., 'Betty Capeluto Miami Collection'). Defaults to --source if empty.",
     )
     args = parser.parse_args()
 
     if args.directory:
-        result = process_directory(args.directory, args.job_id, source=args.source)
+        result = process_directory(args.directory, args.job_id, source=args.source, collection=args.collection)
     else:
-        result = process_uploaded_file(args.file, args.job_id, source=args.source)
+        result = process_uploaded_file(args.file, args.job_id, source=args.source, collection=args.collection)
 
     if result["status"] == "error":
         sys.exit(1)

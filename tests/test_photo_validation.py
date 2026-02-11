@@ -37,11 +37,11 @@ class TestValidatePhotoEntry:
         with pytest.raises(ValueError, match="path"):
             validate_photo_entry("p1", entry)
 
-    def test_zero_dimension_raises(self):
-        """Entry with width=0 or height=0 raises ValueError."""
+    def test_zero_dimension_accepted(self):
+        """Width/height are recommended but not required by validation."""
         entry = {"path": "img.jpg", "width": 0, "height": 600, "collection": "Album"}
-        with pytest.raises(ValueError, match="width"):
-            validate_photo_entry("p1", entry)
+        # Should NOT raise — dimensions are set during face detection, not at registration
+        validate_photo_entry("p1", entry)
 
 
 class TestSaveValidation:

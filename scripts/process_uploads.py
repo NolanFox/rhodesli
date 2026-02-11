@@ -179,17 +179,21 @@ def step_ml_processing(interactive: bool) -> subprocess.CompletedProcess:
 
     job_id = f"staged-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
-    # Check for metadata to get source label
-    source_args = []
+    # Check for metadata to get source/collection labels
+    extra_args = []
     metadata_file = PENDING_DIR / "_metadata.json"
     if metadata_file.exists():
         try:
             with open(metadata_file) as f:
                 meta = json.load(f)
             source = meta.get("source", "")
+            collection = meta.get("collection", "")
             if source:
-                source_args = ["--source", source]
+                extra_args.extend(["--source", source])
                 print(f"  Source from metadata: {source}")
+            if collection:
+                extra_args.extend(["--collection", collection])
+                print(f"  Collection from metadata: {collection}")
         except (json.JSONDecodeError, KeyError):
             pass
 
@@ -197,7 +201,7 @@ def step_ml_processing(interactive: bool) -> subprocess.CompletedProcess:
         "-m", "core.ingest_inbox",
         "--directory", str(PENDING_DIR),
         "--job-id", job_id,
-    ] + source_args
+    ] + extra_args
 
     result = run_script(args, "Face detection")
     return result

@@ -8630,6 +8630,8 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
     ]
     if source:
         subprocess_args.extend(["--source", source])
+    if collection:
+        subprocess_args.extend(["--collection", collection])
 
     subprocess.Popen(
         subprocess_args,
@@ -9187,6 +9189,7 @@ def post(job_id: str, sess=None):
                 subprocess_env["PYTHONPATH"] = str(project_root)
 
             source = upload.get("source", "")
+            upload_collection = upload.get("collection", "")
             subprocess_args = [
                 sys.executable, "-m", "core.ingest_inbox",
                 "--directory", str(uploads_dir),
@@ -9194,6 +9197,8 @@ def post(job_id: str, sess=None):
             ]
             if source:
                 subprocess_args.extend(["--source", source])
+            if upload_collection:
+                subprocess_args.extend(["--collection", upload_collection])
 
             subprocess.Popen(
                 subprocess_args,
