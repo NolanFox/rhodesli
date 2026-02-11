@@ -1,47 +1,31 @@
-# Session 4 Plan — Overnight: Stabilize + Share-Ready
+# Session 16 Plan
+## Tracks: A (navigation), B (UX polish), C (ML kickoff)
+## Test baseline: 1423 passing (ignoring e2e)
+## Top 3 risks:
+1. Photo lightbox navigation is the biggest feature — needs careful HTMX/keyboard integration
+2. Triage filter bugs A2.1-A2.5 may already be partially fixed in v0.22.1 — need to verify before fixing
+3. ML kickoff (Track C) may be blocked on missing API keys or Supabase schema access
 
-## Current State
-- 799 tests passing
-- v0.11.0 (Phase A complete)
-- Event delegation lightbox already in place
+## Track A: Navigation hardening
+- A1: Photo lightbox nav (arrows, keyboard, mobile) — significant feature work
+  - Photos section already has photoNavTo() and nav arrows — works when clicking photo cards
+  - Need: collection-context nav, search-result-context nav, identity-context nav
+  - Need: boundary indicators (first/last photo)
+- A2: Verify triage filter bugs (v0.22.1 claims many fixed)
+  - A2.1: Match mode + filter — appears implemented
+  - A2.2: Up Next + filter — appears implemented
+  - A2.3: Up Next links + filter — identity_card_mini passes triage_filter
+  - A2.4: Promotion banners context — promotion_context populated in grouping
+  - A2.5: Verify 3 promoted clusters — data validation
+- A3: Navigation consistency audit
 
-## Phase 1: Photo Navigation — Complete the Gaps
-**Gap identified:** Arrow buttons exist in photo grid (photoNavTo) and identity lightbox
-(/api/identity/{id}/photos), BUT face card clicks, search results, and browse mode face
-thumbnails all open /photo/{id}/partial WITHOUT navigation context → no arrows.
+## Track B: UX polish
+- B1: Clear stale pending uploads
+- B2: Grammar/pluralization micro-polish
+- B3: Landing page stats accuracy
 
-**Fix:**
-1. Face card "View Photo" clicks → use identity lightbox route instead of bare photo partial
-2. Search result clicks → pass search result list as navigation context
-3. Ensure all photo open paths have prev/next arrows
-4. Fix confirmed face click: navigate to identity, not tag dialog
-5. Write E2E tests for arrow visibility and keyboard nav
-
-## Phase 2: Mobile Responsive
-- Hamburger menu at <768px
-- Bottom tab navigation
-- Responsive photo grid (2/3/4 columns)
-- Mobile match mode vertical stacking
-
-## Phase 3: Landing Page Enhancement
-- Hero section with real archive photo
-- Live stats ("23 of 181 faces identified")
-- CTAs: Browse Photos, Help Identify
-- Progress dashboard
-
-## Phase 4: Inline Face Actions
-- Hover actions on face overlays (confirm/skip/reject)
-- ML hints for skipped faces
-- Verify face count fix (BUG-002)
-
-## Phase 5: Search Polish
-- Fuzzy name search (Levenshtein)
-- Search match highlighting
-
-## Phase 6: Admin Tools
-- Admin export endpoint (ZIP of JSON data)
-- Merge history verification
-
-## Phase 7: Docs & Cleanup
-- Update ROADMAP.md, CHANGELOG.md, tasks/todo.md
-- Final test run and push
+## Track C: ML kickoff
+- Task 1: Repository analysis (data audit, photo metadata, ML code audit)
+- Task 2: rhodesli_ml/ directory structure
+- Task 3: Date label generation script
+- Task 4-5: Docs and backlog updates
