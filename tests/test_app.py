@@ -3,7 +3,28 @@
 import pytest
 from starlette.testclient import TestClient
 
-from app.main import app, parse_quality_from_filename
+from app.main import app, parse_quality_from_filename, _pl
+
+
+class TestPluralize:
+    """Tests for _pl() display helper."""
+
+    def test_singular(self):
+        assert _pl(1, "face") == "1 face"
+
+    def test_plural(self):
+        assert _pl(3, "face") == "3 faces"
+
+    def test_zero(self):
+        assert _pl(0, "face") == "0 faces"
+
+    def test_custom_plural(self):
+        assert _pl(1, "person", "people") == "1 person"
+        assert _pl(2, "person", "people") == "2 people"
+
+    def test_compound_singular(self):
+        assert _pl(1, "similar face") == "1 similar face"
+        assert _pl(5, "similar face") == "5 similar faces"
 
 
 class TestParseQualityFromFilename:

@@ -252,6 +252,16 @@ def save_registry(registry):
 
 
 # =============================================================================
+# DISPLAY HELPERS
+# =============================================================================
+
+def _pl(count, singular, plural=None):
+    """Pluralize: _pl(3, 'face') -> '3 faces', _pl(1, 'face') -> '1 face'."""
+    plural = plural or f"{singular}s"
+    return f"{count} {singular}" if count == 1 else f"{count} {plural}"
+
+
+# =============================================================================
 # USER ACTION LOGGING (LEGACY - REPLACED BY EVENT RECORDER)
 # =============================================================================
 # We keep this for backward compatibility if needed, but EventRecorder is primary now.
@@ -7447,7 +7457,7 @@ def post(target_id: str, source_id: str, source: str = "web",
 
     # Toast with undo
     merge_toast = toast_with_merge_undo(
-        f"Merged {result['faces_merged']} face(s) into {target_name}.",
+        f"Merged {_pl(result['faces_merged'], 'face')} into {target_name}.",
         actual_target_id,
     )
 
@@ -7496,7 +7506,7 @@ def _post_merge_suggestions(target_id: str, registry, crop_files: set, max_sugge
     return Div(
         Div(
             H4("You might also want to review:", cls="text-sm font-medium text-amber-400"),
-            P(f"{len(high_matches)} similar face(s) found after merge", cls="text-xs text-slate-400"),
+            P(f"{_pl(len(high_matches), 'similar face')} found after merge", cls="text-xs text-slate-400"),
             cls="mb-2"
         ),
         Div(*cards, cls="space-y-2"),
@@ -7601,7 +7611,7 @@ def post(identity_id: str, sess=None):
         faces_removed=result["faces_removed"],
     )
 
-    return toast(f"Merge undone. {result['faces_removed']} face(s) restored.", "success")
+    return toast(f"Merge undone. {_pl(result['faces_removed'], 'face')} restored.", "success")
 
 
 @rt("/api/identity/{identity_id}/bulk-merge")
@@ -8572,7 +8582,7 @@ def post(source_id: str, proposal_id: str, sess=None):
             registry.resolve_proposed_match(source_id, proposal_id, "accepted")
             save_registry(registry)
             oob_toast = Div(
-                toast(f"Merged! {result['faces_merged']} face(s) combined.", "success"),
+                toast(f"Merged! {_pl(result['faces_merged'], 'face')} combined.", "success"),
                 hx_swap_oob="beforeend:#toast-container",
             )
         else:
@@ -9189,7 +9199,7 @@ def get(job_id: str):
             ]
             if faces > 0:
                 progress_elements.append(
-                    P(f"{faces} face(s) found so far", cls="text-slate-400 text-xs mt-1")
+                    P(f"{_pl(faces, 'face')} found so far", cls="text-slate-400 text-xs mt-1")
                 )
         else:
             progress_elements = [
@@ -9236,7 +9246,7 @@ def get(job_id: str):
 
         elements = [
             P(
-                f"\u2713 {faces} face(s) extracted from {succeeded}/{total} images",
+                f"\u2713 {_pl(faces, 'face')} extracted from {succeeded}/{total} images",
                 cls="text-amber-600 text-sm font-medium"
             ),
         ]
@@ -9265,9 +9275,9 @@ def get(job_id: str):
     identities = len(status.get("identities_created", []))
     total = status.get("total_files")
 
-    success_text = f"\u2713 {faces} face(s) extracted"
+    success_text = f"\u2713 {_pl(faces, 'face')} extracted"
     if total and total > 1:
-        success_text = f"\u2713 {faces} face(s) extracted from {total} images"
+        success_text = f"\u2713 {_pl(faces, 'face')} extracted from {_pl(total, 'image')}"
     success_text += f", {identities} added to Inbox"
 
     return Div(
@@ -12541,7 +12551,7 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, f
             if result["success"]:
                 save_registry(registry)
                 oob_toast = Div(
-                    toast(f"Merged! {result['faces_merged']} face(s) combined.", "success"),
+                    toast(f"Merged! {_pl(result['faces_merged'], 'face')} combined.", "success"),
                     hx_swap_oob="beforeend:#toast-container",
                 )
             else:
