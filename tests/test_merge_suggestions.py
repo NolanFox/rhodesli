@@ -155,7 +155,8 @@ class TestSuggestMergeEndpoint:
             pytest.skip("Need at least 2 identities with faces")
 
         contributor = _mock_user("contributor")
-        with patch("app.main.is_auth_enabled", return_value=False):
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main._save_annotations"):
             response = client.post(
                 f"/api/identity/{ids[0]}/suggest-merge/{ids[1]}",
                 headers={"HX-Request": "true"},
@@ -264,19 +265,22 @@ class TestAdminApprovalsMergeSuggestion:
         if len(ids) < 2:
             pytest.skip("Need at least 2 identities with faces")
 
-        # First create a merge suggestion
-        from app.main import _create_merge_suggestion
-        _create_merge_suggestion(
-            target_id=ids[0], source_id=ids[1],
-            submitted_by="test@test.com",
-        )
+        # Create a merge suggestion with save mocked
+        from app.main import _create_merge_suggestion, _invalidate_annotations_cache
+        with patch("app.main._save_annotations"):
+            ann_id = _create_merge_suggestion(
+                target_id=ids[0], source_id=ids[1],
+                submitted_by="test@test.com",
+            )
 
+        # The annotation is in the in-memory cache, so the approvals page will show it
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/admin/approvals")
             assert response.status_code == 200
             assert "Merge Suggestion" in response.text
             assert "Execute Merge" in response.text
             assert "Compare" in response.text
+        _invalidate_annotations_cache()
 
     def test_admin_can_execute_merge_suggestion(self, client):
         """Admin can approve a merge suggestion, which executes the merge."""
@@ -284,18 +288,23 @@ class TestAdminApprovalsMergeSuggestion:
         if len(ids) < 2:
             pytest.skip("Need at least 2 identities with faces")
 
-        from app.main import _create_merge_suggestion, _load_annotations
-        ann_id = _create_merge_suggestion(
-            target_id=ids[0], source_id=ids[1],
-            submitted_by="test@test.com",
-        )
+        from app.main import _create_merge_suggestion, _load_annotations, _invalidate_annotations_cache
+        # Create suggestion with save mocked (stays in memory cache)
+        with patch("app.main._save_annotations"):
+            ann_id = _create_merge_suggestion(
+                target_id=ids[0], source_id=ids[1],
+                submitted_by="test@test.com",
+            )
 
-        with patch("app.main.is_auth_enabled", return_value=False):
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main._save_annotations"), \
+             patch("app.main.save_registry"):
             response = client.post(
                 f"/admin/approvals/{ann_id}/approve",
                 headers={"HX-Request": "true"},
             )
             assert response.status_code == 200
-            # Check annotation was marked approved
+            # Check annotation was marked approved (in-memory)
             annotations = _load_annotations()
             assert annotations["annotations"][ann_id]["status"] == "approved"
+        _invalidate_annotations_cache()
