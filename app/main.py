@@ -3239,7 +3239,7 @@ def face_card(
             Img(
                 src=crop_url,
                 alt=face_id,
-                cls="w-full h-auto sepia-[.3] hover:sepia-0 transition-all duration-300"
+                cls="w-full aspect-square object-cover sepia-[.3] hover:sepia-0 transition-all duration-300"
             ),
             era_badge(era) if era else None,
             cls="relative border border-slate-600 bg-slate-700"
@@ -3382,7 +3382,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
             thumbnail_img = Img(
                 src=crop_url,
                 alt=name,
-                cls="w-10 h-10 object-cover rounded border border-slate-600"
+                cls="w-12 h-12 object-cover rounded border border-slate-600"
             )
 
     # Merge button -- role-aware: admin merges directly, contributor suggests
