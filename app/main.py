@@ -415,6 +415,156 @@ def _get_best_proposal_for_identity(identity_id: str) -> dict | None:
     return min(proposals, key=lambda p: p.get("distance", float("inf")))
 
 
+def _compute_triage_counts(to_review: list) -> dict:
+    """Categorize inbox identities by actionability for the triage bar.
+
+    Returns:
+        {
+            "ready_to_confirm": int,  # Has Very High or High proposal to confirmed
+            "rediscovered": int,      # Promoted from SKIPPED (has promoted_from field)
+            "unmatched": int,         # No proposals, no promotion
+        }
+    """
+    ids_with_proposals = _get_identities_with_proposals()
+    ready = 0
+    rediscovered = 0
+    unmatched = 0
+
+    for identity in to_review:
+        iid = identity.get("identity_id", "")
+        has_promotion = identity.get("promoted_from") is not None
+
+        if iid in ids_with_proposals:
+            best = _get_best_proposal_for_identity(iid)
+            if best and best.get("confidence") in ("VERY HIGH", "HIGH"):
+                ready += 1
+                continue
+
+        if has_promotion:
+            rediscovered += 1
+        elif iid in ids_with_proposals:
+            # Has proposals but not high-confidence
+            ready += 1
+        else:
+            unmatched += 1
+
+    return {
+        "ready_to_confirm": ready,
+        "rediscovered": rediscovered,
+        "unmatched": unmatched,
+    }
+
+
+def _triage_category(identity: dict) -> str:
+    """Determine triage category for a single identity.
+
+    Returns: "ready", "rediscovered", or "unmatched"
+    """
+    iid = identity.get("identity_id", "")
+    ids_with_proposals = _get_identities_with_proposals()
+
+    if iid in ids_with_proposals:
+        return "ready"
+
+    if identity.get("promoted_from") is not None:
+        return "rediscovered"
+
+    return "unmatched"
+
+
+def _build_triage_bar(to_review: list, view_mode: str) -> Div:
+    """Build the triage summary bar for the inbox."""
+    counts = _compute_triage_counts(to_review)
+
+    items = []
+    categories = [
+        ("ready", "Ready to Confirm", counts["ready_to_confirm"],
+         "bg-emerald-900/40 border-emerald-600/40 text-emerald-300 hover:bg-emerald-900/60"),
+        ("rediscovered", "Rediscovered", counts["rediscovered"],
+         "bg-amber-900/40 border-amber-600/40 text-amber-300 hover:bg-amber-900/60"),
+        ("unmatched", "Unmatched", counts["unmatched"],
+         "bg-slate-700/40 border-slate-600/40 text-slate-300 hover:bg-slate-700/60"),
+    ]
+
+    for filter_val, label, count, color_cls in categories:
+        if count == 0:
+            continue
+        items.append(
+            A(
+                Span(str(count), cls="text-lg font-bold"),
+                Span(label, cls="text-xs opacity-80"),
+                href=f"/?section=to_review&view={view_mode}&filter={filter_val}",
+                cls=f"flex flex-col items-center px-4 py-2 rounded-lg border transition-colors {color_cls}",
+            )
+        )
+
+    if not items:
+        return None
+
+    return Div(
+        *items,
+        cls="flex gap-3 mb-4 flex-wrap",
+    )
+
+
+def _promotion_badge(identity: dict):
+    """Badge for promoted (rediscovered) identities in browse view."""
+    if not identity.get("promoted_from"):
+        return None
+    reason = identity.get("promotion_reason", "")
+    if reason == "confirmed_match":
+        return Span(
+            "Suggested ID",
+            cls="text-xs px-2 py-0.5 rounded border bg-emerald-600/30 text-emerald-300 border-emerald-500/30",
+            title="Previously skipped — now matches a confirmed identity",
+        )
+    else:
+        return Span(
+            "Rediscovered",
+            cls="text-xs px-2 py-0.5 rounded border bg-amber-600/30 text-amber-300 border-amber-500/30",
+            title="Previously skipped — new match evidence found",
+        )
+
+
+def _promotion_banner(identity: dict):
+    """Banner for promoted faces shown above expanded cards in Focus mode."""
+    if not identity.get("promoted_from"):
+        return None
+    reason = identity.get("promotion_reason", "")
+    context = identity.get("promotion_context", "")
+
+    if reason == "confirmed_match":
+        title = "Identity Suggested"
+        desc = f"This previously skipped face now matches a confirmed identity with high confidence."
+        if context:
+            desc = context
+        icon_cls = "text-emerald-400"
+        border_cls = "border-emerald-600/40 bg-emerald-900/20"
+    elif reason == "new_face_match":
+        title = "New Context Available"
+        desc = "A newly uploaded photo matches this previously skipped face — the new context may help with identification."
+        icon_cls = "text-amber-400"
+        border_cls = "border-amber-600/40 bg-amber-900/20"
+    else:  # group_discovery
+        title = "Rediscovered"
+        desc = "This face now groups with another face from a different batch."
+        icon_cls = "text-amber-400"
+        border_cls = "border-amber-600/40 bg-amber-900/20"
+
+    return Div(
+        Div(
+            Span("*", cls=f"text-lg font-bold {icon_cls}"),
+            Div(
+                Strong(title, cls="text-white text-sm"),
+                P(desc, cls="text-slate-400 text-xs mt-0.5"),
+                cls="ml-2",
+            ),
+            cls="flex items-start",
+        ),
+        cls=f"rounded-lg border p-3 mb-3 {border_cls}",
+    )
+
+
 def _section_for_state(state: str) -> str:
     """Map identity state to the correct sidebar section for navigation links."""
     if state == "CONFIRMED":
@@ -1853,21 +2003,54 @@ def render_to_review_section(
     current_id: str = None,
     is_admin: bool = True,
     sort_by: str = "newest",
+    triage_filter: str = "",
 ) -> Div:
     """Render the To Review section with Focus or Browse mode."""
 
-    # For focus mode, prioritize:
-    # 1. Faces with clustering proposals (highest confidence first)
-    # 2. Then faces without proposals (most faces first for context)
+    # Build triage bar (shown above all views)
+    triage_bar = _build_triage_bar(to_review, view_mode)
+
+    # Apply triage filter if set
+    if triage_filter in ("ready", "rediscovered", "unmatched"):
+        to_review = [i for i in to_review if _triage_category(i) == triage_filter]
+
+    # For focus mode, prioritize by actionability:
+    # 1. Confirmed match promotions (one-click merge available)
+    # 2. Faces with Very High proposals to confirmed identities
+    # 3. Faces with new_face_match or group_discovery promotion
+    # 4. Faces with High proposals
+    # 5. Remaining inbox faces
     ids_with_proposals = _get_identities_with_proposals()
 
     def _focus_sort_key(x):
         iid = x.get("identity_id", "")
         has_proposal = iid in ids_with_proposals
         best = _get_best_proposal_for_identity(iid) if has_proposal else None
-        # Sort: has_proposal DESC, distance ASC, face_count DESC
+        has_promotion = x.get("promoted_from") is not None
+        promotion_reason = x.get("promotion_reason", "")
+
+        # Priority tiers (lower = higher priority):
+        # 0: confirmed_match promotion (highest value)
+        # 1: Very High confidence proposal
+        # 2: new_face_match / group_discovery promotion
+        # 3: High confidence proposal
+        # 4: Other proposals (Moderate/Low)
+        # 5: No proposals, no promotion (unmatched)
+        if has_promotion and promotion_reason == "confirmed_match":
+            tier = 0
+        elif has_proposal and best and best.get("confidence") == "VERY HIGH":
+            tier = 1
+        elif has_promotion:
+            tier = 2
+        elif has_proposal and best and best.get("confidence") == "HIGH":
+            tier = 3
+        elif has_proposal:
+            tier = 4
+        else:
+            tier = 5
+
         return (
-            0 if has_proposal else 1,
+            tier,
             best["distance"] if best else 999,
             -len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
         )
@@ -1911,10 +2094,13 @@ def render_to_review_section(
                     ),
                     cls="mt-6"
                 )
+            # Show promotion banner above the expanded card if applicable
+            banner = _promotion_banner(high_confidence[0])
             # Show one item expanded + queue preview, wrapped in focus-container for HTMX swap.
             # Keyboard shortcuts (C/S/R/F) are handled by the global keydown handler
             # in the page layout — no per-swap re-registration needed.
             content = Div(
+                banner,
                 identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
                 up_next,
                 id="focus-container"
@@ -2005,10 +2191,11 @@ def render_to_review_section(
     if view_mode == "browse":
         return Div(
             Div(header, _sort_control("to_review", sort_by), cls="flex items-center justify-between flex-wrap gap-2 mb-6"),
+            triage_bar,
             content,
             cls="space-y-4"
         )
-    return Div(header, content, cls="space-y-6")
+    return Div(header, triage_bar, content, cls="space-y-6")
 
 
 def _sort_control(section: str, current_sort: str) -> Div:
@@ -3492,6 +3679,7 @@ def identity_card(
                 name_display(identity_id, identity.get("name"), is_admin=is_admin),
                 state_badge(state),
                 _proposal_badge_inline(identity_id),
+                _promotion_badge(identity),
                 Span(
                     f"{total_faces} face{'s' if total_faces != 1 else ''}",
                     cls="text-xs text-slate-400 ml-2"
@@ -5078,7 +5266,7 @@ def get():
 @rt("/")
 def get(section: str = None, view: str = "focus", current: str = None,
         filter_source: str = "", filter_collection: str = "",
-        sort_by: str = "newest", sess=None):
+        sort_by: str = "newest", filter: str = "", sess=None):
     """
     Landing page (no section) or Command Center (with section parameter).
     Public access -- anyone can view. Action buttons shown only to admins.
@@ -5135,7 +5323,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
 
     # Render the appropriate section
     if section == "to_review":
-        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current, is_admin=user_is_admin, sort_by=sort_by)
+        main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current, is_admin=user_is_admin, sort_by=sort_by, triage_filter=filter)
     elif section == "confirmed":
         main_content = render_confirmed_section(confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by)
     elif section == "skipped":

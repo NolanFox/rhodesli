@@ -515,6 +515,43 @@ def main():
         json.dump(proposals_data, f, indent=2)
     print(f"\nWrote {len(suggestions)} proposals to {proposals_path}")
 
+    # Set confirmed_match promotion fields on SKIPPED identities with
+    # VERY HIGH or HIGH proposals. This allows the UI triage bar to show
+    # these as "Suggested ID" even before the merge is executed.
+    promotions = []
+    now = datetime.now(timezone.utc).isoformat()
+    identities = identities_data.get("identities", {})
+    for s in suggestions:
+        if s.get("source_state") != "SKIPPED":
+            continue
+        conf = confidence_label(s["distance"])
+        if conf not in ("VERY HIGH", "HIGH"):
+            continue
+        source_id = s["source_identity_id"]
+        source = identities.get(source_id)
+        if not source or source.get("promoted_from"):
+            continue  # Already promoted
+        source["promoted_from"] = "SKIPPED"
+        source["promoted_at"] = now
+        source["promotion_reason"] = "confirmed_match"
+        source["promotion_context"] = (
+            f"Matches {s['target_identity_name']} at distance {s['distance']:.3f} ({conf})"
+        )
+        promotions.append({
+            "identity_id": source_id,
+            "name": s["source_identity_name"],
+            "target": s["target_identity_name"],
+            "distance": s["distance"],
+        })
+
+    if promotions:
+        # Save updated identities with promotion fields
+        with open(identities_path, "w") as f:
+            json.dump(identities_data, f, indent=2)
+        print(f"\nPromoted {len(promotions)} SKIPPED identities with confirmed matches:")
+        for p in promotions:
+            print(f"  {p['name']} -> {p['target']} (distance {p['distance']:.3f})")
+
     if args.dry_run:
         print("[DRY RUN] No changes made to identities.json.")
         print("Run with --execute to apply these suggestions.")
