@@ -2239,9 +2239,9 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     if filter_source:
         active_filters.append(f"from {filter_source}")
     if active_filters:
-        subtitle = f"{' '.join(active_filters)} \u2014 {len(photos)} photos"
+        subtitle = f"{' '.join(active_filters)} \u2014 {len(photos)} photo{'s' if len(photos) != 1 else ''}"
     else:
-        subtitle_parts = [f"{len(photos)} photos"]
+        subtitle_parts = [f"{len(photos)} photo{'s' if len(photos) != 1 else ''}"]
         if len(collections) > 1:
             subtitle_parts.append(f"{len(collections)} collections")
         subtitle = " \u2022 ".join(subtitle_parts)
@@ -2310,7 +2310,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             data_action="toggle-photo-select",
         ),
         # Result count
-        Span(f"{len(photos)} photos", cls="text-sm text-slate-500 ml-auto"),
+        Span(f"{len(photos)} photo{'s' if len(photos) != 1 else ''}", cls="text-sm text-slate-500 ml-auto"),
         cls="filter-bar flex flex-wrap items-center gap-4 bg-slate-800 rounded-lg p-3 border border-slate-700 mb-4"
     )
 
@@ -2367,7 +2367,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                 # Face count badge with completion indicator
                 Div(
                     Span("\u2713 ", cls="text-emerald-400") if photo["face_count"] > 0 and photo["confirmed_count"] == photo["face_count"] else None,
-                    f"{photo['confirmed_count']}/{photo['face_count']}" if photo["confirmed_count"] > 0 else f"{photo['face_count']} faces",
+                    f"{photo['confirmed_count']}/{photo['face_count']}" if photo["confirmed_count"] > 0 else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
                     cls="absolute top-2 right-2 text-white text-xs font-data "
                         "px-2 py-1 rounded-full backdrop-blur-sm "
                         + ("bg-emerald-600/80" if photo["face_count"] > 0 and photo["confirmed_count"] == photo["face_count"]
@@ -2458,9 +2458,9 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                         cls="mb-2"
                     ),
                     Div(
-                        Span(f"{stats['photo_count']} photos", cls="text-xs text-slate-400"),
+                        Span(f"{stats['photo_count']} photo{'s' if stats['photo_count'] != 1 else ''}", cls="text-xs text-slate-400"),
                         Span(" \u2022 ", cls="text-xs text-slate-600"),
-                        Span(f"{stats['face_count']} faces", cls="text-xs text-slate-400"),
+                        Span(f"{stats['face_count']} face{'s' if stats['face_count'] != 1 else ''}", cls="text-xs text-slate-400"),
                         Span(" \u2022 ", cls="text-xs text-slate-600"),
                         Span(f"{stats['identified_count']} identified", cls="text-xs text-emerald-400"),
                     ),
@@ -2469,10 +2469,20 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     onclick=f"window.location.href='/?section=photos&filter_collection={quote(coll_name)}&sort_by={sort_by}'"
                 )
             )
-        collection_cards = Div(
-            *stat_cards,
-            cls="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"
-        )
+        # Use horizontal scroll for 5+ collections, grid for fewer
+        if len(stat_cards) >= 5:
+            # Make cards fixed-width for horizontal scrolling
+            for card in stat_cards:
+                card.attrs["class"] = card.attrs.get("class", "") + " min-w-[180px] flex-shrink-0"
+            collection_cards = Div(
+                *stat_cards,
+                cls="flex gap-3 mb-4 overflow-x-auto pb-2 scrollbar-thin"
+            )
+        else:
+            collection_cards = Div(
+                *stat_cards,
+                cls="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4"
+            )
 
     # Bulk action bar (hidden until selections exist)
     collection_options_bulk = [Option("Set collection...", value="", disabled=True, selected=True)]

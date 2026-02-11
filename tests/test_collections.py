@@ -69,8 +69,8 @@ class TestCollectionStats:
              patch("app.main.get_identity_for_face", return_value=None):
             html = to_xml(render_photos_section({}, registry, set(), filter_source="Coll A"))
 
-        # When filtered, should show the filtered collection's photos
-        assert "1 photos" in html
+        # When filtered, should show the filtered collection's photos (singular)
+        assert "1 photo" in html
 
     def test_filtered_subtitle_shows_collection_name(self):
         """When filtered to a collection, subtitle shows 'Collection — N photos', not global stats."""

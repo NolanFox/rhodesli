@@ -250,3 +250,63 @@ class TestCollectionStatsEdgeCases:
             html = to_xml(render_photos_section({}, registry, set()))
 
         assert "0 identified" in html
+
+    def test_many_collections_use_horizontal_scroll(self):
+        """5+ collections render with horizontal scroll layout."""
+        from app.main import render_photos_section, to_xml
+        import app.main as main_module
+
+        registry = _make_registry_mock()
+        entries = []
+        for i in range(6):
+            entries.append((f"p{i}", f"img{i}.jpg", f"Collection {i}", [f"f{i}"]))
+        cache = _make_photo_cache(entries)
+
+        with patch.object(main_module, "_photo_cache", cache), \
+             patch.object(main_module, "_build_caches"), \
+             patch("app.main.get_identity_for_face", return_value=None):
+            html = to_xml(render_photos_section({}, registry, set()))
+
+        # With 6 collections, should use flex scroll layout
+        assert "overflow-x-auto" in html
+
+    def test_few_collections_use_grid(self):
+        """4 or fewer collections render with grid layout."""
+        from app.main import render_photos_section, to_xml
+        import app.main as main_module
+
+        registry = _make_registry_mock()
+        entries = []
+        for i in range(3):
+            entries.append((f"p{i}", f"img{i}.jpg", f"Collection {i}", [f"f{i}"]))
+        cache = _make_photo_cache(entries)
+
+        with patch.object(main_module, "_photo_cache", cache), \
+             patch.object(main_module, "_build_caches"), \
+             patch("app.main.get_identity_for_face", return_value=None):
+            html = to_xml(render_photos_section({}, registry, set()))
+
+        # With 3 collections, should use grid layout
+        assert "grid-cols-2" in html
+
+    def test_singular_photo_in_collection_stats(self):
+        """Collection with 1 photo shows '1 photo' not '1 photos'."""
+        from app.main import render_photos_section, to_xml
+        import app.main as main_module
+
+        registry = _make_registry_mock()
+        cache = _make_photo_cache([
+            ("p1", "img1.jpg", "Coll A", ["f1"]),
+            ("p2", "img2.jpg", "Coll B", ["f2", "f3"]),
+            ("p3", "img3.jpg", "Coll B", ["f4"]),
+        ])
+
+        with patch.object(main_module, "_photo_cache", cache), \
+             patch.object(main_module, "_build_caches"), \
+             patch("app.main.get_identity_for_face", return_value=None):
+            html = to_xml(render_photos_section({}, registry, set()))
+
+        # Coll A: "1 photo" (singular), Coll B: "2 photos" (plural)
+        assert "1 photo" in html
+        # "1 photos" should NOT appear
+        assert "1 photos" not in html
