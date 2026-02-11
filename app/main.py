@@ -7837,9 +7837,9 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
         t_photo_id = _face_to_photo_cache.get(t_fid, "")
         n_photo_id = _face_to_photo_cache.get(n_fid, "")
         if t_photo_id and _photo_cache and t_photo_id in _photo_cache:
-            t_photo_url = storage.get_photo_url(_photo_cache[t_photo_id].get("path", ""))
+            t_photo_url = storage.get_photo_url(_photo_cache[t_photo_id].get("filename", ""))
         if n_photo_id and _photo_cache and n_photo_id in _photo_cache:
-            n_photo_url = storage.get_photo_url(_photo_cache[n_photo_id].get("path", ""))
+            n_photo_url = storage.get_photo_url(_photo_cache[n_photo_id].get("filename", ""))
 
     # Determine which image URLs to show
     t_display_url = t_photo_url if view == "photos" and t_photo_url else t_url

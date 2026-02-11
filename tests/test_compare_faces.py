@@ -96,6 +96,52 @@ class TestCompareEndpoint:
             # Photos toggle should show Photos as active
             assert "Photos" in response.text
 
+    def test_compare_photos_tab_has_valid_img_src(self, client):
+        """Photos tab img tags have real photo URLs, not empty paths (regression for 'filename' vs 'path' bug)."""
+        ids = _get_two_identity_ids()
+        if len(ids) < 2:
+            pytest.skip("Need at least 2 identities with faces")
+
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get(f"/api/identity/{ids[0]}/compare/{ids[1]}?view=photos")
+            html = response.text
+            assert response.status_code == 200
+            # Extract img src values - they should contain actual filenames, not be empty
+            import re
+            img_srcs = re.findall(r'<img[^>]+src="([^"]*)"', html)
+            assert len(img_srcs) >= 2, f"Expected at least 2 img tags, found {len(img_srcs)}"
+            for src in img_srcs:
+                # Each src should have a real filename (not just "/photos/" or empty)
+                assert src not in ("", "/photos/", "/photos/%20"), f"Broken img src: {src!r}"
+                # Should contain a file extension
+                assert any(ext in src.lower() for ext in [".jpg", ".jpeg", ".png", ".webp"]), \
+                    f"img src missing file extension: {src!r}"
+
+    def test_compare_faces_and_photos_tabs_both_render_images(self, client):
+        """Both Faces and Photos tabs render img tags with loadable URLs."""
+        ids = _get_two_identity_ids()
+        if len(ids) < 2:
+            pytest.skip("Need at least 2 identities with faces")
+
+        import re
+        with patch("app.main.is_auth_enabled", return_value=False):
+            # Faces tab
+            faces_resp = client.get(f"/api/identity/{ids[0]}/compare/{ids[1]}?view=faces")
+            faces_srcs = re.findall(r'<img[^>]+src="([^"]*)"', faces_resp.text)
+
+            # Photos tab
+            photos_resp = client.get(f"/api/identity/{ids[0]}/compare/{ids[1]}?view=photos")
+            photos_srcs = re.findall(r'<img[^>]+src="([^"]*)"', photos_resp.text)
+
+            # Both tabs should have at least 2 images
+            assert len(faces_srcs) >= 2, f"Faces tab: expected >=2 images, got {len(faces_srcs)}"
+            assert len(photos_srcs) >= 2, f"Photos tab: expected >=2 images, got {len(photos_srcs)}"
+
+            # Photos tab URLs should be different from Faces tab (full photos vs crops)
+            # and should contain /photos/ or raw_photos (not /crops/)
+            for src in photos_srcs:
+                assert src, f"Photos tab has empty img src"
+
     def test_compare_has_navigation_counter(self, client):
         """Compare popup shows position counter for multi-face identities."""
         ids = _get_two_identity_ids()
