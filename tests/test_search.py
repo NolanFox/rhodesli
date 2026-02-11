@@ -618,3 +618,130 @@ class TestAllStatesSearch:
         if "No matches" not in response.text:
             # Should have section= links that match identity states
             assert "section=" in response.text
+
+
+class TestSurnameVariantSearch:
+    """BE-014: Surname variant matching in search.
+
+    Searching for 'Capeluto' should also find 'Capelouto', 'Capuano', etc.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _reset_variant_cache(self):
+        """Reset the module-level surname variant cache between tests."""
+        import core.registry as reg_mod
+        reg_mod._surname_variants_cache = None
+        yield
+        reg_mod._surname_variants_cache = None
+
+    def _make_registry(self, tmp_path, identities_dict):
+        """Helper to create a test registry with given identities."""
+        import json
+        from core.registry import IdentityRegistry
+
+        base = {
+            "anchor_ids": ["face-1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "version_id": 1,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z",
+            "history": [],
+            "merge_history": [],
+        }
+        identities = {}
+        for iid, overrides in identities_dict.items():
+            entry = {**base, "identity_id": iid, **overrides}
+            identities[iid] = entry
+
+        data = {"schema_version": 1, "history": [], "identities": identities}
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        return IdentityRegistry.load(path)
+
+    def test_variant_search_finds_alternate_spelling(self, tmp_path):
+        """Searching 'Capeluto' finds 'Leon Capelouto' via variant matching."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capelouto", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 1
+        assert results[0]["name"] == "Leon Capelouto"
+
+    def test_variant_search_finds_italianized_form(self, tmp_path):
+        """Searching 'Capeluto' finds 'Maria Capuano' (Italianized variant)."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Maria Capuano", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 1
+        assert results[0]["name"] == "Maria Capuano"
+
+    def test_variant_search_bidirectional(self, tmp_path):
+        """Searching 'Capuano' also finds 'Capeluto' — variants work both ways."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Capuano")
+        assert len(results) == 1
+        assert results[0]["name"] == "Leon Capeluto"
+
+    def test_variant_search_finds_multiple_variants(self, tmp_path):
+        """Search finds identities with different variant spellings."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+            "id2": {"name": "Maria Capuano", "state": "CONFIRMED"},
+            "id3": {"name": "Rosa Capelouto", "state": "SKIPPED"},
+        })
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 3
+
+    def test_variant_search_hasson_hassan(self, tmp_path):
+        """Searching 'Hasson' finds 'Hassan' and vice versa."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Stella Hassan", "state": "CONFIRMED"},
+            "id2": {"name": "David Hasson", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Hasson")
+        assert len(results) == 2
+        names = {r["name"] for r in results}
+        assert "Stella Hassan" in names
+        assert "David Hasson" in names
+
+    def test_variant_search_preserves_ranking(self, tmp_path):
+        """Variant results still rank CONFIRMED before other states."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Rosa Capuano", "state": "SKIPPED"},
+            "id2": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Capelouto")
+        assert len(results) == 2
+        assert results[0]["state"] == "CONFIRMED"
+        assert results[1]["state"] == "SKIPPED"
+
+    def test_variant_search_no_false_positives(self, tmp_path):
+        """Variant expansion doesn't match unrelated names."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "John Smith", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 0
+
+    def test_variant_search_with_first_name(self, tmp_path):
+        """Full name search 'Leon Capeluto' still matches via substring."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
+        })
+        # "Leon Capeluto" as a query — "capeluto" word expands to include "capuano"
+        results = reg.search_identities("Leon Capeluto")
+        assert len(results) == 1
+
+    def test_variant_search_works_with_states_filter(self, tmp_path):
+        """Variant search respects the states filter."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
+            "id2": {"name": "Rosa Capelouto", "state": "SKIPPED"},
+        })
+        results = reg.search_identities("Capeluto", states=["CONFIRMED"])
+        assert len(results) == 1
+        assert results[0]["state"] == "CONFIRMED"

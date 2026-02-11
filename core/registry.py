@@ -49,6 +49,39 @@ def _levenshtein(s: str, t: str) -> int:
     return prev_row[-1]
 
 
+# --- Surname variant matching ---
+_surname_variants_cache: dict | None = None
+
+
+def _load_surname_variants() -> dict[str, list[str]]:
+    """Load surname variant groups and build a lookup: lowercase name -> all variants (lowercase).
+
+    Returns a dict where each key is a lowercase variant and the value is the
+    full list of lowercase names in its group (including canonical).
+    """
+    global _surname_variants_cache
+    if _surname_variants_cache is not None:
+        return _surname_variants_cache
+
+    variants_path = Path(__file__).resolve().parent.parent / "data" / "surname_variants.json"
+    lookup: dict[str, list[str]] = {}
+    if variants_path.exists():
+        try:
+            with open(variants_path) as f:
+                data = json.load(f)
+            for group in data.get("variant_groups", []):
+                canonical = group.get("canonical", "")
+                all_names = [canonical] + group.get("variants", [])
+                all_lower = [n.lower() for n in all_names if n]
+                for name_lower in all_lower:
+                    lookup[name_lower] = all_lower
+        except Exception:
+            logger.warning("Failed to load surname variants from %s", variants_path)
+
+    _surname_variants_cache = lookup
+    return lookup
+
+
 SCHEMA_VERSION = 1
 
 
@@ -1671,6 +1704,14 @@ class IdentityRegistry:
         results = []
         fuzzy_candidates = []
 
+        # Expand query with surname variants: if any word in the query
+        # matches a known surname variant, add all variants from that group
+        variant_lookup = _load_surname_variants()
+        query_terms = {query_lower}  # primary query always included
+        for word in query_lower.split():
+            if word in variant_lookup:
+                query_terms.update(variant_lookup[word])
+
         # State priority for ranking (lower = higher priority)
         _state_rank = {
             "CONFIRMED": 0, "PROPOSED": 1, "INBOX": 2,
@@ -1726,8 +1767,8 @@ class IdentityRegistry:
                 if isinstance(alias, str):
                     searchable_texts.append(alias.lower())
 
-            # Case-insensitive substring match (exact match priority)
-            matched = any(query_lower in text for text in searchable_texts)
+            # Case-insensitive substring match — check primary query AND variant expansions
+            matched = any(term in text for term in query_terms for text in searchable_texts)
             if matched:
                 summary = _build_summary()
                 rank = _state_rank.get(identity_state, 9)

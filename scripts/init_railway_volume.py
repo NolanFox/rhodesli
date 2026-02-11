@@ -50,7 +50,7 @@ REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
 
 # Optional files that should be synced from bundle when they differ.
 # These are NOT required for the app to start, but enhance functionality.
-OPTIONAL_SYNC_FILES = ["proposals.json"]
+OPTIONAL_SYNC_FILES = ["proposals.json", "surname_variants.json"]
 
 
 def volume_is_valid(data_dir: Path) -> bool:

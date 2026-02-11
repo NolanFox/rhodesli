@@ -69,6 +69,7 @@ data/*
 !data/golden_set.json
 !data/embeddings.npy
 !data/proposals.json
+!data/surname_variants.json
 
 # Scientific Instrumentation Runtime
 logs/
