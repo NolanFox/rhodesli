@@ -48,6 +48,10 @@ BUNDLED_DATA = Path("/app/data_bundle")
 # Critical files that MUST exist for valid initialization
 REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
 
+# Optional files that should be synced from bundle when they differ.
+# These are NOT required for the app to start, but enhance functionality.
+OPTIONAL_SYNC_FILES = ["proposals.json"]
+
 
 def volume_is_valid(data_dir: Path) -> bool:
     """Check if volume has the critical data files."""
@@ -140,7 +144,9 @@ def _sync_essential_files(data_dir: Path) -> int:
     updated = 0
     ts = int(time.time())
 
-    for filename in REQUIRED_DATA_FILES:
+    all_sync_files = REQUIRED_DATA_FILES + OPTIONAL_SYNC_FILES
+
+    for filename in all_sync_files:
         bundle_file = BUNDLED_DATA / filename
         volume_file = data_dir / filename
 

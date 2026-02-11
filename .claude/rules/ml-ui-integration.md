@@ -38,7 +38,7 @@ paths:
 
 ## Cache Invalidation
 6. `POST /api/sync/push` must invalidate `_proposals_cache` after writing data.
-7. proposals.json is tracked in git (`.gitignore` whitelist) and included in `push_to_production.py` DATA_FILES, but NOT in `REQUIRED_DATA_FILES` (it's optional — app works without it).
+7. proposals.json is tracked in git (`.gitignore` whitelist) and in `OPTIONAL_SYNC_FILES` in `init_railway_volume.py` (synced from bundle to volume on deploy, but not required for app startup).
 
 ## Display Rules
 8. Confidence labels follow AD-013 calibration: VERY HIGH (<0.85), HIGH (0.85-1.00), MODERATE (1.00-1.10), LOW (>1.10).
