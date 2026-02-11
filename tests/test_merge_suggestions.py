@@ -308,3 +308,128 @@ class TestAdminApprovalsMergeSuggestion:
             annotations = _load_annotations()
             assert annotations["annotations"][ann_id]["status"] == "approved"
         _invalidate_annotations_cache()
+
+
+class TestFocusMergeButton:
+    """Merge button in Focus mode's Similar Identities panel must work."""
+
+    def test_neighbor_card_merge_targets_browse_by_default(self):
+        """Without from_focus, merge button targets #identity-{target_id}."""
+        from app.main import neighbor_card
+        from fastcore.xml import to_xml
+        neighbor = {
+            "identity_id": "nbr-id",
+            "name": "Test Person",
+            "distance": 0.5,
+            "percentile": 0.9,
+            "confidence_gap": 10.0,
+            "can_merge": True,
+            "face_count": 1,
+            "anchor_face_ids": [],
+            "candidate_face_ids": [],
+            "state": "INBOX",
+        }
+        html = to_xml(neighbor_card(neighbor, "target-id", set(), user_role="admin", from_focus=False))
+        assert 'hx-target="#identity-target-id"' in html
+        assert "from_focus" not in html
+
+    def test_neighbor_card_merge_targets_focus_container(self):
+        """With from_focus=True, merge button targets #focus-container."""
+        from app.main import neighbor_card
+        from fastcore.xml import to_xml
+        neighbor = {
+            "identity_id": "nbr-id",
+            "name": "Test Person",
+            "distance": 0.5,
+            "percentile": 0.9,
+            "confidence_gap": 10.0,
+            "can_merge": True,
+            "face_count": 1,
+            "anchor_face_ids": [],
+            "candidate_face_ids": [],
+            "state": "INBOX",
+        }
+        html = to_xml(neighbor_card(neighbor, "target-id", set(), user_role="admin", from_focus=True))
+        assert 'hx-target="#focus-container"' in html
+        assert "from_focus=true" in html
+
+    def test_focus_merge_advances_to_next(self):
+        """After merge from focus mode, response contains next focus card."""
+        from core.registry import IdentityRegistry, IdentityState
+        from core.photo_registry import PhotoRegistry
+
+        photo_reg = PhotoRegistry()
+        photo_reg.register_face("photo_1", "/path/photo_1.jpg", "face_a")
+        photo_reg.register_face("photo_2", "/path/photo_2.jpg", "face_b")
+        photo_reg.register_face("photo_3", "/path/photo_3.jpg", "face_c")
+
+        identity_reg = IdentityRegistry()
+        target_id = identity_reg.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+            name="Alice",
+            state=IdentityState.CONFIRMED,
+        )
+        source_id = identity_reg.create_identity(
+            anchor_ids=["face_b"],
+            user_source="test",
+        )
+        # Create a third identity so there's something to advance to
+        identity_reg.create_identity(
+            anchor_ids=["face_c"],
+            user_source="test",
+            state=IdentityState.INBOX,
+        )
+
+        with patch("app.main.load_registry", return_value=identity_reg), \
+             patch("app.main.save_registry"), \
+             patch("app.main.load_photo_registry", return_value=photo_reg), \
+             patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.get_crop_files", return_value=set()):
+            from app.main import app
+            client = TestClient(app)
+            response = client.post(
+                f"/api/identity/{target_id}/merge/{source_id}?from_focus=true",
+                headers={"HX-Request": "true"})
+
+        assert response.status_code == 200
+        # Focus mode response should have focus-container (next card)
+        assert "focus-container" in response.text
+        # Should NOT contain identity-{target_id} card (that's browse mode)
+        assert f'id="identity-{target_id}"' not in response.text
+
+    def test_browse_merge_returns_identity_card(self):
+        """Without from_focus, merge returns browse-mode identity card."""
+        from core.registry import IdentityRegistry, IdentityState
+        from core.photo_registry import PhotoRegistry
+
+        photo_reg = PhotoRegistry()
+        photo_reg.register_face("photo_1", "/path/photo_1.jpg", "face_a")
+        photo_reg.register_face("photo_2", "/path/photo_2.jpg", "face_b")
+
+        identity_reg = IdentityRegistry()
+        target_id = identity_reg.create_identity(
+            anchor_ids=["face_a"],
+            user_source="test",
+            name="Alice",
+            state=IdentityState.CONFIRMED,
+        )
+        source_id = identity_reg.create_identity(
+            anchor_ids=["face_b"],
+            user_source="test",
+        )
+
+        with patch("app.main.load_registry", return_value=identity_reg), \
+             patch("app.main.save_registry"), \
+             patch("app.main.load_photo_registry", return_value=photo_reg), \
+             patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.get_crop_files", return_value=set()):
+            from app.main import app
+            client = TestClient(app)
+            response = client.post(
+                f"/api/identity/{target_id}/merge/{source_id}",
+                headers={"HX-Request": "true"})
+
+        assert response.status_code == 200
+        # Browse mode response should have identity card
+        assert f'id="identity-{target_id}"' in response.text

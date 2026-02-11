@@ -1794,7 +1794,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             Button(
                 "Find Similar",
                 cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors ml-auto min-h-[44px]",
-                hx_get=f"/api/identity/{identity_id}/neighbors",
+                hx_get=f"/api/identity/{identity_id}/neighbors?from_focus=true",
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
@@ -1813,7 +1813,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             Button(
                 "Find Similar",
                 cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors",
-                hx_get=f"/api/identity/{identity_id}/neighbors",
+                hx_get=f"/api/identity/{identity_id}/neighbors?from_focus=true",
                 hx_target=f"#neighbors-{identity_id}",
                 hx_swap="innerHTML",
                 type="button",
@@ -1874,7 +1874,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 # Neighbors container — auto-load if proposals exist
                 Div(
                     id=f"neighbors-{identity_id}", cls="mt-4",
-                    **({"hx_get": f"/api/identity/{identity_id}/neighbors",
+                    **({"hx_get": f"/api/identity/{identity_id}/neighbors?from_focus=true",
                         "hx_trigger": "load",
                         "hx_swap": "innerHTML"}
                        if identity_id in _get_identities_with_proposals() else {}),
@@ -3217,7 +3217,7 @@ def face_card(
     )
 
 
-def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin") -> Div:
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False) -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
@@ -3248,6 +3248,11 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     # -----------------------------------------------
 
     # Merge button -- role-aware: admin merges directly, contributor suggests
+    # In focus mode, target #focus-container and append from_focus=true so the merge
+    # endpoint advances to the next identity instead of returning a browse-mode card.
+    focus_suffix = "&from_focus=true" if from_focus else ""
+    merge_target = "#focus-container" if from_focus else f"#identity-{target_identity_id}"
+    merge_swap = "outerHTML"
     if not can_merge:
         merge_btn = Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
     elif user_role == "contributor":
@@ -3256,8 +3261,8 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
                            hx_swap="outerHTML", data_auth_action="suggest a merge")
     else:
         merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-                           hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_identity_id}",
-                           hx_swap="outerHTML", data_auth_action="merge these identities")
+                           hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}", hx_target=merge_target,
+                           hx_swap=merge_swap, data_auth_action="merge these identities")
 
     # Compare button -- opens side-by-side comparison modal
     compare_btn = Button(
@@ -3409,15 +3414,16 @@ def manual_search_section(identity_id: str) -> Div:
     )
 
 
-def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin") -> Div:
+def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False) -> Div:
     close_btn = Button("Close", cls="text-sm text-slate-400 hover:text-slate-300", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
     if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), close_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
     # Mergeable neighbors get checkboxes for bulk operations
     mergeable = [n for n in neighbors if n.get("can_merge")]
-    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role) for n in neighbors]
+    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role, from_focus=from_focus) for n in neighbors]
+    focus_param = "&from_focus=true" if from_focus else ""
     load_more = Button("Load More", cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-                       hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
+                       hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}{focus_param}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
 
     # Bulk actions (only if there are mergeable neighbors)
     bulk_actions = None
@@ -6466,7 +6472,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
 # =============================================================================
 
 @rt("/api/identity/{identity_id}/neighbors")
-def get(identity_id: str, limit: int = 5, offset: int = 0, sess=None):
+def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = False, sess=None):
     """
     Get nearest neighbor identities for potential merge.
 
@@ -6554,6 +6560,7 @@ def get(identity_id: str, limit: int = 5, offset: int = 0, sess=None):
         has_more=has_more,
         rejected_count=rejected_count,
         user_role=_get_user_role(sess),
+        from_focus=from_focus,
     )
 
 
@@ -7273,7 +7280,7 @@ def toast_with_merge_undo(message: str, target_id: str) -> Div:
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
 def post(target_id: str, source_id: str, source: str = "web",
-         resolved_name: str = None, custom_name: str = None, sess=None):
+         resolved_name: str = None, custom_name: str = None, from_focus: bool = False, sess=None):
     """
     Merge source identity into target identity. Requires admin.
 
@@ -7394,6 +7401,13 @@ def post(target_id: str, source_id: str, source: str = "web",
 
     # Post-merge re-evaluation: suggest nearby unmatched faces (ML-005)
     suggestion_panel = _post_merge_suggestions(actual_target_id, registry, crop_files)
+
+    # If from focus mode, advance to next identity instead of showing browse card
+    if from_focus:
+        return (
+            get_next_focus_card(exclude_id=actual_target_id),
+            merge_toast,
+        )
 
     return (
         identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
