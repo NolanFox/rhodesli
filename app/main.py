@@ -3253,7 +3253,7 @@ def face_card(
     )
 
 
-def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False) -> Div:
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "") -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
@@ -3286,7 +3286,8 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     # Merge button -- role-aware: admin merges directly, contributor suggests
     # In focus mode, target #focus-container and append from_focus=true so the merge
     # endpoint advances to the next identity instead of returning a browse-mode card.
-    focus_suffix = "&from_focus=true" if from_focus else ""
+    _focus_filter = f"&filter={triage_filter}" if triage_filter else ""
+    focus_suffix = f"&from_focus=true{_focus_filter}" if from_focus else ""
     merge_target = "#focus-container" if from_focus else f"#identity-{target_identity_id}"
     merge_swap = "outerHTML"
     if not can_merge:
