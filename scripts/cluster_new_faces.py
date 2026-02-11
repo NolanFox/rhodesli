@@ -297,6 +297,7 @@ def find_matches(
                     "source_identity_name": identity.get(
                         "name", f"Unknown ({identity_id[:8]})"
                     ),
+                    "source_state": identity.get("state", "INBOX"),
                     "target_identity_id": best_match,
                     "target_identity_name": confirmed_identities[best_match]["name"],
                     "distance": best_distance,
@@ -501,6 +502,7 @@ def main():
         proposals_data["proposals"].append({
             "source_identity_id": s["source_identity_id"],
             "source_identity_name": s["source_identity_name"],
+            "source_state": s.get("source_state", "INBOX"),
             "target_identity_id": s["target_identity_id"],
             "target_identity_name": s["target_identity_name"],
             "face_id": s["face_id"],

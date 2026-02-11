@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""Group similar INBOX identities by face embedding similarity.
+"""Group similar unresolved identities by face embedding similarity.
 
 After ingestion, each photo creates one identity per detected face.
-This script compares ALL inbox faces pairwise and merges similar ones
-into clusters, so the admin reviews ~15 groups instead of ~75 individuals.
+This script compares ALL unresolved faces (INBOX + SKIPPED) pairwise and
+merges similar ones into clusters, so the admin reviews fewer groups.
+
+SKIPPED faces are included by default because "skip" means "I can't identify
+this right now," not "exclude from ML forever." When SKIPPED faces match
+INBOX faces, they are promoted back to INBOX with tracking fields.
 
 Uses the same best-linkage / union-find approach as cluster_new_faces.py,
-but compares inbox-vs-inbox instead of inbox-vs-confirmed.
+but compares unresolved-vs-unresolved instead of unresolved-vs-confirmed.
 
 Usage:
-    python scripts/group_inbox_faces.py --dry-run     # Preview grouping
-    python scripts/group_inbox_faces.py --execute      # Actually merge
-    python scripts/group_inbox_faces.py --threshold 0.90  # Stricter grouping
+    python scripts/group_inbox_faces.py --dry-run           # Preview grouping
+    python scripts/group_inbox_faces.py --execute           # Actually merge
+    python scripts/group_inbox_faces.py --threshold 0.90    # Stricter grouping
+    python scripts/group_inbox_faces.py --inbox-only        # Only INBOX (legacy)
 """
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -77,7 +81,7 @@ def _generate_face_id(filename: str, face_index: int) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Group similar INBOX identities by face embedding similarity."
+        description="Group similar unresolved identities by face embedding similarity."
     )
     parser.add_argument(
         "--dry-run",
@@ -96,18 +100,25 @@ def main():
         default=GROUPING_THRESHOLD,
         help=f"Distance threshold for grouping (default: {GROUPING_THRESHOLD})",
     )
+    parser.add_argument(
+        "--inbox-only",
+        action="store_true",
+        help="Only group INBOX faces (legacy behavior, excludes SKIPPED)",
+    )
     args = parser.parse_args()
 
     if args.execute:
         args.dry_run = False
 
+    include_skipped = not args.inbox_only
     data_path = project_root / "data"
 
     print("=" * 60)
-    print("GROUP INBOX FACES")
+    print("GROUP UNRESOLVED FACES")
     print("=" * 60)
     print(f"Data path: {data_path}")
     print(f"Threshold: {args.threshold}")
+    print(f"Include SKIPPED: {include_skipped}")
     print(f"Mode: {'DRY RUN' if args.dry_run else 'EXECUTE'}")
     print()
 
@@ -119,7 +130,9 @@ def main():
     identities_path = data_path / "identities.json"
     registry = IdentityRegistry.load(identities_path)
     inbox_count = len(registry.list_identities(state=IdentityState.INBOX, include_merged=False))
+    skipped_count = len(registry.list_identities(state=IdentityState.SKIPPED, include_merged=False))
     print(f"  INBOX identities: {inbox_count}")
+    print(f"  SKIPPED identities: {skipped_count}")
 
     print("Loading face embeddings...")
     face_data = load_face_data(data_path)
@@ -130,36 +143,66 @@ def main():
     photo_registry = PhotoRegistry.load(photo_index_path)
     print()
 
-    # Run grouping
-    from core.grouping import group_inbox_identities
+    # Run grouping — use global function if including skipped
+    if include_skipped:
+        from core.grouping import group_all_unresolved
 
-    results = group_inbox_identities(
-        registry=registry,
-        face_data=face_data,
-        photo_registry=photo_registry,
-        threshold=args.threshold,
-        dry_run=args.dry_run,
-    )
+        results = group_all_unresolved(
+            registry=registry,
+            face_data=face_data,
+            photo_registry=photo_registry,
+            threshold=args.threshold,
+            include_skipped=True,
+            dry_run=args.dry_run,
+        )
+    else:
+        from core.grouping import group_inbox_identities
+
+        results = group_inbox_identities(
+            registry=registry,
+            face_data=face_data,
+            photo_registry=photo_registry,
+            threshold=args.threshold,
+            dry_run=args.dry_run,
+        )
+        results["inbox_count"] = inbox_count
+        results["skipped_count"] = 0
+        results["promotions"] = []
 
     # Display results
     if not results["groups"]:
         print("No groups found at this threshold.")
-        print(f"All {results['identities_before']} inbox identities are distinct.")
+        total = results.get("inbox_count", 0) + results.get("skipped_count", 0)
+        print(f"All {total} unresolved identities are distinct.")
         print(f"Try increasing --threshold (current: {args.threshold})")
         return
 
     print(f"Found {results['total_groups']} group(s) "
           f"({results['identities_before']} identities -> "
           f"{results['identities_after']} after grouping)")
+    print(f"  INBOX participants: {results.get('inbox_count', '?')}")
+    print(f"  SKIPPED participants: {results.get('skipped_count', '?')}")
     print()
     print("-" * 80)
 
     for i, group in enumerate(results["groups"], 1):
+        states = group.get("member_states", [])
+        state_str = f" [{', '.join(states)}]" if states else ""
         print(f"\nGroup {i}: {group['size']} faces "
-              f"(avg distance: {group['avg_distance']:.4f})")
+              f"(avg distance: {group['avg_distance']:.4f}){state_str}")
         print(f"  Primary: {group['primary_name']} ({group['primary_id'][:8]}...)")
         for mid, mname in zip(group["member_ids"], group["member_names"]):
             print(f"  + Merge:  {mname} ({mid[:8]}...)")
+
+    # Show promotions
+    promotions = results.get("promotions", [])
+    if promotions:
+        print()
+        print("=" * 60)
+        print(f"PROMOTIONS: {len(promotions)} SKIPPED faces promoted to INBOX")
+        print("=" * 60)
+        for p in promotions:
+            print(f"  {p['name']} -> reason: {p['reason']}")
 
     print()
     print("-" * 80)
@@ -170,6 +213,7 @@ def main():
     print(f"  Identities removed:  {results['total_merged']}")
     print(f"  Identities before:   {results['identities_before']}")
     print(f"  Identities after:    {results['identities_after']}")
+    print(f"  Promotions:          {len(promotions)}")
 
     if results["skipped_co_occurrence"] > 0:
         print(f"  Skipped (same photo): {results['skipped_co_occurrence']}")
@@ -187,8 +231,8 @@ def main():
         # Report merge outcomes
         successes = sum(1 for r in results["merge_results"] if r.get("success"))
         failures = len(results["merge_results"]) - successes
+        print(f"  Merges succeeded: {successes}")
         if failures > 0:
-            print(f"  Merges succeeded: {successes}")
             print(f"  Merges failed:    {failures}")
             for r in results["merge_results"]:
                 if not r.get("success"):
