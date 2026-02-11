@@ -6154,10 +6154,12 @@ def photo_view_content(
 
     # Build face overlays with CSS percentages for responsive scaling
     # Only if we have dimensions (needed for percentage calculations)
+    from urllib.parse import quote as _url_quote
     face_overlays = []
     if has_dimensions:
         for face_data in photo["faces"]:
             face_id = face_data["face_id"]
+            face_id_encoded = _url_quote(face_id, safe="")
             bbox = face_data["bbox"]  # [x1, y1, x2, y2]
             x1, y1, x2, y2 = bbox
 
@@ -6236,7 +6238,7 @@ def photo_view_content(
                     placeholder="Type name to tag...",
                     cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                         "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
-                    hx_get=f"/api/face/tag-search?face_id={face_id}",
+                    hx_get=f"/api/face/tag-search?face_id={face_id_encoded}",
                     hx_trigger="keyup changed delay:300ms",
                     hx_target=f"#{tag_results_id}",
                     hx_include="this",
@@ -6805,7 +6807,9 @@ def get(face_id: str, q: str = ""):
     Returns compact autocomplete results with merge buttons.
     Each result merges the face's current identity into the selected one.
     """
+    from urllib.parse import quote as _url_quote
     safe_face_id = face_id.replace(":", "-").replace(" ", "_")
+    face_id_encoded = _url_quote(face_id, safe="")
     results_id = f"tag-results-{safe_face_id}"
 
     if len(q.strip()) < 2:
@@ -6842,7 +6846,7 @@ def get(face_id: str, q: str = ""):
                     cls="flex flex-col min-w-0 text-left"
                 ),
                 cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
-                hx_post=f"/api/face/tag?face_id={face_id}&target_id={r['identity_id']}",
+                hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={r['identity_id']}",
                 hx_target="#photo-modal-content",
                 hx_swap="innerHTML",
                 type="button",
@@ -6860,7 +6864,7 @@ def get(face_id: str, q: str = ""):
         ),
         cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
             "border-t border-slate-700 mt-1 pt-1",
-        hx_post=f"/api/face/create-identity?face_id={face_id}&name={_url_quote(q.strip())}",
+        hx_post=f"/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}",
         hx_target="#photo-modal-content",
         hx_swap="innerHTML",
         type="button",
@@ -7054,6 +7058,13 @@ def post(face_id: str, name: str, sess=None):
 
     identity_id = source_identity["identity_id"]
     registry.rename_identity(identity_id, name)
+    # Auto-confirm when naming from tag dropdown (tagging = "this IS that person")
+    current_state = source_identity.get("state", "INBOX")
+    if current_state in ("INBOX", "PROPOSED", "SKIPPED"):
+        try:
+            registry.confirm_identity(identity_id, user_source="face_tag")
+        except Exception:
+            pass  # Already confirmed, or other benign error
     save_registry(registry)
 
     # Re-render the photo view to show the new name
