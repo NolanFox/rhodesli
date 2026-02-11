@@ -322,3 +322,15 @@
 - **Mistake**: Existing test asserted `"1 photos"` — which was the buggy grammar. When fixing the bug to output `"1 photo"`, the test correctly failed. The fix is to update the test, not revert the fix.
 - **Rule**: When a grammar/display fix causes test failures, verify whether the test was asserting the bug. Update the test to assert correct behavior.
 - **Prevention**: When writing display string assertions, always include a negative assertion for the known-incorrect form (e.g., `assert "1 photos" not in html`).
+
+## Session 2026-02-11: Proposals Deployment Fix
+
+### Lesson 59: Optional data files need explicit sync, not just bundling
+- **Mistake**: `proposals.json` was tracked in git, bundled in Docker, but never synced to the Railway volume because `_sync_essential_files()` only processed `REQUIRED_DATA_FILES`. The "add missing files" fallback only copies files that DON'T exist — proposals.json already existed (empty) on the volume.
+- **Rule**: Any data file that (a) changes over time and (b) needs to reach production must be in either `REQUIRED_DATA_FILES` or `OPTIONAL_SYNC_FILES` in `init_railway_volume.py`. Being in the Docker bundle alone is NOT sufficient if the file already exists on the volume.
+- **Prevention**: When adding a new data file, ask: "Will this file change after initial deployment?" If yes, add it to the sync list. Added `OPTIONAL_SYNC_FILES` for non-critical files like proposals.json.
+
+### Lesson 60: Empty proposals means clustering wasn't re-run, not a UI bug
+- **Mistake**: Assumed the UI was broken because proposals weren't showing. The actual issue was proposals.json had 0 proposals because `cluster_new_faces.py` hadn't been re-run after data changes.
+- **Rule**: When "feature X doesn't work on production", check the DATA first (is it populated?), then check the DEPLOYMENT PIPELINE (does it reach the server?), then check the UI code (does it read the data?).
+- **Prevention**: After any data change (sync, merge, ingest), re-run clustering to regenerate proposals.
