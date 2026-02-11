@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.23.0] - 2026-02-11
+
+### Added
+- **Triage filter propagation**: Focus mode action buttons (confirm, reject, skip, merge) now preserve the active `?filter=` parameter through the full HTMX chain. Previously, clicking "Confirm" lost the filter and showed unfiltered next cards.
+- **Focus mode sorting for filtered views**: `get_next_focus_card()` now accepts `triage_filter`, applies it to identity list, and sorts by `_focus_sort_key` priority. Up Next thumbnails also respect the filter.
+- **Photo navigation boundaries**: First and last photos show dimmed arrow indicators instead of no arrows, signaling navigation limits.
+- **Neighbor card filter preservation**: Merge buttons in the Similar Identities panel preserve the triage filter when returning to Focus mode.
+- **Grammar pluralization**: `_pl()` helper replaces all `face(s)` and `photo(s)` patterns with proper singular/plural forms across the UI.
+- **ML pipeline scaffold**: `rhodesli_ml/` package with 26 files — signal harvester, date label loader, model definitions, evaluation harness, training loops, and Gemini date labeling script.
+- **ML audit reports**: `docs/ml/current_ml_audit.md` (signal inventory: 947 confirmed pairs, 29 rejections, calibration feasible) and `docs/ml/photo_date_audit.md` (92% of photos undated, silver-labeling feasible).
+- 15 new tests (triage filter propagation, photo nav boundaries, pluralization), test count: 1423 → 1438.
+
 ## [v0.22.1] - 2026-02-11
 
 ### Fixed

@@ -1,6 +1,6 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-11 (Session 14 — Data Integrity + Proposals UI + Scalability)
+Last updated: 2026-02-11 (Session 16 — Navigation Hardening + ML Pipeline Kickoff)
 
 ## Active Bugs
 - (none)
@@ -26,6 +26,9 @@ Last updated: 2026-02-11 (Session 14 — Data Integrity + Proposals UI + Scalabi
 - [ ] Smoke test all fixes on live site
 
 ## Near-Term (Next 1-2 Weeks)
+- [ ] ML-050: Run `generate_date_labels.py` to silver-label all 155 photos via Gemini
+- [ ] ML-051: Train similarity calibration model on 947 pairs + 29 rejections
+- [ ] ML-052: MLS vs Euclidean golden set evaluation (does sigma_sq help?)
 - [ ] BE-014: Canonical name registry (variant spellings)
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
 - [ ] FE-041: "Help Identify" mode for non-admin users
@@ -45,6 +48,13 @@ Last updated: 2026-02-11 (Session 14 — Data Integrity + Proposals UI + Scalabi
 - [ ] CI/CD pipeline (automated tests, staging, deploy previews)
 
 ## Completed
+- [x] v0.23.0: Navigation hardening + ML pipeline scaffold (1438 tests)
+  - Triage filter propagation through focus mode action chain
+  - Photo nav boundary indicators (dimmed arrows at first/last)
+  - Grammar pluralization helper _pl()
+  - rhodesli_ml/ package: 26 files (signal harvester, date labeler, audits)
+  - ML audit: 947 confirmed pairs, 29 rejections, calibration feasible
+  - Photo date audit: 92% undated, silver-labeling feasible
 - [x] v0.22.1: Filter consistency + promotion context (1415 tests)
   - Match mode filters (ready/rediscovered/unmatched) now work
   - Up Next thumbnails preserve active filter in navigation links

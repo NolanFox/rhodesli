@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 5.6 — February 11, 2026
-**Status**: 1400 tests passing, v0.22.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 5.7 — February 11, 2026
+**Status**: 1438 tests passing, v0.23.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -198,7 +198,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| ML-001 | User actions don't improve predictions | OPEN | Merges, rejects, confirms generate no signal back to the ML pipeline. The system generates embeddings once and never learns from human corrections. |
+| ML-001 | User actions don't improve predictions | IN PROGRESS | Signal harvester created (`rhodesli_ml/data/signal_harvester.py`): extracts 947 confirmed pairs + 29 rejections. ML pipeline scaffold in `rhodesli_ml/`. Next: train calibration model. |
 | ML-002 | Rejection memory (AD-004) | VERIFIED | "Not Same" pairs are stored and excluded from future suggestions. Commit 8042c85 verified working. |
 | ML-003 | Confirmed matches → golden set | PARTIAL | Golden set exists but needs automated rebuild when new confirmations happen. |
 | ML-004 | Dynamic threshold calibration | DONE | AD-013: four-tier system (VERY_HIGH/HIGH/MODERATE/LOW) from golden set evaluation (2026-02-09) |
