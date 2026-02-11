@@ -1,6 +1,6 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-10 (Session 11 — Upload Flow + Photo Metadata Model Overhaul)
+Last updated: 2026-02-11 (Session 14 — Data Integrity + Proposals UI + Scalability)
 
 ## Active Bugs
 - (none)
@@ -45,6 +45,13 @@ Last updated: 2026-02-10 (Session 11 — Upload Flow + Photo Metadata Model Over
 - [ ] CI/CD pipeline (automated tests, staging, deploy previews)
 
 ## Completed
+- [x] v0.21.0: Data integrity + proposals UI + scalability (1355 tests)
+  - Merge-aware push_to_production.py (production wins on conflicts)
+  - Zeb Capuano identity restored (24 confirmed)
+  - Clustering proposals wired to Focus/Match/Browse modes
+  - Staging lifecycle (mark-processed endpoint)
+  - Grammar pluralization + collections carousel
+  - 4 new .claude/rules/ files
 - [x] Phase A: Railway deployment + Supabase auth + permission model
 - [x] Phase A stabilization: all 8 P0 bugs fixed, event delegation pattern
 - [x] Phase B: Landing page, search, mobile, sync infrastructure

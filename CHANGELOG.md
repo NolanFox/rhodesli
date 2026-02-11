@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.21.0] - 2026-02-11
+
+### Fixed
+- **Merge-aware push to production**: `push_to_production.py` now fetches production state and merges before git push. Production wins on conflicts (state, name, face set, merge, rejection changes). Prevents overwriting admin actions made on production.
+- **Grammar pluralization**: Fixed "1 faces" → "1 face" and "1 photos" → "1 photo" in photo grid badges, collection stats cards, and filter bar subtitles
+- **Test contamination**: 3 merge suggestion tests wrote to real `data/annotations.json` — now properly mock `_save_annotations`
+
+### Added
+- **Clustering proposals UI integration**: Focus mode prioritizes faces with ML proposals (sorted by distance), Match mode shows proposals before live search, Browse view shows "ML Match" badges
+- **proposals.json pipeline**: `cluster_new_faces.py` now writes `data/proposals.json` with match proposals; loaded and cached in web app with full cache invalidation
+- **Staging lifecycle**: `POST /api/sync/staged/mark-processed` endpoint marks staging jobs as processed after pipeline completion
+- **Zeb Capuano identity restored**: Merged and confirmed as 24th confirmed identity
+- **Collections carousel**: Horizontal scroll layout for 5+ collections, grid for fewer
+- 4 new `.claude/rules/` files: data-sync, ui-scalability, ml-ui-integration, post-pipeline-verification
+- 22 merge-aware push tests, 12 proposal tests, 6 staging lifecycle tests, 3 collection/grammar tests
+- Test count: 1340 → 1355
+
 ## [v0.20.4] - 2026-02-10
 
 ### Fixed

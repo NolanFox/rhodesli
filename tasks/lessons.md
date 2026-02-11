@@ -305,3 +305,20 @@
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse → embeddings cache → default.
 - **Prevention**: `get_face_quality()` helper provides the fallback. `face_card()` now falls back to embeddings when filename parse returns 0.
+
+## Session 2026-02-11: Data Integrity + ML-UI Integration
+
+### Lesson 56: Blind push-to-production overwrites admin actions
+- **Mistake**: `push_to_production.py` did `git add data/ && git commit && git push` without checking production state. Admin merged "Zeb Capuano" on production, but local data still had the unmerged identities. Next push overwrote the merge.
+- **Rule**: NEVER push data to production without first fetching and merging with the current production state. Production wins on conflicts (state changes, name changes, face set changes, merges, rejections).
+- **Prevention**: `push_to_production.py` now has `perform_merge()` that fetches via sync API, detects user-modified identities via `_is_production_modified()`, and preserves them. Use `--no-merge` only for known-clean states.
+
+### Lesson 57: FastHTML `cls` is stored as `class` in `.attrs`
+- **Mistake**: After creating a FastHTML `Div(cls="...")`, tried to modify via `card.attrs["cls"]` — KeyError. FastHTML maps the `cls` kwarg to `class` in the attrs dict.
+- **Rule**: Access `element.attrs["class"]` (not `"cls"`) to read/modify CSS classes on FastHTML elements after creation.
+- **Prevention**: Added to `.claude/rules/ui-scalability.md` as a rule.
+
+### Lesson 58: Test assertions must match CORRECT behavior, not historical behavior
+- **Mistake**: Existing test asserted `"1 photos"` — which was the buggy grammar. When fixing the bug to output `"1 photo"`, the test correctly failed. The fix is to update the test, not revert the fix.
+- **Rule**: When a grammar/display fix causes test failures, verify whether the test was asserting the bug. Update the test to assert correct behavior.
+- **Prevention**: When writing display string assertions, always include a negative assertion for the known-incorrect form (e.g., `assert "1 photos" not in html`).
