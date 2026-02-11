@@ -147,7 +147,7 @@ def create_backups() -> dict:
 
 def step_backup(interactive: bool) -> dict | None:
     """Step 1: Create pre-flight backups."""
-    print_step(1, 7, "Creating pre-flight backups")
+    print_step(1, 8, "Creating pre-flight backups")
     backups = create_backups()
     if not backups:
         print("  WARNING: No data files found to back up.")
@@ -156,7 +156,7 @@ def step_backup(interactive: bool) -> dict | None:
 
 def step_download(interactive: bool) -> int:
     """Step 2: Download staged photos. Returns count downloaded."""
-    print_step(2, 7, "Downloading staged photos from production")
+    print_step(2, 8, "Downloading staged photos from production")
 
     result = run_script(
         ["scripts/download_staged.py", "--dest", str(PENDING_DIR)],
@@ -175,7 +175,7 @@ def step_download(interactive: bool) -> int:
 
 def step_ml_processing(interactive: bool) -> subprocess.CompletedProcess:
     """Step 3: Run face detection and embedding generation."""
-    print_step(3, 7, "Running face detection (ML processing)")
+    print_step(3, 8, "Running face detection (ML processing)")
 
     job_id = f"staged-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
@@ -207,9 +207,20 @@ def step_ml_processing(interactive: bool) -> subprocess.CompletedProcess:
     return result
 
 
+def step_grouping(interactive: bool) -> subprocess.CompletedProcess:
+    """Step 4: Group similar inbox faces into clusters (actual merges)."""
+    print_step(4, 8, "Grouping similar inbox faces into clusters")
+
+    result = run_script(
+        ["scripts/group_inbox_faces.py", "--execute"],
+        "Inbox face grouping",
+    )
+    return result
+
+
 def step_clustering(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 4: Run clustering dry-run. ALWAYS pauses for review."""
-    print_step(4, 7, "Running face clustering (proposals)")
+    """Step 5: Run clustering dry-run. ALWAYS pauses for review."""
+    print_step(5, 8, "Running face clustering (proposals)")
 
     result = run_script(
         ["scripts/cluster_new_faces.py", "--dry-run"],
@@ -233,8 +244,8 @@ def step_clustering(interactive: bool) -> subprocess.CompletedProcess:
 
 
 def step_upload_r2(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 5: Upload photos and crops to R2."""
-    print_step(5, 7, "Uploading photos and crops to R2")
+    """Step 6: Upload photos and crops to R2."""
+    print_step(6, 8, "Uploading photos and crops to R2")
 
     if interactive and not prompt_continue("Upload to R2?"):
         print("  Skipped R2 upload.")
@@ -248,8 +259,8 @@ def step_upload_r2(interactive: bool) -> subprocess.CompletedProcess:
 
 
 def step_push_production(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 6: Push updated data to production."""
-    print_step(6, 7, "Pushing data to production")
+    """Step 7: Push updated data to production."""
+    print_step(7, 8, "Pushing data to production")
 
     if interactive and not prompt_continue("Push data to production?"):
         print("  Skipped production push.")
@@ -263,8 +274,8 @@ def step_push_production(interactive: bool) -> subprocess.CompletedProcess:
 
 
 def step_clear_staging(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 7: Clear staging on production."""
-    print_step(7, 7, "Clearing staging on production")
+    """Step 8: Clear staging on production."""
+    print_step(8, 8, "Clearing staging on production")
 
     result = run_script(
         ["scripts/download_staged.py", "--clear-after", "--dest", str(PENDING_DIR)],
@@ -305,7 +316,7 @@ def main():
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Download + ML + clustering preview only (steps 1-4, no upload/push)",
+        help="Download + ML + grouping + clustering preview only (steps 1-5, no upload/push)",
     )
     parser.add_argument(
         "--auto",
@@ -354,7 +365,12 @@ def main():
             print(f"    {path}")
         sys.exit(1)
 
-    # Step 4: Clustering (ALWAYS pauses for review, even in --auto)
+    # Step 4: Group similar inbox faces into clusters (actual merges)
+    result = step_grouping(interactive)
+    if result.returncode != 0:
+        print("\n  WARNING: Inbox grouping failed (non-fatal, continuing).")
+
+    # Step 5: Clustering (ALWAYS pauses for review, even in --auto)
     result = step_clustering(interactive)
     if result.returncode != 0:
         print("\n  FAILED: Clustering failed.")
