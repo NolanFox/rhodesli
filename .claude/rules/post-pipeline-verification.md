@@ -26,6 +26,18 @@ curl -s https://rhodesli.nolanandrewfox.com/api/match/next-pair | grep -o 'ML Ma
 curl -s https://rhodesli.nolanandrewfox.com/admin/pending-uploads | grep -o '[0-9]* pending'
 ```
 
+## Post-Reclustering Checks
+```bash
+# 6. Check for promotions
+python3 -c "import json; ids=json.load(open('data/identities.json')); print(sum(1 for v in ids.get('identities',{}).values() if isinstance(v,dict) and v.get('promoted_from'))), 'promoted')"
+
+# 7. Triage bar renders with correct counts
+curl -s 'https://rhodesli.nolanandrewfox.com/?section=to_review&view=focus' | grep -o 'Ready to Confirm\|Rediscovered\|Unmatched\|triage' | head -5
+
+# 8. Focus mode shows highest-priority face first (should be proposal or promotion)
+curl -s 'https://rhodesli.nolanandrewfox.com/?section=to_review&view=focus' | grep -o 'promotion-banner\|Rediscovered\|New Context' | head -3
+```
+
 ## Data Integrity Before Push
 Always run `python scripts/check_data_integrity.py` before pushing.
 

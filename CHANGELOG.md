@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.22.0] - 2026-02-11
+
+### Added
+- **Global reclustering**: `group_all_unresolved()` in `core/grouping.py` clusters ALL unresolved faces (INBOX + SKIPPED), not just inbox. SKIPPED faces are no longer frozen — they participate in ML grouping like Apple Photos and Google Photos.
+- **Promotion tracking**: When SKIPPED faces match INBOX or other SKIPPED faces, they are promoted back to INBOX with tracking fields (`promoted_from`, `promoted_at`, `promotion_reason`).
+- **Inbox triage bar**: Top of inbox shows Ready to Confirm / Rediscovered / Unmatched counts with filter links. Admin starts with highest-value actions.
+- **Triage filter**: `?filter=ready|rediscovered|unmatched` URL parameter narrows inbox views.
+- **Promotion badges**: Browse view shows "Rediscovered" or "Suggested ID" badges on promoted identities.
+- **Promotion banners**: Focus mode shows contextual banners above promoted faces ("New Context Available", "Identity Suggested", "Rediscovered").
+- **Focus mode priority ordering**: confirmed_match > VERY HIGH proposals > promotions > HIGH proposals > other proposals > unmatched.
+- **source_state tracking**: `proposals.json` now includes `source_state` field to identify proposals from SKIPPED faces.
+- 31 new tests (13 global grouping + 18 triage UX), test count: 1355 → 1400.
+
+### Data
+- 4 groups formed (8 faces → 4 clusters), 4 identities merged
+- 7 SKIPPED faces promoted: 1 new_face_match, 6 group_discovery
+- 16 clustering proposals against confirmed identities
+- INBOX: 65→68, SKIPPED: 196→187
+
 ## [v0.21.0] - 2026-02-11
 
 ### Fixed

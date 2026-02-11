@@ -40,6 +40,23 @@ paths:
 6. `POST /api/sync/push` must invalidate `_proposals_cache` after writing data.
 7. proposals.json is tracked in git (`.gitignore` whitelist) and in `OPTIONAL_SYNC_FILES` in `init_railway_volume.py` (synced from bundle to volume on deploy, but not required for app startup).
 
+## Global Reclustering
+Clustering operates on ALL unresolved faces (INBOX + SKIPPED), not just inbox.
+When SKIPPED faces gain new matches, they are promoted to INBOX with tracking fields.
+
+Promotion fields on identity:
+- `promoted_from`: previous status ("SKIPPED")
+- `promoted_at`: ISO timestamp
+- `promotion_reason`: "new_face_match" | "group_discovery" | "confirmed_match"
+- `promotion_context`: human-readable explanation (for confirmed_match)
+
+`source_state` field in proposals.json tracks which proposals come from SKIPPED faces.
+
+## Inbox Triage
+The inbox shows a triage bar: Ready to Confirm / Rediscovered / Unmatched.
+Focus and Match modes sort by priority: confirmed matches first, then promotions, then unmatched.
+Filter parameter `?filter=ready|rediscovered|unmatched` narrows the inbox view.
+
 ## Display Rules
 8. Confidence labels follow AD-013 calibration: VERY HIGH (<0.85), HIGH (0.85-1.00), MODERATE (1.00-1.10), LOW (>1.10).
 9. Show comparative metrics (margin, "15% closer than next-best") rather than absolute distances for non-technical users (Lesson #41).

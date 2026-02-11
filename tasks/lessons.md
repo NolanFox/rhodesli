@@ -334,3 +334,15 @@
 - **Mistake**: Assumed the UI was broken because proposals weren't showing. The actual issue was proposals.json had 0 proposals because `cluster_new_faces.py` hadn't been re-run after data changes.
 - **Rule**: When "feature X doesn't work on production", check the DATA first (is it populated?), then check the DEPLOYMENT PIPELINE (does it reach the server?), then check the UI code (does it read the data?).
 - **Prevention**: After any data change (sync, merge, ingest), re-run clustering to regenerate proposals.
+
+## Session 2026-02-11: Global Reclustering + Inbox Triage
+
+### Lesson 61: SKIPPED faces must participate in clustering, not just proposals
+- **Mistake**: `group_inbox_identities()` only included INBOX faces (line 139). The 196 SKIPPED faces were excluded from peer-to-peer grouping forever. But `cluster_new_faces.py` already included them for proposal generation against confirmed identities.
+- **Rule**: Status boundaries (INBOX vs SKIPPED) should not be clustering boundaries. "Skip" means "I can't identify this right now," not "exclude from ML forever." Every major photo system (Apple, Google, Immich) continuously re-evaluates all unresolved faces.
+- **Prevention**: `group_all_unresolved()` now includes both INBOX and SKIPPED. Use `--inbox-only` flag only for legacy behavior. Added `.claude/rules/ml-ui-integration.md` section documenting this.
+
+### Lesson 62: Triage by actionability, not chronology
+- **Mistake**: The inbox showed all items sorted by creation date. Admin had to scroll past 60+ unidentified faces to find the one that had an ML match at 0.61 distance — a near-certain identification.
+- **Rule**: Sort the inbox by actionability: confirmed matches first (one-click merge), then proposals (high-confidence), then promotions (new evidence), then unmatched. The admin's time is best spent on the highest-confidence actions.
+- **Prevention**: Focus mode `_focus_sort_key` now uses 6-tier priority. Triage bar shows counts by category with filter links.
