@@ -721,7 +721,7 @@
     "5ad32dd1-673e-4ae7-8437-6e1fe615cda2": {
       "identity_id": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2",
       "name": "Unidentified Person 033",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 936_compress:face0",
@@ -735,9 +735,9 @@
       "negative_ids": [
         "identity:925904af-af2c-49af-a721-e4b74a312182"
       ],
-      "version_id": 10,
+      "version_id": 11,
       "created_at": "2026-02-01T21:29:26.547176+00:00",
-      "updated_at": "2026-02-11T05:10:27.195420+00:00",
+      "updated_at": "2026-02-11T06:22:25.119988+00:00",
       "promoted_from": "SKIPPED",
       "promoted_at": "2026-02-11T05:10:27.193326+00:00",
       "promotion_reason": "group_discovery",
@@ -926,21 +926,23 @@
     },
     "fd43c9dd-8558-4305-8bda-90c3f320daac": {
       "identity_id": "fd43c9dd-8558-4305-8bda-90c3f320daac",
-      "name": "Unidentified Person 045",
-      "state": "SKIPPED",
+      "name": "Boulissa Pizanti Capeluto",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 003_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 4,
       "created_at": "2026-02-01T21:29:26.547429+00:00",
-      "updated_at": "2026-02-10T04:07:31.199904+00:00"
+      "updated_at": "2026-02-11T06:55:22.759839+00:00",
+      "first_name": "Boulissa Pizanti",
+      "last_name": "Capeluto"
     },
     "5d9ba7e2-f3dd-430d-8576-552962c42d6f": {
       "identity_id": "5d9ba7e2-f3dd-430d-8576-552962c42d6f",
-      "name": "Unidentified Person 046",
-      "state": "SKIPPED",
+      "name": "Joya Habib Pizanti",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 003_compress:face2"
@@ -948,9 +950,11 @@
       "negative_ids": [
         "identity:925904af-af2c-49af-a721-e4b74a312182"
       ],
-      "version_id": 3,
+      "version_id": 5,
       "created_at": "2026-02-01T21:29:26.547446+00:00",
-      "updated_at": "2026-02-10T04:07:30.988135+00:00"
+      "updated_at": "2026-02-11T06:54:16.042205+00:00",
+      "first_name": "Joya Habib",
+      "last_name": "Pizanti"
     },
     "cb2a9cdd-a3a6-4c3b-9071-5710a366eda5": {
       "identity_id": "cb2a9cdd-a3a6-4c3b-9071-5710a366eda5",
@@ -1034,16 +1038,65 @@
       "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "name": "Selma Capeluto",
       "state": "CONFIRMED",
-      "anchor_ids": [],
+      "anchor_ids": [
+        "inbox_efa182f997c9",
+        "inbox_61c4952679a7",
+        "inbox_e8842bcd8c1a",
+        "inbox_a01016d743d0",
+        "inbox_441f60c145fb"
+      ],
       "candidate_ids": [
         "596771324.500867:face1",
         "Image 983_compress:face6",
         "Image 984_compress:face9"
       ],
       "negative_ids": [],
-      "version_id": 3,
+      "version_id": 4,
       "created_at": "2026-02-01T21:29:26.547569+00:00",
-      "updated_at": "2026-02-03T04:51:15.142334+00:00"
+      "updated_at": "2026-02-11T06:20:15.195485+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "887f596b-22eb-4ae0-82ff-87ad3ef27397",
+          "timestamp": "2026-02-11T06:20:15.195485+00:00",
+          "source_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
+          "source_name": "Unidentified Person 296",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_efa182f997c9",
+              "inbox_61c4952679a7",
+              "inbox_e8842bcd8c1a",
+              "inbox_a01016d743d0",
+              "inbox_441f60c145fb"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 296",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 3,
+            "name": "Selma Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_efa182f997c9",
+              "inbox_61c4952679a7",
+              "inbox_e8842bcd8c1a",
+              "inbox_a01016d743d0",
+              "inbox_441f60c145fb"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        }
+      ]
     },
     "2ceb4547-5869-4c7c-b5d1-2a989514749a": {
       "identity_id": "2ceb4547-5869-4c7c-b5d1-2a989514749a",
@@ -1409,15 +1462,52 @@
       "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
       "name": "Betty Capeluto Fox",
       "state": "CONFIRMED",
-      "anchor_ids": [],
+      "anchor_ids": [
+        "inbox_22d81a2ed078"
+      ],
       "candidate_ids": [
         "Image 978_compress:face0",
         "Image 983_compress:face2"
       ],
       "negative_ids": [],
-      "version_id": 3,
+      "version_id": 4,
       "created_at": "2026-02-01T21:29:26.548826+00:00",
-      "updated_at": "2026-02-03T04:52:24.678484+00:00"
+      "updated_at": "2026-02-11T06:20:53.506424+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "8a61f35a-ca36-4a1b-8f77-b422fdd72b19",
+          "timestamp": "2026-02-11T06:20:53.506424+00:00",
+          "source_id": "3267b6b7-c013-4449-812a-3c4f9bfd9300",
+          "source_name": "Unidentified Person 320",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_22d81a2ed078"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 320",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 2,
+            "name": "Betty Capeluto Fox",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_22d81a2ed078"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        }
+      ]
     },
     "1547d786-4349-41ed-abb4-02e63b2ba313": {
       "identity_id": "1547d786-4349-41ed-abb4-02e63b2ba313",
@@ -1478,7 +1568,7 @@
     "c4d13c9b-ef1e-4df1-a574-2adced093f96": {
       "identity_id": "c4d13c9b-ef1e-4df1-a574-2adced093f96",
       "name": "Unidentified Person 083",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 932_compress:face2",
@@ -1486,9 +1576,9 @@
         "Image 939_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 3,
+      "version_id": 4,
       "created_at": "2026-02-01T21:29:26.548920+00:00",
-      "updated_at": "2026-02-11T05:10:27.195808+00:00",
+      "updated_at": "2026-02-11T06:22:36.044152+00:00",
       "promoted_from": "SKIPPED",
       "promoted_at": "2026-02-11T05:10:27.193326+00:00",
       "promotion_reason": "group_discovery",
@@ -2169,7 +2259,11 @@
       "anchor_ids": [
         "inbox_209af5bffddc",
         "inbox_98e4a65502b3",
-        "inbox_e581364d9e28"
+        "inbox_e581364d9e28",
+        "inbox_de99078f4995",
+        "inbox_251a55eeaedc",
+        "inbox_1f520b11165b",
+        "inbox_aa674bb2d16f"
       ],
       "candidate_ids": [
         "Image 032_compress:face0",
@@ -2182,9 +2276,9 @@
         "Image 031_compress:face0"
       ],
       "negative_ids": [],
-      "version_id": 11,
+      "version_id": 14,
       "created_at": "2026-02-01T21:29:26.549879+00:00",
-      "updated_at": "2026-02-08T06:31:10.262668+00:00",
+      "updated_at": "2026-02-11T06:43:33.203094+00:00",
       "merge_history": [
         {
           "merge_event_id": "8c65ebda-640c-4648-98f1-bb4f418569d1",
@@ -2233,6 +2327,107 @@
           },
           "direction_auto_corrected": false,
           "merged_by": "face_tag"
+        },
+        {
+          "merge_event_id": "ffefdfc2-6631-4e24-948f-c81a05937d89",
+          "timestamp": "2026-02-11T06:19:38.569803+00:00",
+          "source_id": "23ce2d83-f36b-437d-845d-44dd6f910a31",
+          "source_name": "Unidentified Person 318",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_de99078f4995",
+              "inbox_251a55eeaedc"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 318",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 3,
+            "candidate_count": 8,
+            "name": "Victoria Capuano Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_de99078f4995",
+              "inbox_251a55eeaedc"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        },
+        {
+          "merge_event_id": "83b86758-230c-428b-8a42-00ec01b95d17",
+          "timestamp": "2026-02-11T06:32:09.604320+00:00",
+          "source_id": "1c1ecee7-b1ac-4358-a544-064980030728",
+          "source_name": "Unidentified Person 362",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_1f520b11165b"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 362",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 5,
+            "candidate_count": 8,
+            "name": "Victoria Capuano Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_1f520b11165b"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "face_tag"
+        },
+        {
+          "merge_event_id": "a1929d6e-c6f5-4fac-84cf-92228dc34a72",
+          "timestamp": "2026-02-11T06:43:33.203094+00:00",
+          "source_id": "2cd362da-8553-4172-86e6-79e5ac6c4332",
+          "source_name": "Unidentified Person 315",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_aa674bb2d16f"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 315",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 6,
+            "candidate_count": 8,
+            "name": "Victoria Capuano Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_aa674bb2d16f"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
         }
       ]
     },
@@ -2305,7 +2500,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.549989+00:00",
-      "updated_at": "2026-02-10T04:07:11.776217+00:00"
+      "updated_at": "2026-02-11T06:50:26.553872+00:00",
+      "merged_into": "7cba61d1-4aec-401a-b2ff-5142fb68ac36"
     },
     "956aec21-4fbc-4202-b6f7-a701031b862a": {
       "identity_id": "956aec21-4fbc-4202-b6f7-a701031b862a",
@@ -2318,7 +2514,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.550010+00:00",
-      "updated_at": "2026-02-10T04:07:11.345586+00:00"
+      "updated_at": "2026-02-11T06:50:38.364493+00:00",
+      "merged_into": "7cba61d1-4aec-401a-b2ff-5142fb68ac36"
     },
     "1f507642-f38d-48ab-ba2a-66f368e258a0": {
       "identity_id": "1f507642-f38d-48ab-ba2a-66f368e258a0",
@@ -2328,10 +2525,12 @@
       "candidate_ids": [
         "Image 028_compress:face3"
       ],
-      "negative_ids": [],
-      "version_id": 2,
+      "negative_ids": [
+        "identity:7cba61d1-4aec-401a-b2ff-5142fb68ac36"
+      ],
+      "version_id": 3,
       "created_at": "2026-02-01T21:29:26.550073+00:00",
-      "updated_at": "2026-02-10T04:07:10.867246+00:00"
+      "updated_at": "2026-02-11T06:48:39.987638+00:00"
     },
     "6c78a002-d973-43fb-ad90-169ae0cfcd52": {
       "identity_id": "6c78a002-d973-43fb-ad90-169ae0cfcd52",
@@ -2624,7 +2823,14 @@
         "inbox_e57332256894",
         "inbox_96aab0451fc0",
         "inbox_7dac7a474419",
-        "inbox_8c2472e103aa"
+        "inbox_8c2472e103aa",
+        "inbox_4ca8098ff1d5",
+        "inbox_197decf08f7c",
+        "inbox_de6c29f39e6d",
+        "inbox_3b59588cdc20",
+        "inbox_37feea05cf40",
+        "inbox_dd93163579df",
+        "inbox_f855c874323d"
       ],
       "candidate_ids": [
         "596771324.500867:face0",
@@ -2643,11 +2849,12 @@
       "negative_ids": [
         "identity:925904af-af2c-49af-a721-e4b74a312182",
         "identity:024a6038-e6db-4f5e-b951-e107a342d8bd",
-        "identity:20142ba0-1bb4-467e-8d13-5fb36d873ad2"
+        "identity:20142ba0-1bb4-467e-8d13-5fb36d873ad2",
+        "identity:7cba61d1-4aec-401a-b2ff-5142fb68ac36"
       ],
-      "version_id": 16,
+      "version_id": 20,
       "created_at": "2026-02-01T21:29:26.550798+00:00",
-      "updated_at": "2026-02-10T05:22:36.962658+00:00",
+      "updated_at": "2026-02-11T06:48:18.621925+00:00",
       "merge_history": [
         {
           "merge_event_id": "e3f434b2-cc38-4243-b4f1-268a18821788",
@@ -2744,6 +2951,113 @@
           },
           "direction_auto_corrected": false,
           "merged_by": "face_tag"
+        },
+        {
+          "merge_event_id": "4ac2bee1-7e56-4210-afac-f24c4be418af",
+          "timestamp": "2026-02-11T06:20:02.120112+00:00",
+          "source_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
+          "source_name": "Unidentified Person 295",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_4ca8098ff1d5",
+              "inbox_197decf08f7c",
+              "inbox_de6c29f39e6d",
+              "inbox_3b59588cdc20",
+              "inbox_37feea05cf40"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 295",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 6,
+            "candidate_count": 12,
+            "name": "Big Leon Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_4ca8098ff1d5",
+              "inbox_197decf08f7c",
+              "inbox_de6c29f39e6d",
+              "inbox_3b59588cdc20",
+              "inbox_37feea05cf40"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        },
+        {
+          "merge_event_id": "e78d6ab6-c9fa-46f6-8a41-339f86772559",
+          "timestamp": "2026-02-11T06:21:15.375947+00:00",
+          "source_id": "c06c7fb4-e7ec-40f1-ae7f-5b7da4c84bf6",
+          "source_name": "Unidentified Person 322",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_dd93163579df"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 322",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 11,
+            "candidate_count": 12,
+            "name": "Big Leon Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_dd93163579df"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        },
+        {
+          "merge_event_id": "8c8118fc-bc3e-4c25-bb0b-c92d48dfb5e8",
+          "timestamp": "2026-02-11T06:37:33.742430+00:00",
+          "source_id": "ef572046-27d3-4069-9510-391f9c0ea226",
+          "source_name": "Unidentified Person 304",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_f855c874323d"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 304",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 12,
+            "candidate_count": 12,
+            "name": "Big Leon Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_f855c874323d"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "face_tag"
         }
       ]
     },
@@ -2827,10 +3141,12 @@
         "Image 975_compress:face3",
         "Image 984_compress:face1"
       ],
-      "negative_ids": [],
-      "version_id": 5,
+      "negative_ids": [
+        "identity:7cba61d1-4aec-401a-b2ff-5142fb68ac36"
+      ],
+      "version_id": 6,
       "created_at": "2026-02-01T21:29:26.550910+00:00",
-      "updated_at": "2026-02-02T22:36:21.228572+00:00"
+      "updated_at": "2026-02-11T06:48:58.549176+00:00"
     },
     "58451efc-4ea1-49e5-864e-e54e9dea9066": {
       "identity_id": "58451efc-4ea1-49e5-864e-e54e9dea9066",
@@ -2916,10 +3232,12 @@
       "candidate_ids": [
         "Image 007_compress:face0"
       ],
-      "negative_ids": [],
-      "version_id": 3,
+      "negative_ids": [
+        "identity:acefd033-e25a-4b1b-b66d-9f2c6b5731f3"
+      ],
+      "version_id": 4,
       "created_at": "2026-02-01T21:29:26.551044+00:00",
-      "updated_at": "2026-02-02T19:46:23.938043+00:00"
+      "updated_at": "2026-02-11T06:30:52.584457+00:00"
     },
     "2e1f36e0-d9c6-45f7-9858-e8147db2faad": {
       "identity_id": "2e1f36e0-d9c6-45f7-9858-e8147db2faad",
@@ -2968,14 +3286,51 @@
       "identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
       "name": "Rica Moussafer Pizante",
       "state": "CONFIRMED",
-      "anchor_ids": [],
+      "anchor_ids": [
+        "inbox_3f047afeb6e4"
+      ],
       "candidate_ids": [
         "Image 951_compress:face0"
       ],
       "negative_ids": [],
-      "version_id": 4,
+      "version_id": 5,
       "created_at": "2026-02-01T21:29:26.551136+00:00",
-      "updated_at": "2026-02-02T23:09:46.719752+00:00"
+      "updated_at": "2026-02-11T06:21:05.736320+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "52230248-84c7-4966-b8ff-e24f5be06cb9",
+          "timestamp": "2026-02-11T06:21:05.736320+00:00",
+          "source_id": "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b",
+          "source_name": "Unidentified Person 356",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_3f047afeb6e4"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 356",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 1,
+            "name": "Rica Moussafer Pizante",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_3f047afeb6e4"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        }
+      ]
     },
     "cb32481f-081e-418f-980d-5ac8435e5154": {
       "identity_id": "cb32481f-081e-418f-980d-5ac8435e5154",
@@ -3253,10 +3608,12 @@
         "Image 932_compress:face5",
         "Image 968_compress:face1"
       ],
-      "negative_ids": [],
-      "version_id": 2,
+      "negative_ids": [
+        "identity:7cba61d1-4aec-401a-b2ff-5142fb68ac36"
+      ],
+      "version_id": 3,
       "created_at": "2026-02-01T21:29:26.551546+00:00",
-      "updated_at": "2026-02-07T05:48:15.723721+00:00"
+      "updated_at": "2026-02-11T06:49:12.092590+00:00"
     },
     "d970c349-793e-420c-9911-4b698e38b334": {
       "identity_id": "d970c349-793e-420c-9911-4b698e38b334",
@@ -3288,21 +3645,130 @@
       "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
       "name": "Victor Capelluto",
       "state": "CONFIRMED",
-      "anchor_ids": [],
+      "anchor_ids": [
+        "inbox_6e7b13515ac3"
+      ],
       "candidate_ids": [
         "Image 001_compress:face1",
         "Image 028_compress:face5",
         "Image 969_compress:face2",
         "Image 972_compress:face2",
-        "Image 984_compress:face4"
+        "Image 984_compress:face4",
+        "Image 003_compress:face0",
+        "Image 941_compress:face4"
       ],
       "negative_ids": [
         "identity:925904af-af2c-49af-a721-e4b74a312182",
-        "identity:024a6038-e6db-4f5e-b951-e107a342d8bd"
+        "identity:024a6038-e6db-4f5e-b951-e107a342d8bd",
+        "identity:b6d9ea5b-bf90-463a-bab3-682acac7753d",
+        "identity:1f507642-f38d-48ab-ba2a-66f368e258a0",
+        "identity:843aaa8e-6212-4a1b-93e7-753dc1262453",
+        "identity:798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a"
       ],
-      "version_id": 6,
+      "version_id": 13,
       "created_at": "2026-02-01T21:29:26.551614+00:00",
-      "updated_at": "2026-02-10T03:52:30.467988+00:00"
+      "updated_at": "2026-02-11T06:50:53.732285+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "d0d9b711-21da-4c89-a845-230c5f6bc47e",
+          "timestamp": "2026-02-11T06:50:26.553872+00:00",
+          "source_id": "492729f4-82e5-4a8a-9454-f2e1214af04a",
+          "source_name": "Unidentified Person 136",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 003_compress:face0"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 136",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 5,
+            "name": "Victor Capelluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 003_compress:face0"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        },
+        {
+          "merge_event_id": "86759157-e156-4f48-a8b7-7ce0ba707734",
+          "timestamp": "2026-02-11T06:50:38.364493+00:00",
+          "source_id": "956aec21-4fbc-4202-b6f7-a701031b862a",
+          "source_name": "Unidentified Person 137",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 941_compress:face4"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 137",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 6,
+            "name": "Victor Capelluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 941_compress:face4"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        },
+        {
+          "merge_event_id": "e6942c7d-82d7-4268-ad8f-bb784f5a0508",
+          "timestamp": "2026-02-11T06:50:53.732285+00:00",
+          "source_id": "338072dc-f22c-44d8-8869-611dbd61f80e",
+          "source_name": "Unidentified Person 314",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_6e7b13515ac3"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 314",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 7,
+            "name": "Victor Capelluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_6e7b13515ac3"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        }
+      ]
     },
     "302df985-c8e0-45ba-8541-5cc2a0be39fa": {
       "identity_id": "302df985-c8e0-45ba-8541-5cc2a0be39fa",
@@ -3338,7 +3804,9 @@
       "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
       "name": "Laura Franco Capelluto",
       "state": "CONFIRMED",
-      "anchor_ids": [],
+      "anchor_ids": [
+        "inbox_edd3cd27dff2"
+      ],
       "candidate_ids": [
         "Image 969_compress:face1",
         "Image 972_compress:face11",
@@ -3348,9 +3816,44 @@
       "negative_ids": [
         "identity:925904af-af2c-49af-a721-e4b74a312182"
       ],
-      "version_id": 5,
+      "version_id": 6,
       "created_at": "2026-02-01T21:29:26.551684+00:00",
-      "updated_at": "2026-02-06T05:15:37.130349+00:00"
+      "updated_at": "2026-02-11T06:20:41.974062+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "7c3720c1-0d82-4c6e-a505-b245c3c6d325",
+          "timestamp": "2026-02-11T06:20:41.974062+00:00",
+          "source_id": "3c205d8e-b1a0-4a76-b493-ecb7ff505424",
+          "source_name": "Unidentified Person 339",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_edd3cd27dff2"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 339",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 4,
+            "name": "Laura Franco Capelluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_edd3cd27dff2"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": true,
+          "merged_by": "web"
+        }
+      ]
     },
     "2be9032f-58eb-4bd2-919d-dbb7eb88f7ba": {
       "identity_id": "2be9032f-58eb-4bd2-919d-dbb7eb88f7ba",
@@ -4792,16 +5295,16 @@
     "72fc323e-cc5c-4c2a-98b2-d7639997562e": {
       "identity_id": "72fc323e-cc5c-4c2a-98b2-d7639997562e",
       "name": "Unidentified Person 266",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_1fccf88f4a71",
         "inbox_714a0d28ad6f"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 3,
+      "version_id": 4,
       "created_at": "2026-02-04T04:11:07.098929+00:00",
-      "updated_at": "2026-02-11T05:10:27.196127+00:00",
+      "updated_at": "2026-02-11T06:23:25.412563+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "b5e8a89e",
@@ -5499,7 +6002,7 @@
     "d033e1b3-5208-4e7f-ac74-587cd1bcedb7": {
       "identity_id": "d033e1b3-5208-4e7f-ac74-587cd1bcedb7",
       "name": "Unidentified Person 291",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_2ac19090ecaf"
       ],
@@ -5507,9 +6010,9 @@
         "Image 011_compress:face0"
       ],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 3,
       "created_at": "2026-02-10T23:26:17.914434+00:00",
-      "updated_at": "2026-02-11T05:10:27.194987+00:00",
+      "updated_at": "2026-02-11T06:23:39.336826+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5556,15 +6059,15 @@
     "2a5406b9-73e4-46ff-ad7f-413bec084e81": {
       "identity_id": "2a5406b9-73e4-46ff-ad7f-413bec084e81",
       "name": "Unidentified Person 292",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_8eb57b4397c4"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:22.477808+00:00",
-      "updated_at": "2026-02-10T23:26:22.477808+00:00",
+      "updated_at": "2026-02-11T06:36:59.132446+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5576,15 +6079,15 @@
     "07009102-a308-4356-90d9-41cd327d4d44": {
       "identity_id": "07009102-a308-4356-90d9-41cd327d4d44",
       "name": "Unidentified Person 293",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_8a8b7e4eb0bf"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:22.477866+00:00",
-      "updated_at": "2026-02-10T23:26:22.477866+00:00",
+      "updated_at": "2026-02-11T06:35:10.794846+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5596,15 +6099,15 @@
     "8403a5a0-d572-44cd-8f39-ad99f95110bf": {
       "identity_id": "8403a5a0-d572-44cd-8f39-ad99f95110bf",
       "name": "Unidentified Person 294",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_7410ed3d601e"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:22.477897+00:00",
-      "updated_at": "2026-02-10T23:26:22.477897+00:00",
+      "updated_at": "2026-02-11T06:35:12.969268+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5628,7 +6131,7 @@
       "negative_ids": [],
       "version_id": 5,
       "created_at": "2026-02-10T23:26:22.477926+00:00",
-      "updated_at": "2026-02-11T04:21:57.828704+00:00",
+      "updated_at": "2026-02-11T06:20:02.120112+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5769,7 +6272,8 @@
           "direction_auto_corrected": false,
           "merged_by": "batch_grouping"
         }
-      ]
+      ],
+      "merged_into": "b6d9ea5b-bf90-463a-bab3-682acac7753d"
     },
     "b3608797-a0ce-4375-a238-8247c98f50bb": {
       "identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
@@ -5786,7 +6290,7 @@
       "negative_ids": [],
       "version_id": 5,
       "created_at": "2026-02-10T23:26:22.477951+00:00",
-      "updated_at": "2026-02-11T04:21:57.829833+00:00",
+      "updated_at": "2026-02-11T06:20:15.195485+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5927,20 +6431,21 @@
           "direction_auto_corrected": false,
           "merged_by": "batch_grouping"
         }
-      ]
+      ],
+      "merged_into": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18"
     },
     "a3816eda-d814-4dcd-86c0-f5ba9315e61e": {
       "identity_id": "a3816eda-d814-4dcd-86c0-f5ba9315e61e",
       "name": "Unidentified Person 297",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_6286072a106a"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:26.586656+00:00",
-      "updated_at": "2026-02-10T23:26:26.586656+00:00",
+      "updated_at": "2026-02-11T06:37:01.823419+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5952,15 +6457,15 @@
     "17420155-6cc9-47d2-9e07-1fb7606fabb8": {
       "identity_id": "17420155-6cc9-47d2-9e07-1fb7606fabb8",
       "name": "Unidentified Person 298",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_a5915ae18524"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533052+00:00",
-      "updated_at": "2026-02-10T23:26:31.533052+00:00",
+      "updated_at": "2026-02-11T06:42:01.602614+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5972,15 +6477,15 @@
     "ba08053c-9c97-4c01-9ff9-9b6f538428b5": {
       "identity_id": "ba08053c-9c97-4c01-9ff9-9b6f538428b5",
       "name": "Unidentified Person 299",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_934175276bd3"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533091+00:00",
-      "updated_at": "2026-02-10T23:26:31.533091+00:00",
+      "updated_at": "2026-02-11T06:41:59.952802+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -5992,15 +6497,15 @@
     "2da57f3b-4dd2-4adf-a1b5-e5da3baa2b24": {
       "identity_id": "2da57f3b-4dd2-4adf-a1b5-e5da3baa2b24",
       "name": "Unidentified Person 300",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_22788aa3c61b"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533117+00:00",
-      "updated_at": "2026-02-10T23:26:31.533117+00:00",
+      "updated_at": "2026-02-11T06:41:52.345450+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6012,15 +6517,15 @@
     "9108e4a3-ccf8-4493-a7da-c3964db62ab8": {
       "identity_id": "9108e4a3-ccf8-4493-a7da-c3964db62ab8",
       "name": "Unidentified Person 301",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_f04360035919"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533141+00:00",
-      "updated_at": "2026-02-10T23:26:31.533141+00:00",
+      "updated_at": "2026-02-11T06:41:51.123568+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6032,15 +6537,15 @@
     "a778010c-f10b-4349-b9a5-6cc12e313564": {
       "identity_id": "a778010c-f10b-4349-b9a5-6cc12e313564",
       "name": "Unidentified Person 302",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_e060efab2231"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533164+00:00",
-      "updated_at": "2026-02-10T23:26:31.533164+00:00",
+      "updated_at": "2026-02-11T06:41:56.139947+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6052,15 +6557,15 @@
     "dcfb22d7-05b4-42dd-b575-6d29f4a17446": {
       "identity_id": "dcfb22d7-05b4-42dd-b575-6d29f4a17446",
       "name": "Unidentified Person 303",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_1433cf765261"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533186+00:00",
-      "updated_at": "2026-02-10T23:26:31.533186+00:00",
+      "updated_at": "2026-02-11T06:41:48.669883+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6080,27 +6585,28 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-10T23:26:31.533209+00:00",
-      "updated_at": "2026-02-10T23:26:31.533209+00:00",
+      "updated_at": "2026-02-11T06:37:33.742430+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "596770938.488977.jpg",
         "ingested_at": "2026-02-10T23:26:31.533200+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "b6d9ea5b-bf90-463a-bab3-682acac7753d"
     },
     "56792a62-adc4-4c5e-9458-424189896c26": {
       "identity_id": "56792a62-adc4-4c5e-9458-424189896c26",
       "name": "Unidentified Person 305",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_b3743ea8ca63"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533231+00:00",
-      "updated_at": "2026-02-10T23:26:31.533231+00:00",
+      "updated_at": "2026-02-11T06:41:38.080357+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6112,15 +6618,15 @@
     "1a3ce7b0-c29d-47f7-a53b-116f1126e213": {
       "identity_id": "1a3ce7b0-c29d-47f7-a53b-116f1126e213",
       "name": "Unidentified Person 306",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_20225d8a84c5"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533254+00:00",
-      "updated_at": "2026-02-10T23:26:31.533254+00:00",
+      "updated_at": "2026-02-11T06:41:36.570765+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6132,15 +6638,15 @@
     "2f02fc6a-311b-496b-92b0-e21da0fd7fb6": {
       "identity_id": "2f02fc6a-311b-496b-92b0-e21da0fd7fb6",
       "name": "Unidentified Person 307",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_4b7ba617b460"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533289+00:00",
-      "updated_at": "2026-02-10T23:26:31.533289+00:00",
+      "updated_at": "2026-02-11T06:41:35.086968+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6152,15 +6658,15 @@
     "d3f3ec3f-ab33-44f7-be9d-a8d30300ba6b": {
       "identity_id": "d3f3ec3f-ab33-44f7-be9d-a8d30300ba6b",
       "name": "Unidentified Person 308",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_97f174702917"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533312+00:00",
-      "updated_at": "2026-02-10T23:26:31.533312+00:00",
+      "updated_at": "2026-02-11T06:41:33.294125+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6172,15 +6678,15 @@
     "4caebe5c-20c8-4961-85a4-47e36ee7c171": {
       "identity_id": "4caebe5c-20c8-4961-85a4-47e36ee7c171",
       "name": "Unidentified Person 309",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_4abdc5064791"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533334+00:00",
-      "updated_at": "2026-02-10T23:26:31.533334+00:00",
+      "updated_at": "2026-02-11T06:41:32.030131+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6192,15 +6698,15 @@
     "d19e58b1-a8df-4cb4-b5fa-160efcb587f7": {
       "identity_id": "d19e58b1-a8df-4cb4-b5fa-160efcb587f7",
       "name": "Unidentified Person 310",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_c4e77d3791ae"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533356+00:00",
-      "updated_at": "2026-02-10T23:26:31.533356+00:00",
+      "updated_at": "2026-02-11T06:41:30.009043+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6212,15 +6718,15 @@
     "b608cf88-935c-439e-8f09-6e02304d1e4a": {
       "identity_id": "b608cf88-935c-439e-8f09-6e02304d1e4a",
       "name": "Unidentified Person 311",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_33923f52d7ff"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:31.533378+00:00",
-      "updated_at": "2026-02-10T23:26:31.533378+00:00",
+      "updated_at": "2026-02-11T06:41:27.970267+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6282,14 +6788,15 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-10T23:26:40.075700+00:00",
-      "updated_at": "2026-02-10T23:26:40.075700+00:00",
+      "updated_at": "2026-02-11T06:50:53.732285+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "757557421.130308.jpg",
         "ingested_at": "2026-02-10T23:26:40.075661+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "7cba61d1-4aec-401a-b2ff-5142fb68ac36"
     },
     "2cd362da-8553-4172-86e6-79e5ac6c4332": {
       "identity_id": "2cd362da-8553-4172-86e6-79e5ac6c4332",
@@ -6302,14 +6809,15 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-10T23:26:40.075738+00:00",
-      "updated_at": "2026-02-10T23:26:40.075738+00:00",
+      "updated_at": "2026-02-11T06:43:33.203094+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "757557421.130308.jpg",
         "ingested_at": "2026-02-10T23:26:40.075726+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8"
     },
     "b4a1ecb7-9eca-4ad6-8664-b7ee76b383ca": {
       "identity_id": "b4a1ecb7-9eca-4ad6-8664-b7ee76b383ca",
@@ -6334,23 +6842,25 @@
     },
     "67e830ac-7ebb-4d66-9ab2-72204610bef9": {
       "identity_id": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
-      "name": "Unidentified Person 317",
-      "state": "INBOX",
+      "name": "Debbie Fox Schapiro",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_7a6bee77eb84"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-10T23:26:47.841360+00:00",
-      "updated_at": "2026-02-10T23:26:47.841360+00:00",
+      "updated_at": "2026-02-11T06:55:57.451447+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "596771420.719238.jpg",
         "ingested_at": "2026-02-10T23:26:47.841323+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Debbie Fox",
+      "last_name": "Schapiro"
     },
     "23ce2d83-f36b-437d-845d-44dd6f910a31": {
       "identity_id": "23ce2d83-f36b-437d-845d-44dd6f910a31",
@@ -6364,7 +6874,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-10T23:26:47.841395+00:00",
-      "updated_at": "2026-02-11T04:21:57.830150+00:00",
+      "updated_at": "2026-02-11T06:19:38.569803+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6406,7 +6916,8 @@
           "direction_auto_corrected": false,
           "merged_by": "batch_grouping"
         }
-      ]
+      ],
+      "merged_into": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8"
     },
     "0cf92cac-bac2-468d-800a-52694599d17c": {
       "identity_id": "0cf92cac-bac2-468d-800a-52694599d17c",
@@ -6440,14 +6951,15 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-10T23:26:47.841440+00:00",
-      "updated_at": "2026-02-10T23:26:47.841440+00:00",
+      "updated_at": "2026-02-11T06:20:53.506424+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "596771420.719238.jpg",
         "ingested_at": "2026-02-10T23:26:47.841432+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "609d7e34-38a3-4bdd-9879-35560b624bae"
     },
     "d7176c54-befb-452f-a68a-f932ac2a0a94": {
       "identity_id": "d7176c54-befb-452f-a68a-f932ac2a0a94",
@@ -6481,14 +6993,15 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-10T23:26:51.711947+00:00",
-      "updated_at": "2026-02-10T23:26:51.711947+00:00",
+      "updated_at": "2026-02-11T06:21:15.375947+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "596771351.496458.jpg",
         "ingested_at": "2026-02-10T23:26:51.711938+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "b6d9ea5b-bf90-463a-bab3-682acac7753d"
     },
     "56e2dd2b-8c12-4bfe-bc77-6f39685f50cf": {
       "identity_id": "56e2dd2b-8c12-4bfe-bc77-6f39685f50cf",
@@ -6514,15 +7027,15 @@
     "87c332af-7537-4254-ab16-413ef606e384": {
       "identity_id": "87c332af-7537-4254-ab16-413ef606e384",
       "name": "Unidentified Person 324",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_915993027357"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:56.055813+00:00",
-      "updated_at": "2026-02-10T23:26:56.055813+00:00",
+      "updated_at": "2026-02-11T06:56:08.398872+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6534,15 +7047,15 @@
     "0498a62d-66b8-4725-b955-bb682966fd76": {
       "identity_id": "0498a62d-66b8-4725-b955-bb682966fd76",
       "name": "Unidentified Person 325",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_e10a963df79c"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:56.055836+00:00",
-      "updated_at": "2026-02-10T23:26:56.055836+00:00",
+      "updated_at": "2026-02-11T06:56:13.245931+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6596,15 +7109,15 @@
     "8df7c735-1197-4f6a-820f-0de37deba4db": {
       "identity_id": "8df7c735-1197-4f6a-820f-0de37deba4db",
       "name": "Unidentified Person 328",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_6e43a0d7994d"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:56.055899+00:00",
-      "updated_at": "2026-02-10T23:26:56.055899+00:00",
+      "updated_at": "2026-02-11T06:56:14.654054+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6616,15 +7129,15 @@
     "7984e5f6-d4fa-4d25-acfb-056c00f45479": {
       "identity_id": "7984e5f6-d4fa-4d25-acfb-056c00f45479",
       "name": "Unidentified Person 329",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_4dfa4db09642"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:56.055919+00:00",
-      "updated_at": "2026-02-10T23:26:56.055919+00:00",
+      "updated_at": "2026-02-11T06:56:11.852630+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6636,15 +7149,15 @@
     "27ffe71c-ce3e-4248-ae50-17fef4f8451b": {
       "identity_id": "27ffe71c-ce3e-4248-ae50-17fef4f8451b",
       "name": "Unidentified Person 330",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_ac66e78396bf"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:56.055939+00:00",
-      "updated_at": "2026-02-10T23:26:56.055939+00:00",
+      "updated_at": "2026-02-11T06:40:28.378957+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6655,56 +7168,60 @@
     },
     "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a": {
       "identity_id": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
-      "name": "Unidentified Person 331",
-      "state": "INBOX",
+      "name": "Abraham Capuano",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_08cde0472d2f"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-10T23:27:00.080366+00:00",
-      "updated_at": "2026-02-10T23:27:00.080366+00:00",
+      "updated_at": "2026-02-11T06:26:37.218609+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "Image_567.jpg",
         "ingested_at": "2026-02-10T23:27:00.080330+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Abraham",
+      "last_name": "Capuano"
     },
     "94a13283-4154-4afc-bb29-99eaa094f7be": {
       "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
-      "name": "Unidentified Person 332",
-      "state": "INBOX",
+      "name": "Hanula Mosafir Capuano",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_0b5fd3625bbe"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-10T23:27:00.080399+00:00",
-      "updated_at": "2026-02-10T23:27:00.080399+00:00",
+      "updated_at": "2026-02-11T06:26:22.781217+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "Image_567.jpg",
         "ingested_at": "2026-02-10T23:27:00.080390+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Hanula Mosafir",
+      "last_name": "Capuano"
     },
     "e25e732f-3e70-492a-baf5-4b4b700f469f": {
       "identity_id": "e25e732f-3e70-492a-baf5-4b4b700f469f",
       "name": "Unidentified Person 333",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_ac1d0ecf8a8d"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:27:03.843525+00:00",
-      "updated_at": "2026-02-10T23:27:03.843525+00:00",
+      "updated_at": "2026-02-11T06:56:27.144887+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6716,15 +7233,15 @@
     "a50f0223-da30-4bb3-82fe-ca5bd709cb9e": {
       "identity_id": "a50f0223-da30-4bb3-82fe-ca5bd709cb9e",
       "name": "Unidentified Person 334",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_25087d5a153c"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:27:03.843562+00:00",
-      "updated_at": "2026-02-10T23:27:03.843562+00:00",
+      "updated_at": "2026-02-11T06:56:25.102170+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
@@ -6756,57 +7273,61 @@
     },
     "9b41ba49-7cde-4f76-bc43-341e320db6a9": {
       "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
-      "name": "Unidentified Person 336",
-      "state": "INBOX",
+      "name": "Isaac Capelouto",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_39f3db6c1325"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:11.399075+00:00",
-      "updated_at": "2026-02-11T00:55:11.399075+00:00",
+      "updated_at": "2026-02-11T06:27:10.320415+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "findagrave-20260210",
         "filename": "grave_isaac_capeluto_90588193_133774507166.jpg",
         "ingested_at": "2026-02-11T00:55:11.399027+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Isaac",
+      "last_name": "Capelouto"
     },
     "a2889099-2d75-42ee-93b4-81232b9f4e16": {
       "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
-      "name": "Unidentified Person 337",
-      "state": "INBOX",
+      "name": "Mathilda Capouano Capelouto",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_5c6363fd8f94"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:24.013640+00:00",
-      "updated_at": "2026-02-11T00:55:24.013640+00:00",
+      "updated_at": "2026-02-11T06:33:30.762984+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Mathilda_Capelouto_Capouano_from_Naturalization_Doc.tiff",
         "ingested_at": "2026-02-11T00:55:24.013593+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Mathilda Capouano",
+      "last_name": "Capelouto"
     },
     "ec55b4e8-ac3c-4209-a273-e96f7f85659c": {
       "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
-      "name": "Unidentified Person 338",
-      "state": "INBOX",
+      "name": "Esther Diana Taranto Capouano",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_7ef78fea1635",
         "inbox_4c646b9ae7c3"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 4,
       "created_at": "2026-02-11T00:55:27.209095+00:00",
-      "updated_at": "2026-02-11T04:21:57.830492+00:00",
+      "updated_at": "2026-02-11T06:23:20.695641+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -6848,7 +7369,9 @@
           "direction_auto_corrected": false,
           "merged_by": "batch_grouping"
         }
-      ]
+      ],
+      "first_name": "Esther Diana Taranto",
+      "last_name": "Capouano"
     },
     "3c205d8e-b1a0-4a76-b493-ecb7ff505424": {
       "identity_id": "3c205d8e-b1a0-4a76-b493-ecb7ff505424",
@@ -6861,67 +7384,72 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-11T00:55:30.384599+00:00",
-      "updated_at": "2026-02-11T00:55:30.384599+00:00",
+      "updated_at": "2026-02-11T06:20:41.974062+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Laura_Franco_immigration_document_photo.jpg",
         "ingested_at": "2026-02-11T00:55:30.384564+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "35b997f8-7b9c-46a3-8070-78f0c57e48be"
     },
     "c9e959bf-a75e-4f5a-bc31-bd95bfe09314": {
       "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
-      "name": "Unidentified Person 340",
-      "state": "INBOX",
+      "name": "Felicita Russo Capelluto",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_90ceb891cfb9"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:33.442605+00:00",
-      "updated_at": "2026-02-11T00:55:33.442605+00:00",
+      "updated_at": "2026-02-11T06:39:11.639346+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Felicita__Russo__Capelluto_-_Brazilian_immigration_card.jpg",
         "ingested_at": "2026-02-11T00:55:33.442563+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Felicita Russo",
+      "last_name": "Capelluto"
     },
     "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60": {
       "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
-      "name": "Unidentified Person 341",
-      "state": "INBOX",
+      "name": "Mose Capelluto",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_8d1c3d11476c"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:36.565397+00:00",
-      "updated_at": "2026-02-11T00:55:36.565397+00:00",
+      "updated_at": "2026-02-11T06:32:57.522325+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Mose_Capelluto_-_Brazilian_immigration_card.jpg",
         "ingested_at": "2026-02-11T00:55:36.565355+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Mose",
+      "last_name": "Capelluto"
     },
     "445d7d00-4bf8-43dd-b7b5-1505ed95e5e6": {
       "identity_id": "445d7d00-4bf8-43dd-b7b5-1505ed95e5e6",
       "name": "Unidentified Person 342",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_c597724ee513"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443219+00:00",
-      "updated_at": "2026-02-11T00:55:40.443219+00:00",
+      "updated_at": "2026-02-11T06:59:55.864833+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -6933,15 +7461,15 @@
     "05ef886c-3661-4e9d-8b79-b2475a869aea": {
       "identity_id": "05ef886c-3661-4e9d-8b79-b2475a869aea",
       "name": "Unidentified Person 343",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_d31ba5aaf951"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443257+00:00",
-      "updated_at": "2026-02-11T00:55:40.443257+00:00",
+      "updated_at": "2026-02-11T06:59:30.551062+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -6953,15 +7481,15 @@
     "a7c6de6e-0a38-4e51-8277-672a6e0b7374": {
       "identity_id": "a7c6de6e-0a38-4e51-8277-672a6e0b7374",
       "name": "Unidentified Person 344",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_08a26952860e"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443289+00:00",
-      "updated_at": "2026-02-11T00:55:40.443289+00:00",
+      "updated_at": "2026-02-11T06:59:30.040472+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -6973,15 +7501,15 @@
     "db54653a-0325-442e-9ef5-943d9dcf5e77": {
       "identity_id": "db54653a-0325-442e-9ef5-943d9dcf5e77",
       "name": "Unidentified Person 345",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_33a5999ab758"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 4,
       "created_at": "2026-02-11T00:55:40.443316+00:00",
-      "updated_at": "2026-02-11T00:55:40.443316+00:00",
+      "updated_at": "2026-02-11T06:59:46.866043+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -6993,15 +7521,15 @@
     "11cd61ed-050e-4396-babe-5c4db414e9dd": {
       "identity_id": "11cd61ed-050e-4396-babe-5c4db414e9dd",
       "name": "Unidentified Person 346",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_2bca8f91dff5"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 4,
       "created_at": "2026-02-11T00:55:40.443339+00:00",
-      "updated_at": "2026-02-11T00:55:40.443339+00:00",
+      "updated_at": "2026-02-11T06:59:46.389735+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7013,15 +7541,15 @@
     "e3be23d5-9d0a-480b-91cf-860934594aeb": {
       "identity_id": "e3be23d5-9d0a-480b-91cf-860934594aeb",
       "name": "Unidentified Person 347",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_45d40b9fd6ee"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 4,
       "created_at": "2026-02-11T00:55:40.443361+00:00",
-      "updated_at": "2026-02-11T00:55:40.443361+00:00",
+      "updated_at": "2026-02-11T06:59:46.015012+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7033,15 +7561,15 @@
     "1dadd1b7-606e-4d5e-a821-9b05e23c9760": {
       "identity_id": "1dadd1b7-606e-4d5e-a821-9b05e23c9760",
       "name": "Unidentified Person 348",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_f35bb1365452"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443383+00:00",
-      "updated_at": "2026-02-11T00:55:40.443383+00:00",
+      "updated_at": "2026-02-11T06:59:23.304709+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7053,15 +7581,15 @@
     "c7e09fdb-87b9-44ef-8710-33399fc81a8b": {
       "identity_id": "c7e09fdb-87b9-44ef-8710-33399fc81a8b",
       "name": "Unidentified Person 349",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_8ef0575be1aa"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443405+00:00",
-      "updated_at": "2026-02-11T00:55:40.443405+00:00",
+      "updated_at": "2026-02-11T06:59:22.806777+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7073,15 +7601,15 @@
     "860d51c1-0cdd-4b7a-806b-05e79c4c8026": {
       "identity_id": "860d51c1-0cdd-4b7a-806b-05e79c4c8026",
       "name": "Unidentified Person 350",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_399313b2427a"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443426+00:00",
-      "updated_at": "2026-02-11T00:55:40.443426+00:00",
+      "updated_at": "2026-02-11T06:59:22.288276+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7093,15 +7621,15 @@
     "f346611b-49d0-4c70-b7d8-79edd072cd43": {
       "identity_id": "f346611b-49d0-4c70-b7d8-79edd072cd43",
       "name": "Unidentified Person 351",
-      "state": "INBOX",
+      "state": "SKIPPED",
       "anchor_ids": [
         "inbox_49a655802062"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:40.443448+00:00",
-      "updated_at": "2026-02-11T00:55:40.443448+00:00",
+      "updated_at": "2026-02-11T06:59:21.624209+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7112,83 +7640,93 @@
     },
     "acefd033-e25a-4b1b-b66d-9f2c6b5731f3": {
       "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "name": "Unidentified Person 352",
-      "state": "INBOX",
+      "name": "Rahamin Capeluto",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_0eb1cb24b038"
       ],
       "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
+      "negative_ids": [
+        "identity:58565113-b749-4f0f-a75b-994b725a1248"
+      ],
+      "version_id": 4,
       "created_at": "2026-02-11T00:55:43.678816+00:00",
-      "updated_at": "2026-02-11T00:55:43.678816+00:00",
+      "updated_at": "2026-02-11T06:30:52.584457+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Rahamin_Capeluto_Declaration_Naturalization_w_Picture.jpg",
         "ingested_at": "2026-02-11T00:55:43.678784+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Rahamin",
+      "last_name": "Capeluto"
     },
     "4f005632-a4e3-45d0-b60b-50a1adc99cb8": {
       "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
-      "name": "Unidentified Person 353",
-      "state": "INBOX",
+      "name": "Marcos Capelluto",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_db0e5c2aa97b"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:46.822922+00:00",
-      "updated_at": "2026-02-11T00:55:46.822922+00:00",
+      "updated_at": "2026-02-11T06:34:01.235662+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Marcos_Capelluto_immigration_card.jpeg",
         "ingested_at": "2026-02-11T00:55:46.822886+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Marcos",
+      "last_name": "Capelluto"
     },
     "c93e5c13-791d-4c1c-84f3-07b5d616ed31": {
       "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
-      "name": "Unidentified Person 354",
-      "state": "INBOX",
+      "name": "Abraham Almaleh",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_52cbbbe7f308"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:49.909239+00:00",
-      "updated_at": "2026-02-11T00:55:49.909239+00:00",
+      "updated_at": "2026-02-11T06:27:46.426874+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "abraham_almaleh_517958956_10172333855565346_6983007175757830190_n.jpg",
         "ingested_at": "2026-02-11T00:55:49.909201+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Abraham",
+      "last_name": "Almaleh"
     },
     "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa": {
       "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
-      "name": "Unidentified Person 355",
-      "state": "INBOX",
+      "name": "Louis Pizante",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_cd8b7399da8b"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:53.050340+00:00",
-      "updated_at": "2026-02-11T00:55:53.050340+00:00",
+      "updated_at": "2026-02-11T06:34:21.199313+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Louis_Pizante___Rica_Mousafir.jpg",
         "ingested_at": "2026-02-11T00:55:53.050299+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Louis",
+      "last_name": "Pizante"
     },
     "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b": {
       "identity_id": "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b",
@@ -7201,27 +7739,28 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-11T00:55:53.050375+00:00",
-      "updated_at": "2026-02-11T00:55:53.050375+00:00",
+      "updated_at": "2026-02-11T06:21:05.736320+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Louis_Pizante___Rica_Mousafir.jpg",
         "ingested_at": "2026-02-11T00:55:53.050366+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "475abda0-e3e7-4db8-8f62-61f6c0e05367"
     },
     "1766ae6b-738e-4082-8c74-21f460ec1c66": {
       "identity_id": "1766ae6b-738e-4082-8c74-21f460ec1c66",
       "name": "Unidentified Person 357",
-      "state": "INBOX",
+      "state": "CONTESTED",
       "anchor_ids": [
         "inbox_f1e6110f0b21"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-11T00:55:56.189609+00:00",
-      "updated_at": "2026-02-11T00:55:56.189609+00:00",
+      "updated_at": "2026-02-11T06:30:05.851534+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
@@ -7232,83 +7771,91 @@
     },
     "bc7f747d-c3a1-4df4-971e-5046a4192853": {
       "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
-      "name": "Unidentified Person 358",
-      "state": "INBOX",
+      "name": "Selma Capouya Capouano",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_88ecd8c22c6d"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:56.189642+00:00",
-      "updated_at": "2026-02-11T00:55:56.189642+00:00",
+      "updated_at": "2026-02-11T06:28:26.958636+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "Wedding_of_David_Capouano_and_Selma_Capouya.jpeg",
         "ingested_at": "2026-02-11T00:55:56.189632+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Selma Capouya",
+      "last_name": "Capouano"
     },
     "e31718ca-2f73-4976-9181-e92a7c58ca37": {
       "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
-      "name": "Unidentified Person 359",
-      "state": "INBOX",
+      "name": "David Raymond Capouano",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_d7e5b9adb5b3"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:55:59.250843+00:00",
-      "updated_at": "2026-02-11T00:55:59.250843+00:00",
+      "updated_at": "2026-02-11T06:31:23.929438+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "ancestry-20260210",
         "filename": "David_Raymond_Capouano_-_declaration_of_intention_.jpg",
         "ingested_at": "2026-02-11T00:55:59.250803+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "David Raymond",
+      "last_name": "Capouano"
     },
     "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e": {
       "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
-      "name": "Unidentified Person 360",
-      "state": "INBOX",
+      "name": "Rachel Capouya Capuano",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_dd1b02478cbf"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:56:15.812327+00:00",
-      "updated_at": "2026-02-11T00:56:15.812327+00:00",
+      "updated_at": "2026-02-11T06:31:51.585519+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "facebook-20260210",
         "filename": "rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n.jpg",
         "ingested_at": "2026-02-11T00:56:15.812193+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Rachel Capouya",
+      "last_name": "Capuano"
     },
     "a5c9d5d1-5739-413a-a18e-cdd3111ad26e": {
       "identity_id": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
-      "name": "Unidentified Person 361",
-      "state": "INBOX",
+      "name": "Luna Leonora Capuano Hazan",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_0082df7f4531"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:56:19.193263+00:00",
-      "updated_at": "2026-02-11T00:56:19.193263+00:00",
+      "updated_at": "2026-02-11T06:29:47.085233+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "facebook-20260210",
         "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
         "ingested_at": "2026-02-11T00:56:19.193213+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Luna Leonora Capuano",
+      "last_name": "Hazan"
     },
     "1c1ecee7-b1ac-4358-a544-064980030728": {
       "identity_id": "1c1ecee7-b1ac-4358-a544-064980030728",
@@ -7321,54 +7868,59 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-11T00:56:19.193311+00:00",
-      "updated_at": "2026-02-11T00:56:19.193311+00:00",
+      "updated_at": "2026-02-11T06:32:09.604320+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "facebook-20260210",
         "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
         "ingested_at": "2026-02-11T00:56:19.193300+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8"
     },
     "6f044a38-810e-4034-9a15-bc51fdc13d9b": {
       "identity_id": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
-      "name": "Unidentified Person 363",
-      "state": "INBOX",
+      "name": "Isaac Hazan",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_d6b5cab6c51f"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:56:19.193339+00:00",
-      "updated_at": "2026-02-11T00:56:19.193339+00:00",
+      "updated_at": "2026-02-11T06:29:18.784370+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "facebook-20260210",
         "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
         "ingested_at": "2026-02-11T00:56:19.193330+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Isaac",
+      "last_name": "Hazan"
     },
     "6a97c774-f66d-4edc-9e55-699d958336fd": {
       "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
-      "name": "Unidentified Person 364",
-      "state": "INBOX",
+      "name": "Mary Maria Capelouto Hasson",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_53d1c16e5ed9"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 3,
       "created_at": "2026-02-11T00:56:22.467345+00:00",
-      "updated_at": "2026-02-11T00:56:22.467345+00:00",
+      "updated_at": "2026-02-11T06:25:12.910393+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "facebook-20260210",
         "filename": "mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n.jpg",
         "ingested_at": "2026-02-11T00:56:22.467312+00:00",
         "grouped_faces": 1
-      }
+      },
+      "first_name": "Mary Maria Capelouto",
+      "last_name": "Hasson"
     },
     "5e5fd083-aa46-40f2-878e-7d341204025d": {
       "identity_id": "5e5fd083-aa46-40f2-878e-7d341204025d",
@@ -22605,6 +23157,1544 @@
         "faces_merged": 1,
         "direction_swapped": false,
         "merge_event_id": "d04c11ac-d4e2-4f56-aa6e-82c0bcbd4c73"
+      }
+    },
+    {
+      "event_id": "eb7bec1a-ea5a-414f-9e2f-de33a820d2ae",
+      "timestamp": "2026-02-11T06:19:38.569893+00:00",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 11,
+      "metadata": {
+        "source_identity_id": "23ce2d83-f36b-437d-845d-44dd6f910a31",
+        "faces_merged": 2,
+        "direction_swapped": true,
+        "merge_event_id": "ffefdfc2-6631-4e24-948f-c81a05937d89"
+      }
+    },
+    {
+      "event_id": "dc7d1cf7-74ba-4db6-9f4d-d67163f92f0a",
+      "timestamp": "2026-02-11T06:20:02.120581+00:00",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 16,
+      "metadata": {
+        "source_identity_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
+        "faces_merged": 5,
+        "direction_swapped": true,
+        "merge_event_id": "4ac2bee1-7e56-4210-afac-f24c4be418af"
+      }
+    },
+    {
+      "event_id": "50451483-d541-45ec-9ccd-ca95dabc4e04",
+      "timestamp": "2026-02-11T06:20:15.195586+00:00",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "source_identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
+        "faces_merged": 5,
+        "direction_swapped": true,
+        "merge_event_id": "887f596b-22eb-4ae0-82ff-87ad3ef27397"
+      }
+    },
+    {
+      "event_id": "2178cffe-225a-4b3e-a7f3-43c3bc519959",
+      "timestamp": "2026-02-11T06:20:41.974618+00:00",
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 5,
+      "metadata": {
+        "source_identity_id": "3c205d8e-b1a0-4a76-b493-ecb7ff505424",
+        "faces_merged": 1,
+        "direction_swapped": true,
+        "merge_event_id": "7c3720c1-0d82-4c6e-a505-b245c3c6d325"
+      }
+    },
+    {
+      "event_id": "5f74209a-2b8c-4da8-ae14-6aee5db6e393",
+      "timestamp": "2026-02-11T06:20:53.506496+00:00",
+      "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "source_identity_id": "3267b6b7-c013-4449-812a-3c4f9bfd9300",
+        "faces_merged": 1,
+        "direction_swapped": true,
+        "merge_event_id": "8a61f35a-ca36-4a1b-8f77-b422fdd72b19"
+      }
+    },
+    {
+      "event_id": "2586ee60-cd2b-48aa-8b13-349d6563363e",
+      "timestamp": "2026-02-11T06:21:05.736387+00:00",
+      "identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "source_identity_id": "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b",
+        "faces_merged": 1,
+        "direction_swapped": true,
+        "merge_event_id": "52230248-84c7-4966-b8ff-e24f5be06cb9"
+      }
+    },
+    {
+      "event_id": "1d049c4a-69ec-429a-8413-7732f7058d10",
+      "timestamp": "2026-02-11T06:21:15.376046+00:00",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 17,
+      "metadata": {
+        "source_identity_id": "c06c7fb4-e7ec-40f1-ae7f-5b7da4c84bf6",
+        "faces_merged": 1,
+        "direction_swapped": true,
+        "merge_event_id": "e78d6ab6-c9fa-46f6-8a41-339f86772559"
+      }
+    },
+    {
+      "event_id": "62e1c102-7c1e-40d7-b955-c74a3ac16a0d",
+      "timestamp": "2026-02-11T06:22:25.120064+00:00",
+      "identity_id": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 10,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "44dbb08f-5dde-455a-81d5-5d3b5b88c52d",
+      "timestamp": "2026-02-11T06:22:36.044206+00:00",
+      "identity_id": "c4d13c9b-ef1e-4df1-a574-2adced093f96",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "b9fe28d4-d516-409c-b934-d2a81ded8001",
+      "timestamp": "2026-02-11T06:23:03.057819+00:00",
+      "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "0a6ae7a9-f0ca-4a0d-b7f6-b94a7d8c5210",
+      "timestamp": "2026-02-11T06:23:20.695727+00:00",
+      "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "previous_name": "Unidentified Person 338",
+        "new_name": "Esther Diana Taranto Capouano"
+      }
+    },
+    {
+      "event_id": "51ece8bd-c682-4211-9fba-16a04d741ad5",
+      "timestamp": "2026-02-11T06:23:25.412621+00:00",
+      "identity_id": "72fc323e-cc5c-4c2a-98b2-d7639997562e",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "d9d0b6b1-2671-4b77-a686-692b47e7e2f1",
+      "timestamp": "2026-02-11T06:23:39.336896+00:00",
+      "identity_id": "d033e1b3-5208-4e7f-ac74-587cd1bcedb7",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "0b6a839e-d017-492f-add4-c11186a29d84",
+      "timestamp": "2026-02-11T06:25:04.256221+00:00",
+      "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "previous_name": "Unidentified Person 364",
+        "new_name": "Mary Maria Capelouto Hasson"
+      }
+    },
+    {
+      "event_id": "1bb9b336-0f1a-499f-8c42-bb948e7e420e",
+      "timestamp": "2026-02-11T06:25:12.910490+00:00",
+      "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "b1892413-c56e-4577-b4c1-064b266b31e0",
+      "timestamp": "2026-02-11T06:26:21.364178+00:00",
+      "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "previous_name": "Unidentified Person 332",
+        "new_name": "Hanula Mosafir Capuano"
+      }
+    },
+    {
+      "event_id": "2c4b9f5b-d10b-4c8e-9335-a982ef5b4b3a",
+      "timestamp": "2026-02-11T06:26:22.781263+00:00",
+      "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "e4a70780-e858-46ec-aa5d-c2a3b76f62d2",
+      "timestamp": "2026-02-11T06:26:35.450746+00:00",
+      "identity_id": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "previous_name": "Unidentified Person 331",
+        "new_name": "Abraham Capuano"
+      }
+    },
+    {
+      "event_id": "9a77161b-fac1-4c80-bb03-bc7eb379ba8a",
+      "timestamp": "2026-02-11T06:26:37.218672+00:00",
+      "identity_id": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "bfa09a1a-f7d3-44a5-8fa0-77d90c434307",
+      "timestamp": "2026-02-11T06:27:06.213803+00:00",
+      "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "previous_name": "Unidentified Person 336",
+        "new_name": "Isaac Capelouto"
+      }
+    },
+    {
+      "event_id": "6f30a72e-f46e-4e2c-b5a2-4e019f5defd8",
+      "timestamp": "2026-02-11T06:27:10.320477+00:00",
+      "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "c56a4134-fa73-4e3d-b629-6b4f6e3440d0",
+      "timestamp": "2026-02-11T06:27:33.562548+00:00",
+      "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "0edb4de2-e8ef-44c8-984b-b26140e70f4c",
+      "timestamp": "2026-02-11T06:27:46.426953+00:00",
+      "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 354",
+        "new_name": "Abraham Almaleh"
+      }
+    },
+    {
+      "event_id": "a52876f5-eb3d-43df-825e-422fb5cd0212",
+      "timestamp": "2026-02-11T06:28:02.405909+00:00",
+      "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "fe1504b0-d5b0-45aa-b468-253a91a4979f",
+      "timestamp": "2026-02-11T06:28:26.958714+00:00",
+      "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 358",
+        "new_name": "Selma Capouya Capouano"
+      }
+    },
+    {
+      "event_id": "3e168b73-c938-4c83-8643-c8367ea247c7",
+      "timestamp": "2026-02-11T06:29:10.793304+00:00",
+      "identity_id": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "cb47439f-7026-4ad6-9aa8-f4df7941bd5e",
+      "timestamp": "2026-02-11T06:29:18.784453+00:00",
+      "identity_id": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 363",
+        "new_name": "Isaac Hazan"
+      }
+    },
+    {
+      "event_id": "d99fa9af-b667-493c-b34e-001338a3103b",
+      "timestamp": "2026-02-11T06:29:22.819361+00:00",
+      "identity_id": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "b566e103-4542-4fa8-b7b1-ae6d95f54941",
+      "timestamp": "2026-02-11T06:29:47.085354+00:00",
+      "identity_id": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 361",
+        "new_name": "Luna Leonora Capuano Hazan"
+      }
+    },
+    {
+      "event_id": "d7dcf237-daf5-4eba-80bf-46767e811028",
+      "timestamp": "2026-02-11T06:30:05.851604+00:00",
+      "identity_id": "1766ae6b-738e-4082-8c74-21f460ec1c66",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONTESTED",
+        "reason": "Rejected via quick action"
+      }
+    },
+    {
+      "event_id": "8c1d558a-dc07-4232-8f25-60077d240435",
+      "timestamp": "2026-02-11T06:30:37.810545+00:00",
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "previous_name": "Unidentified Person 352",
+        "new_name": "Rahamin Capeluto"
+      }
+    },
+    {
+      "event_id": "d84cf0d5-61b8-4844-8d06-c8e3e47cbd12",
+      "timestamp": "2026-02-11T06:30:39.028959+00:00",
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "30e5a5e0-1443-4980-b75f-1439e59f1841",
+      "timestamp": "2026-02-11T06:30:52.584533+00:00",
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "rejected_identity_id": "58565113-b749-4f0f-a75b-994b725a1248",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "893bacb9-ea49-4362-bd69-bc472c351fae",
+      "timestamp": "2026-02-11T06:30:52.584542+00:00",
+      "identity_id": "58565113-b749-4f0f-a75b-994b725a1248",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "rejected_identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "b2d0cbcb-f59a-4683-b0fe-a979c356e53b",
+      "timestamp": "2026-02-11T06:31:12.902604+00:00",
+      "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "9fa008c4-8fb0-4443-b99e-a85a45d24ddb",
+      "timestamp": "2026-02-11T06:31:23.929508+00:00",
+      "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 359",
+        "new_name": "David Raymond Capouano"
+      }
+    },
+    {
+      "event_id": "faacc37c-f3aa-48a0-8b42-4714ce0b8898",
+      "timestamp": "2026-02-11T06:31:38.783102+00:00",
+      "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "14d5d23b-8cf1-4571-b403-cc06cb925ed8",
+      "timestamp": "2026-02-11T06:31:51.585610+00:00",
+      "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 360",
+        "new_name": "Rachel Capouya Capuano"
+      }
+    },
+    {
+      "event_id": "f57c1cc5-c366-47f1-abe1-aa0df352c49d",
+      "timestamp": "2026-02-11T06:32:09.604402+00:00",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "face_tag",
+      "confidence_weight": 1.0,
+      "previous_version_id": 12,
+      "metadata": {
+        "source_identity_id": "1c1ecee7-b1ac-4358-a544-064980030728",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "83b86758-230c-428b-8a42-00ec01b95d17"
+      }
+    },
+    {
+      "event_id": "d0e3794e-07c8-4e4c-a361-7285927272ac",
+      "timestamp": "2026-02-11T06:32:46.268247+00:00",
+      "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "735519ae-2559-4f21-9d34-4139498af871",
+      "timestamp": "2026-02-11T06:32:57.522398+00:00",
+      "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 341",
+        "new_name": "Mose Capelluto"
+      }
+    },
+    {
+      "event_id": "7fcdc37b-7097-4d60-bc74-b4a3e53bb3af",
+      "timestamp": "2026-02-11T06:33:09.284441+00:00",
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "5b97296b-bea3-47b8-8281-279a465f5bb0",
+      "timestamp": "2026-02-11T06:33:30.763057+00:00",
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 337",
+        "new_name": "Mathilda Capouano Capelouto"
+      }
+    },
+    {
+      "event_id": "5d7fae29-30f9-40de-b57d-34e4b460e632",
+      "timestamp": "2026-02-11T06:33:52.030924+00:00",
+      "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "ccaeb742-55ee-4c5e-9d6b-18f0811e8dae",
+      "timestamp": "2026-02-11T06:34:01.235737+00:00",
+      "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 353",
+        "new_name": "Marcos Capelluto"
+      }
+    },
+    {
+      "event_id": "b021b576-6473-4600-bddc-3c252ab95485",
+      "timestamp": "2026-02-11T06:34:12.688153+00:00",
+      "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "ddcd291a-54a9-4c63-b42c-5db99e70aa2e",
+      "timestamp": "2026-02-11T06:34:21.199378+00:00",
+      "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 355",
+        "new_name": "Louis Pizante"
+      }
+    },
+    {
+      "event_id": "b5389f97-2f10-4d10-bfa6-fbe9329fc58a",
+      "timestamp": "2026-02-11T06:35:10.794932+00:00",
+      "identity_id": "07009102-a308-4356-90d9-41cd327d4d44",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "69918676-7fae-44b4-a122-e68a2d87cfa7",
+      "timestamp": "2026-02-11T06:35:12.969324+00:00",
+      "identity_id": "8403a5a0-d572-44cd-8f39-ad99f95110bf",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "61d8957c-0645-4cdf-b950-0d11f380c1cb",
+      "timestamp": "2026-02-11T06:36:59.132547+00:00",
+      "identity_id": "2a5406b9-73e4-46ff-ad7f-413bec084e81",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "3bf925bf-0bdf-4ee7-bb0b-34143e9f2495",
+      "timestamp": "2026-02-11T06:37:01.823482+00:00",
+      "identity_id": "a3816eda-d814-4dcd-86c0-f5ba9315e61e",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "15d50428-9a5d-4dec-a15f-866afab38fe8",
+      "timestamp": "2026-02-11T06:37:33.742527+00:00",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "face_tag",
+      "confidence_weight": 1.0,
+      "previous_version_id": 18,
+      "metadata": {
+        "source_identity_id": "ef572046-27d3-4069-9510-391f9c0ea226",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "8c8118fc-bc3e-4c25-bb0b-c92d48dfb5e8"
+      }
+    },
+    {
+      "event_id": "547eb3e7-bce8-41bd-8b22-62cb32932123",
+      "timestamp": "2026-02-11T06:38:55.148757+00:00",
+      "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "ae3b1ae3-ca0f-4068-8c7c-3934f9227dfa",
+      "timestamp": "2026-02-11T06:39:11.639415+00:00",
+      "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 340",
+        "new_name": "Felicita Russo Capelluto"
+      }
+    },
+    {
+      "event_id": "e3a7b78e-4ac9-42be-b664-9d808db8c2d0",
+      "timestamp": "2026-02-11T06:40:28.379015+00:00",
+      "identity_id": "27ffe71c-ce3e-4248-ae50-17fef4f8451b",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "301dcc30-1658-4a9c-bf7e-59277f1a2ee3",
+      "timestamp": "2026-02-11T06:41:27.970321+00:00",
+      "identity_id": "b608cf88-935c-439e-8f09-6e02304d1e4a",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "adae5e57-b22a-4394-8fcc-f466dd79b83b",
+      "timestamp": "2026-02-11T06:41:30.009093+00:00",
+      "identity_id": "d19e58b1-a8df-4cb4-b5fa-160efcb587f7",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "6d7823cb-fc52-4dc5-b851-a33c9a8bc4c5",
+      "timestamp": "2026-02-11T06:41:32.030185+00:00",
+      "identity_id": "4caebe5c-20c8-4961-85a4-47e36ee7c171",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "977c44cb-6007-428f-b1c0-1f8eb822b971",
+      "timestamp": "2026-02-11T06:41:33.294198+00:00",
+      "identity_id": "d3f3ec3f-ab33-44f7-be9d-a8d30300ba6b",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "2061d744-7d4d-4e37-ad4b-bee77060c309",
+      "timestamp": "2026-02-11T06:41:35.087032+00:00",
+      "identity_id": "2f02fc6a-311b-496b-92b0-e21da0fd7fb6",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "e2b1f2c8-340c-4066-b4f0-93c7c237f2c6",
+      "timestamp": "2026-02-11T06:41:36.570821+00:00",
+      "identity_id": "1a3ce7b0-c29d-47f7-a53b-116f1126e213",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "b548c112-c05c-4a64-a6a4-33e4f386d70f",
+      "timestamp": "2026-02-11T06:41:38.080429+00:00",
+      "identity_id": "56792a62-adc4-4c5e-9458-424189896c26",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "21f9129e-210f-4334-a337-e4aeeefdf5f6",
+      "timestamp": "2026-02-11T06:41:48.669944+00:00",
+      "identity_id": "dcfb22d7-05b4-42dd-b575-6d29f4a17446",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "d648722d-b11f-45b1-9088-c9ae0f73c759",
+      "timestamp": "2026-02-11T06:41:51.123951+00:00",
+      "identity_id": "9108e4a3-ccf8-4493-a7da-c3964db62ab8",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "49e35680-f525-4784-a38f-6d9ebc21acef",
+      "timestamp": "2026-02-11T06:41:52.345504+00:00",
+      "identity_id": "2da57f3b-4dd2-4adf-a1b5-e5da3baa2b24",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "60747841-c614-4ad3-b535-ae6896f62cb6",
+      "timestamp": "2026-02-11T06:41:56.140022+00:00",
+      "identity_id": "a778010c-f10b-4349-b9a5-6cc12e313564",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "8dcf2700-32ee-4926-ac45-30097c460f5e",
+      "timestamp": "2026-02-11T06:41:59.952866+00:00",
+      "identity_id": "ba08053c-9c97-4c01-9ff9-9b6f538428b5",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "3331a8a1-fa6e-4bb7-9bba-481da8d3b255",
+      "timestamp": "2026-02-11T06:42:01.602686+00:00",
+      "identity_id": "17420155-6cc9-47d2-9e07-1fb7606fabb8",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "5f6866c6-2eb0-46aa-98b0-01f71d8d99e1",
+      "timestamp": "2026-02-11T06:43:33.203176+00:00",
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 13,
+      "metadata": {
+        "source_identity_id": "2cd362da-8553-4172-86e6-79e5ac6c4332",
+        "faces_merged": 1,
+        "direction_swapped": true,
+        "merge_event_id": "a1929d6e-c6f5-4fac-84cf-92228dc34a72"
+      }
+    },
+    {
+      "event_id": "60aa5dbf-4156-4d1e-ab8c-106da9f7bc14",
+      "timestamp": "2026-02-11T06:48:18.622048+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 6,
+      "metadata": {
+        "rejected_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "c1faa1fc-37e5-4d79-822b-408d7e4e82ee",
+      "timestamp": "2026-02-11T06:48:18.622073+00:00",
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 19,
+      "metadata": {
+        "rejected_identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "47362249-0f6c-474b-9de6-75ab03add7e6",
+      "timestamp": "2026-02-11T06:48:39.987726+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 7,
+      "metadata": {
+        "rejected_identity_id": "1f507642-f38d-48ab-ba2a-66f368e258a0",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "c7281790-c178-4fb6-ae80-1a220b9f3632",
+      "timestamp": "2026-02-11T06:48:39.987739+00:00",
+      "identity_id": "1f507642-f38d-48ab-ba2a-66f368e258a0",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "rejected_identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "637ec742-36e2-457e-9041-42488c03e861",
+      "timestamp": "2026-02-11T06:48:58.549250+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 8,
+      "metadata": {
+        "rejected_identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "5ae15986-f67d-4f3b-97ab-16eb8da880c0",
+      "timestamp": "2026-02-11T06:48:58.549260+00:00",
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 5,
+      "metadata": {
+        "rejected_identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "02b5582f-1695-47e7-8d26-9177859c92c5",
+      "timestamp": "2026-02-11T06:49:12.092680+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 9,
+      "metadata": {
+        "rejected_identity_id": "798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "4d817d1f-9fcc-474d-af86-5d6d3d976670",
+      "timestamp": "2026-02-11T06:49:12.092690+00:00",
+      "identity_id": "798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "rejected_identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "e344cf85-8cb8-4070-9599-73ee0ab78976",
+      "timestamp": "2026-02-11T06:50:26.553974+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 10,
+      "metadata": {
+        "source_identity_id": "492729f4-82e5-4a8a-9454-f2e1214af04a",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "d0d9b711-21da-4c89-a845-230c5f6bc47e"
+      }
+    },
+    {
+      "event_id": "1270bfe9-5e34-4cc4-a5b3-f51939361eca",
+      "timestamp": "2026-02-11T06:50:38.364574+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 11,
+      "metadata": {
+        "source_identity_id": "956aec21-4fbc-4202-b6f7-a701031b862a",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "86759157-e156-4f48-a8b7-7ce0ba707734"
+      }
+    },
+    {
+      "event_id": "dd1b852f-0b97-4fe7-8ddf-2730be7c188a",
+      "timestamp": "2026-02-11T06:50:53.732382+00:00",
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 12,
+      "metadata": {
+        "source_identity_id": "338072dc-f22c-44d8-8869-611dbd61f80e",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "e6942c7d-82d7-4268-ad8f-bb784f5a0508"
+      }
+    },
+    {
+      "event_id": "56c0db6f-4e7a-46bf-942a-9fb8db7cca51",
+      "timestamp": "2026-02-11T06:53:36.281742+00:00",
+      "identity_id": "5d9ba7e2-f3dd-430d-8576-552962c42d6f",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "SKIPPED"
+      }
+    },
+    {
+      "event_id": "85f2c809-e8c3-4c37-a1e5-b14915e789f5",
+      "timestamp": "2026-02-11T06:54:16.042286+00:00",
+      "identity_id": "5d9ba7e2-f3dd-430d-8576-552962c42d6f",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "previous_name": "Unidentified Person 046",
+        "new_name": "Joya Habib Pizanti"
+      }
+    },
+    {
+      "event_id": "585f7c5a-74d7-4fff-b7b9-96616f0978db",
+      "timestamp": "2026-02-11T06:54:20.568861+00:00",
+      "identity_id": "fd43c9dd-8558-4305-8bda-90c3f320daac",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "SKIPPED"
+      }
+    },
+    {
+      "event_id": "99dbe663-8d76-4f59-9deb-f350ff39b97e",
+      "timestamp": "2026-02-11T06:55:22.759911+00:00",
+      "identity_id": "fd43c9dd-8558-4305-8bda-90c3f320daac",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "previous_name": "Unidentified Person 045",
+        "new_name": "Boulissa Pizanti Capeluto"
+      }
+    },
+    {
+      "event_id": "5b596dcd-d3f8-4ad5-a3af-31f00714348b",
+      "timestamp": "2026-02-11T06:55:42.458819+00:00",
+      "identity_id": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONFIRMED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "937866bf-34de-41fe-8981-795655c626be",
+      "timestamp": "2026-02-11T06:55:57.451512+00:00",
+      "identity_id": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "action": "rename",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "previous_name": "Unidentified Person 317",
+        "new_name": "Debbie Fox Schapiro"
+      }
+    },
+    {
+      "event_id": "1c7262eb-62c8-43f9-b32e-a8bc98af1c78",
+      "timestamp": "2026-02-11T06:56:08.398933+00:00",
+      "identity_id": "87c332af-7537-4254-ab16-413ef606e384",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "e1600813-4f5b-4c5e-815f-e3c1bf6c3814",
+      "timestamp": "2026-02-11T06:56:11.852685+00:00",
+      "identity_id": "7984e5f6-d4fa-4d25-acfb-056c00f45479",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "b1e417bd-03e5-4966-9247-e7194bd55834",
+      "timestamp": "2026-02-11T06:56:13.245993+00:00",
+      "identity_id": "0498a62d-66b8-4725-b955-bb682966fd76",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "49f221ab-276a-490a-a879-0bbfa2166721",
+      "timestamp": "2026-02-11T06:56:14.654139+00:00",
+      "identity_id": "8df7c735-1197-4f6a-820f-0de37deba4db",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "quick_action",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "8a9a875c-d3d6-49f8-a020-8c45e429af2c",
+      "timestamp": "2026-02-11T06:56:25.102231+00:00",
+      "identity_id": "a50f0223-da30-4bb3-82fe-ca5bd709cb9e",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "8ad28141-529b-4ec8-aeeb-ff67a8c94cd3",
+      "timestamp": "2026-02-11T06:56:27.144964+00:00",
+      "identity_id": "e25e732f-3e70-492a-baf5-4b4b700f469f",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "fa076a20-67b9-4fe1-9080-25ee584cfda5",
+      "timestamp": "2026-02-11T06:59:21.624265+00:00",
+      "identity_id": "f346611b-49d0-4c70-b7d8-79edd072cd43",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "5d0ed342-f47e-41f6-bdac-0f6ee886def2",
+      "timestamp": "2026-02-11T06:59:22.288325+00:00",
+      "identity_id": "860d51c1-0cdd-4b7a-806b-05e79c4c8026",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "3ffbf57d-41d5-48dd-a35c-8e713633f2a3",
+      "timestamp": "2026-02-11T06:59:22.806842+00:00",
+      "identity_id": "c7e09fdb-87b9-44ef-8710-33399fc81a8b",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "7a2c8fbe-7ca3-4bf4-a897-f09e64f8b071",
+      "timestamp": "2026-02-11T06:59:23.304761+00:00",
+      "identity_id": "1dadd1b7-606e-4d5e-a821-9b05e23c9760",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "35d93c56-9d83-4feb-a622-fb4f35f9cbf9",
+      "timestamp": "2026-02-11T06:59:24.382589+00:00",
+      "identity_id": "e3be23d5-9d0a-480b-91cf-860934594aeb",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "REJECTED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "6827da11-c225-4628-9089-d3cf9e3d5abb",
+      "timestamp": "2026-02-11T06:59:24.623481+00:00",
+      "identity_id": "11cd61ed-050e-4396-babe-5c4db414e9dd",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "REJECTED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "fa5d9706-cc3a-4559-acd4-d3cc575f7700",
+      "timestamp": "2026-02-11T06:59:24.875928+00:00",
+      "identity_id": "db54653a-0325-442e-9ef5-943d9dcf5e77",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "REJECTED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "189f0c69-f55e-4931-91b3-ae434c45cae8",
+      "timestamp": "2026-02-11T06:59:30.040554+00:00",
+      "identity_id": "a7c6de6e-0a38-4e51-8277-672a6e0b7374",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "2f0abe6c-cbc6-4923-ac36-9db7f4786856",
+      "timestamp": "2026-02-11T06:59:30.551132+00:00",
+      "identity_id": "05ef886c-3661-4e9d-8b79-b2475a869aea",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "d2821209-372a-4fb2-86de-2a4918cb48d4",
+      "timestamp": "2026-02-11T06:59:36.047389+00:00",
+      "identity_id": "db54653a-0325-442e-9ef5-943d9dcf5e77",
+      "action": "reset",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "INBOX",
+        "previous_state": "REJECTED"
+      }
+    },
+    {
+      "event_id": "3cdc8595-90ea-4a7d-9606-1327b74b5528",
+      "timestamp": "2026-02-11T06:59:37.756340+00:00",
+      "identity_id": "11cd61ed-050e-4396-babe-5c4db414e9dd",
+      "action": "reset",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "INBOX",
+        "previous_state": "REJECTED"
+      }
+    },
+    {
+      "event_id": "71b56b32-38ab-43d8-aa2b-b694ccb01c27",
+      "timestamp": "2026-02-11T06:59:38.997352+00:00",
+      "identity_id": "e3be23d5-9d0a-480b-91cf-860934594aeb",
+      "action": "reset",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "new_state": "INBOX",
+        "previous_state": "REJECTED"
+      }
+    },
+    {
+      "event_id": "2d5d5c94-b72c-41df-b3ca-d9d2d6ddc20a",
+      "timestamp": "2026-02-11T06:59:46.015087+00:00",
+      "identity_id": "e3be23d5-9d0a-480b-91cf-860934594aeb",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "8aef141e-29a0-452b-9329-deb1f8bc55b8",
+      "timestamp": "2026-02-11T06:59:46.389803+00:00",
+      "identity_id": "11cd61ed-050e-4396-babe-5c4db414e9dd",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "0deab80b-8299-4102-bc1d-787f55a2fbc2",
+      "timestamp": "2026-02-11T06:59:46.866129+00:00",
+      "identity_id": "db54653a-0325-442e-9ef5-943d9dcf5e77",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
+      }
+    },
+    {
+      "event_id": "89d785ee-3cab-42e7-b7f5-dc07a7f77bdb",
+      "timestamp": "2026-02-11T06:59:55.864888+00:00",
+      "identity_id": "445d7d00-4bf8-43dd-b7b5-1505ed95e5e6",
+      "action": "skip",
+      "face_ids": [],
+      "user_source": "web_review",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "SKIPPED",
+        "previous_state": "INBOX"
       }
     }
   ]

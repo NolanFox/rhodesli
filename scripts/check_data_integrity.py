@@ -50,7 +50,7 @@ def check_identity_integrity():
     ids = json.loads(id_path.read_text())
     identities = ids.get("identities", ids)
 
-    valid_states = {"CONFIRMED", "PROPOSED", "INBOX", "SKIPPED"}
+    valid_states = {"CONFIRMED", "PROPOSED", "INBOX", "SKIPPED", "CONTESTED"}
     test_names = ["test person", "test identity", "fixture"]
 
     for iid, identity in identities.items():
