@@ -1,0 +1,21 @@
+# Shared configuration for Rhodesli ML pipeline
+paths:
+  data_dir: ../data
+  embeddings: ../data/embeddings.npy
+  identities: ../data/identities.json
+  photo_index: ../data/photo_index.json
+  raw_photos: ../raw_photos
+  mlflow_tracking_uri: ./mlruns
+
+# Current production model (frozen InsightFace)
+embedding:
+  model: buffalo_l  # InsightFace buffalo_l (ArcFace ResNet-100)
+  dim: 512
+  metric: cosine  # cosine distance via scipy.spatial.distance.cosine
+
+# Thresholds (from AD-013 calibration on golden set)
+thresholds:
+  very_high: 0.70
+  high: 0.85
+  moderate: 1.00
+  grouping: 0.95  # intra-cluster max distance

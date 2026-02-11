@@ -1,0 +1,21 @@
+# Similarity calibration model configuration (Phase 2)
+model:
+  type: mlp  # Small MLP on frozen embeddings
+  hidden_dims: [256, 128, 64]
+  dropout: 0.3
+  output: probability  # calibrated match probability
+
+training:
+  batch_size: 64
+  learning_rate: 0.0005
+  max_epochs: 100
+  patience: 15
+  hard_negative_weight: 3.0  # upweight rejected pairs
+
+features:
+  # Input signals (concatenated embedding pair + metadata)
+  embedding_distance: true
+  embedding_cosine: true
+  face_quality_diff: true
+  photo_collection_same: true
+  # Future: date proximity, name similarity

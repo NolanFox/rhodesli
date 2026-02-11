@@ -1,0 +1,28 @@
+# Date/era estimation model configuration
+model:
+  backbone: efficientnet_b0  # or resnet18
+  pretrained: true
+  num_classes: 13  # decades: 1900s through 2020s
+  ordinal: true  # ordinal regression (CORAL loss)
+
+training:
+  batch_size: 32
+  learning_rate: 0.001
+  max_epochs: 50
+  patience: 10  # early stopping
+  weight_decay: 0.0001
+  scheduler: cosine_annealing
+
+data:
+  image_size: 224
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+
+augmentations:
+  # Heritage-specific augmentations
+  sepia_probability: 0.3
+  noise_probability: 0.2
+  resolution_degradation: 0.2
+  scanning_artifacts: 0.1
+  projective_distortion: 0.1
