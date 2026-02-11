@@ -11549,6 +11549,49 @@ async def post(request):
     return {"removed": removed, "errors": errors, "count": len(removed)}
 
 
+@rt("/api/sync/staged/mark-processed")
+async def post(request):
+    """Mark staging jobs as processed in pending_uploads.json.
+
+    Called by the pipeline after successful processing to remove jobs from
+    the Pending Uploads admin page.
+
+    Accepts JSON body with:
+        job_ids: list of job IDs to mark as processed
+        all: bool — mark ALL staged jobs as processed
+    """
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    body = await request.json()
+    pending = _load_pending_uploads()
+
+    marked = []
+    if body.get("all"):
+        for job_id, upload in pending["uploads"].items():
+            if upload.get("status") == "staged":
+                upload["status"] = "processed"
+                upload["processed_at"] = datetime.now(timezone.utc).isoformat()
+                marked.append(job_id)
+    else:
+        job_ids = body.get("job_ids", [])
+        if not job_ids:
+            return Response("Must provide 'job_ids' or 'all'", status_code=400)
+        for job_id in job_ids:
+            if job_id in pending["uploads"]:
+                upload = pending["uploads"][job_id]
+                if upload.get("status") in ("staged", "approved"):
+                    upload["status"] = "processed"
+                    upload["processed_at"] = datetime.now(timezone.utc).isoformat()
+                    marked.append(job_id)
+
+    if marked:
+        _save_pending_uploads(pending)
+
+    return {"marked_processed": marked, "count": len(marked)}
+
+
 # --- Push API (for pushing locally-processed data back to production) ---
 
 

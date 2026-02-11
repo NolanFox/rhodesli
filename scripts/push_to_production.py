@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """
-Push locally-processed data to production via git.
+Push locally-processed data to production via git, with merge-aware logic.
 
-Commits essential data files and pushes to origin/main, which triggers
-a Railway redeploy with the updated data bundled in the Docker image.
+CRITICAL: This script NEVER blind-overwrites production data. It:
+1. Fetches current production state via sync API
+2. Merges local + production data (production wins on conflicts)
+3. Writes the merged result locally
+4. Git commits and pushes
+
+This prevents overwriting user actions on production (merges, confirmations,
+rejections, renames) that happened since the last local sync.
 
 Usage:
     # Dry run (compare local vs remote, don't push):
@@ -14,6 +20,9 @@ Usage:
 
     # Push with a custom commit message:
     python scripts/push_to_production.py -m "data: updated after clustering run"
+
+    # Skip merge (DANGEROUS — only for known-clean states):
+    python scripts/push_to_production.py --no-merge
 
 Requires git configured with push access to origin.
 """
@@ -99,23 +108,48 @@ def get_local_stats() -> dict:
     return stats
 
 
+def _get_ssl_context():
+    """Get SSL context, using certifi certs if available."""
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        return ssl.create_default_context()
+
+
+def fetch_production_json(endpoint: str) -> dict | None:
+    """Fetch JSON data from production sync API."""
+    if not SYNC_TOKEN:
+        return None
+
+    import urllib.error
+    import urllib.request
+
+    url = f"{SITE_URL}{endpoint}"
+    req = urllib.request.Request(url)
+    req.add_header("Authorization", f"Bearer {SYNC_TOKEN}")
+    ssl_ctx = _get_ssl_context()
+
+    try:
+        with urllib.request.urlopen(req, timeout=30, context=ssl_ctx) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        print(f"  WARNING: Could not fetch {endpoint}: {e}")
+        return None
+
+
 def get_production_stats() -> dict | None:
     """Fetch stats from production sync/status endpoint."""
     if not SYNC_TOKEN:
         return None
 
-    import ssl
     import urllib.error
     import urllib.request
 
-    try:
-        import certifi
-        ssl_ctx = ssl.create_default_context(cafile=certifi.where())
-    except ImportError:
-        ssl_ctx = ssl.create_default_context()
-
     url = f"{SITE_URL}/api/sync/status"
     req = urllib.request.Request(url)
+    ssl_ctx = _get_ssl_context()
 
     try:
         with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
@@ -123,6 +157,177 @@ def get_production_stats() -> dict | None:
     except Exception as e:
         print(f"  (could not reach production: {e})")
         return None
+
+
+def _extract_face_ids(identity: dict) -> set[str]:
+    """Extract all face IDs from an identity (anchors + candidates)."""
+    face_ids = set()
+    for anchor in identity.get("anchor_ids", []):
+        if isinstance(anchor, str):
+            face_ids.add(anchor)
+        elif isinstance(anchor, dict):
+            face_ids.add(anchor["face_id"])
+    face_ids.update(identity.get("candidate_ids", []))
+    return face_ids
+
+
+def _is_production_modified(local: dict, prod: dict) -> bool:
+    """Check if production identity differs from local in ways that indicate user action.
+
+    Production wins if the admin changed state, name, faces, or merge status.
+    """
+    # State change (confirm, reject, skip, etc.)
+    if prod.get("state") != local.get("state"):
+        return True
+    # Name change (rename)
+    if prod.get("name") != local.get("name"):
+        return True
+    # merged_into changed
+    if prod.get("merged_into") != local.get("merged_into"):
+        return True
+    # Face set changed (merge, detach, add)
+    if _extract_face_ids(prod) != _extract_face_ids(local):
+        return True
+    # Negative IDs changed (rejection)
+    if set(prod.get("negative_ids", [])) != set(local.get("negative_ids", [])):
+        return True
+    return False
+
+
+def merge_identities(local_data: dict, prod_data: dict) -> tuple[dict, dict]:
+    """Merge local and production identity data. Production wins on conflicts.
+
+    Returns (merged_data, merge_report).
+    """
+    local_ids = local_data.get("identities", {})
+    prod_ids = prod_data.get("identities", {})
+    merged = {}
+    report = {"kept_local": 0, "kept_production": 0, "new_local": 0, "production_only": 0}
+
+    all_keys = set(list(local_ids.keys()) + list(prod_ids.keys()))
+
+    for iid in all_keys:
+        local = local_ids.get(iid)
+        prod = prod_ids.get(iid)
+
+        if local and not prod:
+            merged[iid] = local  # New from local pipeline
+            report["new_local"] += 1
+        elif prod and not local:
+            merged[iid] = prod  # Exists only on production
+            report["production_only"] += 1
+        elif local and prod:
+            if _is_production_modified(local, prod):
+                merged[iid] = prod  # Production wins — user action detected
+                report["kept_production"] += 1
+            else:
+                merged[iid] = local  # No conflict, use local (may have pipeline updates)
+                report["kept_local"] += 1
+
+    merged_data = {
+        "schema_version": local_data.get("schema_version", 1),
+        "identities": merged,
+    }
+    return merged_data, report
+
+
+def merge_photo_index(local_data: dict, prod_data: dict) -> tuple[dict, dict]:
+    """Merge local and production photo index. Production wins on conflicts.
+
+    Returns (merged_data, merge_report).
+    """
+    local_photos = local_data.get("photos", {})
+    prod_photos = prod_data.get("photos", {})
+    merged_photos = {}
+    report = {"kept_local": 0, "kept_production": 0, "new_local": 0, "production_only": 0}
+
+    all_keys = set(list(local_photos.keys()) + list(prod_photos.keys()))
+
+    for pid in all_keys:
+        local = local_photos.get(pid)
+        prod = prod_photos.get(pid)
+
+        if local and not prod:
+            merged_photos[pid] = local
+            report["new_local"] += 1
+        elif prod and not local:
+            merged_photos[pid] = prod
+            report["production_only"] += 1
+        elif local and prod:
+            # Check if production has changes (source, collection, metadata)
+            if prod != local:
+                merged_photos[pid] = prod  # Production wins
+                report["kept_production"] += 1
+            else:
+                merged_photos[pid] = local
+                report["kept_local"] += 1
+
+    # Merge face_to_photo (union — production wins on conflicts)
+    local_f2p = local_data.get("face_to_photo", {})
+    prod_f2p = prod_data.get("face_to_photo", {})
+    merged_f2p = {**local_f2p, **prod_f2p}
+
+    merged_data = {
+        "schema_version": local_data.get("schema_version", 1),
+        "photos": merged_photos,
+        "face_to_photo": merged_f2p,
+    }
+    return merged_data, report
+
+
+def perform_merge() -> bool:
+    """Fetch production data and merge with local. Returns True if merge happened."""
+    print("Fetching production data for merge...")
+
+    prod_identities = fetch_production_json("/api/sync/identities")
+    prod_photo_index = fetch_production_json("/api/sync/photo-index")
+
+    if not prod_identities and not prod_photo_index:
+        print("  WARNING: Could not fetch production data. Proceeding without merge.")
+        print("  This may overwrite production changes!")
+        return False
+
+    merged_any = False
+
+    # Merge identities
+    if prod_identities:
+        local_path = DATA_DIR / "identities.json"
+        with open(local_path) as f:
+            local_data = json.load(f)
+
+        merged_data, report = merge_identities(local_data, prod_identities)
+
+        if report["kept_production"] > 0 or report["production_only"] > 0:
+            with open(local_path, "w") as f:
+                json.dump(merged_data, f, indent=2)
+            print(f"  Identities merged: {report['kept_production']} production wins, "
+                  f"{report['new_local']} new local, "
+                  f"{report['production_only']} production-only, "
+                  f"{report['kept_local']} unchanged")
+            merged_any = True
+        else:
+            print(f"  Identities: no production changes to merge ({report['kept_local']} unchanged, {report['new_local']} new)")
+
+    # Merge photo index
+    if prod_photo_index:
+        local_path = DATA_DIR / "photo_index.json"
+        with open(local_path) as f:
+            local_data = json.load(f)
+
+        merged_data, report = merge_photo_index(local_data, prod_photo_index)
+
+        if report["kept_production"] > 0 or report["production_only"] > 0:
+            with open(local_path, "w") as f:
+                json.dump(merged_data, f, indent=2)
+            print(f"  Photo index merged: {report['kept_production']} production wins, "
+                  f"{report['new_local']} new local, "
+                  f"{report['production_only']} production-only, "
+                  f"{report['kept_local']} unchanged")
+            merged_any = True
+        else:
+            print(f"  Photo index: no production changes to merge ({report['kept_local']} unchanged, {report['new_local']} new)")
+
+    return merged_any
 
 
 def git_has_changes() -> bool:
@@ -151,7 +356,7 @@ def git_has_changes() -> bool:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Push data to production via git commit + push.",
+        description="Push data to production via git commit + push (merge-aware).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -165,9 +370,14 @@ def main():
         default=None,
         help="Custom commit message (default: auto-generated)",
     )
+    parser.add_argument(
+        "--no-merge",
+        action="store_true",
+        help="Skip merge step (DANGEROUS — may overwrite production changes)",
+    )
     args = parser.parse_args()
 
-    print("=== Push to Production (via git) ===\n")
+    print("=== Push to Production (merge-aware) ===\n")
 
     # Step 1: Verify essential data files exist
     missing = [f for f in DATA_FILES[:2] if not (PROJECT_ROOT / f).exists()]
@@ -182,13 +392,18 @@ def main():
         sys.exit(1)
     print("  Integrity check passed.\n")
 
-    # Step 3: Show local stats
+    # Step 3: Merge with production (CRITICAL — prevents overwriting user actions)
+    if not args.no_merge:
+        perform_merge()
+        print()
+
+    # Step 4: Show local stats (after merge)
     local_stats = get_local_stats()
-    print("Local data:")
+    print("Local data (after merge):")
     print(f"  Identities: {local_stats.get('identities', '?')} ({local_stats.get('confirmed', '?')} confirmed)")
     print(f"  Photos: {local_stats.get('photos', '?')}")
 
-    # Step 4: Show production stats for comparison
+    # Step 5: Show production stats for comparison
     print("\nProduction data:")
     prod_stats = get_production_stats()
     if prod_stats:
@@ -197,7 +412,7 @@ def main():
     else:
         print("  (unavailable)")
 
-    # Step 5: Check for changes
+    # Step 6: Check for changes
     if not git_has_changes():
         print("\nNo changes to push — data files are up to date in git.")
         return
@@ -218,7 +433,7 @@ def main():
         print("\nDRY RUN — no changes pushed.")
         return
 
-    # Step 6: Stage and commit
+    # Step 7: Stage and commit
     print("\nStaging data files...")
     run(["git", "add"] + existing)
 
@@ -239,7 +454,7 @@ def main():
         print(f"ERROR: git commit failed:\n{result.stdout}\n{result.stderr}")
         sys.exit(1)
 
-    # Step 7: Push to origin
+    # Step 8: Push to origin
     print("Pushing to origin/main...")
     result = run(["git", "push", "origin", "main"], check=False)
     if result.returncode != 0:

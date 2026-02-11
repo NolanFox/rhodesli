@@ -5327,34 +5327,34 @@
       "identity_id": "fc904fa4-20cc-47e6-951d-f68be528ebdf",
       "name": "Unidentified Person 289",
       "state": "INBOX",
-      "anchor_ids": [
-        "inbox_138d977cbce9"
-      ],
+      "anchor_ids": [],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T18:27:10.309006+00:00",
-      "updated_at": "2026-02-10T18:27:10.309006+00:00",
+      "updated_at": "2026-02-11T03:00:02.101070+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210",
         "filename": "Zeb_Capuano_says_Howdy_Boys_from_Lido.jpg",
         "ingested_at": "2026-02-10T18:27:10.308961+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merged_into": "0b9cb708-9b13-4a42-a25d-ad36f3e08547"
     },
     "0b9cb708-9b13-4a42-a25d-ad36f3e08547": {
       "identity_id": "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
-      "name": "Unidentified Person 290",
-      "state": "INBOX",
+      "name": "Zeb Capuano",
+      "state": "CONFIRMED",
       "anchor_ids": [
-        "inbox_67d39ad2f197"
+        "inbox_67d39ad2f197",
+        "inbox_138d977cbce9"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T18:27:13.995682+00:00",
-      "updated_at": "2026-02-10T18:27:13.995682+00:00",
+      "updated_at": "2026-02-11T03:00:02.101070+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210",

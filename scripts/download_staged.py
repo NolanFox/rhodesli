@@ -148,6 +148,31 @@ def clear_staged(file_paths: list[str] | None = None):
         return False
 
 
+def mark_jobs_processed():
+    """Mark all staged jobs as processed in pending_uploads.json on production."""
+    import urllib.request
+    import urllib.error
+
+    url = f"{SITE_URL}/api/sync/staged/mark-processed"
+    body = json.dumps({"all": True}).encode()
+
+    req = urllib.request.Request(url, data=body, method="POST")
+    req.add_header("Authorization", f"Bearer {SYNC_TOKEN}")
+    req.add_header("Content-Type", "application/json")
+    ssl_ctx = _get_ssl_context()
+
+    try:
+        with urllib.request.urlopen(req, timeout=15, context=ssl_ctx) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        count = result.get("count", 0)
+        if count > 0:
+            print(f"  Marked {count} job(s) as processed in Pending Uploads.")
+        return True
+    except Exception as e:
+        print(f"  WARNING: Could not mark jobs as processed: {e}")
+        return False
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Download staged uploads from production for local ML processing.",
@@ -220,6 +245,8 @@ def main():
             clear_staged(job_dirs)
         else:
             clear_staged()
+        # Mark staging jobs as processed so they disappear from Pending Uploads
+        mark_jobs_processed()
 
     print(f"\nNext steps:")
     print(f"  1. python -m core.ingest_inbox --directory {args.dest} --job-id staged-$(date +%Y%m%d)")

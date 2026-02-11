@@ -62,6 +62,21 @@ class TestPendingUploadsHelpers:
             _save_pending_uploads(data)
             assert _count_pending_uploads() == 3  # 2 pending + 1 staged
 
+    def test_count_excludes_processed(self, tmp_path):
+        """_count_pending_uploads excludes uploads with status='processed'."""
+        with patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads, _count_pending_uploads
+            data = {
+                "uploads": {
+                    "a": {"status": "pending"},
+                    "b": {"status": "staged"},
+                    "c": {"status": "processed"},
+                    "d": {"status": "processed"},
+                }
+            }
+            _save_pending_uploads(data)
+            assert _count_pending_uploads() == 2  # only pending + staged
+
     def test_save_is_atomic(self, tmp_path):
         """_save_pending_uploads uses atomic write (no .tmp file left behind)."""
         with patch("app.main.data_path", tmp_path):
@@ -308,3 +323,96 @@ class TestRejectPendingUpload:
             response = client.post("/admin/pending/job1/reject")
             assert response.status_code == 200
             assert "already" in response.text.lower()
+
+
+class TestMarkProcessedEndpoint:
+    """Tests for POST /api/sync/staged/mark-processed."""
+
+    def test_mark_all_staged_as_processed(self, client, tmp_path):
+        """Mark all staged jobs as processed."""
+        with patch("app.main.SYNC_API_TOKEN", "test-token"), \
+             patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job1": {"job_id": "job1", "status": "staged"},
+                    "job2": {"job_id": "job2", "status": "staged"},
+                    "job3": {"job_id": "job3", "status": "pending"},
+                }
+            })
+
+            response = client.post(
+                "/api/sync/staged/mark-processed",
+                headers={"Authorization": "Bearer test-token"},
+                json={"all": True},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["count"] == 2  # only staged jobs, not pending
+
+            # Verify file was updated
+            with open(tmp_path / "pending_uploads.json") as f:
+                pending = json.load(f)
+            assert pending["uploads"]["job1"]["status"] == "processed"
+            assert pending["uploads"]["job2"]["status"] == "processed"
+            assert pending["uploads"]["job3"]["status"] == "pending"  # unchanged
+
+    def test_mark_specific_jobs_as_processed(self, client, tmp_path):
+        """Mark specific job IDs as processed."""
+        with patch("app.main.SYNC_API_TOKEN", "test-token"), \
+             patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job1": {"job_id": "job1", "status": "staged"},
+                    "job2": {"job_id": "job2", "status": "staged"},
+                }
+            })
+
+            response = client.post(
+                "/api/sync/staged/mark-processed",
+                headers={"Authorization": "Bearer test-token"},
+                json={"job_ids": ["job1"]},
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["count"] == 1
+            assert "job1" in data["marked_processed"]
+
+            with open(tmp_path / "pending_uploads.json") as f:
+                pending = json.load(f)
+            assert pending["uploads"]["job1"]["status"] == "processed"
+            assert pending["uploads"]["job2"]["status"] == "staged"
+
+    def test_mark_processed_requires_token(self, client):
+        """Mark-processed endpoint requires valid sync token."""
+        with patch("app.main.SYNC_API_TOKEN", "valid-token"):
+            response = client.post(
+                "/api/sync/staged/mark-processed",
+                json={"all": True},
+            )
+            assert response.status_code == 401
+
+    def test_processed_jobs_excluded_from_pending_page(self, client, auth_enabled, admin_user, tmp_path):
+        """Processed jobs should not appear on the admin pending page."""
+        with patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job1": {
+                        "job_id": "job1",
+                        "uploader_email": "admin@test.com",
+                        "status": "processed",
+                        "source": "Processed Job",
+                        "files": ["photo1.jpg"],
+                        "file_count": 1,
+                        "submitted_at": "2026-02-10T00:00:00+00:00",
+                    }
+                }
+            })
+
+            response = client.get("/admin/pending")
+            assert response.status_code == 200
+            # Processed job should NOT show as a pending/staged item
+            assert "Processed Job" not in response.text
+            assert "No pending uploads" in response.text
