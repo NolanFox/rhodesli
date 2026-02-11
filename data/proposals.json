@@ -1,10 +1,11 @@
 {
-  "generated_at": "2026-02-11T04:22:16.577079+00:00",
+  "generated_at": "2026-02-11T05:10:32.111198+00:00",
   "threshold": 1.05,
   "proposals": [
     {
       "source_identity_id": "23ce2d83-f36b-437d-845d-44dd6f910a31",
       "source_identity_name": "Unidentified Person 318",
+      "source_state": "INBOX",
       "target_identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
       "target_identity_name": "Victoria Capuano Capeluto",
       "face_id": "inbox_de99078f4995",
@@ -16,6 +17,7 @@
     {
       "source_identity_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
       "source_identity_name": "Unidentified Person 295",
+      "source_state": "INBOX",
       "target_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "target_identity_name": "Big Leon Capeluto",
       "face_id": "inbox_3b59588cdc20",
@@ -27,6 +29,7 @@
     {
       "source_identity_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
       "source_identity_name": "Unidentified Person 295",
+      "source_state": "INBOX",
       "target_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "target_identity_name": "Big Leon Capeluto",
       "face_id": "inbox_197decf08f7c",
@@ -38,6 +41,7 @@
     {
       "source_identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
       "source_identity_name": "Unidentified Person 296",
+      "source_state": "INBOX",
       "target_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "target_identity_name": "Selma Capeluto",
       "face_id": "inbox_61c4952679a7",
@@ -49,6 +53,7 @@
     {
       "source_identity_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
       "source_identity_name": "Unidentified Person 295",
+      "source_state": "INBOX",
       "target_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "target_identity_name": "Big Leon Capeluto",
       "face_id": "inbox_4ca8098ff1d5",
@@ -60,6 +65,7 @@
     {
       "source_identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
       "source_identity_name": "Unidentified Person 296",
+      "source_state": "INBOX",
       "target_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "target_identity_name": "Selma Capeluto",
       "face_id": "inbox_e8842bcd8c1a",
@@ -71,6 +77,7 @@
     {
       "source_identity_id": "23ce2d83-f36b-437d-845d-44dd6f910a31",
       "source_identity_name": "Unidentified Person 318",
+      "source_state": "INBOX",
       "target_identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
       "target_identity_name": "Victoria Capuano Capeluto",
       "face_id": "inbox_251a55eeaedc",
@@ -82,6 +89,7 @@
     {
       "source_identity_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
       "source_identity_name": "Unidentified Person 295",
+      "source_state": "INBOX",
       "target_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "target_identity_name": "Big Leon Capeluto",
       "face_id": "inbox_de6c29f39e6d",
@@ -93,6 +101,7 @@
     {
       "source_identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
       "source_identity_name": "Unidentified Person 296",
+      "source_state": "INBOX",
       "target_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "target_identity_name": "Selma Capeluto",
       "face_id": "inbox_a01016d743d0",
@@ -104,6 +113,7 @@
     {
       "source_identity_id": "7600abc8-40f1-4b5d-96e7-8c1e964c109b",
       "source_identity_name": "Unidentified Person 295",
+      "source_state": "INBOX",
       "target_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "target_identity_name": "Big Leon Capeluto",
       "face_id": "inbox_37feea05cf40",
@@ -115,6 +125,7 @@
     {
       "source_identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
       "source_identity_name": "Unidentified Person 296",
+      "source_state": "INBOX",
       "target_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "target_identity_name": "Selma Capeluto",
       "face_id": "inbox_efa182f997c9",
@@ -126,6 +137,7 @@
     {
       "source_identity_id": "3c205d8e-b1a0-4a76-b493-ecb7ff505424",
       "source_identity_name": "Unidentified Person 339",
+      "source_state": "INBOX",
       "target_identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
       "target_identity_name": "Laura Franco Capelluto",
       "face_id": "inbox_edd3cd27dff2",
@@ -137,6 +149,7 @@
     {
       "source_identity_id": "3267b6b7-c013-4449-812a-3c4f9bfd9300",
       "source_identity_name": "Unidentified Person 320",
+      "source_state": "INBOX",
       "target_identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
       "target_identity_name": "Betty Capeluto Fox",
       "face_id": "inbox_22d81a2ed078",
@@ -148,6 +161,7 @@
     {
       "source_identity_id": "b3608797-a0ce-4375-a238-8247c98f50bb",
       "source_identity_name": "Unidentified Person 296",
+      "source_state": "INBOX",
       "target_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "target_identity_name": "Selma Capeluto",
       "face_id": "inbox_441f60c145fb",
@@ -159,6 +173,7 @@
     {
       "source_identity_id": "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b",
       "source_identity_name": "Unidentified Person 356",
+      "source_state": "INBOX",
       "target_identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
       "target_identity_name": "Rica Moussafer Pizante",
       "face_id": "inbox_3f047afeb6e4",
@@ -170,6 +185,7 @@
     {
       "source_identity_id": "c06c7fb4-e7ec-40f1-ae7f-5b7da4c84bf6",
       "source_identity_name": "Unidentified Person 322",
+      "source_state": "INBOX",
       "target_identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "target_identity_name": "Big Leon Capeluto",
       "face_id": "inbox_dd93163579df",

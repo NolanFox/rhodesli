@@ -721,7 +721,7 @@
     "5ad32dd1-673e-4ae7-8437-6e1fe615cda2": {
       "identity_id": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2",
       "name": "Unidentified Person 033",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 936_compress:face0",
@@ -729,19 +729,58 @@
         "Image 968_compress:face3",
         "Image 969_compress:face0",
         "Image 972_compress:face3",
-        "Image 975_compress:face0"
+        "Image 975_compress:face0",
+        "Image 932_compress:face0"
       ],
       "negative_ids": [
         "identity:925904af-af2c-49af-a721-e4b74a312182"
       ],
-      "version_id": 9,
+      "version_id": 10,
       "created_at": "2026-02-01T21:29:26.547176+00:00",
-      "updated_at": "2026-02-07T05:43:15.876474+00:00"
+      "updated_at": "2026-02-11T05:10:27.195420+00:00",
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "group_discovery",
+      "merge_history": [
+        {
+          "merge_event_id": "83d86802-ab04-4000-9598-aa5daa239683",
+          "timestamp": "2026-02-11T05:10:27.195420+00:00",
+          "source_id": "1e559d44-62aa-4d63-a673-d8abd00e2112",
+          "source_name": "Unidentified Person 034",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 932_compress:face0"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 034",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 6,
+            "name": "Unidentified Person 033",
+            "state": "INBOX"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 932_compress:face0"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "batch_grouping"
+        }
+      ]
     },
     "1e559d44-62aa-4d63-a673-d8abd00e2112": {
       "identity_id": "1e559d44-62aa-4d63-a673-d8abd00e2112",
       "name": "Unidentified Person 034",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 932_compress:face0"
@@ -749,7 +788,11 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547197+00:00",
-      "updated_at": "2026-02-10T04:07:34.574897+00:00"
+      "updated_at": "2026-02-11T05:10:27.195420+00:00",
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "group_discovery",
+      "merged_into": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2"
     },
     "1549d2b4-5d1f-4b0d-8ef2-430087a76d67": {
       "identity_id": "1549d2b4-5d1f-4b0d-8ef2-430087a76d67",
@@ -1435,21 +1478,60 @@
     "c4d13c9b-ef1e-4df1-a574-2adced093f96": {
       "identity_id": "c4d13c9b-ef1e-4df1-a574-2adced093f96",
       "name": "Unidentified Person 083",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 932_compress:face2",
-        "Image 948_compress:face6"
+        "Image 948_compress:face6",
+        "Image 939_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 3,
       "created_at": "2026-02-01T21:29:26.548920+00:00",
-      "updated_at": "2026-02-07T05:54:29.143042+00:00"
+      "updated_at": "2026-02-11T05:10:27.195808+00:00",
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "group_discovery",
+      "merge_history": [
+        {
+          "merge_event_id": "41d7981f-6047-4540-a02c-8fcc2f6821bd",
+          "timestamp": "2026-02-11T05:10:27.195808+00:00",
+          "source_id": "203c8eab-13d0-4ce3-a938-b8727a49d2f2",
+          "source_name": "Unidentified Person 084",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 939_compress:face1"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 084",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 2,
+            "name": "Unidentified Person 083",
+            "state": "INBOX"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 939_compress:face1"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "batch_grouping"
+        }
+      ]
     },
     "203c8eab-13d0-4ce3-a938-b8727a49d2f2": {
       "identity_id": "203c8eab-13d0-4ce3-a938-b8727a49d2f2",
       "name": "Unidentified Person 084",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 939_compress:face1"
@@ -1457,7 +1539,11 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.548938+00:00",
-      "updated_at": "2026-02-10T04:07:24.045645+00:00"
+      "updated_at": "2026-02-11T05:10:27.195808+00:00",
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "group_discovery",
+      "merged_into": "c4d13c9b-ef1e-4df1-a574-2adced093f96"
     },
     "fd0010a3-64be-40dd-bd81-1ed18e635a97": {
       "identity_id": "fd0010a3-64be-40dd-bd81-1ed18e635a97",
@@ -1716,7 +1802,7 @@
     "c6c94b77-e102-49bb-9eb6-10807aff0c74": {
       "identity_id": "c6c94b77-e102-49bb-9eb6-10807aff0c74",
       "name": "Unidentified Person 104",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 011_compress:face0"
@@ -1724,7 +1810,11 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.549329+00:00",
-      "updated_at": "2026-02-10T04:07:18.128086+00:00"
+      "updated_at": "2026-02-11T05:10:27.194987+00:00",
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "new_face_match",
+      "merged_into": "d033e1b3-5208-4e7f-ac74-587cd1bcedb7"
     },
     "4bd9678b-f82e-4a58-b12f-2673cf2d7f80": {
       "identity_id": "4bd9678b-f82e-4a58-b12f-2673cf2d7f80",
@@ -4702,21 +4792,60 @@
     "72fc323e-cc5c-4c2a-98b2-d7639997562e": {
       "identity_id": "72fc323e-cc5c-4c2a-98b2-d7639997562e",
       "name": "Unidentified Person 266",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [
-        "inbox_1fccf88f4a71"
+        "inbox_1fccf88f4a71",
+        "inbox_714a0d28ad6f"
       ],
       "candidate_ids": [],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 3,
       "created_at": "2026-02-04T04:11:07.098929+00:00",
-      "updated_at": "2026-02-10T03:49:24.575127+00:00",
+      "updated_at": "2026-02-11T05:10:27.196127+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "b5e8a89e",
         "filename": "603575780.793224.jpg",
         "ingested_at": "2026-02-04T04:11:07.098913+00:00"
-      }
+      },
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "group_discovery",
+      "merge_history": [
+        {
+          "merge_event_id": "d04c11ac-d4e2-4f56-aa6e-82c0bcbd4c73",
+          "timestamp": "2026-02-11T05:10:27.196127+00:00",
+          "source_id": "a1d7e368-0648-4772-8047-443624cbe308",
+          "source_name": "Unidentified Person 277",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [
+              "inbox_714a0d28ad6f"
+            ],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "name": "Unidentified Person 277",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 1,
+            "candidate_count": 0,
+            "name": "Unidentified Person 266",
+            "state": "INBOX"
+          },
+          "faces_added": {
+            "anchors": [
+              "inbox_714a0d28ad6f"
+            ],
+            "candidates": [],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "batch_grouping"
+        }
+      ]
     },
     "f5a409d7-1c73-4293-ab60-4644eb5294b4": {
       "identity_id": "f5a409d7-1c73-4293-ab60-4644eb5294b4",
@@ -4954,7 +5083,7 @@
     "a1d7e368-0648-4772-8047-443624cbe308": {
       "identity_id": "a1d7e368-0648-4772-8047-443624cbe308",
       "name": "Unidentified Person 277",
-      "state": "SKIPPED",
+      "state": "INBOX",
       "anchor_ids": [
         "inbox_714a0d28ad6f"
       ],
@@ -4962,13 +5091,17 @@
       "negative_ids": [],
       "version_id": 5,
       "created_at": "2026-02-04T04:11:12.301697+00:00",
-      "updated_at": "2026-02-10T05:38:32.133188+00:00",
+      "updated_at": "2026-02-11T05:10:27.196127+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "b5e8a89e",
         "filename": "603575654.056133.jpg",
         "ingested_at": "2026-02-04T04:11:12.301688+00:00"
-      }
+      },
+      "promoted_from": "SKIPPED",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "promotion_reason": "group_discovery",
+      "merged_into": "72fc323e-cc5c-4c2a-98b2-d7639997562e"
     },
     "28451fea-20d8-45f4-be8b-81b14147e5bf": {
       "identity_id": "28451fea-20d8-45f4-be8b-81b14147e5bf",
@@ -5370,18 +5503,55 @@
       "anchor_ids": [
         "inbox_2ac19090ecaf"
       ],
-      "candidate_ids": [],
+      "candidate_ids": [
+        "Image 011_compress:face0"
+      ],
       "negative_ids": [],
-      "version_id": 1,
+      "version_id": 2,
       "created_at": "2026-02-10T23:26:17.914434+00:00",
-      "updated_at": "2026-02-10T23:26:17.914434+00:00",
+      "updated_at": "2026-02-11T05:10:27.194987+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "staged-20260210-182610",
         "filename": "596770996.415863.jpg",
         "ingested_at": "2026-02-10T23:26:17.914386+00:00",
         "grouped_faces": 1
-      }
+      },
+      "merge_history": [
+        {
+          "merge_event_id": "befe3a73-15ed-4b9e-b692-6994f5849b35",
+          "timestamp": "2026-02-11T05:10:27.194987+00:00",
+          "source_id": "c6c94b77-e102-49bb-9eb6-10807aff0c74",
+          "source_name": "Unidentified Person 104",
+          "source_state": "INBOX",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 011_compress:face0"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 104",
+            "state": "INBOX",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 1,
+            "candidate_count": 0,
+            "name": "Unidentified Person 291",
+            "state": "INBOX"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 011_compress:face0"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "batch_grouping"
+        }
+      ]
     },
     "2a5406b9-73e4-46ff-ad7f-413bec084e81": {
       "identity_id": "2a5406b9-73e4-46ff-ad7f-413bec084e81",
@@ -22371,6 +22541,70 @@
         "faces_merged": 1,
         "direction_swapped": false,
         "merge_event_id": "7c265550-5464-411f-9cc1-ffb7ff445b96"
+      }
+    },
+    {
+      "event_id": "ea478e33-7e19-421a-9ef0-b0c77bce9235",
+      "timestamp": "2026-02-11T05:10:27.195053+00:00",
+      "identity_id": "d033e1b3-5208-4e7f-ac74-587cd1bcedb7",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "batch_grouping",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "source_identity_id": "c6c94b77-e102-49bb-9eb6-10807aff0c74",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "befe3a73-15ed-4b9e-b692-6994f5849b35"
+      }
+    },
+    {
+      "event_id": "8499fb87-3664-4f5e-970a-83a913404048",
+      "timestamp": "2026-02-11T05:10:27.195469+00:00",
+      "identity_id": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "batch_grouping",
+      "confidence_weight": 1.0,
+      "previous_version_id": 9,
+      "metadata": {
+        "source_identity_id": "1e559d44-62aa-4d63-a673-d8abd00e2112",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "83d86802-ab04-4000-9598-aa5daa239683"
+      }
+    },
+    {
+      "event_id": "bd0dbc72-f7d5-41ed-bef3-b8de8be36d06",
+      "timestamp": "2026-02-11T05:10:27.195851+00:00",
+      "identity_id": "c4d13c9b-ef1e-4df1-a574-2adced093f96",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "batch_grouping",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "source_identity_id": "203c8eab-13d0-4ce3-a938-b8727a49d2f2",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "41d7981f-6047-4540-a02c-8fcc2f6821bd"
+      }
+    },
+    {
+      "event_id": "ddcaf540-e0a3-4a15-b0a9-7936e7b6dc2e",
+      "timestamp": "2026-02-11T05:10:27.196173+00:00",
+      "identity_id": "72fc323e-cc5c-4c2a-98b2-d7639997562e",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "batch_grouping",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "source_identity_id": "a1d7e368-0648-4772-8047-443624cbe308",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "d04c11ac-d4e2-4f56-aa6e-82c0bcbd4c73"
       }
     }
   ]
