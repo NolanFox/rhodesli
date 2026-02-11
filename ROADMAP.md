@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.20.0 · 1282 tests · 148 photos · 181 faces · 23 confirmed · 33 proposals ready
+Current: v0.21.0 · 1355 tests · 155 photos · 181 faces · 24 confirmed · 33 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -122,6 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-11: v0.21.0 — Data Integrity + Proposals UI + Scalability: merge-aware push, Zeb Capuano restored, clustering proposals wired to Focus/Match/Browse, staging lifecycle, grammar pluralization, collections carousel, 4 rules files (1355 tests)
 - [x] 2026-02-10: v0.20.0 — Upload Flow + Photo Metadata Model Overhaul: separate source/collection/source_url fields, upload UX with autocomplete, dual photo filters, bulk metadata editing, migration script, 22 new tests (1282 tests)
 - [x] 2026-02-10: v0.19.0 — Anonymous Guest Contributions: guest-or-login modal, guest-submit endpoint, stash-and-login flow, admin Guest badge, pending_unverified status (1235 tests)
 - [x] 2026-02-10: v0.18.0 — UX Overhaul + Contributor Flow: landing page rewrite, login prompt modals, section rename (Confirmed→People, Skipped→Needs Help), button prominence, compare faces UX, contributor merge suggestions, bulk photo select mode (1221 tests)
