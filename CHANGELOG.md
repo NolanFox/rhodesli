@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.24.0] - 2026-02-11
+
+### Fixed
+- **Search broken for non-confirmed identities**: `search_identities()` hard-filtered to CONFIRMED state only. Rewrote to search ALL non-merged states, with CONFIRMED ranked first. Tag-search and `/api/search` now find SKIPPED, INBOX, and PROPOSED identities.
+- **Face tag URL encoding**: Face IDs containing colons/spaces (e.g., `Image 924_compress:face4`) broke HTMX URLs. All face IDs now URL-encoded in HTMX attributes.
+- **Auto-confirm on tag**: Creating an identity from the tag dropdown now auto-confirms INBOX/PROPOSED/SKIPPED identities.
+
+### Added
+- **Surname variant search (BE-014)**: `data/surname_variants.json` with 13 Rhodes Jewish surname variant groups. Searching "Capeluto" also finds "Capelouto", "Capuano", etc. Bidirectional matching with 10 tests.
+- **Identity metadata edit UI (BE-011)**: Inline HTMX edit form for admin metadata editing (maiden name, birth/death year, birth place, bio, relationship notes). Pre-fills existing values, returns updated display with OOB toast.
+- **ML suggestions redesign**: Replaced raw "dist 0.82, +5% gap" with visual confidence tiers (Very High/High/Moderate/Low/Very Low), face crop thumbnails, and Compare/Merge action buttons.
+- **Face overlay visual language**: Confirmed faces get always-visible name labels. Color-coded overlay legend (Identified=green, Needs Help=indigo, New=dashed).
+- **Decision provenance rule**: `.claude/rules/decision-provenance.md` — behavior changes require documented decisions.
+- **Feature completeness rule**: `.claude/rules/feature-completeness.md` — features must handle all states, entry points, and navigation context.
+- 29 new tests (10 surname variants, 10 all-states search, 6 metadata form, 3 ML suggestions), test count: 1438 → 1467.
+
 ## [v0.23.0] - 2026-02-11
 
 ### Added

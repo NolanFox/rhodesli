@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.23.0 · 1438 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
+Current: v0.24.0 · 1467 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -76,7 +76,7 @@ Goal: Make the archive meaningful beyond face matching.
 - [x] BE-013: EXIF extraction — core/exif.py with date, camera, GPS (2026-02-10)
 - [x] BE-023: Photo provenance model — separate source/collection/source_url, migration, dual filters (2026-02-10)
 - [x] FE-064: Upload UX overhaul — separate collection/source/URL fields, autocomplete, bulk metadata (2026-02-10)
-- [ ] BE-014: Canonical name registry (variant spellings)
+- [x] BE-014: Canonical name registry — surname_variants.json with 13 variant groups, wired into search (2026-02-11)
 - [x] AN-001: Annotation system core — submit/review/approve/reject workflow (2026-02-10)
 - [x] AN-002–AN-006: Photo-level annotations display + submission form (2026-02-10)
 - [x] AN-010–AN-014: Identity metadata display + annotations section (2026-02-10)
@@ -122,6 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-11: v0.24.0 — Community Readiness: search finds all identity states, surname variant matching (13 groups), face tag URL encoding + auto-confirm, metadata edit UI, ML suggestions visual redesign, face overlay name labels + legend, decision-provenance + feature-completeness harness rules (1467 tests)
 - [x] 2026-02-11: v0.23.0 — Navigation Hardening + ML Pipeline Scaffold: triage filter propagation through action chain, photo nav boundaries, grammar pluralization, rhodesli_ml/ package with 26 files (signal harvester, date labeler, audit reports), 1438 tests
 - [x] 2026-02-11: v0.22.1 — Filter Consistency + Promotion Context: match mode respects triage filters, Up Next preserves filter in navigation, promotion banners show specific group context, 15 new tests (1415 tests)
 - [x] 2026-02-11: v0.22.0 — Global Reclustering + Inbox Triage: SKIPPED faces participate in clustering, promotion tracking (new_face_match/group_discovery/confirmed_match), triage bar with filter links, promotion badges/banners in Focus/Browse, priority-sorted Focus mode, 31 new tests (1400 tests)
