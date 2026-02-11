@@ -7816,6 +7816,86 @@ def get(identity_id: str, index: int = 0):
         nav_script, cls="flex flex-col items-center")
 
 
+def _compare_photo_with_overlays(photo_url_str: str, photo_id: str, highlight_face_id: str, registry, img_height_cls: str) -> Div:
+    """Render a photo with face bounding box overlays for the compare modal.
+
+    Shows all faces in the photo with state-based colors. The face being
+    compared (highlight_face_id) gets a bright amber highlight.
+    """
+    photo = get_photo_metadata(photo_id) if photo_id else None
+    if not photo or not photo_url_str:
+        return Div(
+            Img(src=photo_url_str or "", cls=f"max-w-full {img_height_cls} object-contain rounded") if photo_url_str else Div(
+                Span("?", cls="text-6xl text-slate-500"),
+                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+            cls="flex justify-center bg-slate-700/50 rounded p-2")
+
+    width, height = get_photo_dimensions(photo["filename"])
+    has_dimensions = width > 0 and height > 0
+
+    face_overlays = []
+    if has_dimensions:
+        for face_data in photo.get("faces", []):
+            face_id = face_data["face_id"]
+            bbox = face_data.get("bbox")
+            if not bbox:
+                continue
+            x1, y1, x2, y2 = bbox
+
+            left_pct = (x1 / width) * 100
+            top_pct = (y1 / height) * 100
+            width_pct = ((x2 - x1) / width) * 100
+            height_pct = ((y2 - y1) / height) * 100
+
+            identity = get_identity_for_face(registry, face_id)
+            raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+            display_name = ensure_utf8_display(raw_name)
+            identity_id = identity["identity_id"] if identity else None
+
+            is_highlighted = face_id == highlight_face_id
+
+            if is_highlighted:
+                overlay_cls = "border-2 border-amber-400 bg-amber-400/25"
+            elif identity:
+                state = identity.get("state", "INBOX")
+                if state == "CONFIRMED":
+                    overlay_cls = "border-2 border-emerald-500/60 bg-emerald-500/10"
+                elif state == "PROPOSED":
+                    overlay_cls = "border-2 border-indigo-400/60 bg-indigo-400/10"
+                else:
+                    overlay_cls = "border-2 border-slate-400/60 bg-slate-400/5"
+            else:
+                overlay_cls = "border-2 border-dashed border-slate-400/40 bg-slate-400/5"
+
+            # Click handler: navigate to identity card, closing the modal
+            nav_section = _section_for_state(identity.get("state", "INBOX")) if identity else "to_review"
+            click_script = (
+                f"on click halt the event's bubbling "
+                f"then add .hidden to #compare-modal "
+                f"then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+            ) if identity_id else ""
+
+            overlay = Div(
+                Span(
+                    display_name,
+                    cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10"
+                ),
+                cls=f"absolute cursor-pointer transition-all group {overlay_cls}",
+                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+                title=display_name,
+                data_face_id=face_id,
+                **{"_": click_script} if click_script else {},
+            )
+            face_overlays.append(overlay)
+
+    return Div(
+        Div(
+            Img(src=photo_url_str, cls=f"max-w-full {img_height_cls} object-contain rounded"),
+            *face_overlays,
+            cls="relative inline-block max-w-full"),
+        cls="flex justify-center bg-slate-700/50 rounded p-2")
+
+
 @rt("/api/identity/{target_id}/compare/{neighbor_id}")
 def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces", sess=None):
     """Side-by-side comparison view for evaluating merge candidates."""
@@ -7843,9 +7923,11 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
     t_name = ensure_utf8_display(tgt.get("name")) or f"Identity {target_id[:8]}..."
     n_name = ensure_utf8_display(nbr.get("name")) or f"Identity {neighbor_id[:8]}..."
 
-    # Resolve full photo URLs for photo view mode
+    # Resolve full photo URLs and photo IDs for photo view mode
     t_photo_url = None
     n_photo_url = None
+    t_photo_id = ""
+    n_photo_id = ""
     if view == "photos":
         _build_caches()
         t_photo_id = _face_to_photo_cache.get(t_fid, "")
@@ -7914,6 +7996,27 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
 
     img_h = "max-h-[60vh]" if view == "photos" else "max-h-[50vh]"
 
+    # Build photo containers — with face overlays when in photos view
+    if view == "photos" and t_photo_url:
+        t_photo_div = _compare_photo_with_overlays(t_photo_url, t_photo_id, t_fid, registry, img_h)
+    else:
+        t_photo_div = Div(
+            Img(src=t_display_url or "", alt=t_name,
+                cls=f"max-w-full {img_h} object-contain rounded") if t_display_url else Div(
+                Span("?", cls="text-6xl text-slate-500"),
+                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+            cls="flex justify-center bg-slate-700/50 rounded p-2")
+
+    if view == "photos" and n_photo_url:
+        n_photo_div = _compare_photo_with_overlays(n_photo_url, n_photo_id, n_fid, registry, img_h)
+    else:
+        n_photo_div = Div(
+            Img(src=n_display_url or "", alt=n_name,
+                cls=f"max-w-full {img_h} object-contain rounded") if n_display_url else Div(
+                Span("?", cls="text-6xl text-slate-500"),
+                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
+            cls="flex justify-center bg-slate-700/50 rounded p-2")
+
     return Div(
         toggle,
         Div(
@@ -7921,12 +8024,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                 A(t_name, href=f"/?section={t_section}&current={target_id}",
                   cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
                   **{"_": "on click add .hidden to #compare-modal"}),
-                Div(
-                    Img(src=t_display_url or "", alt=t_name,
-                        cls=f"max-w-full {img_h} object-contain rounded") if t_display_url else Div(
-                        Span("?", cls="text-6xl text-slate-500"),
-                        cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-                    cls="flex justify-center bg-slate-700/50 rounded p-2"),
+                t_photo_div,
                 _cn("t", target_idx, len(tf), neighbor_idx),
                 cls="flex-1 min-w-0"),
             Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
@@ -7934,12 +8032,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                 A(n_name, href=f"/?section={n_section}&current={neighbor_id}",
                   cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
                   **{"_": "on click add .hidden to #compare-modal"}),
-                Div(
-                    Img(src=n_display_url or "", alt=n_name,
-                        cls=f"max-w-full {img_h} object-contain rounded") if n_display_url else Div(
-                        Span("?", cls="text-6xl text-slate-500"),
-                        cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-                    cls="flex justify-center bg-slate-700/50 rounded p-2"),
+                n_photo_div,
                 _cn("n", neighbor_idx, len(nf), target_idx),
                 cls="flex-1 min-w-0"),
             cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start"),

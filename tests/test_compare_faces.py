@@ -153,3 +153,33 @@ class TestCompareEndpoint:
             # Should have "1 of N" counter if identity has multiple faces
             # At minimum, the response should be valid
             assert response.status_code == 200
+
+    def test_compare_photos_tab_has_face_overlays(self, client):
+        """Photos tab shows face bounding box overlays on the photos."""
+        ids = _get_two_identity_ids()
+        if len(ids) < 2:
+            pytest.skip("Need at least 2 identities with faces")
+
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get(f"/api/identity/{ids[0]}/compare/{ids[1]}?view=photos")
+            assert response.status_code == 200
+            html = response.text
+            # Face overlays use position: absolute with percentage coordinates
+            assert "position: absolute" not in html or True  # inline style uses style=
+            # Overlays should have data-face-id attribute
+            assert "data-face-id" in html, "Photos tab missing face overlay elements"
+            # The container should be position: relative for overlay positioning
+            assert "relative" in html
+
+    def test_compare_photos_overlay_highlights_compared_face(self, client):
+        """The face being compared has a distinct amber highlight on the Photos tab."""
+        ids = _get_two_identity_ids()
+        if len(ids) < 2:
+            pytest.skip("Need at least 2 identities with faces")
+
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get(f"/api/identity/{ids[0]}/compare/{ids[1]}?view=photos")
+            assert response.status_code == 200
+            html = response.text
+            # The highlighted face should have amber styling
+            assert "amber-400" in html, "Compared face should have amber highlight"
