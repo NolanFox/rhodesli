@@ -131,8 +131,8 @@ class TestPhotoCompletionBadges:
 class TestOverlayTooltips:
     """Face overlays show name tooltips on hover."""
 
-    def test_overlay_has_hover_tooltip(self, client):
-        """Face overlays include a tooltip span that appears on group hover."""
+    def test_overlay_has_name_display(self, client):
+        """Face overlays include name display — hover tooltip or always-visible label."""
         from app.main import load_embeddings_for_photos
         photos = load_embeddings_for_photos()
         if not photos:
@@ -141,5 +141,97 @@ class TestOverlayTooltips:
         response = client.get(f"/photo/{photo_id}/partial")
         assert response.status_code == 200
         text = response.text
-        assert "group-hover:opacity-100" in text, "Tooltip should appear on group hover"
-        assert "pointer-events-none" in text, "Tooltip should not intercept clicks"
+        # Confirmed faces have always-visible labels, others have hover tooltips
+        has_hover = "group-hover:opacity-100" in text
+        has_label = "bg-black/70" in text  # Always-visible name label
+        assert has_hover or has_label, "Overlay should have name display (hover or always-visible)"
+        assert "pointer-events-none" in text, "Name display should not intercept clicks"
+
+
+class TestFaceOverlayLegend:
+    """Photo view includes a legend explaining face overlay colors."""
+
+    def test_overlay_legend_present(self, client):
+        """Photo view has a legend showing Identified / Needs Help / New."""
+        from app.main import load_embeddings_for_photos
+        photos = load_embeddings_for_photos()
+        if not photos:
+            pytest.skip("No embeddings available for testing")
+        photo_id = next(iter(photos.keys()))
+        response = client.get(f"/photo/{photo_id}/partial")
+        assert response.status_code == 200
+        text = response.text
+        if "face-overlay" in text:  # Only check if there are face overlays
+            assert "Identified" in text, "Legend should explain green = Identified"
+            assert "Needs Help" in text, "Legend should explain amber = Needs Help"
+
+
+class TestMLSuggestionsRedesign:
+    """ML suggestions use visual confidence indicators instead of technical metrics."""
+
+    def test_skip_hints_returns_confidence_tiers(self, client):
+        """Skip hints use confidence tier labels (Very High/High/Moderate/Low)."""
+        # Find a skipped identity with hints
+        from app.main import load_registry
+        try:
+            registry = load_registry()
+        except Exception:
+            pytest.skip("No registry available")
+
+        skipped = [
+            iid for iid, ident in registry._identities.items()
+            if ident.get("state") == "SKIPPED" and not ident.get("merged_into")
+        ]
+        if not skipped:
+            pytest.skip("No SKIPPED identities to test hints")
+
+        response = client.get(f"/api/identity/{skipped[0]}/skip-hints")
+        assert response.status_code == 200
+        text = response.text
+        if "No similar" not in text:
+            # Should have confidence labels, not raw distances
+            has_confidence = any(label in text for label in
+                                ["Very High", "High", "Moderate", "Low"])
+            assert has_confidence, "Hints should use confidence tier labels"
+            assert "AI suggestions" in text, "Section should be labeled 'AI suggestions'"
+
+    def test_skip_hints_have_compare_button(self, client):
+        """Skip hints include a Compare button for each suggestion."""
+        from app.main import load_registry
+        try:
+            registry = load_registry()
+        except Exception:
+            pytest.skip("No registry available")
+
+        skipped = [
+            iid for iid, ident in registry._identities.items()
+            if ident.get("state") == "SKIPPED" and not ident.get("merged_into")
+        ]
+        if not skipped:
+            pytest.skip("No SKIPPED identities")
+
+        response = client.get(f"/api/identity/{skipped[0]}/skip-hints")
+        text = response.text
+        if "No similar" not in text and "AI suggestions" in text:
+            assert "Compare" in text, "Each suggestion should have a Compare button"
+
+    def test_skip_hints_no_raw_distance(self, client):
+        """Skip hints should NOT show raw distance values to users."""
+        from app.main import load_registry
+        try:
+            registry = load_registry()
+        except Exception:
+            pytest.skip("No registry available")
+
+        skipped = [
+            iid for iid, ident in registry._identities.items()
+            if ident.get("state") == "SKIPPED" and not ident.get("merged_into")
+        ]
+        if not skipped:
+            pytest.skip("No SKIPPED identities")
+
+        response = client.get(f"/api/identity/{skipped[0]}/skip-hints")
+        text = response.text
+        if "AI suggestions" in text:
+            assert "dist " not in text, "Raw distance should not be shown"
+            assert "gap)" not in text, "Gap percentage should not be shown"

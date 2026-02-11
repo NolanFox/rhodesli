@@ -6317,12 +6317,25 @@ def photo_view_content(
                         "opacity-0 group-hover:opacity-100 transition-opacity z-10",
                 )
 
-            overlay = Div(
-                # Tooltip on hover
-                Span(
+            # Name label: always visible for confirmed, hover for others
+            if state == "CONFIRMED":
+                # Always-visible name label below the face box
+                name_label = Span(
+                    display_name,
+                    cls="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[11px] px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[150%] truncate"
+                )
+                hover_tooltip = None
+            else:
+                # Hover tooltip for non-confirmed
+                name_label = None
+                hover_tooltip = Span(
                     display_name,
                     cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
-                ),
+                )
+
+            overlay = Div(
+                hover_tooltip,
+                name_label,
                 status_badge,
                 quick_actions,
                 tag_dropdown,
@@ -6408,6 +6421,16 @@ def photo_view_content(
                 cls="max-w-full h-auto"
             ),
             *face_overlays,
+            # Face overlay legend
+            Div(
+                Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-emerald-500 mr-0.5"),
+                Span("Identified", cls="text-slate-400 mr-2"),
+                Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-amber-500 mr-0.5"),
+                Span("Needs Help", cls="text-slate-400 mr-2"),
+                Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-slate-400 mr-0.5"),
+                Span("New", cls="text-slate-400"),
+                cls="absolute bottom-1 right-1 bg-black/60 rounded px-2 py-0.5 flex items-center gap-0.5 text-[10px]",
+            ) if face_overlays else None,
             nav_prev,
             nav_next,
             cls="relative inline-block max-w-full"
@@ -6672,24 +6695,84 @@ def get(identity_id: str):
     if not neighbors:
         return Span("No similar identities found.", cls="text-xs text-slate-500 italic")
 
-    # Build hint text: "Might be: Leon Capeluto (dist 0.82), Betty Capeluto (dist 0.95)"
-    hints = []
+    # Map distance to confidence tier for visual display
+    def _confidence_tier(dist):
+        if dist < 0.80:
+            return ("Very High", "bg-emerald-500", 5)
+        elif dist < 1.05:
+            return ("High", "bg-green-500", 4)
+        elif dist < 1.15:
+            return ("Moderate", "bg-amber-500", 3)
+        elif dist < 1.25:
+            return ("Low", "bg-orange-500", 2)
+        else:
+            return ("Very Low", "bg-red-500", 1)
+
+    # Build suggestion cards with visual confidence and action buttons
+    crop_files = get_crop_files()
+    suggestion_items = []
     for n in neighbors:
         name = ensure_utf8_display(n.get("name", "Unknown"))
         dist = n.get("distance", 0)
-        gap = n.get("confidence_gap", 0)
-        gap_text = f", +{gap}% gap" if gap > 0 else ""
-        hints.append(Span(
-            f"{name} ",
-            Span(f"(dist {dist:.2f}{gap_text})", cls="text-slate-500"),
-            cls="text-amber-300/80",
+        neighbor_id = n.get("identity_id", "")
+        tier_label, tier_color, tier_dots = _confidence_tier(dist)
+
+        # Face thumbnail
+        preview_face = n.get("preview_face_id") or n.get("anchor_ids", [""])[0] if isinstance(n.get("anchor_ids", [None])[0], str) else ""
+        if not preview_face and n.get("anchor_ids"):
+            aids = n.get("anchor_ids", [])
+            if aids:
+                preview_face = aids[0] if isinstance(aids[0], str) else aids[0].get("face_id", "")
+        face_url = resolve_face_image_url(preview_face, crop_files) if preview_face else None
+        thumb = Img(src=face_url, cls="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-slate-600") if face_url else Div(cls="w-10 h-10 rounded-full bg-slate-600 flex-shrink-0")
+
+        # Confidence dots (filled vs empty)
+        dots = Span(
+            *[Span(cls=f"inline-block w-1.5 h-1.5 rounded-full {'bg-current' if i < tier_dots else 'bg-slate-600'}")
+              for i in range(5)],
+            cls=f"flex gap-0.5 items-center {tier_color.replace('bg-', 'text-')}",
+        )
+
+        # State badge for named vs unidentified
+        is_named = not name.startswith("Unidentified Person")
+        name_cls = "text-sm text-white font-medium truncate" if is_named else "text-sm text-slate-300 truncate"
+
+        # Action buttons
+        compare_btn = Button(
+            "Compare",
+            cls="text-[10px] px-2 py-0.5 bg-slate-600 hover:bg-slate-500 text-slate-300 rounded transition-colors",
+            hx_get=f"/api/identity/{identity_id}/compare/{neighbor_id}",
+            hx_target=f"#neighbors-{identity_id}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+        merge_btn = Button(
+            "Merge",
+            cls="text-[10px] px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors",
+            hx_post=f"/api/identity/{neighbor_id}/merge/{identity_id}",
+            hx_target="#focus-container",
+            hx_swap="outerHTML",
+            type="button",
+        ) if tier_dots >= 3 else None  # Only show merge for Moderate+ confidence
+
+        suggestion_items.append(Div(
+            thumb,
+            Div(
+                Span(name, cls=name_cls),
+                Div(dots, Span(tier_label, cls=f"text-[10px] {tier_color.replace('bg-', 'text-')}"), cls="flex items-center gap-1.5"),
+                cls="flex-1 min-w-0 flex flex-col",
+            ),
+            Div(compare_btn, merge_btn, cls="flex gap-1 flex-shrink-0"),
+            cls="flex items-center gap-2 p-2 rounded hover:bg-slate-700/50 transition-colors",
         ))
 
     return Div(
-        Span("Might be: ", cls="text-xs text-slate-400 font-medium"),
-        *[Span(h, Span(" · ", cls="text-slate-600") if i < len(hints) - 1 else None)
-          for i, h in enumerate(hints)],
-        cls="text-xs flex flex-wrap items-center gap-1",
+        Div(
+            Span("AI suggestions", cls="text-xs text-slate-400 font-medium"),
+            cls="mb-1",
+        ),
+        *suggestion_items,
+        cls="mt-2 bg-slate-800/50 rounded-lg border border-slate-700/50 p-1",
     )
 
 
