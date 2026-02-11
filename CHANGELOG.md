@@ -16,7 +16,8 @@ All notable changes to this project will be documented in this file.
 - **Face overlay visual language**: Confirmed faces get always-visible name labels. Color-coded overlay legend (Identified=green, Needs Help=indigo, New=dashed).
 - **Decision provenance rule**: `.claude/rules/decision-provenance.md` — behavior changes require documented decisions.
 - **Feature completeness rule**: `.claude/rules/feature-completeness.md` — features must handle all states, entry points, and navigation context.
-- 29 new tests (10 surname variants, 10 all-states search, 6 metadata form, 3 ML suggestions), test count: 1438 → 1467.
+- **Upload safety checks**: File size limits (50 MB/file, 500 MB/batch), batch limit (50 files), server-side file type validation. Cleanup on failure.
+- 35 new tests (10 surname variants, 10 all-states search, 6 metadata form, 3 ML suggestions, 6 upload safety), test count: 1438 → 1473.
 
 ## [v0.23.0] - 2026-02-11
 

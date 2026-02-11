@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.24.0 · 1467 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
+Current: v0.24.0 · 1473 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -122,7 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
-- [x] 2026-02-11: v0.24.0 — Community Readiness: search finds all identity states, surname variant matching (13 groups), face tag URL encoding + auto-confirm, metadata edit UI, ML suggestions visual redesign, face overlay name labels + legend, decision-provenance + feature-completeness harness rules (1467 tests)
+- [x] 2026-02-11: v0.24.0 — Community Readiness: search finds all identity states, surname variant matching (13 groups), face tag URL encoding + auto-confirm, metadata edit UI, ML suggestions visual redesign, face overlay name labels + legend, upload safety checks, decision-provenance + feature-completeness harness rules (1473 tests)
 - [x] 2026-02-11: v0.23.0 — Navigation Hardening + ML Pipeline Scaffold: triage filter propagation through action chain, photo nav boundaries, grammar pluralization, rhodesli_ml/ package with 26 files (signal harvester, date labeler, audit reports), 1438 tests
 - [x] 2026-02-11: v0.22.1 — Filter Consistency + Promotion Context: match mode respects triage filters, Up Next preserves filter in navigation, promotion banners show specific group context, 15 new tests (1415 tests)
 - [x] 2026-02-11: v0.22.0 — Global Reclustering + Inbox Triage: SKIPPED faces participate in clustering, promotion tracking (new_face_match/group_discovery/confirmed_match), triage bar with filter links, promotion badges/banners in Focus/Browse, priority-sorted Focus mode, 31 new tests (1400 tests)
