@@ -1645,21 +1645,22 @@ class IdentityRegistry:
         query: str,
         limit: int = 10,
         exclude_id: str = None,
+        states: list[str] | None = None,
     ) -> list[dict]:
         """
-        Search for identities by name.
+        Search for identities by name across all states.
 
-        Used for manual search in the neighbors sidebar, allowing users to find
-        and merge identities that the algorithm may have split incorrectly.
+        Used for sidebar search, face tagging, and merge search.
 
         Args:
             query: Search string (case-insensitive substring match)
             limit: Maximum results to return (default 10)
             exclude_id: Identity ID to exclude (e.g., the currently viewed identity)
+            states: Optional list of states to include. None = all non-merged states.
 
         Returns:
-            List of lightweight summaries: {identity_id, name, face_count, preview_face_id}
-            Only returns CONFIRMED identities that are not merged.
+            List of lightweight summaries: {identity_id, name, face_count,
+            preview_face_id, state}. Ranked: CONFIRMED first, then by name.
         """
         # Empty or whitespace query returns nothing
         query = query.strip() if query else ""
@@ -1670,13 +1671,21 @@ class IdentityRegistry:
         results = []
         fuzzy_candidates = []
 
+        # State priority for ranking (lower = higher priority)
+        _state_rank = {
+            "CONFIRMED": 0, "PROPOSED": 1, "INBOX": 2,
+            "SKIPPED": 3, "CONTESTED": 4, "REJECTED": 5,
+        }
+
         for identity in self._identities.values():
             # Skip merged identities
             if identity.get("merged_into"):
                 continue
 
-            # Only CONFIRMED identities
-            if identity["state"] != IdentityState.CONFIRMED.value:
+            identity_state = identity.get("state", "INBOX")
+
+            # Filter by requested states if specified
+            if states is not None and identity_state not in states:
                 continue
 
             # Skip excluded identity
@@ -1686,9 +1695,9 @@ class IdentityRegistry:
             name = identity.get("name") or ""
 
             # Build summary dict (shared between exact and fuzzy paths)
-            def _build_summary():
-                anchor_ids = identity.get("anchor_ids", [])
-                candidate_ids = identity.get("candidate_ids", [])
+            def _build_summary(ident=identity, n=name):
+                anchor_ids = ident.get("anchor_ids", [])
+                candidate_ids = ident.get("candidate_ids", [])
                 face_count = len(anchor_ids) + len(candidate_ids)
                 preview_face_id = None
                 for face_list in [anchor_ids, candidate_ids]:
@@ -1701,36 +1710,52 @@ class IdentityRegistry:
                         if preview_face_id:
                             break
                 return {
-                    "identity_id": identity["identity_id"],
-                    "name": name,
+                    "identity_id": ident["identity_id"],
+                    "name": n,
                     "face_count": face_count,
                     "preview_face_id": preview_face_id,
+                    "state": ident.get("state", "INBOX"),
                 }
 
-            # Case-insensitive substring match on name (exact match priority)
-            if query_lower in name.lower():
-                results.append(_build_summary())
-                if len(results) >= limit:
-                    break
+            # Also search aliases/alternate names
+            searchable_texts = [name.lower()]
+            for alias in identity.get("aliases", []):
+                if isinstance(alias, str):
+                    searchable_texts.append(alias.lower())
+            for alias in identity.get("alternate_names", []):
+                if isinstance(alias, str):
+                    searchable_texts.append(alias.lower())
+
+            # Case-insensitive substring match (exact match priority)
+            matched = any(query_lower in text for text in searchable_texts)
+            if matched:
+                summary = _build_summary()
+                rank = _state_rank.get(identity_state, 9)
+                results.append((rank, name.lower(), summary))
             else:
                 # Track for fuzzy fallback
-                fuzzy_candidates.append((name, _build_summary))
+                fuzzy_candidates.append((name, identity_state, _build_summary))
+
+        # Sort by state rank, then name
+        results.sort(key=lambda x: (x[0], x[1]))
+        sorted_results = [r[2] for r in results[:limit]]
 
         # Fuzzy fallback: if exact match found nothing, try Levenshtein
-        if not results and fuzzy_candidates:
+        if not sorted_results and fuzzy_candidates:
             scored = []
-            for name, builder in fuzzy_candidates:
+            for name, id_state, builder in fuzzy_candidates:
                 # Check each word in the name against the query
                 for word in name.lower().split():
                     dist = _levenshtein(query_lower, word)
                     threshold = 2 if len(query_lower) <= 8 else 3
                     if dist <= threshold:
-                        scored.append((dist, builder()))
+                        rank = _state_rank.get(id_state, 9)
+                        scored.append((dist, rank, builder()))
                         break
-            scored.sort(key=lambda x: x[0])
-            results = [s[1] for s in scored[:limit]]
+            scored.sort(key=lambda x: (x[0], x[1]))
+            sorted_results = [s[2] for s in scored[:limit]]
 
-        return results
+        return sorted_results
 
 
     def add_note(self, identity_id: str, text: str, author: str = "") -> dict:

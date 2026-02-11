@@ -683,8 +683,8 @@ class TestSearchIdentities:
         assert len(results) == 1
         assert results[0]["identity_id"] == identity_id
 
-    def test_confirmed_only_filtering(self):
-        """Search should only return CONFIRMED identities."""
+    def test_all_states_search_default(self):
+        """Search returns all non-merged identities, CONFIRMED ranked first."""
         from core.registry import IdentityRegistry, IdentityState
 
         registry = IdentityRegistry()
@@ -697,14 +697,14 @@ class TestSearchIdentities:
         )
         registry.confirm_identity(confirmed_id, user_source="test")
 
-        # Create PROPOSED identity (should not appear)
+        # Create PROPOSED identity
         proposed_id = registry.create_identity(
             anchor_ids=["face_002"],
             name="Alice Proposed",
             user_source="test",
         )
 
-        # Create INBOX identity (should not appear)
+        # Create INBOX identity
         inbox_id = registry.create_identity(
             anchor_ids=["face_003"],
             name="Alice Inbox",
@@ -712,7 +712,7 @@ class TestSearchIdentities:
             state=IdentityState.INBOX,
         )
 
-        # Create REJECTED identity (should not appear)
+        # Create REJECTED identity
         rejected_id = registry.create_identity(
             anchor_ids=["face_004"],
             name="Alice Rejected",
@@ -721,7 +721,35 @@ class TestSearchIdentities:
         )
         registry.reject_identity(rejected_id, user_source="test")
 
+        # Default search finds all non-merged states
         results = registry.search_identities("Alice")
+        result_ids = [r["identity_id"] for r in results]
+        assert confirmed_id in result_ids
+        assert proposed_id in result_ids
+        assert inbox_id in result_ids
+        # CONFIRMED ranked first
+        assert results[0]["identity_id"] == confirmed_id
+
+    def test_states_filter_confirmed_only(self):
+        """Search with states filter returns only matching states."""
+        from core.registry import IdentityRegistry, IdentityState
+
+        registry = IdentityRegistry()
+
+        confirmed_id = registry.create_identity(
+            anchor_ids=["face_001"],
+            name="Alice Confirmed",
+            user_source="test",
+        )
+        registry.confirm_identity(confirmed_id, user_source="test")
+
+        proposed_id = registry.create_identity(
+            anchor_ids=["face_002"],
+            name="Alice Proposed",
+            user_source="test",
+        )
+
+        results = registry.search_identities("Alice", states=["CONFIRMED"])
         assert len(results) == 1
         assert results[0]["identity_id"] == confirmed_id
 

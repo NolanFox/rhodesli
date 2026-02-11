@@ -6732,7 +6732,7 @@ def get(q: str = ""):
         q: Search query (minimum 2 characters, case-insensitive partial match)
 
     Returns HTMX partial with matching identity results (limit 10).
-    Each result links to the confirmed section with the identity highlighted.
+    Each result links to the correct section based on identity state.
     """
     if len(q.strip()) < 2:
         return ""
@@ -6744,7 +6744,7 @@ def get(q: str = ""):
             P("Search unavailable.", cls="text-slate-400 italic text-sm p-2"),
         )
 
-    # Search confirmed identities by name
+    # Search all non-merged identities by name
     results = registry.search_identities(q)
     if not results:
         return Div(
@@ -6762,15 +6762,35 @@ def get(q: str = ""):
         # Highlight matched portion in name (case-insensitive)
         name_display = _highlight_match(name, query_stripped)
 
+        # Route to correct section based on identity state
+        section = _section_for_state(r.get("state", "INBOX"))
+
+        # State badge for non-confirmed results
+        state = r.get("state", "INBOX")
+        state_indicator = None
+        if state != "CONFIRMED":
+            state_colors = {
+                "PROPOSED": "bg-indigo-500/20 text-indigo-300",
+                "INBOX": "bg-slate-500/20 text-slate-300",
+                "SKIPPED": "bg-amber-500/20 text-amber-300",
+            }
+            badge_cls = state_colors.get(state, "bg-slate-500/20 text-slate-300")
+            state_label = "Needs Help" if state == "SKIPPED" else state.title()
+            state_indicator = Span(state_label, cls=f"text-[10px] px-1.5 py-0.5 rounded {badge_cls}")
+
         items.append(
             A(
                 thumb,
                 Div(
-                    Span(name_display, cls="text-sm text-slate-200 truncate"),
-                    Span(f"{r['face_count']} faces", cls="text-xs text-slate-500"),
+                    Div(
+                        Span(name_display, cls="text-sm text-slate-200 truncate"),
+                        state_indicator,
+                        cls="flex items-center gap-1.5"
+                    ),
+                    Span(f"{r['face_count']} {'face' if r['face_count'] == 1 else 'faces'}", cls="text-xs text-slate-500"),
                     cls="flex flex-col min-w-0"
                 ),
-                href=f"/?section=confirmed#identity-{r['identity_id']}",
+                href=f"/?section={section}#identity-{r['identity_id']}",
                 cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer"
             )
         )

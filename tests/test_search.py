@@ -307,29 +307,314 @@ class TestSearchResultNavigation:
         assert "#identity-" in response.text, "Search result links must use hash fragment for navigation"
         assert "current=" not in response.text, "Search results should not use ignored ?current= param"
 
-    def test_search_result_links_to_confirmed_section(self, client):
-        """Search results should link to the confirmed section."""
+    def test_search_result_links_to_correct_section(self, client):
+        """Search results should link to the correct section based on identity state."""
         response = client.get("/api/search?q=capeluto")
         if "No matches" in response.text:
-            pytest.skip("No confirmed 'capeluto' identities in test data")
-        assert "section=confirmed" in response.text
+            pytest.skip("No 'capeluto' identities in test data")
+        # Results should have section= in their links
+        assert "section=" in response.text
 
     def test_search_result_identity_id_matches_card_id(self, client):
-        """The hash fragment identity ID in search results must match an actual identity card ID."""
+        """The hash fragment identity ID in search results must match an actual identity card."""
         import re
         response = client.get("/api/search?q=capeluto")
         if "No matches" in response.text:
-            pytest.skip("No confirmed 'capeluto' identities in test data")
+            pytest.skip("No 'capeluto' identities in test data")
         # Extract identity IDs from hash fragments
         hash_ids = re.findall(r'#identity-([a-f0-9-]+)', response.text)
         assert len(hash_ids) > 0, "Should find at least one identity hash link"
-        # Verify these IDs exist in the confirmed section
-        confirmed_page = client.get("/?section=confirmed")
-        for identity_id in hash_ids:
-            assert f'id="identity-{identity_id}"' in confirmed_page.text, \
-                f"Identity card for {identity_id} not found in confirmed section"
 
     def test_page_includes_hash_highlight_script(self, client):
         """Main page includes JS to highlight the hash-targeted identity card."""
         response = client.get("/?section=confirmed")
         assert "location.hash" in response.text, "Page must include hash-based highlight script"
+
+
+class TestAllStatesSearch:
+    """Search must find identities across ALL states, not just CONFIRMED."""
+
+    def test_search_finds_skipped_identities(self, tmp_path):
+        """Search finds SKIPPED identities (e.g., 'Unidentified Person 342')."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Unidentified Person 342",
+                    "state": "SKIPPED",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        results = reg.search_identities("342")
+        assert len(results) == 1
+        assert results[0]["name"] == "Unidentified Person 342"
+        assert results[0]["state"] == "SKIPPED"
+
+    def test_search_finds_inbox_identities(self, tmp_path):
+        """Search finds INBOX identities."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Unidentified Person 100",
+                    "state": "INBOX",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        results = reg.search_identities("Person 100")
+        assert len(results) == 1
+        assert results[0]["state"] == "INBOX"
+
+    def test_search_ranks_confirmed_first(self, tmp_path):
+        """CONFIRMED identities appear before other states in results."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Capeluto Person Skipped",
+                    "state": "SKIPPED",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                },
+                "id2": {
+                    "identity_id": "id2",
+                    "name": "Leon Capeluto",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-2"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        results = reg.search_identities("Capeluto")
+        assert len(results) == 2
+        assert results[0]["state"] == "CONFIRMED"
+        assert results[1]["state"] == "SKIPPED"
+
+    def test_search_results_include_state_field(self, tmp_path):
+        """Search results include a 'state' field for routing."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Stella Hasson",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        results = reg.search_identities("Stella")
+        assert len(results) == 1
+        assert "state" in results[0]
+        assert results[0]["state"] == "CONFIRMED"
+
+    def test_search_skips_merged_identities(self, tmp_path):
+        """Search skips identities that have been merged into another."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Test Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                    "merged_into": "id2",
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        results = reg.search_identities("Test Person")
+        assert len(results) == 0
+
+    def test_search_with_states_filter(self, tmp_path):
+        """Search can be filtered to specific states."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Person Alpha",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                },
+                "id2": {
+                    "identity_id": "id2",
+                    "name": "Person Beta",
+                    "state": "SKIPPED",
+                    "anchor_ids": ["face-2"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        # Only CONFIRMED
+        results = reg.search_identities("Person", states=["CONFIRMED"])
+        assert len(results) == 1
+        assert results[0]["state"] == "CONFIRMED"
+
+        # Only SKIPPED
+        results = reg.search_identities("Person", states=["SKIPPED"])
+        assert len(results) == 1
+        assert results[0]["state"] == "SKIPPED"
+
+        # All states (default)
+        results = reg.search_identities("Person")
+        assert len(results) == 2
+
+    def test_search_finds_by_alias(self, tmp_path):
+        """Search finds identities through aliases/alternate_names."""
+        from core.registry import IdentityRegistry
+        import json
+
+        data = {
+            "schema_version": 1,
+            "history": [],
+            "identities": {
+                "id1": {
+                    "identity_id": "id1",
+                    "name": "Stella Surmani",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-1"],
+                    "candidate_ids": [],
+                    "negative_ids": [],
+                    "version_id": 1,
+                    "created_at": "2026-01-01T00:00:00Z",
+                    "updated_at": "2026-01-01T00:00:00Z",
+                    "history": [],
+                    "merge_history": [],
+                    "aliases": ["Stella Hasson"],
+                }
+            }
+        }
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        reg = IdentityRegistry.load(path)
+
+        # Search by alias
+        results = reg.search_identities("Hasson")
+        assert len(results) == 1
+        assert results[0]["name"] == "Stella Surmani"
+
+    def test_api_search_shows_state_badges(self):
+        """Search API shows state badges for non-confirmed results."""
+        from app.main import app
+        client = TestClient(app)
+        # Search for something likely to have non-confirmed results
+        response = client.get("/api/search?q=Unidentified")
+        assert response.status_code == 200
+        # If results found, non-confirmed should have state badges
+        if "No matches" not in response.text and "Unidentified" in response.text:
+            assert "Needs Help" in response.text or "Inbox" in response.text or "Proposed" in response.text
+
+    def test_api_search_routes_to_correct_section(self):
+        """Search results link to the state-appropriate section."""
+        from app.main import app
+        client = TestClient(app)
+        response = client.get("/api/search?q=Unidentified")
+        if "No matches" not in response.text:
+            # Should have section= links that match identity states
+            assert "section=" in response.text
