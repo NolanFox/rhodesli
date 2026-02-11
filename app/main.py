@@ -1696,10 +1696,13 @@ def _proposal_badge_inline(identity_id: str):
     )
 
 
-def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = True) -> Div:
+def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = True, triage_filter: str = "") -> Div:
     """
     Expanded identity card for Focus Mode review.
     Shows larger thumbnail and prominent actions (admin only).
+
+    Args:
+        triage_filter: Active triage filter to preserve in action URLs
     """
     identity_id = identity["identity_id"]
     raw_name = ensure_utf8_display(identity.get("name"))
@@ -1759,9 +1762,10 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
     if is_admin:
         base_confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
         base_reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
-        confirm_url = f"{base_confirm_url}?from_focus=true"
-        reject_url = f"{base_reject_url}?from_focus=true"
-        skip_url = f"/identity/{identity_id}/skip?from_focus=true"
+        _filter_suffix = f"&filter={triage_filter}" if triage_filter else ""
+        confirm_url = f"{base_confirm_url}?from_focus=true{_filter_suffix}"
+        reject_url = f"{base_reject_url}?from_focus=true{_filter_suffix}"
+        skip_url = f"/identity/{identity_id}/skip?from_focus=true{_filter_suffix}"
 
         actions = Div(
             Button(
@@ -2101,7 +2105,7 @@ def render_to_review_section(
             # in the page layout — no per-swap re-registration needed.
             content = Div(
                 banner,
-                identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin),
+                identity_card_expanded(high_confidence[0], crop_files, is_admin=is_admin, triage_filter=triage_filter),
                 up_next,
                 id="focus-container"
             )
@@ -2804,12 +2808,16 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     )
 
 
-def get_next_focus_card(exclude_id: str = None):
+def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
     """
     Get the next identity card for focus mode review.
 
     Returns an expanded identity card + Up Next carousel for the top priority items,
     or an empty state if no items remain.
+
+    Args:
+        exclude_id: Identity ID to exclude (just-actioned item)
+        triage_filter: Active triage filter to preserve through navigation
 
     IMPORTANT: This must use the same sorting as render_to_review_section to ensure
     the "Up Next" queue matches what appears after an action.
@@ -2826,25 +2834,50 @@ def get_next_focus_card(exclude_id: str = None):
     if exclude_id:
         to_review = [i for i in to_review if i["identity_id"] != exclude_id]
 
-    # Sort by priority: PRIMARY = face count (desc), SECONDARY = created_at (desc, for tie-breaking)
-    # This matches the sorting in render_to_review_section which receives to_review pre-sorted by created_at
-    # and then applies a stable sort by face count.
-    to_review.sort(key=lambda x: x.get("created_at", ""), reverse=True)  # Secondary: by date
-    to_review.sort(
-        key=lambda x: len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
-        reverse=True
-    )  # Primary: by face count (stable sort preserves date order for ties)
+    # Apply triage filter if set (must match render_to_review_section logic)
+    if triage_filter in ("ready", "rediscovered", "unmatched"):
+        to_review = [i for i in to_review if _triage_category(i) == triage_filter]
 
-    high_confidence = to_review[:10]
+    # Sort by actionability priority (matches render_to_review_section's _focus_sort_key)
+    ids_with_proposals = _get_identities_with_proposals()
+
+    def _focus_sort_key(x):
+        iid = x.get("identity_id", "")
+        has_proposal = iid in ids_with_proposals
+        best = _get_best_proposal_for_identity(iid) if has_proposal else None
+        has_promotion = x.get("promoted_from") is not None
+        promotion_reason = x.get("promotion_reason", "")
+
+        if has_promotion and promotion_reason == "confirmed_match":
+            tier = 0
+        elif has_proposal and best and best.get("confidence") == "VERY HIGH":
+            tier = 1
+        elif has_promotion:
+            tier = 2
+        elif has_proposal and best and best.get("confidence") == "HIGH":
+            tier = 3
+        elif has_proposal:
+            tier = 4
+        else:
+            tier = 5
+
+        return (
+            tier,
+            best["distance"] if best else 999,
+            -len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
+        )
+
+    high_confidence = sorted(to_review, key=_focus_sort_key)[:10]
 
     if high_confidence:
+        user_is_admin = True  # get_next_focus_card is only called from admin action routes
         # Build Up Next carousel
         up_next = None
         if len(high_confidence) > 1:
             up_next = Div(
                 H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                 Div(
-                    *[identity_card_mini(i, crop_files, clickable=True) for i in high_confidence[1:6]],
+                    *[identity_card_mini(i, crop_files, clickable=True, triage_filter=triage_filter) for i in high_confidence[1:6]],
                     Div(
                         f"+{len(high_confidence) - 6} more",
                         cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
@@ -2854,8 +2887,11 @@ def get_next_focus_card(exclude_id: str = None):
                 cls="mt-6"
             )
 
+        # Show promotion banner above the expanded card if applicable
+        banner = _promotion_banner(high_confidence[0])
         return Div(
-            identity_card_expanded(high_confidence[0], crop_files),
+            banner,
+            identity_card_expanded(high_confidence[0], crop_files, is_admin=user_is_admin, triage_filter=triage_filter),
             up_next,
             id="focus-container"
         )
@@ -5787,7 +5823,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
 
 
 @rt("/confirm/{identity_id}")
-def post(identity_id: str, from_focus: bool = False, sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
     """
     Confirm an identity (move from PROPOSED to CONFIRMED).
     Requires admin.
@@ -5829,7 +5865,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
     # If from focus mode, return the next focus card
     if from_focus:
         return (
-            get_next_focus_card(exclude_id=identity_id),
+            get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
             toast("Identity confirmed.", "success"),
         )
 
@@ -5845,7 +5881,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
 
 
 @rt("/reject/{identity_id}")
-def post(identity_id: str, from_focus: bool = False, sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
     """Contest/reject an identity (move to CONTESTED). Requires admin."""
     denied = _check_admin(sess)
     if denied:
@@ -5881,7 +5917,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
     # If from focus mode, return the next focus card
     if from_focus:
         return (
-            get_next_focus_card(exclude_id=identity_id),
+            get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
             toast("Identity contested.", "warning"),
         )
 
@@ -6292,7 +6328,7 @@ def photo_view_content(
     nav_counter = None
     nav_keyboard_script = None
 
-    if prev_id or next_id:
+    if prev_id or next_id or (nav_total > 0):
         # Build navigation buttons with data-action attributes for event delegation.
         # The global delegation handler (in the page layout) reads data-action,
         # data-nav-idx, and data-nav-url to dispatch navigation. This pattern
@@ -6325,6 +6361,21 @@ def photo_view_content(
                 data_action="photo-nav-next",
                 data_nav_idx=str(nav_idx + 1),
                 data_nav_url=next_url,
+            )
+        # Boundary indicators for first/last photo
+        if not prev_id and nav_total > 1:
+            nav_prev = Div(
+                Span("\u25C0", cls="text-xl opacity-30"),
+                cls="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 text-white/30 "
+                    "w-12 h-12 rounded-full flex items-center justify-center z-10 cursor-default",
+                title="First photo",
+            )
+        if not next_id and nav_total > 1:
+            nav_next = Div(
+                Span("\u25B6", cls="text-xl opacity-30"),
+                cls="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 text-white/30 "
+                    "w-12 h-12 rounded-full flex items-center justify-center z-10 cursor-default",
+                title="Last photo",
             )
         if nav_idx >= 0 and nav_total > 0:
             nav_counter = Span(
@@ -7280,7 +7331,7 @@ def toast_with_merge_undo(message: str, target_id: str) -> Div:
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
 def post(target_id: str, source_id: str, source: str = "web",
-         resolved_name: str = None, custom_name: str = None, from_focus: bool = False, sess=None):
+         resolved_name: str = None, custom_name: str = None, from_focus: bool = False, filter: str = "", sess=None):
     """
     Merge source identity into target identity. Requires admin.
 
@@ -7405,7 +7456,7 @@ def post(target_id: str, source_id: str, source: str = "web",
     # If from focus mode, advance to next identity instead of showing browse card
     if from_focus:
         return (
-            get_next_focus_card(exclude_id=actual_target_id),
+            get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter),
             merge_toast,
         )
 
@@ -9745,7 +9796,7 @@ def post(identity_id: str, sess=None):
 
 
 @rt("/inbox/{identity_id}/confirm")
-def post(identity_id: str, from_focus: bool = False, sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
     """Confirm identity from INBOX state (INBOX -> CONFIRMED). Requires admin."""
     denied = _check_admin(sess)
     if denied:
@@ -9781,7 +9832,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
     # If from focus mode, return the next focus card
     if from_focus:
         return (
-            get_next_focus_card(exclude_id=identity_id),
+            get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
             toast("Identity confirmed.", "success"),
         )
 
@@ -9796,7 +9847,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
 
 
 @rt("/inbox/{identity_id}/reject")
-def post(identity_id: str, from_focus: bool = False, sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
     """Reject identity from INBOX state (INBOX -> REJECTED). Requires admin."""
     denied = _check_admin(sess)
     if denied:
@@ -9832,7 +9883,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
     # If from focus mode, return the next focus card
     if from_focus:
         return (
-            get_next_focus_card(exclude_id=identity_id),
+            get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
             toast("Identity rejected.", "success"),
         )
 
@@ -9847,7 +9898,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
 
 
 @rt("/identity/{identity_id}/skip")
-def post(identity_id: str, from_focus: bool = False, sess=None):
+def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None):
     """
     Skip identity (defer for later review). Requires admin.
 
@@ -9887,7 +9938,7 @@ def post(identity_id: str, from_focus: bool = False, sess=None):
     # If from focus mode, return the next focus card
     if from_focus:
         return (
-            get_next_focus_card(exclude_id=identity_id),
+            get_next_focus_card(exclude_id=identity_id, triage_filter=filter),
             toast("Skipped for later.", "info"),
         )
 
