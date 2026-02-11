@@ -6262,6 +6262,606 @@
         "ingested_at": "2026-02-10T23:27:03.843578+00:00",
         "grouped_faces": 1
       }
+    },
+    "9b41ba49-7cde-4f76-bc43-341e320db6a9": {
+      "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "name": "Unidentified Person 336",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_39f3db6c1325"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:11.399075+00:00",
+      "updated_at": "2026-02-11T00:55:11.399075+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "findagrave-20260210",
+        "filename": "grave_isaac_capeluto_90588193_133774507166.jpg",
+        "ingested_at": "2026-02-11T00:55:11.399027+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "a2889099-2d75-42ee-93b4-81232b9f4e16": {
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "name": "Unidentified Person 337",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_5c6363fd8f94"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:24.013640+00:00",
+      "updated_at": "2026-02-11T00:55:24.013640+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Mathilda_Capelouto_Capouano_from_Naturalization_Doc.tiff",
+        "ingested_at": "2026-02-11T00:55:24.013593+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "ec55b4e8-ac3c-4209-a273-e96f7f85659c": {
+      "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
+      "name": "Unidentified Person 338",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_7ef78fea1635"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:27.209095+00:00",
+      "updated_at": "2026-02-11T00:55:27.209095+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Esther_Diana__Taranto__Capouano_decl_of_intention.jpeg",
+        "ingested_at": "2026-02-11T00:55:27.209056+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "3c205d8e-b1a0-4a76-b493-ecb7ff505424": {
+      "identity_id": "3c205d8e-b1a0-4a76-b493-ecb7ff505424",
+      "name": "Unidentified Person 339",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_edd3cd27dff2"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:30.384599+00:00",
+      "updated_at": "2026-02-11T00:55:30.384599+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Laura_Franco_immigration_document_photo.jpg",
+        "ingested_at": "2026-02-11T00:55:30.384564+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "c9e959bf-a75e-4f5a-bc31-bd95bfe09314": {
+      "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "name": "Unidentified Person 340",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_90ceb891cfb9"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:33.442605+00:00",
+      "updated_at": "2026-02-11T00:55:33.442605+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Felicita__Russo__Capelluto_-_Brazilian_immigration_card.jpg",
+        "ingested_at": "2026-02-11T00:55:33.442563+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60": {
+      "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
+      "name": "Unidentified Person 341",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8d1c3d11476c"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:36.565397+00:00",
+      "updated_at": "2026-02-11T00:55:36.565397+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Mose_Capelluto_-_Brazilian_immigration_card.jpg",
+        "ingested_at": "2026-02-11T00:55:36.565355+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "445d7d00-4bf8-43dd-b7b5-1505ed95e5e6": {
+      "identity_id": "445d7d00-4bf8-43dd-b7b5-1505ed95e5e6",
+      "name": "Unidentified Person 342",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_c597724ee513"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443219+00:00",
+      "updated_at": "2026-02-11T00:55:40.443219+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443181+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "05ef886c-3661-4e9d-8b79-b2475a869aea": {
+      "identity_id": "05ef886c-3661-4e9d-8b79-b2475a869aea",
+      "name": "Unidentified Person 343",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d31ba5aaf951"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443257+00:00",
+      "updated_at": "2026-02-11T00:55:40.443257+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443247+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "a7c6de6e-0a38-4e51-8277-672a6e0b7374": {
+      "identity_id": "a7c6de6e-0a38-4e51-8277-672a6e0b7374",
+      "name": "Unidentified Person 344",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_08a26952860e"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443289+00:00",
+      "updated_at": "2026-02-11T00:55:40.443289+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443274+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "db54653a-0325-442e-9ef5-943d9dcf5e77": {
+      "identity_id": "db54653a-0325-442e-9ef5-943d9dcf5e77",
+      "name": "Unidentified Person 345",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_33a5999ab758"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443316+00:00",
+      "updated_at": "2026-02-11T00:55:40.443316+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443307+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "11cd61ed-050e-4396-babe-5c4db414e9dd": {
+      "identity_id": "11cd61ed-050e-4396-babe-5c4db414e9dd",
+      "name": "Unidentified Person 346",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_2bca8f91dff5"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443339+00:00",
+      "updated_at": "2026-02-11T00:55:40.443339+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443331+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "e3be23d5-9d0a-480b-91cf-860934594aeb": {
+      "identity_id": "e3be23d5-9d0a-480b-91cf-860934594aeb",
+      "name": "Unidentified Person 347",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_45d40b9fd6ee"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443361+00:00",
+      "updated_at": "2026-02-11T00:55:40.443361+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443353+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "1dadd1b7-606e-4d5e-a821-9b05e23c9760": {
+      "identity_id": "1dadd1b7-606e-4d5e-a821-9b05e23c9760",
+      "name": "Unidentified Person 348",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f35bb1365452"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443383+00:00",
+      "updated_at": "2026-02-11T00:55:40.443383+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443375+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "c7e09fdb-87b9-44ef-8710-33399fc81a8b": {
+      "identity_id": "c7e09fdb-87b9-44ef-8710-33399fc81a8b",
+      "name": "Unidentified Person 349",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_8ef0575be1aa"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443405+00:00",
+      "updated_at": "2026-02-11T00:55:40.443405+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443397+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "860d51c1-0cdd-4b7a-806b-05e79c4c8026": {
+      "identity_id": "860d51c1-0cdd-4b7a-806b-05e79c4c8026",
+      "name": "Unidentified Person 350",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_399313b2427a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443426+00:00",
+      "updated_at": "2026-02-11T00:55:40.443426+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443418+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "f346611b-49d0-4c70-b7d8-79edd072cd43": {
+      "identity_id": "f346611b-49d0-4c70-b7d8-79edd072cd43",
+      "name": "Unidentified Person 351",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_49a655802062"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:40.443448+00:00",
+      "updated_at": "2026-02-11T00:55:40.443448+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Abraham_Rousso_family.jpg",
+        "ingested_at": "2026-02-11T00:55:40.443440+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "acefd033-e25a-4b1b-b66d-9f2c6b5731f3": {
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "name": "Unidentified Person 352",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_0eb1cb24b038"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:43.678816+00:00",
+      "updated_at": "2026-02-11T00:55:43.678816+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Rahamin_Capeluto_Declaration_Naturalization_w_Picture.jpg",
+        "ingested_at": "2026-02-11T00:55:43.678784+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "4f005632-a4e3-45d0-b60b-50a1adc99cb8": {
+      "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
+      "name": "Unidentified Person 353",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_db0e5c2aa97b"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:46.822922+00:00",
+      "updated_at": "2026-02-11T00:55:46.822922+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Marcos_Capelluto_immigration_card.jpeg",
+        "ingested_at": "2026-02-11T00:55:46.822886+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "c93e5c13-791d-4c1c-84f3-07b5d616ed31": {
+      "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
+      "name": "Unidentified Person 354",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_52cbbbe7f308"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:49.909239+00:00",
+      "updated_at": "2026-02-11T00:55:49.909239+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "abraham_almaleh_517958956_10172333855565346_6983007175757830190_n.jpg",
+        "ingested_at": "2026-02-11T00:55:49.909201+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa": {
+      "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "name": "Unidentified Person 355",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_cd8b7399da8b"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:53.050340+00:00",
+      "updated_at": "2026-02-11T00:55:53.050340+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Louis_Pizante___Rica_Mousafir.jpg",
+        "ingested_at": "2026-02-11T00:55:53.050299+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b": {
+      "identity_id": "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b",
+      "name": "Unidentified Person 356",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_3f047afeb6e4"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:53.050375+00:00",
+      "updated_at": "2026-02-11T00:55:53.050375+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Louis_Pizante___Rica_Mousafir.jpg",
+        "ingested_at": "2026-02-11T00:55:53.050366+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "1766ae6b-738e-4082-8c74-21f460ec1c66": {
+      "identity_id": "1766ae6b-738e-4082-8c74-21f460ec1c66",
+      "name": "Unidentified Person 357",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_f1e6110f0b21"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:56.189609+00:00",
+      "updated_at": "2026-02-11T00:55:56.189609+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Wedding_of_David_Capouano_and_Selma_Capouya.jpeg",
+        "ingested_at": "2026-02-11T00:55:56.189568+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "bc7f747d-c3a1-4df4-971e-5046a4192853": {
+      "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "name": "Unidentified Person 358",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_88ecd8c22c6d"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:56.189642+00:00",
+      "updated_at": "2026-02-11T00:55:56.189642+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "Wedding_of_David_Capouano_and_Selma_Capouya.jpeg",
+        "ingested_at": "2026-02-11T00:55:56.189632+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "e31718ca-2f73-4976-9181-e92a7c58ca37": {
+      "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "name": "Unidentified Person 359",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d7e5b9adb5b3"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:55:59.250843+00:00",
+      "updated_at": "2026-02-11T00:55:59.250843+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "ancestry-20260210",
+        "filename": "David_Raymond_Capouano_-_declaration_of_intention_.jpg",
+        "ingested_at": "2026-02-11T00:55:59.250803+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e": {
+      "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "name": "Unidentified Person 360",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_dd1b02478cbf"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:56:15.812327+00:00",
+      "updated_at": "2026-02-11T00:56:15.812327+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "facebook-20260210",
+        "filename": "rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n.jpg",
+        "ingested_at": "2026-02-11T00:56:15.812193+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "a5c9d5d1-5739-413a-a18e-cdd3111ad26e": {
+      "identity_id": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "name": "Unidentified Person 361",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_0082df7f4531"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:56:19.193263+00:00",
+      "updated_at": "2026-02-11T00:56:19.193263+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "facebook-20260210",
+        "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
+        "ingested_at": "2026-02-11T00:56:19.193213+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "1c1ecee7-b1ac-4358-a544-064980030728": {
+      "identity_id": "1c1ecee7-b1ac-4358-a544-064980030728",
+      "name": "Unidentified Person 362",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_1f520b11165b"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:56:19.193311+00:00",
+      "updated_at": "2026-02-11T00:56:19.193311+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "facebook-20260210",
+        "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
+        "ingested_at": "2026-02-11T00:56:19.193300+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "6f044a38-810e-4034-9a15-bc51fdc13d9b": {
+      "identity_id": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "name": "Unidentified Person 363",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_d6b5cab6c51f"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:56:19.193339+00:00",
+      "updated_at": "2026-02-11T00:56:19.193339+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "facebook-20260210",
+        "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
+        "ingested_at": "2026-02-11T00:56:19.193330+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "6a97c774-f66d-4edc-9e55-699d958336fd": {
+      "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "name": "Unidentified Person 364",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_53d1c16e5ed9"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:56:22.467345+00:00",
+      "updated_at": "2026-02-11T00:56:22.467345+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "facebook-20260210",
+        "filename": "mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n.jpg",
+        "ingested_at": "2026-02-11T00:56:22.467312+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "5e5fd083-aa46-40f2-878e-7d341204025d": {
+      "identity_id": "5e5fd083-aa46-40f2-878e-7d341204025d",
+      "name": "Unidentified Person 365",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_4c646b9ae7c3"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-11T00:56:25.648692+00:00",
+      "updated_at": "2026-02-11T00:56:25.648692+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "facebook-20260210",
+        "filename": "eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n.jpg",
+        "ingested_at": "2026-02-11T00:56:25.648653+00:00",
+        "grouped_faces": 1
+      }
     }
   },
   "history": [
@@ -20859,6 +21459,396 @@
       "action": "create",
       "face_ids": [
         "inbox_37feea05cf40"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "867a1c88-9aa9-4b6a-8ede-ddcb8c144440",
+      "timestamp": "2026-02-11T00:55:11.399096+00:00",
+      "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "action": "create",
+      "face_ids": [
+        "inbox_39f3db6c1325"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "a64cd9df-5f74-4e13-a460-18dee0de3157",
+      "timestamp": "2026-02-11T00:55:24.013661+00:00",
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "action": "create",
+      "face_ids": [
+        "inbox_5c6363fd8f94"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "224cf871-5796-4d14-b4e9-ae36cc34bd0d",
+      "timestamp": "2026-02-11T00:55:27.209127+00:00",
+      "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
+      "action": "create",
+      "face_ids": [
+        "inbox_7ef78fea1635"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "2373860d-bc4b-421e-90a7-cdeb2d8f7d24",
+      "timestamp": "2026-02-11T00:55:30.384618+00:00",
+      "identity_id": "3c205d8e-b1a0-4a76-b493-ecb7ff505424",
+      "action": "create",
+      "face_ids": [
+        "inbox_edd3cd27dff2"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "fea1843f-e8ac-42d5-ba01-27894e1d1881",
+      "timestamp": "2026-02-11T00:55:33.442626+00:00",
+      "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "action": "create",
+      "face_ids": [
+        "inbox_90ceb891cfb9"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "125c7a46-d547-42e6-a1e2-24722b05c82b",
+      "timestamp": "2026-02-11T00:55:36.565416+00:00",
+      "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
+      "action": "create",
+      "face_ids": [
+        "inbox_8d1c3d11476c"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "13a54772-3675-4309-86ad-138114f56066",
+      "timestamp": "2026-02-11T00:55:40.443239+00:00",
+      "identity_id": "445d7d00-4bf8-43dd-b7b5-1505ed95e5e6",
+      "action": "create",
+      "face_ids": [
+        "inbox_c597724ee513"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "6de795a6-dc54-499c-9fed-5ca8323f4570",
+      "timestamp": "2026-02-11T00:55:40.443269+00:00",
+      "identity_id": "05ef886c-3661-4e9d-8b79-b2475a869aea",
+      "action": "create",
+      "face_ids": [
+        "inbox_d31ba5aaf951"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "494d2d0d-9949-4be4-807f-ad13a73121b4",
+      "timestamp": "2026-02-11T00:55:40.443302+00:00",
+      "identity_id": "a7c6de6e-0a38-4e51-8277-672a6e0b7374",
+      "action": "create",
+      "face_ids": [
+        "inbox_08a26952860e"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "f583c181-6d9b-45fb-acf7-079fd4ee1743",
+      "timestamp": "2026-02-11T00:55:40.443326+00:00",
+      "identity_id": "db54653a-0325-442e-9ef5-943d9dcf5e77",
+      "action": "create",
+      "face_ids": [
+        "inbox_33a5999ab758"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "bf8e38a1-1606-4db9-b0d2-c86ae0f96816",
+      "timestamp": "2026-02-11T00:55:40.443348+00:00",
+      "identity_id": "11cd61ed-050e-4396-babe-5c4db414e9dd",
+      "action": "create",
+      "face_ids": [
+        "inbox_2bca8f91dff5"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "80881d65-dc8f-4d38-b5d1-6d5fd46d47cb",
+      "timestamp": "2026-02-11T00:55:40.443371+00:00",
+      "identity_id": "e3be23d5-9d0a-480b-91cf-860934594aeb",
+      "action": "create",
+      "face_ids": [
+        "inbox_45d40b9fd6ee"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "59edd245-bef9-4346-9289-705a992c3311",
+      "timestamp": "2026-02-11T00:55:40.443392+00:00",
+      "identity_id": "1dadd1b7-606e-4d5e-a821-9b05e23c9760",
+      "action": "create",
+      "face_ids": [
+        "inbox_f35bb1365452"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "1f524bad-2908-4ad1-a18e-a683cbf5d09d",
+      "timestamp": "2026-02-11T00:55:40.443414+00:00",
+      "identity_id": "c7e09fdb-87b9-44ef-8710-33399fc81a8b",
+      "action": "create",
+      "face_ids": [
+        "inbox_8ef0575be1aa"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "3bba5c39-f6b4-4401-88b5-fe9565afe445",
+      "timestamp": "2026-02-11T00:55:40.443435+00:00",
+      "identity_id": "860d51c1-0cdd-4b7a-806b-05e79c4c8026",
+      "action": "create",
+      "face_ids": [
+        "inbox_399313b2427a"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "bb594b28-9563-4364-b87c-5831fc014028",
+      "timestamp": "2026-02-11T00:55:40.443457+00:00",
+      "identity_id": "f346611b-49d0-4c70-b7d8-79edd072cd43",
+      "action": "create",
+      "face_ids": [
+        "inbox_49a655802062"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "8abce3a0-9323-4068-9c16-76ed9d5884bd",
+      "timestamp": "2026-02-11T00:55:43.678833+00:00",
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "action": "create",
+      "face_ids": [
+        "inbox_0eb1cb24b038"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "4e50a91e-d107-4a00-bbad-9df30be38ed4",
+      "timestamp": "2026-02-11T00:55:46.822940+00:00",
+      "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
+      "action": "create",
+      "face_ids": [
+        "inbox_db0e5c2aa97b"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "d86db4c8-08eb-41ce-8fb4-4717ccf9e739",
+      "timestamp": "2026-02-11T00:55:49.909264+00:00",
+      "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
+      "action": "create",
+      "face_ids": [
+        "inbox_52cbbbe7f308"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "29314c3b-0b73-4e09-82a6-fe18beae752c",
+      "timestamp": "2026-02-11T00:55:53.050359+00:00",
+      "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "action": "create",
+      "face_ids": [
+        "inbox_cd8b7399da8b"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "cf4fd4e7-1793-4947-a538-18156bc0f942",
+      "timestamp": "2026-02-11T00:55:53.050387+00:00",
+      "identity_id": "8b698c1c-5f2b-4116-9e56-8b3eb848aa5b",
+      "action": "create",
+      "face_ids": [
+        "inbox_3f047afeb6e4"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "a751fb76-bb82-41e4-9624-2b9757decd7a",
+      "timestamp": "2026-02-11T00:55:56.189626+00:00",
+      "identity_id": "1766ae6b-738e-4082-8c74-21f460ec1c66",
+      "action": "create",
+      "face_ids": [
+        "inbox_f1e6110f0b21"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "0f919dc4-5d37-4e38-8516-990160b8f95e",
+      "timestamp": "2026-02-11T00:55:56.189653+00:00",
+      "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "action": "create",
+      "face_ids": [
+        "inbox_88ecd8c22c6d"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "cce49cbd-7504-44a6-bbe1-df96b305b0f3",
+      "timestamp": "2026-02-11T00:55:59.250861+00:00",
+      "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "action": "create",
+      "face_ids": [
+        "inbox_d7e5b9adb5b3"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "707bce1f-84fe-4841-8e1a-df3c367286b8",
+      "timestamp": "2026-02-11T00:56:15.812362+00:00",
+      "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "action": "create",
+      "face_ids": [
+        "inbox_dd1b02478cbf"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "a2ce1ab5-44cc-4d0f-8182-936cd27392a4",
+      "timestamp": "2026-02-11T00:56:19.193292+00:00",
+      "identity_id": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "action": "create",
+      "face_ids": [
+        "inbox_0082df7f4531"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "a7317c1a-59f1-4890-bcf8-e25e312bd4e2",
+      "timestamp": "2026-02-11T00:56:19.193324+00:00",
+      "identity_id": "1c1ecee7-b1ac-4358-a544-064980030728",
+      "action": "create",
+      "face_ids": [
+        "inbox_1f520b11165b"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "e0dc0264-5fdb-41eb-b35d-d5cb40053db9",
+      "timestamp": "2026-02-11T00:56:19.193354+00:00",
+      "identity_id": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "action": "create",
+      "face_ids": [
+        "inbox_d6b5cab6c51f"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "49ae3e24-176c-4625-9ee3-75c56db09a33",
+      "timestamp": "2026-02-11T00:56:22.467362+00:00",
+      "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "action": "create",
+      "face_ids": [
+        "inbox_53d1c16e5ed9"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "75ceaa8f-b0fa-4bea-9545-e7cf1933e476",
+      "timestamp": "2026-02-11T00:56:25.648711+00:00",
+      "identity_id": "5e5fd083-aa46-40f2-878e-7d341204025d",
+      "action": "create",
+      "face_ids": [
+        "inbox_4c646b9ae7c3"
       ],
       "user_source": "inbox_ingest",
       "confidence_weight": 1.0,

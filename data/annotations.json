@@ -15,8 +15,8 @@
       "reviewed_by": "admin@test.com",
       "reviewed_at": "2026-02-10T01:00:00Z"
     },
-    "35275ed9-7885-4c05-b602-922c6df89280": {
-      "annotation_id": "35275ed9-7885-4c05-b602-922c6df89280",
+    "19d2bf12-37d2-4f90-9799-7f7e43cab677": {
+      "annotation_id": "19d2bf12-37d2-4f90-9799-7f7e43cab677",
       "type": "merge_suggestion",
       "target_type": "identity",
       "target_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
@@ -24,13 +24,13 @@
       "confidence": "likely",
       "reason": "",
       "submitted_by": "anonymous",
-      "submitted_at": "2026-02-10T23:30:13.500136+00:00",
+      "submitted_at": "2026-02-11T00:53:31.019405+00:00",
       "status": "pending",
       "reviewed_by": null,
       "reviewed_at": null
     },
-    "5c70bf7d-08f6-4042-ba93-a2d1082533be": {
-      "annotation_id": "5c70bf7d-08f6-4042-ba93-a2d1082533be",
+    "4dcd6c37-fc3f-437b-ba12-86165f12c76c": {
+      "annotation_id": "4dcd6c37-fc3f-437b-ba12-86165f12c76c",
       "type": "merge_suggestion",
       "target_type": "identity",
       "target_id": "target-123",
@@ -38,13 +38,13 @@
       "confidence": "likely",
       "reason": "They look similar",
       "submitted_by": "test@test.com",
-      "submitted_at": "2026-02-10T23:30:13.511547+00:00",
+      "submitted_at": "2026-02-11T00:53:31.028920+00:00",
       "status": "pending",
       "reviewed_by": null,
       "reviewed_at": null
     },
-    "6e64ddaa-3704-4a68-992e-7e4bf484bd81": {
-      "annotation_id": "6e64ddaa-3704-4a68-992e-7e4bf484bd81",
+    "d57b97bc-d782-425a-8c45-286d5f871930": {
+      "annotation_id": "d57b97bc-d782-425a-8c45-286d5f871930",
       "type": "merge_suggestion",
       "target_type": "identity",
       "target_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
@@ -52,13 +52,13 @@
       "confidence": "likely",
       "reason": "",
       "submitted_by": "test@test.com",
-      "submitted_at": "2026-02-10T23:30:14.837525+00:00",
+      "submitted_at": "2026-02-11T00:53:32.212012+00:00",
       "status": "pending",
       "reviewed_by": null,
       "reviewed_at": null
     },
-    "37c6b199-65f8-4bff-8952-0c9de185f921": {
-      "annotation_id": "37c6b199-65f8-4bff-8952-0c9de185f921",
+    "8d172980-5397-49f1-ac26-ac977ba22524": {
+      "annotation_id": "8d172980-5397-49f1-ac26-ac977ba22524",
       "type": "merge_suggestion",
       "target_type": "identity",
       "target_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
@@ -66,10 +66,10 @@
       "confidence": "likely",
       "reason": "",
       "submitted_by": "test@test.com",
-      "submitted_at": "2026-02-10T23:30:14.857176+00:00",
+      "submitted_at": "2026-02-11T00:53:32.226754+00:00",
       "status": "approved",
       "reviewed_by": "admin",
-      "reviewed_at": "2026-02-10T23:30:14.859509+00:00"
+      "reviewed_at": "2026-02-11T00:53:32.228921+00:00"
     }
   }
 }

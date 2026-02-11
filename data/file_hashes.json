@@ -290,6 +290,138 @@
       ],
       "job_id": "staged-20260210-182610",
       "filename": "596771481.064027.jpg"
+    },
+    "564d3b573aee509483f70af8215c9e62bacd7b45b7862942aaa2e8360ea74e48": {
+      "face_ids": [
+        "inbox_39f3db6c1325"
+      ],
+      "job_id": "findagrave-20260210",
+      "filename": "grave_isaac_capeluto_90588193_133774507166.jpg"
+    },
+    "3d992ad519d55ff429b381a4352bb8b61a7024f083dba4e3790284cc684fa156": {
+      "face_ids": [
+        "inbox_5c6363fd8f94"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Mathilda_Capelouto_Capouano_from_Naturalization_Doc.tiff"
+    },
+    "d48254cee2684a5cc3cf7f9c1f05a39d3beb295ee77b4dee86f1d436667b099b": {
+      "face_ids": [
+        "inbox_7ef78fea1635"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Esther_Diana__Taranto__Capouano_decl_of_intention.jpeg"
+    },
+    "ae591bd8e8159f510081253d0f382a8f87d79e5285d3e0a8bb9b3106b88c785b": {
+      "face_ids": [
+        "inbox_edd3cd27dff2"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Laura_Franco_immigration_document_photo.jpg"
+    },
+    "48bed0809e3f98f6315295fd116701e0ff91de7e2a9c261e0073592c440674f7": {
+      "face_ids": [
+        "inbox_90ceb891cfb9"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Felicita__Russo__Capelluto_-_Brazilian_immigration_card.jpg"
+    },
+    "fc476578c7c505a160f64059121335e095e3f3f26ef6456d7f5a6ff385a32f6a": {
+      "face_ids": [
+        "inbox_8d1c3d11476c"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Mose_Capelluto_-_Brazilian_immigration_card.jpg"
+    },
+    "7380cf6a7a5aabdaa6a6d9311f2c9cf0e65b06c02e3cede4b44f5f48115f9544": {
+      "face_ids": [
+        "inbox_c597724ee513",
+        "inbox_d31ba5aaf951",
+        "inbox_08a26952860e",
+        "inbox_33a5999ab758",
+        "inbox_2bca8f91dff5",
+        "inbox_45d40b9fd6ee",
+        "inbox_f35bb1365452",
+        "inbox_8ef0575be1aa",
+        "inbox_399313b2427a",
+        "inbox_49a655802062"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Abraham_Rousso_family.jpg"
+    },
+    "bc9fa2aaa7ace9fe88bcdc7af5ad22432b8d4f6ef435bd92425e1ba0680f48d7": {
+      "face_ids": [
+        "inbox_0eb1cb24b038"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Rahamin_Capeluto_Declaration_Naturalization_w_Picture.jpg"
+    },
+    "3019bbbe077e6e00f7b1a15174761f213bd5f8b73431f4d2bced8b7ee9ba3cc6": {
+      "face_ids": [
+        "inbox_db0e5c2aa97b"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Marcos_Capelluto_immigration_card.jpeg"
+    },
+    "aba78a097c1c498c6f11a32e01d2bafc9a73caf684bdfce267db1d912bfd522e": {
+      "face_ids": [
+        "inbox_52cbbbe7f308"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "abraham_almaleh_517958956_10172333855565346_6983007175757830190_n.jpg"
+    },
+    "9a4e626add35dbf34b9f538293584c247b05239d6a9a7e61695976a1fbc8bf9e": {
+      "face_ids": [
+        "inbox_cd8b7399da8b",
+        "inbox_3f047afeb6e4"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Louis_Pizante___Rica_Mousafir.jpg"
+    },
+    "771f93ea563555c8d40124b06a2ff1a1d94809c77f6073f8b34dd6aa26258cb7": {
+      "face_ids": [
+        "inbox_f1e6110f0b21",
+        "inbox_88ecd8c22c6d"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "Wedding_of_David_Capouano_and_Selma_Capouya.jpeg"
+    },
+    "2984161ab60ecbd98c75db8be19992a78f4e95294ad33a2063d777b3b2a9b3ce": {
+      "face_ids": [
+        "inbox_d7e5b9adb5b3"
+      ],
+      "job_id": "ancestry-20260210",
+      "filename": "David_Raymond_Capouano_-_declaration_of_intention_.jpg"
+    },
+    "149e007b583f92015bc74a692e284942c24a80bec014b8517b1c5464fa40507a": {
+      "face_ids": [
+        "inbox_dd1b02478cbf"
+      ],
+      "job_id": "facebook-20260210",
+      "filename": "rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n.jpg"
+    },
+    "be536a1398c58f2e997007d727d1e3579dab0bb42c17e5af163b02247f7e4adf": {
+      "face_ids": [
+        "inbox_0082df7f4531",
+        "inbox_1f520b11165b",
+        "inbox_d6b5cab6c51f"
+      ],
+      "job_id": "facebook-20260210",
+      "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg"
+    },
+    "3c4a4c983abaf43890cc8a2d35b86d87632d93acb73f2b0a788572ca2fdca88d": {
+      "face_ids": [
+        "inbox_53d1c16e5ed9"
+      ],
+      "job_id": "facebook-20260210",
+      "filename": "mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n.jpg"
+    },
+    "187a1bf53987f88ff0019da233497e4bfcaf779421117247ee9ce1097a59281b": {
+      "face_ids": [
+        "inbox_4c646b9ae7c3"
+      ],
+      "job_id": "facebook-20260210",
+      "filename": "eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n.jpg"
     }
   }
 }

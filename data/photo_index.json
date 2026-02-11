@@ -1811,6 +1811,208 @@
       "date_taken": "2019-11-29 20:51:21",
       "width": 2000,
       "height": 3000
+    },
+    "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166": {
+      "path": "raw_photos/pending/batch_findagrave/grave_isaac_capeluto_90588193_133774507166.jpg",
+      "face_ids": [
+        "inbox_39f3db6c1325"
+      ],
+      "source": "Find A Grave",
+      "collection": "Find A Grave",
+      "source_url": "",
+      "width": 640,
+      "height": 853,
+      "date_taken": "2012-05-22 02:29:17",
+      "camera": "OLYMPUS IMAGING CORP. SZ-10"
+    },
+    "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc": {
+      "path": "raw_photos/pending/batch_ancestry/Mathilda_Capelouto_Capouano_from_Naturalization_Doc.tiff",
+      "face_ids": [
+        "inbox_5c6363fd8f94"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 642,
+      "height": 476
+    },
+    "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention": {
+      "path": "raw_photos/pending/batch_ancestry/Esther_Diana__Taranto__Capouano_decl_of_intention.jpeg",
+      "face_ids": [
+        "inbox_7ef78fea1635"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 3660,
+      "height": 4428
+    },
+    "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo": {
+      "path": "raw_photos/pending/batch_ancestry/Laura_Franco_immigration_document_photo.jpg",
+      "face_ids": [
+        "inbox_edd3cd27dff2"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 720,
+      "height": 746
+    },
+    "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card": {
+      "path": "raw_photos/pending/batch_ancestry/Felicita__Russo__Capelluto_-_Brazilian_immigration_card.jpg",
+      "face_ids": [
+        "inbox_90ceb891cfb9"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 2373,
+      "height": 1434
+    },
+    "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card": {
+      "path": "raw_photos/pending/batch_ancestry/Mose_Capelluto_-_Brazilian_immigration_card.jpg",
+      "face_ids": [
+        "inbox_8d1c3d11476c"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 2317,
+      "height": 1432
+    },
+    "inbox_ancestry-20260210_5_Abraham_Rousso_family": {
+      "path": "raw_photos/pending/batch_ancestry/Abraham_Rousso_family.jpg",
+      "face_ids": [
+        "inbox_08a26952860e",
+        "inbox_2bca8f91dff5",
+        "inbox_33a5999ab758",
+        "inbox_399313b2427a",
+        "inbox_45d40b9fd6ee",
+        "inbox_49a655802062",
+        "inbox_8ef0575be1aa",
+        "inbox_c597724ee513",
+        "inbox_d31ba5aaf951",
+        "inbox_f35bb1365452"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 662,
+      "height": 893
+    },
+    "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture": {
+      "path": "raw_photos/pending/batch_ancestry/Rahamin_Capeluto_Declaration_Naturalization_w_Picture.jpg",
+      "face_ids": [
+        "inbox_0eb1cb24b038"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 3497,
+      "height": 2520
+    },
+    "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card": {
+      "path": "raw_photos/pending/batch_ancestry/Marcos_Capelluto_immigration_card.jpeg",
+      "face_ids": [
+        "inbox_db0e5c2aa97b"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 2561,
+      "height": 1732
+    },
+    "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n": {
+      "path": "raw_photos/pending/batch_ancestry/abraham_almaleh_517958956_10172333855565346_6983007175757830190_n.jpg",
+      "face_ids": [
+        "inbox_52cbbbe7f308"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 1275,
+      "height": 1255
+    },
+    "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir": {
+      "path": "raw_photos/pending/batch_ancestry/Louis_Pizante___Rica_Mousafir.jpg",
+      "face_ids": [
+        "inbox_3f047afeb6e4",
+        "inbox_cd8b7399da8b"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 363,
+      "height": 502
+    },
+    "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya": {
+      "path": "raw_photos/pending/batch_ancestry/Wedding_of_David_Capouano_and_Selma_Capouya.jpeg",
+      "face_ids": [
+        "inbox_88ecd8c22c6d",
+        "inbox_f1e6110f0b21"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 400,
+      "height": 400
+    },
+    "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_": {
+      "path": "raw_photos/pending/batch_ancestry/David_Raymond_Capouano_-_declaration_of_intention_.jpg",
+      "face_ids": [
+        "inbox_d7e5b9adb5b3"
+      ],
+      "source": "Ancestry",
+      "collection": "Family Tree",
+      "source_url": "",
+      "width": 1140,
+      "height": 1500
+    },
+    "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n": {
+      "path": "raw_photos/pending/batch_facebook/rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n.jpg",
+      "face_ids": [
+        "inbox_dd1b02478cbf"
+      ],
+      "source": "Facebook",
+      "collection": "Jews of Rhodes: Family Memories & Heritage",
+      "source_url": "",
+      "width": 639,
+      "height": 698
+    },
+    "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n": {
+      "path": "raw_photos/pending/batch_facebook/victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
+      "face_ids": [
+        "inbox_0082df7f4531",
+        "inbox_1f520b11165b",
+        "inbox_d6b5cab6c51f"
+      ],
+      "source": "Facebook",
+      "collection": "Jews of Rhodes: Family Memories & Heritage",
+      "source_url": "",
+      "width": 720,
+      "height": 960
+    },
+    "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n": {
+      "path": "raw_photos/pending/batch_facebook/mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n.jpg",
+      "face_ids": [
+        "inbox_53d1c16e5ed9"
+      ],
+      "source": "Facebook",
+      "collection": "Jews of Rhodes: Family Memories & Heritage",
+      "source_url": "",
+      "width": 1535,
+      "height": 2048
+    },
+    "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n": {
+      "path": "raw_photos/pending/batch_facebook/eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n.jpg",
+      "face_ids": [
+        "inbox_4c646b9ae7c3"
+      ],
+      "source": "Facebook",
+      "collection": "Jews of Rhodes: Family Memories & Heritage",
+      "source_url": "",
+      "width": 1567,
+      "height": 2048
     }
   },
   "face_to_photo": {
@@ -2233,6 +2435,36 @@
     "inbox_0b5fd3625bbe": "inbox_staged-20260210-182610_12_Image_567",
     "inbox_ac1d0ecf8a8d": "inbox_staged-20260210-182610_13_596771481.064027",
     "inbox_25087d5a153c": "inbox_staged-20260210-182610_13_596771481.064027",
-    "inbox_37feea05cf40": "inbox_staged-20260210-182610_13_596771481.064027"
+    "inbox_37feea05cf40": "inbox_staged-20260210-182610_13_596771481.064027",
+    "inbox_39f3db6c1325": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+    "inbox_5c6363fd8f94": "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc",
+    "inbox_7ef78fea1635": "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention",
+    "inbox_edd3cd27dff2": "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo",
+    "inbox_90ceb891cfb9": "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card",
+    "inbox_8d1c3d11476c": "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card",
+    "inbox_c597724ee513": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_d31ba5aaf951": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_08a26952860e": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_33a5999ab758": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_2bca8f91dff5": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_45d40b9fd6ee": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_f35bb1365452": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_8ef0575be1aa": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_399313b2427a": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_49a655802062": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+    "inbox_0eb1cb24b038": "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture",
+    "inbox_db0e5c2aa97b": "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card",
+    "inbox_52cbbbe7f308": "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n",
+    "inbox_cd8b7399da8b": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+    "inbox_3f047afeb6e4": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+    "inbox_f1e6110f0b21": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+    "inbox_88ecd8c22c6d": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+    "inbox_d7e5b9adb5b3": "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_",
+    "inbox_dd1b02478cbf": "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n",
+    "inbox_0082df7f4531": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
+    "inbox_1f520b11165b": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
+    "inbox_d6b5cab6c51f": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
+    "inbox_53d1c16e5ed9": "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n",
+    "inbox_4c646b9ae7c3": "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n"
   }
 }
