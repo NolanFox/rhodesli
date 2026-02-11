@@ -1897,7 +1897,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 # Suggest Name form (hidden by default, shown via Hyperscript toggle)
                 _suggest_name_form(identity_id),
                 # Identity metadata (AN-012)
-                _identity_metadata_display(identity),
+                _identity_metadata_display(identity, is_admin=is_admin),
                 # Identity annotations (AN-013/AN-014)
                 _identity_annotations_section(identity_id, is_admin=is_admin),
                 # Notes section (loads via HTMX)
@@ -3758,7 +3758,7 @@ def identity_card(
             id=f"faces-{identity_id}",
         ),
         # Identity metadata (AN-012)
-        _identity_metadata_display(identity),
+        _identity_metadata_display(identity, is_admin=is_admin),
         # Action buttons based on state (admin only)
         review_action_buttons(identity_id, state, is_admin=is_admin),
         # Neighbors container (shown when "Find Similar" is clicked)
@@ -8365,6 +8365,95 @@ def post(identity_id: str, text: str = "", sess=None):
     )
 
 
+@rt("/api/identity/{identity_id}/metadata-form")
+def get(identity_id: str, sess=None):
+    """Return an inline metadata edit form for an identity."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return toast("Identity not found.", "error")
+
+    _input_cls = ("w-full px-2 py-1.5 text-sm bg-slate-700 border border-slate-600 text-white rounded "
+                  "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500")
+
+    return Div(
+        Form(
+            Div(
+                Div(
+                    Label("Maiden Name", cls="text-xs text-slate-400"),
+                    Input(type="text", name="maiden_name", value=identity.get("maiden_name", ""),
+                          placeholder="née ...", cls=_input_cls),
+                    cls="flex-1"
+                ),
+                Div(
+                    Label("Birth Year", cls="text-xs text-slate-400"),
+                    Input(type="text", name="birth_year", value=str(identity.get("birth_year", "")),
+                          placeholder="e.g. 1920", cls=_input_cls),
+                    cls="w-24"
+                ),
+                Div(
+                    Label("Death Year", cls="text-xs text-slate-400"),
+                    Input(type="text", name="death_year", value=str(identity.get("death_year", "")),
+                          placeholder="e.g. 1995", cls=_input_cls),
+                    cls="w-24"
+                ),
+                cls="flex gap-2"
+            ),
+            Div(
+                Label("Birthplace", cls="text-xs text-slate-400"),
+                Input(type="text", name="birth_place", value=identity.get("birth_place", ""),
+                      placeholder="e.g. Rhodes, Greece", cls=_input_cls),
+            ),
+            Div(
+                Label("Relationships", cls="text-xs text-slate-400"),
+                Input(type="text", name="relationship_notes", value=identity.get("relationship_notes", ""),
+                      placeholder="e.g. Daughter of X & Y, married to Z", cls=_input_cls),
+            ),
+            Div(
+                Label("Bio", cls="text-xs text-slate-400"),
+                Textarea(
+                    identity.get("bio", ""),
+                    name="bio", rows="2",
+                    placeholder="Biographical notes...",
+                    cls=_input_cls + " resize-y",
+                ),
+            ),
+            Div(
+                Button("Save", type="submit",
+                       cls="px-3 py-1.5 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500"),
+                Button("Cancel", type="button",
+                       cls="px-3 py-1.5 text-xs bg-slate-600 text-slate-300 rounded hover:bg-slate-500",
+                       hx_get=f"/api/identity/{identity_id}/metadata-display",
+                       hx_target=f"#metadata-{identity_id}",
+                       hx_swap="innerHTML"),
+                cls="flex gap-2 mt-1"
+            ),
+            hx_post=f"/api/identity/{identity_id}/metadata",
+            hx_target=f"#metadata-{identity_id}",
+            hx_swap="innerHTML",
+            cls="space-y-2",
+        ),
+        id=f"metadata-{identity_id}",
+    )
+
+
+@rt("/api/identity/{identity_id}/metadata-display")
+def get(identity_id: str, sess=None):
+    """Return the metadata display (non-form) for an identity."""
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Span()
+    is_admin = not _check_admin(sess)
+    return _identity_metadata_display(identity, is_admin=is_admin)
+
+
 @rt("/api/identity/{identity_id}/metadata")
 def post(identity_id: str, birth_year: str = "", death_year: str = "",
          birth_place: str = "", maiden_name: str = "",
@@ -8401,10 +8490,16 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
         registry = load_registry()
         registry.set_metadata(identity_id, metadata, user_source="admin_web")
         save_registry(registry)
+        # Return updated display with success toast
+        identity = registry.get_identity(identity_id)
+        display = _identity_metadata_display(identity, is_admin=True)
+        oob_toast = Div(
+            toast(f"Metadata updated ({len(metadata)} field(s)).", "success"),
+            hx_swap_oob="beforeend:#toast-container",
+        )
+        return (display, oob_toast)
     except KeyError:
         return toast("Identity not found.", "error")
-
-    return toast(f"Metadata updated ({len(metadata)} field(s)).", "success")
 
 
 @rt("/api/photo/{photo_id}/metadata")
@@ -11075,8 +11170,9 @@ def _photo_annotations_section(photo_id: str, is_admin: bool = False):
     )
 
 
-def _identity_metadata_display(identity: dict):
+def _identity_metadata_display(identity: dict, is_admin: bool = False):
     """AN-012: Display identity metadata fields (bio, birth/death, relationships)."""
+    identity_id = identity.get("identity_id", "")
     metadata_fields = {
         "bio": "Bio",
         "birth_year": "Born",
@@ -11094,9 +11190,28 @@ def _identity_metadata_display(identity: dict):
                 Span(str(value), cls="text-slate-300"),
                 cls="text-xs"
             ))
-    if not items:
+
+    # Edit button for admins
+    edit_btn = None
+    if is_admin and identity_id:
+        edit_btn = Button(
+            "Edit Details" if not items else "Edit",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
+            hx_get=f"/api/identity/{identity_id}/metadata-form",
+            hx_target=f"#metadata-{identity_id}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+
+    if not items and not edit_btn:
         return Span()
-    return Div(*items, cls="mt-2 space-y-0.5")
+
+    return Div(
+        Div(*items, cls="space-y-0.5") if items else None,
+        edit_btn,
+        id=f"metadata-{identity_id}",
+        cls="mt-2",
+    )
 
 
 def _identity_annotations_section(identity_id: str, is_admin: bool = False):

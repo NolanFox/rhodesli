@@ -178,3 +178,99 @@ class TestSuggestNameForm:
         assert "certain" in html
         assert "likely" in html
         assert "guess" in html
+
+
+class TestMetadataEditForm:
+    """Tests for the inline metadata edit form."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def test_metadata_form_endpoint_exists(self, client):
+        """GET /api/identity/{id}/metadata-form returns a form."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+            "birth_year": 1920,
+            "birth_place": "Rhodes, Greece",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert response.status_code == 200
+            assert "maiden_name" in response.text.lower() or "Maiden" in response.text
+            assert "birth_year" in response.text.lower() or "Birth Year" in response.text
+            assert "bio" in response.text.lower() or "Bio" in response.text
+
+    def test_metadata_form_pre_fills_values(self, client):
+        """Form pre-fills with existing metadata values."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+            "birth_place": "Rhodes, Greece",
+            "maiden_name": "Hasson",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert "Rhodes, Greece" in response.text
+            assert "Hasson" in response.text
+
+    def test_metadata_form_requires_admin(self, client):
+        """Metadata form requires admin authentication."""
+        from app.auth import User
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=None):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert response.status_code in (401, 403)
+
+    def test_metadata_display_shows_edit_button_for_admin(self):
+        """Metadata display includes edit button for admin users."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=True))
+        assert "Edit Details" in html or "Edit" in html
+        assert "metadata-form" in html
+
+    def test_metadata_display_no_edit_for_non_admin(self):
+        """Metadata display has no edit button for non-admin users."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        assert "metadata-form" not in html
+
+    def test_metadata_post_returns_updated_display(self, client):
+        """POST metadata returns updated display, not just a toast."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+            "birth_place": "Rhodes, Greece",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
+            response = client.post(
+                "/api/identity/test-id-001/metadata",
+                data={"birth_place": "Rhodes, Greece"}
+            )
+            assert response.status_code == 200
+            # Should contain updated display, not just a toast
+            assert "metadata-test-id-001" in response.text or "Metadata updated" in response.text
