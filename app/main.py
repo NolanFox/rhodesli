@@ -535,19 +535,17 @@ def _promotion_banner(identity: dict):
 
     if reason == "confirmed_match":
         title = "Identity Suggested"
-        desc = f"This previously skipped face now matches a confirmed identity with high confidence."
-        if context:
-            desc = context
+        desc = context or "This previously skipped face now matches a confirmed identity with high confidence."
         icon_cls = "text-emerald-400"
         border_cls = "border-emerald-600/40 bg-emerald-900/20"
     elif reason == "new_face_match":
         title = "New Context Available"
-        desc = "A newly uploaded photo matches this previously skipped face — the new context may help with identification."
+        desc = context or "A newly uploaded photo matches this previously skipped face."
         icon_cls = "text-amber-400"
         border_cls = "border-amber-600/40 bg-amber-900/20"
     else:  # group_discovery
         title = "Rediscovered"
-        desc = "This face now groups with another face from a different batch."
+        desc = context or "This face now groups with another face from a different batch."
         icon_cls = "text-amber-400"
         border_cls = "border-amber-600/40 bg-amber-900/20"
 
@@ -1949,7 +1947,7 @@ def _suggest_name_form(identity_id: str) -> Div:
     )
 
 
-def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False) -> Div:
+def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False, triage_filter: str = "") -> Div:
     """
     Mini identity card for queue preview in Focus Mode.
 
@@ -1957,6 +1955,7 @@ def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False)
         identity: Identity dict
         crop_files: Set of available crop files
         clickable: If True, clicking loads this identity in focus mode
+        triage_filter: Active filter to preserve in navigation links
     """
     identity_id = identity["identity_id"]
 
@@ -1976,12 +1975,13 @@ def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False)
     if clickable:
         # Wrap in a link that loads this identity in focus mode (correct section)
         section = _section_for_state(identity.get("state", "INBOX"))
+        filter_suffix = f"&filter={triage_filter}" if triage_filter else ""
         return A(
             Div(
                 img_element,
                 cls="w-full aspect-square rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center hover:ring-2 hover:ring-indigo-400 transition-all"
             ),
-            href=f"/?section={section}&view=focus&current={identity_id}",
+            href=f"/?section={section}&view=focus&current={identity_id}{filter_suffix}",
             cls="w-24 flex-shrink-0 cursor-pointer",
             title="Click to review this identity"
         )
@@ -2085,7 +2085,7 @@ def render_to_review_section(
                 up_next = Div(
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                     Div(
-                        *[identity_card_mini(i, crop_files, clickable=True) for i in high_confidence[1:6]],
+                        *[identity_card_mini(i, crop_files, clickable=True, triage_filter=triage_filter) for i in high_confidence[1:6]],
                         Div(
                             f"+{len(high_confidence) - 6} more",
                             cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
@@ -2120,6 +2120,7 @@ def render_to_review_section(
             )
     elif view_mode == "match":
         # Match mode - gamified side-by-side pairing
+        match_url = f"/api/match/next-pair?filter={triage_filter}" if triage_filter else "/api/match/next-pair"
         content = Div(
             Div(
                 Div(
@@ -2133,7 +2134,7 @@ def render_to_review_section(
             Div(
                 P("Loading next pair...", cls="text-slate-400 text-center py-8"),
                 id="match-pair-container",
-                hx_get="/api/match/next-pair",
+                hx_get=match_url,
                 hx_trigger="load",
                 hx_swap="innerHTML",
             ),
@@ -12036,11 +12037,18 @@ def _log_match_decision(identity_a: str, identity_b: str, decision: str,
         print(f"[match] Failed to log decision: {e}")
 
 
-def _get_best_match_pair():
+def _get_best_match_pair(triage_filter: str = ""):
     """
     Find the best pair of identities to show in match mode.
 
     Returns (identity_a, identity_b, distance) or None if no pairs available.
+
+    Args:
+        triage_filter: Optional filter to scope pairs:
+            - "ready": Only proposal pairs (skip NN fallback)
+            - "rediscovered": Only pairs where source has promoted_from
+            - "unmatched": Skip proposals, NN search only for non-proposal faces
+            - "": All pairs (default behavior)
 
     Priority:
     1. Clustering proposals (pre-computed, highest confidence first)
@@ -12050,37 +12058,55 @@ def _get_best_match_pair():
     face_data = get_face_data()
     photo_registry = load_photo_registry()
 
-    # Priority 1: Check clustering proposals
-    proposals_data = _load_proposals()
-    for proposal in proposals_data.get("proposals", []):
-        source_id = proposal["source_identity_id"]
-        target_id = proposal["target_identity_id"]
-        source = registry.get_identity(source_id)
-        target = registry.get_identity(target_id)
-        if not source or not target:
-            continue
-        # Skip if already merged or resolved
-        if source.get("merged_into") or target.get("merged_into"):
-            continue
-        # Skip confirmed-confirmed pairs (already resolved)
-        if source.get("state") == "CONFIRMED" and target.get("state") == "CONFIRMED":
-            continue
-        # Valid proposal — return as match pair
-        neighbor_info = {
-            "identity_id": target_id,
-            "name": target.get("name", "Unknown"),
-            "state": target.get("state", ""),
-            "distance": proposal["distance"],
-            "face_count": len(target.get("anchor_ids", []) + target.get("candidate_ids", [])),
-            "confidence": proposal.get("confidence", ""),
-            "from_proposal": True,
-        }
-        return (source, neighbor_info, proposal["distance"])
+    ids_with_proposals = _get_identities_with_proposals()
+
+    # Priority 1: Check clustering proposals (skip for "unmatched" filter)
+    if triage_filter != "unmatched":
+        proposals_data = _load_proposals()
+        for proposal in proposals_data.get("proposals", []):
+            source_id = proposal["source_identity_id"]
+            target_id = proposal["target_identity_id"]
+            source = registry.get_identity(source_id)
+            target = registry.get_identity(target_id)
+            if not source or not target:
+                continue
+            # Skip if already merged or resolved
+            if source.get("merged_into") or target.get("merged_into"):
+                continue
+            # Skip confirmed-confirmed pairs (already resolved)
+            if source.get("state") == "CONFIRMED" and target.get("state") == "CONFIRMED":
+                continue
+            # Apply rediscovered filter: source must have promoted_from
+            if triage_filter == "rediscovered" and not source.get("promoted_from"):
+                continue
+            # Valid proposal — return as match pair
+            neighbor_info = {
+                "identity_id": target_id,
+                "name": target.get("name", "Unknown"),
+                "state": target.get("state", ""),
+                "distance": proposal["distance"],
+                "face_count": len(target.get("anchor_ids", []) + target.get("candidate_ids", [])),
+                "confidence": proposal.get("confidence", ""),
+                "from_proposal": True,
+            }
+            return (source, neighbor_info, proposal["distance"])
 
     # Priority 2: Fallback to live nearest-neighbor search
+    # Skip for "ready" filter (only proposals matter)
+    if triage_filter == "ready":
+        return None
+
     inbox = registry.list_identities(state=IdentityState.INBOX)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
     to_review = inbox + proposed
+
+    # Apply filter to NN candidates
+    if triage_filter == "rediscovered":
+        to_review = [i for i in to_review if i.get("promoted_from") is not None]
+    elif triage_filter == "unmatched":
+        to_review = [i for i in to_review
+                     if i.get("identity_id", "") not in ids_with_proposals
+                     and not i.get("promoted_from")]
 
     if len(to_review) < 2:
         return None
@@ -12109,20 +12135,24 @@ def _get_best_match_pair():
 
 
 @rt("/api/match/next-pair")
-def get(sess=None):
+def get(filter: str = "", sess=None):
     """
     Get the next pair of faces to compare in Match mode.
 
     Returns an HTMX partial with two large face crops side by side,
     confidence bar, clickable photos, and action buttons.
+
+    Args:
+        filter: Triage filter (ready/rediscovered/unmatched) to scope pairs.
     """
-    pair = _get_best_match_pair()
+    pair = _get_best_match_pair(triage_filter=filter)
 
     if pair is None:
+        _back_url = f"/?section=to_review&view=focus&filter={filter}" if filter else "/?section=to_review&view=focus"
         return Div(
             H3("No more pairs to match!", cls="text-lg font-medium text-white"),
             P("All available identities have been reviewed.", cls="text-slate-400 mt-2"),
-            A("Back to Focus mode", href="/?section=to_review&view=focus",
+            A("Back to Focus mode", href=_back_url,
               cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"),
             cls="text-center py-12"
         )
@@ -12213,6 +12243,9 @@ def get(sess=None):
             cls="flex-1 max-w-[280px]"
         )
 
+    # Build filter query suffix for URL propagation
+    filter_suffix = f"&filter={filter}" if filter else ""
+
     return Div(
         # Confidence bar
         Div(
@@ -12245,7 +12278,7 @@ def get(sess=None):
             Button(
                 "Suggest Same" if _get_user_role(sess) == "contributor" else "Same Person",
                 cls=f"px-8 py-3 text-sm font-bold {'bg-purple-600 hover:bg-purple-500' if _get_user_role(sess) == 'contributor' else 'bg-emerald-600 hover:bg-emerald-500'} text-white rounded-lg transition-colors min-h-[44px]",
-                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}",
+                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=same&confidence={confidence_pct}{filter_suffix}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
@@ -12255,7 +12288,7 @@ def get(sess=None):
             Button(
                 "Different People",
                 cls="px-8 py-3 text-sm font-bold border-2 border-red-500 text-red-400 rounded-lg hover:bg-red-500/20 transition-colors min-h-[44px]",
-                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different&confidence={confidence_pct}",
+                hx_post=f"/api/match/decide?identity_a={identity_id_a}&identity_b={identity_id_b}&decision=different&confidence={confidence_pct}{filter_suffix}",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
@@ -12264,7 +12297,7 @@ def get(sess=None):
             Button(
                 "Skip",
                 cls="px-4 py-3 text-sm text-slate-400 hover:text-slate-300 transition-colors min-h-[44px]",
-                hx_get="/api/match/next-pair",
+                hx_get=f"/api/match/next-pair?filter={filter}" if filter else "/api/match/next-pair",
                 hx_target="#match-pair-container",
                 hx_swap="innerHTML",
                 type="button",
@@ -12282,7 +12315,7 @@ def get(sess=None):
 
 
 @rt("/api/match/decide")
-def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, sess=None):
+def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, filter: str = "", sess=None):
     """
     Record a match decision, log it, and return the next pair.
 
@@ -12321,16 +12354,17 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, s
             Script("if (typeof incrementMatchCount === 'function') incrementMatchCount();"),
             hx_swap_oob="beforeend:body",
         )
-        pair = _get_best_match_pair()
+        pair = _get_best_match_pair(triage_filter=filter)
         if pair is None:
             return (Div(
                 H3("No more pairs!", cls="text-lg font-medium text-white"),
                 P("You have reviewed all available pairs.", cls="text-slate-400 mt-2"),
                 cls="text-center py-12"
             ), oob_toast, counter_script)
+        _next_url = f"/api/match/next-pair?filter={filter}" if filter else "/api/match/next-pair"
         next_pair_html = Div(
             P("Loading next pair...", cls="text-slate-400 text-center py-4"),
-            hx_get="/api/match/next-pair", hx_trigger="load", hx_swap="outerHTML",
+            hx_get=_next_url, hx_trigger="load", hx_swap="outerHTML",
         )
         return (next_pair_html, oob_toast, counter_script)
 
@@ -12388,21 +12422,23 @@ def post(identity_a: str, identity_b: str, decision: str, confidence: int = 0, s
         hx_swap_oob="beforeend:body",
     )
 
-    # Get next pair
-    pair = _get_best_match_pair()
+    # Get next pair (respecting active filter)
+    pair = _get_best_match_pair(triage_filter=filter)
     if pair is None:
+        _back_url = f"/?section=to_review&view=focus&filter={filter}" if filter else "/?section=to_review&view=focus"
         next_content = Div(
             H3("No more pairs!", cls="text-lg font-medium text-white"),
             P("You have matched all available pairs.", cls="text-slate-400 mt-2"),
-            A("Back to Focus mode", href="/?section=to_review&view=focus",
+            A("Back to Focus mode", href=_back_url,
               cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"),
             cls="text-center py-12"
         )
         return (next_content, oob_toast, counter_script)
 
+    _next_url = f"/api/match/next-pair?filter={filter}" if filter else "/api/match/next-pair"
     next_pair_html = Div(
         P("Loading next pair...", cls="text-slate-400 text-center py-4"),
-        hx_get="/api/match/next-pair",
+        hx_get=_next_url,
         hx_trigger="load",
         hx_swap="outerHTML",
     )

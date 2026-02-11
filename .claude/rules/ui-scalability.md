@@ -18,3 +18,7 @@ paths:
 ## Photo/Face Display
 5. **Face overlays must be interactive in ALL views** (photo viewer, lightbox, grid card) with cursor-pointer, click handler, and tooltip (Lesson #45).
 6. **Navigation links must derive section from identity state** using `_section_for_state()`, never hardcode `section=to_review` (Lesson #46).
+
+## Filter Consistency Across Views
+7. **When a filter parameter (`?filter=X`) is active, ALL UI elements must respect it**: main content, Up Next, pagination, prev/next arrows. ALL navigation links must preserve it in the URL. When the filtered set is exhausted, show "All reviewed" instead of leaking other items. Never render navigation controls that point outside the filtered set (Lesson #63).
+8. **Match mode must pass filter through the full chain**: initial `hx_get`, action buttons (`hx_post`), Skip button, and decide endpoint all propagate `&filter=X`.

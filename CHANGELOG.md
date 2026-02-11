@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.22.1] - 2026-02-11
+
+### Fixed
+- **Match mode filters**: `?filter=ready|rediscovered|unmatched` now works in Match mode. Previously match mode ignored the filter and showed all proposals regardless. Filter flows through the full HTMX chain: initial load → action buttons → Skip → decide → next pair.
+- **Up Next filter preservation**: Clicking an Up Next thumbnail now preserves the active filter in the URL. Previously navigated to the unfiltered context, showing the wrong set of faces.
+- **Promotion context banners**: Promotion banners now show specific context (e.g., "Groups with Person 033, Person 034") instead of generic text. `core/grouping.py` populates `promotion_context` for `new_face_match` and `group_discovery` promotions.
+
+### Added
+- Match mode filter behaviors: `ready` = proposals only, `rediscovered` = promoted faces only, `unmatched` = NN search only (no proposals).
+- 15 new tests (6 match filters + 3 Up Next filter + 4 promotion context + 2 grouping context), test count: 1400 → 1415.
+- Lesson 63: filter consistency across all navigation paths.
+- `.claude/rules/ui-scalability.md` updated with filter consistency rules.
+
 ## [v0.22.0] - 2026-02-11
 
 ### Added

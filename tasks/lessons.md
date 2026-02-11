@@ -346,3 +346,8 @@
 - **Mistake**: The inbox showed all items sorted by creation date. Admin had to scroll past 60+ unidentified faces to find the one that had an ML match at 0.61 distance — a near-certain identification.
 - **Rule**: Sort the inbox by actionability: confirmed matches first (one-click merge), then proposals (high-confidence), then promotions (new evidence), then unmatched. The admin's time is best spent on the highest-confidence actions.
 - **Prevention**: Focus mode `_focus_sort_key` now uses 6-tier priority. Triage bar shows counts by category with filter links.
+
+### Lesson 63: Filters must be preserved across all navigation paths
+- **Mistake**: Match mode ignored `?filter=` entirely — `_get_best_match_pair()` had no filter parameter. Up Next thumbnails linked to `?current=UUID` without `&filter=X`, so clicking navigated to the unfiltered context. Promotion banners had empty `promotion_context` because grouping code never set it.
+- **Rule**: When a filter parameter (`?filter=X`) is active, every UI element must respect it: main content, Up Next thumbnails, action buttons, Skip button, and the decide endpoint. Breaking filter context is disorienting. Promotion banners must show specific context (which faces grouped) not generic text.
+- **Prevention**: Match mode now passes filter through the full HTMX chain. `identity_card_mini` accepts `triage_filter` param. `core/grouping.py` populates `promotion_context` with group member names. Rule added to `.claude/rules/ui-scalability.md`.

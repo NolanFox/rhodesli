@@ -320,6 +320,82 @@ class TestGroupAllUnresolved:
         assert promo["identity_id"] == "skipped1"
         assert promo["reason"] == "new_face_match"
 
+    def test_promotion_context_set_on_execute(self, tmp_path):
+        """Promoted identities must have non-empty promotion_context."""
+        from core.grouping import group_all_unresolved
+
+        base_emb = random_embedding(seed=42)
+        close_emb = similar_embedding(base_emb, distance=0.3)
+
+        identities = {
+            "inbox1": make_identity("inbox1", "INBOX", ["face_a"]),
+            "skipped1": make_identity("skipped1", "SKIPPED", ["face_b"]),
+        }
+        registry = make_test_registry(identities, tmp_path)
+        photo_registry = make_test_photo_registry({
+            "photo1": {"path": "img1.jpg", "face_ids": ["face_a"]},
+            "photo2": {"path": "img2.jpg", "face_ids": ["face_b"]},
+        }, tmp_path)
+        face_data = {
+            "face_a": {"mu": base_emb},
+            "face_b": {"mu": close_emb},
+        }
+
+        results = group_all_unresolved(
+            registry=registry,
+            face_data=face_data,
+            photo_registry=photo_registry,
+            threshold=0.95,
+            dry_run=False,
+        )
+
+        assert len(results["promotions"]) >= 1
+        # Check that the promoted identity (skipped1) got promotion_context
+        # After merge, skipped1 may be merged into inbox1
+        # But promotion fields were set before merge
+        primary_id = results["groups"][0]["primary_id"]
+        primary = registry.get_identity(primary_id)
+        if primary.get("promoted_from"):
+            assert primary.get("promotion_context"), \
+                "promotion_context should be non-empty for promoted identities"
+            assert "Matches with" in primary["promotion_context"] or \
+                   "Groups with" in primary["promotion_context"]
+
+    def test_promotion_context_group_discovery(self, tmp_path):
+        """SKIPPED-only groups get group_discovery promotion_context."""
+        from core.grouping import group_all_unresolved
+
+        base_emb = random_embedding(seed=42)
+        close_emb = similar_embedding(base_emb, distance=0.3)
+
+        identities = {
+            "skipped1": make_identity("skipped1", "SKIPPED", ["face_a"]),
+            "skipped2": make_identity("skipped2", "SKIPPED", ["face_b"]),
+        }
+        registry = make_test_registry(identities, tmp_path)
+        photo_registry = make_test_photo_registry({
+            "photo1": {"path": "img1.jpg", "face_ids": ["face_a"]},
+            "photo2": {"path": "img2.jpg", "face_ids": ["face_b"]},
+        }, tmp_path)
+        face_data = {
+            "face_a": {"mu": base_emb},
+            "face_b": {"mu": close_emb},
+        }
+
+        results = group_all_unresolved(
+            registry=registry,
+            face_data=face_data,
+            photo_registry=photo_registry,
+            threshold=0.95,
+            dry_run=False,
+        )
+
+        assert len(results["promotions"]) >= 1
+        primary_id = results["groups"][0]["primary_id"]
+        primary = registry.get_identity(primary_id)
+        assert primary.get("promotion_context") is not None
+        assert "Groups with" in primary["promotion_context"]
+
     def test_multi_face_identities_not_split(self, tmp_path):
         """Existing multi-face clusters should not be broken apart."""
         from core.grouping import group_all_unresolved

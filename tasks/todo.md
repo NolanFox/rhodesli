@@ -45,6 +45,11 @@ Last updated: 2026-02-11 (Session 14 — Data Integrity + Proposals UI + Scalabi
 - [ ] CI/CD pipeline (automated tests, staging, deploy previews)
 
 ## Completed
+- [x] v0.22.1: Filter consistency + promotion context (1415 tests)
+  - Match mode filters (ready/rediscovered/unmatched) now work
+  - Up Next thumbnails preserve active filter in navigation links
+  - Promotion banners show specific context (group member names)
+  - 15 new tests, lesson 63
 - [x] v0.21.0: Data integrity + proposals UI + scalability (1355 tests)
   - Merge-aware push_to_production.py (production wins on conflicts)
   - Zeb Capuano identity restored (24 confirmed)

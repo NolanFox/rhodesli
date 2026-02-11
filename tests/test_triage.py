@@ -292,3 +292,86 @@ class TestFocusOrdering:
         assert _triage_category(identities[1]) == "ready"
         # The plain identity should be "unmatched"
         assert _triage_category(identities[0]) == "unmatched"
+
+
+class TestUpNextFilterPreservation:
+    """Tests that Up Next thumbnails preserve the active filter parameter."""
+
+    def test_mini_card_includes_filter_in_link(self):
+        """identity_card_mini with triage_filter includes it in href."""
+        from app.main import identity_card_mini
+
+        identity = make_identity("abc123def456")
+        card = identity_card_mini(identity, crop_files=set(), clickable=True,
+                                   triage_filter="rediscovered")
+        html = str(card)
+        assert "filter=rediscovered" in html
+        assert "current=abc123def456" in html
+
+    def test_mini_card_no_filter_when_empty(self):
+        """identity_card_mini without triage_filter has no filter param."""
+        from app.main import identity_card_mini
+
+        identity = make_identity("abc123def456")
+        card = identity_card_mini(identity, crop_files=set(), clickable=True,
+                                   triage_filter="")
+        html = str(card)
+        assert "filter=" not in html
+
+    def test_mini_card_preserves_section_and_filter(self):
+        """identity_card_mini includes correct section AND filter."""
+        from app.main import identity_card_mini
+
+        identity = make_identity("abc123def456", state="INBOX")
+        card = identity_card_mini(identity, crop_files=set(), clickable=True,
+                                   triage_filter="ready")
+        html = str(card)
+        assert "section=to_review" in html
+        assert "view=focus" in html
+        assert "filter=ready" in html
+
+
+class TestPromotionContextPopulated:
+    """Tests that promotion banners display context when available."""
+
+    def test_banner_shows_custom_context_for_group_discovery(self):
+        from app.main import _promotion_banner
+
+        identity = make_identity("id1", promoted_from="SKIPPED",
+                                  promotion_reason="group_discovery",
+                                  promotion_context="Groups with Person 033, Person 034")
+        banner = _promotion_banner(identity)
+        html = str(banner)
+        assert "Groups with Person 033, Person 034" in html
+        assert "Rediscovered" in html
+
+    def test_banner_shows_custom_context_for_new_face_match(self):
+        from app.main import _promotion_banner
+
+        identity = make_identity("id1", promoted_from="SKIPPED",
+                                  promotion_reason="new_face_match",
+                                  promotion_context="Matches with Person 088 from recently uploaded photos")
+        banner = _promotion_banner(identity)
+        html = str(banner)
+        assert "Matches with Person 088" in html
+        assert "New Context Available" in html
+
+    def test_banner_shows_custom_context_for_confirmed_match(self):
+        from app.main import _promotion_banner
+
+        identity = make_identity("id1", promoted_from="SKIPPED",
+                                  promotion_reason="confirmed_match",
+                                  promotion_context="Matches Victoria Capuano at distance 0.612 (VERY HIGH)")
+        banner = _promotion_banner(identity)
+        html = str(banner)
+        assert "Matches Victoria Capuano" in html
+        assert "Identity Suggested" in html
+
+    def test_banner_falls_back_to_generic_without_context(self):
+        from app.main import _promotion_banner
+
+        identity = make_identity("id1", promoted_from="SKIPPED",
+                                  promotion_reason="group_discovery")
+        banner = _promotion_banner(identity)
+        html = str(banner)
+        assert "groups with another face" in html

@@ -510,6 +510,9 @@ def group_all_unresolved(
         results["groups"].append(group_info)
 
         if not dry_run:
+            # Build context strings for promotion banners
+            group_names = [items[i]["name"] for i in group_indices]
+
             # Before merging, promote SKIPPED members to INBOX
             for idx in group_indices:
                 item = items[idx]
@@ -519,10 +522,15 @@ def group_all_unresolved(
                         identity["state"] = "INBOX"
                         identity["promoted_from"] = "SKIPPED"
                         identity["promoted_at"] = now
+                        # Build context from the OTHER members in the group
+                        other_names = [n for n in group_names if n != item["name"]]
+                        others_str = ", ".join(other_names[:3])
                         if has_inbox:
                             identity["promotion_reason"] = "new_face_match"
+                            identity["promotion_context"] = f"Matches with {others_str} from recently uploaded photos"
                         else:
                             identity["promotion_reason"] = "group_discovery"
+                            identity["promotion_context"] = f"Groups with {others_str} — previously unidentified faces that appear to be the same person"
 
             # Now merge members into primary
             for other_idx in member_indices:
@@ -548,12 +556,16 @@ def group_all_unresolved(
             # Transfer promotion fields to the primary if it was SKIPPED
             primary_identity = registry._identities.get(primary["identity_id"])
             if primary_identity and primary["original_state"] == "SKIPPED":
+                other_names = [items[i]["name"] for i in member_indices]
+                others_str = ", ".join(other_names[:3])
                 primary_identity["promoted_from"] = "SKIPPED"
                 primary_identity["promoted_at"] = now
                 if has_inbox:
                     primary_identity["promotion_reason"] = "new_face_match"
+                    primary_identity["promotion_context"] = f"Matches with {others_str} from recently uploaded photos"
                 else:
                     primary_identity["promotion_reason"] = "group_discovery"
+                    primary_identity["promotion_context"] = f"Groups with {others_str} — previously unidentified faces that appear to be the same person"
 
     results["identities_after"] = identities_before - results["total_merged"]
     return results
