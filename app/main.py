@@ -2706,8 +2706,8 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
             if face_photo_id:
                 face_previews.append(
                     Button(
-                        Img(src=crop_url, cls="w-14 h-14 rounded object-cover border border-slate-600 hover:border-indigo-400 transition-colors", alt=f"Face"),
-                        cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
+                        Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border border-slate-600 hover:border-indigo-400 transition-colors", alt=f"Face"),
+                        cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
                         hx_get=f"/photo/{face_photo_id}/partial?face={fid}&identity_id={identity_id}",
                         hx_target="#photo-modal-content",
                         **{"_": "on click remove .hidden from #photo-modal"},
@@ -2717,11 +2717,11 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                 )
 
     return Div(
-        # Top row: This Person + Best Match side by side
+        # Top row: This Person + Best Match side by side (larger faces)
         Div(
             # Left: This Person
             Div(
-                Div("This Person", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+                Div("Who is this?", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
                 Button(
                     Div(
                         Img(
@@ -2729,7 +2729,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                             alt=name,
                             cls="w-full h-full object-cover"
                         ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                        cls="w-36 h-36 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                        cls="w-40 h-40 sm:w-56 sm:h-56 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
                     hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}" if main_photo_id else None,
@@ -2739,37 +2739,34 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                     title="Click to view full photo",
                 ) if main_photo_id else Div(
                     Img(src=main_crop_url, alt=name, cls="w-full h-full object-cover") if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-36 h-36 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                    cls="w-40 h-40 sm:w-56 sm:h-56 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                 ),
                 Div(
                     P(name, cls="text-lg font-semibold text-white mt-2"),
                     P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400"),
                 ),
-                # Additional faces
-                Div(*face_previews, cls="flex gap-2 mt-2") if face_previews else None,
+                # Additional faces (larger previews)
+                Div(*face_previews, cls="flex gap-2 mt-3") if face_previews else None,
                 cls="flex-1"
             ),
             # Right: Best Match suggestion
             suggestion_el,
-            cls="flex flex-col sm:flex-row gap-6"
+            cls="flex flex-col sm:flex-row gap-6 items-start"
         ),
         # Photo context
         photo_context_el,
-        # Neighbors container — auto-loads ML suggestions
+        # Neighbors container — always auto-loads ML suggestions
         Div(
             id=f"neighbors-{identity_id}", cls="mt-4",
-            **({"hx_get": f"/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
-                "hx_trigger": "load",
-                "hx_swap": "innerHTML"}
-               if identity_id in _get_identities_with_proposals() else
-               {"hx_get": f"/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
-                "hx_trigger": "load",
-                "hx_swap": "innerHTML"}),
+            hx_get=f"/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
+            hx_trigger="load",
+            hx_swap="innerHTML",
         ),
-        # Actions
-        actions,
+        # Name form (inline, hidden by default)
         name_form,
-        cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6",
+        # Sticky action bar at bottom
+        actions,
+        cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6 pb-24 sm:pb-6",
         id="skipped-focus-card",
     )
 
@@ -2930,6 +2927,20 @@ def _build_skipped_suggestion(identity_id: str, crop_files: set):
     except (KeyError, Exception):
         suggestion_crop_url = None
 
+    # Confidence ring color
+    ring_cls = {
+        "VERY HIGH": "ring-emerald-400",
+        "HIGH": "ring-blue-400",
+        "MODERATE": "ring-amber-400",
+    }.get(confidence, "ring-slate-500")
+
+    confidence_label = {
+        "VERY HIGH": "Strong match",
+        "HIGH": "Good match",
+        "MODERATE": "Possible match",
+        "LOW": "Weak match",
+    }.get(confidence, "Match")
+
     return Div(
         Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
         Div(
@@ -2938,13 +2949,12 @@ def _build_skipped_suggestion(identity_id: str, crop_files: set):
                 alt=target_name,
                 cls="w-full h-full object-cover"
             ) if suggestion_crop_url else Span("?", cls="text-4xl text-slate-500"),
-            cls="w-36 h-36 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+            cls=f"w-40 h-40 sm:w-56 sm:h-56 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-3 {ring_cls}"
         ),
         Div(
             P(target_name, cls="text-lg font-semibold text-white mt-2"),
             P(
-                Span(f"{confidence}", cls=f"font-bold {color_cls}"),
-                Span(f" ({confidence_pct}%)", cls="text-slate-400"),
+                Span(f"{confidence_label}", cls=f"font-bold {color_cls}"),
                 cls="text-sm mt-1"
             ),
         ),
@@ -3010,16 +3020,13 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
         )
     )
 
-    shortcut_text = "Y / N / Enter / S" if has_suggestion else "Enter / S"
-    buttons.append(
-        Span(
-            f"Keyboard: {shortcut_text}",
-            cls="text-xs text-slate-600 hidden sm:inline ml-2",
-            title="Y=Same Person, N=Not Same, Enter=I Know Them, S=Skip"
-        )
-    )
+    shortcut_text = "Y Same · N Different · Enter Name · S Skip" if has_suggestion else "Enter Name · S Skip"
 
-    return Div(*buttons, cls="flex flex-wrap items-center gap-3 mt-6")
+    return Div(
+        Div(*buttons, cls="flex flex-wrap items-center gap-3"),
+        Div(shortcut_text, cls="text-xs text-slate-500 mt-2 hidden sm:block"),
+        cls="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700 p-4 -mx-4 sm:-mx-6 -mb-24 sm:-mb-6 mt-6 rounded-b-xl z-10",
+    )
 
 
 def get_next_skipped_focus_card(exclude_id: str = None) -> Div:

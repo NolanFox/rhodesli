@@ -43,9 +43,9 @@ class TestSkippedFocusModeRendering:
         assert len(cards) == 1, f"Expected 1 focus card, got {len(cards)}"
 
     def test_focus_mode_has_this_person_label(self, client):
-        """Shows 'This Person' label above the face crop."""
+        """Shows 'Who is this?' label above the face crop."""
         resp = client.get("/?section=skipped&view=focus")
-        assert "This Person" in resp.text
+        assert "Who is this?" in resp.text
 
     def test_focus_mode_has_best_match(self, client):
         """Shows 'Best Match' section (with or without suggestions)."""
