@@ -6136,11 +6136,18 @@ def get(section: str = None, view: str = "focus", current: str = None,
     user = get_current_user(sess or {})
 
     # If no section specified:
-    # - Logged-in users go straight to the dashboard
+    # - Logged-in users: go to inbox if items exist, otherwise Needs Help
     # - Anonymous users see the public landing page
     if section is None:
         if user is not None:
-            section = "to_review"
+            # Smart redirect: skip empty inbox, go to Needs Help
+            registry_check = load_registry()
+            inbox_count = len(registry_check.list_identities(state=IdentityState.INBOX))
+            proposed_count = len(registry_check.list_identities(state=IdentityState.PROPOSED))
+            if inbox_count + proposed_count > 0:
+                section = "to_review"
+            else:
+                section = "skipped"  # Needs Help — always has items to review
         else:
             stats = _compute_landing_stats()
             featured_photos = _get_featured_photos(8)
