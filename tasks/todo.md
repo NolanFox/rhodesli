@@ -13,15 +13,14 @@ Last updated: 2026-02-12 (Session 19b — Core UX Fixes)
 - [x] Actionability ordering verified with 3 unit tests
 - [x] 22 new tests (1589 total)
 
-## Session 19c TODO (Remaining)
-- [ ] Smart onboarding (surname recognition flow)
-- [ ] Personalized discovery feed (replace empty inbox)
-- [ ] Navigation renaming (Inbox → New Matches, Needs Help → Help Identify)
-- [ ] Structured name fields (first/last/maiden/aliases)
-- [ ] Proposal system overhaul
-- [ ] Face quality scoring
-- [ ] Mobile responsiveness audit
-- [ ] Documentation encoding fix
+## Session 19c Completed
+- [x] Discovery UX research doc (docs/design/DISCOVERY_UX_RESEARCH.md)
+- [x] Structured name fields (generation_qualifier, death_place, compact display)
+- [x] Smart onboarding (3-step surname recognition flow)
+- [x] Personalized landing page (interest surname banner)
+- [x] Navigation renaming (Inbox → New Matches, Needs Help → Help Identify)
+- [x] Proposal system polish (admin approvals badge, I Know This Person rename)
+- [x] 33 new tests (1622 total)
 
 ## Session 19 Completed
 - [x] Best Match fallback: real-time neighbor computation when proposals empty

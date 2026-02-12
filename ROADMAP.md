@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.27.1 · 1589 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
+Current: v0.28.0 · 1622 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -122,6 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-12: v0.28.0 — User Journey & Data Model (Session 19c): Discovery UX research doc, structured identity metadata (generation_qualifier, death_place, compact display), 3-step surname onboarding, personalized landing banner, nav renaming (Inbox→New Matches, Needs Help→Help Identify), admin approvals badge, "I Know This Person" button. 33 new tests. 1622 tests
 - [x] 2026-02-12: v0.27.1 — Core UX Fixes (Session 19b): Search AND-matching for multi-word queries, 300px face crops, more matches strip, Z-key undo, admin photo previews, View Photo links. 22 new tests. 1589 tests
 - [x] 2026-02-12: v0.27.0 — Discovery-First Overhaul (Session 19): Fixed Best Match (real-time neighbor fallback), source photo rendering, ordering (batch vectorized distances), welcome modal persistence (cookie), empty inbox redirect. Larger face crops, confidence rings, sticky action bar, collapsible neighbors panel, reject undo toast. `batch_best_neighbor_distances()` in core/neighbors.py. 1567 tests
 - [x] 2026-02-12: v0.26.0 — Focus Mode + Docs (Session 18c): Needs Help Focus Mode (guided single-identity review, photo context, Same Person/Not Same/I Know Them/Skip actions, Y/N/Enter/S keyboard shortcuts, progress counter, Up Next carousel). Actionability scoring (best ML leads first), visual badges (Strong lead/Good lead). AD-030–037 rejected approaches, DECISION_LOG.md, SUPABASE_AUDIT.md. 1557 tests

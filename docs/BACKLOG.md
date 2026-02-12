@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 6.3 — February 12, 2026
-**Status**: 1589 tests passing, v0.27.1, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 6.4 — February 12, 2026
+**Status**: 1622 tests passing, v0.28.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -106,10 +106,10 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | FE-050 | Welcome/about landing page | DONE | Heritage photos, community explanation (2026-02-06) |
 | FE-051 | Interactive hero with real archive photos | DONE | Carousel with real archive photos (2026-02-06) |
-| FE-052 | First-time user welcome modal | DONE | Cookie-based welcome modal with archive overview and "Got it" dismiss. v0.27.0: switched from session to persistent cookie (2026-02-12) |
+| FE-052 | First-time user welcome modal | DONE | v0.28.0: 3-step surname onboarding replaces generic modal. Surname grid → discover matches → CTA buttons. Cookie-based (2026-02-12) |
 | FE-053 | Progress dashboard | DONE | "X of Y faces identified" with percentage and help CTA, 5 tests (2026-02-08) |
 | FE-054 | Landing page stats + historical content | DONE | Fixed unidentified stat to include SKIPPED, rewrote About section with Rhodes history (2026-02-10) |
-| FE-055 | UI clarity pass | DONE | Section rename Confirmed→People, Skipped→Needs Help, section descriptions, empty states (2026-02-10) |
+| FE-055 | UI clarity pass | DONE | Section rename Confirmed→People, Skipped→Needs Help→Help Identify, Inbox→New Matches, section descriptions, empty states (2026-02-12) |
 | FE-056 | Button prominence | DONE | View All Photos + Find Similar as styled buttons with icons (2026-02-10) |
 | FE-057 | Compare faces UX overhaul | DONE | Face/photo toggle, clickable names, 1-of-N navigation, max-w-[90vw], View Photo links, Back to Compare, filter preservation, grouped badge (2026-02-11) |
 | FE-058 | Login prompt modal | DONE | HTMX 401 interceptor with contextual action messages, signup link (2026-02-10) |

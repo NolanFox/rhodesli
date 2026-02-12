@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.28.0] - 2026-02-12
+
+### Added
+- **Discovery UX research**: docs/design/DISCOVERY_UX_RESEARCH.md documenting patterns from MyHeritage, Google Photos, Ancestry and Rhodesli's unique dense community graph advantage.
+- **Identity metadata fields**: `generation_qualifier` (e.g., "the Elder") and `death_place` added to identity metadata schema, form, and display.
+- **Compact metadata display**: Life summary format "1890–1944 · Rhodes → Auschwitz · née Capeluto" replaces verbose field-by-field display.
+- **Smart onboarding**: 3-step surname recognition flow replaces generic welcome modal. Step 1: surname grid from surname_variants.json. Step 2: matching confirmed identities via `/api/onboarding/discover`. Step 3: CTA buttons.
+- **Personalized landing page**: When inbox is empty and user has selected interest surnames, shows a horizontal strip of matching confirmed identities above Help Identify section.
+- **Admin approvals badge**: Sidebar shows pending annotation count next to Approvals link.
+- **"I Know This Person" button**: Renamed from "Suggest Name" for clearer intent.
+
+### Changed
+- **Navigation renaming**: "Inbox" → "New Matches" and "Needs Help" → "Help Identify" across sidebar, mobile tabs, section headers, admin dashboard, and face overlay legend.
+- **Section subtitles**: Updated to be more descriptive ("faces the AI matched — confirm or correct").
+- 33 new tests, test count: 1589 → 1622.
+
 ## [v0.27.1] - 2026-02-12
 
 ### Fixed
