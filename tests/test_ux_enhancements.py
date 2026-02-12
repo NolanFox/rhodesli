@@ -690,3 +690,146 @@ class TestBackToCompareNavigation:
             # The button should hide photo-modal and show compare-modal
             assert "add .hidden to #photo-modal" in html
             assert "remove .hidden from #compare-modal" in html
+
+
+# ---------------------------------------------------------------------------
+# 7. Compare modal face crop zoom
+# ---------------------------------------------------------------------------
+
+class TestCompareCropZoom:
+    """Face crop images in the compare modal should support click-to-zoom
+    via hyperscript toggle and CSS transition classes."""
+
+    def _build_compare_mocks(self):
+        """Set up mocks for the compare endpoint with two identities."""
+        target = _make_identity("zoom-target", name="Leon Capeluto", state="CONFIRMED",
+                                anchor_ids=["face-zt1"])
+        neighbor = _make_identity("zoom-neighbor", name="Betty Capeluto", state="CONFIRMED",
+                                  anchor_ids=["face-zn1"])
+        registry = _make_registry([target, neighbor])
+        crop_files = {"face-zt1.jpg", "face-zn1.jpg"}
+        face_to_photo = {"face-zt1": "photo-z1", "face-zn1": "photo-z2"}
+        photo_cache = {
+            "photo-z1": {"filename": "img1.jpg", "faces": [{"face_id": "face-zt1"}], "source": "test"},
+            "photo-z2": {"filename": "img2.jpg", "faces": [{"face_id": "face-zn1"}], "source": "test"},
+        }
+        return registry, crop_files, face_to_photo, photo_cache
+
+    def test_face_crops_have_zoom_data_attribute(self, client):
+        """Face crop images in faces view have data-compare-zoom attribute."""
+        registry, crop_files, face_to_photo, photo_cache = self._build_compare_mocks()
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"):
+
+            resp = client.get("/api/identity/zoom-target/compare/zoom-neighbor?view=faces")
+            assert resp.status_code == 200
+            html = resp.text
+
+            # Both face crop images should have the zoom data attribute
+            assert 'data-compare-zoom="true"' in html
+
+    def test_face_crops_have_zoom_hyperscript(self, client):
+        """Face crop images include hyperscript for zoom toggle."""
+        registry, crop_files, face_to_photo, photo_cache = self._build_compare_mocks()
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"):
+
+            resp = client.get("/api/identity/zoom-target/compare/zoom-neighbor?view=faces")
+            html = resp.text
+
+            # Hyperscript should toggle the zoomed class
+            assert "toggle .compare-crop-zoomed" in html
+            # Hyperscript should set scale(2) for zoom-in
+            assert "scale(2)" in html
+            # Hyperscript should set scale(1) for zoom-out
+            assert "scale(1)" in html
+
+    def test_face_crops_have_cursor_zoom_in_class(self, client):
+        """Face crop images have cursor-zoom-in class for initial state."""
+        registry, crop_files, face_to_photo, photo_cache = self._build_compare_mocks()
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"):
+
+            resp = client.get("/api/identity/zoom-target/compare/zoom-neighbor?view=faces")
+            html = resp.text
+
+            # Images should have zoom-in cursor and transition classes
+            assert "cursor-zoom-in" in html
+            assert "transition-transform" in html
+            assert "duration-200" in html
+
+    def test_face_crop_container_has_overflow_hidden(self, client):
+        """Face crop containers have overflow-hidden to contain zoomed images."""
+        registry, crop_files, face_to_photo, photo_cache = self._build_compare_mocks()
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"):
+
+            resp = client.get("/api/identity/zoom-target/compare/zoom-neighbor?view=faces")
+            html = resp.text
+
+            # Container divs should have overflow-hidden
+            assert "overflow-hidden" in html
+
+    def test_photos_view_does_not_have_zoom(self, client):
+        """Photos view (with overlays) should NOT have the zoom data attribute,
+        since zoom is only for face crop images in faces view."""
+        registry, crop_files, face_to_photo, photo_cache = self._build_compare_mocks()
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"), \
+             patch("app.main.storage") as mock_storage:
+
+            mock_storage.get_photo_url.return_value = "/photos/img1.jpg"
+            resp = client.get("/api/identity/zoom-target/compare/zoom-neighbor?view=photos")
+            html = resp.text
+
+            # Photos view uses overlay-based rendering, not zoomable crops
+            assert "data-compare-zoom" not in html
+
+    def test_zoom_hyperscript_sets_cursor_zoom_out(self, client):
+        """Hyperscript sets cursor to zoom-out when zoomed in."""
+        registry, crop_files, face_to_photo, photo_cache = self._build_compare_mocks()
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"):
+
+            resp = client.get("/api/identity/zoom-target/compare/zoom-neighbor?view=faces")
+            html = resp.text
+
+            # Hyperscript should toggle cursor between zoom-in and zoom-out
+            assert "zoom-out" in html
+            assert "zoom-in" in html

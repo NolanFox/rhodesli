@@ -5,20 +5,27 @@ All notable changes to this project will be documented in this file.
 ## [v0.25.0] - 2026-02-11
 
 ### Fixed
-- **AI suggestions Compare button broken**: Compare button in skip-hints (ML suggestions) targeted `#neighbors-{id}` (sidebar) instead of `#compare-modal-content`. Modal never opened. Fixed with correct target + hyperscript.
+- **AI suggestions Compare button broken**: Compare button in skip-hints targeted `#neighbors-{id}` (sidebar) instead of `#compare-modal-content`. Modal never opened.
+- **AI suggestion thumbnails not loading**: `find_nearest_neighbors()` returns raw results without face IDs. Skip-hints now enriches results with `anchor_face_ids`/`candidate_face_ids`, matching the `neighbor_card` pattern.
+- **Search variant highlighting**: Searching "Capelluto" found "Capeluto" results but couldn't highlight the match. `_highlight_match()` now falls back to variant terms for highlighting.
+- **Sidebar search breaks Needs Help layout**: Client-side card filter hid `.identity-card` but left skip-hint containers visible. Card+hint wrappers now carry `data-name` for unified filtering.
+- **Staged uploads stuck**: Admin pending page had no action for staged uploads — only the CLI API could clear them. Added "Mark Processed" button with `POST /admin/pending/{id}/mark-processed`.
+- **Detach button looked destructive**: Red styling and terse confirmation made non-destructive detach look scary. Changed to neutral slate + explains reversibility ("You can merge it back later").
 
 ### Added
-- **UX audit (Session 18)**: 7 user story code-level walkthroughs, 10 UX issues identified and prioritized. `docs/UX_AUDIT_SESSION_18.md` + `docs/design/UX_PRINCIPLES.md` (10 principles).
-- **Compare modal → Photo context (UX-001)**: "View Photo" buttons on both sides of compare modal open the full photo lightbox with face highlight. Passes `from_compare=1` for back navigation.
-- **Back to Compare navigation**: Photo modal shows "Back to Compare" button when opened from compare modal, toggling modal visibility without losing compare state.
-- **Post-merge guidance banner (UX-002)**: After merge, unnamed identities show "Grouped (N faces) — Add a name?" with rename CTA. Named identities show "Merge complete" with auto-dismiss.
-- **Grouped badge**: Unnamed multi-face identities show purple "Grouped (N faces)" badge to distinguish from single-face inbox items.
-- **Compare modal sizing (UX-006)**: Upgraded from `max-w-5xl` to `max-w-[90vw] lg:max-w-7xl` for better photo comparison.
-- **Compare modal filter preservation (UX-005)**: `?filter=` parameter now flows through compare endpoint: toggle buttons, face nav arrows, identity name links, and neighbor_card Compare buttons.
-- **Landing page "Needs Help" CTA (UX-010)**: Needs-help stat card is now clickable, plus "Help Identify Faces" button in bottom CTA section.
-- **UX principles doc**: `docs/design/UX_PRINCIPLES.md` with 10 design principles and anti-patterns.
+- **UX audit (Session 18)**: 7 user story walkthroughs, 10 UX issues identified. `docs/UX_AUDIT_SESSION_18.md` + `docs/design/UX_PRINCIPLES.md` (10 principles).
+- **Compare modal → Photo context (UX-001)**: "View Photo" buttons with `from_compare=1` for back navigation.
+- **Back to Compare navigation**: Photo modal shows "Back to Compare" button when opened from compare modal.
+- **Post-merge guidance banner (UX-002)**: Unnamed identities show "Grouped (N faces) — Add a name?" after merge.
+- **Grouped badge**: Unnamed multi-face identities show purple "Grouped (N faces)" badge.
+- **Compare modal sizing (UX-006)**: `max-w-[90vw] lg:max-w-7xl` for better photo comparison.
+- **Compare modal filter preservation (UX-005)**: `?filter=` flows through compare endpoint, face nav, and neighbor_card.
+- **Variable suggestion count**: Skip-hints adapts count based on confidence: 3 for strong, 2 for moderate, 1 for weak matches.
+- **UX principles doc**: `docs/design/UX_PRINCIPLES.md` with 10 design principles.
 - **UX context rule**: `.claude/rules/ux-context.md` — checklist for all UX changes.
-- 25 new tests (20 UX enhancements + 4 back-to-compare + 1 AI suggestions regression), test count: 1473 → 1498.
+- **Co-occurrence signals**: Neighbor cards show "N shared photos" badge when identities appear in the same photos.
+- **Compare zoom**: Click-to-zoom on face crops in compare modal with cursor-zoom-in/out toggle.
+- 54 new tests, test count: 1473 → 1527.
 
 ## [v0.24.0] - 2026-02-11
 
