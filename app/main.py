@@ -4253,8 +4253,14 @@ def manual_search_section(identity_id: str) -> Div:
 
 
 def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False, focus_section: str = "") -> Div:
-    close_btn = Button("Close", cls="text-sm text-slate-400 hover:text-slate-300", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
-    if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), close_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
+    toggle_btn = Button(
+        "▾ Collapse",
+        cls="text-sm text-slate-400 hover:text-slate-300",
+        id=f"neighbors-toggle-{identity_id}",
+        type="button",
+        **{"_": f"on click toggle .hidden on #neighbors-body-{identity_id} then if my.textContent == '▸ Expand' set my.textContent to '▾ Collapse' else set my.textContent to '▸ Expand'"},
+    )
+    if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), toggle_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
     # Mergeable neighbors get checkboxes for bulk operations
     mergeable = [n for n in neighbors if n.get("can_merge")]
@@ -4314,9 +4320,15 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
                        Button("Review", cls="text-xs text-indigo-400 hover:text-indigo-300 ml-2", hx_get=f"/api/identity/{identity_id}/rejected", hx_target=f"#rejected-list-{identity_id}", hx_swap="innerHTML"),
                        cls="flex items-center justify-between"), Div(id=f"rejected-list-{identity_id}"), cls="mt-4 pt-3 border-t border-slate-600") if rejected_count > 0 else None
 
-    return Div(Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-white"), close_btn, cls="flex items-center justify-between mb-3"),
-               bulk_actions,
-               Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected, cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
+    return Div(
+        Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-white"), toggle_btn, cls="flex items-center justify-between mb-3"),
+        Div(
+            bulk_actions,
+            Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected,
+            id=f"neighbors-body-{identity_id}",
+        ),
+        cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600",
+    )
 
 
 def name_display(identity_id: str, name: str, is_admin: bool = True) -> Div:
@@ -11246,9 +11258,25 @@ def post(identity_id: str, suggestion_id: str = "", sess=None):
             # If reject fails, just advance — don't block the user
             pass
 
+    # Toast with undo for reject action
+    reject_toast = Div(
+        Span("✗", cls="mr-2"),
+        Span("Suggestion rejected. Moving to next.", cls="flex-1"),
+        Button(
+            "Undo",
+            cls="ml-3 px-2 py-1 text-xs font-bold bg-white/20 hover:bg-white/30 rounded transition-colors",
+            hx_post=f"/api/identity/{identity_id}/unreject/{suggestion_id}",
+            hx_swap="outerHTML",
+            hx_target="closest div",
+            type="button",
+        ) if suggestion_id else None,
+        cls="px-4 py-3 rounded shadow-lg flex items-center bg-amber-600 text-white animate-fade-in",
+        **{"_": "on load wait 8s then remove me"},
+    )
+
     return (
         get_next_skipped_focus_card(exclude_id=identity_id),
-        toast("Suggestion rejected. Moving to next.", "info"),
+        reject_toast,
     )
 
 

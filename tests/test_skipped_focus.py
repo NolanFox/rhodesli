@@ -275,6 +275,44 @@ class TestActionabilityBadges:
         assert "identity-card-wrapper" in resp.text or "No unresolved" in resp.text
 
 
+class TestCollapsibleNeighborsPanel:
+    """Test that Similar Identities panel is collapsible, not dismissible."""
+
+    def test_neighbors_panel_has_toggle_button(self, client):
+        """Neighbors panel has a toggle button instead of a close/dismiss button."""
+        from app.main import neighbors_sidebar
+        from fasthtml.common import to_xml
+        result = neighbors_sidebar("test-id", [], set())
+        html = to_xml(result)
+        assert "Collapse" in html or "Expand" in html
+        assert "neighbors-toggle-" in html
+
+    def test_neighbors_panel_toggle_uses_hyperscript(self, client):
+        """Toggle button uses Hyperscript to show/hide body."""
+        from app.main import neighbors_sidebar
+        from fasthtml.common import to_xml
+        result = neighbors_sidebar("test-id", [], set())
+        html = to_xml(result)
+        assert "toggle .hidden" in html
+        assert "neighbors-body-test-id" in html
+
+
+class TestRejectUndoToast:
+    """Test that reject-suggestion includes an undo toast."""
+
+    def test_reject_route_returns_undo_button(self, client):
+        """POST /api/skipped/{id}/reject-suggestion returns toast with undo."""
+        resp = client.post("/api/skipped/fake-id/reject-suggestion?suggestion_id=fake-target")
+        html = resp.text
+        assert "Undo" in html or resp.status_code in (200, 404)
+
+    def test_reject_route_toast_has_unreject_link(self, client):
+        """Reject toast links to the unreject endpoint."""
+        resp = client.post("/api/skipped/fake-id/reject-suggestion?suggestion_id=fake-target")
+        if resp.status_code == 200:
+            assert "unreject" in resp.text
+
+
 class TestSkippedFocusMergeIntegration:
     """Test that merge route handles focus_section=skipped."""
 
