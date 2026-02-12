@@ -505,3 +505,60 @@ class TestKeyboardUndoSupport:
         if "focus-btn-confirm" in resp.text:
             assert "data-undo-url" in resp.text
             assert "undo-merge" in resp.text
+
+
+class TestActionabilitySortUnit:
+    """Unit tests for _sort_skipped_by_actionability ordering logic."""
+
+    def test_very_high_before_high(self):
+        """VERY HIGH confidence identities sort before HIGH."""
+        from app.main import _sort_skipped_by_actionability
+        from unittest.mock import patch
+
+        mock_neighbors = {
+            "id-high": (0.95, "HIGH"),
+            "id-very-high": (0.75, "VERY HIGH"),
+        }
+        skipped = [
+            {"identity_id": "id-high", "name": "Person A", "state": "SKIPPED"},
+            {"identity_id": "id-very-high", "name": "Person B", "state": "SKIPPED"},
+        ]
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors):
+            result = _sort_skipped_by_actionability(skipped)
+            assert result[0]["identity_id"] == "id-very-high"
+            assert result[1]["identity_id"] == "id-high"
+
+    def test_no_match_sorts_last(self):
+        """Identities with no ML match sort after all matched identities."""
+        from app.main import _sort_skipped_by_actionability
+        from unittest.mock import patch
+
+        mock_neighbors = {
+            "id-match": (1.10, "MODERATE"),
+        }
+        skipped = [
+            {"identity_id": "id-nomatch", "name": "Nobody", "state": "SKIPPED"},
+            {"identity_id": "id-match", "name": "Somebody", "state": "SKIPPED"},
+        ]
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors):
+            result = _sort_skipped_by_actionability(skipped)
+            assert result[0]["identity_id"] == "id-match"
+            assert result[1]["identity_id"] == "id-nomatch"
+
+    def test_within_tier_sorts_by_distance(self):
+        """Within same confidence tier, closer distance sorts first."""
+        from app.main import _sort_skipped_by_actionability
+        from unittest.mock import patch
+
+        mock_neighbors = {
+            "id-far": (0.98, "HIGH"),
+            "id-close": (0.82, "HIGH"),
+        }
+        skipped = [
+            {"identity_id": "id-far", "name": "Far", "state": "SKIPPED"},
+            {"identity_id": "id-close", "name": "Close", "state": "SKIPPED"},
+        ]
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors):
+            result = _sort_skipped_by_actionability(skipped)
+            assert result[0]["identity_id"] == "id-close"
+            assert result[1]["identity_id"] == "id-far"
