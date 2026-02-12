@@ -4913,47 +4913,188 @@ def _guest_or_login_modal(form_data: dict) -> Div:
     )
 
 
+def _get_onboarding_surnames() -> list[str]:
+    """Get canonical surname list from surname_variants.json for the onboarding grid."""
+    variants_path = Path(__file__).resolve().parent.parent / "data" / "surname_variants.json"
+    if not variants_path.exists():
+        return []
+    try:
+        with open(variants_path) as f:
+            data = json.load(f)
+        return [g["canonical"] for g in data.get("variant_groups", []) if g.get("canonical")]
+    except Exception:
+        return []
+
+
 def _welcome_modal(sess) -> Div:
     """
-    First-time user welcome modal (FE-052).
+    Smart onboarding modal with surname recognition (FE-052 + Session 19c).
+    Step 1: Surname grid — "Do you recognize any family names?"
+    Step 2: Discovery — show matching identities (via HTMX)
+    Step 3: Call to action — browse, help identify, or upload
+
     Shows once per user using a persistent cookie (1 year expiry).
-    Modal starts hidden, JavaScript shows it only if cookie is absent.
     """
+    surnames = _get_onboarding_surnames()
+
+    # Build surname buttons for Step 1
+    surname_buttons = []
+    for name in surnames:
+        surname_buttons.append(
+            Button(
+                name,
+                type="button",
+                cls="onboarding-surname px-4 py-2 text-sm rounded-lg border border-slate-600 "
+                    "text-slate-300 hover:border-amber-400 hover:text-amber-200 "
+                    "transition-all duration-200 cursor-pointer",
+                data_surname=name,
+            )
+        )
+
     return Div(
         Div(
             Div(
-                H2("Welcome to Rhodesli", cls="text-xl font-bold text-white mb-3"),
-                P(
-                    "Rhodesli is a heritage photo archive for the Sephardic Jewish community "
-                    "of Rhodes. Browse photos, help identify faces, and preserve family history.",
-                    cls="text-sm text-slate-300 mb-3"
+                # Step 1: Surname recognition
+                Div(
+                    H2("Welcome to Rhodesli", cls="text-xl font-bold text-white mb-2"),
+                    P("A heritage photo archive for the Jewish community of Rhodes.",
+                      cls="text-sm text-slate-400 mb-4"),
+                    P("Do you recognize any of these family names?",
+                      cls="text-sm text-amber-200 font-medium mb-3"),
+                    Div(*surname_buttons, cls="flex flex-wrap gap-2 mb-4") if surname_buttons else None,
+                    Div(
+                        Button(
+                            "These names are new to me",
+                            type="button",
+                            cls="text-xs text-slate-500 hover:text-slate-300 underline",
+                            data_action="onboarding-skip-surnames",
+                        ),
+                        Button(
+                            "Show me what you found",
+                            type="button",
+                            cls="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg "
+                                "hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed",
+                            id="onboarding-discover-btn",
+                            disabled="true",
+                            data_action="onboarding-discover",
+                        ),
+                        cls="flex items-center justify-between gap-3 mt-2",
+                    ),
+                    id="onboarding-step-1",
                 ),
-                P(
-                    "You can browse all photos and identities freely. "
-                    "If you recognize someone, use the 'Suggest Name' button to help identify them.",
-                    cls="text-sm text-slate-400 mb-4"
+                # Step 2: Discovery results (HTMX target)
+                Div(
+                    id="onboarding-step-2",
+                    cls="hidden",
                 ),
-                Button(
-                    "Got it!",
-                    cls="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 w-full",
-                    **{"_": "on click add .hidden to #welcome-modal then "
-                       "set document.cookie to 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax'"},
-                    type="button",
+                # Step 3: Call to action
+                Div(
+                    H2("Start exploring", cls="text-lg font-bold text-white mb-3"),
+                    Div(
+                        A("Browse Photos", href="/?section=photos",
+                          cls="block px-4 py-3 bg-slate-700 rounded-lg text-center text-white "
+                              "hover:bg-slate-600 transition-colors",
+                          data_action="onboarding-close"),
+                        A("Help Identify Faces", href="/?section=skipped",
+                          cls="block px-4 py-3 bg-amber-600/20 border border-amber-500/30 rounded-lg "
+                              "text-center text-amber-200 hover:bg-amber-600/30 transition-colors",
+                          data_action="onboarding-close"),
+                        A("View Identified People", href="/?section=confirmed",
+                          cls="block px-4 py-3 bg-slate-700 rounded-lg text-center text-white "
+                              "hover:bg-slate-600 transition-colors",
+                          data_action="onboarding-close"),
+                        cls="grid gap-2",
+                    ),
+                    id="onboarding-step-3",
+                    cls="hidden",
                 ),
-                cls="bg-slate-800 rounded-xl p-6 border border-slate-700 max-w-md w-full mx-4"
+                cls="bg-slate-800 rounded-xl p-6 border border-slate-700 max-w-lg w-full mx-4 "
+                    "max-h-[90vh] overflow-y-auto"
             ),
             cls="fixed inset-0 bg-black/60 flex items-center justify-center z-[9998]",
             id="welcome-modal",
         ),
         Script("""
             (function() {
+                // Check if already welcomed
                 var welcomed = document.cookie.split(';').some(function(c) {
                     return c.trim().startsWith('rhodesli_welcomed=');
                 });
                 if (welcomed) {
                     var el = document.getElementById('welcome-modal');
                     if (el) el.classList.add('hidden');
+                    return;
                 }
+
+                var selectedSurnames = [];
+
+                // Surname toggle buttons
+                document.addEventListener('click', function(e) {
+                    var btn = e.target.closest('.onboarding-surname');
+                    if (btn) {
+                        var name = btn.getAttribute('data-surname');
+                        var idx = selectedSurnames.indexOf(name);
+                        if (idx >= 0) {
+                            selectedSurnames.splice(idx, 1);
+                            btn.classList.remove('border-amber-400', 'text-amber-200', 'bg-amber-400/10');
+                            btn.classList.add('border-slate-600', 'text-slate-300');
+                        } else {
+                            selectedSurnames.push(name);
+                            btn.classList.add('border-amber-400', 'text-amber-200', 'bg-amber-400/10');
+                            btn.classList.remove('border-slate-600', 'text-slate-300');
+                        }
+                        var discBtn = document.getElementById('onboarding-discover-btn');
+                        if (discBtn) {
+                            discBtn.disabled = selectedSurnames.length === 0;
+                        }
+                    }
+                });
+
+                // Discover button — fetch matching people
+                document.addEventListener('click', function(e) {
+                    var action = e.target.closest('[data-action]');
+                    if (!action) return;
+                    var act = action.getAttribute('data-action');
+
+                    if (act === 'onboarding-discover' && selectedSurnames.length > 0) {
+                        // Save surnames to cookie
+                        document.cookie = 'rhodesli_interest_surnames=' +
+                            encodeURIComponent(selectedSurnames.join(',')) +
+                            '; path=/; max-age=31536000; SameSite=Lax';
+
+                        // Fetch matching people via HTMX-like fetch
+                        var url = '/api/onboarding/discover?surnames=' +
+                            encodeURIComponent(selectedSurnames.join(','));
+                        fetch(url).then(function(r) { return r.text(); }).then(function(html) {
+                            var step2 = document.getElementById('onboarding-step-2');
+                            if (step2) {
+                                step2.innerHTML = html;
+                                step2.classList.remove('hidden');
+                            }
+                            var step1 = document.getElementById('onboarding-step-1');
+                            if (step1) step1.classList.add('hidden');
+                        });
+                    }
+
+                    if (act === 'onboarding-skip-surnames') {
+                        // Skip to step 3 (CTA)
+                        document.cookie = 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax';
+                        document.getElementById('onboarding-step-1').classList.add('hidden');
+                        document.getElementById('onboarding-step-3').classList.remove('hidden');
+                    }
+
+                    if (act === 'onboarding-continue') {
+                        // Move from step 2 to step 3
+                        document.getElementById('onboarding-step-2').classList.add('hidden');
+                        document.getElementById('onboarding-step-3').classList.remove('hidden');
+                    }
+
+                    if (act === 'onboarding-close') {
+                        document.cookie = 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax';
+                        var modal = document.getElementById('welcome-modal');
+                        if (modal) modal.classList.add('hidden');
+                    }
+                });
             })();
         """),
     )
@@ -9752,6 +9893,95 @@ def post(photo_id: str, date_taken: str = "", location: str = "",
     save_photo_registry(photo_registry)
 
     return toast(f"Photo metadata updated ({len(metadata)} field(s)).", "success")
+
+
+@rt("/api/onboarding/discover")
+def get(surnames: str = ""):
+    """Return HTML fragment showing confirmed identities matching selected surnames.
+
+    Public endpoint — no auth required. Used by the onboarding modal.
+    """
+    if not surnames.strip():
+        return Div(P("No surnames selected.", cls="text-sm text-slate-400"))
+
+    surname_list = [s.strip() for s in surnames.split(",") if s.strip()]
+
+    # Load surname variants for matching
+    from core.registry import _load_surname_variants
+    variant_lookup = _load_surname_variants()
+
+    # Expand each surname to its variant group
+    target_names = set()
+    for surname in surname_list:
+        target_names.add(surname.lower())
+        variants = variant_lookup.get(surname.lower(), [])
+        target_names.update(variants)
+
+    # Find confirmed identities whose last name matches
+    registry = load_registry()
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    crop_files = get_crop_files()
+
+    matches = []
+    for identity in confirmed:
+        name = (identity.get("name") or "").strip()
+        if not name or name.startswith("Unidentified"):
+            continue
+        # Check last name or any word in name
+        name_words = [w.lower() for w in name.split()]
+        if any(w in target_names for w in name_words):
+            face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+            crop_url = resolve_face_image_url(face_ids[0], crop_files) if face_ids else None
+            if crop_url:
+                matches.append({
+                    "name": name,
+                    "crop_url": crop_url,
+                    "identity_id": identity["identity_id"],
+                    "photo_count": len(face_ids),
+                })
+
+    if not matches:
+        return Div(
+            H3("No matches yet", cls="text-lg font-bold text-white mb-2"),
+            P("We don't have confirmed identities with those surnames yet, "
+              "but you can still help identify unknown faces!",
+              cls="text-sm text-slate-400 mb-4"),
+            Button("Continue", type="button", data_action="onboarding-continue",
+                   cls="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-500 w-full"),
+        )
+
+    # Show up to 6 matching people
+    people_cards = []
+    for m in matches[:6]:
+        people_cards.append(
+            A(
+                Div(
+                    Img(src=m["crop_url"], alt=m["name"],
+                        cls="w-16 h-16 rounded-full object-cover border-2 border-amber-400/50"),
+                    Div(
+                        Span(m["name"], cls="text-sm font-medium text-white"),
+                        Span(f"{m['photo_count']} photo{'s' if m['photo_count'] != 1 else ''}",
+                             cls="text-xs text-slate-400"),
+                        cls="flex flex-col",
+                    ),
+                    cls="flex items-center gap-3",
+                ),
+                href=f"/?section=confirmed&current={m['identity_id']}",
+                cls="block p-2 rounded-lg hover:bg-slate-700/50 transition-colors",
+                data_action="onboarding-close",
+            )
+        )
+
+    return Div(
+        H3(f"We found {len(matches)} {'person' if len(matches) == 1 else 'people'} "
+           f"with those family names!",
+           cls="text-lg font-bold text-white mb-3"),
+        Div(*people_cards, cls="space-y-1 mb-4 max-h-64 overflow-y-auto"),
+        P(f"{len(matches)} identified so far — can you help find more?",
+          cls="text-xs text-slate-500 mb-3") if len(matches) > 6 else None,
+        Button("Continue", type="button", data_action="onboarding-continue",
+               cls="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-500 w-full"),
+    )
 
 
 @rt("/api/photos/bulk-update-source")

@@ -127,7 +127,7 @@ class TestWelcomeModal:
     """Tests for the first-time user welcome modal (FE-052)."""
 
     def test_welcome_modal_renders_on_first_visit(self):
-        """Welcome modal appears on first visit (no 'welcomed' in session)."""
+        """Welcome modal appears on first visit with surname recognition."""
         from app.main import _welcome_modal
         from fastcore.xml import to_xml
 
@@ -136,7 +136,7 @@ class TestWelcomeModal:
         html = to_xml(result)
         assert "Welcome to Rhodesli" in html
         assert "welcome-modal" in html
-        assert "Got it!" in html
+        assert "onboarding-surname" in html  # Surname buttons present
 
     def test_welcome_modal_uses_persistent_cookie(self):
         """Welcome modal uses persistent cookie for dismissal, not session."""
@@ -169,11 +169,11 @@ class TestWelcomeModal:
         html = to_xml(result)
         assert "Welcome to Rhodesli" in html
 
-    def test_welcome_modal_mentions_suggest_name(self):
-        """Welcome modal tells users about the Suggest Name feature."""
+    def test_welcome_modal_has_help_identify_cta(self):
+        """Welcome modal has a 'Help Identify Faces' call to action."""
         from app.main import _welcome_modal
         from fastcore.xml import to_xml
 
         result = _welcome_modal({})
         html = to_xml(result)
-        assert "Suggest Name" in html
+        assert "Help Identify" in html
