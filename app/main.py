@@ -1118,13 +1118,31 @@ def get_face_quality(face_id: str) -> float:
 def _highlight_match(name: str, query: str):
     """Return FastHTML elements with the matched portion highlighted.
 
-    Case-insensitive substring match. Returns a tuple of Span elements,
-    or just a plain string if no match found.
+    Case-insensitive substring match. When the exact query doesn't match,
+    tries surname variant terms (e.g., query "Capelluto" highlights "Capeluto"
+    in "Leon Capeluto").
     """
     if not query:
         return name
     idx = name.lower().find(query.lower())
     if idx == -1:
+        # Try variant terms — if query word maps to a variant group,
+        # highlight whichever variant appears in the name
+        from core.registry import _load_surname_variants
+        variant_lookup = _load_surname_variants()
+        for word in query.lower().split():
+            if word in variant_lookup:
+                for variant in variant_lookup[word]:
+                    vidx = name.lower().find(variant)
+                    if vidx != -1:
+                        before = name[:vidx]
+                        match = name[vidx:vidx + len(variant)]
+                        after = name[vidx + len(variant):]
+                        return (
+                            Span(before) if before else None,
+                            Span(match, cls="text-amber-300 font-semibold"),
+                            Span(after) if after else None,
+                        )
         return name
     before = name[:idx]
     match = name[idx:idx + len(query)]

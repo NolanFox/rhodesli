@@ -274,6 +274,22 @@ class TestSearchHighlighting:
         result = _highlight_match("Leon Capeluto", "")
         assert result == "Leon Capeluto"
 
+    def test_highlight_variant_match(self):
+        """Variant query highlights the matched variant in the name."""
+        from app.main import _highlight_match
+        from fasthtml.common import to_xml
+        # "Capelluto" is a variant of "Capeluto" — should highlight "Capeluto" in result
+        result = _highlight_match("Leon Capeluto", "Capelluto")
+        html = to_xml(result)
+        assert "text-amber-300" in html
+        assert "Capeluto" in html
+
+    def test_highlight_variant_no_false_positive(self):
+        """Variant highlighting doesn't match unrelated names."""
+        from app.main import _highlight_match
+        result = _highlight_match("David Franco", "Capelluto")
+        assert result == "David Franco"
+
     @pytest.fixture
     def client(self):
         from app.main import app
