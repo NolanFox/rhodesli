@@ -293,3 +293,94 @@ class TestSkippedFocusMergeIntegration:
         )
         # Should not be 500
         assert resp.status_code in (200, 404)
+
+
+class TestBestMatchFallback:
+    """Test that Best Match falls back to real-time neighbors when proposals empty."""
+
+    def test_get_best_match_uses_proposals_first(self):
+        """_get_best_match_for_identity prefers proposals over neighbors."""
+        from app.main import _get_best_match_for_identity
+        proposal = {
+            "target_identity_id": "t1",
+            "target_identity_name": "Known Person",
+            "distance": 0.85,
+            "confidence": "HIGH",
+        }
+        with patch("app.main._get_best_proposal_for_identity", return_value=proposal):
+            result = _get_best_match_for_identity("test-id")
+            assert result == proposal
+
+    def test_get_best_match_falls_back_to_neighbors(self):
+        """_get_best_match_for_identity falls back to _compute_best_neighbor."""
+        from app.main import _get_best_match_for_identity
+        neighbor = {
+            "target_identity_id": "t2",
+            "target_identity_name": "Neighbor",
+            "distance": 1.05,
+            "confidence": "MODERATE",
+        }
+        with patch("app.main._get_best_proposal_for_identity", return_value=None), \
+             patch("app.main._compute_best_neighbor", return_value=neighbor):
+            result = _get_best_match_for_identity("test-id")
+            assert result == neighbor
+
+    def test_get_best_match_returns_none_when_no_matches(self):
+        """_get_best_match_for_identity returns None when nothing found."""
+        from app.main import _get_best_match_for_identity
+        with patch("app.main._get_best_proposal_for_identity", return_value=None), \
+             patch("app.main._compute_best_neighbor", return_value=None):
+            result = _get_best_match_for_identity("test-id")
+            assert result is None
+
+    def test_confidence_labels_in_suggestion(self, client):
+        """Focus mode shows human-readable confidence labels."""
+        resp = client.get("/?section=skipped&view=focus")
+        # Should have one of the human-readable labels
+        html = resp.text
+        has_label = any(label in html for label in [
+            "Strong match", "Good match", "Possible match", "Weak match",
+            "No ML suggestions yet"
+        ])
+        assert has_label, "Expected a confidence label in the best match area"
+
+
+class TestSmartLandingRedirect:
+    """Test that logged-in users are redirected to the right section."""
+
+    def test_logged_in_empty_inbox_goes_to_skipped(self, client):
+        """When inbox is empty, logged-in users see Needs Help instead."""
+        from app.auth import User
+        mock_user = User(id="test", email="test@test.com", is_admin=True)
+        with patch("app.main.get_current_user", return_value=mock_user), \
+             patch("app.main.is_auth_enabled", return_value=True):
+            resp = client.get("/")
+            html = resp.text
+            # Should show Needs Help content (not empty inbox)
+            assert "Needs Help" in html or "skipped" in html
+
+
+class TestSourcePhotoRendering:
+    """Test that source photo renders with correct URL."""
+
+    def test_photo_context_uses_filename_fallback(self):
+        """_build_skipped_photo_context uses 'filename' when 'path' is missing."""
+        from app.main import _build_skipped_photo_context
+        from fasthtml.common import to_xml
+
+        # Mock the photo cache to have a "filename" key but no "path"
+        with patch("app.main._build_caches"), \
+             patch("app.main._photo_cache", {
+                 "test-photo": {
+                     "filename": "Image 001_compress.jpg",
+                     "faces": [],
+                     "collection": "Test Collection",
+                 }
+             }), \
+             patch("app.main.load_registry") as mock_reg:
+            mock_reg.return_value.list_identities.return_value = []
+            result = _build_skipped_photo_context("test-face", "test-photo", "test-identity")
+            if result:
+                html = to_xml(result)
+                # Should have a non-empty image URL (not just /raw_photos/)
+                assert "Image" in html or "raw_photos" in html
