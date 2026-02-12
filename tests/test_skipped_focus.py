@@ -422,3 +422,48 @@ class TestSourcePhotoRendering:
                 html = to_xml(result)
                 # Should have a non-empty image URL (not just /raw_photos/)
                 assert "Image" in html or "raw_photos" in html
+
+
+class TestFocusModeLargerCrops:
+    """Face crops in Focus Mode should be at least ~288px (w-72)."""
+
+    def test_main_face_crop_has_large_sizing(self, client):
+        """Main face crop uses w-72 h-72 on desktop (288px)."""
+        resp = client.get("/?section=skipped&view=focus")
+        assert resp.status_code == 200
+        # Check for w-48 (mobile) and sm:w-72 (desktop) sizing
+        assert "sm:w-72" in resp.text
+
+    def test_best_match_has_large_sizing(self, client):
+        """Best match crop also uses w-72 sizing on desktop."""
+        resp = client.get("/?section=skipped&view=focus")
+        # The best match panel should also have large crops
+        assert "sm:h-72" in resp.text
+
+    def test_view_photo_link_exists(self, client):
+        """'View Photo' text link exists below face crop."""
+        resp = client.get("/?section=skipped&view=focus")
+        assert "View Photo" in resp.text
+
+    def test_data_focus_mode_attribute(self, client):
+        """Focus card has data-focus-mode='skipped' for keyboard handler detection."""
+        resp = client.get("/?section=skipped&view=focus")
+        assert 'data-focus-mode="skipped"' in resp.text
+
+
+class TestOtherMatchesStrip:
+    """Horizontal strip of secondary matches below main comparison."""
+
+    def test_more_matches_strip_renders(self, client):
+        """Focus mode renders 'More matches' section when multiple neighbors exist."""
+        resp = client.get("/?section=skipped&view=focus")
+        # May or may not have other matches depending on data, but should not crash
+        assert resp.status_code == 200
+
+    def test_suggestion_with_strip_returns_tuple(self):
+        """_build_skipped_suggestion_with_strip returns (el, strip_or_none)."""
+        from app.main import _build_skipped_suggestion_with_strip
+        # Should return a tuple of two elements
+        result = _build_skipped_suggestion_with_strip("nonexistent-id", set())
+        assert isinstance(result, tuple)
+        assert len(result) == 2

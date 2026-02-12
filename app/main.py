@@ -2649,8 +2649,8 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     # Get photo context (collection, other identified people)
     photo_context_el = _build_skipped_photo_context(main_face_id, main_photo_id, identity_id)
 
-    # Get top ML suggestion for side-by-side display
-    suggestion_el = _build_skipped_suggestion(identity_id, crop_files)
+    # Get top ML suggestions for side-by-side display + strip
+    suggestion_el, other_matches_strip = _build_skipped_suggestion_with_strip(identity_id, crop_files)
 
     # Action buttons
     if is_admin:
@@ -2717,7 +2717,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                 )
 
     return Div(
-        # Top row: This Person + Best Match side by side (larger faces)
+        # Top row: This Person + Best Match side by side (large faces ~300px)
         Div(
             # Left: This Person
             Div(
@@ -2729,7 +2729,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                             alt=name,
                             cls="w-full h-full object-cover"
                         ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                        cls="w-40 h-40 sm:w-56 sm:h-56 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                        cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
                     hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}" if main_photo_id else None,
@@ -2739,20 +2739,27 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                     title="Click to view full photo",
                 ) if main_photo_id else Div(
                     Img(src=main_crop_url, alt=name, cls="w-full h-full object-cover") if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-40 h-40 sm:w-56 sm:h-56 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                    cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                 ),
                 Div(
                     P(name, cls="text-lg font-semibold text-white mt-2"),
                     P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400"),
                 ),
-                # Additional faces (larger previews)
+                A("View Photo", href="#", cls="text-xs text-indigo-400 hover:text-indigo-300 mt-1 inline-block",
+                  hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}" if main_photo_id else None,
+                  hx_target="#photo-modal-content",
+                  **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
+                ) if main_photo_id else None,
+                # Additional faces
                 Div(*face_previews, cls="flex gap-2 mt-3") if face_previews else None,
-                cls="flex-1"
+                cls="flex-1 flex flex-col items-center sm:items-start"
             ),
             # Right: Best Match suggestion
             suggestion_el,
-            cls="flex flex-col sm:flex-row gap-6 items-start"
+            cls="flex flex-col sm:flex-row gap-8 items-start justify-center"
         ),
+        # Other matches strip (horizontal scroll)
+        other_matches_strip,
         # Photo context
         photo_context_el,
         # Neighbors container — always auto-loads ML suggestions
@@ -2768,6 +2775,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
         actions,
         cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6 pb-24 sm:pb-6",
         id="skipped-focus-card",
+        **{"data-focus-mode": "skipped"},
     )
 
 
@@ -2881,6 +2889,41 @@ def _compute_best_neighbor(identity_id: str):
         return None
 
 
+def _compute_top_neighbors(identity_id: str, limit: int = 5):
+    """Compute top N neighbors for an identity using real-time embedding distance.
+
+    Returns a list of dicts with keys: target_identity_id, target_identity_name, distance, confidence.
+    """
+    try:
+        from core.neighbors import find_nearest_neighbors
+        registry = load_registry()
+        photo_registry = load_photo_registry()
+        face_data = get_face_data()
+        neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=limit
+        )
+        results = []
+        for n in neighbors:
+            dist = n.get("distance", 999)
+            if dist < 0.80:
+                confidence = "VERY HIGH"
+            elif dist < 1.00:
+                confidence = "HIGH"
+            elif dist < 1.20:
+                confidence = "MODERATE"
+            else:
+                confidence = "LOW"
+            results.append({
+                "target_identity_id": n["identity_id"],
+                "target_identity_name": n.get("name", "Unknown"),
+                "distance": dist,
+                "confidence": confidence,
+            })
+        return results
+    except (ImportError, Exception):
+        return []
+
+
 def _get_best_match_for_identity(identity_id: str):
     """Get best match: first from proposals, then from real-time neighbors."""
     best = _get_best_proposal_for_identity(identity_id)
@@ -2890,58 +2933,82 @@ def _get_best_match_for_identity(identity_id: str):
 
 
 def _build_skipped_suggestion(identity_id: str, crop_files: set):
-    """Build the 'Best Match' side-by-side panel for a skipped identity."""
-    best = _get_best_match_for_identity(identity_id)
-    if not best:
-        return Div(
-            Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
-            P("No ML suggestions yet", cls="text-sm text-slate-500 italic"),
-            P("Try 'Find Similar' to search manually", cls="text-xs text-slate-500 mt-1"),
-            cls="flex-1"
-        )
+    """Build the 'Best Match' side-by-side panel for a skipped identity.
 
-    target_id = best.get("target_identity_id", "")
-    target_name = ensure_utf8_display(best.get("target_identity_name", "Unknown"))
-    confidence = best.get("confidence", "")
-    distance = best.get("distance", 0)
-    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+    Returns a single element (for backward compat with any callers).
+    """
+    el, _ = _build_skipped_suggestion_with_strip(identity_id, crop_files)
+    return el
 
-    color_cls = {
-        "VERY HIGH": "text-emerald-300",
-        "HIGH": "text-blue-300",
-        "MODERATE": "text-amber-300",
-    }.get(confidence, "text-slate-300")
 
-    # Get suggestion's face crop
+def _resolve_match_crop(target_id: str, crop_files: set):
+    """Resolve the first available face crop URL for an identity."""
     try:
         registry = load_registry()
         target_identity = registry.get_identity(target_id)
         target_faces = target_identity.get("anchor_ids", []) + target_identity.get("candidate_ids", [])
-        suggestion_crop_url = None
         for f in target_faces:
             fid = f if isinstance(f, str) else f.get("face_id", "")
             url = resolve_face_image_url(fid, crop_files)
             if url:
-                suggestion_crop_url = url
-                break
+                return url
     except (KeyError, Exception):
-        suggestion_crop_url = None
+        pass
+    return None
 
-    # Confidence ring color
-    ring_cls = {
-        "VERY HIGH": "ring-emerald-400",
-        "HIGH": "ring-blue-400",
-        "MODERATE": "ring-amber-400",
-    }.get(confidence, "ring-slate-500")
 
-    confidence_label = {
-        "VERY HIGH": "Strong match",
-        "HIGH": "Good match",
-        "MODERATE": "Possible match",
-        "LOW": "Weak match",
-    }.get(confidence, "Match")
+def _confidence_tier(distance: float) -> str:
+    """Map embedding distance to confidence tier."""
+    if distance < 0.80:
+        return "VERY HIGH"
+    elif distance < 1.00:
+        return "HIGH"
+    elif distance < 1.20:
+        return "MODERATE"
+    return "LOW"
 
-    return Div(
+
+_CONFIDENCE_RING = {"VERY HIGH": "ring-emerald-400", "HIGH": "ring-blue-400", "MODERATE": "ring-amber-400"}
+_CONFIDENCE_COLOR = {"VERY HIGH": "text-emerald-300", "HIGH": "text-blue-300", "MODERATE": "text-amber-300"}
+_CONFIDENCE_LABEL = {"VERY HIGH": "Strong match", "HIGH": "Good match", "MODERATE": "Possible match", "LOW": "Weak match"}
+
+
+def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
+    """Build 'Best Match' panel + horizontal strip of other matches.
+
+    Returns (suggestion_el, other_matches_strip_el).
+    """
+    # Fetch up to 5 neighbors
+    top_matches = _compute_top_neighbors(identity_id, limit=5)
+
+    # Also check proposals
+    best_proposal = _get_best_proposal_for_identity(identity_id)
+    if best_proposal:
+        # Merge proposal into top of list if not already present
+        proposal_id = best_proposal.get("target_identity_id", "")
+        if not any(m.get("target_identity_id") == proposal_id for m in top_matches):
+            top_matches.insert(0, best_proposal)
+
+    if not top_matches:
+        no_match_el = Div(
+            Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+            P("No ML suggestions yet", cls="text-sm text-slate-500 italic"),
+            P("Try 'I Know Them' to name this person", cls="text-xs text-slate-500 mt-1"),
+            cls="flex-1 flex flex-col items-center sm:items-start"
+        )
+        return no_match_el, None
+
+    # Best match (primary comparison)
+    best = top_matches[0]
+    target_id = best.get("target_identity_id", "")
+    target_name = ensure_utf8_display(best.get("target_identity_name", "Unknown"))
+    confidence = best.get("confidence", "")
+    ring_cls = _CONFIDENCE_RING.get(confidence, "ring-slate-500")
+    color_cls = _CONFIDENCE_COLOR.get(confidence, "text-slate-300")
+    confidence_label = _CONFIDENCE_LABEL.get(confidence, "Match")
+    suggestion_crop_url = _resolve_match_crop(target_id, crop_files)
+
+    suggestion_el = Div(
         Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
         Div(
             Img(
@@ -2949,17 +3016,49 @@ def _build_skipped_suggestion(identity_id: str, crop_files: set):
                 alt=target_name,
                 cls="w-full h-full object-cover"
             ) if suggestion_crop_url else Span("?", cls="text-4xl text-slate-500"),
-            cls=f"w-40 h-40 sm:w-56 sm:h-56 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-3 {ring_cls}"
+            cls=f"w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-3 {ring_cls}"
         ),
         Div(
             P(target_name, cls="text-lg font-semibold text-white mt-2"),
             P(
-                Span(f"{confidence_label}", cls=f"font-bold {color_cls}"),
+                Span(confidence_label, cls=f"font-bold {color_cls}"),
                 cls="text-sm mt-1"
             ),
         ),
-        cls="flex-1"
+        cls="flex-1 flex flex-col items-center sm:items-start"
     )
+
+    # Other matches strip (2nd through 5th)
+    other_matches_strip = None
+    other_matches = top_matches[1:]
+    if other_matches:
+        strip_items = []
+        for match in other_matches:
+            m_id = match.get("target_identity_id", "")
+            m_name = ensure_utf8_display(match.get("target_identity_name", "Unknown"))
+            m_conf = match.get("confidence", "LOW")
+            m_ring = _CONFIDENCE_RING.get(m_conf, "ring-slate-500")
+            m_crop = _resolve_match_crop(m_id, crop_files)
+            m_label = _CONFIDENCE_LABEL.get(m_conf, "Match")
+            strip_items.append(
+                Div(
+                    Div(
+                        Img(src=m_crop or "", alt=m_name, cls="w-full h-full object-cover") if m_crop else Span("?", cls="text-lg text-slate-500"),
+                        cls=f"w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-2 {m_ring}"
+                    ),
+                    P(m_name[:20] + ("..." if len(m_name) > 20 else ""), cls="text-xs text-slate-300 mt-1 text-center truncate max-w-[80px]"),
+                    P(m_label, cls=f"text-[10px] {_CONFIDENCE_COLOR.get(m_conf, 'text-slate-400')} text-center"),
+                    cls="flex flex-col items-center flex-shrink-0 cursor-pointer hover:bg-slate-700/50 rounded-lg p-1 transition-colors",
+                    title=f"{m_name} — {m_label}",
+                )
+            )
+        other_matches_strip = Div(
+            Div("More matches", cls="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide"),
+            Div(*strip_items, cls="flex gap-3 overflow-x-auto pb-2"),
+            cls="mt-5 pt-4 border-t border-slate-700/50"
+        )
+
+    return suggestion_el, other_matches_strip
 
 
 def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
