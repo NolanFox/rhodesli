@@ -1020,16 +1020,19 @@ def _compute_co_occurrence(
 
 def get_first_anchor_face_id(identity_id: str, registry) -> str | None:
     """
-    Get the first anchor face ID for an identity.
+    Get the best-quality anchor face ID for an identity.
 
     Used for showing thumbnails in neighbor cards.
+    Falls back to the first anchor if quality data is unavailable.
 
     Returns:
-        First anchor face ID, or None if identity has no anchors.
+        Best anchor face ID, or None if identity has no anchors.
     """
     try:
         anchor_ids = registry.get_anchor_face_ids(identity_id)
-        return anchor_ids[0] if anchor_ids else None
+        if not anchor_ids:
+            return None
+        return get_best_face_id(anchor_ids)
     except KeyError:
         return None
 
@@ -1154,6 +1157,95 @@ def get_face_quality(face_id: str) -> float:
             q = face.get("quality", 0)
             return q if q > 0 else None
     return None
+
+
+def _get_face_cache_entry(face_id: str) -> dict | None:
+    """Look up full face data (bbox, det_score, quality) from embeddings cache."""
+    _build_caches()
+    photo_id = get_photo_id_for_face(face_id)
+    if not photo_id:
+        return None
+    photo = _photo_cache.get(photo_id)
+    if not photo:
+        return None
+    for face in photo.get("faces", []):
+        if face.get("face_id") == face_id:
+            return face
+    return None
+
+
+def compute_face_quality_score(face_id: str) -> float:
+    """Compute composite quality score (0-100) for a face.
+
+    Components:
+    - Detection confidence (0-30 pts): InsightFace SCRFD det_score
+    - Face crop size (0-35 pts): pixel area from bounding box
+    - Embedding norm (0-35 pts): proxy for image quality (MagFace principle)
+
+    Returns 0 if face data is not found.
+    """
+    face = _get_face_cache_entry(face_id)
+    if not face:
+        return 0.0
+
+    score = 0.0
+
+    # 1. Detection confidence — 0-30 pts
+    det_score = face.get("det_score", 0.5)
+    score += det_score * 30
+
+    # 2. Face crop size from bbox — 0-35 pts
+    # Good faces are 150+ pixels on a side (~22500 area)
+    bbox = face.get("bbox", [0, 0, 0, 0])
+    if len(bbox) == 4:
+        face_width = abs(bbox[2] - bbox[0])
+        face_height = abs(bbox[3] - bbox[1])
+        face_area = face_width * face_height
+        # Scale: 0=tiny, 1=good (22500px²=150×150)
+        area_factor = min(face_area / 22500.0, 1.0)
+        score += area_factor * 35
+
+    # 3. Embedding norm — 0-35 pts
+    # Raw quality is the embedding L2 norm (~15-30 range typically)
+    raw_quality = face.get("quality", 0)
+    if raw_quality > 0:
+        # Normalize: 15 = low, 30 = high quality
+        norm_factor = max(min((raw_quality - 15) / 15.0, 1.0), 0.0)
+        score += norm_factor * 35
+
+    return round(score, 1)
+
+
+def get_best_face_id(face_ids: list) -> str | None:
+    """Pick the highest-quality face from a list of face IDs.
+
+    Returns the face_id with the highest composite quality score,
+    or the first one if scores can't be computed.
+    """
+    if not face_ids:
+        return None
+
+    # Normalize: face_ids can be strings or dicts
+    ids = []
+    for f in face_ids:
+        if isinstance(f, str):
+            ids.append(f)
+        elif isinstance(f, dict):
+            ids.append(f.get("face_id", ""))
+        else:
+            ids.append(str(f))
+
+    if len(ids) == 1:
+        return ids[0]
+
+    best_id = ids[0]
+    best_score = -1
+    for fid in ids:
+        s = compute_face_quality_score(fid)
+        if s > best_score:
+            best_score = s
+            best_id = fid
+    return best_id
 
 
 def _highlight_match(name: str, query: str):
@@ -1799,22 +1891,23 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
     face_count = len(all_face_ids)
 
-    # Get first face for main thumbnail
+    # Get best-quality face for main thumbnail
     main_crop_url = None
     main_photo_id = None
-    if all_face_ids:
-        first_face = all_face_ids[0]
-        face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
-        main_crop_url = resolve_face_image_url(face_id, crop_files)
-        main_photo_id = get_photo_id_for_face(face_id)
+    best_face_id = get_best_face_id(all_face_ids)
+    if best_face_id:
+        main_crop_url = resolve_face_image_url(best_face_id, crop_files)
+        main_photo_id = get_photo_id_for_face(best_face_id)
 
-    # Build face grid for additional faces (skip first since it's shown as main thumbnail)
+    # Build face grid for additional faces (skip best since it's shown as main thumbnail)
     face_previews = []
-    for face_entry in all_face_ids[1:6]:  # Skip first face, show up to 5 more
+    for face_entry in all_face_ids[:6]:  # Show up to 6, skip the best one
         if isinstance(face_entry, str):
             face_id = face_entry
         else:
             face_id = face_entry.get("face_id", "")
+        if face_id == best_face_id:
+            continue  # Already shown as main thumbnail
         crop_url = resolve_face_image_url(face_id, crop_files)
         if crop_url:
             # Get photo_id for this face to make it clickable
@@ -2049,13 +2142,12 @@ def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False,
     """
     identity_id = identity["identity_id"]
 
-    # Get first face for thumbnail
+    # Get best-quality face for thumbnail
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
     crop_url = None
-    if all_face_ids:
-        first_face = all_face_ids[0]
-        face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
-        crop_url = resolve_face_image_url(face_id, crop_files)
+    best_fid = get_best_face_id(all_face_ids)
+    if best_fid:
+        crop_url = resolve_face_image_url(best_fid, crop_files)
 
     img_element = Img(
         src=crop_url or "",
@@ -2648,13 +2740,11 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
     face_count = len(all_face_ids)
 
-    # Get first face for main thumbnail
+    # Get best-quality face for main display
     main_crop_url = None
     main_photo_id = None
-    main_face_id = None
-    if all_face_ids:
-        first_face = all_face_ids[0]
-        main_face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
+    main_face_id = get_best_face_id(all_face_ids)
+    if main_face_id:
         main_crop_url = resolve_face_image_url(main_face_id, crop_files)
         main_photo_id = get_photo_id_for_face(main_face_id)
 
