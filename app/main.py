@@ -3081,6 +3081,8 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
                 type="button",
                 id="focus-btn-confirm",
                 title=f"Merge with {target_name}" if target_name else "Merge with suggestion",
+                **{"data-undo-url": f"/api/identity/{target_id}/undo-merge", "data-undo-type": "merge",
+                   "data-undo-identity": identity_id},
             )
         )
         buttons.append(
@@ -3093,6 +3095,8 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
                 type="button",
                 id="focus-btn-reject",
                 title="Not the same person — reject this suggestion",
+                **{"data-undo-url": f"/api/identity/{identity_id}/unreject/{target_id}", "data-undo-type": "reject",
+                   "data-undo-identity": identity_id},
             )
         )
 
@@ -3116,14 +3120,20 @@ def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
             type="button",
             id="focus-btn-skip",
             title="Skip — come back later",
+            **{"data-undo-type": "skip", "data-undo-identity": identity_id},
         )
     )
 
-    shortcut_text = "Y Same · N Different · Enter Name · S Skip" if has_suggestion else "Enter Name · S Skip"
+    shortcut_text = "Y Same · N Different · Enter Name · S Skip · Z Undo" if has_suggestion else "Enter Name · S Skip"
 
     return Div(
         Div(*buttons, cls="flex flex-wrap items-center gap-3"),
         Div(shortcut_text, cls="text-xs text-slate-500 mt-2 hidden sm:block"),
+        # Undo toast (hidden by default, shown after undo-able action)
+        Div(
+            id="undo-toast",
+            cls="hidden fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-700 text-white px-4 py-2 rounded-lg shadow-lg z-50 text-sm flex items-center gap-3",
+        ),
         cls="sticky bottom-0 bg-slate-800/95 backdrop-blur-sm border-t border-slate-700 p-4 -mx-4 sm:-mx-6 -mb-24 sm:-mb-6 mt-6 rounded-b-xl z-10",
     )
 
@@ -6702,6 +6712,25 @@ def get(section: str = None, view: str = "focus", current: str = None,
 
             // Keyboard delegation: one global listener, reads DOM for current state.
             // Priority: modals first, then suppress in text fields, then mode shortcuts.
+
+            // Undo stack: stores last 10 actions for Z-key undo
+            if (!window._undoStack) window._undoStack = [];
+
+            // Capture undo data before HTMX actions fire
+            document.addEventListener('click', function(e) {
+                var btn = e.target.closest('[data-undo-type]');
+                if (btn) {
+                    var undoInfo = {
+                        type: btn.getAttribute('data-undo-type'),
+                        url: btn.getAttribute('data-undo-url') || '',
+                        identity: btn.getAttribute('data-undo-identity') || '',
+                        ts: Date.now()
+                    };
+                    window._undoStack.push(undoInfo);
+                    if (window._undoStack.length > 10) window._undoStack.shift();
+                }
+            }, true);
+
             document.addEventListener('keydown', function(e) {
                 // --- Modal navigation (highest priority) ---
                 // Unified photo modal (handles both photo grid browsing and identity photo browsing)
@@ -6740,6 +6769,23 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 // --- Ignore when modifier keys are held (Cmd+R, Ctrl+S, etc.) ---
                 if (e.metaKey || e.ctrlKey || e.altKey) return;
 
+                // --- Z = Undo last action (works in all focus modes) ---
+                if (e.key === 'z' || e.key === 'Z') {
+                    e.preventDefault();
+                    if (!window._undoStack || window._undoStack.length === 0) return;
+                    var last = window._undoStack.pop();
+                    if (last.type === 'skip') {
+                        // Skip undo: navigate back to the skipped identity
+                        window.location.href = '/?section=skipped&view=focus&current=' + last.identity;
+                    } else if (last.url) {
+                        // Merge/reject undo: POST to undo endpoint, then reload focus on that identity
+                        fetch(last.url, {method: 'POST', headers: {'HX-Request': 'true'}}).then(function() {
+                            window.location.href = '/?section=skipped&view=focus&current=' + last.identity;
+                        });
+                    }
+                    return;
+                }
+
                 // --- Match mode shortcuts: Y=Same, N=Different, S=Skip ---
                 var matchBtn = null;
                 if (e.key === 'y' || e.key === 'Y') matchBtn = document.getElementById('match-btn-same');
@@ -6748,7 +6794,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 if (matchBtn) { e.preventDefault(); matchBtn.click(); return; }
 
                 // --- Focus mode shortcuts ---
-                // Skipped focus mode: Y=Same Person, N=Not Same, Enter=I Know Them, S=Skip
+                // Skipped focus mode: Y=Same Person, N=Not Same, Enter=I Know Them, S=Skip, Z=Undo
                 // Inbox focus mode: C=Confirm, S=Skip, R=Reject, F=Find Similar
                 var focusBtn = null;
                 var isSkippedFocus = document.querySelector('[data-focus-mode="skipped"]');
