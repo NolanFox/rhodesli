@@ -1524,7 +1524,8 @@ def toast_with_undo(
 def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
     """Admin-only dashboard summary banner at the top of the workstation.
 
-    Shows inbox count, skipped count, and quick links to Focus Mode.
+    Shows inbox count, skipped count, and quick links.
+    Focus/Browse toggle lives in each section's header instead.
     Only rendered when user is admin.
     """
     to_review = counts.get("to_review", 0)
@@ -1554,12 +1555,6 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
     return Div(
         Div(
             *stats_row,
-            # Quick action: go to Focus Mode
-            A(
-                "Focus Mode",
-                href="/?section=to_review&view=focus",
-                cls="ml-auto text-xs font-medium px-3 py-1 bg-indigo-600/80 text-white rounded hover:bg-indigo-500 transition-colors",
-            ) if current_section != "to_review" else None,
             cls="max-w-6xl mx-auto px-4 sm:px-8 flex items-center gap-4 flex-wrap",
         ),
         id="admin-dashboard-banner",

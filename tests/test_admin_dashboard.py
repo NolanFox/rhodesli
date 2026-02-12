@@ -27,17 +27,16 @@ class TestAdminDashboardBanner:
         response = client.get("/?section=to_review")
         assert "Help Identify" in response.text
 
-    def test_banner_has_focus_mode_link(self, client, auth_disabled):
-        """Banner should have a Focus Mode quick link when not in to_review."""
-        response = client.get("/?section=confirmed")
-        assert "Focus Mode" in response.text
+    def test_banner_no_duplicate_focus_mode_button(self, client, auth_disabled):
+        """Banner should NOT have a standalone Focus Mode button (removed in v0.28.2).
 
-    def test_banner_no_focus_link_when_already_in_review(self, client, auth_disabled):
-        """Focus Mode link hidden when already in to_review section."""
-        response = client.get("/?section=to_review")
-        # The Focus Mode button should NOT appear when already in to_review
-        # (it might still show as text in the sidebar, but not as the banner CTA)
+        Focus/Browse toggle now lives in each section's header instead.
+        """
+        response = client.get("/?section=confirmed")
         assert response.status_code == 200
+        # The "Focus Mode" CTA button was removed from the banner
+        # Focus toggle is in section headers (section_header function)
+        assert "admin-dashboard-banner" in response.text
 
     def test_anonymous_no_banner(self, client, auth_enabled, no_user):
         """Anonymous users should NOT see the admin banner."""
