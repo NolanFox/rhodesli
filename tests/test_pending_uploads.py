@@ -588,13 +588,9 @@ class TestPendingUploadsPhotoPreview:
             response = admin_client.get("/admin/pending")
             assert response.status_code == 200
 
-    def test_pending_card_shows_thumbnails_when_staging_dir_exists(self, admin_client, tmp_path):
-        """Pending upload card shows image thumbnails when staging files exist."""
+    def test_pending_card_shows_thumbnails_with_admin_preview_urls(self, admin_client, tmp_path):
+        """Pending upload card shows image thumbnails using admin preview endpoint."""
         job_id = "test-job-001"
-        staging_dir = tmp_path / "staging" / job_id
-        staging_dir.mkdir(parents=True)
-        (staging_dir / "photo1.jpg").write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
-        (staging_dir / "photo2.jpg").write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
 
         pending_data = {"uploads": {job_id: {
             "job_id": job_id, "status": "pending",
@@ -603,8 +599,35 @@ class TestPendingUploadsPhotoPreview:
             "submitted_at": "2026-02-12T00:00:00Z", "collection": "",
         }}}
 
-        with patch("app.main._load_pending_uploads", return_value=pending_data), \
-             patch("app.main.data_path", tmp_path):
+        with patch("app.main._load_pending_uploads", return_value=pending_data):
             response = admin_client.get("/admin/pending")
             assert response.status_code == 200
-            assert "photo1.jpg" in response.text or "staged/download" in response.text
+            # Uses admin-authenticated preview endpoint, not sync API
+            assert "/admin/staging-preview/" in response.text
+            assert "photo1.jpg" in response.text
+            assert "photo2.jpg" in response.text
+
+    def test_staging_preview_serves_file(self, admin_client, tmp_path):
+        """Admin staging preview endpoint serves staged photo files."""
+        job_id = "test-job-002"
+        staging_dir = tmp_path / "staging" / job_id
+        staging_dir.mkdir(parents=True)
+        (staging_dir / "photo.jpg").write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
+
+        with patch("app.main.data_path", tmp_path):
+            response = admin_client.get(f"/admin/staging-preview/{job_id}/photo.jpg")
+            assert response.status_code == 200
+            assert response.headers.get("content-type", "").startswith("image/jpeg")
+
+    def test_staging_preview_blocks_path_traversal(self, admin_client, tmp_path):
+        """Admin staging preview rejects path traversal attempts."""
+        with patch("app.main.data_path", tmp_path):
+            # Path traversal in job_id
+            response = admin_client.get("/admin/staging-preview/..%2F..%2Fetc/passwd")
+            assert response.status_code in (400, 404)  # Blocked or not found
+
+    def test_staging_preview_returns_404_for_missing_file(self, admin_client, tmp_path):
+        """Admin staging preview returns 404 for non-existent files."""
+        with patch("app.main.data_path", tmp_path):
+            response = admin_client.get("/admin/staging-preview/nonexistent/photo.jpg")
+            assert response.status_code == 404

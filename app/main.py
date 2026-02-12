@@ -11225,15 +11225,13 @@ def get(sess=None):
                     cls="flex gap-2 items-start"
                 )
 
-            # Photo preview thumbnails
+            # Photo preview thumbnails (served via admin-authenticated endpoint)
             preview_thumbs = []
-            staging_dir = data_path / "staging" / job_id
             upload_files = item.get("files", [])
+            from urllib.parse import quote
             for fname in upload_files[:6]:
-                fpath = staging_dir / fname
-                if fpath.exists() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-                    from urllib.parse import quote
-                    thumb_url = f"/api/sync/staged/download/{quote(job_id)}/{quote(fname)}"
+                if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+                    thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
                     preview_thumbs.append(
                         Img(src=thumb_url, alt=fname, loading="lazy",
                             cls="w-16 h-16 object-cover rounded border border-slate-600",
@@ -11676,6 +11674,42 @@ def post(job_id: str, sess=None):
         ),
         cls="p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
     )
+
+
+@app.get("/admin/staging-preview/{job_id}/{filename:path}")
+async def admin_staging_preview(job_id: str, filename: str, sess=None):
+    """Serve staged upload photos for admin preview. Session-authenticated."""
+    denied = _check_admin(sess)
+    if denied:
+        return Response("Unauthorized", status_code=401)
+
+    # Security: block path traversal
+    if ".." in job_id or ".." in filename or job_id.startswith("/") or filename.startswith("/"):
+        return Response("Invalid path", status_code=400)
+
+    staging_dir = data_path / "staging"
+    target = (staging_dir / job_id / filename).resolve()
+
+    # Ensure resolved path is still inside staging dir
+    if not str(target).startswith(str(staging_dir.resolve())):
+        return Response("Invalid path", status_code=400)
+
+    if not target.exists() or not target.is_file():
+        return Response("File not found", status_code=404)
+
+    # Determine content type from extension
+    ext = target.suffix.lower()
+    content_types = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+    content_type = content_types.get(ext, "application/octet-stream")
+
+    return FileResponse(str(target), media_type=content_type)
+
+# Move staging preview route before FastHTML's catch-all static route
+for i, route in enumerate(app.routes):
+    if getattr(route, "path", None) == "/admin/staging-preview/{job_id}/{filename:path}":
+        _staging_route = app.routes.pop(i)
+        app.routes.insert(0, _staging_route)
+        break
 
 
 # =============================================================================
