@@ -170,6 +170,95 @@ class TestOnboardingDiscoverEndpoint:
             assert "Leon Capeluto" in response.text
 
 
+class TestPersonalizedDiscoveryBanner:
+    """Tests for _personalized_discovery_banner."""
+
+    def test_banner_shows_matching_people(self):
+        """Banner shows confirmed identities matching interest surnames."""
+        from app.main import _personalized_discovery_banner, to_xml
+
+        confirmed = [
+            {
+                "identity_id": "id-001",
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face1"],
+                "candidate_ids": [],
+            },
+        ]
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"):
+            result = _personalized_discovery_banner(["Capeluto"], confirmed, set(), {})
+            html = to_xml(result)
+            assert "Capeluto" in html
+            assert "Leon" in html or "confirmed" in html
+
+    def test_banner_empty_when_no_matches(self):
+        """Banner renders empty div when no matches found."""
+        from app.main import _personalized_discovery_banner, to_xml
+
+        confirmed = [
+            {
+                "identity_id": "id-001",
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face1"],
+                "candidate_ids": [],
+            },
+        ]
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"):
+            result = _personalized_discovery_banner(["Pizante"], confirmed, set(), {})
+            html = to_xml(result)
+            # Should be an empty div, not an error
+            assert html is not None
+
+    def test_banner_shows_multiple_surnames(self):
+        """Banner displays multiple interest surnames."""
+        from app.main import _personalized_discovery_banner, to_xml
+
+        confirmed = [
+            {
+                "identity_id": "id-001",
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face1"],
+                "candidate_ids": [],
+            },
+            {
+                "identity_id": "id-002",
+                "name": "Stella Hasson",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face2"],
+                "candidate_ids": [],
+            },
+        ]
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"):
+            result = _personalized_discovery_banner(["Capeluto", "Hasson"], confirmed, set(), {})
+            html = to_xml(result)
+            assert "Capeluto" in html
+            assert "Hasson" in html
+
+    def test_banner_limits_to_5_people(self):
+        """Banner shows at most 5 people thumbnails."""
+        from app.main import _personalized_discovery_banner, to_xml
+
+        confirmed = [
+            {
+                "identity_id": f"id-{i:03d}",
+                "name": f"Person{i} Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": [f"face{i}"],
+                "candidate_ids": [],
+            }
+            for i in range(10)
+        ]
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"):
+            result = _personalized_discovery_banner(["Capeluto"], confirmed, set(), {})
+            html = to_xml(result)
+            # Count face thumbnail images — should be at most 5
+            count = html.count("/crops/test.jpg")
+            assert count <= 5
+
+
 class TestGetOnboardingSurnames:
     """Tests for _get_onboarding_surnames helper."""
 

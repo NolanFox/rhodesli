@@ -6390,16 +6390,97 @@ def get():
     )
 
 
+def _personalized_discovery_banner(interest_surnames: list[str], confirmed_list: list,
+                                    crop_files: set, counts: dict) -> Div:
+    """Render a personalized discovery banner showing people matching user's interest surnames.
+
+    Shown at top of Needs Help section when user selected surnames during onboarding.
+    """
+    from core.registry import _load_surname_variants
+    variant_lookup = _load_surname_variants()
+
+    # Expand surnames to include variants
+    target_names = set()
+    for surname in interest_surnames:
+        target_names.add(surname.lower())
+        variants = variant_lookup.get(surname.lower(), [])
+        target_names.update(variants)
+
+    # Find matching confirmed identities
+    matches = []
+    for identity in confirmed_list:
+        name = (identity.get("name") or "").strip()
+        if not name or name.startswith("Unidentified"):
+            continue
+        name_words = [w.lower() for w in name.split()]
+        if any(w in target_names for w in name_words):
+            face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+            crop_url = resolve_face_image_url(face_ids[0], crop_files) if face_ids else None
+            if crop_url:
+                matches.append({
+                    "name": name,
+                    "crop_url": crop_url,
+                    "identity_id": identity["identity_id"],
+                })
+
+    if not matches:
+        return Div()  # Empty — no banner
+
+    # Show up to 5 matching people as a horizontal strip
+    people_thumbs = []
+    for m in matches[:5]:
+        people_thumbs.append(
+            A(
+                Div(
+                    Img(src=m["crop_url"], alt=m["name"],
+                        cls="w-12 h-12 rounded-full object-cover border-2 border-amber-400/50"),
+                    Span(m["name"].split()[0], cls="text-xs text-slate-400 mt-1 truncate w-14 text-center"),
+                    cls="flex flex-col items-center",
+                ),
+                href=f"/?section=confirmed&current={m['identity_id']}",
+                cls="hover:opacity-80 transition-opacity",
+            )
+        )
+
+    surnames_display = " & ".join(interest_surnames[:3])
+    more = f" +{len(interest_surnames) - 3}" if len(interest_surnames) > 3 else ""
+
+    return Div(
+        Div(
+            Div(
+                P(f"People from the {surnames_display}{more} families",
+                  cls="text-sm font-medium text-amber-200"),
+                P(f"{len(matches)} identified \u2014 can you help find more?",
+                  cls="text-xs text-slate-400"),
+                cls="flex-1",
+            ),
+            Div(*people_thumbs, cls="flex gap-3"),
+            cls="flex items-center gap-4",
+        ),
+        A("View all \u2192", href=f"/?section=confirmed",
+          cls="text-xs text-amber-400 hover:text-amber-300 mt-2 inline-block"),
+        cls="bg-amber-900/20 border border-amber-700/30 rounded-lg p-4 mb-4",
+    )
+
+
 @rt("/")
 def get(section: str = None, view: str = "focus", current: str = None,
         filter_source: str = "", filter_collection: str = "",
-        sort_by: str = "newest", filter: str = "", sess=None):
+        sort_by: str = "newest", filter: str = "", request=None, sess=None):
     """
     Landing page (no section) or Command Center (with section parameter).
     Public access -- anyone can view. Action buttons shown only to admins.
     Logged-in users with no section go to the triage dashboard.
     """
     user = get_current_user(sess or {})
+
+    # Read interest surnames from cookie for personalization
+    interest_surnames = []
+    if request:
+        raw = request.cookies.get("rhodesli_interest_surnames", "")
+        if raw:
+            from urllib.parse import unquote
+            interest_surnames = [s.strip() for s in unquote(raw).split(",") if s.strip()]
 
     # If no section specified:
     # - Logged-in users: go to inbox if items exist, otherwise Needs Help
@@ -6455,6 +6536,11 @@ def get(section: str = None, view: str = "focus", current: str = None,
     if view not in ("focus", "browse", "match"):
         view = "focus"
 
+    # Personalized discovery banner when user has interest surnames
+    discovery_banner = None
+    if interest_surnames and section == "skipped":
+        discovery_banner = _personalized_discovery_banner(interest_surnames, confirmed_list, crop_files, counts)
+
     # Render the appropriate section
     if section == "to_review":
         main_content = render_to_review_section(to_review, crop_files, view, counts, current_id=current, is_admin=user_is_admin, sort_by=sort_by, triage_filter=filter)
@@ -6467,6 +6553,10 @@ def get(section: str = None, view: str = "focus", current: str = None,
         main_content = render_photos_section(counts, registry, crop_files, filter_source, sort_by, filter_collection)
     else:  # rejected
         main_content = render_rejected_section(dismissed, crop_files, counts, is_admin=user_is_admin)
+
+    # Prepend discovery banner to main content if present
+    if discovery_banner:
+        main_content = Div(discovery_banner, main_content)
 
     style = Style("""
         html, body {
