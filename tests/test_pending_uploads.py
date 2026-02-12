@@ -570,3 +570,41 @@ class TestUploadSafetyChecks:
             response = client.post("/upload", files=files, data={"source": "Test"})
             assert response.status_code == 200
             assert "500 mb" in response.text.lower() or "too large" in response.text.lower()
+
+
+class TestPendingUploadsPhotoPreview:
+    """Photo preview thumbnails on admin pending page."""
+
+    @pytest.fixture
+    def admin_client(self):
+        from app.main import app
+        from starlette.testclient import TestClient
+        with patch("app.main.is_auth_enabled", return_value=False):
+            return TestClient(app)
+
+    def test_admin_pending_page_returns_200(self, admin_client, tmp_path):
+        """Admin pending page loads without error."""
+        with patch("app.main._load_pending_uploads", return_value={"uploads": {}}):
+            response = admin_client.get("/admin/pending")
+            assert response.status_code == 200
+
+    def test_pending_card_shows_thumbnails_when_staging_dir_exists(self, admin_client, tmp_path):
+        """Pending upload card shows image thumbnails when staging files exist."""
+        job_id = "test-job-001"
+        staging_dir = tmp_path / "staging" / job_id
+        staging_dir.mkdir(parents=True)
+        (staging_dir / "photo1.jpg").write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
+        (staging_dir / "photo2.jpg").write_bytes(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
+
+        pending_data = {"uploads": {job_id: {
+            "job_id": job_id, "status": "pending",
+            "uploader_email": "test@example.com", "source": "Test",
+            "files": ["photo1.jpg", "photo2.jpg"], "file_count": 2,
+            "submitted_at": "2026-02-12T00:00:00Z", "collection": "",
+        }}}
+
+        with patch("app.main._load_pending_uploads", return_value=pending_data), \
+             patch("app.main.data_path", tmp_path):
+            response = admin_client.get("/admin/pending")
+            assert response.status_code == 200
+            assert "photo1.jpg" in response.text or "staged/download" in response.text

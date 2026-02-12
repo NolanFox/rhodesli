@@ -10735,6 +10735,27 @@ def get(sess=None):
                     cls="flex gap-2 items-start"
                 )
 
+            # Photo preview thumbnails
+            preview_thumbs = []
+            staging_dir = data_path / "staging" / job_id
+            upload_files = item.get("files", [])
+            for fname in upload_files[:6]:
+                fpath = staging_dir / fname
+                if fpath.exists() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                    from urllib.parse import quote
+                    thumb_url = f"/api/sync/staged/download/{quote(job_id)}/{quote(fname)}"
+                    preview_thumbs.append(
+                        Img(src=thumb_url, alt=fname, loading="lazy",
+                            cls="w-16 h-16 object-cover rounded border border-slate-600",
+                            title=fname)
+                    )
+            remaining = len(upload_files) - 6
+            if remaining > 0:
+                preview_thumbs.append(
+                    Div(f"+{remaining}", cls="w-16 h-16 flex items-center justify-center rounded border border-slate-600 text-slate-400 text-sm bg-slate-800")
+                )
+            preview_row = Div(*preview_thumbs, cls="flex gap-2 mt-3 flex-wrap") if preview_thumbs else None
+
             pending_cards.append(
                 Div(
                     Div(
@@ -10748,6 +10769,7 @@ def get(sess=None):
                         actions,
                         cls="flex items-start justify-between gap-4"
                     ),
+                    preview_row,
                     id=f"pending-card-{job_id}",
                     cls="p-4 bg-slate-800 border border-slate-700 rounded-lg"
                 )
