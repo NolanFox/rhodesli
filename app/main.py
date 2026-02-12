@@ -1675,7 +1675,7 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
         )
     ]
 
-    # Add view toggle for to_review section
+    # Add view toggle for sections that support it
     if section == "to_review" and view_mode is not None:
         toggle = Div(
             A(
@@ -1692,6 +1692,21 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
                 "Match",
                 href="/?section=to_review&view=match",
                 cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-amber-500 text-white' if view_mode == 'match' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            ),
+            cls="flex items-center gap-2"
+        )
+        header_content.append(toggle)
+    elif section == "skipped" and view_mode is not None:
+        toggle = Div(
+            A(
+                "Focus",
+                href="/?section=skipped&view=focus",
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'focus' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+            ),
+            A(
+                "View All",
+                href="/?section=skipped&view=browse",
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'browse' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
             ),
             cls="flex items-center gap-2"
         )
@@ -2322,8 +2337,87 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
     )
 
 
-def render_skipped_section(skipped: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
-    """Render the Skipped section with ML hints for re-evaluation."""
+def render_skipped_section(skipped: list, crop_files: set, counts: dict,
+                           is_admin: bool = True, view_mode: str = "focus",
+                           current_id: str = None) -> Div:
+    """Render the Skipped section with Focus or Browse mode.
+
+    Focus mode: guided one-at-a-time review with photo context and ML suggestions.
+    Browse mode: grid of identity cards with lazy-loaded ML hints.
+    """
+    header = section_header(
+        "Needs Help",
+        f"{counts['skipped']} face{'s' if counts['skipped'] != 1 else ''} we haven't been able to identify yet \u2014 your family knowledge could be the key",
+        view_mode=view_mode,
+        section="skipped",
+    )
+
+    if view_mode == "focus":
+        # Sort by actionability for focus mode
+        sorted_skipped = _sort_skipped_by_actionability(skipped)
+
+        # If a specific identity was requested, move it to the front
+        if current_id:
+            current_identity = None
+            remaining = []
+            for item in sorted_skipped:
+                if item["identity_id"] == current_id:
+                    current_identity = item
+                else:
+                    remaining.append(item)
+            if not current_identity:
+                for item in skipped:
+                    if item["identity_id"] == current_id:
+                        current_identity = item
+                        break
+            if current_identity:
+                sorted_skipped = [current_identity] + remaining[:9]
+
+        if sorted_skipped:
+            # Build Up Next carousel
+            up_next = None
+            if len(sorted_skipped) > 1:
+                up_next = Div(
+                    H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
+                    Div(
+                        *[identity_card_mini(i, crop_files, clickable=True) for i in sorted_skipped[1:6]],
+                        Div(
+                            f"+{len(sorted_skipped) - 6} more",
+                            cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
+                        ) if len(sorted_skipped) > 6 else None,
+                        cls="flex gap-3 overflow-x-auto pb-2"
+                    ),
+                    cls="mt-6"
+                )
+
+            # Progress counter
+            total = counts["skipped"]
+            progress = _skipped_focus_progress()
+
+            content = Div(
+                progress,
+                skipped_card_expanded(sorted_skipped[0], crop_files, is_admin=is_admin),
+                up_next,
+                id="skipped-focus-container",
+                data_focus_mode="skipped",
+            )
+        else:
+            content = Div(
+                Div("🎉", cls="text-4xl mb-4"),
+                H3("All caught up!", cls="text-lg font-medium text-white"),
+                P("No faces need help right now.", cls="text-slate-400 mt-1"),
+                A(
+                    "← Back to Inbox",
+                    href="/?section=to_review",
+                    cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"
+                ),
+                cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
+                id="skipped-focus-container",
+            )
+
+        return Div(header, content, cls="space-y-6")
+
+    # Browse mode (default fallback)
     cards = []
     for identity in skipped:
         card = identity_card(identity, crop_files, lane_color="stone", show_actions=False, is_admin=is_admin)
@@ -2349,11 +2443,505 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict, is_admi
             cls="text-center py-12 text-slate-400"
         )
 
+    return Div(header, content, cls="space-y-6")
+
+
+def _sort_skipped_by_actionability(skipped: list) -> list:
+    """Sort skipped identities by actionability — best leads first.
+
+    Priority tiers (lower = higher priority):
+      0: Has VERY HIGH confidence proposal (near-certain match)
+      1: Has HIGH confidence proposal
+      2: Has MODERATE or lower proposal
+      3: No proposals (unmatched)
+
+    Within each tier, sort by best distance ascending (closest match first).
+    """
+    ids_with_proposals = _get_identities_with_proposals()
+
+    def _actionability_key(x):
+        iid = x.get("identity_id", "")
+        has_proposal = iid in ids_with_proposals
+        best = _get_best_proposal_for_identity(iid) if has_proposal else None
+
+        if has_proposal and best:
+            confidence = best.get("confidence", "")
+            if confidence == "VERY HIGH":
+                tier = 0
+            elif confidence == "HIGH":
+                tier = 1
+            else:
+                tier = 2
+            return (tier, best.get("distance", 999))
+        else:
+            return (3, 999)
+
+    return sorted(skipped, key=_actionability_key)
+
+
+def _skipped_focus_progress() -> Div:
+    """Build progress counter for skipped focus mode.
+
+    Uses client-side cookie to persist count across HTMX swaps.
+    """
     return Div(
-        section_header("Needs Help", f"{counts['skipped']} faces we haven't been able to identify yet \u2014 your family knowledge could be the key"),
-        content,
-        cls="space-y-6"
+        Div(
+            Span("Reviewed: ", cls="text-slate-400"),
+            Span("0", id="skipped-reviewed-count", cls="text-white font-bold"),
+            Span(" this session", cls="text-slate-400"),
+            cls="text-sm"
+        ),
+        A(
+            "← Exit Focus Mode",
+            href="/?section=skipped&view=browse",
+            cls="text-sm text-slate-400 hover:text-white transition-colors"
+        ),
+        Script("""
+            (function() {
+                var key = 'skipped_focus_count';
+                function getCount() {
+                    var stored = document.cookie.split(';').find(function(c) { return c.trim().startsWith(key + '='); });
+                    return stored ? parseInt(stored.split('=')[1]) : 0;
+                }
+                function setCount(n) {
+                    document.cookie = key + '=' + n + '; path=/; max-age=86400';
+                    var el = document.getElementById('skipped-reviewed-count');
+                    if (el) el.textContent = n;
+                }
+                // Initialize on load
+                var el = document.getElementById('skipped-reviewed-count');
+                if (el) el.textContent = getCount();
+                // Increment when the focus container is swapped (action was taken)
+                document.body.addEventListener('htmx:afterSwap', function(evt) {
+                    if (evt.detail.target && evt.detail.target.id === 'skipped-focus-container') {
+                        setCount(getCount() + 1);
+                    }
+                });
+            })();
+        """),
+        cls="flex items-center justify-between mb-4",
+        id="skipped-focus-progress",
     )
+
+
+def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True) -> Div:
+    """
+    Expanded identity card for Needs Help Focus Mode.
+
+    Shows the face prominently, the best ML suggestion side-by-side,
+    photo context (full photo with collection info), and action buttons:
+    - Same Person (Y): merge with top suggestion
+    - Not Same (N): reject top suggestion
+    - I Know Them (Enter): name input + confirm
+    - Skip (S): advance without action
+    """
+    identity_id = identity["identity_id"]
+    raw_name = ensure_utf8_display(identity.get("name"))
+    name = raw_name or "Unidentified Person"
+    state = identity["state"]
+
+    # Get all faces
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    face_count = len(all_face_ids)
+
+    # Get first face for main thumbnail
+    main_crop_url = None
+    main_photo_id = None
+    main_face_id = None
+    if all_face_ids:
+        first_face = all_face_ids[0]
+        main_face_id = first_face if isinstance(first_face, str) else first_face.get("face_id", "")
+        main_crop_url = resolve_face_image_url(main_face_id, crop_files)
+        main_photo_id = get_photo_id_for_face(main_face_id)
+
+    # Get photo context (collection, other identified people)
+    photo_context_el = _build_skipped_photo_context(main_face_id, main_photo_id, identity_id)
+
+    # Get top ML suggestion for side-by-side display
+    suggestion_el = _build_skipped_suggestion(identity_id, crop_files)
+
+    # Action buttons
+    if is_admin:
+        actions = _build_skipped_focus_actions(identity_id, state)
+    else:
+        actions = Div(
+            Button(
+                "Suggest Name",
+                cls="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors min-h-[44px]",
+                **{"_": f"on click toggle .hidden on #skipped-name-form-{identity_id}"},
+                type="button",
+            ),
+            cls="flex items-center gap-3 mt-6"
+        )
+
+    # Inline name form (hidden by default)
+    name_form = Div(
+        Form(
+            Input(
+                type="text",
+                name="name",
+                placeholder="Type their name...",
+                cls="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-slate-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-h-[44px]",
+                autofocus=True,
+            ),
+            Button(
+                "Confirm Identity",
+                cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
+                type="submit",
+            ),
+            Button(
+                "Cancel",
+                cls="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors min-h-[44px]",
+                type="button",
+                **{"_": f"on click add .hidden to #skipped-name-form-{identity_id}"},
+            ),
+            hx_post=f"/api/skipped/{identity_id}/name-and-confirm",
+            hx_target="#skipped-focus-container",
+            hx_swap="outerHTML",
+            cls="flex gap-3 items-center",
+        ),
+        cls="mt-4 hidden",
+        id=f"skipped-name-form-{identity_id}",
+    )
+
+    # Additional faces preview
+    face_previews = []
+    for face_entry in all_face_ids[1:4]:
+        fid = face_entry if isinstance(face_entry, str) else face_entry.get("face_id", "")
+        crop_url = resolve_face_image_url(fid, crop_files)
+        if crop_url:
+            face_photo_id = get_photo_id_for_face(fid)
+            if face_photo_id:
+                face_previews.append(
+                    Button(
+                        Img(src=crop_url, cls="w-14 h-14 rounded object-cover border border-slate-600 hover:border-indigo-400 transition-colors", alt=f"Face"),
+                        cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
+                        hx_get=f"/photo/{face_photo_id}/partial?face={fid}&identity_id={identity_id}",
+                        hx_target="#photo-modal-content",
+                        **{"_": "on click remove .hidden from #photo-modal"},
+                        type="button",
+                        title="Click to view photo",
+                    )
+                )
+
+    return Div(
+        # Top row: This Person + Best Match side by side
+        Div(
+            # Left: This Person
+            Div(
+                Div("This Person", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+                Button(
+                    Div(
+                        Img(
+                            src=main_crop_url or "",
+                            alt=name,
+                            cls="w-full h-full object-cover"
+                        ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
+                        cls="w-36 h-36 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                    ),
+                    cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
+                    hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}" if main_photo_id else None,
+                    hx_target="#photo-modal-content",
+                    **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
+                    type="button",
+                    title="Click to view full photo",
+                ) if main_photo_id else Div(
+                    Img(src=main_crop_url, alt=name, cls="w-full h-full object-cover") if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
+                    cls="w-36 h-36 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                ),
+                Div(
+                    P(name, cls="text-lg font-semibold text-white mt-2"),
+                    P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400"),
+                ),
+                # Additional faces
+                Div(*face_previews, cls="flex gap-2 mt-2") if face_previews else None,
+                cls="flex-1"
+            ),
+            # Right: Best Match suggestion
+            suggestion_el,
+            cls="flex flex-col sm:flex-row gap-6"
+        ),
+        # Photo context
+        photo_context_el,
+        # Neighbors container — auto-loads ML suggestions
+        Div(
+            id=f"neighbors-{identity_id}", cls="mt-4",
+            **({"hx_get": f"/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
+                "hx_trigger": "load",
+                "hx_swap": "innerHTML"}
+               if identity_id in _get_identities_with_proposals() else
+               {"hx_get": f"/api/identity/{identity_id}/neighbors?from_focus=true&focus_section=skipped",
+                "hx_trigger": "load",
+                "hx_swap": "innerHTML"}),
+        ),
+        # Actions
+        actions,
+        name_form,
+        cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6",
+        id="skipped-focus-card",
+    )
+
+
+def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str):
+    """Build photo context panel showing collection info and co-identified faces."""
+    if not photo_id:
+        return None
+
+    _build_caches()
+    photo = _photo_cache.get(photo_id)
+    if not photo:
+        return None
+
+    collection = photo.get("collection") or photo.get("source") or ""
+    photo_url = storage.get_photo_url(photo.get("path", ""))
+
+    # Find other identified faces in this photo
+    registry = load_registry()
+    other_people = []
+    for fid in photo.get("face_ids", []):
+        if fid == face_id:
+            continue
+        # Look up which identity this face belongs to
+        for state_name in ["CONFIRMED", "PROPOSED", "INBOX", "SKIPPED"]:
+            try:
+                state_enum = IdentityState[state_name]
+                identities = registry.list_identities(state=state_enum)
+                for ident in identities:
+                    if ident["identity_id"] == identity_id:
+                        continue
+                    all_faces = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+                    face_strs = [f if isinstance(f, str) else f.get("face_id", "") for f in all_faces]
+                    if fid in face_strs:
+                        ident_name = ensure_utf8_display(ident.get("name") or "")
+                        if ident_name and not ident_name.startswith("Unidentified"):
+                            other_people.append(ident_name)
+                        break
+            except (KeyError, AttributeError):
+                continue
+
+    other_people = list(set(other_people))[:5]  # Deduplicate, limit
+
+    context_items = []
+    if collection:
+        context_items.append(Span(f"Collection: {collection}", cls="text-xs text-slate-400"))
+    if other_people:
+        context_items.append(Span(f"Also in photo: {', '.join(other_people)}", cls="text-xs text-slate-300"))
+
+    if not context_items and not photo_url:
+        return None
+
+    return Div(
+        Div("Photo Context", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+        Div(
+            # Small photo thumbnail
+            Button(
+                Img(
+                    src=photo_url,
+                    cls="w-20 h-14 object-cover rounded border border-slate-600 hover:border-indigo-400 transition-colors",
+                    alt="Source photo",
+                ),
+                cls="p-0 bg-transparent cursor-pointer flex-shrink-0",
+                hx_get=f"/photo/{photo_id}/partial?face={face_id}&identity_id={identity_id}",
+                hx_target="#photo-modal-content",
+                **{"_": "on click remove .hidden from #photo-modal"},
+                type="button",
+                title="View full photo",
+            ),
+            Div(*context_items, cls="flex flex-col gap-1") if context_items else None,
+            cls="flex items-center gap-3"
+        ),
+        cls="mt-4 bg-slate-700/30 rounded-lg p-3 border border-slate-700/50"
+    )
+
+
+def _build_skipped_suggestion(identity_id: str, crop_files: set):
+    """Build the 'Best Match' side-by-side panel for a skipped identity."""
+    best = _get_best_proposal_for_identity(identity_id)
+    if not best:
+        return Div(
+            Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+            P("No ML suggestions yet", cls="text-sm text-slate-500 italic"),
+            P("Try 'Find Similar' to search manually", cls="text-xs text-slate-500 mt-1"),
+            cls="flex-1"
+        )
+
+    target_id = best.get("target_identity_id", "")
+    target_name = ensure_utf8_display(best.get("target_identity_name", "Unknown"))
+    confidence = best.get("confidence", "")
+    distance = best.get("distance", 0)
+    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+
+    color_cls = {
+        "VERY HIGH": "text-emerald-300",
+        "HIGH": "text-blue-300",
+        "MODERATE": "text-amber-300",
+    }.get(confidence, "text-slate-300")
+
+    # Get suggestion's face crop
+    try:
+        registry = load_registry()
+        target_identity = registry.get_identity(target_id)
+        target_faces = target_identity.get("anchor_ids", []) + target_identity.get("candidate_ids", [])
+        suggestion_crop_url = None
+        for f in target_faces:
+            fid = f if isinstance(f, str) else f.get("face_id", "")
+            url = resolve_face_image_url(fid, crop_files)
+            if url:
+                suggestion_crop_url = url
+                break
+    except (KeyError, Exception):
+        suggestion_crop_url = None
+
+    return Div(
+        Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+        Div(
+            Img(
+                src=suggestion_crop_url or "",
+                alt=target_name,
+                cls="w-full h-full object-cover"
+            ) if suggestion_crop_url else Span("?", cls="text-4xl text-slate-500"),
+            cls="w-36 h-36 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+        ),
+        Div(
+            P(target_name, cls="text-lg font-semibold text-white mt-2"),
+            P(
+                Span(f"{confidence}", cls=f"font-bold {color_cls}"),
+                Span(f" ({confidence_pct}%)", cls="text-slate-400"),
+                cls="text-sm mt-1"
+            ),
+        ),
+        cls="flex-1"
+    )
+
+
+def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
+    """Build action buttons for skipped focus mode."""
+    best = _get_best_proposal_for_identity(identity_id)
+    has_suggestion = best is not None
+
+    buttons = []
+
+    if has_suggestion:
+        target_id = best.get("target_identity_id", "")
+        target_name = ensure_utf8_display(best.get("target_identity_name", ""))
+        buttons.append(
+            Button(
+                "✓ Same Person",
+                cls="px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition-colors min-h-[44px]",
+                hx_post=f"/api/identity/{target_id}/merge/{identity_id}?from_focus=true&focus_section=skipped",
+                hx_target="#skipped-focus-container",
+                hx_swap="outerHTML",
+                type="button",
+                id="focus-btn-confirm",
+                title=f"Merge with {target_name}" if target_name else "Merge with suggestion",
+            )
+        )
+        buttons.append(
+            Button(
+                "✗ Not Same",
+                cls="px-4 py-2 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 transition-colors min-h-[44px]",
+                hx_post=f"/api/skipped/{identity_id}/reject-suggestion?suggestion_id={target_id}",
+                hx_target="#skipped-focus-container",
+                hx_swap="outerHTML",
+                type="button",
+                id="focus-btn-reject",
+                title="Not the same person — reject this suggestion",
+            )
+        )
+
+    buttons.append(
+        Button(
+            "I Know Them",
+            cls="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors min-h-[44px]",
+            type="button",
+            id="focus-btn-name",
+            **{"_": f"on click remove .hidden from #skipped-name-form-{identity_id} then set focus to the first <input/> in #skipped-name-form-{identity_id}"},
+            title="I recognize this person — enter their name",
+        )
+    )
+    buttons.append(
+        Button(
+            "→ Skip",
+            cls="px-4 py-2 bg-slate-700 text-slate-300 font-medium rounded-lg hover:bg-slate-600 transition-colors min-h-[44px]",
+            hx_post=f"/api/skipped/{identity_id}/focus-skip",
+            hx_target="#skipped-focus-container",
+            hx_swap="outerHTML",
+            type="button",
+            id="focus-btn-skip",
+            title="Skip — come back later",
+        )
+    )
+
+    shortcut_text = "Y / N / Enter / S" if has_suggestion else "Enter / S"
+    buttons.append(
+        Span(
+            f"Keyboard: {shortcut_text}",
+            cls="text-xs text-slate-600 hidden sm:inline ml-2",
+            title="Y=Same Person, N=Not Same, Enter=I Know Them, S=Skip"
+        )
+    )
+
+    return Div(*buttons, cls="flex flex-wrap items-center gap-3 mt-6")
+
+
+def get_next_skipped_focus_card(exclude_id: str = None) -> Div:
+    """
+    Get the next skipped identity card for focus mode review.
+
+    Returns an expanded identity card + Up Next carousel for skipped identities,
+    sorted by actionability. Returns empty state if no items remain.
+    """
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    skipped = registry.list_identities(state=IdentityState.SKIPPED)
+
+    # Filter out the just-actioned item
+    if exclude_id:
+        skipped = [i for i in skipped if i["identity_id"] != exclude_id]
+
+    # Sort by actionability
+    sorted_skipped = _sort_skipped_by_actionability(skipped)
+
+    if sorted_skipped:
+        # Build Up Next carousel
+        up_next = None
+        if len(sorted_skipped) > 1:
+            up_next = Div(
+                H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
+                Div(
+                    *[identity_card_mini(i, crop_files, clickable=True) for i in sorted_skipped[1:6]],
+                    Div(
+                        f"+{len(sorted_skipped) - 6} more",
+                        cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
+                    ) if len(sorted_skipped) > 6 else None,
+                    cls="flex gap-3 overflow-x-auto pb-2"
+                ),
+                cls="mt-6"
+            )
+
+        progress = _skipped_focus_progress()
+
+        return Div(
+            progress,
+            skipped_card_expanded(sorted_skipped[0], crop_files, is_admin=True),
+            up_next,
+            id="skipped-focus-container",
+            data_focus_mode="skipped",
+        )
+    else:
+        return Div(
+            Div("🎉", cls="text-4xl mb-4"),
+            H3("All caught up!", cls="text-lg font-medium text-white"),
+            P("You've reviewed all the faces that need help.", cls="text-slate-400 mt-1"),
+            A(
+                "← Back to Inbox",
+                href="/?section=to_review",
+                cls="inline-block mt-4 text-indigo-400 hover:text-indigo-300 font-medium"
+            ),
+            cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-12 text-center",
+            id="skipped-focus-container",
+        )
 
 
 def render_rejected_section(dismissed: list, crop_files: set, counts: dict, is_admin: bool = True) -> Div:
@@ -3312,7 +3900,7 @@ def face_card(
     )
 
 
-def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "") -> Div:
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "", focus_section: str = "") -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
@@ -3347,8 +3935,14 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     # In focus mode, target #focus-container and append from_focus=true so the merge
     # endpoint advances to the next identity instead of returning a browse-mode card.
     _focus_filter = f"&filter={triage_filter}" if triage_filter else ""
-    focus_suffix = f"&from_focus=true{_focus_filter}" if from_focus else ""
-    merge_target = "#focus-container" if from_focus else f"#identity-{target_identity_id}"
+    _focus_section = f"&focus_section={focus_section}" if focus_section else ""
+    focus_suffix = f"&from_focus=true{_focus_filter}{_focus_section}" if from_focus else ""
+    if from_focus and focus_section == "skipped":
+        merge_target = "#skipped-focus-container"
+    elif from_focus:
+        merge_target = "#focus-container"
+    else:
+        merge_target = f"#identity-{target_identity_id}"
     merge_swap = "outerHTML"
     if not can_merge:
         merge_btn = Button("Blocked", cls="px-3 py-1 text-sm font-bold bg-slate-600 text-slate-400 rounded cursor-not-allowed", disabled=True, title=neighbor.get("merge_blocked_reason_display"))
@@ -3513,14 +4107,15 @@ def manual_search_section(identity_id: str) -> Div:
     )
 
 
-def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False) -> Div:
+def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False, focus_section: str = "") -> Div:
     close_btn = Button("Close", cls="text-sm text-slate-400 hover:text-slate-300", hx_get=f"/api/identity/{identity_id}/neighbors/close", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML")
     if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), close_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
 
     # Mergeable neighbors get checkboxes for bulk operations
     mergeable = [n for n in neighbors if n.get("can_merge")]
-    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role, from_focus=from_focus) for n in neighbors]
-    focus_param = "&from_focus=true" if from_focus else ""
+    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role, from_focus=from_focus, focus_section=focus_section) for n in neighbors]
+    _focus_section_param = f"&focus_section={focus_section}" if focus_section else ""
+    focus_param = f"&from_focus=true{_focus_section_param}" if from_focus else ""
     load_more = Button("Load More", cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
                        hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}{focus_param}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
 
@@ -5442,7 +6037,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
     elif section == "confirmed":
         main_content = render_confirmed_section(confirmed_list, crop_files, counts, is_admin=user_is_admin, sort_by=sort_by)
     elif section == "skipped":
-        main_content = render_skipped_section(skipped_list, crop_files, counts, is_admin=user_is_admin)
+        skipped_view = view if view in ("focus", "browse") else "focus"
+        main_content = render_skipped_section(skipped_list, crop_files, counts, is_admin=user_is_admin, view_mode=skipped_view, current_id=current)
     elif section == "photos":
         main_content = render_photos_section(counts, registry, crop_files, filter_source, sort_by, filter_collection)
     else:  # rejected
@@ -5882,12 +6478,22 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 else if (e.key === 's' || e.key === 'S') matchBtn = document.getElementById('match-btn-skip');
                 if (matchBtn) { e.preventDefault(); matchBtn.click(); return; }
 
-                // --- Focus mode shortcuts: C=Confirm, S=Skip, R=Reject, F=Find Similar ---
+                // --- Focus mode shortcuts ---
+                // Skipped focus mode: Y=Same Person, N=Not Same, Enter=I Know Them, S=Skip
+                // Inbox focus mode: C=Confirm, S=Skip, R=Reject, F=Find Similar
                 var focusBtn = null;
-                if (e.key === 'c' || e.key === 'C') focusBtn = document.getElementById('focus-btn-confirm');
-                else if (e.key === 's' || e.key === 'S') focusBtn = document.getElementById('focus-btn-skip');
-                else if (e.key === 'r' || e.key === 'R') focusBtn = document.getElementById('focus-btn-reject');
-                else if (e.key === 'f' || e.key === 'F') focusBtn = document.getElementById('focus-btn-similar');
+                var isSkippedFocus = document.querySelector('[data-focus-mode="skipped"]');
+                if (isSkippedFocus) {
+                    if (e.key === 'y' || e.key === 'Y') focusBtn = document.getElementById('focus-btn-confirm');
+                    else if (e.key === 'n' || e.key === 'N') focusBtn = document.getElementById('focus-btn-reject');
+                    else if (e.key === 'Enter') focusBtn = document.getElementById('focus-btn-name');
+                    else if (e.key === 's' || e.key === 'S') focusBtn = document.getElementById('focus-btn-skip');
+                } else {
+                    if (e.key === 'c' || e.key === 'C') focusBtn = document.getElementById('focus-btn-confirm');
+                    else if (e.key === 's' || e.key === 'S') focusBtn = document.getElementById('focus-btn-skip');
+                    else if (e.key === 'r' || e.key === 'R') focusBtn = document.getElementById('focus-btn-reject');
+                    else if (e.key === 'f' || e.key === 'F') focusBtn = document.getElementById('focus-btn-similar');
+                }
                 if (focusBtn) { e.preventDefault(); focusBtn.click(); return; }
             });
         """),
@@ -6639,7 +7245,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
 # =============================================================================
 
 @rt("/api/identity/{identity_id}/neighbors")
-def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = False, sess=None):
+def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = False, focus_section: str = "", sess=None):
     """
     Get nearest neighbor identities for potential merge.
 
@@ -6733,6 +7339,7 @@ def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = Fa
         rejected_count=rejected_count,
         user_role=_get_user_role(sess),
         from_focus=from_focus,
+        focus_section=focus_section,
     )
 
 
@@ -7562,7 +8169,7 @@ def toast_with_merge_undo(message: str, target_id: str) -> Div:
 
 @rt("/api/identity/{target_id}/merge/{source_id}")
 def post(target_id: str, source_id: str, source: str = "web",
-         resolved_name: str = None, custom_name: str = None, from_focus: bool = False, filter: str = "", sess=None):
+         resolved_name: str = None, custom_name: str = None, from_focus: bool = False, filter: str = "", focus_section: str = "", sess=None):
     """
     Merge source identity into target identity. Requires admin.
 
@@ -7724,6 +8331,11 @@ def post(target_id: str, source_id: str, source: str = "web",
 
     # If from focus mode, advance to next identity instead of showing browse card
     if from_focus:
+        if focus_section == "skipped":
+            return (
+                get_next_skipped_focus_card(exclude_id=actual_target_id),
+                merge_toast,
+            )
         return (
             get_next_focus_card(exclude_id=actual_target_id, triage_filter=filter),
             merge_toast,
@@ -10441,6 +11053,79 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
     return (
         identity_card(updated_identity, crop_files, lane_color="stone", show_actions=False),
         toast("Skipped for later.", "info"),
+    )
+
+
+# =============================================================================
+# ROUTES — SKIPPED FOCUS MODE ACTIONS
+# =============================================================================
+
+@rt("/api/skipped/{identity_id}/focus-skip")
+def post(identity_id: str, sess=None):
+    """Advance to next identity in skipped focus mode without taking action."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    return (
+        get_next_skipped_focus_card(exclude_id=identity_id),
+        toast("Skipped for now.", "info"),
+    )
+
+
+@rt("/api/skipped/{identity_id}/reject-suggestion")
+def post(identity_id: str, suggestion_id: str = "", sess=None):
+    """Reject a suggestion for a skipped identity and advance to next."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if suggestion_id:
+        try:
+            registry = load_registry()
+            registry.reject_identity_pair(identity_id, suggestion_id, user_source="skipped_focus")
+            save_registry(registry)
+        except (KeyError, ValueError):
+            # If reject fails, just advance — don't block the user
+            pass
+
+    return (
+        get_next_skipped_focus_card(exclude_id=identity_id),
+        toast("Suggestion rejected. Moving to next.", "info"),
+    )
+
+
+@rt("/api/skipped/{identity_id}/name-and-confirm")
+def post(identity_id: str, name: str = "", sess=None):
+    """Name a skipped identity and confirm it, then advance to next in focus mode."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    name = name.strip()
+    if not name:
+        return Response(
+            to_xml(toast("Please enter a name.", "warning")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    try:
+        registry = load_registry()
+        registry.rename_identity(identity_id, name, user_source="web_review")
+        registry.confirm_identity(identity_id, user_source="web_review")
+        save_registry(registry)
+    except (KeyError, ValueError) as e:
+        return Response(
+            to_xml(toast(f"Cannot confirm: {str(e)}", "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
+
+    log_user_action("CONFIRM_NAMED", identity_id=identity_id, name=name)
+
+    return (
+        get_next_skipped_focus_card(exclude_id=identity_id),
+        toast(f"Confirmed as {name}!", "success"),
     )
 
 
