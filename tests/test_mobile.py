@@ -156,7 +156,7 @@ class TestMobileBottomTabs:
         text = response.text
         assert "Photos" in text
         assert "People" in text
-        assert "Inbox" in text
+        assert "Matches" in text
         assert "Search" in text
 
     def test_bottom_tabs_hidden_on_desktop(self, client):

@@ -215,7 +215,7 @@ class TestSkippedSectionFilterWrapper:
     """Skipped section cards must have wrappers with data-name for sidebar filtering."""
 
     def test_skipped_cards_have_wrapper_with_data_name(self, client):
-        """Needs Help card+hint wrappers have data-name so filter hides both together."""
+        """Help Identify card+hint wrappers have data-name so filter hides both together."""
         response = client.get("/?section=skipped")
         assert response.status_code == 200
         html = response.text

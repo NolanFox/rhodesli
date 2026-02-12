@@ -1,5 +1,5 @@
 """
-Tests for UI clarity: section descriptions, Skipped→Needs Help rename, empty states.
+Tests for UI clarity: section descriptions, Skipped→Help Identify rename, empty states.
 """
 
 import pytest
@@ -17,11 +17,11 @@ class TestSectionDescriptions:
     """Tests for descriptive section headers."""
 
     def test_inbox_description(self, client):
-        """Inbox section has descriptive subtitle."""
+        """New Matches section has descriptive subtitle."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/?section=to_review&view=browse")
             assert response.status_code == 200
-            assert "faces the AI has detected" in response.text
+            assert "faces the AI matched" in response.text
 
     def test_confirmed_section_label(self, client):
         """Confirmed section uses 'People' label with description."""
@@ -31,19 +31,19 @@ class TestSectionDescriptions:
             assert "People" in response.text
             assert "identified" in response.text
 
-    def test_skipped_displayed_as_needs_help(self, client):
-        """UI shows 'Needs Help' instead of 'Skipped' in section header."""
+    def test_skipped_displayed_as_help_identify(self, client):
+        """UI shows 'Help Identify' instead of 'Skipped' in section header."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/?section=skipped")
             assert response.status_code == 200
-            assert "Needs Help" in response.text
+            assert "Help Identify" in response.text
 
 
 class TestSkippedRename:
-    """Tests for Skipped → Needs Help UI rename."""
+    """Tests for Skipped → Help Identify UI rename."""
 
-    def test_sidebar_shows_needs_help(self, client):
-        """Sidebar navigation shows 'Needs Help' not 'Skipped'."""
+    def test_sidebar_shows_help_identify(self, client):
+        """Sidebar navigation shows 'Help Identify' not 'Skipped'."""
         from app.main import sidebar, load_registry, _compute_sidebar_counts
         from fastcore.xml import to_xml
         from unittest.mock import MagicMock
@@ -54,7 +54,7 @@ class TestSkippedRename:
         registry = load_registry()
         counts = _compute_sidebar_counts(registry)
         html = to_xml(sidebar(user=user, current_section="to_review", counts=counts))
-        assert "Needs Help" in html
+        assert "Help Identify" in html
         # Internal URL still uses ?section=skipped for backwards compatibility
         assert "section=skipped" in html
 

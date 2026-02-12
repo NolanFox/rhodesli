@@ -362,7 +362,7 @@ def test_sidebar_navigation(page, app_server):
     sidebar = page.locator("#sidebar")
     assert sidebar.count() > 0, "Sidebar not found"
 
-    assert page.locator("#sidebar a[title*='Inbox']").count() > 0, "Missing Inbox link"
+    assert page.locator("#sidebar a[title*='New Matches']").count() > 0, "Missing New Matches link"
     assert page.locator("#sidebar a[title*='Confirmed']").count() > 0, "Missing Confirmed link"
     assert page.locator("#sidebar a[title*='Photos']").count() > 0, "Missing Photos link"
 

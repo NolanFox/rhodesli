@@ -22,10 +22,10 @@ class TestAdminDashboardBanner:
         response = client.get("/?section=confirmed")
         assert "People" in response.text
 
-    def test_banner_shows_needs_help_count(self, client, auth_disabled):
-        """Banner should show the Needs Help count (renamed from Skipped)."""
+    def test_banner_shows_help_identify_count(self, client, auth_disabled):
+        """Banner should show the Help Identify count (renamed from Skipped)."""
         response = client.get("/?section=to_review")
-        assert "Needs Help" in response.text
+        assert "Help Identify" in response.text
 
     def test_banner_has_focus_mode_link(self, client, auth_disabled):
         """Banner should have a Focus Mode quick link when not in to_review."""

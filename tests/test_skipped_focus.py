@@ -1,4 +1,4 @@
-"""Tests for Needs Help (Skipped) Focus Mode.
+"""Tests for Help Identify (Skipped) Focus Mode.
 
 Verifies:
 - Focus mode renders single expanded identity card
@@ -24,7 +24,7 @@ def client():
 
 
 class TestSkippedFocusModeRendering:
-    """Verify the Focus Mode renders correctly for Needs Help section."""
+    """Verify the Focus Mode renders correctly for Help Identify section."""
 
     def test_focus_mode_returns_200(self, client):
         """GET /?section=skipped&view=focus returns 200."""
@@ -92,7 +92,7 @@ class TestSkippedFocusModeRendering:
 
 
 class TestSkippedFocusModeViewToggle:
-    """Verify Focus/Browse toggle works for Needs Help section."""
+    """Verify Focus/Browse toggle works for Help Identify section."""
 
     def test_view_toggle_present(self, client):
         """View toggle with Focus and View All links is present."""
@@ -387,15 +387,15 @@ class TestSmartLandingRedirect:
     """Test that logged-in users are redirected to the right section."""
 
     def test_logged_in_empty_inbox_goes_to_skipped(self, client):
-        """When inbox is empty, logged-in users see Needs Help instead."""
+        """When inbox is empty, logged-in users see Help Identify instead."""
         from app.auth import User
         mock_user = User(id="test", email="test@test.com", is_admin=True)
         with patch("app.main.get_current_user", return_value=mock_user), \
              patch("app.main.is_auth_enabled", return_value=True):
             resp = client.get("/")
             html = resp.text
-            # Should show Needs Help content (not empty inbox)
-            assert "Needs Help" in html or "skipped" in html
+            # Should show Help Identify content (not empty inbox)
+            assert "Help Identify" in html or "skipped" in html
 
 
 class TestSourcePhotoRendering:

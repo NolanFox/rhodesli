@@ -152,7 +152,7 @@ class TestFaceOverlayLegend:
     """Photo view includes a legend explaining face overlay colors."""
 
     def test_overlay_legend_present(self, client):
-        """Photo view has a legend showing Identified / Needs Help / New."""
+        """Photo view has a legend showing Identified / Help Identify / New."""
         from app.main import load_embeddings_for_photos
         photos = load_embeddings_for_photos()
         if not photos:
@@ -163,7 +163,7 @@ class TestFaceOverlayLegend:
         text = response.text
         if "face-overlay" in text:  # Only check if there are face overlays
             assert "Identified" in text, "Legend should explain green = Identified"
-            assert "Needs Help" in text, "Legend should explain amber = Needs Help"
+            assert "Help Identify" in text, "Legend should explain amber = Help Identify"
 
 
 class TestMLSuggestionsRedesign:

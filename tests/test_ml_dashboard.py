@@ -35,7 +35,7 @@ class TestMLDashboard:
         assert response.status_code == 200
         assert "Confirmed" in response.text
         assert "Skipped" in response.text
-        assert "Inbox" in response.text
+        assert "New Matches" in response.text
 
     def test_ml_dashboard_shows_thresholds(self, client):
         """ML dashboard displays calibrated thresholds."""

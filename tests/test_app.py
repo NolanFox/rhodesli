@@ -71,10 +71,10 @@ class TestGalleryRoute:
         response = client.get("/")
         assert "grid" in response.text  # Tailwind grid classes
 
-    def test_triage_view_has_inbox_header(self, client):
-        """Triage section displays the Inbox header."""
+    def test_triage_view_has_new_matches_header(self, client):
+        """Triage section displays the New Matches header."""
         response = client.get("/?section=to_review")
-        assert "Inbox" in response.text
+        assert "New Matches" in response.text
 
     def test_gallery_has_face_cards(self, client):
         """Gallery has face card elements with images when viewing browse."""
@@ -85,7 +85,7 @@ class TestGalleryRoute:
     def test_triage_view_has_attention_subtitle(self, client):
         """Triage section shows items needing attention."""
         response = client.get("/?section=to_review")
-        assert "need your attention" in response.text
+        assert "faces the AI matched" in response.text
 
     def test_workstation_has_keyboard_shortcuts(self, client):
         """Workstation displays keyboard shortcut hints."""

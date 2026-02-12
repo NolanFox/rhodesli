@@ -624,7 +624,7 @@ class TestAllStatesSearch:
         assert response.status_code == 200
         # If results found, non-confirmed should have state badges
         if "No matches" not in response.text and "Unidentified" in response.text:
-            assert "Needs Help" in response.text or "Inbox" in response.text or "Proposed" in response.text
+            assert "Help Identify" in response.text or "New Matches" in response.text or "Proposed" in response.text
 
     def test_api_search_routes_to_correct_section(self):
         """Search results link to the state-appropriate section."""

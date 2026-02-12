@@ -1433,7 +1433,7 @@ def _admin_dashboard_banner(counts: dict, current_section: str) -> Div:
     stat_items = [
         ("To Review", to_review, "/?section=to_review&view=focus", "text-amber-400"),
         ("People", confirmed, "/?section=confirmed", "text-emerald-400"),
-        ("Needs Help", skipped, "/?section=skipped", "text-yellow-400"),
+        ("Help Identify", skipped, "/?section=skipped", "text-yellow-400"),
     ]
     if proposals > 0:
         stat_items.append(("Proposals", proposals, "/admin/proposals", "text-blue-400"))
@@ -1588,8 +1588,8 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     "Review",
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
-                nav_item("/?section=to_review", "📥", "Inbox", counts["to_review"], "to_review", "blue"),
-                nav_item("/?section=skipped", "❓", "Needs Help", counts["skipped"], "skipped", "yellow"),
+                nav_item("/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "blue"),
+                nav_item("/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
                 cls="mb-3"
             ),
             # Library Section
@@ -2262,8 +2262,8 @@ def render_to_review_section(
 
     # Build header with optional sort controls (browse mode only)
     header = section_header(
-        "Inbox",
-        f"{counts['to_review']} items need your attention \u2014 faces the AI has detected but no one has identified yet",
+        "New Matches",
+        f"{counts['to_review']} faces the AI matched \u2014 confirm or correct",
         view_mode=view_mode,
         section="to_review"
     )
@@ -2346,8 +2346,8 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
     Browse mode: grid of identity cards with lazy-loaded ML hints.
     """
     header = section_header(
-        "Needs Help",
-        f"{counts['skipped']} face{'s' if counts['skipped'] != 1 else ''} we haven't been able to identify yet \u2014 your family knowledge could be the key",
+        "Help Identify",
+        f"{counts['skipped']} face{'s' if counts['skipped'] != 1 else ''} we need your help with \u2014 your family knowledge could be the key",
         view_mode=view_mode,
         section="skipped",
     )
@@ -3923,19 +3923,19 @@ def upload_area(existing_sources: list[str] = None, existing_collections: list[s
 
 def inbox_badge(count: int) -> A:
     """
-    Inbox badge showing count of items awaiting review.
+    New Matches badge showing count of items awaiting review.
     """
     if count == 0:
         return A(
             Span("\U0001F4E5", cls="mr-2"),
-            "Inbox",
+            "New Matches",
             Span("(0)", cls="text-slate-500 ml-1"),
             href="#inbox-lane",
             cls="text-slate-400 hover:text-slate-300 text-sm"
         )
     return A(
         Span("\U0001F4E5", cls="mr-2"),
-        "Inbox",
+        "New Matches",
         Span(
             f"({count})",
             cls="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full ml-1"
@@ -6790,7 +6790,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 cls="w-5 h-5", fill="none", stroke="currentColor", viewBox="0 0 24 24",
                 stroke_width="2", stroke_linecap="round", stroke_linejoin="round",
             ),
-            Span("Inbox", cls="text-[10px]"),
+            Span("Matches", cls="text-[10px]"),
             href="/?section=to_review&view=focus",
             cls=f"flex flex-col items-center justify-center gap-0.5 min-h-[44px] min-w-[44px] "
                 f"{'text-amber-400' if section == 'to_review' else 'text-slate-400 hover:text-slate-200'}",
@@ -7659,7 +7659,7 @@ def photo_view_content(
                 Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-emerald-500 mr-0.5"),
                 Span("Identified", cls="text-slate-400 mr-2"),
                 Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-amber-500 mr-0.5"),
-                Span("Needs Help", cls="text-slate-400 mr-2"),
+                Span("Help Identify", cls="text-slate-400 mr-2"),
                 Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-slate-400 mr-0.5"),
                 Span("New", cls="text-slate-400"),
                 cls="absolute bottom-1 right-1 bg-black/60 rounded px-2 py-0.5 flex items-center gap-0.5 text-[10px]",
@@ -8123,7 +8123,7 @@ def get(q: str = ""):
                 "SKIPPED": "bg-amber-500/20 text-amber-300",
             }
             badge_cls = state_colors.get(state, "bg-slate-500/20 text-slate-300")
-            state_label = "Needs Help" if state == "SKIPPED" else state.title()
+            state_label = "Help Identify" if state == "SKIPPED" else state.title()
             state_indicator = Span(state_label, cls=f"text-[10px] px-1.5 py-0.5 rounded {badge_cls}")
 
         items.append(
@@ -12478,7 +12478,7 @@ def get(sess=None):
     stat_cards = Div(
         _stat_card("Confirmed", str(len(confirmed)), "emerald"),
         _stat_card("Skipped", str(len(skipped)), "amber"),
-        _stat_card("Inbox", str(len(inbox) + len(proposed)), "blue"),
+        _stat_card("New Matches", str(len(inbox) + len(proposed)), "blue"),
         _stat_card("Rejected", str(len(rejected)), "red"),
         _stat_card("Total Faces", str(total_faces), "slate"),
         _stat_card("Identities", str(total_identities), "indigo"),
