@@ -211,6 +211,26 @@ class TestLightboxFaceOverlayClickable:
 # BUG 3: Identity links must route to correct section based on state
 # ---------------------------------------------------------------------------
 
+class TestSkippedSectionFilterWrapper:
+    """Skipped section cards must have wrappers with data-name for sidebar filtering."""
+
+    def test_skipped_cards_have_wrapper_with_data_name(self, client):
+        """Needs Help card+hint wrappers have data-name so filter hides both together."""
+        response = client.get("/?section=skipped")
+        assert response.status_code == 200
+        html = response.text
+        # If there are identity cards, they should be inside wrappers with data-name
+        if "identity-card" in html:
+            assert "identity-card-wrapper" in html, \
+                "Skipped section cards must be wrapped in identity-card-wrapper for filter"
+
+    def test_filter_script_targets_wrappers(self, client):
+        """Client-side filter script queries both .identity-card and .identity-card-wrapper."""
+        response = client.get("/?section=skipped")
+        assert response.status_code == 200
+        assert "identity-card-wrapper" in response.text
+
+
 class TestIdentityLinkRouting:
     """Identity card links must route to the correct section based on state."""
 

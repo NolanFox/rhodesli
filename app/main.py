@@ -2307,7 +2307,9 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict, is_admi
                 hx_swap="innerHTML",
                 cls="ml-4 mt-1 mb-3",
             )
-            cards.append(Div(card, hint))
+            # Wrapper carries data-name so sidebar filter hides card+hint together
+            raw_name = (identity.get("name") or "").lower()
+            cards.append(Div(card, hint, cls="identity-card-wrapper", data_name=raw_name))
 
     if cards:
         content = Div(*cards)
@@ -5734,7 +5736,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 }
                 var filterTimer = null;
                 function sidebarFilterCards(query) {
-                    var cards = document.querySelectorAll('.identity-card');
+                    // Filter both standalone cards and wrapper divs (Needs Help has card+hint wrappers)
+                    var cards = document.querySelectorAll('.identity-card, .identity-card-wrapper');
                     var q = (query || '').toLowerCase().trim();
                     for (var i = 0; i < cards.length; i++) {
                         var name = cards[i].getAttribute('data-name') || '';
