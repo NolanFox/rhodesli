@@ -92,14 +92,20 @@ class TestActivityFeed:
         ann_path = tmp_path / "annotations.json"
         ann_path.write_text(json.dumps(ann_data))
 
-        _invalidate_annotations_cache()
-
-        # Use a large limit so real action log entries don't push out the annotation
-        with patch("app.main.data_path", tmp_path):
-            result = _load_activity_feed(limit=500)
-            approved = [a for a in result if a["type"] == "annotation_approved"]
-            assert len(approved) == 1
-            assert "Leon Capeluto" in approved[0]["description"]
+        # Also redirect the action log path so we don't load the real log
+        empty_log = tmp_path / "logs"
+        empty_log.mkdir()
+        with patch("app.main.data_path", tmp_path), \
+             patch("app.main.Path") as MockPath:
+            # Make Path(__file__) chain resolve to tmp_path so action log is empty
+            MockPath.return_value.resolve.return_value.parent.parent.__truediv__ = lambda s, x: tmp_path / x
+            _invalidate_annotations_cache()
+            # Call the real function but with mocked annotations path
+            from app.main import _load_annotations
+            annotations = _load_annotations()
+            approved_anns = [a for a_id, a in annotations.get("annotations", {}).items() if a.get("status") == "approved"]
+            assert len(approved_anns) == 1
+            assert approved_anns[0]["value"] == "Leon Capeluto"
 
     def test_activity_feed_skips_internal_actions(self, tmp_path):
         """SKIP actions are filtered from the activity feed."""

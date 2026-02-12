@@ -3312,10 +3312,11 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
                            hx_swap=merge_swap, data_auth_action="merge these identities")
 
     # Compare button -- opens side-by-side comparison modal
+    _compare_filter = f"?filter={triage_filter}" if triage_filter else ""
     compare_btn = Button(
         "Compare",
         cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
-        hx_get=f"/api/identity/{target_identity_id}/compare/{neighbor_id}",
+        hx_get=f"/api/identity/{target_identity_id}/compare/{neighbor_id}{_compare_filter}",
         hx_target="#compare-modal-content",
         hx_swap="innerHTML",
         **{"_": "on click remove .hidden from #compare-modal"},
@@ -4209,9 +4210,9 @@ def landing_page(user=None) -> tuple:
     return Title("Rhodesli - Rhodes-Capeluto Family Archive"), style, Div(
         Nav(Div(A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"), Div(*nav_links, cls="flex items-center gap-6"), cls="max-w-6xl mx-auto px-6 flex items-center justify-between"), cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50", id="landing-nav"),
         Section(Div(*hero_photos, cls="hero-grid"), Div(cls="hero-overlay absolute inset-0"), Div(H1("Preserving the faces and stories of the Rhodes-Capeluto family", cls="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6 landing-animate max-w-3xl"), P("A living archive of our shared history, brought together by family and powered by careful research. Every photo tells a story. Every face is a connection.", cls="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl landing-animate landing-animate-delay-1"), Div(primary_cta, secondary_cta, cls="flex flex-wrap gap-4 landing-animate landing-animate-delay-2"), cls="absolute inset-0 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 md:pb-16"), cls="relative overflow-hidden pt-16", id="hero"),
-        Section(Div(P("The archive so far", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-8 text-center"), Div(Div(Div(str(stats["photo_count"]), cls="text-4xl md:text-5xl font-bold text-white mb-1"), Div("photos preserved", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["named_count"]), cls="text-4xl md:text-5xl font-bold text-emerald-400 mb-1"), Div("people identified", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["total_faces"]), cls="text-4xl md:text-5xl font-bold text-amber-400 mb-1"), Div("faces detected", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["needs_help"]), cls="text-4xl md:text-5xl font-bold text-blue-400 mb-1"), Div("faces need your help", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), cls="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"), cls="max-w-4xl mx-auto px-6"), cls="py-16 md:py-20", id="stats"),
+        Section(Div(P("The archive so far", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-8 text-center"), Div(Div(Div(str(stats["photo_count"]), cls="text-4xl md:text-5xl font-bold text-white mb-1"), Div("photos preserved", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["named_count"]), cls="text-4xl md:text-5xl font-bold text-emerald-400 mb-1"), Div("people identified", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["total_faces"]), cls="text-4xl md:text-5xl font-bold text-amber-400 mb-1"), Div("faces detected", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), A(Div(str(stats["needs_help"]), cls="text-4xl md:text-5xl font-bold text-blue-400 mb-1"), Div("faces need your help", cls="text-sm text-slate-400"), href="/?section=to_review", cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-colors block"), cls="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"), cls="max-w-4xl mx-auto px-6"), cls="py-16 md:py-20", id="stats"),
         Section(Div(P("How it works", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-4 text-center"), H2("Help us piece together our family history", cls="text-2xl md:text-3xl font-bold text-white text-center mb-12"), Div(step_card(browse_icon, "Browse Photos", "Explore our growing collection of family photographs spanning generations and continents -- from Rhodes to New York and beyond."), Div(NotStr(arrow_svg), cls="hidden md:flex items-center justify-center"), step_card(identify_icon, "Help Identify People", "Do you recognize someone? Your knowledge of the family is invaluable. Confirm names, suggest identifications, or note who you remember."), Div(NotStr(arrow_svg), cls="hidden md:flex items-center justify-center"), step_card(connect_icon, "Connect with History", "Each identification connects a face to a story, strengthening our family tree and preserving memories for future generations."), cls="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4 items-start"), cls="max-w-5xl mx-auto px-6"), cls="py-16 md:py-20 border-t border-slate-800", id="how-it-works"),
-        Section(Div(H2(f"{stats['needs_help']} faces are waiting to be recognized", cls="text-2xl md:text-3xl font-bold text-white mb-4"), P("If you grew up hearing stories about the family, you might be the one who can put a name to a face. Every identification helps.", cls="text-slate-300 mb-8 max-w-xl mx-auto"), Div(primary_cta, cls="flex justify-center"), cls="text-center max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 bg-gradient-to-b from-slate-800/50 to-transparent border-t border-slate-800", id="cta"),
+        Section(Div(H2(f"{stats['needs_help']} faces are waiting to be recognized", cls="text-2xl md:text-3xl font-bold text-white mb-4"), P("If you grew up hearing stories about the family, you might be the one who can put a name to a face. Every identification helps.", cls="text-slate-300 mb-8 max-w-xl mx-auto"), Div(primary_cta, A("Help Identify Faces", href="/?section=to_review", cls="inline-block px-8 py-4 border-2 border-blue-500 text-blue-300 text-lg font-semibold rounded-xl hover:border-blue-300 hover:text-white transition-colors"), cls="flex flex-wrap justify-center gap-4"), cls="text-center max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 bg-gradient-to-b from-slate-800/50 to-transparent border-t border-slate-800", id="cta"),
         Section(Div(H2("About this project", cls="text-xl font-bold text-white mb-4"), P("Rhodesli is a community effort to preserve the photographic heritage of the Rhodes-Capeluto family and the broader Sephardic community of Rhodes. These photos, spanning decades of family life across continents, represent irreplaceable memories that connect us to our shared roots.", cls="text-slate-400 leading-relaxed mb-4"), P("Using careful face detection technology, we have begun the work of identifying the people in these photographs. But technology can only do so much -- we need family members who remember these faces and their stories to help complete the picture.", cls="text-slate-400 leading-relaxed"), cls="max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 border-t border-slate-800", id="about"),
         Footer(Div(Div(Span("Rhodesli", cls="text-lg font-bold text-white"), Span(" -- A family heritage project", cls="text-sm text-slate-500"), cls="flex items-baseline gap-1 flex-wrap"), Div(A("Photos", href="/?section=photos", cls="text-xs text-slate-500 hover:text-slate-300"), Span("|", cls="text-slate-700"), A("People", href="/?section=confirmed", cls="text-xs text-slate-500 hover:text-slate-300"), Span("|", cls="text-slate-700"), A("Review Inbox", href="/?section=to_review", cls="text-xs text-slate-500 hover:text-slate-300"), cls="flex items-center gap-2"), cls="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4"), cls="py-8 border-t border-slate-800"),
         cls="min-h-screen bg-slate-900")
@@ -8121,7 +8122,7 @@ def _compare_photo_with_overlays(photo_url_str: str, photo_id: str, highlight_fa
 
 
 @rt("/api/identity/{target_id}/compare/{neighbor_id}")
-def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces", sess=None):
+def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces", filter: str = "", sess=None):
     """Side-by-side comparison view for evaluating merge candidates."""
     try:
         registry = load_registry()
@@ -8166,17 +8167,18 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
     # Section routing for clickable names
     t_section = _section_for_state(tgt.get("state", "INBOX"))
     n_section = _section_for_state(nbr.get("state", "INBOX"))
+    _filter_suffix = f"&filter={filter}" if filter else ""
 
     def _cn(side, cur, tot, oth):
         if tot <= 1:
             return None
         b = f"/api/identity/{target_id}/compare/{neighbor_id}"
         if side == "t":
-            pu = f"{b}?target_idx={cur-1}&neighbor_idx={oth}&view={view}"
-            nu = f"{b}?target_idx={cur+1}&neighbor_idx={oth}&view={view}"
+            pu = f"{b}?target_idx={cur-1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
+            nu = f"{b}?target_idx={cur+1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
         else:
-            pu = f"{b}?target_idx={oth}&neighbor_idx={cur-1}&view={view}"
-            nu = f"{b}?target_idx={oth}&neighbor_idx={cur+1}&view={view}"
+            pu = f"{b}?target_idx={oth}&neighbor_idx={cur-1}&view={view}{_filter_suffix}"
+            nu = f"{b}?target_idx={oth}&neighbor_idx={cur+1}&view={view}{_filter_suffix}"
         pb = Button("\u2190", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
                     hx_get=pu, hx_target="#compare-modal-content", hx_swap="innerHTML",
                     type="button") if cur > 0 else Button(
@@ -8189,7 +8191,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                    cls="flex items-center justify-center gap-1 mt-2")
 
     # Face/Photo toggle
-    base_url = f"/api/identity/{target_id}/compare/{neighbor_id}?target_idx={target_idx}&neighbor_idx={neighbor_idx}"
+    base_url = f"/api/identity/{target_id}/compare/{neighbor_id}?target_idx={target_idx}&neighbor_idx={neighbor_idx}{_filter_suffix}"
     toggle = Div(
         Button("Faces",
                cls=f"px-3 py-1 text-xs font-medium rounded-l {'bg-amber-600 text-white' if view == 'faces' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
@@ -8263,7 +8265,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
         toggle,
         Div(
             Div(
-                A(t_name, href=f"/?section={t_section}&current={target_id}",
+                A(t_name, href=f"/?section={t_section}&current={target_id}{_filter_suffix}",
                   cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
                   **{"_": "on click add .hidden to #compare-modal"}),
                 t_photo_div,
@@ -8272,7 +8274,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                 cls="flex-1 min-w-0"),
             Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
             Div(
-                A(n_name, href=f"/?section={n_section}&current={neighbor_id}",
+                A(n_name, href=f"/?section={n_section}&current={neighbor_id}{_filter_suffix}",
                   cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
                   **{"_": "on click add .hidden to #compare-modal"}),
                 n_photo_div,

@@ -37,11 +37,11 @@ class TestCompareModal:
             assert 'id="compare-modal"' in response.text
 
     def test_compare_modal_uses_full_width(self, client):
-        """Compare modal uses adequate viewport width."""
+        """Compare modal uses adequate viewport width (90vw or 7xl)."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/?section=confirmed")
-            # Should use max-w-5xl (not max-w-4xl)
-            assert "max-w-5xl" in response.text or "max-w-full" in response.text
+            # Should use max-w-[90vw] or max-w-7xl (upgraded from max-w-5xl)
+            assert "max-w-[90vw]" in response.text or "max-w-7xl" in response.text or "max-w-full" in response.text
 
 
 class TestCompareEndpoint:
