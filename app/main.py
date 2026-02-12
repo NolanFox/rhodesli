@@ -3244,13 +3244,11 @@ def face_card(
 
         detach_btn = Button(
             "Detach",
-            cls="text-xs text-red-400 hover:text-red-300 underline mt-1 ml-2",
-            # Fix: URL Encode the face_id so spaces don't break the path
+            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2",
             hx_post=f"/api/face/{quote(face_id)}/detach",
-            # Fix: Use the safe CSS ID selector
             hx_target=f"#{safe_dom_id}",
             hx_swap="outerHTML",
-            hx_confirm="Detach this face into a new identity?",
+            hx_confirm="Move this face to its own identity? (You can merge it back later.)",
             type="button",
         )
 
@@ -9063,7 +9061,7 @@ def post(face_id: str, sess=None):
         Div(new_card_html, hx_swap_oob="afterbegin:#proposed-lane"),
 
         # C. Success toast
-        toast(f"Face detached into new identity.", "success"),
+        toast("Face moved to its own identity. Use Merge to combine them back.", "success"),
     )
 
 

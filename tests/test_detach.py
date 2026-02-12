@@ -183,3 +183,32 @@ class TestDetachFace:
         assert registry.get_anchor_face_ids(identity_id) == ["face_a"]
         # New identity should have face_b
         assert "face_b" in registry.get_anchor_face_ids(result["to_identity_id"])
+
+
+class TestDetachUX:
+    """Detach button uses non-alarming styling and explains reversibility."""
+
+    def test_detach_button_not_red(self):
+        """Detach button should use neutral styling, not red (detach is non-destructive)."""
+        from fasthtml.common import to_xml
+        from app.main import face_card
+
+        card = face_card("face_a", "/static/crops/test.jpg", quality=0.5, show_detach=True)
+        html = to_xml(card)
+
+        # Should have Detach button
+        assert "Detach" in html
+        # Should NOT use red styling (detach is non-destructive)
+        assert "text-red-400" not in html
+        # Should use neutral slate color
+        assert "text-slate-400" in html
+
+    def test_detach_confirm_explains_reversibility(self):
+        """Detach confirmation should explain you can merge back."""
+        from fasthtml.common import to_xml
+        from app.main import face_card
+
+        card = face_card("face_a", "/static/crops/test.jpg", quality=0.5, show_detach=True)
+        html = to_xml(card)
+
+        assert "merge it back" in html.lower()
