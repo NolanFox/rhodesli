@@ -35,6 +35,7 @@ sys.path.insert(0, str(project_root))
 from core.registry import IdentityRegistry, IdentityState
 from core.config import (
     MATCH_THRESHOLD_HIGH,
+    MATCH_THRESHOLD_LOW,
     MATCH_THRESHOLD_MEDIUM,
     MATCH_THRESHOLD_MODERATE,
     MATCH_THRESHOLD_VERY_HIGH,
@@ -6724,14 +6725,15 @@ def get(identity_id: str):
         return Span("No similar identities found.", cls="text-xs text-slate-500 italic")
 
     # Map distance to confidence tier for visual display
+    # Uses config constants for consistency with neighbor_card (AD-013)
     def _confidence_tier(dist):
-        if dist < 0.80:
+        if dist < MATCH_THRESHOLD_VERY_HIGH:
             return ("Very High", "bg-emerald-500", 5)
-        elif dist < 1.05:
+        elif dist < MATCH_THRESHOLD_HIGH:
             return ("High", "bg-green-500", 4)
-        elif dist < 1.15:
+        elif dist < MATCH_THRESHOLD_MODERATE:
             return ("Moderate", "bg-amber-500", 3)
-        elif dist < 1.25:
+        elif dist < MATCH_THRESHOLD_LOW:
             return ("Low", "bg-orange-500", 2)
         else:
             return ("Very Low", "bg-red-500", 1)
