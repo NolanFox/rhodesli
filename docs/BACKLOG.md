@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 6.1 — February 12, 2026
-**Status**: 1557 tests passing, v0.26.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 6.2 — February 12, 2026
+**Status**: 1567 tests passing, v0.27.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -106,7 +106,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 |----|------|--------|-------|
 | FE-050 | Welcome/about landing page | DONE | Heritage photos, community explanation (2026-02-06) |
 | FE-051 | Interactive hero with real archive photos | DONE | Carousel with real archive photos (2026-02-06) |
-| FE-052 | First-time user welcome modal | DONE | Session-based welcome modal with archive overview and "Got it" dismiss (2026-02-10) |
+| FE-052 | First-time user welcome modal | DONE | Cookie-based welcome modal with archive overview and "Got it" dismiss. v0.27.0: switched from session to persistent cookie (2026-02-12) |
 | FE-053 | Progress dashboard | DONE | "X of Y faces identified" with percentage and help CTA, 5 tests (2026-02-08) |
 | FE-054 | Landing page stats + historical content | DONE | Fixed unidentified stat to include SKIPPED, rewrote About section with Rhodes history (2026-02-10) |
 | FE-055 | UI clarity pass | DONE | Section rename Confirmed→People, Skipped→Needs Help, section descriptions, empty states (2026-02-10) |

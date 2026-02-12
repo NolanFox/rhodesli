@@ -1,6 +1,18 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-12 (Session 18c — Focus Mode + Docs)
+Last updated: 2026-02-12 (Session 19 — Discovery-First Overhaul)
+
+## Session 19 Completed
+- [x] Best Match fallback: real-time neighbor computation when proposals empty
+- [x] Source photo rendering: filename fallback for photo cache
+- [x] Ordering fix: batch vectorized distances via batch_best_neighbor_distances()
+- [x] Welcome modal: persistent cookie replaces session-based check
+- [x] Smart landing: empty inbox → Needs Help redirect
+- [x] Larger face crops + confidence rings
+- [x] Sticky action bar
+- [x] Collapsible Similar Identities panel (toggle, not dismiss)
+- [x] Reject undo toast with unreject link
+- [x] 10 new tests (1567 total)
 
 ## Session 18c Completed
 - [x] Focus Mode for Needs Help: guided single-identity review with photo context, actions, keyboard shortcuts

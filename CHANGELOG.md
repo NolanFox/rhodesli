@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.27.0] - 2026-02-12
+
+### Fixed
+- **Best Match always empty**: All 16 proposals in proposals.json targeted INBOX identities, not SKIPPED. Added real-time neighbor computation fallback (`_compute_best_neighbor`, `_get_best_match_for_identity`) so Best Match works for all identities.
+- **Source photo broken image**: Photo cache uses "filename" key (from embeddings.npy) but code used `photo.get("path")`. Added fallback: `photo.get("path") or photo.get("filename")`.
+- **Ordering random**: All 211 SKIPPED identities had no proposals, so all landed in the same tier. Added `batch_best_neighbor_distances()` to `core/neighbors.py` for vectorized batch distance computation. Ordering now uses real embedding distances.
+- **Welcome modal on every visit**: Session-based check meant modal reappeared every session. Switched to persistent cookie (`rhodesli_welcomed`, 1-year max-age) with JS-based show/hide.
+- **Empty inbox dead end**: Logged-in users with empty inbox saw "All caught up!" instead of useful content. Smart landing now redirects to Needs Help section when inbox is empty.
+
+### Added
+- **Real-time neighbor computation**: `_compute_best_neighbor()` and `batch_best_neighbor_distances()` provide ML suggestions without pre-computed proposals.
+- **Confidence rings on Best Match**: Face crops show colored ring borders (emerald=strong, blue=good, amber=possible, grey=weak).
+- **Human-readable confidence labels**: "Strong match", "Good match", "Possible match", "Weak match" replace raw ML scores.
+- **Larger face crops**: Focus mode crops enlarged from w-36/w-48 to w-40/w-56 for better detail.
+- **Sticky action bar**: Action buttons stick to bottom of viewport for easy access on long cards.
+- **Collapsible Similar Identities panel**: Changed from dismiss (Close) to toggle (Collapse/Expand) using Hyperscript.
+- **Reject undo toast**: Reject suggestion action shows toast with Undo button linking to unreject endpoint.
+- 10 new tests, test count: 1557 → 1567.
+
 ## [v0.26.0] - 2026-02-12
 
 ### Added
