@@ -147,7 +147,7 @@ class TestNeighborCardThumbnail:
         # Should fall back to second anchor's crop
         assert "/crops/image_002_22.00_0.jpg" in html
         # Should NOT show placeholder
-        assert 'class="w-12 h-12 bg-slate-600' not in html
+        assert 'class="w-16 h-16 bg-slate-600' not in html
 
     def test_shows_placeholder_when_no_anchors_have_crops(self):
         """When no anchors have crop files, shows placeholder."""
@@ -167,7 +167,7 @@ class TestNeighborCardThumbnail:
         html = to_xml(card)
 
         # Should show placeholder div
-        assert 'class="w-12 h-12 bg-slate-600' in html
+        assert 'class="w-16 h-16 bg-slate-600' in html
 
     def test_shows_placeholder_when_no_anchors(self):
         """When identity has no anchors, shows placeholder."""
@@ -187,7 +187,7 @@ class TestNeighborCardThumbnail:
         html = to_xml(card)
 
         # Should show placeholder
-        assert 'class="w-12 h-12 bg-slate-600' in html
+        assert 'class="w-16 h-16 bg-slate-600' in html
 
     def test_falls_back_to_candidate_when_no_anchor_crops(self):
         """When no anchors have crops, falls back to candidate faces (B2-REPAIR)."""
@@ -211,7 +211,7 @@ class TestNeighborCardThumbnail:
         # Should use candidate's crop
         assert "/crops/candidate_image_21.50_0.jpg" in html
         # Should NOT show placeholder
-        assert 'class="w-12 h-12 bg-slate-600' not in html
+        assert 'class="w-16 h-16 bg-slate-600' not in html
 
     def test_falls_back_to_candidate_when_no_anchors(self):
         """PROPOSED identities with only candidates should show candidate thumbnail."""
@@ -234,7 +234,7 @@ class TestNeighborCardThumbnail:
         # Should use candidate's crop
         assert "/crops/solo_candidate_21.50_0.jpg" in html
         # Should NOT show placeholder
-        assert 'class="w-12 h-12 bg-slate-600' not in html
+        assert 'class="w-16 h-16 bg-slate-600' not in html
 
     def test_shows_placeholder_when_neither_anchor_nor_candidate_has_crop(self):
         """When neither anchors nor candidates have crops, shows placeholder."""
@@ -255,4 +255,4 @@ class TestNeighborCardThumbnail:
         html = to_xml(card)
 
         # Should show placeholder
-        assert 'class="w-12 h-12 bg-slate-600' in html
+        assert 'class="w-16 h-16 bg-slate-600' in html

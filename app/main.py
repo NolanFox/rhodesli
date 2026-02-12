@@ -1917,7 +1917,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                     Button(
                         Img(
                             src=crop_url,
-                            cls="w-16 h-16 rounded object-cover border border-slate-600 hover:border-indigo-400 transition-colors",
+                            cls="w-16 h-16 rounded object-cover border border-slate-600 hover:border-indigo-400 hover:scale-110 transition-all",
                             alt=f"Face {face_id[:8]}"
                         ),
                         cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded transition-all",
@@ -2022,7 +2022,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                             alt=name,
                             cls="w-full h-full object-cover"
                         ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                        cls="w-32 h-32 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                        cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
                     hx_get=f"/photo/{main_photo_id}/partial?face={face_id}&identity_id={identity_id}" if main_photo_id else None,
@@ -2036,7 +2036,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                         alt=name,
                         cls="w-full h-full object-cover"
                     ) if main_crop_url else Span("?", cls="text-6xl text-slate-500"),
-                    cls="w-32 h-32 sm:w-48 sm:h-48 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
+                    cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                 ),
                 cls="flex-shrink-0"
             ),
@@ -3146,7 +3146,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
                 Div(
                     Div(
                         Img(src=m_crop or "", alt=m_name, cls="w-full h-full object-cover") if m_crop else Span("?", cls="text-lg text-slate-500"),
-                        cls=f"w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-2 {m_ring}"
+                        cls=f"w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center ring-2 {m_ring} hover:scale-105 transition-transform"
                     ),
                     P(m_name[:20] + ("..." if len(m_name) > 20 else ""), cls="text-xs text-slate-300 mt-1 text-center truncate max-w-[80px]"),
                     P(m_label, cls=f"text-[10px] {_CONFIDENCE_COLOR.get(m_conf, 'text-slate-400')} text-center"),
@@ -4323,14 +4323,20 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
         type="button",
     )
 
-    # Thumbnail logic
-    thumbnail_img = Div(cls="w-12 h-12 bg-slate-600 rounded")
+    # Thumbnail logic — prefer best quality, fall back to any available crop
+    thumbnail_img = Div(cls="w-16 h-16 bg-slate-600 rounded")
     anchor_face_ids = neighbor.get("anchor_face_ids", []) + neighbor.get("candidate_face_ids", [])
-    for fid in anchor_face_ids:
-        crop_url = resolve_face_image_url(fid, crop_files)
-        if crop_url:
-            thumbnail_img = Img(src=crop_url, alt=name, cls="w-12 h-12 object-cover rounded border border-slate-600")
-            break
+    crop_url = None
+    best_fid = get_best_face_id(anchor_face_ids) if anchor_face_ids else None
+    if best_fid:
+        crop_url = resolve_face_image_url(best_fid, crop_files)
+    if not crop_url:
+        for fid in anchor_face_ids:
+            crop_url = resolve_face_image_url(fid, crop_files)
+            if crop_url:
+                break
+    if crop_url:
+        thumbnail_img = Img(src=crop_url, alt=name, cls="w-16 h-16 object-cover rounded border border-slate-600 hover:scale-105 transition-transform")
 
     # Checkbox for bulk selection (linked to bulk form via hyperscript)
     # Uses property assignment (not attribute toggle) so FormData picks it up
