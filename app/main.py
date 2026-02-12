@@ -6770,9 +6770,10 @@ def get(identity_id: str):
             "Compare",
             cls="text-[10px] px-2 py-0.5 bg-slate-600 hover:bg-slate-500 text-slate-300 rounded transition-colors",
             hx_get=f"/api/identity/{identity_id}/compare/{neighbor_id}",
-            hx_target=f"#neighbors-{identity_id}",
+            hx_target="#compare-modal-content",
             hx_swap="innerHTML",
             type="button",
+            **{"_": "on click remove .hidden from #compare-modal"},
         )
         merge_btn = Button(
             "Merge",

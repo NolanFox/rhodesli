@@ -114,6 +114,30 @@ class TestSkipHintsEndpoint:
             assert "hx-get" in content or "hx_get" in content
 
 
+class TestAISuggestionsCompareButton:
+    """Regression: AI suggestions Compare button must open the compare modal, not swap into sidebar."""
+
+    def test_skip_hints_compare_targets_modal(self, client, auth_disabled):
+        """Compare button in AI suggestions targets #compare-modal-content, not #neighbors-{id}."""
+        from app.main import load_registry
+        registry = load_registry()
+        identities = registry.list_identities()
+
+        if not identities:
+            pytest.skip("No identities available")
+
+        identity_id = identities[0]["identity_id"]
+        response = client.get(f"/api/identity/{identity_id}/skip-hints")
+
+        if response.status_code == 200 and "Compare" in response.text:
+            html = response.text
+            # Compare button must target the modal, not the sidebar
+            assert '#compare-modal-content' in html, \
+                "Compare button should target #compare-modal-content"
+            assert f'#neighbors-{identity_id}' not in html or 'Compare' not in html.split(f'#neighbors-{identity_id}')[0], \
+                "Compare button should NOT target #neighbors-{identity_id}"
+
+
 class TestNeighborCardConfidenceGap:
     """Test that neighbor cards display the confidence gap."""
 
