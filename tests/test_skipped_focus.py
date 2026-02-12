@@ -196,7 +196,8 @@ class TestSkippedFocusModeWithMockData:
                  "distance": 0.85,
                  "target_identity_id": "target-1",
                  "target_identity_name": "Known Person",
-             }):
+             }), \
+             patch("app.main._identity_quality_score", return_value=50.0):
             sorted_list = _sort_skipped_by_actionability(identities)
             assert sorted_list[0]["identity_id"] == "skip-high"
 
@@ -206,7 +207,8 @@ class TestSkippedFocusModeWithMockData:
 
         identities = self._mock_skipped_identities()
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()):
+        with patch("app.main._get_identities_with_proposals", return_value=set()), \
+             patch("app.main._identity_quality_score", return_value=50.0):
             sorted_list = _sort_skipped_by_actionability(identities)
             # Both in tier 3 (no proposals), should maintain original order
             assert len(sorted_list) == 2
@@ -516,14 +518,15 @@ class TestActionabilitySortUnit:
         from unittest.mock import patch
 
         mock_neighbors = {
-            "id-high": (0.95, "HIGH"),
-            "id-very-high": (0.75, "VERY HIGH"),
+            "id-high": (0.95, "HIGH", "Person X"),
+            "id-very-high": (0.75, "VERY HIGH", "Person Y"),
         }
         skipped = [
             {"identity_id": "id-high", "name": "Person A", "state": "SKIPPED"},
             {"identity_id": "id-very-high", "name": "Person B", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors):
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
+             patch("app.main._identity_quality_score", return_value=50.0):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-very-high"
             assert result[1]["identity_id"] == "id-high"
@@ -534,13 +537,14 @@ class TestActionabilitySortUnit:
         from unittest.mock import patch
 
         mock_neighbors = {
-            "id-match": (1.10, "MODERATE"),
+            "id-match": (1.10, "MODERATE", "Someone"),
         }
         skipped = [
             {"identity_id": "id-nomatch", "name": "Nobody", "state": "SKIPPED"},
             {"identity_id": "id-match", "name": "Somebody", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors):
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
+             patch("app.main._identity_quality_score", return_value=50.0):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-match"
             assert result[1]["identity_id"] == "id-nomatch"
@@ -551,14 +555,57 @@ class TestActionabilitySortUnit:
         from unittest.mock import patch
 
         mock_neighbors = {
-            "id-far": (0.98, "HIGH"),
-            "id-close": (0.82, "HIGH"),
+            "id-far": (0.98, "HIGH", "Person X"),
+            "id-close": (0.82, "HIGH", "Person Y"),
         }
         skipped = [
             {"identity_id": "id-far", "name": "Far", "state": "SKIPPED"},
             {"identity_id": "id-close", "name": "Close", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors):
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
+             patch("app.main._identity_quality_score", return_value=50.0):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-close"
             assert result[1]["identity_id"] == "id-far"
+
+    def test_named_match_before_unidentified_within_tier(self):
+        """Named match targets sort before unidentified ones within same tier."""
+        from app.main import _sort_skipped_by_actionability
+        from unittest.mock import patch
+
+        mock_neighbors = {
+            "id-named": (0.90, "HIGH", "Rica Moussafer"),
+            "id-unid": (0.90, "HIGH", "Unidentified Person 310"),
+        }
+        skipped = [
+            {"identity_id": "id-unid", "name": "Person A", "state": "SKIPPED"},
+            {"identity_id": "id-named", "name": "Person B", "state": "SKIPPED"},
+        ]
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
+             patch("app.main._identity_quality_score", return_value=50.0):
+            result = _sort_skipped_by_actionability(skipped)
+            assert result[0]["identity_id"] == "id-named"
+            assert result[1]["identity_id"] == "id-unid"
+
+    def test_quality_tiebreaker_within_tier(self):
+        """Higher quality face sorts first within same tier and distance."""
+        from app.main import _sort_skipped_by_actionability
+        from unittest.mock import patch
+
+        mock_neighbors = {
+            "id-blurry": (0.90, "HIGH", "Person X"),
+            "id-clear": (0.90, "HIGH", "Person Y"),
+        }
+        skipped = [
+            {"identity_id": "id-blurry", "name": "Blurry", "state": "SKIPPED"},
+            {"identity_id": "id-clear", "name": "Clear", "state": "SKIPPED"},
+        ]
+
+        def mock_quality(identity):
+            return 80.0 if identity.get("identity_id") == "id-clear" else 20.0
+
+        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
+             patch("app.main._identity_quality_score", side_effect=mock_quality):
+            result = _sort_skipped_by_actionability(skipped)
+            assert result[0]["identity_id"] == "id-clear"
+            assert result[1]["identity_id"] == "id-blurry"

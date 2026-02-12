@@ -2231,9 +2231,13 @@ def render_to_review_section(
         else:
             tier = 5
 
+        # Quality tiebreaker — clear faces first within same tier
+        quality = _identity_quality_score(x)
+
         return (
             tier,
             best["distance"] if best else 999,
+            -quality,
             -len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
         )
 
@@ -2578,7 +2582,8 @@ def _get_skipped_neighbor_distances(skipped: list) -> dict:
         if iid in ids_with_proposals:
             best = _get_best_proposal_for_identity(iid)
             if best:
-                result[iid] = (best.get("distance", 999), best.get("confidence", "LOW"))
+                target_name = best.get("target_name", best.get("name", ""))
+                result[iid] = (best.get("distance", 999), best.get("confidence", "LOW"), target_name)
 
     # For identities without proposals, compute batch neighbors
     needs_computation = [i["identity_id"] for i in skipped if i["identity_id"] not in result]
@@ -2588,7 +2593,7 @@ def _get_skipped_neighbor_distances(skipped: list) -> dict:
             registry = load_registry()
             face_data = get_face_data()
             batch_results = batch_best_neighbor_distances(needs_computation, registry, face_data)
-            for iid, (dist, _, _) in batch_results.items():
+            for iid, (dist, neighbor_id, neighbor_name) in batch_results.items():
                 if dist < 999:
                     if dist < 0.80:
                         confidence = "VERY HIGH"
@@ -2598,13 +2603,28 @@ def _get_skipped_neighbor_distances(skipped: list) -> dict:
                         confidence = "MODERATE"
                     else:
                         confidence = "LOW"
-                    result[iid] = (dist, confidence)
+                    result[iid] = (dist, confidence, neighbor_name or "")
         except (ImportError, Exception) as e:
             print(f"[sort] Batch neighbor computation failed: {e}")
 
     _skipped_neighbor_cache = result
     _skipped_neighbor_cache_key = cache_key
     return result
+
+
+def _identity_quality_score(identity: dict) -> float:
+    """Get the best face quality score for an identity (0-100).
+
+    Used for ordering — clear, high-quality faces should appear before
+    blurry or small ones within the same confidence tier.
+    """
+    face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    if not face_ids:
+        return 0.0
+    best_id = get_best_face_id(face_ids)
+    if best_id:
+        return compute_face_quality_score(best_id)
+    return 0.0
 
 
 def _sort_skipped_by_actionability(skipped: list) -> list:
@@ -2616,7 +2636,11 @@ def _sort_skipped_by_actionability(skipped: list) -> list:
       2: Has MODERATE or lower match
       3: No matches found
 
-    Within each tier, sort by best distance ascending (closest match first).
+    Within each tier, sort by:
+      1. Named match target bonus (named targets like "Rica Moussafer" before "Unidentified Person 310")
+      2. Distance ascending (closest match first)
+      3. Face quality descending (clear faces before blurry ones)
+
     Uses proposals when available, falls back to real-time neighbor computation.
     """
     neighbor_data = _get_skipped_neighbor_distances(skipped)
@@ -2626,7 +2650,7 @@ def _sort_skipped_by_actionability(skipped: list) -> list:
         match = neighbor_data.get(iid)
 
         if match:
-            dist, confidence = match
+            dist, confidence, target_name = match
             if confidence == "VERY HIGH":
                 tier = 0
             elif confidence == "HIGH":
@@ -2635,9 +2659,17 @@ def _sort_skipped_by_actionability(skipped: list) -> list:
                 tier = 2
             else:
                 tier = 3
-            return (tier, dist)
+
+            # Named match bonus: 0 if target is named, 1 if unidentified
+            is_unidentified = 1 if (not target_name or target_name.startswith("Unidentified")) else 0
+
+            # Quality penalty (negative so higher quality sorts first)
+            quality = _identity_quality_score(x)
+
+            return (tier, is_unidentified, dist, -quality)
         else:
-            return (4, 999)
+            quality = _identity_quality_score(x)
+            return (4, 1, 999, -quality)
 
     return sorted(skipped, key=_actionability_key)
 
@@ -2650,7 +2682,8 @@ def _actionability_badge(identity_id: str, ids_with_proposals: set = None):
     """
     # Try cached neighbor distances first
     if _skipped_neighbor_cache and identity_id in _skipped_neighbor_cache:
-        _, confidence = _skipped_neighbor_cache[identity_id]
+        cached = _skipped_neighbor_cache[identity_id]
+        confidence = cached[1]  # (distance, confidence, target_name)
     else:
         # Fallback to proposals
         if ids_with_proposals and identity_id not in ids_with_proposals:
@@ -3866,9 +3899,13 @@ def get_next_focus_card(exclude_id: str = None, triage_filter: str = ""):
         else:
             tier = 5
 
+        # Quality tiebreaker — clear faces first within same tier
+        quality = _identity_quality_score(x)
+
         return (
             tier,
             best["distance"] if best else 999,
+            -quality,
             -len(x.get("anchor_ids", []) + x.get("candidate_ids", [])),
         )
 
