@@ -61,7 +61,7 @@ def check_identity_integrity():
         if state not in valid_states:
             errors.append(f"INVALID STATE: identity {iid} has state='{state}'")
 
-        name = identity.get("name", "").lower()
+        name = (identity.get("name") or "").lower()
         for pat in test_names:
             if pat in name:
                 errors.append(

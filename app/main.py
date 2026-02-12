@@ -3726,6 +3726,14 @@ def identity_card(
     # Pagination controls
     pagination = _face_pagination_controls(identity_id, 0, total_faces, "date")
 
+    # Badge for merged-unnamed identities (multiple faces but no human name)
+    grouped_badge = None
+    if total_faces > 1 and (name.startswith("Unidentified") or name.startswith("Identity ")):
+        grouped_badge = Span(
+            f"Grouped ({total_faces} faces)",
+            cls="text-xs px-2 py-0.5 rounded bg-purple-600/20 text-purple-300 border border-purple-500/30 ml-2",
+        )
+
     return Div(
         # Header with name, state, and controls
         Div(
@@ -3734,6 +3742,7 @@ def identity_card(
                 state_badge(state),
                 _proposal_badge_inline(identity_id),
                 _promotion_badge(identity),
+                grouped_badge,
                 Span(
                     f"{total_faces} face{'s' if total_faces != 1 else ''}",
                     cls="text-xs text-slate-400 ml-2"
@@ -3844,7 +3853,7 @@ def compare_modal() -> Div:
                 P("Loading...", cls="text-slate-400 text-center py-8"),
                 id="compare-modal-content",
             ),
-            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-5xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700"
+            cls="bg-slate-800 rounded-lg shadow-2xl w-full max-w-full sm:max-w-[90vw] lg:max-w-7xl max-h-[90vh] overflow-auto p-3 sm:p-6 relative border border-slate-700"
         ),
         id="compare-modal",
         cls="hidden fixed inset-0 flex items-center justify-center p-2 sm:p-4 z-[10000]",
@@ -7545,6 +7554,7 @@ def post(target_id: str, source_id: str, source: str = "web",
     crop_files = get_crop_files()
     updated_identity = registry.get_identity(actual_target_id)
     target_name = ensure_utf8_display(updated_identity.get("name")) or "identity"
+    is_unnamed = target_name.startswith("Unidentified") or target_name.startswith("identity")
 
     # Log the action
     log_user_action(
@@ -7578,6 +7588,43 @@ def post(target_id: str, source_id: str, source: str = "web",
     # Post-merge re-evaluation: suggest nearby unmatched faces (ML-005)
     suggestion_panel = _post_merge_suggestions(actual_target_id, registry, crop_files)
 
+    # Post-merge guidance banner — encourage naming unnamed identities
+    if is_unnamed:
+        faces_merged = result["faces_merged"]
+        merge_guidance = Div(
+            Div(
+                Span("Grouped!", cls="font-bold text-emerald-300"),
+                Span(f" {_pl(faces_merged, 'face')} are now linked together.", cls="text-slate-300"),
+                cls="text-sm",
+            ),
+            Button(
+                "Add a name \u2192",
+                cls="text-xs text-indigo-400 hover:text-indigo-300 underline mt-1",
+                hx_get=f"/api/identity/{actual_target_id}/rename-form",
+                hx_target=f"#name-{actual_target_id}",
+                hx_swap="outerHTML",
+                type="button",
+            ),
+            cls="bg-emerald-900/20 border border-emerald-500/30 rounded-lg px-4 py-3 mb-3",
+            id=f"merge-guidance-{actual_target_id}",
+            hx_swap_oob=f"afterbegin:#identity-{actual_target_id}",
+        )
+    else:
+        total_faces = len(updated_identity.get("anchor_ids", [])) + len(updated_identity.get("candidate_ids", []))
+        merge_guidance = Div(
+            Div(
+                Span("Merge complete!", cls="font-bold text-emerald-300"),
+                Span(f" {_pl(total_faces, 'face')} now confirmed as ", cls="text-slate-300"),
+                Span(target_name, cls="font-semibold text-white"),
+                Span(".", cls="text-slate-300"),
+                cls="text-sm",
+            ),
+            cls="bg-emerald-900/20 border border-emerald-500/30 rounded-lg px-4 py-3 mb-3",
+            id=f"merge-guidance-{actual_target_id}",
+            hx_swap_oob=f"afterbegin:#identity-{actual_target_id}",
+            **{"_": "on load wait 6s then transition opacity to 0 over 1s then remove me"},
+        )
+
     # If from focus mode, advance to next identity instead of showing browse card
     if from_focus:
         return (
@@ -7587,6 +7634,7 @@ def post(target_id: str, source_id: str, source: str = "web",
 
     return (
         identity_card(updated_identity, crop_files, lane_color="emerald", show_actions=False),
+        merge_guidance,
         *oob_elements,
         merge_toast,
         suggestion_panel,
@@ -8099,15 +8147,13 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
     t_name = ensure_utf8_display(tgt.get("name")) or f"Identity {target_id[:8]}..."
     n_name = ensure_utf8_display(nbr.get("name")) or f"Identity {neighbor_id[:8]}..."
 
-    # Resolve full photo URLs and photo IDs for photo view mode
+    # Resolve photo IDs (always needed for View Photo links) and photo URLs (for photos view)
     t_photo_url = None
     n_photo_url = None
-    t_photo_id = ""
-    n_photo_id = ""
+    _build_caches()
+    t_photo_id = _face_to_photo_cache.get(t_fid, "")
+    n_photo_id = _face_to_photo_cache.get(n_fid, "")
     if view == "photos":
-        _build_caches()
-        t_photo_id = _face_to_photo_cache.get(t_fid, "")
-        n_photo_id = _face_to_photo_cache.get(n_fid, "")
         if t_photo_id and _photo_cache and t_photo_id in _photo_cache:
             t_photo_url = storage.get_photo_url(_photo_cache[t_photo_id].get("filename", ""))
         if n_photo_id and _photo_cache and n_photo_id in _photo_cache:
@@ -8193,6 +8239,26 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                 cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
             cls="flex justify-center bg-slate-700/50 rounded p-2")
 
+    # View Photo links — open the full photo lightbox from compare modal
+    t_view_photo = Button(
+        "View Photo \u2192",
+        cls="text-xs text-amber-400/70 hover:text-amber-400 mt-1",
+        hx_get=f"/photo/{t_photo_id}/partial?face={t_fid}",
+        hx_target="#photo-modal-content",
+        hx_swap="innerHTML",
+        **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
+        type="button",
+    ) if t_photo_id else None
+    n_view_photo = Button(
+        "View Photo \u2192",
+        cls="text-xs text-indigo-400/70 hover:text-indigo-400 mt-1",
+        hx_get=f"/photo/{n_photo_id}/partial?face={n_fid}",
+        hx_target="#photo-modal-content",
+        hx_swap="innerHTML",
+        **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
+        type="button",
+    ) if n_photo_id else None
+
     return Div(
         toggle,
         Div(
@@ -8201,6 +8267,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                   cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
                   **{"_": "on click add .hidden to #compare-modal"}),
                 t_photo_div,
+                t_view_photo,
                 _cn("t", target_idx, len(tf), neighbor_idx),
                 cls="flex-1 min-w-0"),
             Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
@@ -8209,6 +8276,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
                   cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
                   **{"_": "on click add .hidden to #compare-modal"}),
                 n_photo_div,
+                n_view_photo,
                 _cn("n", neighbor_idx, len(nf), target_idx),
                 cls="flex-1 min-w-0"),
             cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start"),
