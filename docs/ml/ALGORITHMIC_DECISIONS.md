@@ -300,12 +300,24 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Revisit condition**: If dual-branch adapter (original + restored) proves practical without identity drift
 - **Affects**: `core/ingest.py`, `core/ingest_inbox.py`
 
+### AD-038: Face Quality Scoring — Composite Display Score
+- **Date**: 2026-02-12
+- **Context**: Identity thumbnails showed first-in-list face, not best-quality. User feedback: "photos are very poor quality, you feel like keeping on scrolling."
+- **Decision**: Composite quality score (0-100) combining three signals:
+  - Detection confidence (0-30 pts): InsightFace SCRFD `det_score`
+  - Face crop area (0-35 pts): from bounding box, normalized to 22500px² (150×150)
+  - Embedding norm (0-35 pts): MagFace principle — higher norm = higher quality
+- **Display only**: Score used to select best thumbnail for identity cards. Never used for ML matching, clustering, or filtering. Low-quality faces are deprioritized, never hidden.
+- **Rejected**: (1) Sharpness (Laplacian variance) — requires loading original image crops at runtime, too expensive for on-demand computation. (2) Pose frontality — not available in current InsightFace output without additional model call. (3) Single signal (just det_score) — insufficient discrimination; many faces have high det_score but are tiny (newspaper thumbnails).
+- **Affects**: `app/main.py` — `compute_face_quality_score()`, `get_best_face_id()`, identity card rendering, neighbor card thumbnails.
+- **Tests**: `tests/test_quality_scoring.py` — 13 tests.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-038)
+1. Add a new entry with AD-XXX format (next: AD-039)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

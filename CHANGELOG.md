@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.28.1] - 2026-02-12
+
+### Added
+- **Face quality scoring** (AD-038): Composite 0-100 score combining detection confidence, face area, and embedding norm. Best-quality crop automatically selected as identity thumbnail everywhere.
+- **Discovery UX rules** (`.claude/rules/discovery-ux.md`): 10 principles for all future UI work.
+- **Photo enhancement research doc**: Summarizes 3 papers confirming enhancement hurts face recognition.
+- **Feedback tracker**: `docs/feedback/CLAUDE_BENATAR_FEEDBACK.md` tracking 11 items with status.
+
+### Changed
+- **Larger face crops globally**: Focus mode main crop 128→192px (mobile) / 192→288px (desktop). Neighbor thumbnails 48→64px. More matches strip 64→80px / 80→96px.
+- **Quality-aware thumbnails**: `get_best_face_id()` replaces `all_face_ids[0]` in identity cards, neighbor cards, and focus mode.
+- **Hover effects**: Face crop images have subtle scale-on-hover indicating clickability.
+- 13 new tests (quality scoring), test count: 1622 → 1635.
+
 ## [v0.28.0] - 2026-02-12
 
 ### Added

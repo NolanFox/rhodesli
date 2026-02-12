@@ -1,6 +1,17 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-12 (Session 19b — Core UX Fixes)
+Last updated: 2026-02-12 (Session 19d — Polish, Quality & Documentation)
+
+## Session 19d Completed
+- [x] Face quality scoring (AD-038): composite 0-100 score, best-face selection for thumbnails
+- [x] Global face crop sizing audit: larger crops everywhere, hover effects
+- [x] Mobile responsiveness: verified all features already implemented (hamburger, bottom nav, stacking)
+- [x] Photo enhancement research doc (docs/ml/PHOTO_ENHANCEMENT_RESEARCH.md)
+- [x] Discovery UX rules (.claude/rules/discovery-ux.md) — 10 principles
+- [x] Claude Benatar feedback tracker (docs/feedback/CLAUDE_BENATAR_FEEDBACK.md)
+- [x] AD-038 documented in ALGORITHMIC_DECISIONS.md
+- [x] CHANGELOG, ROADMAP, BACKLOG sync for v0.28.1
+- [x] 13 new tests (1635 total)
 
 ## Session 19b Completed
 - [x] Search AND-matching: multi-word queries now use AND logic with variant expansion
