@@ -2417,13 +2417,17 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
 
         return Div(header, content, cls="space-y-6")
 
-    # Browse mode (default fallback)
+    # Browse mode (default fallback) — sort by actionability (best leads first)
+    sorted_browse = _sort_skipped_by_actionability(skipped)
+    ids_with_proposals = _get_identities_with_proposals()
     cards = []
-    for identity in skipped:
+    for identity in sorted_browse:
         card = identity_card(identity, crop_files, lane_color="stone", show_actions=False, is_admin=is_admin)
         if card:
             # Add lazy-loaded ML hint below each skipped card
             identity_id = identity["identity_id"]
+            # Add actionability badge
+            badge = _actionability_badge(identity_id, ids_with_proposals)
             hint = Div(
                 id=f"skip-hint-{identity_id}",
                 hx_get=f"/api/identity/{identity_id}/skip-hints",
@@ -2433,7 +2437,7 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
             )
             # Wrapper carries data-name so sidebar filter hides card+hint together
             raw_name = (identity.get("name") or "").lower()
-            cards.append(Div(card, hint, cls="identity-card-wrapper", data_name=raw_name))
+            cards.append(Div(badge, card, hint, cls="identity-card-wrapper", data_name=raw_name))
 
     if cards:
         content = Div(*cards)
@@ -2477,6 +2481,34 @@ def _sort_skipped_by_actionability(skipped: list) -> list:
             return (3, 999)
 
     return sorted(skipped, key=_actionability_key)
+
+
+def _actionability_badge(identity_id: str, ids_with_proposals: set):
+    """Return a visual badge for an identity's actionability level.
+
+    Returns None if the identity has no leads.
+    """
+    if identity_id not in ids_with_proposals:
+        return None
+
+    best = _get_best_proposal_for_identity(identity_id)
+    if not best:
+        return None
+
+    confidence = best.get("confidence", "")
+    if confidence in ("VERY HIGH", "HIGH"):
+        return Div(
+            Span("Strong lead", cls="text-xs font-bold text-emerald-300"),
+            Span(" — ML found a likely match", cls="text-xs text-slate-400"),
+            cls="px-3 py-1 bg-emerald-900/30 border border-emerald-500/30 rounded-lg mb-1",
+        )
+    elif confidence == "MODERATE":
+        return Div(
+            Span("Good lead", cls="text-xs font-bold text-amber-300"),
+            Span(" — possible match found", cls="text-xs text-slate-400"),
+            cls="px-3 py-1 bg-amber-900/30 border border-amber-500/30 rounded-lg mb-1",
+        )
+    return None
 
 
 def _skipped_focus_progress() -> Div:

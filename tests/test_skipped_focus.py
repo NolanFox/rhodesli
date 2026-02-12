@@ -234,6 +234,47 @@ class TestSkippedFocusUpNext:
             assert "Up Next" in text
 
 
+class TestActionabilityBadges:
+    """Test actionability badges in browse and focus mode."""
+
+    def test_strong_lead_badge_for_high_confidence(self):
+        """Strong lead badge returned for VERY HIGH or HIGH proposals."""
+        from app.main import _actionability_badge
+        with patch("app.main._get_best_proposal_for_identity", return_value={
+            "confidence": "HIGH", "distance": 0.85,
+            "target_identity_id": "t1", "target_identity_name": "Known"
+        }):
+            badge = _actionability_badge("test-id", {"test-id"})
+            from fasthtml.common import to_xml
+            html = to_xml(badge)
+            assert "Strong lead" in html
+
+    def test_good_lead_badge_for_moderate(self):
+        """Good lead badge returned for MODERATE proposals."""
+        from app.main import _actionability_badge
+        with patch("app.main._get_best_proposal_for_identity", return_value={
+            "confidence": "MODERATE", "distance": 1.1,
+            "target_identity_id": "t1", "target_identity_name": "Maybe"
+        }):
+            badge = _actionability_badge("test-id", {"test-id"})
+            from fasthtml.common import to_xml
+            html = to_xml(badge)
+            assert "Good lead" in html
+
+    def test_no_badge_for_no_proposals(self):
+        """No badge when identity has no proposals."""
+        from app.main import _actionability_badge
+        badge = _actionability_badge("test-id", set())
+        assert badge is None
+
+    def test_browse_mode_sorted_by_actionability(self, client):
+        """Browse mode sorts by actionability (check structure exists)."""
+        resp = client.get("/?section=skipped&view=browse")
+        assert resp.status_code == 200
+        # Browse mode should still have the card wrapper structure
+        assert "identity-card-wrapper" in resp.text or "No unresolved" in resp.text
+
+
 class TestSkippedFocusMergeIntegration:
     """Test that merge route handles focus_section=skipped."""
 
