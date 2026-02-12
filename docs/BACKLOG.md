@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 5.8 — February 11, 2026
-**Status**: 1467 tests passing, v0.24.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 5.9 — February 11, 2026
+**Status**: 1497 tests passing, v0.25.0, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -111,7 +111,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-054 | Landing page stats + historical content | DONE | Fixed unidentified stat to include SKIPPED, rewrote About section with Rhodes history (2026-02-10) |
 | FE-055 | UI clarity pass | DONE | Section rename Confirmed→People, Skipped→Needs Help, section descriptions, empty states (2026-02-10) |
 | FE-056 | Button prominence | DONE | View All Photos + Find Similar as styled buttons with icons (2026-02-10) |
-| FE-057 | Compare faces UX overhaul | DONE | Face/photo toggle, clickable names, 1-of-N navigation, max-w-5xl (2026-02-10) |
+| FE-057 | Compare faces UX overhaul | DONE | Face/photo toggle, clickable names, 1-of-N navigation, max-w-[90vw], View Photo links, Back to Compare, filter preservation, grouped badge (2026-02-11) |
 | FE-058 | Login prompt modal | DONE | HTMX 401 interceptor with contextual action messages, signup link (2026-02-10) |
 | FE-059 | Bulk photo select mode | DONE | Select toggle, checkboxes, floating action bar, collection reassignment (2026-02-10) |
 

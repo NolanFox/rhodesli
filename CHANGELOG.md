@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.25.0] - 2026-02-11
+
+### Added
+- **UX audit (Session 18)**: 7 user story code-level walkthroughs, 10 UX issues identified and prioritized. `docs/UX_AUDIT_SESSION_18.md` + `docs/design/UX_PRINCIPLES.md` (10 principles).
+- **Compare modal → Photo context (UX-001)**: "View Photo" buttons on both sides of compare modal open the full photo lightbox with face highlight. Passes `from_compare=1` for back navigation.
+- **Back to Compare navigation**: Photo modal shows "Back to Compare" button when opened from compare modal, toggling modal visibility without losing compare state.
+- **Post-merge guidance banner (UX-002)**: After merge, unnamed identities show "Grouped (N faces) — Add a name?" with rename CTA. Named identities show "Merge complete" with auto-dismiss.
+- **Grouped badge**: Unnamed multi-face identities show purple "Grouped (N faces)" badge to distinguish from single-face inbox items.
+- **Compare modal sizing (UX-006)**: Upgraded from `max-w-5xl` to `max-w-[90vw] lg:max-w-7xl` for better photo comparison.
+- **Compare modal filter preservation (UX-005)**: `?filter=` parameter now flows through compare endpoint: toggle buttons, face nav arrows, identity name links, and neighbor_card Compare buttons.
+- **Landing page "Needs Help" CTA (UX-010)**: Needs-help stat card is now clickable, plus "Help Identify Faces" button in bottom CTA section.
+- **UX principles doc**: `docs/design/UX_PRINCIPLES.md` with 10 design principles and anti-patterns.
+- **UX context rule**: `.claude/rules/ux-context.md` — checklist for all UX changes.
+- 28 new tests (20 UX enhancements + 4 back-to-compare + 4 navigation), test count: 1473 → 1497.
+
 ## [v0.24.0] - 2026-02-11
 
 ### Fixed

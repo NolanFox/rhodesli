@@ -608,3 +608,85 @@ class TestCompareViewModes:
             assert "view=photos" in html
             assert "Faces" in html
             assert "Photos" in html
+
+
+# ---------------------------------------------------------------------------
+# 6. Back to Compare navigation (from photo modal)
+# ---------------------------------------------------------------------------
+
+class TestBackToCompareNavigation:
+    """When photo modal is opened from compare modal (via View Photo),
+    a 'Back to Compare' button should appear, allowing return to compare."""
+
+    def test_view_photo_buttons_pass_from_compare_param(self, client):
+        """View Photo buttons in compare modal include from_compare=1 param."""
+        target = _make_identity("nav-target", name="Leon", state="CONFIRMED",
+                                anchor_ids=["face-nt1"])
+        neighbor = _make_identity("nav-neighbor", name="Betty", state="CONFIRMED",
+                                  anchor_ids=["face-nn1"])
+        registry = _make_registry([target, neighbor])
+        crop_files = {"face-nt1.jpg", "face-nn1.jpg"}
+        face_to_photo = {"face-nt1": "photo-n1", "face-nn1": "photo-n2"}
+        photo_cache = {
+            "photo-n1": {"filename": "img1.jpg", "faces": [{"face_id": "face-nt1"}], "source": "test"},
+            "photo-n2": {"filename": "img2.jpg", "faces": [{"face_id": "face-nn1"}], "source": "test"},
+        }
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value=crop_files), \
+             patch("app.main.resolve_face_image_url", return_value="/static/crops/face.jpg"), \
+             patch("app.main._face_to_photo_cache", face_to_photo), \
+             patch("app.main._photo_cache", photo_cache), \
+             patch("app.main._build_caches"):
+
+            resp = client.get("/api/identity/nav-target/compare/nav-neighbor?view=faces")
+            html = resp.text
+            assert "from_compare=1" in html
+
+    def _get_any_photo_id(self):
+        """Get any valid photo ID from the loaded photo data."""
+        from app.main import load_photo_registry
+        photo_reg = load_photo_registry()
+        # Access internal _photos dict to get any photo ID
+        if not photo_reg._photos:
+            return None
+        return next(iter(photo_reg._photos))
+
+    def test_photo_partial_with_from_compare_shows_back_button(self, client):
+        """Photo partial with from_compare=1 renders 'Back to Compare' button."""
+        photo_id = self._get_any_photo_id()
+        if not photo_id:
+            pytest.skip("No photos available")
+
+        with patch("app.main.is_auth_enabled", return_value=False):
+            resp = client.get(f"/photo/{photo_id}/partial?from_compare=1")
+            assert resp.status_code == 200
+            html = resp.text
+            assert "Back to Compare" in html
+            assert "#compare-modal" in html
+
+    def test_photo_partial_without_from_compare_no_back_button(self, client):
+        """Photo partial without from_compare does NOT show 'Back to Compare'."""
+        photo_id = self._get_any_photo_id()
+        if not photo_id:
+            pytest.skip("No photos available")
+
+        with patch("app.main.is_auth_enabled", return_value=False):
+            resp = client.get(f"/photo/{photo_id}/partial")
+            assert resp.status_code == 200
+            html = resp.text
+            assert "Back to Compare" not in html
+
+    def test_back_to_compare_button_toggles_modals(self, client):
+        """Back button hides photo modal and shows compare modal via hyperscript."""
+        photo_id = self._get_any_photo_id()
+        if not photo_id:
+            pytest.skip("No photos available")
+
+        with patch("app.main.is_auth_enabled", return_value=False):
+            resp = client.get(f"/photo/{photo_id}/partial?from_compare=1")
+            html = resp.text
+            # The button should hide photo-modal and show compare-modal
+            assert "add .hidden to #photo-modal" in html
+            assert "remove .hidden from #compare-modal" in html

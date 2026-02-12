@@ -6108,6 +6108,7 @@ def photo_view_content(
     nav_total: int = 0,
     identity_id: str = None,
     is_admin: bool = False,
+    from_compare: bool = False,
 ) -> tuple:
     """
     Build the photo view content with face overlays.
@@ -6421,8 +6422,22 @@ def photo_view_content(
         # No per-swap keyboard script needed — the global event delegation
         # handler in the page layout handles ArrowLeft/ArrowRight/Escape.
 
+    # "Back to Compare" button when opened from compare modal
+    back_to_compare = None
+    if from_compare:
+        back_to_compare = Div(
+            Button(
+                "\u2190 Back to Compare",
+                cls="text-sm text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded border border-indigo-500/30 hover:border-indigo-400/50 transition-colors",
+                **{"_": "on click add .hidden to #photo-modal then remove .hidden from #compare-modal"},
+                type="button",
+            ),
+            cls="mb-3"
+        )
+
     # Main content
     content = Div(
+        back_to_compare,
         # Photo container with overlays and nav arrows
         Div(
             Img(
@@ -6545,7 +6560,8 @@ def get(photo_id: str, face: str = None, sess=None):
 
 @rt("/photo/{photo_id}/partial")
 def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = None,
-        nav_idx: int = -1, nav_total: int = 0, identity_id: str = None, sess=None):
+        nav_idx: int = -1, nav_total: int = 0, identity_id: str = None,
+        from_compare: bool = False, sess=None):
     """
     Render photo view partial for HTMX modal injection.
 
@@ -6553,6 +6569,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
     - prev_id/next_id: Adjacent photo IDs for prev/next buttons
     - nav_idx/nav_total: Current position for "X of Y" display
     - identity_id: Identity context for computing prev/next from identity's photos
+    - from_compare: If True, show "Back to Compare" button (opened via compare modal)
     """
     user_is_admin = (get_current_user(sess or {}).is_admin if get_current_user(sess or {}) else False) if is_auth_enabled() else True
     return photo_view_content(
@@ -6561,6 +6578,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
         nav_idx=nav_idx, nav_total=nav_total,
         identity_id=identity_id,
         is_admin=user_is_admin,
+        from_compare=from_compare,
     )
 
 
@@ -8242,10 +8260,11 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
             cls="flex justify-center bg-slate-700/50 rounded p-2")
 
     # View Photo links — open the full photo lightbox from compare modal
+    # Pass from_compare=1 so the photo view shows a "Back to Compare" button
     t_view_photo = Button(
         "View Photo \u2192",
         cls="text-xs text-amber-400/70 hover:text-amber-400 mt-1",
-        hx_get=f"/photo/{t_photo_id}/partial?face={t_fid}",
+        hx_get=f"/photo/{t_photo_id}/partial?face={t_fid}&from_compare=1",
         hx_target="#photo-modal-content",
         hx_swap="innerHTML",
         **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
@@ -8254,7 +8273,7 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
     n_view_photo = Button(
         "View Photo \u2192",
         cls="text-xs text-indigo-400/70 hover:text-indigo-400 mt-1",
-        hx_get=f"/photo/{n_photo_id}/partial?face={n_fid}",
+        hx_get=f"/photo/{n_photo_id}/partial?face={n_fid}&from_compare=1",
         hx_target="#photo-modal-content",
         hx_swap="innerHTML",
         **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
