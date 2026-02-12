@@ -188,6 +188,70 @@ class TestSkipHintsThumbnailResolution:
         mock_registry.get_candidate_face_ids.assert_called_with("neighbor-1")
 
 
+class TestVariableSuggestionCount:
+    """Test that skip-hints adapts suggestion count based on confidence."""
+
+    def test_strong_match_shows_up_to_3(self, client, auth_disabled, monkeypatch):
+        """When best match is strong (< HIGH threshold), show up to 3 suggestions."""
+        from unittest.mock import MagicMock
+        from app import main as app_main
+
+        mock_registry = MagicMock()
+        mock_registry.get_identity.return_value = {
+            "identity_id": "target-id", "name": "Test", "state": "CONFIRMED",
+            "anchor_ids": ["face_a"],
+        }
+        mock_registry.get_anchor_face_ids.return_value = ["face_x"]
+        mock_registry.get_candidate_face_ids.return_value = []
+        monkeypatch.setattr(app_main, "load_registry", lambda: mock_registry)
+
+        # 5 neighbors with strong top match (dist=0.80 < HIGH=1.05)
+        mock_neighbors = [
+            {"identity_id": f"n-{i}", "name": f"N{i}", "distance": 0.80 + i * 0.05,
+             "face_count": 1, "can_merge": True, "confidence_gap": 10.0}
+            for i in range(5)
+        ]
+        monkeypatch.setattr("core.neighbors.find_nearest_neighbors", lambda *a, **kw: mock_neighbors)
+        monkeypatch.setattr(app_main, "get_face_data", lambda: {})
+        monkeypatch.setattr(app_main, "load_photo_registry", lambda: MagicMock())
+
+        response = client.get("/api/identity/target-id/skip-hints")
+        assert response.status_code == 200
+        # Should show 3 suggestions (strong match)
+        html = response.text
+        assert html.count("Compare") == 3
+
+    def test_weak_match_shows_only_1(self, client, auth_disabled, monkeypatch):
+        """When best match is weak (> LOW threshold), show only 1 suggestion."""
+        from unittest.mock import MagicMock
+        from app import main as app_main
+
+        mock_registry = MagicMock()
+        mock_registry.get_identity.return_value = {
+            "identity_id": "target-id", "name": "Test", "state": "CONFIRMED",
+            "anchor_ids": ["face_a"],
+        }
+        mock_registry.get_anchor_face_ids.return_value = ["face_x"]
+        mock_registry.get_candidate_face_ids.return_value = []
+        monkeypatch.setattr(app_main, "load_registry", lambda: mock_registry)
+
+        # 5 neighbors with weak top match (dist=1.30 > LOW=1.25)
+        mock_neighbors = [
+            {"identity_id": f"n-{i}", "name": f"N{i}", "distance": 1.30 + i * 0.05,
+             "face_count": 1, "can_merge": True, "confidence_gap": 10.0}
+            for i in range(5)
+        ]
+        monkeypatch.setattr("core.neighbors.find_nearest_neighbors", lambda *a, **kw: mock_neighbors)
+        monkeypatch.setattr(app_main, "get_face_data", lambda: {})
+        monkeypatch.setattr(app_main, "load_photo_registry", lambda: MagicMock())
+
+        response = client.get("/api/identity/target-id/skip-hints")
+        assert response.status_code == 200
+        # Should show only 1 suggestion (weak match)
+        html = response.text
+        assert html.count("Compare") == 1
+
+
 class TestNeighborCardConfidenceGap:
     """Test that neighbor cards display the confidence gap."""
 

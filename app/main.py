@@ -977,6 +977,36 @@ def find_shared_photo_filename(
     return ""
 
 
+def _compute_co_occurrence(
+    identity_a_id: str,
+    identity_b_id: str,
+    registry,
+    photo_registry,
+) -> int:
+    """
+    Count how many photos two identities appear in together.
+
+    Strong evidence they are different people (or family members in the same photo).
+    Uses anchor + candidate face IDs for both identities.
+
+    Returns:
+        Number of shared photos (0 if none).
+    """
+    faces_a = (
+        registry.get_anchor_face_ids(identity_a_id)
+        + registry.get_candidate_face_ids(identity_a_id)
+    )
+    faces_b = (
+        registry.get_anchor_face_ids(identity_b_id)
+        + registry.get_candidate_face_ids(identity_b_id)
+    )
+
+    photos_a = photo_registry.get_photos_for_faces(faces_a)
+    photos_b = photo_registry.get_photos_for_faces(faces_b)
+
+    return len(photos_a & photos_b)
+
+
 def get_first_anchor_face_id(identity_id: str, registry) -> str | None:
     """
     Get the first anchor face ID for an identity.
@@ -3293,6 +3323,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
 
     can_merge = neighbor["can_merge"]
     face_count = neighbor.get("face_count", 0)
+    co_occurrence = neighbor.get("co_occurrence", 0)
 
     # --- CALIBRATION: AD-013 Evidence-Based Thresholds (2026-02-09) ---
     if distance < MATCH_THRESHOLD_VERY_HIGH:
@@ -3373,7 +3404,8 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
                 # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
                 Div(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"),
                     Span(f"+{confidence_gap}% gap", cls="text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded") if confidence_gap > 0 else None,
-                    cls="flex items-center"),
+                    Span(f"Seen together in {co_occurrence} photo{'s' if co_occurrence != 1 else ''}", cls="text-[10px] text-amber-400 italic ml-1") if co_occurrence > 0 else None,
+                    cls="flex items-center flex-wrap"),
                 cls="flex-1 min-w-0 ml-3"),
             Div(compare_btn, merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                                   hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML"),
@@ -6672,6 +6704,11 @@ def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = Fa
         except KeyError:
             n["state"] = "INBOX"
 
+        # Compute co-occurrence: how many photos these two identities share
+        n["co_occurrence"] = _compute_co_occurrence(
+            identity_id, n["identity_id"], registry, photo_registry
+        )
+
         # Enhance blocked merge reason with photo filename
         if not n["can_merge"] and n["merge_blocked_reason"] == "co_occurrence":
             filename = find_shared_photo_filename(
@@ -6734,14 +6771,27 @@ def get(identity_id: str):
 
     try:
         from core.neighbors import find_nearest_neighbors
+        # Fetch up to 5 candidates, then trim based on confidence
         neighbors = find_nearest_neighbors(
-            identity_id, registry, photo_registry, face_data, limit=3
+            identity_id, registry, photo_registry, face_data, limit=5
         )
     except Exception:
         return Span()
 
     if not neighbors:
         return Span("No similar identities found.", cls="text-xs text-slate-500 italic")
+
+    # Variable suggestion count: show more when top match is confident,
+    # fewer when uncertain. If best match is strong, show up to 3;
+    # if weak, show only 1 to avoid decision fatigue.
+    best_dist = neighbors[0]["distance"] if neighbors else float("inf")
+    if best_dist < MATCH_THRESHOLD_HIGH:
+        max_show = 3  # Strong match — show alternatives for comparison
+    elif best_dist < MATCH_THRESHOLD_LOW:
+        max_show = 2  # Moderate — show a couple
+    else:
+        max_show = 1  # Weak — just show the best guess
+    neighbors = neighbors[:max_show]
 
     # Enrich neighbor data with face IDs for thumbnail resolution
     # (find_nearest_neighbors returns raw results without face IDs)
@@ -8266,26 +8316,42 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
 
     img_h = "max-h-[60vh]" if view == "photos" else "max-h-[50vh]"
 
+    # Hyperscript for click-to-zoom on face crop images in compare modal
+    _zoom_script = (
+        "on click toggle .compare-crop-zoomed on me "
+        "then if I match .compare-crop-zoomed "
+        "set my style.transform to 'scale(2)' "
+        "then set my style.cursor to 'zoom-out' "
+        "else "
+        "set my style.transform to 'scale(1)' "
+        "then set my style.cursor to 'zoom-in' "
+        "end"
+    )
+
     # Build photo containers — with face overlays when in photos view
     if view == "photos" and t_photo_url:
         t_photo_div = _compare_photo_with_overlays(t_photo_url, t_photo_id, t_fid, registry, img_h)
     else:
         t_photo_div = Div(
             Img(src=t_display_url or "", alt=t_name,
-                cls=f"max-w-full {img_h} object-contain rounded") if t_display_url else Div(
+                cls=f"max-w-full {img_h} object-contain rounded cursor-zoom-in transition-transform duration-200",
+                data_compare_zoom="true",
+                **{"_": _zoom_script}) if t_display_url else Div(
                 Span("?", cls="text-6xl text-slate-500"),
                 cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-            cls="flex justify-center bg-slate-700/50 rounded p-2")
+            cls="flex justify-center bg-slate-700/50 rounded p-2 overflow-hidden")
 
     if view == "photos" and n_photo_url:
         n_photo_div = _compare_photo_with_overlays(n_photo_url, n_photo_id, n_fid, registry, img_h)
     else:
         n_photo_div = Div(
             Img(src=n_display_url or "", alt=n_name,
-                cls=f"max-w-full {img_h} object-contain rounded") if n_display_url else Div(
+                cls=f"max-w-full {img_h} object-contain rounded cursor-zoom-in transition-transform duration-200",
+                data_compare_zoom="true",
+                **{"_": _zoom_script}) if n_display_url else Div(
                 Span("?", cls="text-6xl text-slate-500"),
                 cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-            cls="flex justify-center bg-slate-700/50 rounded p-2")
+            cls="flex justify-center bg-slate-700/50 rounded p-2 overflow-hidden")
 
     # View Photo links — open the full photo lightbox from compare modal
     # Pass from_compare=1 so the photo view shows a "Back to Compare" button
