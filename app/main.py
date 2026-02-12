@@ -4440,7 +4440,8 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
     )
 
 
-def name_display(identity_id: str, name: str, is_admin: bool = True) -> Div:
+def name_display(identity_id: str, name: str, is_admin: bool = True,
+                  generation_qualifier: str = "") -> Div:
     """
     Identity name display with edit button (admin only).
     Returns the name header component that can be swapped for inline editing.
@@ -4448,6 +4449,8 @@ def name_display(identity_id: str, name: str, is_admin: bool = True) -> Div:
     # UI BOUNDARY: sanitize name for safe rendering
     safe_name = ensure_utf8_display(name)
     display_name = safe_name or f"Identity {identity_id[:8]}..."
+    if generation_qualifier:
+        display_name = f"{display_name} {generation_qualifier}"
     edit_btn = Button(
         "Edit",
         hx_get=f"/api/identity/{identity_id}/rename-form",
@@ -4651,7 +4654,8 @@ def identity_card(
         # Header with name, state, and controls
         Div(
             Div(
-                name_display(identity_id, identity.get("name"), is_admin=is_admin),
+                name_display(identity_id, identity.get("name"), is_admin=is_admin,
+                             generation_qualifier=identity.get("generation_qualifier", "")),
                 state_badge(state),
                 _proposal_badge_inline(identity_id),
                 _promotion_badge(identity),
@@ -9584,6 +9588,15 @@ def get(identity_id: str, sess=None):
                     cls="flex-1"
                 ),
                 Div(
+                    Label("Qualifier", cls="text-xs text-slate-400"),
+                    Input(type="text", name="generation_qualifier", value=identity.get("generation_qualifier", ""),
+                          placeholder="e.g. Sr., Jr.", cls=_input_cls),
+                    cls="w-24"
+                ),
+                cls="flex gap-2"
+            ),
+            Div(
+                Div(
                     Label("Birth Year", cls="text-xs text-slate-400"),
                     Input(type="text", name="birth_year", value=str(identity.get("birth_year", "")),
                           placeholder="e.g. 1920", cls=_input_cls),
@@ -9595,12 +9608,19 @@ def get(identity_id: str, sess=None):
                           placeholder="e.g. 1995", cls=_input_cls),
                     cls="w-24"
                 ),
-                cls="flex gap-2"
-            ),
-            Div(
-                Label("Birthplace", cls="text-xs text-slate-400"),
-                Input(type="text", name="birth_place", value=identity.get("birth_place", ""),
-                      placeholder="e.g. Rhodes, Greece", cls=_input_cls),
+                Div(
+                    Label("Birthplace", cls="text-xs text-slate-400"),
+                    Input(type="text", name="birth_place", value=identity.get("birth_place", ""),
+                          placeholder="e.g. Rhodes, Greece", cls=_input_cls),
+                    cls="flex-1"
+                ),
+                Div(
+                    Label("Death Place", cls="text-xs text-slate-400"),
+                    Input(type="text", name="death_place", value=identity.get("death_place", ""),
+                          placeholder="e.g. Auschwitz", cls=_input_cls),
+                    cls="flex-1"
+                ),
+                cls="flex gap-2 flex-wrap"
             ),
             Div(
                 Label("Relationships", cls="text-xs text-slate-400"),
@@ -9649,7 +9669,8 @@ def get(identity_id: str, sess=None):
 
 @rt("/api/identity/{identity_id}/metadata")
 def post(identity_id: str, birth_year: str = "", death_year: str = "",
-         birth_place: str = "", maiden_name: str = "",
+         birth_place: str = "", death_place: str = "", maiden_name: str = "",
+         generation_qualifier: str = "",
          relationship_notes: str = "", bio: str = "", sess=None):
     """Update identity metadata. Admin-only (BE-011)."""
     denied = _check_admin(sess)
@@ -9669,8 +9690,12 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
             pass
     if birth_place.strip():
         metadata["birth_place"] = birth_place.strip()
+    if death_place.strip():
+        metadata["death_place"] = death_place.strip()
     if maiden_name.strip():
         metadata["maiden_name"] = maiden_name.strip()
+    if generation_qualifier.strip():
+        metadata["generation_qualifier"] = generation_qualifier.strip()
     if relationship_notes.strip():
         metadata["relationship_notes"] = relationship_notes.strip()
     if bio.strip():
@@ -12567,16 +12592,44 @@ def _photo_annotations_section(photo_id: str, is_admin: bool = False):
 def _identity_metadata_display(identity: dict, is_admin: bool = False):
     """AN-012: Display identity metadata fields (bio, birth/death, relationships)."""
     identity_id = identity.get("identity_id", "")
-    metadata_fields = {
-        "bio": "Bio",
-        "birth_year": "Born",
-        "death_year": "Died",
-        "birth_place": "Birthplace",
-        "maiden_name": "Maiden Name",
-        "relationship_notes": "Relationships",
-    }
+
+    # Build compact summary line: "~1890–1944 · Rhodes → Auschwitz"
+    summary_parts = []
+    birth_year = identity.get("birth_year")
+    death_year = identity.get("death_year")
+    if birth_year and death_year:
+        summary_parts.append(f"{birth_year}–{death_year}")
+    elif birth_year:
+        summary_parts.append(f"b. {birth_year}")
+    elif death_year:
+        summary_parts.append(f"d. {death_year}")
+
+    birth_place = identity.get("birth_place")
+    death_place = identity.get("death_place")
+    if birth_place and death_place:
+        summary_parts.append(f"{birth_place} \u2192 {death_place}")
+    elif birth_place:
+        summary_parts.append(birth_place)
+    elif death_place:
+        summary_parts.append(death_place)
+
+    maiden_name = identity.get("maiden_name")
+    if maiden_name:
+        summary_parts.append(f"n\u00e9e {maiden_name}")
+
     items = []
-    for key, label in metadata_fields.items():
+    if summary_parts:
+        items.append(P(
+            " \u00b7 ".join(summary_parts),
+            cls="text-xs text-slate-400 italic"
+        ))
+
+    # Additional fields shown below the summary
+    detail_fields = {
+        "relationship_notes": "Relationships",
+        "bio": "Bio",
+    }
+    for key, label in detail_fields.items():
         value = identity.get(key)
         if value:
             items.append(P(

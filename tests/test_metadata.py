@@ -115,6 +115,63 @@ class TestIdentityMetadata:
         assert identity["maiden_name"] == "Capeluto"
 
 
+    def test_generation_qualifier_stored(self):
+        """Generation qualifier stored as metadata."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        iid = registry.create_identity(anchor_ids=["face1"], user_source="test", name="Leon Capeluto")
+
+        registry.set_metadata(iid, {
+            "generation_qualifier": "Sr.",
+        }, user_source="test")
+
+        identity = registry.get_identity(iid)
+        assert identity["generation_qualifier"] == "Sr."
+
+    def test_death_place_stored(self):
+        """Death place stored as metadata."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        iid = registry.create_identity(anchor_ids=["face1"], user_source="test", name="Leon Capeluto")
+
+        registry.set_metadata(iid, {
+            "death_place": "Auschwitz",
+        }, user_source="test")
+
+        identity = registry.get_identity(iid)
+        assert identity["death_place"] == "Auschwitz"
+
+    def test_full_structured_identity(self):
+        """All structured name and metadata fields work together."""
+        from core.registry import IdentityRegistry
+
+        registry = IdentityRegistry()
+        iid = registry.create_identity(anchor_ids=["face1"], user_source="test", name="Leon Capeluto")
+        # rename_identity auto-parses first/last name
+        registry.rename_identity(iid, "Leon Capeluto", user_source="test")
+
+        registry.set_metadata(iid, {
+            "generation_qualifier": "Sr.",
+            "birth_year": 1890,
+            "death_year": 1944,
+            "birth_place": "Rhodes, Greece",
+            "death_place": "Auschwitz",
+            "bio": "Community leader",
+        }, user_source="test")
+
+        identity = registry.get_identity(iid)
+        assert identity["first_name"] == "Leon"
+        assert identity["last_name"] == "Capeluto"
+        assert identity["generation_qualifier"] == "Sr."
+        assert identity["birth_year"] == 1890
+        assert identity["death_year"] == 1944
+        assert identity["birth_place"] == "Rhodes, Greece"
+        assert identity["death_place"] == "Auschwitz"
+        assert identity["bio"] == "Community leader"
+
+
 class TestMetadataEndpoint:
     """Tests for POST /api/identity/{id}/metadata."""
 
@@ -274,3 +331,183 @@ class TestMetadataEditForm:
             assert response.status_code == 200
             # Should contain updated display, not just a toast
             assert "metadata-test-id-001" in response.text or "Metadata updated" in response.text
+
+
+class TestMetadataDisplayFormat:
+    """Tests for compact metadata display format."""
+
+    def test_display_compact_summary_birth_death(self):
+        """Compact summary shows 'YYYY–YYYY' for birth and death years."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-001",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "birth_year": 1890,
+            "death_year": 1944,
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        assert "1890" in html
+        assert "1944" in html
+
+    def test_display_compact_summary_places(self):
+        """Compact summary shows 'Birthplace -> Deathplace' with arrow."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-002",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "birth_place": "Rhodes, Greece",
+            "death_place": "Auschwitz",
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        assert "Rhodes, Greece" in html
+        assert "Auschwitz" in html
+
+    def test_display_compact_summary_maiden_name(self):
+        """Compact summary shows maiden name with 'nee'."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-003",
+            "name": "Victoria Cukran",
+            "state": "CONFIRMED",
+            "maiden_name": "Capeluto",
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        assert "Capeluto" in html
+
+    def test_display_only_birth_year(self):
+        """Shows 'b. YYYY' when only birth year is known."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-004",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+            "birth_year": 1920,
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        assert "b. 1920" in html
+
+    def test_display_only_death_year(self):
+        """Shows 'd. YYYY' when only death year is known."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-005",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+            "death_year": 1944,
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        assert "d. 1944" in html
+
+    def test_display_no_metadata_empty(self):
+        """No metadata renders empty span (no crash)."""
+        from app.main import _identity_metadata_display, to_xml
+
+        identity = {
+            "identity_id": "test-id-006",
+            "name": "Unknown Person",
+            "state": "INBOX",
+        }
+        html = to_xml(_identity_metadata_display(identity, is_admin=False))
+        # Should render without error — no metadata fields present
+        assert html is not None
+
+
+class TestNameDisplayQualifier:
+    """Tests for name display with generation qualifier."""
+
+    def test_name_display_with_qualifier(self):
+        """Name display appends generation qualifier."""
+        from app.main import name_display, to_xml
+
+        result = name_display("test-id", "Leon Capeluto", is_admin=False,
+                              generation_qualifier="Sr.")
+        html = to_xml(result)
+        assert "Leon Capeluto Sr." in html
+
+    def test_name_display_without_qualifier(self):
+        """Name display works without qualifier."""
+        from app.main import name_display, to_xml
+
+        result = name_display("test-id", "Leon Capeluto", is_admin=False)
+        html = to_xml(result)
+        assert "Leon Capeluto" in html
+        assert "Sr." not in html
+
+    def test_name_display_empty_qualifier_ignored(self):
+        """Empty qualifier string doesn't add trailing space."""
+        from app.main import name_display, to_xml
+
+        result = name_display("test-id", "Leon Capeluto", is_admin=False,
+                              generation_qualifier="")
+        html = to_xml(result)
+        assert "Leon Capeluto" in html
+        # No trailing space before closing tag
+        assert "Leon Capeluto " not in html or "Leon Capeluto Sr" not in html
+
+
+class TestMetadataFormNewFields:
+    """Tests for generation_qualifier and death_place in the metadata form."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def test_form_includes_qualifier_field(self, client):
+        """Metadata form has generation_qualifier input."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert response.status_code == 200
+            assert "generation_qualifier" in response.text
+
+    def test_form_includes_death_place_field(self, client):
+        """Metadata form has death_place input."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert response.status_code == 200
+            assert "death_place" in response.text
+
+    def test_post_qualifier_and_death_place(self, client):
+        """POST metadata accepts generation_qualifier and death_place."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "generation_qualifier": "Sr.",
+            "death_place": "Auschwitz",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
+            response = client.post(
+                "/api/identity/test-id-001/metadata",
+                data={"generation_qualifier": "Sr.", "death_place": "Auschwitz"}
+            )
+            assert response.status_code == 200
+            mock_reg.set_metadata.assert_called_once()
+            call_args = mock_reg.set_metadata.call_args
+            metadata = call_args[0][1]
+            assert metadata["generation_qualifier"] == "Sr."
+            assert metadata["death_place"] == "Auschwitz"

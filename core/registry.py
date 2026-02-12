@@ -1036,8 +1036,9 @@ class IdentityRegistry:
         Set metadata fields on an identity (BE-011).
 
         All metadata fields are optional. Only provided keys are updated.
-        Valid keys: birth_year, death_year, birth_place, maiden_name,
-                    alternate_names, relationship_notes, bio, name_source.
+        Valid keys: birth_year, death_year, birth_place, death_place,
+                    maiden_name, generation_qualifier, alternate_names,
+                    relationship_notes, bio, name_source.
 
         Args:
             identity_id: Identity ID
@@ -1046,7 +1047,8 @@ class IdentityRegistry:
         """
         identity = self._identities[identity_id]
         valid_keys = {
-            "birth_year", "death_year", "birth_place", "maiden_name",
+            "birth_year", "death_year", "birth_place", "death_place",
+            "maiden_name", "generation_qualifier",
             "alternate_names", "relationship_notes", "bio", "name_source",
             "first_name", "last_name",
         }
