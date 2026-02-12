@@ -1050,12 +1050,16 @@
       "candidate_ids": [
         "596771324.500867:face1",
         "Image 983_compress:face6",
-        "Image 984_compress:face9"
+        "Image 984_compress:face9",
+        "Image 961_compress:face3"
       ],
-      "negative_ids": [],
-      "version_id": 4,
+      "negative_ids": [
+        "identity:cda313c9-8ea9-43a7-b0bb-61476eac302b",
+        "identity:bfcf965d-ca65-445f-9d6b-6d5544c92e51"
+      ],
+      "version_id": 8,
       "created_at": "2026-02-01T21:29:26.547569+00:00",
-      "updated_at": "2026-02-11T06:20:15.195485+00:00",
+      "updated_at": "2026-02-12T04:24:27.357818+00:00",
       "merge_history": [
         {
           "merge_event_id": "887f596b-22eb-4ae0-82ff-87ad3ef27397",
@@ -1097,6 +1101,47 @@
           },
           "direction_auto_corrected": true,
           "merged_by": "web"
+        },
+        {
+          "merge_event_id": "67231461-0014-4801-af2e-55d887809e0e",
+          "timestamp": "2026-02-12T04:22:57.560656+00:00",
+          "source_id": "3caf2e0e-2f27-44b5-9782-e2ec22a1e7cd",
+          "source_name": "Unidentified Person 174",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 026_compress:face2",
+              "Image 961_compress:face3"
+            ],
+            "negative_ids": [
+              "identity:cda313c9-8ea9-43a7-b0bb-61476eac302b",
+              "identity:bfcf965d-ca65-445f-9d6b-6d5544c92e51"
+            ],
+            "name": "Unidentified Person 174",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 5,
+            "candidate_count": 3,
+            "name": "Selma Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 026_compress:face2",
+              "Image 961_compress:face3"
+            ],
+            "negatives": [
+              "identity:cda313c9-8ea9-43a7-b0bb-61476eac302b",
+              "identity:bfcf965d-ca65-445f-9d6b-6d5544c92e51"
+            ]
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "face_tag"
         }
       ]
     },
@@ -1219,7 +1264,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547732+00:00",
-      "updated_at": "2026-02-10T04:07:26.800067+00:00"
+      "updated_at": "2026-02-12T03:57:21.268445+00:00",
+      "merged_into": "dac6a91d-a142-4069-a582-6f4343ea6376"
     },
     "dac6a91d-a142-4069-a582-6f4343ea6376": {
       "identity_id": "dac6a91d-a142-4069-a582-6f4343ea6376",
@@ -1227,12 +1273,48 @@
       "state": "SKIPPED",
       "anchor_ids": [],
       "candidate_ids": [
-        "Image 052_compress:face0"
+        "Image 052_compress:face0",
+        "Image 047_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 3,
       "created_at": "2026-02-01T21:29:26.547750+00:00",
-      "updated_at": "2026-02-10T04:07:26.610475+00:00"
+      "updated_at": "2026-02-12T03:57:21.268445+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "01606633-84c6-4eb7-b745-de01d21a9ec7",
+          "timestamp": "2026-02-12T03:57:21.268445+00:00",
+          "source_id": "3c3be5a6-bd5a-40c5-a849-94c3dbff4150",
+          "source_name": "Unidentified Person 062",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 047_compress:face1"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 062",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 1,
+            "name": "Unidentified Person 063",
+            "state": "SKIPPED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 047_compress:face1"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        }
+      ]
     },
     "0894da71-bba3-4952-b36f-a71a0a3787bc": {
       "identity_id": "0894da71-bba3-4952-b36f-a71a0a3787bc",
@@ -1520,12 +1602,48 @@
       "anchor_ids": [],
       "candidate_ids": [
         "Image 983_compress:face1",
-        "Image 984_compress:face2"
+        "Image 984_compress:face2",
+        "Image 961_compress:face2"
       ],
       "negative_ids": [],
-      "version_id": 4,
+      "version_id": 5,
       "created_at": "2026-02-01T21:29:26.548844+00:00",
-      "updated_at": "2026-02-03T04:52:28.627961+00:00"
+      "updated_at": "2026-02-12T04:23:09.442325+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "4f351215-fbbc-4756-bae7-5fa0e7d3a3e7",
+          "timestamp": "2026-02-12T04:23:09.442325+00:00",
+          "source_id": "349c12dc-8a40-41af-a22d-50d7ab62b5d3",
+          "source_name": "Unidentified Person 113",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 961_compress:face2"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 113",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 2,
+            "name": "Anita Capeluto Franco",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 961_compress:face2"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "face_tag"
+        }
+      ]
     },
     "2e40ab6b-b82f-4c0d-aa54-147a43c3517a": {
       "identity_id": "2e40ab6b-b82f-4c0d-aa54-147a43c3517a",
@@ -1577,12 +1695,13 @@
       "candidate_ids": [
         "Image 932_compress:face2",
         "Image 948_compress:face6",
-        "Image 939_compress:face1"
+        "Image 939_compress:face1",
+        "Image 013_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 4,
+      "version_id": 5,
       "created_at": "2026-02-01T21:29:26.548920+00:00",
-      "updated_at": "2026-02-11T06:22:36.044152+00:00",
+      "updated_at": "2026-02-12T03:56:23.735177+00:00",
       "promoted_from": "SKIPPED",
       "promoted_at": "2026-02-11T05:10:27.193326+00:00",
       "promotion_reason": "group_discovery",
@@ -1619,6 +1738,39 @@
           },
           "direction_auto_corrected": false,
           "merged_by": "batch_grouping"
+        },
+        {
+          "merge_event_id": "770592b5-c580-4973-99eb-f2283787d296",
+          "timestamp": "2026-02-12T03:56:23.735177+00:00",
+          "source_id": "fd0010a3-64be-40dd-bd81-1ed18e635a97",
+          "source_name": "Unidentified Person 085",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 013_compress:face1"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 085",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 3,
+            "name": "Unidentified Person 083",
+            "state": "SKIPPED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 013_compress:face1"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
         }
       ]
     },
@@ -1650,7 +1802,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.548957+00:00",
-      "updated_at": "2026-02-10T04:07:23.704394+00:00"
+      "updated_at": "2026-02-12T03:56:23.735177+00:00",
+      "merged_into": "c4d13c9b-ef1e-4df1-a574-2adced093f96"
     },
     "11f7d10a-16d9-4c3b-a9ce-04082c555980": {
       "identity_id": "11f7d10a-16d9-4c3b-a9ce-04082c555980",
@@ -2012,7 +2165,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.549489+00:00",
-      "updated_at": "2026-02-10T04:07:15.664758+00:00"
+      "updated_at": "2026-02-12T04:23:04.224868+00:00",
+      "merged_into": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a"
     },
     "349c12dc-8a40-41af-a22d-50d7ab62b5d3": {
       "identity_id": "349c12dc-8a40-41af-a22d-50d7ab62b5d3",
@@ -2025,7 +2179,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.549509+00:00",
-      "updated_at": "2026-02-10T04:07:15.334049+00:00"
+      "updated_at": "2026-02-12T04:23:09.442325+00:00",
+      "merged_into": "1547d786-4349-41ed-abb4-02e63b2ba313"
     },
     "35963375-7f31-482f-89da-908cf115aa61": {
       "identity_id": "35963375-7f31-482f-89da-908cf115aa61",
@@ -2063,9 +2218,9 @@
         "Image 991_compress:face0"
       ],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 4,
       "created_at": "2026-02-01T21:29:26.549570+00:00",
-      "updated_at": "2026-02-10T04:07:14.979405+00:00"
+      "updated_at": "2026-02-12T04:15:19.212568+00:00"
     },
     "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5": {
       "identity_id": "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5",
@@ -2235,12 +2390,48 @@
       "anchor_ids": [],
       "candidate_ids": [
         "Image 983_compress:face0",
-        "Image 984_compress:face6"
+        "Image 984_compress:face6",
+        "Image 961_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 4,
+      "version_id": 5,
       "created_at": "2026-02-01T21:29:26.549837+00:00",
-      "updated_at": "2026-02-02T21:54:36.396394+00:00"
+      "updated_at": "2026-02-12T04:23:04.224868+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "d75a2664-da8a-45d1-8108-4bf683c59e85",
+          "timestamp": "2026-02-12T04:23:04.224868+00:00",
+          "source_id": "110e575e-4b63-44c6-9be6-bbc2eeea8278",
+          "source_name": "Unidentified Person 112",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 961_compress:face1"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 112",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 2,
+            "name": "Nace Capeluto",
+            "state": "CONFIRMED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 961_compress:face1"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "face_tag"
+        }
+      ]
     },
     "be7bdd23-99aa-4ed5-806a-b331925ac3f1": {
       "identity_id": "be7bdd23-99aa-4ed5-806a-b331925ac3f1",
@@ -3284,7 +3475,8 @@
       ],
       "version_id": 4,
       "created_at": "2026-02-01T21:29:26.551114+00:00",
-      "updated_at": "2026-02-10T03:15:18.663013+00:00"
+      "updated_at": "2026-02-12T04:22:57.560656+00:00",
+      "merged_into": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18"
     },
     "475abda0-e3e7-4db8-8f62-61f6c0e05367": {
       "identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
@@ -3342,12 +3534,48 @@
       "state": "SKIPPED",
       "anchor_ids": [],
       "candidate_ids": [
-        "Image 043_compress:face0"
+        "Image 043_compress:face0",
+        "Image 998_compress:face1"
       ],
       "negative_ids": [],
-      "version_id": 2,
+      "version_id": 3,
       "created_at": "2026-02-01T21:29:26.551158+00:00",
-      "updated_at": "2026-02-10T04:07:03.700715+00:00"
+      "updated_at": "2026-02-12T04:13:09.061706+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "1b6b947e-ac6b-475f-b949-2c39583069d7",
+          "timestamp": "2026-02-12T04:13:09.061706+00:00",
+          "source_id": "3e6236a5-9d47-404c-a7db-4a0378e9e251",
+          "source_name": "Unidentified Person 177",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 998_compress:face1"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 177",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 1,
+            "name": "Unidentified Person 176",
+            "state": "SKIPPED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 998_compress:face1"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        }
+      ]
     },
     "3e6236a5-9d47-404c-a7db-4a0378e9e251": {
       "identity_id": "3e6236a5-9d47-404c-a7db-4a0378e9e251",
@@ -3360,7 +3588,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.551181+00:00",
-      "updated_at": "2026-02-10T04:07:03.096374+00:00"
+      "updated_at": "2026-02-12T04:13:09.061706+00:00",
+      "merged_into": "cb32481f-081e-418f-980d-5ac8435e5154"
     },
     "2c7591d7-b6f0-420c-9195-12f96d2d3386": {
       "identity_id": "2c7591d7-b6f0-420c-9195-12f96d2d3386",
@@ -3610,14 +3839,84 @@
       "anchor_ids": [],
       "candidate_ids": [
         "Image 932_compress:face5",
-        "Image 968_compress:face1"
+        "Image 968_compress:face1",
+        "Image 940_compress:face2",
+        "Image 052_compress:face1"
       ],
       "negative_ids": [
         "identity:7cba61d1-4aec-401a-b2ff-5142fb68ac36"
       ],
-      "version_id": 3,
+      "version_id": 5,
       "created_at": "2026-02-01T21:29:26.551546+00:00",
-      "updated_at": "2026-02-11T06:49:12.092590+00:00"
+      "updated_at": "2026-02-12T03:51:51.714672+00:00",
+      "merge_history": [
+        {
+          "merge_event_id": "85a2a36b-5b77-4bea-8e51-10291a9dac3d",
+          "timestamp": "2026-02-12T03:49:33.381743+00:00",
+          "source_id": "abe194d8-bd90-445c-a89d-bd514c9c1db2",
+          "source_name": "Unidentified Person 195",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 940_compress:face2"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 195",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 2,
+            "name": "Unidentified Person 193",
+            "state": "SKIPPED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 940_compress:face2"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        },
+        {
+          "merge_event_id": "837e1e13-1378-4ec2-82a5-11799453cfda",
+          "timestamp": "2026-02-12T03:51:51.714672+00:00",
+          "source_id": "d970c349-793e-420c-9911-4b698e38b334",
+          "source_name": "Unidentified Person 194",
+          "source_state": "SKIPPED",
+          "source_snapshot": {
+            "anchor_ids": [],
+            "candidate_ids": [
+              "Image 052_compress:face1"
+            ],
+            "negative_ids": [],
+            "name": "Unidentified Person 194",
+            "state": "SKIPPED",
+            "first_name": "",
+            "last_name": ""
+          },
+          "target_snapshot_before": {
+            "anchor_count": 0,
+            "candidate_count": 3,
+            "name": "Unidentified Person 193",
+            "state": "SKIPPED"
+          },
+          "faces_added": {
+            "anchors": [],
+            "candidates": [
+              "Image 052_compress:face1"
+            ],
+            "negatives": []
+          },
+          "direction_auto_corrected": false,
+          "merged_by": "web"
+        }
+      ]
     },
     "d970c349-793e-420c-9911-4b698e38b334": {
       "identity_id": "d970c349-793e-420c-9911-4b698e38b334",
@@ -3630,7 +3929,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.551569+00:00",
-      "updated_at": "2026-02-10T04:01:49.405671+00:00"
+      "updated_at": "2026-02-12T03:51:51.714672+00:00",
+      "merged_into": "798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a"
     },
     "abe194d8-bd90-445c-a89d-bd514c9c1db2": {
       "identity_id": "abe194d8-bd90-445c-a89d-bd514c9c1db2",
@@ -3643,7 +3943,8 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.551591+00:00",
-      "updated_at": "2026-02-10T04:01:48.572865+00:00"
+      "updated_at": "2026-02-12T03:49:33.381743+00:00",
+      "merged_into": "798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a"
     },
     "7cba61d1-4aec-401a-b2ff-5142fb68ac36": {
       "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
@@ -7946,6 +8247,20 @@
         "grouped_faces": 1
       },
       "merged_into": "ec55b4e8-ac3c-4209-a273-e96f7f85659c"
+    },
+    "224495e8-d15a-461e-a782-9a9d6bf1d834": {
+      "identity_id": "224495e8-d15a-461e-a782-9a9d6bf1d834",
+      "name": null,
+      "state": "CONTESTED",
+      "anchor_ids": [
+        "Image 026_compress:face2"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 2,
+      "created_at": "2026-02-12T04:24:27.357768+00:00",
+      "updated_at": "2026-02-12T04:25:18.859363+00:00",
+      "provenance": null
     }
   },
   "history": [
@@ -24755,6 +25070,232 @@
       "metadata": {
         "previous_name": "Unidentified Person 075",
         "new_name": "Sheila Surmani"
+      }
+    },
+    {
+      "event_id": "ecf3b10f-4072-4e2c-9c1a-82943be8ce87",
+      "timestamp": "2026-02-12T03:49:33.381805+00:00",
+      "identity_id": "798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "source_identity_id": "abe194d8-bd90-445c-a89d-bd514c9c1db2",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "85a2a36b-5b77-4bea-8e51-10291a9dac3d"
+      }
+    },
+    {
+      "event_id": "6c065e6b-3de2-418d-85e4-550a0ca8f498",
+      "timestamp": "2026-02-12T03:51:51.714744+00:00",
+      "identity_id": "798ccd39-0e9e-461c-8cb1-5c1c39a2aa7a",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "source_identity_id": "d970c349-793e-420c-9911-4b698e38b334",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "837e1e13-1378-4ec2-82a5-11799453cfda"
+      }
+    },
+    {
+      "event_id": "671fd6d5-ae57-48c5-b4cc-15ffaa02cbae",
+      "timestamp": "2026-02-12T03:56:23.735240+00:00",
+      "identity_id": "c4d13c9b-ef1e-4df1-a574-2adced093f96",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "source_identity_id": "fd0010a3-64be-40dd-bd81-1ed18e635a97",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "770592b5-c580-4973-99eb-f2283787d296"
+      }
+    },
+    {
+      "event_id": "8b34d052-d6be-41bd-b251-23fa7a1d8ba8",
+      "timestamp": "2026-02-12T03:57:21.268556+00:00",
+      "identity_id": "dac6a91d-a142-4069-a582-6f4343ea6376",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "source_identity_id": "3c3be5a6-bd5a-40c5-a849-94c3dbff4150",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "01606633-84c6-4eb7-b745-de01d21a9ec7"
+      }
+    },
+    {
+      "event_id": "23feb4d0-10c9-483b-84fe-1402fe35be39",
+      "timestamp": "2026-02-12T04:13:09.061775+00:00",
+      "identity_id": "cb32481f-081e-418f-980d-5ac8435e5154",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "source_identity_id": "3e6236a5-9d47-404c-a7db-4a0378e9e251",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "1b6b947e-ac6b-475f-b949-2c39583069d7"
+      }
+    },
+    {
+      "event_id": "11a53d91-fabc-4f8a-8c35-bface530733a",
+      "timestamp": "2026-02-12T04:15:16.328625+00:00",
+      "identity_id": "5a4c0aca-c717-4ff0-84a3-2d805cacb5f1",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 2,
+      "metadata": {
+        "rejected_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "99e6406a-2e3f-4dd0-96a2-2e85cd5c6be9",
+      "timestamp": "2026-02-12T04:15:16.328635+00:00",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "action": "reject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "rejected_identity_id": "5a4c0aca-c717-4ff0-84a3-2d805cacb5f1",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "0ffa83f1-d8ac-4e0b-ad60-86065a70d78b",
+      "timestamp": "2026-02-12T04:15:19.212670+00:00",
+      "identity_id": "5a4c0aca-c717-4ff0-84a3-2d805cacb5f1",
+      "action": "unreject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 3,
+      "metadata": {
+        "unrejected_identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "3cb5dd21-1226-43c6-81ab-199023f9329d",
+      "timestamp": "2026-02-12T04:15:19.212686+00:00",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "action": "unreject",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 5,
+      "metadata": {
+        "unrejected_identity_id": "5a4c0aca-c717-4ff0-84a3-2d805cacb5f1",
+        "type": "identity_pair"
+      }
+    },
+    {
+      "event_id": "91fb11b1-3b2b-4c31-91c1-693bd36ba5d6",
+      "timestamp": "2026-02-12T04:22:57.560730+00:00",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "face_tag",
+      "confidence_weight": 1.0,
+      "previous_version_id": 6,
+      "metadata": {
+        "source_identity_id": "3caf2e0e-2f27-44b5-9782-e2ec22a1e7cd",
+        "faces_merged": 2,
+        "direction_swapped": false,
+        "merge_event_id": "67231461-0014-4801-af2e-55d887809e0e"
+      }
+    },
+    {
+      "event_id": "adc098d7-d241-44f8-9cc4-2c446b58ef97",
+      "timestamp": "2026-02-12T04:23:04.224935+00:00",
+      "identity_id": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "face_tag",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "source_identity_id": "110e575e-4b63-44c6-9be6-bbc2eeea8278",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "d75a2664-da8a-45d1-8108-4bf683c59e85"
+      }
+    },
+    {
+      "event_id": "17754958-c774-414a-b04d-54b5f67b0b5d",
+      "timestamp": "2026-02-12T04:23:09.442388+00:00",
+      "identity_id": "1547d786-4349-41ed-abb4-02e63b2ba313",
+      "action": "merge",
+      "face_ids": [],
+      "user_source": "face_tag",
+      "confidence_weight": 1.0,
+      "previous_version_id": 4,
+      "metadata": {
+        "source_identity_id": "349c12dc-8a40-41af-a22d-50d7ab62b5d3",
+        "faces_merged": 1,
+        "direction_swapped": false,
+        "merge_event_id": "4f351215-fbbc-4756-bae7-5fa0e7d3a3e7"
+      }
+    },
+    {
+      "event_id": "c6c4690b-48cf-4380-8bed-b17fdf708557",
+      "timestamp": "2026-02-12T04:24:27.357812+00:00",
+      "identity_id": "224495e8-d15a-461e-a782-9a9d6bf1d834",
+      "action": "create",
+      "face_ids": [
+        "Image 026_compress:face2"
+      ],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "0b6c0809-1643-4094-921f-c8784e25632e",
+      "timestamp": "2026-02-12T04:24:27.357827+00:00",
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "action": "detach",
+      "face_ids": [
+        "Image 026_compress:face2"
+      ],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 7,
+      "metadata": {
+        "to_identity_id": "224495e8-d15a-461e-a782-9a9d6bf1d834"
+      }
+    },
+    {
+      "event_id": "cb957b05-d385-4bc5-b9a1-4c01d7bfd448",
+      "timestamp": "2026-02-12T04:25:18.859463+00:00",
+      "identity_id": "224495e8-d15a-461e-a782-9a9d6bf1d834",
+      "action": "state_change",
+      "face_ids": [],
+      "user_source": "web",
+      "confidence_weight": 1.0,
+      "previous_version_id": 1,
+      "metadata": {
+        "new_state": "CONTESTED",
+        "reason": "Rejected via UI"
       }
     }
   ]
