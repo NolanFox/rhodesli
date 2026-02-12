@@ -138,6 +138,85 @@ def find_nearest_neighbors(target_id, registry, photo_registry, face_data, limit
 
     return results
 
+def batch_best_neighbor_distances(identity_ids, registry, face_data):
+    """Compute the best-neighbor distance for a batch of identities.
+
+    Returns a dict mapping identity_id -> (best_distance, best_neighbor_id, best_neighbor_name).
+    Uses vectorized numpy operations for efficiency — O(n*m) total, not O(n^2*m).
+    """
+    if not identity_ids:
+        return {}
+
+    # Build a lookup of identity_id -> representative embedding (first available face)
+    query_data = {}  # id -> (embedding_vector,)
+    for iid in identity_ids:
+        fids, embs = get_identity_embeddings(iid, registry, face_data)
+        if embs.size > 0:
+            query_data[iid] = embs
+
+    if not query_data:
+        return {}
+
+    # Build candidate pool: all identities NOT in the query set
+    query_set = set(identity_ids)
+    all_identities = registry.list_identities()
+    candidate_data = {}  # id -> (name, embeddings)
+    for cand in all_identities:
+        cid = cand["identity_id"]
+        if cid in query_set:
+            continue
+        if cand.get("merged_into"):
+            continue
+        fids, embs = get_identity_embeddings(cid, registry, face_data)
+        if embs.size > 0:
+            candidate_data[cid] = (cand.get("name", "Unknown"), embs)
+
+    if not candidate_data:
+        return {iid: (999.0, None, None) for iid in identity_ids}
+
+    # Stack all candidate embeddings into one matrix for vectorized distance
+    cand_ids = list(candidate_data.keys())
+    cand_names = [candidate_data[cid][0] for cid in cand_ids]
+    cand_emb_list = [candidate_data[cid][1] for cid in cand_ids]
+    # Track which rows belong to which candidate
+    cand_row_to_idx = []
+    cand_all_embs = []
+    for idx, embs in enumerate(cand_emb_list):
+        for row in embs:
+            cand_all_embs.append(row)
+            cand_row_to_idx.append(idx)
+    cand_matrix = np.vstack(cand_all_embs)  # shape: (total_cand_faces, 512)
+    cand_row_to_idx = np.array(cand_row_to_idx)
+
+    results = {}
+    for iid, q_embs in query_data.items():
+        # Compute distances from all query faces to all candidate faces
+        dists = cdist(q_embs, cand_matrix, metric='euclidean')
+        # For each candidate, find the minimum distance across all face pairs
+        min_per_row = np.min(dists, axis=0)  # min across query faces for each candidate face
+        # Group by candidate identity and find overall min
+        best_dist = 999.0
+        best_idx = -1
+        for cidx in range(len(cand_ids)):
+            mask = cand_row_to_idx == cidx
+            if mask.any():
+                cand_min = float(np.min(min_per_row[mask]))
+                if cand_min < best_dist:
+                    best_dist = cand_min
+                    best_idx = cidx
+        if best_idx >= 0:
+            results[iid] = (best_dist, cand_ids[best_idx], cand_names[best_idx])
+        else:
+            results[iid] = (999.0, None, None)
+
+    # Fill in identities that had no embeddings
+    for iid in identity_ids:
+        if iid not in results:
+            results[iid] = (999.0, None, None)
+
+    return results
+
+
 def sort_faces_by_outlier_score(identity_id, registry, face_data):
     """
     Sort faces by distance from the identity's ad-hoc centroid.

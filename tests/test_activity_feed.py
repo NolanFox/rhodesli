@@ -138,23 +138,27 @@ class TestWelcomeModal:
         assert "welcome-modal" in html
         assert "Got it!" in html
 
-    def test_welcome_modal_hidden_on_return_visit(self):
-        """Welcome modal does not appear when session has 'welcomed' flag."""
+    def test_welcome_modal_uses_persistent_cookie(self):
+        """Welcome modal uses persistent cookie for dismissal, not session."""
         from app.main import _welcome_modal
         from fastcore.xml import to_xml
 
-        sess = {"welcomed": True}
-        result = _welcome_modal(sess)
+        result = _welcome_modal({})
         html = to_xml(result)
-        assert "Welcome to Rhodesli" not in html
+        # Should contain cookie-setting JavaScript
+        assert "rhodesli_welcomed" in html
+        assert "max-age=31536000" in html  # 1 year expiry
 
-    def test_welcome_modal_sets_session_flag(self):
-        """Welcome modal sets 'welcomed' flag in session."""
+    def test_welcome_modal_checks_cookie_client_side(self):
+        """Welcome modal checks cookie on load and hides if present."""
         from app.main import _welcome_modal
+        from fastcore.xml import to_xml
 
-        sess = {}
-        _welcome_modal(sess)
-        assert sess["welcomed"] is True
+        result = _welcome_modal({})
+        html = to_xml(result)
+        # Client-side JS should check for cookie and hide modal
+        assert "rhodesli_welcomed" in html
+        assert "classList.add" in html or "hidden" in html
 
     def test_welcome_modal_handles_none_session(self):
         """Welcome modal handles None session gracefully."""

@@ -2450,52 +2450,112 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
     return Div(header, content, cls="space-y-6")
 
 
+_skipped_neighbor_cache = None
+_skipped_neighbor_cache_key = None
+
+
+def _get_skipped_neighbor_distances(skipped: list) -> dict:
+    """Get best-neighbor distances for all skipped identities.
+
+    Uses proposals first, falls back to batch neighbor computation.
+    Results are cached for the lifetime of the process (invalidated on data reload).
+    """
+    global _skipped_neighbor_cache, _skipped_neighbor_cache_key
+    cache_key = len(skipped)  # Simple cache invalidation
+    if _skipped_neighbor_cache is not None and _skipped_neighbor_cache_key == cache_key:
+        return _skipped_neighbor_cache
+
+    ids_with_proposals = _get_identities_with_proposals()
+    result = {}
+
+    # First, use proposals for any identities that have them
+    for identity in skipped:
+        iid = identity.get("identity_id", "")
+        if iid in ids_with_proposals:
+            best = _get_best_proposal_for_identity(iid)
+            if best:
+                result[iid] = (best.get("distance", 999), best.get("confidence", "LOW"))
+
+    # For identities without proposals, compute batch neighbors
+    needs_computation = [i["identity_id"] for i in skipped if i["identity_id"] not in result]
+    if needs_computation:
+        try:
+            from core.neighbors import batch_best_neighbor_distances
+            registry = load_registry()
+            face_data = get_face_data()
+            batch_results = batch_best_neighbor_distances(needs_computation, registry, face_data)
+            for iid, (dist, _, _) in batch_results.items():
+                if dist < 999:
+                    if dist < 0.80:
+                        confidence = "VERY HIGH"
+                    elif dist < 1.00:
+                        confidence = "HIGH"
+                    elif dist < 1.20:
+                        confidence = "MODERATE"
+                    else:
+                        confidence = "LOW"
+                    result[iid] = (dist, confidence)
+        except (ImportError, Exception) as e:
+            print(f"[sort] Batch neighbor computation failed: {e}")
+
+    _skipped_neighbor_cache = result
+    _skipped_neighbor_cache_key = cache_key
+    return result
+
+
 def _sort_skipped_by_actionability(skipped: list) -> list:
     """Sort skipped identities by actionability — best leads first.
 
     Priority tiers (lower = higher priority):
-      0: Has VERY HIGH confidence proposal (near-certain match)
-      1: Has HIGH confidence proposal
-      2: Has MODERATE or lower proposal
-      3: No proposals (unmatched)
+      0: Has VERY HIGH confidence match (near-certain)
+      1: Has HIGH confidence match
+      2: Has MODERATE or lower match
+      3: No matches found
 
     Within each tier, sort by best distance ascending (closest match first).
+    Uses proposals when available, falls back to real-time neighbor computation.
     """
-    ids_with_proposals = _get_identities_with_proposals()
+    neighbor_data = _get_skipped_neighbor_distances(skipped)
 
     def _actionability_key(x):
         iid = x.get("identity_id", "")
-        has_proposal = iid in ids_with_proposals
-        best = _get_best_proposal_for_identity(iid) if has_proposal else None
+        match = neighbor_data.get(iid)
 
-        if has_proposal and best:
-            confidence = best.get("confidence", "")
+        if match:
+            dist, confidence = match
             if confidence == "VERY HIGH":
                 tier = 0
             elif confidence == "HIGH":
                 tier = 1
-            else:
+            elif confidence == "MODERATE":
                 tier = 2
-            return (tier, best.get("distance", 999))
+            else:
+                tier = 3
+            return (tier, dist)
         else:
-            return (3, 999)
+            return (4, 999)
 
     return sorted(skipped, key=_actionability_key)
 
 
-def _actionability_badge(identity_id: str, ids_with_proposals: set):
+def _actionability_badge(identity_id: str, ids_with_proposals: set = None):
     """Return a visual badge for an identity's actionability level.
 
-    Returns None if the identity has no leads.
+    Uses cached neighbor data from _get_skipped_neighbor_distances() when available,
+    falls back to proposals. Returns None if the identity has no leads.
     """
-    if identity_id not in ids_with_proposals:
-        return None
+    # Try cached neighbor distances first
+    if _skipped_neighbor_cache and identity_id in _skipped_neighbor_cache:
+        _, confidence = _skipped_neighbor_cache[identity_id]
+    else:
+        # Fallback to proposals
+        if ids_with_proposals and identity_id not in ids_with_proposals:
+            return None
+        best = _get_best_proposal_for_identity(identity_id)
+        if not best:
+            return None
+        confidence = best.get("confidence", "")
 
-    best = _get_best_proposal_for_identity(identity_id)
-    if not best:
-        return None
-
-    confidence = best.get("confidence", "")
     if confidence in ("VERY HIGH", "HIGH"):
         return Div(
             Span("Strong lead", cls="text-xs font-bold text-emerald-300"),
@@ -2725,7 +2785,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str):
         return None
 
     collection = photo.get("collection") or photo.get("source") or ""
-    photo_url = storage.get_photo_url(photo.get("path", ""))
+    photo_url = storage.get_photo_url(photo.get("path") or photo.get("filename") or "")
 
     # Find other identified faces in this photo
     registry = load_registry()
@@ -2786,9 +2846,55 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str):
     )
 
 
+def _compute_best_neighbor(identity_id: str):
+    """Compute best neighbor for an identity using real-time embedding distance.
+
+    Returns a dict with keys matching proposal format:
+      target_identity_id, target_identity_name, distance, confidence
+    or None if no neighbor found.
+    """
+    try:
+        from core.neighbors import find_nearest_neighbors
+        registry = load_registry()
+        photo_registry = load_photo_registry()
+        face_data = get_face_data()
+        neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=1
+        )
+        if not neighbors:
+            return None
+        n = neighbors[0]
+        dist = n.get("distance", 999)
+        # Map distance to confidence tier (same thresholds as clustering)
+        if dist < 0.80:
+            confidence = "VERY HIGH"
+        elif dist < 1.00:
+            confidence = "HIGH"
+        elif dist < 1.20:
+            confidence = "MODERATE"
+        else:
+            confidence = "LOW"
+        return {
+            "target_identity_id": n["identity_id"],
+            "target_identity_name": n.get("name", "Unknown"),
+            "distance": dist,
+            "confidence": confidence,
+        }
+    except (ImportError, Exception):
+        return None
+
+
+def _get_best_match_for_identity(identity_id: str):
+    """Get best match: first from proposals, then from real-time neighbors."""
+    best = _get_best_proposal_for_identity(identity_id)
+    if best:
+        return best
+    return _compute_best_neighbor(identity_id)
+
+
 def _build_skipped_suggestion(identity_id: str, crop_files: set):
     """Build the 'Best Match' side-by-side panel for a skipped identity."""
-    best = _get_best_proposal_for_identity(identity_id)
+    best = _get_best_match_for_identity(identity_id)
     if not best:
         return Div(
             Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
@@ -2848,7 +2954,7 @@ def _build_skipped_suggestion(identity_id: str, crop_files: set):
 
 def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
     """Build action buttons for skipped focus mode."""
-    best = _get_best_proposal_for_identity(identity_id)
+    best = _get_best_match_for_identity(identity_id)
     has_suggestion = best is not None
 
     buttons = []
@@ -4678,15 +4784,9 @@ def _guest_or_login_modal(form_data: dict) -> Div:
 def _welcome_modal(sess) -> Div:
     """
     First-time user welcome modal (FE-052).
-    Shows once per session. Dismissed via 'Got it' button.
+    Shows once per user using a persistent cookie (1 year expiry).
+    Modal starts hidden, JavaScript shows it only if cookie is absent.
     """
-    if sess and sess.get("welcomed"):
-        return Span()  # Already welcomed
-
-    # Mark as welcomed for this session
-    if sess is not None:
-        sess["welcomed"] = True
-
     return Div(
         Div(
             Div(
@@ -4704,7 +4804,8 @@ def _welcome_modal(sess) -> Div:
                 Button(
                     "Got it!",
                     cls="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 w-full",
-                    **{"_": "on click add .hidden to #welcome-modal"},
+                    **{"_": "on click add .hidden to #welcome-modal then "
+                       "set document.cookie to 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax'"},
                     type="button",
                 ),
                 cls="bg-slate-800 rounded-xl p-6 border border-slate-700 max-w-md w-full mx-4"
@@ -4712,6 +4813,17 @@ def _welcome_modal(sess) -> Div:
             cls="fixed inset-0 bg-black/60 flex items-center justify-center z-[9998]",
             id="welcome-modal",
         ),
+        Script("""
+            (function() {
+                var welcomed = document.cookie.split(';').some(function(c) {
+                    return c.trim().startsWith('rhodesli_welcomed=');
+                });
+                if (welcomed) {
+                    var el = document.getElementById('welcome-modal');
+                    if (el) el.classList.add('hidden');
+                }
+            })();
+        """),
     )
 
 
@@ -13379,10 +13491,12 @@ async def post(request):
         }
 
     # Invalidate in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
+    _skipped_neighbor_cache = None
+    _skipped_neighbor_cache_key = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 
