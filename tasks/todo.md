@@ -1,6 +1,16 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-11 (Session 16 — Navigation Hardening + ML Pipeline Kickoff)
+Last updated: 2026-02-12 (Session 18c — Focus Mode + Docs)
+
+## Session 18c Completed
+- [x] Focus Mode for Needs Help: guided single-identity review with photo context, actions, keyboard shortcuts
+- [x] Actionability scoring: best ML leads first in Focus and Browse
+- [x] Visual badges: Strong lead / Good lead in browse view
+- [x] AD-030–037: 8 rejected/under-investigation approaches
+- [x] DECISION_LOG.md: 18 major decisions
+- [x] SUPABASE_AUDIT.md: auth-only usage
+- [x] Lightbox navigation verified (49 tests, fully working)
+- [x] Gender metadata assessed (not available in data, would need re-ingest)
 
 ## Active Bugs
 - (none)

@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.26.0] - 2026-02-12
+
+### Added
+- **Focus Mode for Needs Help**: Guided single-identity review experience for skipped faces. Shows face + best ML suggestion side-by-side, photo context (collection, co-identified people), action buttons (Same Person/Not Same/I Know Them/Skip), keyboard shortcuts (Y/N/Enter/S), progress counter, Up Next carousel.
+- **Actionability scoring**: Needs Help identities sorted by ML confidence — strong leads first in both Focus and Browse modes.
+- **Visual badges**: "Strong lead" (emerald) and "Good lead" (amber) badges on browse cards indicating ML match quality.
+- **Focus/Browse toggle**: Needs Help section now supports Focus and Browse views (matching Inbox pattern).
+- **Three new action routes**: `/api/skipped/{id}/focus-skip`, `/api/skipped/{id}/reject-suggestion`, `/api/skipped/{id}/name-and-confirm` for focus mode workflow.
+- **Merge route focus_section**: Merge and neighbors routes support `focus_section=skipped` for correct container targeting.
+- **AD-030 to AD-037**: 8 rejected/under-investigation algorithmic approaches documented.
+- **DECISION_LOG.md**: Chronological record of 18 major architectural decisions.
+- **SUPABASE_AUDIT.md**: Auth-only usage audit — no critical path dependency.
+- 30 new tests, test count: 1527 → 1557.
+
 ## [v0.25.0] - 2026-02-11
 
 ### Fixed

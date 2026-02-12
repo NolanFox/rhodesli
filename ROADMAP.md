@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.25.0 · 1527 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
+Current: v0.26.0 · 1557 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -122,6 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-12: v0.26.0 — Focus Mode + Docs (Session 18c): Needs Help Focus Mode (guided single-identity review, photo context, Same Person/Not Same/I Know Them/Skip actions, Y/N/Enter/S keyboard shortcuts, progress counter, Up Next carousel). Actionability scoring (best ML leads first), visual badges (Strong lead/Good lead). AD-030–037 rejected approaches, DECISION_LOG.md, SUPABASE_AUDIT.md. 1557 tests
 - [x] 2026-02-11: v0.25.0 — Discovery UX + Bug Fixes (Session 18/18b): UX audit (7 user stories, 10 issues), compare modal View Photo + Back to Compare, post-merge guidance banners, grouped badge, compare modal 90vw + filter preservation. Bug fixes: AI suggestion thumbnails, search variant highlighting, sidebar filter layout, staged upload actions, detach UX. Variable suggestion count, co-occurrence signals, compare zoom. 1527 tests
 - [x] 2026-02-11: v0.24.0 — Community Readiness: search finds all identity states, surname variant matching (13 groups), face tag URL encoding + auto-confirm, metadata edit UI, ML suggestions visual redesign, face overlay name labels + legend, upload safety checks, decision-provenance + feature-completeness harness rules (1473 tests)
 - [x] 2026-02-11: v0.23.0 — Navigation Hardening + ML Pipeline Scaffold: triage filter propagation through action chain, photo nav boundaries, grammar pluralization, rhodesli_ml/ package with 26 files (signal harvester, date labeler, audit reports), 1438 tests
