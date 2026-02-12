@@ -1701,22 +1701,27 @@ class IdentityRegistry:
             return []
 
         query_lower = query.lower()
-        results = []
-        fuzzy_candidates = []
+        words = query_lower.split()
 
-        # Expand query with surname variants: if any word in the query
-        # matches a known surname variant, add all variants from that group
+        # Build expanded term sets for each word (AND-of-ORs matching)
+        # e.g. "Leon Capelluto" → [{"leon"}, {"capelluto","capeluto","capelouto",...}]
         variant_lookup = _load_surname_variants()
-        query_terms = {query_lower}  # primary query always included
-        for word in query_lower.split():
+        word_term_sets: list[set[str]] = []
+        for word in words:
+            term_set = {word}
             if word in variant_lookup:
-                query_terms.update(variant_lookup[word])
+                term_set.update(variant_lookup[word])
+            word_term_sets.append(term_set)
 
         # State priority for ranking (lower = higher priority)
         _state_rank = {
             "CONFIRMED": 0, "PROPOSED": 1, "INBOX": 2,
             "SKIPPED": 3, "CONTESTED": 4, "REJECTED": 5,
         }
+
+        full_matches = []     # all words matched
+        partial_matches = []  # some words matched (secondary results)
+        fuzzy_candidates = []
 
         for identity in self._identities.values():
             # Skip merged identities
@@ -1767,32 +1772,47 @@ class IdentityRegistry:
                 if isinstance(alias, str):
                     searchable_texts.append(alias.lower())
 
-            # Case-insensitive substring match — check primary query AND variant expansions
-            matched = any(term in text for term in query_terms for text in searchable_texts)
-            if matched:
-                summary = _build_summary()
-                rank = _state_rank.get(identity_state, 9)
-                results.append((rank, name.lower(), summary))
+            # Count how many query words match (with variant expansion)
+            words_matched = 0
+            for term_set in word_term_sets:
+                if any(term in text for term in term_set for text in searchable_texts):
+                    words_matched += 1
+
+            rank = _state_rank.get(identity_state, 9)
+            if words_matched == len(word_term_sets):
+                # All words matched — primary result
+                full_matches.append((rank, name.lower(), _build_summary()))
+            elif words_matched > 0:
+                # Partial match — secondary result (lower priority)
+                partial_matches.append((rank, name.lower(), _build_summary()))
             else:
-                # Track for fuzzy fallback
+                # No match — track for fuzzy fallback
                 fuzzy_candidates.append((name, identity_state, _build_summary))
 
-        # Sort by state rank, then name
-        results.sort(key=lambda x: (x[0], x[1]))
-        sorted_results = [r[2] for r in results[:limit]]
+        # Primary: full matches sorted by state rank, then name
+        full_matches.sort(key=lambda x: (x[0], x[1]))
+        sorted_results = [r[2] for r in full_matches[:limit]]
 
-        # Fuzzy fallback: if exact match found nothing, try Levenshtein
+        # Fill remaining slots with partial matches if needed
+        remaining = limit - len(sorted_results)
+        if remaining > 0 and partial_matches:
+            partial_matches.sort(key=lambda x: (x[0], x[1]))
+            sorted_results.extend(r[2] for r in partial_matches[:remaining])
+
+        # Fuzzy fallback: if no exact/partial matches, try Levenshtein per-word
         if not sorted_results and fuzzy_candidates:
             scored = []
-            for name, id_state, builder in fuzzy_candidates:
-                # Check each word in the name against the query
-                for word in name.lower().split():
-                    dist = _levenshtein(query_lower, word)
-                    threshold = 2 if len(query_lower) <= 8 else 3
-                    if dist <= threshold:
-                        rank = _state_rank.get(id_state, 9)
-                        scored.append((dist, rank, builder()))
-                        break
+            for cand_name, id_state, builder in fuzzy_candidates:
+                best_dist = 999
+                for word in cand_name.lower().split():
+                    for qword in words:
+                        dist = _levenshtein(qword, word)
+                        threshold = 2 if len(qword) <= 8 else 3
+                        if dist <= threshold:
+                            best_dist = min(best_dist, dist)
+                if best_dist < 999:
+                    fuzz_rank = _state_rank.get(id_state, 9)
+                    scored.append((best_dist, fuzz_rank, builder()))
             scored.sort(key=lambda x: (x[0], x[1]))
             sorted_results = [s[2] for s in scored[:limit]]
 

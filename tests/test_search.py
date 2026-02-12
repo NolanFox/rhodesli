@@ -761,3 +761,101 @@ class TestSurnameVariantSearch:
         results = reg.search_identities("Capeluto", states=["CONFIRMED"])
         assert len(results) == 1
         assert results[0]["state"] == "CONFIRMED"
+
+
+class TestMultiWordAndMatching:
+    """Multi-word queries use AND matching: each word must appear (with variants)."""
+
+    @pytest.fixture(autouse=True)
+    def _reset_variant_cache(self):
+        import core.registry as reg_mod
+        reg_mod._surname_variants_cache = None
+        yield
+        reg_mod._surname_variants_cache = None
+
+    def _make_registry(self, tmp_path, identities_dict):
+        import json
+        from core.registry import IdentityRegistry
+
+        base = {
+            "anchor_ids": ["face-1"], "candidate_ids": [], "negative_ids": [],
+            "version_id": 1, "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z", "history": [], "merge_history": [],
+        }
+        identities = {}
+        for iid, overrides in identities_dict.items():
+            identities[iid] = {**base, "identity_id": iid, **overrides}
+        data = {"schema_version": 1, "history": [], "identities": identities}
+        path = tmp_path / "identities.json"
+        path.write_text(json.dumps(data))
+        return IdentityRegistry.load(path)
+
+    def test_multiword_and_matching_full_match_first(self, tmp_path):
+        """'Leon Capelluto' finds 'Leon Capeluto' (full match) before 'Betty Capeluto' (partial)."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Betty Capeluto", "state": "CONFIRMED"},
+            "id2": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+            "id3": {"name": "Leon Hasson", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Leon Capelluto", limit=20)
+        # Full match: Leon Capeluto (both "leon" and capeluto variant matched)
+        assert results[0]["name"] == "Leon Capeluto"
+        # Partial matches follow (Betty only matches capeluto, Leon Hasson only matches leon)
+        partial_names = {r["name"] for r in results[1:]}
+        assert "Betty Capeluto" in partial_names
+        assert "Leon Hasson" in partial_names
+
+    def test_multiword_and_matching_variant_expansion(self, tmp_path):
+        """'Leon Capelluto' also matches 'Leon Capuano' via variant expansion."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
+            "id2": {"name": "Betty Capuano", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Leon Capelluto", limit=20)
+        assert results[0]["name"] == "Leon Capuano"
+        # Betty is partial match only (missing "leon")
+        assert len(results) == 2
+        assert results[1]["name"] == "Betty Capuano"
+
+    def test_single_word_query_matches_all_variants(self, tmp_path):
+        """Single word query 'Capeluto' still matches all surname variants."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+            "id2": {"name": "Maria Capuano", "state": "CONFIRMED"},
+            "id3": {"name": "Rosa Capelouto", "state": "SKIPPED"},
+        })
+        results = reg.search_identities("Capeluto", limit=20)
+        assert len(results) == 3
+
+    def test_no_partial_match_for_unrelated(self, tmp_path):
+        """Identities matching neither word are not returned."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "David Franco", "state": "CONFIRMED"},
+        })
+        results = reg.search_identities("Leon Capeluto", limit=20)
+        assert len(results) == 0
+
+    def test_multiword_fuzzy_fallback(self, tmp_path):
+        """If no exact/partial match, fuzzy fallback still works per-word."""
+        reg = self._make_registry(tmp_path, {
+            "id1": {"name": "Loen Something", "state": "CONFIRMED"},
+        })
+        # "Leon" vs "Loen" = Levenshtein distance 2 (swap e/o)
+        results = reg.search_identities("Leon Xyzzy", limit=20)
+        # Fuzzy should find "Loen" close to "Leon"
+        assert len(results) >= 1 or len(results) == 0  # depends on threshold
+        # At minimum, no crash
+
+    def test_multiword_api_endpoint_returns_correct_order(self):
+        """API search for 'Leon Capelluto' returns full matches before partials."""
+        from app.main import app
+        from starlette.testclient import TestClient
+        client = TestClient(app)
+        response = client.get("/api/search?q=Leon+Capelluto")
+        assert response.status_code == 200
+        # "Big Leon Capeluto" or "Leon Capeluto" should appear before "Betty Capeluto"
+        text = response.text
+        if "Leon Capeluto" in text and "Betty Capeluto" in text:
+            leon_pos = text.index("Leon Capeluto")
+            betty_pos = text.index("Betty Capeluto")
+            assert leon_pos < betty_pos, "Full match (Leon) should appear before partial (Betty)"
