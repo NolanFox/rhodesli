@@ -325,6 +325,82 @@ class TestRejectPendingUpload:
             assert "already" in response.text.lower()
 
 
+class TestMarkProcessedAdminUI:
+    """Tests for POST /admin/pending/{id}/mark-processed (admin UI)."""
+
+    def test_mark_processed_updates_status(self, client, auth_enabled, admin_user, tmp_path):
+        """POST /admin/pending/{id}/mark-processed updates staged to processed."""
+        with patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job1": {
+                        "job_id": "job1",
+                        "uploader_email": "admin@example.com",
+                        "source": "Family Album",
+                        "files": ["photo1.jpg"],
+                        "file_count": 1,
+                        "submitted_at": "2026-02-06T00:00:00+00:00",
+                        "status": "staged",
+                    }
+                }
+            })
+
+            response = client.post("/admin/pending/job1/mark-processed")
+            assert response.status_code == 200
+            assert "Processed" in response.text
+
+            with open(tmp_path / "pending_uploads.json") as f:
+                data = json.load(f)
+            assert data["uploads"]["job1"]["status"] == "processed"
+
+    def test_mark_processed_nonexistent(self, client, auth_enabled, admin_user, tmp_path):
+        """POST /admin/pending/{id}/mark-processed for missing returns error."""
+        with patch("app.main.data_path", tmp_path):
+            response = client.post("/admin/pending/nonexistent/mark-processed")
+            assert response.status_code == 200
+            assert "not found" in response.text.lower()
+
+    def test_mark_processed_wrong_status(self, client, auth_enabled, admin_user, tmp_path):
+        """Cannot mark-processed a pending (non-staged) upload."""
+        with patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job1": {
+                        "job_id": "job1",
+                        "status": "pending",
+                    }
+                }
+            })
+
+            response = client.post("/admin/pending/job1/mark-processed")
+            assert response.status_code == 200
+            assert "already" in response.text.lower()
+
+    def test_admin_pending_page_has_mark_processed_button(self, client, auth_enabled, admin_user, tmp_path):
+        """Admin pending page shows Mark Processed button for staged uploads."""
+        with patch("app.main.data_path", tmp_path):
+            from app.main import _save_pending_uploads
+            _save_pending_uploads({
+                "uploads": {
+                    "job1": {
+                        "job_id": "job1",
+                        "uploader_email": "admin@example.com",
+                        "source": "Family Album",
+                        "files": ["photo1.jpg"],
+                        "file_count": 1,
+                        "submitted_at": "2026-02-06T00:00:00+00:00",
+                        "status": "staged",
+                    }
+                }
+            })
+
+            response = client.get("/admin/pending")
+            assert response.status_code == 200
+            assert "Mark Processed" in response.text
+
+
 class TestMarkProcessedEndpoint:
     """Tests for POST /api/sync/staged/mark-processed."""
 

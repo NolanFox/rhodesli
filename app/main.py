@@ -9716,6 +9716,13 @@ def get(sess=None):
             if is_staged:
                 actions = Div(
                     Span("Staged", cls="px-2 py-1 bg-blue-600/30 text-blue-300 text-xs font-bold rounded uppercase"),
+                    Button(
+                        "Mark Processed",
+                        hx_post=f"/admin/pending/{job_id}/mark-processed",
+                        hx_target=f"#pending-card-{job_id}",
+                        hx_swap="outerHTML",
+                        cls="px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-500 transition-colors"
+                    ),
                     cls="flex gap-2 items-start"
                 )
             else:
@@ -10125,6 +10132,46 @@ def post(job_id: str, sess=None):
             cls="flex items-center gap-1"
         ),
         cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg"
+    )
+
+
+@rt("/admin/pending/{job_id}/mark-processed")
+def post(job_id: str, sess=None):
+    """Mark a staged upload as processed. Requires admin."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    pending = _load_pending_uploads()
+    if job_id not in pending["uploads"]:
+        return Div(
+            P("Upload not found.", cls="text-red-400 text-sm"),
+            cls="p-3 bg-red-900/20 border border-red-500/30 rounded-lg"
+        )
+
+    upload = pending["uploads"][job_id]
+    if upload["status"] != "staged":
+        return Div(
+            P(f"Upload already {upload['status']}.", cls="text-slate-400 text-sm"),
+            cls="p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg"
+        )
+
+    upload["status"] = "processed"
+    upload["processed_at"] = datetime.now(timezone.utc).isoformat()
+    user = get_current_user(sess or {})
+    upload["processed_by"] = user.email if user else "unknown"
+    _save_pending_uploads(pending)
+
+    file_count = upload.get("file_count", len(upload.get("files", [])))
+    return Div(
+        Div(
+            Span("Processed", cls="text-green-400 text-xs font-bold uppercase"),
+            Span(" | ", cls="text-slate-600"),
+            Span(upload.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
+            Span(f" | {file_count} file{'s' if file_count != 1 else ''}", cls="text-slate-500 text-xs"),
+            cls="flex items-center gap-1"
+        ),
+        cls="p-3 bg-green-900/20 border border-green-500/30 rounded-lg"
     )
 
 
