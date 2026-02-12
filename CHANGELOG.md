@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.28.2] - 2026-02-12
+
+### Fixed
+- **Test data pollution**: Removed 5 test annotations and 46 contaminated history entries from production data. Fixed Victoria Cukran Capeluto's version_id (76 -> 22, inflated by test renames).
+- **Admin staging preview**: Photo thumbnails on pending uploads page now work using session-authenticated `/admin/staging-preview/` endpoint instead of token-only sync API.
+- **Duplicate Focus Mode button**: Removed standalone "Focus Mode" button from admin dashboard banner. Focus/Browse toggle lives in each section's header.
+
+### Changed
+- **Help Identify ordering**: Quality scores (0-100) now influence ordering. Clear, high-quality faces surface before blurry ones within each confidence tier. Named match targets (e.g., "Rica Moussafer") sort before unidentified ones.
+
+### Added
+- **Data safety rules**: `.claude/rules/data-safety.md` with test isolation enforcement. 2 guard tests prevent future test data contamination.
+- **Feedback tracking**: `docs/feedback/FEEDBACK_INDEX.md` centralizes all user feedback with status tracking and linked files. `.claude/rules/feedback-driven.md` enforces review at session boundaries.
+- **Cleanup script**: `scripts/clean_test_data.py` for emergency test data removal with `--dry-run` default.
+- 6 new tests (quality ordering, named match priority, staging preview, path traversal, 404, contamination guards). Test count: 1641.
+
 ## [v0.28.1] - 2026-02-12
 
 ### Added

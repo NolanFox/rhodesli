@@ -1,6 +1,16 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-12 (Session 19d — Polish, Quality & Documentation)
+Last updated: 2026-02-12 (Session 19e — Data Safety, Quality Ranking, Admin Fixes)
+
+## Session 19e Completed
+- [x] Fix test data pollution: removed 5 test annotations + 46 contaminated history entries from production
+- [x] Quality scores influence Help Identify ordering: clear faces + named matches sort first
+- [x] Admin staging preview: session-authenticated endpoint replaces token-only sync API for photo thumbnails
+- [x] Remove duplicate Focus Mode button from admin dashboard banner
+- [x] Mobile audit: verified all 5 requirements already implemented with test coverage
+- [x] Feedback tracking: FEEDBACK_INDEX.md + .claude/rules/feedback-driven.md
+- [x] Data safety rules: .claude/rules/data-safety.md + guard tests
+- [x] 6 new tests (1641 total)
 
 ## Session 19d Completed
 - [x] Face quality scoring (AD-038): composite 0-100 score, best-face selection for thumbnails

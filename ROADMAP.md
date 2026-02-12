@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.28.1 · 1635 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
+Current: v0.28.2 · 1641 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -122,6 +122,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-12: v0.28.2 — Data Safety & Admin Fixes (Session 19e): Removed test data from production (5 annotations, 46 history entries), quality scores influence Help Identify ordering, admin staging preview endpoint, duplicate Focus Mode button removal, feedback tracking architecture. 6 new tests. 1641 tests
 - [x] 2026-02-12: v0.28.1 — Quality & Documentation (Session 19d): Face quality scoring (AD-038, composite 0-100), quality-aware thumbnail selection, larger face crops globally, hover effects. Photo enhancement research doc, discovery UX rules, feedback tracker. 13 new tests. 1635 tests
 - [x] 2026-02-12: v0.28.0 — User Journey & Data Model (Session 19c): Discovery UX research doc, structured identity metadata (generation_qualifier, death_place, compact display), 3-step surname onboarding, personalized landing banner, nav renaming (Inbox→New Matches, Needs Help→Help Identify), admin approvals badge, "I Know This Person" button. 33 new tests. 1622 tests
 - [x] 2026-02-12: v0.27.1 — Core UX Fixes (Session 19b): Search AND-matching for multi-word queries, 300px face crops, more matches strip, Z-key undo, admin photo previews, View Photo links. 22 new tests. 1589 tests
