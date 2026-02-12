@@ -234,10 +234,78 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 
 ---
 
+## Rejected Approaches
+
+### AD-030: [Rejected] Centroid Averaging for Multi-Anchor Identities
+- **Date**: 2026-02-11
+- **Context**: How to represent identities with multiple confirmed faces
+- **Decision**: Rejected in favor of multi-anchor comparison (each face independently)
+- **Reason**: Averaging embeddings creates "muddy" centroids that don't match any real face; multi-anchor preserves individual face quality
+- **Revisit condition**: Never — multi-anchor is strictly superior for PFE embeddings
+- **Affects**: `core/neighbors.py`
+
+### AD-031: [Rejected] Full Fine-Tuning Before Calibration
+- **Date**: 2026-02-11
+- **Context**: Whether to fine-tune the base model on Rhodesli data before calibrating thresholds
+- **Decision**: Rejected — calibrate thresholds on pretrained model first, then consider fine-tuning
+- **Reason**: Fine-tuning with <1000 faces risks overfitting; calibration catches low-hanging fruit without model changes
+- **Revisit condition**: If calibration + LoRA plateau below 90% accuracy on golden set
+- **Affects**: `scripts/cluster_new_faces.py`
+
+### AD-032: [Rejected] Training From Scratch
+- **Date**: 2026-02-11
+- **Context**: Whether to train a face recognition model from scratch on archive photos
+- **Decision**: Rejected — use pretrained AdaFace/InsightFace as-is
+- **Reason**: Dataset too sparse (<1000 unique faces); pretrained models have seen millions of faces
+- **Revisit condition**: If archive exceeds 10,000 faces AND domain shift is demonstrated
+- **Affects**: N/A (would be new infrastructure)
+
+### AD-033: [Rejected] Flat Classification for Date Labels
+- **Date**: 2026-02-11
+- **Context**: How to predict photo dates from visual features
+- **Decision**: CORAL ordinal regression chosen over flat multiclass classification
+- **Reason**: Dates have natural ordering; flat classification ignores that "1940" is closer to "1945" than to "1980"
+- **Revisit condition**: Never for ordered labels — CORAL is strictly superior
+- **Affects**: `rhodesli_ml/models/date_labeler.py`
+
+### AD-034: [Rejected] GEDCOM Relatedness as Matching Signal
+- **Date**: 2026-02-11
+- **Context**: Whether to use family tree data to boost face matching confidence
+- **Decision**: Reframed as similarity explorer rather than matching signal
+- **Reason**: Family resemblance doesn't equal same person; would create false positive bias
+- **Revisit condition**: If kinship detection accuracy exceeds 90% on archive-specific pairs
+- **Affects**: N/A (not implemented)
+
+### AD-035: [Rejected] LoRA on Convolutional Layers
+- **Date**: 2026-02-11
+- **Context**: Whether to apply LoRA adaptation to convolutional backbone layers
+- **Decision**: Rejected — ArcFace uses ResNet backbone where LoRA is less effective
+- **Reason**: LoRA works best on attention/linear layers (Transformers); ResNet convolutions have different adaptation dynamics
+- **Revisit condition**: If base model switches to Vision Transformer (ViT) architecture
+- **Affects**: `rhodesli_ml/models/`
+
+### AD-036: [Under Investigation] MLS vs Euclidean Distance Metric
+- **Date**: 2026-02-11
+- **Context**: Whether mutual likelihood score (MLS) is better than Euclidean for PFE embeddings
+- **Decision**: Under investigation pending ML-052 experiment
+- **Reason**: PFE embeddings include uncertainty estimates; MLS leverages these but is computationally more expensive
+- **Revisit condition**: Active investigation — compare on golden set
+- **Affects**: `core/neighbors.py`
+
+### AD-037: [Rejected] Face Restoration as Preprocessing
+- **Date**: 2026-02-11
+- **Context**: Whether to apply GFPGAN/CodeFormer face restoration before embedding extraction
+- **Decision**: Rejected — restoration changes identity features
+- **Reason**: Restoration hallucinates details not in the original photo, shifting embeddings away from ground truth; hurts recognition more than it helps
+- **Revisit condition**: If dual-branch adapter (original + restored) proves practical without identity drift
+- **Affects**: `core/ingest.py`, `core/ingest_inbox.py`
+
+---
+
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-030)
+1. Add a new entry with AD-XXX format (next: AD-038)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
