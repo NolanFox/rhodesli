@@ -60,3 +60,14 @@ class TestSidebarProposalsLink:
         """Proposals link is hidden for non-admin users."""
         response = client.get("/?section=to_review")
         assert "/admin/proposals" not in response.text
+
+    def test_sidebar_has_approvals_link(self, client, admin_user):
+        """Admin sidebar includes Approvals nav item."""
+        response = client.get("/?section=to_review")
+        assert "/admin/approvals" in response.text
+        assert "Approvals" in response.text
+
+    def test_sidebar_approvals_hidden_for_non_admin(self, client, auth_enabled, regular_user):
+        """Approvals link is hidden for non-admin users."""
+        response = client.get("/?section=to_review")
+        assert "/admin/approvals" not in response.text

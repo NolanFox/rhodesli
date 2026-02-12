@@ -222,7 +222,7 @@ class TestSuggestNameForm:
         result = _suggest_name_form("test-identity-id")
         html = to_xml(result)
         assert "suggest-name-test-identity-id" in html
-        assert "Suggest a Name" in html
+        assert "I Know This Person" in html
         assert "name_suggestion" in html
         assert "/api/annotations/submit" in html
 

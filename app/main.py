@@ -605,6 +605,16 @@ def _compute_sidebar_counts(registry) -> dict:
     photo_count = len(_photo_cache) if _photo_cache else 0
     proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, 'list_proposed_matches') else 0
 
+    # Count pending user annotations (for admin approvals badge)
+    pending_annotations = 0
+    try:
+        annotations_data = _load_annotations()
+        for ann in annotations_data.get("annotations", []):
+            if ann.get("status") in ("pending", "pending_unverified"):
+                pending_annotations += 1
+    except Exception:
+        pass
+
     return {
         "to_review": len(to_review),
         "confirmed": len(confirmed_list),
@@ -613,6 +623,7 @@ def _compute_sidebar_counts(registry) -> dict:
         "photos": photo_count,
         "pending_uploads": _count_pending_uploads(),
         "proposals": proposal_count,
+        "pending_annotations": pending_annotations,
     }
 
 
@@ -1623,7 +1634,8 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     "Admin",
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
-                nav_item("/admin/pending", "📋", "Pending Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
+                nav_item("/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
+                nav_item("/admin/approvals", "✅", "Approvals", counts.get("pending_annotations", 0), "approvals", "emerald"),
                 nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
                 cls="mb-3"
             ) if (user and user.is_admin) else None,
@@ -1898,7 +1910,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                 **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
             ),
             Button(
-                "Suggest Name",
+                "I Know This Person",
                 cls="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors",
                 **{"_": f"on click toggle .hidden on #suggest-name-{identity_id}"},
                 type="button",
@@ -1989,7 +2001,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
 def _suggest_name_form(identity_id: str) -> Div:
     """Hidden form for suggesting a name for an unidentified person."""
     return Div(
-        H4("Suggest a Name", cls="text-sm font-medium text-white mb-2"),
+        H4("I Know This Person", cls="text-sm font-medium text-white mb-2"),
         Form(
             Input(type="hidden", name="target_type", value="identity"),
             Input(type="hidden", name="target_id", value=identity_id),
@@ -2658,7 +2670,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     else:
         actions = Div(
             Button(
-                "Suggest Name",
+                "I Know This Person",
                 cls="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors min-h-[44px]",
                 **{"_": f"on click toggle .hidden on #skipped-name-form-{identity_id}"},
                 type="button",

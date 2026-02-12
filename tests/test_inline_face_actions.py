@@ -356,6 +356,7 @@ class TestFaceCountRegression:
         assert "skipped" in counts
         assert "rejected" in counts
         assert "photos" in counts
+        assert "pending_annotations" in counts
 
     def test_sidebar_counts_are_integers(self):
         """All sidebar count values are non-negative integers."""
