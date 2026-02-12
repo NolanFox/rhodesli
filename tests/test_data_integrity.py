@@ -149,3 +149,40 @@ class TestRealDataIntegrity:
                 assert "test" not in val.lower(), (
                     f"Photo {pid} has {field}='{val}' — test contamination!"
                 )
+
+    def test_no_test_data_in_annotations(self):
+        """No test-created annotations exist in production annotations.json."""
+        ann_path = Path("data/annotations.json")
+        if not ann_path.exists():
+            pytest.skip("No data/annotations.json")
+
+        ann = json.loads(ann_path.read_text())
+        annotations = ann.get("annotations", {})
+
+        test_patterns = ["test@test.com", "user@test.com", "admin@test.com",
+                         "target-123", "target-id", "source-456"]
+
+        for ann_id, a in annotations.items():
+            ann_str = json.dumps(a)
+            for pattern in test_patterns:
+                assert pattern not in ann_str, (
+                    f"Annotation {ann_id} contains test pattern '{pattern}'"
+                )
+
+    def test_no_test_data_in_identity_history(self):
+        """No test-created entries exist in production identity history."""
+        ids_path = Path("data/identities.json")
+        if not ids_path.exists():
+            pytest.skip("No data/identities.json")
+
+        data = json.loads(ids_path.read_text())
+        history = data.get("history", [])
+
+        test_patterns = ["Test Person Name", "restoration_note", "test@test.com"]
+
+        for i, h in enumerate(history):
+            meta_str = json.dumps(h.get("metadata", {}))
+            for pattern in test_patterns:
+                assert pattern not in meta_str, (
+                    f"History entry [{i}] contains test pattern '{pattern}'"
+                )
