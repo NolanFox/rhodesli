@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.27.1] - 2026-02-12
+
+### Fixed
+- **Search AND-matching**: Multi-word queries now use AND logic — "Leon Capelluto" finds "Big Leon Capeluto" (both words must match) instead of returning all Capeluto variants. Full matches rank above partial matches.
+
+### Added
+- **300px face crops in Focus Mode**: Enlarged from 224px to 288px on desktop for confident identification.
+- **More matches strip**: Horizontal scrollable strip shows 2nd-5th best ML matches below main comparison.
+- **View Photo links**: Explicit text links below face crops for viewing full source photo.
+- **Z-key undo**: Press Z to undo last merge, reject, or skip action in Focus Mode. Stores last 10 actions.
+- **Admin photo previews**: Pending uploads page shows thumbnail previews of uploaded photos before approval.
+- **Actionability unit tests**: 3 new tests verify VERY HIGH > HIGH ordering, no-match-last, and within-tier distance sorting.
+- 22 new tests, test count: 1567 → 1589.
+
 ## [v0.27.0] - 2026-02-12
 
 ### Fixed

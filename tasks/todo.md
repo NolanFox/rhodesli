@@ -1,6 +1,27 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-12 (Session 19 — Discovery-First Overhaul)
+Last updated: 2026-02-12 (Session 19b — Core UX Fixes)
+
+## Session 19b Completed
+- [x] Search AND-matching: multi-word queries now use AND logic with variant expansion
+- [x] Focus Mode button routing verified (already correct from prior session)
+- [x] 300px face crops in Focus Mode (w-72, ~288px desktop)
+- [x] More matches strip: horizontal scrollable strip of 2nd-5th best matches
+- [x] View Photo text links below face crops
+- [x] Z-key undo for merge/reject/skip in Focus Mode
+- [x] Admin pending uploads photo preview thumbnails
+- [x] Actionability ordering verified with 3 unit tests
+- [x] 22 new tests (1589 total)
+
+## Session 19c TODO (Remaining)
+- [ ] Smart onboarding (surname recognition flow)
+- [ ] Personalized discovery feed (replace empty inbox)
+- [ ] Navigation renaming (Inbox → New Matches, Needs Help → Help Identify)
+- [ ] Structured name fields (first/last/maiden/aliases)
+- [ ] Proposal system overhaul
+- [ ] Face quality scoring
+- [ ] Mobile responsiveness audit
+- [ ] Documentation encoding fix
 
 ## Session 19 Completed
 - [x] Best Match fallback: real-time neighbor computation when proposals empty
