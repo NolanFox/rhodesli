@@ -6724,6 +6724,12 @@ def get(identity_id: str):
     if not neighbors:
         return Span("No similar identities found.", cls="text-xs text-slate-500 italic")
 
+    # Enrich neighbor data with face IDs for thumbnail resolution
+    # (find_nearest_neighbors returns raw results without face IDs)
+    for n in neighbors:
+        n["anchor_face_ids"] = registry.get_anchor_face_ids(n["identity_id"])
+        n["candidate_face_ids"] = registry.get_candidate_face_ids(n["identity_id"])
+
     # Map distance to confidence tier for visual display
     # Uses config constants for consistency with neighbor_card (AD-013)
     def _confidence_tier(dist):
@@ -6747,14 +6753,14 @@ def get(identity_id: str):
         neighbor_id = n.get("identity_id", "")
         tier_label, tier_color, tier_dots = _confidence_tier(dist)
 
-        # Face thumbnail
-        preview_face = n.get("preview_face_id") or n.get("anchor_ids", [""])[0] if isinstance(n.get("anchor_ids", [None])[0], str) else ""
-        if not preview_face and n.get("anchor_ids"):
-            aids = n.get("anchor_ids", [])
-            if aids:
-                preview_face = aids[0] if isinstance(aids[0], str) else aids[0].get("face_id", "")
-        face_url = resolve_face_image_url(preview_face, crop_files) if preview_face else None
-        thumb = Img(src=face_url, cls="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-slate-600") if face_url else Div(cls="w-10 h-10 rounded-full bg-slate-600 flex-shrink-0")
+        # Face thumbnail — use enriched anchor/candidate face IDs (same pattern as neighbor_card)
+        thumb = Div(cls="w-10 h-10 rounded-full bg-slate-600 flex-shrink-0")
+        all_face_ids = n.get("anchor_face_ids", []) + n.get("candidate_face_ids", [])
+        for fid in all_face_ids:
+            face_url = resolve_face_image_url(fid, crop_files)
+            if face_url:
+                thumb = Img(src=face_url, cls="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-slate-600")
+                break
 
         # Confidence dots (filled vs empty)
         dots = Span(

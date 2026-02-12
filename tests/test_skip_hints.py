@@ -138,6 +138,56 @@ class TestAISuggestionsCompareButton:
                 "Compare button should NOT target #neighbors-{identity_id}"
 
 
+class TestSkipHintsThumbnailResolution:
+    """Test that skip-hints resolves face thumbnails via enriched anchor_face_ids."""
+
+    def test_skip_hints_enriches_face_ids(self, client, auth_disabled, monkeypatch):
+        """Skip hints should enrich neighbor results with anchor_face_ids for thumbnail resolution."""
+        from unittest.mock import MagicMock
+
+        from app import main as app_main
+
+        # Create a minimal registry with one identity that has anchors
+        mock_registry = MagicMock()
+        mock_registry.get_identity.return_value = {
+            "identity_id": "target-id",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face_a"],
+        }
+        mock_registry.get_anchor_face_ids.return_value = ["face_x", "face_y"]
+        mock_registry.get_candidate_face_ids.return_value = ["face_z"]
+        monkeypatch.setattr(app_main, "load_registry", lambda: mock_registry)
+
+        # Mock find_nearest_neighbors to return a result WITHOUT face IDs
+        mock_neighbors = [
+            {
+                "identity_id": "neighbor-1",
+                "name": "Neighbor Person",
+                "distance": 0.85,
+                "face_count": 2,
+                "can_merge": True,
+                "confidence_gap": 100.0,
+            }
+        ]
+
+        monkeypatch.setattr(
+            "core.neighbors.find_nearest_neighbors",
+            lambda *a, **kw: mock_neighbors,
+        )
+
+        # Mock face data and photo registry
+        monkeypatch.setattr(app_main, "get_face_data", lambda: {})
+        monkeypatch.setattr(app_main, "load_photo_registry", lambda: MagicMock())
+
+        response = client.get("/api/identity/target-id/skip-hints")
+        assert response.status_code == 200
+
+        # The enrichment should have been called
+        mock_registry.get_anchor_face_ids.assert_called_with("neighbor-1")
+        mock_registry.get_candidate_face_ids.assert_called_with("neighbor-1")
+
+
 class TestNeighborCardConfidenceGap:
     """Test that neighbor cards display the confidence gap."""
 
