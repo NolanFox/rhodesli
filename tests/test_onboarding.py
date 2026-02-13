@@ -12,57 +12,57 @@ from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
 
-class TestOnboardingSurnames:
-    """Surname grid rendered in onboarding modal."""
+class TestWelcomeBannerOnboarding:
+    """Welcome banner (non-blocking) replaced the old modal wall."""
 
-    def test_onboarding_modal_contains_surnames(self):
-        """Onboarding modal renders surname buttons from surname_variants.json."""
-        from app.main import _welcome_modal, to_xml
+    def test_welcome_banner_renders_with_context(self):
+        """Welcome banner renders with heritage archive description."""
+        from app.main import _welcome_banner
+        from fastcore.xml import to_xml
 
-        result = _welcome_modal(None)
+        result = _welcome_banner()
         html = to_xml(result)
-        # Should contain surnames from the variant groups
-        assert "Capeluto" in html
-        assert "Hasson" in html
-        assert "Franco" in html
-        assert "onboarding-surname" in html
+        assert "Welcome to Rhodesli" in html
+        assert "welcome-banner" in html
 
-    def test_onboarding_modal_has_discover_button(self):
-        """Onboarding modal has a disabled 'Show me what you found' button."""
-        from app.main import _welcome_modal, to_xml
+    def test_welcome_banner_has_dismiss(self):
+        """Welcome banner has dismiss button with data-action."""
+        from app.main import _welcome_banner
+        from fastcore.xml import to_xml
 
-        result = _welcome_modal(None)
+        result = _welcome_banner()
         html = to_xml(result)
-        assert "onboarding-discover-btn" in html
-        assert "Show me what you found" in html
+        assert "welcome-banner-dismiss" in html
 
-    def test_onboarding_modal_has_skip_option(self):
-        """Onboarding modal has a skip/bypass option."""
-        from app.main import _welcome_modal, to_xml
+    def test_welcome_banner_is_non_blocking(self):
+        """Welcome banner uses a simple top bar, not a modal overlay."""
+        from app.main import _welcome_banner
+        from fastcore.xml import to_xml
 
-        result = _welcome_modal(None)
+        result = _welcome_banner()
         html = to_xml(result)
-        assert "onboarding-skip-surnames" in html
+        # Should NOT have modal overlay classes
+        assert "fixed inset-0" not in html
+        assert "bg-black/80" not in html
 
-    def test_onboarding_modal_has_step_3_cta(self):
-        """Onboarding modal has step 3 with navigation CTAs."""
-        from app.main import _welcome_modal, to_xml
+    def test_welcome_banner_cookie_based_dismissal(self):
+        """Welcome banner uses persistent cookie for dismissal."""
+        from app.main import _welcome_banner
+        from fastcore.xml import to_xml
 
-        result = _welcome_modal(None)
-        html = to_xml(result)
-        assert "Browse Photos" in html
-        assert "Help Identify" in html
-        assert "section=photos" in html
-        assert "section=skipped" in html
-
-    def test_onboarding_modal_cookie_check_script(self):
-        """Onboarding modal includes cookie check script."""
-        from app.main import _welcome_modal, to_xml
-
-        result = _welcome_modal(None)
+        result = _welcome_banner()
         html = to_xml(result)
         assert "rhodesli_welcomed" in html
-        assert "rhodesli_interest_surnames" in html
+        assert "max-age=31536000" in html
+
+    def test_welcome_banner_has_identify_prompt(self):
+        """Welcome banner encourages visitors to identify faces."""
+        from app.main import _welcome_banner
+        from fastcore.xml import to_xml
+
+        result = _welcome_banner()
+        html = to_xml(result)
+        assert "identify" in html.lower()
 
 
 class TestOnboardingDiscoverEndpoint:
