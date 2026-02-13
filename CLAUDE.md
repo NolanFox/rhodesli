@@ -60,6 +60,12 @@ After updating docs, run: `python scripts/verify_docs_sync.py`
 4. UI never deletes a face — only detach, reject, or hide
 5. provenance="human" overrides provenance="model"
 
+## Development Process
+- **Spec-Driven Development**: Sessions changing app behavior follow SDD. See `.claude/rules/spec-driven-development.md`.
+  - PRD in `docs/prds/` → Acceptance tests in `tests/e2e/` → Implementation → Verification
+- **Decision Provenance**: AD-NNN in `docs/ml/ALGORITHMIC_DECISIONS.md`, process docs in `docs/process/`
+- **Data Safety**: Community contribution data MUST be backed up before any data migration (AD-047)
+
 ## Workflow
 1. Read `tasks/lessons.md` and `tasks/todo.md` at session start
 2. Plan before coding — update todo.md with checkboxes
@@ -84,6 +90,8 @@ When compacting, always preserve:
 - `docs/design/` — MERGE_DESIGN, FUTURE_COMMUNITY
 - `docs/ml/` — ALGORITHMIC_DECISIONS (AD-001+), MODEL_INVENTORY
 - `docs/ops/` — OPS_DECISIONS (OD-001+), PIPELINE (upload processing)
+- `docs/process/` — DEVELOPMENT_PRACTICES (SDD research + decision log)
+- `docs/prds/` — PRDs for feature work | `docs/templates/` — PRD_TEMPLATE
 - `docs/ROLES.md` — permission matrix (contributors suggest, admins decide)
 - `docs/CODING_RULES.md`, `docs/DEPLOYMENT_GUIDE.md`, `docs/DECISIONS.md`
 - `tasks/lessons.md` — persistent learnings | `tasks/todo.md` — task tracking

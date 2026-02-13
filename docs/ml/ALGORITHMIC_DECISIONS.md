@@ -374,12 +374,29 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Config**: `rhodesli_ml/config/date_estimation.yaml` → augmentation section.
 - **Affects**: `rhodesli_ml/data/augmentations.py`.
 
+### AD-046: Adopt Spec-Driven Development for UX Work
+- **Date**: 2026-02-13
+- **Decision**: All sessions that change application behavior require a PRD and Playwright acceptance tests before implementation begins.
+- **Rationale**: After 24 sessions, unit tests (1,845 passing) consistently failed to catch UX bugs that were obvious in 2 minutes of manual testing. The gap between "endpoint returns 200" and "human can complete flow" requires browser-level verification. SDD formalizes this with phase gates.
+- **Alternatives rejected**:
+  - Continue current approach: proven insufficient over 24 sessions
+  - Full BDD framework (Cucumber/Gherkin): too heavy for solo project
+  - Manual testing only: doesn't scale, not reproducible
+- **Sources**: CodeRabbit 2025 analysis, METR trial, Takahashi SDD article (Jan 2026), Thoughtworks SDD analysis (Dec 2025)
+- **Affects**: `.claude/rules/spec-driven-development.md`, `docs/process/DEVELOPMENT_PRACTICES.md`, `docs/templates/PRD_TEMPLATE.md`.
+
+### AD-047: Preserve Community Contribution Data Across All Changes
+- **Date**: 2026-02-13
+- **Decision**: All sessions must back up JSON data files before any migration or schema change. Claude Benatar's real submissions are the first community data and must never be lost.
+- **Rationale**: First real community contribution (poisson1957@hotmail.com suggesting "Sarina Benatar Saragossi") validated the entire contribution pipeline. This data has both sentimental and functional value as test fixtures for the approval flow.
+- **Affects**: All data migration scripts, `scripts/backup_data.sh`.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-046)
+1. Add a new entry with AD-XXX format (next: AD-048)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
