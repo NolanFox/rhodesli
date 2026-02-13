@@ -8310,8 +8310,27 @@ def public_photo_page(
                         ),
                         cls="photo-flip-container photo-hero-container relative mx-auto" if has_back else "photo-hero-container relative mx-auto",
                     ),
-                    # Flip button (only shown when back image exists)
+                    # Action bar: Share, Download, Flip (if back image)
                     Div(
+                        Button(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'),
+                            "Share This Photo",
+                            cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors",
+                            type="button",
+                            data_action="share-photo",
+                            id="share-photo-btn",
+                            data_share_title=og_title,
+                            data_share_text=og_description,
+                            data_share_url=og_page_url,
+                        ),
+                        A(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>'),
+                            "Download",
+                            href=f"/photo/{photo_id}/download",
+                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
+                            download=True,
+                        ),
+                        # Flip button (only when back image exists)
                         Button(
                             NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'),
                             Span("Flip Photo", id="flip-btn-text"),
@@ -8319,10 +8338,10 @@ def public_photo_page(
                             type="button",
                             data_action="flip-photo",
                             id="flip-photo-btn",
-                        ),
-                        Span("This photo has writing on the back", cls="text-slate-500 text-xs ml-3"),
-                        cls="flex items-center justify-center mt-4"
-                    ) if has_back else None,
+                        ) if has_back else None,
+                        cls="flex flex-wrap items-center justify-center gap-3 mt-4"
+                    ),
+                    Span("This photo has writing on the back", cls="text-slate-500 text-xs text-center block mt-2") if has_back else None,
                     # Photo metadata
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
@@ -8409,20 +8428,68 @@ def public_photo_page(
                 ),
                 cls="py-8 border-t border-slate-800"
             ),
-            # Flip photo event handler (global delegation pattern)
+            # Action button event handlers (global delegation pattern)
             Script("""
                 document.addEventListener('click', function(e) {
-                    var btn = e.target.closest('[data-action="flip-photo"]');
-                    if (!btn) return;
-                    var inner = document.getElementById('photo-flip-inner');
-                    if (!inner) return;
-                    inner.classList.toggle('is-flipped');
-                    var textEl = document.getElementById('flip-btn-text');
-                    if (textEl) {
-                        textEl.textContent = inner.classList.contains('is-flipped') ? 'Flip Back' : 'Flip Photo';
+                    // Share button handler
+                    var shareBtn = e.target.closest('[data-action="share-photo"]');
+                    if (shareBtn) {
+                        var title = shareBtn.getAttribute('data-share-title') || 'Rhodesli Photo';
+                        var text = shareBtn.getAttribute('data-share-text') || '';
+                        var url = shareBtn.getAttribute('data-share-url') || window.location.href;
+                        // Try native Web Share API first (mobile)
+                        if (navigator.share) {
+                            navigator.share({ title: title, text: text, url: url }).catch(function(err) {
+                                if (err.name !== 'AbortError') { copyToClipboard(url); }
+                            });
+                        } else {
+                            copyToClipboard(url);
+                        }
+                        return;
+                    }
+                    // Flip button handler
+                    var flipBtn = e.target.closest('[data-action="flip-photo"]');
+                    if (flipBtn) {
+                        var inner = document.getElementById('photo-flip-inner');
+                        if (!inner) return;
+                        inner.classList.toggle('is-flipped');
+                        var textEl = document.getElementById('flip-btn-text');
+                        if (textEl) {
+                            textEl.textContent = inner.classList.contains('is-flipped') ? 'Flip Back' : 'Flip Photo';
+                        }
+                        return;
                     }
                 });
-            """) if has_back else None,
+                function copyToClipboard(url) {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url).then(function() {
+                            showShareToast('Link copied to clipboard!');
+                        }).catch(function() {
+                            showShareToast('Could not copy link');
+                        });
+                    } else {
+                        // Fallback for older browsers
+                        var input = document.createElement('input');
+                        input.value = url;
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        showShareToast('Link copied to clipboard!');
+                    }
+                }
+                function showShareToast(message) {
+                    var existing = document.getElementById('share-toast');
+                    if (existing) existing.remove();
+                    var toast = document.createElement('div');
+                    toast.id = 'share-toast';
+                    toast.textContent = message;
+                    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;';
+                    document.body.appendChild(toast);
+                    setTimeout(function() { toast.style.opacity = '0'; }, 2000);
+                    setTimeout(function() { toast.remove(); }, 2500);
+                }
+            """),
             cls="min-h-screen bg-slate-900"
         ),
     )
@@ -8465,6 +8532,41 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
         identity_id=identity_id,
         is_admin=user_is_admin,
         from_compare=from_compare,
+    )
+
+
+@rt("/photo/{photo_id}/download")
+def get(photo_id: str):
+    """
+    Download the original full-resolution photo.
+
+    Public endpoint — no auth required.
+    Returns the photo file with Content-Disposition: attachment header.
+    """
+    photo = get_photo_metadata(photo_id)
+    if not photo:
+        return Response("Photo not found", status_code=404)
+
+    filename = photo["filename"]
+    basename = Path(filename).name
+
+    # In R2 mode, redirect to the R2 URL (can't serve local file)
+    if storage.is_r2_mode():
+        download_url = photo_url(filename)
+        return Response(
+            status_code=302,
+            headers={"Location": download_url}
+        )
+
+    # Local mode: serve from filesystem
+    photo_path = photos_path / basename
+    if not photo_path.exists():
+        return Response("Photo file not found", status_code=404)
+
+    return FileResponse(
+        str(photo_path),
+        filename=basename,
+        headers={"Content-Disposition": f'attachment; filename="{basename}"'},
     )
 
 

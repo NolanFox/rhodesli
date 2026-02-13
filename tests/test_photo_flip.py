@@ -38,13 +38,13 @@ class TestFlipUIHidden:
     """Photos without back_image should not show flip UI."""
 
     def test_no_flip_button_without_back_image(self, client, real_photo_id):
-        """Flip button is NOT shown when photo has no back_image."""
+        """Flip button element is NOT shown when photo has no back_image."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
-        assert "Flip Photo" not in html
-        assert "flip-photo-btn" not in html
+        # The button element should not exist (JS may reference the text as strings)
+        assert 'id="flip-photo-btn"' not in html
 
     def test_no_flip_container_without_back_image(self, client, real_photo_id):
         """Flip container class is not on the photo div when there's no back image."""
