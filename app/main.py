@@ -4258,6 +4258,76 @@ def share_button(photo_id: str, style: str = "icon", label: str = "Share"):
         )
 
 
+def parse_transform_to_css(transform_str: str) -> str:
+    """Convert a transform string like 'rotate:90,flipH' to CSS transform value.
+
+    Supported transforms:
+    - rotate:90, rotate:180, rotate:270 — clockwise rotation
+    - flipH — horizontal mirror (scaleX(-1))
+    - flipV — vertical mirror (scaleY(-1))
+    - invert — handled separately via CSS filter, not transform
+
+    Returns CSS transform property value (e.g., 'rotate(90deg) scaleX(-1)').
+    """
+    if not transform_str or not transform_str.strip():
+        return ""
+
+    parts = [p.strip() for p in transform_str.split(",") if p.strip()]
+    css_parts = []
+    for part in parts:
+        if part.startswith("rotate:"):
+            degrees = part.split(":")[1]
+            css_parts.append(f"rotate({degrees}deg)")
+        elif part == "flipH":
+            css_parts.append("scaleX(-1)")
+        elif part == "flipV":
+            css_parts.append("scaleY(-1)")
+        # 'invert' is handled via CSS filter, not transform
+    return " ".join(css_parts)
+
+
+def parse_transform_to_filter(transform_str: str) -> str:
+    """Extract CSS filter from transform string (for 'invert')."""
+    if not transform_str or "invert" not in transform_str:
+        return ""
+    return "invert(1)"
+
+
+def image_transform_toolbar(photo_id: str, target: str = "front") -> Div:
+    """Admin toolbar for non-destructive image orientation.
+
+    target: 'front' or 'back' — which image side to transform.
+    """
+    field_name = "transform" if target == "front" else "back_transform"
+    label = "Front orientation" if target == "front" else "Back orientation"
+
+    def _btn(icon_label, transform_val, danger=False):
+        cls_base = "px-2 py-1 text-xs rounded transition-colors"
+        cls_color = "bg-red-900/50 hover:bg-red-800/50 text-red-300" if danger else "bg-slate-700 hover:bg-slate-600 text-slate-300"
+        return Button(
+            icon_label,
+            cls=f"{cls_base} {cls_color}",
+            type="button",
+            hx_post=f"/api/photo/{photo_id}/transform?transform={transform_val}&field={field_name}",
+            hx_target="#transform-result",
+            hx_swap="innerHTML",
+        )
+
+    return Div(
+        P(label, cls="text-xs text-slate-400 font-medium mb-1"),
+        Div(
+            _btn("\u21bb 90\u00b0", "rotate:90"),
+            _btn("\u21ba -90\u00b0", "rotate:270"),
+            _btn("\u2194 Flip H", "flipH"),
+            _btn("\u2195 Flip V", "flipV"),
+            _btn("\u25d0 Invert", "invert"),
+            _btn("\u21a9 Reset", "reset", danger=True),
+            cls="flex flex-wrap gap-1",
+        ),
+        cls="mt-2",
+    )
+
+
 def face_card(
     face_id: str,
     crop_url: str,
@@ -8140,6 +8210,14 @@ def public_photo_page(
     back_transcription = photo.get("back_transcription", "")
     has_back = bool(back_image)
 
+    # Non-destructive transforms (CSS-based, never modifies original)
+    front_transform = photo.get("transform", "")
+    back_transform_str = photo.get("back_transform", "")
+    front_css_transform = parse_transform_to_css(front_transform)
+    front_css_filter = parse_transform_to_filter(front_transform)
+    back_css_transform = parse_transform_to_css(back_transform_str)
+    back_css_filter = parse_transform_to_filter(back_transform_str)
+
     # Collect face info for overlays and person cards
     face_info_list = []
     identified_names = []
@@ -8452,6 +8530,7 @@ def public_photo_page(
                                     src=photo_url(filename),
                                     alt=f"Historical photograph from {photo.get('collection', 'the Rhodes diaspora')}",
                                     cls="photo-hero max-w-full h-auto rounded-lg",
+                                    style=f"transform: {front_css_transform}; filter: {front_css_filter};" if (front_css_transform or front_css_filter) else None,
                                 ),
                                 *face_overlays,
                                 # Overlay legend
@@ -8470,6 +8549,7 @@ def public_photo_page(
                                     src=photo_url(back_image),
                                     alt="Back of photograph",
                                     cls="max-w-full h-auto rounded-lg",
+                                    style=f"transform: {back_css_transform}; filter: {back_css_filter};" if (back_css_transform or back_css_filter) else None,
                                 ),
                                 P("Back of photograph", cls="text-amber-700/60 text-xs text-center mt-2 italic font-serif"),
                                 P(
@@ -8558,6 +8638,14 @@ def public_photo_page(
                         Div(id="transcription-result", cls="mt-1"),
                         cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50"
                     ) if is_admin and has_back else None,
+                    # Admin: Image orientation toolbar
+                    Div(
+                        image_transform_toolbar(photo_id, target="front"),
+                        image_transform_toolbar(photo_id, target="back") if has_back else None,
+                        Div(id="transform-result", cls="mt-1"),
+                        P(f"Current: {front_transform}", cls="text-xs text-slate-500 mt-1") if front_transform else None,
+                        cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50"
+                    ) if is_admin else None,
                     # Photo metadata
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
@@ -11051,6 +11139,54 @@ def post(photo_id: str, back_transcription: str = "", sess=None):
     save_photo_registry(photo_registry)
 
     return toast("Transcription saved.", "success")
+
+
+@rt("/api/photo/{photo_id}/transform")
+def post(photo_id: str, transform: str = "", field: str = "transform", sess=None):
+    """Set non-destructive image transformation. Admin-only.
+
+    transform: The transform to apply (e.g., 'rotate:90', 'flipH', 'reset')
+    field: 'transform' (front image) or 'back_transform' (back image)
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if field not in {"transform", "back_transform"}:
+        return toast("Invalid field.", "error")
+
+    photo_registry = load_photo_registry()
+    photo = photo_registry.get_photo(photo_id)
+    if not photo:
+        return toast("Photo not found.", "error")
+
+    if transform == "reset":
+        new_transform = ""
+    else:
+        # Append to existing transform (or start fresh)
+        existing = photo.get(field, "")
+        if existing:
+            new_transform = f"{existing},{transform}"
+        else:
+            new_transform = transform
+
+    photo_registry.set_metadata(photo_id, {field: new_transform})
+    save_photo_registry(photo_registry)
+
+    # Return the CSS transform for live preview
+    css_transform = parse_transform_to_css(new_transform)
+    css_filter = parse_transform_to_filter(new_transform)
+    return Div(
+        P(f"Transform: {new_transform}" if new_transform else "Transform reset.", cls="text-xs text-slate-400"),
+        Script(f"""
+            var img = document.querySelector('.photo-hero, .photo-flip-front img');
+            if (img) {{
+                img.style.transform = '{css_transform}';
+                img.style.filter = '{css_filter}';
+            }}
+        """) if css_transform or css_filter or transform == "reset" else None,
+        cls="mt-1",
+    )
 
 
 @rt("/api/onboarding/discover")

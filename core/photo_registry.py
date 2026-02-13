@@ -234,6 +234,7 @@ class PhotoRegistry:
             "date_taken", "date_estimate", "location", "caption",
             "occasion", "photographer", "donor", "notes", "camera",
             "back_image", "back_transcription",
+            "transform", "back_transform",
         }
         for key, value in metadata.items():
             if key in valid_keys:
