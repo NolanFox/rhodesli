@@ -8261,6 +8261,66 @@
       "created_at": "2026-02-12T04:24:27.357768+00:00",
       "updated_at": "2026-02-12T04:25:18.859363+00:00",
       "provenance": null
+    },
+    "4f07ca04-ccca-432d-a07d-baa4efc648d5": {
+      "identity_id": "4f07ca04-ccca-432d-a07d-baa4efc648d5",
+      "name": "Unidentified Person 358",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b37589fa16b9"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-13T12:37:17.666022+00:00",
+      "updated_at": "2026-02-13T12:37:17.666022+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "benatar-20260213",
+        "filename": "Sarina2.jpg",
+        "ingested_at": "2026-02-13T12:37:17.665972+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "737cc037-d46e-495c-9a6b-d022424d4db4": {
+      "identity_id": "737cc037-d46e-495c-9a6b-d022424d4db4",
+      "name": "Unidentified Person 359",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b0542d169e4a"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-13T12:37:17.666063+00:00",
+      "updated_at": "2026-02-13T12:37:17.666063+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "benatar-20260213",
+        "filename": "Sarina2.jpg",
+        "ingested_at": "2026-02-13T12:37:17.666052+00:00",
+        "grouped_faces": 1
+      }
+    },
+    "48ac1614-7e4d-4319-b766-f03103fceecc": {
+      "identity_id": "48ac1614-7e4d-4319-b766-f03103fceecc",
+      "name": "Unidentified Person 360",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_9e3e1edda122"
+      ],
+      "candidate_ids": [],
+      "negative_ids": [],
+      "version_id": 1,
+      "created_at": "2026-02-13T12:37:17.666095+00:00",
+      "updated_at": "2026-02-13T12:37:17.666095+00:00",
+      "provenance": {
+        "source": "inbox_ingest",
+        "job_id": "benatar-20260213",
+        "filename": "Sarina2.jpg",
+        "ingested_at": "2026-02-13T12:37:17.666085+00:00",
+        "grouped_faces": 1
+      }
     }
   },
   "history": [
@@ -24652,6 +24712,45 @@
         "new_state": "CONTESTED",
         "reason": "Rejected via UI"
       }
+    },
+    {
+      "event_id": "a36171e0-df68-4e00-884e-d91c5afdb020",
+      "timestamp": "2026-02-13T12:37:17.666045+00:00",
+      "identity_id": "4f07ca04-ccca-432d-a07d-baa4efc648d5",
+      "action": "create",
+      "face_ids": [
+        "inbox_b37589fa16b9"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "a474a769-2c27-4d05-a17d-b6318667d2f3",
+      "timestamp": "2026-02-13T12:37:17.666080+00:00",
+      "identity_id": "737cc037-d46e-495c-9a6b-d022424d4db4",
+      "action": "create",
+      "face_ids": [
+        "inbox_b0542d169e4a"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
+    },
+    {
+      "event_id": "68089cff-63ab-49d8-a229-a1cce0c2f1fb",
+      "timestamp": "2026-02-13T12:37:17.666106+00:00",
+      "identity_id": "48ac1614-7e4d-4319-b766-f03103fceecc",
+      "action": "create",
+      "face_ids": [
+        "inbox_9e3e1edda122"
+      ],
+      "user_source": "inbox_ingest",
+      "confidence_weight": 1.0,
+      "previous_version_id": 0,
+      "metadata": {}
     }
   ]
 }
