@@ -10100,8 +10100,8 @@ def get(face_id: str, q: str = "", sess=None):
                 "confidence": "likely",
                 "reason": f"face_tag:{face_id}:new_name",
             }),
-            hx_target="#toast-container",
-            hx_swap="beforeend",
+            hx_target=f"#tag-results-{safe_face_id}",
+            hx_swap="innerHTML",
             type="button",
         )
     items.append(create_btn)
@@ -15216,6 +15216,26 @@ def post(target_type: str, target_id: str, annotation_type: str,
         "reviewed_at": None,
     }
     _save_annotations(annotations)
+
+    # If submitted from face tag dropdown, return inline confirmation + OOB toast
+    if reason and reason.startswith("face_tag:") and annotation_type == "name_suggestion":
+        parts = reason.split(":")
+        face_id_from_reason = parts[1] if len(parts) >= 2 else ""
+        confirmation = Div(
+            Div(
+                Span("You suggested: ", cls="text-emerald-400 text-sm"),
+                Span(value.strip(), cls="text-sm font-medium text-white"),
+                cls="flex items-center gap-1"
+            ),
+            Span("Pending review", cls="text-xs text-slate-500"),
+            cls="p-2 bg-emerald-900/20 border border-emerald-700/30 rounded-lg text-center"
+        )
+        oob_toast = Div(
+            toast("Thanks! Your suggestion has been submitted for review.", "success"),
+            id="toast-container",
+            hx_swap_oob="beforeend",
+        )
+        return Response(to_xml(confirmation) + to_xml(oob_toast))
 
     return Response(
         to_xml(toast("Thanks! Your suggestion has been submitted for review.", "success")),

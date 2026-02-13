@@ -411,8 +411,8 @@ class TestSuggestButtonSubmission:
         # photo-modal must remain at z-[9999]
         assert "z-[9999]" in html
 
-    def test_suggest_button_targets_toast_container(self, client, auth_enabled, regular_user):
-        """Non-admin suggest button targets #toast-container for visible feedback."""
+    def test_suggest_button_targets_tag_results(self, client, auth_enabled, regular_user):
+        """Non-admin suggest button targets tag-results container for inline confirmation."""
         with patch("app.main.load_registry") as mock_reg, \
              patch("app.main.get_identity_for_face") as mock_get_id, \
              patch("app.main.get_crop_files", return_value=set()), \
@@ -425,6 +425,31 @@ class TestSuggestButtonSubmission:
             resp = client.get("/api/face/tag-search?face_id=test-face&q=Sarina+Benatar")
             html = resp.text
 
-            # The suggest button must target toast-container
-            assert 'hx-target="#toast-container"' in html
+            # The suggest button targets the tag results area for inline "You suggested" confirmation
+            assert 'hx-target="#tag-results-test-face"' in html
             assert 'hx-post="/api/annotations/submit"' in html
+
+    def test_face_tag_submission_shows_inline_confirmation(self, client, tmp_path):
+        """Submitting from face tag dropdown returns 'You suggested' inline UI."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps({"schema_version": 1, "annotations": {}}))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            resp = client.post(
+                "/api/annotations/submit",
+                data={
+                    "target_type": "identity",
+                    "target_id": "test-id",
+                    "annotation_type": "name_suggestion",
+                    "value": "Sarina Benatar",
+                    "reason": "face_tag:test-face:new_name",
+                },
+            )
+            html = resp.text
+            assert "You suggested" in html
+            assert "Sarina Benatar" in html
+            assert "Pending review" in html
