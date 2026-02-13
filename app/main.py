@@ -1393,6 +1393,63 @@ def sanitize_stem(stem: str) -> str:
     return sanitized
 
 
+def _existing_suggestions_for_identity(identity_id: str, face_id_encoded: str) -> list:
+    """Return FT elements showing existing pending suggestions for an identity.
+
+    If there are pending name_suggestion annotations for this identity,
+    returns "I Agree" buttons so community members can confirm them.
+    """
+    if not identity_id:
+        return []
+    try:
+        annotations = _load_annotations()
+    except Exception:
+        return []
+
+    pending = [
+        a for a in annotations.get("annotations", {}).values()
+        if a.get("target_id") == identity_id
+        and a.get("type") == "name_suggestion"
+        and a.get("status") in ("pending", "pending_unverified")
+    ]
+    if not pending:
+        return []
+
+    from urllib.parse import unquote
+    import json as _json
+
+    items = []
+    for ann in pending:
+        confirmations = len(ann.get("confirmations", []))
+        people_count = 1 + confirmations  # original + confirmations
+        items.append(Div(
+            Div(
+                Span(ann["value"], cls="text-sm font-medium text-amber-300"),
+                Span(f"suggested by {people_count} {'person' if people_count == 1 else 'people'}",
+                     cls="text-xs text-slate-500"),
+                cls="flex flex-col"
+            ),
+            Button(
+                "I Agree",
+                hx_post="/api/annotations/submit",
+                hx_vals=_json.dumps({
+                    "target_type": "identity",
+                    "target_id": identity_id,
+                    "annotation_type": "name_suggestion",
+                    "value": ann["value"],
+                    "confidence": "likely",
+                    "reason": f"face_tag:{unquote(face_id_encoded)}:agree",
+                }),
+                hx_target="closest div",
+                hx_swap="outerHTML",
+                cls="px-2 py-0.5 text-xs bg-emerald-700 text-white rounded hover:bg-emerald-600 flex-shrink-0",
+                type="button",
+            ),
+            cls="flex items-center justify-between gap-2 px-2 py-1.5 bg-amber-900/20 border border-amber-700/30 rounded mb-1"
+        ))
+    return items
+
+
 def resolve_face_image_url(face_id: str, crop_files: set) -> str:
     """
     Resolve a canonical face ID to its crop image URL.
@@ -7768,8 +7825,11 @@ def photo_view_content(
                     name="q",
                     autocomplete="off",
                 ),
-                # Results container
-                Div(id=tag_results_id, cls="mt-1 max-h-48 overflow-y-auto"),
+                # Results container (pre-populated with existing suggestions if any)
+                Div(
+                    *_existing_suggestions_for_identity(identity_id, face_id_encoded),
+                    id=tag_results_id, cls="mt-1 max-h-48 overflow-y-auto"
+                ),
                 # Bottom actions
                 Div(
                     Button(

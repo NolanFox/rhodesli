@@ -186,6 +186,62 @@ class TestAnnotationApproval:
         assert saved["annotations"][ann_id]["status"] == "rejected"
 
 
+class TestExistingSuggestions:
+    """Tests for showing existing suggestions in the tag dropdown."""
+
+    def test_existing_suggestions_shown_in_dropdown(self, tmp_path):
+        """When an identity has pending suggestions, they appear in the dropdown."""
+        import json
+        from app.main import _existing_suggestions_for_identity, _invalidate_annotations_cache
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "ann-1": {
+                    "annotation_id": "ann-1",
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "id-123",
+                    "value": "Leon Capeluto",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                    "confirmations": [{"by": "user2@test.com", "timestamp": "2026-02-10T01:00:00Z"}],
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            items = _existing_suggestions_for_identity("id-123", "test-face")
+
+        assert len(items) == 1
+        html = str(items[0])
+        assert "Leon Capeluto" in html
+        assert "I Agree" in html
+        assert "2 people" in html  # 1 submitter + 1 confirmation
+
+    def test_no_suggestions_for_different_identity(self, tmp_path):
+        """No suggestions shown for an identity without any."""
+        import json
+        from app.main import _existing_suggestions_for_identity, _invalidate_annotations_cache
+
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps({"schema_version": 1, "annotations": {}}))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            items = _existing_suggestions_for_identity("id-999", "test-face")
+
+        assert len(items) == 0
+
+
 class TestAnnotationDedup:
     """Tests for duplicate annotation deduplication."""
 
