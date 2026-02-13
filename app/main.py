@@ -3613,10 +3613,20 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             # Photo info
             Div(
                 P(photo["filename"], cls="text-sm text-white truncate font-data"),
-                P(
-                    f"\U0001F4C1 {photo['source']}",
-                    cls="text-xs text-slate-500 truncate mt-0.5"
-                ) if photo["source"] else None,
+                Div(
+                    P(
+                        f"\U0001F4C1 {photo['source']}",
+                        cls="text-xs text-slate-500 truncate"
+                    ) if photo["source"] else None,
+                    A(
+                        "Full Page",
+                        href=f"/photo/{photo['photo_id']}",
+                        cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline",
+                        target="_blank",
+                        **{"_": "on click halt the event's bubbling"},
+                    ),
+                    cls="flex items-center justify-between mt-0.5"
+                ),
                 cls="p-3"
             ),
             cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden "
@@ -4246,6 +4256,16 @@ def face_card(
             type="button",
         )
 
+    # Full-page link to public photo viewer
+    full_page_link = None
+    if photo_id:
+        full_page_link = A(
+            "Full Page",
+            href=f"/photo/{photo_id}",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 underline mt-1 ml-2",
+            target="_blank",
+        )
+
     # Detach button (only if show_detach is True)
     detach_btn = None
     if show_detach:
@@ -4281,9 +4301,10 @@ def face_card(
             ),
             Div(
                 view_photo_btn,
+                full_page_link,
                 detach_btn,
                 cls="flex items-center"
-            ) if view_photo_btn or detach_btn else None,
+            ) if view_photo_btn or detach_btn or full_page_link else None,
             cls="mt-2"
         ),
         cls="bg-slate-700 border border-slate-600 p-2 rounded shadow-md hover:shadow-lg transition-shadow",
@@ -7877,6 +7898,13 @@ def photo_view_content(
                     cls="text-slate-300 text-sm font-data font-medium"
                 ),
                 nav_counter,
+                A(
+                    "Open Full Page",
+                    href=f"/photo/{photo_id}",
+                    cls="text-xs text-indigo-400 hover:text-indigo-300 underline ml-auto",
+                    target="_blank",
+                    rel="noopener",
+                ),
                 cls="flex items-center gap-2"
             ),
             P(
