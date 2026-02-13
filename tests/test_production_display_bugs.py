@@ -34,6 +34,20 @@ def test_required_data_files_includes_all_essentials():
     assert "embeddings.npy" in REQUIRED_DATA_FILES
 
 
+def test_annotations_json_in_sync_files():
+    """annotations.json must be synced to production to prevent stale test data.
+
+    Without this, test data that leaked into the Railway volume's annotations.json
+    would never be overwritten by the clean version from git.
+    """
+    from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+
+    assert "annotations.json" in OPTIONAL_SYNC_FILES, (
+        "annotations.json must be in OPTIONAL_SYNC_FILES so that the clean "
+        "version from git overwrites any stale/contaminated data on the Railway volume."
+    )
+
+
 def test_parse_quality_from_filename_legacy_format():
     """Legacy crop filenames encode quality as {name}_{quality}_{index}.jpg."""
     from app.main import parse_quality_from_filename
