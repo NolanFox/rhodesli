@@ -487,29 +487,36 @@ def _triage_category(identity: dict) -> str:
     return "unmatched"
 
 
-def _build_triage_bar(to_review: list, view_mode: str) -> Div:
+def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "") -> Div:
     """Build the triage summary bar for the inbox."""
     counts = _compute_triage_counts(to_review)
 
     items = []
     categories = [
         ("ready", "Ready to Confirm", counts["ready_to_confirm"],
-         "bg-emerald-900/40 border-emerald-600/40 text-emerald-300 hover:bg-emerald-900/60"),
+         "bg-emerald-900/40 border-emerald-600/40 text-emerald-300 hover:bg-emerald-900/60",
+         "ring-2 ring-emerald-400 bg-emerald-800/60 font-bold"),
         ("rediscovered", "Rediscovered", counts["rediscovered"],
-         "bg-amber-900/40 border-amber-600/40 text-amber-300 hover:bg-amber-900/60"),
+         "bg-amber-900/40 border-amber-600/40 text-amber-300 hover:bg-amber-900/60",
+         "ring-2 ring-amber-400 bg-amber-800/60 font-bold"),
         ("unmatched", "Unmatched", counts["unmatched"],
-         "bg-slate-700/40 border-slate-600/40 text-slate-300 hover:bg-slate-700/60"),
+         "bg-slate-700/40 border-slate-600/40 text-slate-300 hover:bg-slate-700/60",
+         "ring-2 ring-slate-400 bg-slate-600/60 font-bold"),
     ]
 
-    for filter_val, label, count, color_cls in categories:
+    for filter_val, label, count, color_cls, active_cls in categories:
         if count == 0:
             continue
+        is_active = (filter_val == active_filter)
+        pill_cls = f"flex flex-col items-center px-4 py-2 rounded-lg border transition-colors {color_cls}"
+        if is_active:
+            pill_cls += f" {active_cls}"
         items.append(
             A(
                 Span(str(count), cls="text-lg font-bold"),
-                Span(label, cls="text-xs opacity-80"),
+                Span(label, cls="text-xs" + ("" if is_active else " opacity-80")),
                 href=f"/?section=to_review&view={view_mode}&filter={filter_val}",
-                cls=f"flex flex-col items-center px-4 py-2 rounded-lg border transition-colors {color_cls}",
+                cls=pill_cls,
             )
         )
 
@@ -2189,7 +2196,7 @@ def render_to_review_section(
     """Render the To Review section with Focus or Browse mode."""
 
     # Build triage bar (shown above all views)
-    triage_bar = _build_triage_bar(to_review, view_mode)
+    triage_bar = _build_triage_bar(to_review, view_mode, active_filter=triage_filter)
 
     # Apply triage filter if set
     if triage_filter in ("ready", "rediscovered", "unmatched"):
@@ -2271,9 +2278,10 @@ def render_to_review_section(
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                     Div(
                         *[identity_card_mini(i, crop_files, clickable=True, triage_filter=triage_filter) for i in high_confidence[1:6]],
-                        Div(
+                        A(
                             f"+{len(high_confidence) - 6} more",
-                            cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
+                            href="/?section=to_review&view=browse",
+                            cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square hover:bg-slate-600 transition-colors cursor-pointer"
                         ) if len(high_confidence) > 6 else None,
                         cls="flex gap-3 overflow-x-auto pb-2"
                     ),
@@ -2488,9 +2496,10 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
                     H3("Up Next", cls="text-sm font-medium text-slate-400 mb-3"),
                     Div(
                         *[identity_card_mini(i, crop_files, clickable=True) for i in sorted_skipped[1:6]],
-                        Div(
+                        A(
                             f"+{len(sorted_skipped) - 6} more",
-                            cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square"
+                            href="/?section=to_review&view=browse",
+                            cls="w-24 flex-shrink-0 flex items-center justify-center bg-slate-700 rounded-lg text-sm text-slate-400 aspect-square hover:bg-slate-600 transition-colors cursor-pointer"
                         ) if len(sorted_skipped) > 6 else None,
                         cls="flex gap-3 overflow-x-auto pb-2"
                     ),
