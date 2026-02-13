@@ -7955,6 +7955,11 @@ def public_photo_page(
     registry = load_registry()
     from urllib.parse import quote as _url_quote
 
+    # Check for back image (front/back flip feature)
+    back_image = photo.get("back_image", "")
+    back_transcription = photo.get("back_transcription", "")
+    has_back = bool(back_image)
+
     # Collect face info for overlays and person cards
     face_info_list = []
     identified_names = []
@@ -8129,6 +8134,36 @@ def public_photo_page(
             background: #475569;
             border-radius: 3px;
         }
+        /* CSS 3D Flip Animation */
+        .photo-flip-container {
+            perspective: 1200px;
+        }
+        .photo-flip-inner {
+            position: relative;
+            transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+        .photo-flip-inner.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .photo-flip-front {
+            backface-visibility: hidden;
+            position: relative;
+        }
+        .photo-flip-back {
+            backface-visibility: hidden;
+            transform: rotateY(180deg);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+        }
+        .photo-flip-inner:not(.is-flipped) .photo-flip-back {
+            pointer-events: none;
+        }
+        .photo-flip-inner.is-flipped .photo-flip-front {
+            pointer-events: none;
+        }
     """)
 
     return (
@@ -8153,24 +8188,56 @@ def public_photo_page(
             # Hero photo section
             Section(
                 Div(
-                    # Photo with overlays
+                    # Photo with overlays (with optional flip animation)
                     Div(
-                        Img(
-                            src=photo_url(filename),
-                            alt=f"Historical photograph from {photo.get('collection', 'the Rhodes diaspora')}",
-                            cls="photo-hero max-w-full h-auto rounded-lg",
-                        ),
-                        *face_overlays,
-                        # Overlay legend
                         Div(
-                            Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-emerald-400 mr-1"),
-                            Span("Identified", cls="text-slate-300 mr-3"),
-                            Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"),
-                            Span("Unidentified", cls="text-slate-300"),
-                            cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm",
-                        ) if face_overlays else None,
-                        cls="photo-hero-container relative mx-auto"
+                            # Front side
+                            Div(
+                                Img(
+                                    src=photo_url(filename),
+                                    alt=f"Historical photograph from {photo.get('collection', 'the Rhodes diaspora')}",
+                                    cls="photo-hero max-w-full h-auto rounded-lg",
+                                ),
+                                *face_overlays,
+                                # Overlay legend
+                                Div(
+                                    Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-emerald-400 mr-1"),
+                                    Span("Identified", cls="text-slate-300 mr-3"),
+                                    Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"),
+                                    Span("Unidentified", cls="text-slate-300"),
+                                    cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm",
+                                ) if face_overlays else None,
+                                cls="photo-flip-front" if has_back else "",
+                            ),
+                            # Back side (only rendered if back image exists)
+                            Div(
+                                Img(
+                                    src=photo_url(back_image),
+                                    alt="Back of photograph",
+                                    cls="max-w-full h-auto rounded-lg",
+                                ),
+                                P("Back of photograph", cls="text-slate-400 text-xs text-center mt-2 italic"),
+                                P(back_transcription, cls="text-slate-300 text-sm mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 italic") if back_transcription else None,
+                                cls="photo-flip-back",
+                            ) if has_back else None,
+                            id="photo-flip-inner",
+                            cls="photo-flip-inner" if has_back else "",
+                        ),
+                        cls="photo-flip-container photo-hero-container relative mx-auto" if has_back else "photo-hero-container relative mx-auto",
                     ),
+                    # Flip button (only shown when back image exists)
+                    Div(
+                        Button(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'),
+                            Span("Flip Photo", id="flip-btn-text"),
+                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors",
+                            type="button",
+                            data_action="flip-photo",
+                            id="flip-photo-btn",
+                        ),
+                        Span("This photo has writing on the back", cls="text-slate-500 text-xs ml-3"),
+                        cls="flex items-center justify-center mt-4"
+                    ) if has_back else None,
                     # Photo metadata
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
@@ -8257,6 +8324,20 @@ def public_photo_page(
                 ),
                 cls="py-8 border-t border-slate-800"
             ),
+            # Flip photo event handler (global delegation pattern)
+            Script("""
+                document.addEventListener('click', function(e) {
+                    var btn = e.target.closest('[data-action="flip-photo"]');
+                    if (!btn) return;
+                    var inner = document.getElementById('photo-flip-inner');
+                    if (!inner) return;
+                    inner.classList.toggle('is-flipped');
+                    var textEl = document.getElementById('flip-btn-text');
+                    if (textEl) {
+                        textEl.textContent = inner.classList.contains('is-flipped') ? 'Flip Back' : 'Flip Photo';
+                    }
+                });
+            """) if has_back else None,
             cls="min-h-screen bg-slate-900"
         ),
     )
@@ -10466,7 +10547,8 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
 @rt("/api/photo/{photo_id}/metadata")
 def post(photo_id: str, date_taken: str = "", location: str = "",
          caption: str = "", occasion: str = "", donor: str = "",
-         notes: str = "", sess=None):
+         notes: str = "", back_image: str = "", back_transcription: str = "",
+         sess=None):
     """Update photo metadata. Admin-only (BE-012)."""
     denied = _check_admin(sess)
     if denied:
@@ -10485,6 +10567,10 @@ def post(photo_id: str, date_taken: str = "", location: str = "",
         metadata["donor"] = donor.strip()
     if notes.strip():
         metadata["notes"] = notes.strip()
+    if back_image.strip():
+        metadata["back_image"] = back_image.strip()
+    if back_transcription.strip():
+        metadata["back_transcription"] = back_transcription.strip()
 
     if not metadata:
         return toast("No metadata provided.", "warning")

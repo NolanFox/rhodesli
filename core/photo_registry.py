@@ -233,6 +233,7 @@ class PhotoRegistry:
         valid_keys = {
             "date_taken", "date_estimate", "location", "caption",
             "occasion", "photographer", "donor", "notes", "camera",
+            "back_image", "back_transcription",
         }
         for key, value in metadata.items():
             if key in valid_keys:
