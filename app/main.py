@@ -7277,12 +7277,12 @@ def get(section: str = None, view: str = "focus", current: str = None,
         # Global share utility functions (used by share buttons on all pages)
         Script("""
             function _sharePhotoUrl(url) {
-                if (navigator.share) {
-                    navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function(err) {
-                        if (err.name !== 'AbortError') { _copyAndToast(url); }
-                    });
-                } else {
-                    _copyAndToast(url);
+                // Always copy to clipboard first (desktop-friendly).
+                // On mobile, also offer native share sheet after copying.
+                _copyAndToast(url);
+                var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (isMobile && navigator.share) {
+                    navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function() {});
                 }
             }
             function _copyAndToast(url) {
@@ -8578,11 +8578,11 @@ def public_person_page(
             # Share JS (standalone page needs its own)
             Script("""
                 function _sharePhotoUrl(url) {
-                    if (navigator.share) {
-                        navigator.share({ title: 'Rhodesli', url: url }).catch(function(err) {
-                            if (err.name !== 'AbortError') { _copyAndToast(url); }
-                        });
-                    } else { _copyAndToast(url); }
+                    _copyAndToast(url);
+                    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile && navigator.share) {
+                        navigator.share({ title: 'Rhodesli', url: url }).catch(function() {});
+                    }
                 }
                 function _copyAndToast(url) {
                     if (navigator.clipboard) {
@@ -9544,11 +9544,11 @@ def public_photo_page(
             # Action button event handlers (standalone page — needs its own share/flip JS)
             Script("""
                 function _sharePhotoUrl(url) {
-                    if (navigator.share) {
-                        navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function(err) {
-                            if (err.name !== 'AbortError') { _copyAndToast(url); }
-                        });
-                    } else { _copyAndToast(url); }
+                    _copyAndToast(url);
+                    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile && navigator.share) {
+                        navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function() {});
+                    }
                 }
                 function _copyAndToast(url) {
                     if (navigator.clipboard) {
