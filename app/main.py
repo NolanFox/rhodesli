@@ -5185,7 +5185,7 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                        type="button", aria_label="Close"),
                 cls="flex justify-between items-center mb-4 pb-2 border-b border-slate-700"
             ),
-            P("You can contribute without an account, or sign in for credit.",
+            P("Your suggestion will be reviewed by a family member.",
               cls="text-slate-400 mb-6 text-sm"),
             # Option 1: Continue as guest
             Form(
@@ -5213,7 +5213,7 @@ def _guest_or_login_modal(form_data: dict) -> Div:
                 Button("Sign in to save",
                        type="submit",
                        cls="w-full p-2 bg-blue-600 hover:bg-blue-700 rounded text-white font-medium"),
-                P("Get credit for your contributions.",
+                P("Track your contributions with your account.",
                   cls="text-xs text-slate-500 mt-1 text-center"),
                 hx_post="/api/annotations/stash-and-login",
                 hx_target="#guest-or-login-modal",

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.31.2] - 2026-02-13
+
+### Fixed
+- **Welcome modal wall removed** — First-time visitors no longer see a blocking modal. Replaced with a dismissible top banner that doesn't interrupt content viewing. Tests updated to match.
+- **Frictionless guest tagging** — Anonymous annotation submissions now save directly (no guest-or-login modal loop). Users see a confirmation toast and can immediately continue tagging. Annotations saved as `pending_unverified` for admin review.
+- **Navigation loss on Help Identify** — "I Can Help Identify" button on public photo viewer now links to the first unidentified face from the current photo. Landing page and nav "Help Identify" links go to the correct section (skipped, not inbox).
+- **Modal Escape key dismissal** — All 6 modals now support Escape key to close (login-modal, guest-or-login-modal, and confirm-modal were missing it).
+- **Guest modal copy** — Removed "credit" and "taking credit" language. Reframed as "Your suggestion will be reviewed by a family member."
+
+### Changed
+- 7 new tests (modal dismissibility, contextual CTA, anonymous submission). Test count: 1838 → 1845.
+
 ## [v0.31.1] - 2026-02-13
 
 ### Fixed

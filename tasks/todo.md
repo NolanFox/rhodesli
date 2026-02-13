@@ -1,6 +1,14 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-13 (Session 24 — Emergency UX Triage)
+Last updated: 2026-02-13 (Session 24b — Guest/Visitor UX Fixes)
+
+## Session 24b Completed
+- [x] FIX 1: Welcome modal tests updated — old _welcome_modal → _welcome_banner (10 tests fixed)
+- [x] FIX 2: Frictionless guest tagging — anonymous saves directly, no modal loop (7 tests updated)
+- [x] FIX 3: Navigation loss fixed — Help Identify links to skipped section with context
+- [x] FIX 5: Modal Escape key audit — all 6 modals now dismissible via Escape (5 new tests)
+- [x] Guest modal copy: removed "credit" language, reframed as review-by-family
+- [x] 1845 total tests (1838 baseline + 7 net new)
 
 ## Session 24 Completed
 - [x] Share button copies to clipboard first (not OS share sheet)
