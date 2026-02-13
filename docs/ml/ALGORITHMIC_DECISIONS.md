@@ -312,12 +312,74 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Affects**: `app/main.py` — `compute_face_quality_score()`, `get_best_face_id()`, identity card rendering, neighbor card thumbnails.
 - **Tests**: `tests/test_quality_scoring.py` — 13 tests.
 
+### AD-039: Gemini 3 Pro for Silver Labeling (NOT Cheaper Models)
+- **Date**: 2026-02-13
+- **Context**: Need to silver-label 155 undated photos. Multiple Gemini models available at different price points.
+- **Decision**: Use `gemini-3-pro-preview` ($4.27 total) for production, `gemini-3-flash-preview` (free tier) for testing.
+- **Rationale**: Cost difference between cheapest ($0.15) and best ($4.27) is negligible at 155 photos. Silver labels are the foundation for all downstream ML — quality matters more than saving $4. Gemini 2.0 Flash deprecated March 31, 2026.
+- **Rejected**: Gemini 2.0 Flash (deprecated), GPT-4o (~$30+), Claude Vision (similar cost to GPT-4o).
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 1.
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py`.
+
+### AD-040: Two-Layer Date Estimation (Gemini Year + PyTorch Decade)
+- **Date**: 2026-02-13
+- **Context**: Whether to estimate at year or decade granularity.
+- **Decision**: Gemini outputs year-level estimates for display ("circa 1937"). PyTorch trains on decade classes (10 classes, CORAL ordinal regression) for new uploads.
+- **Rationale**: 155 photos / 10 decades = ~15 per class (viable). 155 / 100+ years = not viable. MyHeritage needed tens of thousands for year-level.
+- **Rejected**: Year-level PyTorch training (insufficient data), decade-only Gemini output (less compelling UX).
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 2.
+- **Affects**: `rhodesli_ml/models/date_classifier.py`, `rhodesli_ml/scripts/generate_date_labels.py`.
+
+### AD-041: Evidence-First Prompt Architecture
+- **Date**: 2026-02-13
+- **Context**: How to structure the Gemini Vision prompt for date estimation.
+- **Decision**: Decomposed analysis with 4 independent evidence categories (print/format, fashion, environment, technology), per-cue strength ratings, structured JSON output with `decade_probabilities`.
+- **Rationale**: Enables cross-querying ("all photos with scalloped borders"), contradiction detection (reprint vs original), retroactive re-scoring, and full audit trail.
+- **Rejected**: Narrative-only reasoning (not queryable), forensic checklist without decomposition (encourages hallucinated specifics).
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 3.
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py`.
+
+### AD-042: Cultural Lag Adjustment for Sephardic Diaspora
+- **Date**: 2026-02-13
+- **Context**: Standard fashion-dating assumes Western mainstream timeline.
+- **Decision**: Explicit prompt instruction accounting for 5-15 year fashion lag in Rhodes and immigrant communities. Studio portraits used conservative formal attire that appears older than actual date.
+- **Rationale**: Without adjustment, model systematically estimates photos as older than they are.
+- **Rejected**: No adjustment (systematic dating bias), fixed offset (too rigid for varying contexts).
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 4.
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (prompt text).
+
+### AD-043: Soft Label Training via KL Divergence
+- **Date**: 2026-02-13
+- **Context**: How to train PyTorch model using Gemini's probabilistic outputs.
+- **Decision**: Use Gemini's `decade_probabilities` as soft labels via KL divergence auxiliary loss, weighted at 0.3 alongside CORAL primary loss.
+- **Rationale**: Hard labels discard useful uncertainty. Soft distributions preserve calibrated signal. Standard knowledge distillation technique (Hinton et al., 2015).
+- **Rejected**: Hard-label-only training (discards Gemini's uncertainty estimates).
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 5.
+- **Config**: `rhodesli_ml/config/date_estimation.yaml` → `soft_label_weight: 0.3`.
+- **Affects**: `rhodesli_ml/models/date_classifier.py`, `rhodesli_ml/training/train_date.py`.
+
+### AD-044: best_year_estimate Display Field
+- **Date**: 2026-02-13
+- **Context**: What granularity to show users in the photo viewer.
+- **Decision**: Gemini outputs `best_year_estimate` (integer year). App displays as "circa 1937". Three granularity levels: year (display), range (uncertainty), distribution (full).
+- **Rationale**: "circa 1937" more compelling than "1930s" for genealogy UX. Simpler than computing weighted average from probabilities in app layer.
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 6.
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py`, future UX integration.
+
+### AD-045: Heritage-Specific Augmentations for Date Estimation
+- **Date**: 2026-02-13
+- **Context**: Standard ImageNet augmentations don't model heritage photo degradation.
+- **Decision**: Custom augmentation pipeline: sepia, resolution degradation, film grain, JPEG artifacts, scanning artifacts, geometric distortion (photos-of-photos), fading.
+- **Rationale**: Heritage photos have domain-specific degradation absent from standard libraries. Expert review specifically recommended geometric distortion for photos-of-photos.
+- **Config**: `rhodesli_ml/config/date_estimation.yaml` → augmentation section.
+- **Affects**: `rhodesli_ml/data/augmentations.py`.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-039)
+1. Add a new entry with AD-XXX format (next: AD-046)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
