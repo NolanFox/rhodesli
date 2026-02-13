@@ -390,8 +390,10 @@ def process_single_image(
     except FileNotFoundError:
         photo_registry = PhotoRegistry()
 
+    # Use relative path (raw_photos/filename.jpg) per data model rules
+    relative_path = f"raw_photos/{filepath.name}"
     for face in faces:
-        photo_registry.register_face(photo_id, str(filepath), face["face_id"], source=source)
+        photo_registry.register_face(photo_id, relative_path, face["face_id"], source=source)
 
     # Store image dimensions for face overlay positioning (critical for R2 mode)
     if image_width > 0 and image_height > 0:
