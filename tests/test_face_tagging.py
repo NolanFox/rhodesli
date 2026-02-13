@@ -11,8 +11,8 @@ class TestTagDropdownInOverlay:
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     @patch("app.main.load_registry")
     @patch("app.main.get_identity_for_face")
-    def test_face_overlay_has_tag_dropdown(self, mock_get_id, mock_reg, mock_dim, mock_meta):
-        """Each face overlay contains a hidden tag dropdown with search input."""
+    def test_face_overlay_has_tag_dropdown_admin(self, mock_get_id, mock_reg, mock_dim, mock_meta):
+        """Admin face overlay shows 'Type name to tag' placeholder."""
         from app.main import photo_view_content, to_xml
 
         mock_meta.return_value = {
@@ -27,12 +27,39 @@ class TestTagDropdownInOverlay:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content("p1", is_partial=True)
+        result = photo_view_content("p1", is_partial=True, is_admin=True)
         html = to_xml(result)
 
         # Should have tag dropdown
         assert "tag-dropdown-" in html
         assert "Type name to tag" in html
+        assert "/api/face/tag-search" in html
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    @patch("app.main.get_identity_for_face")
+    def test_face_overlay_has_tag_dropdown_nonadmin(self, mock_get_id, mock_reg, mock_dim, mock_meta):
+        """Non-admin face overlay shows 'Who is this person?' placeholder."""
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [{"face_id": "face-1", "bbox": [10, 10, 100, 100]}],
+            "source": "Test",
+        }
+        mock_get_id.return_value = {
+            "identity_id": "id-1",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
+        mock_reg.return_value = MagicMock()
+
+        result = photo_view_content("p1", is_partial=True, is_admin=False)
+        html = to_xml(result)
+
+        assert "tag-dropdown-" in html
+        assert "Who is this person?" in html
         assert "/api/face/tag-search" in html
 
     @patch("app.main.get_photo_metadata")
@@ -73,7 +100,8 @@ class TestTagDropdownInOverlay:
         }
         mock_reg.return_value = MagicMock()
 
-        result = photo_view_content("p1", is_partial=True)
+        # Admin mode: shows "Type name to tag"
+        result = photo_view_content("p1", is_partial=True, is_admin=True)
         html = to_xml(result)
 
         assert "tag-dropdown-" in html

@@ -7855,11 +7855,12 @@ def photo_view_content(
                     f"then if el call el.focus()"
                 )
 
+            tag_placeholder = "Type name to tag..." if is_admin else "Who is this person?"
             tag_dropdown = Div(
                 # Search input
                 Input(
                     type="text",
-                    placeholder="Type name to tag...",
+                    placeholder=tag_placeholder,
                     cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                         "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
                     hx_get=f"/api/face/tag-search?face_id={face_id_encoded}",
@@ -10032,13 +10033,14 @@ def get(q: str = ""):
 
 
 @rt("/api/face/tag-search")
-def get(face_id: str, q: str = ""):
+def get(face_id: str, q: str = "", sess=None):
     """
     Search for identities to tag a face with (Instagram-style tagging).
 
-    Returns compact autocomplete results with merge buttons.
-    Each result merges the face's current identity into the selected one.
+    Admin: returns merge buttons (direct action).
+    Non-admin: returns suggestion buttons (creates annotation for review).
     """
+    import json as _json
     from urllib.parse import quote as _url_quote
     safe_face_id = face_id.replace(":", "-").replace(" ", "_")
     face_id_encoded = _url_quote(face_id, safe="")
@@ -10055,9 +10057,19 @@ def get(face_id: str, q: str = ""):
             id=results_id
         )
 
+    # Determine user role for rendering appropriate action buttons
+    user_is_admin = False
+    if not is_auth_enabled():
+        user_is_admin = True
+    else:
+        user = get_current_user(sess or {})
+        if user and user.is_admin:
+            user_is_admin = True
+
     # Find the identity this face belongs to (to exclude from results)
     source_identity = get_identity_for_face(registry, face_id)
     exclude_id = source_identity["identity_id"] if source_identity else None
+    source_identity_id = source_identity["identity_id"] if source_identity else ""
 
     # Search all identities (confirmed get priority in search_identities)
     results = registry.search_identities(q, exclude_id=exclude_id)
@@ -10069,8 +10081,9 @@ def get(face_id: str, q: str = ""):
         thumb = Img(src=face_url, cls="w-8 h-8 rounded-full object-cover flex-shrink-0") if face_url else Div(cls="w-8 h-8 rounded-full bg-slate-600 flex-shrink-0")
         name = ensure_utf8_display(r["name"]) or "Unnamed"
 
-        items.append(
-            Button(
+        if user_is_admin:
+            # Admin: direct merge
+            btn = Button(
                 thumb,
                 Div(
                     Span(name, cls="text-sm text-slate-200 truncate"),
@@ -10083,28 +10096,75 @@ def get(face_id: str, q: str = ""):
                 hx_swap="innerHTML",
                 type="button",
             )
-        )
+        else:
+            # Non-admin: submit name suggestion annotation
+            btn = Button(
+                thumb,
+                Div(
+                    Span(name, cls="text-sm text-slate-200 truncate"),
+                    Span("Suggest match", cls="text-xs text-indigo-400"),
+                    cls="flex flex-col min-w-0 text-left"
+                ),
+                cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
+                hx_post="/api/annotations/submit",
+                hx_vals=_json.dumps({
+                    "target_type": "identity",
+                    "target_id": source_identity_id,
+                    "annotation_type": "name_suggestion",
+                    "value": name,
+                    "confidence": "likely",
+                    "reason": f"face_tag:{face_id}:matched_to:{r['identity_id']}",
+                }),
+                hx_target="#toast-container",
+                hx_swap="beforeend",
+                type="button",
+            )
+        items.append(btn)
 
-    # "+ Create New Identity" option — renames the face's current identity with the typed name
+    # Bottom option: create new identity (admin) or suggest new name (non-admin)
     from urllib.parse import quote as _url_quote
-    create_btn = Button(
-        Div("+", cls="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg"),
-        Div(
-            Span(f'Create "{q.strip()}"', cls="text-sm text-indigo-300 truncate"),
-            Span("New identity", cls="text-xs text-slate-500"),
-            cls="flex flex-col min-w-0 text-left"
-        ),
-        cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
-            "border-t border-slate-700 mt-1 pt-1",
-        hx_post=f"/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}",
-        hx_target="#photo-modal-content",
-        hx_swap="innerHTML",
-        type="button",
-    )
+    if user_is_admin:
+        create_btn = Button(
+            Div("+", cls="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg"),
+            Div(
+                Span(f'Create "{q.strip()}"', cls="text-sm text-indigo-300 truncate"),
+                Span("New identity", cls="text-xs text-slate-500"),
+                cls="flex flex-col min-w-0 text-left"
+            ),
+            cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
+                "border-t border-slate-700 mt-1 pt-1",
+            hx_post=f"/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}",
+            hx_target="#photo-modal-content",
+            hx_swap="innerHTML",
+            type="button",
+        )
+    else:
+        create_btn = Button(
+            Div("+", cls="w-8 h-8 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-white font-bold text-lg"),
+            Div(
+                Span(f'Suggest "{q.strip()}"', cls="text-sm text-indigo-300 truncate"),
+                Span("Submit for review", cls="text-xs text-slate-500"),
+                cls="flex flex-col min-w-0 text-left"
+            ),
+            cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
+                "border-t border-slate-700 mt-1 pt-1",
+            hx_post="/api/annotations/submit",
+            hx_vals=_json.dumps({
+                "target_type": "identity",
+                "target_id": source_identity_id,
+                "annotation_type": "name_suggestion",
+                "value": q.strip(),
+                "confidence": "likely",
+                "reason": f"face_tag:{face_id}:new_name",
+            }),
+            hx_target="#toast-container",
+            hx_swap="beforeend",
+            type="button",
+        )
     items.append(create_btn)
 
     if not results:
-        # Show only the create button with a "no matches" message
+        # Show only the create/suggest button with a "no matches" message
         return Div(
             P("No existing matches.", cls="text-slate-500 italic text-xs p-1"),
             create_btn,

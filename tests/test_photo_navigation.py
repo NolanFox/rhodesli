@@ -470,7 +470,7 @@ class TestConfirmedFaceClick:
         mock_reg.return_value = mock_reg_inst
 
         with patch("app.main.get_identity_for_face", return_value=mock_identity):
-            result = photo_view_content("p1", is_partial=True)
+            result = photo_view_content("p1", is_partial=True, is_admin=True)
             html = to_xml(result)
 
         # Should have tag dropdown toggle (not navigation)
