@@ -380,3 +380,10 @@
 - **Mistake**: Assumed the contributor uploaded 2 photos in 1 batch. They actually uploaded in 2 separate batches (2 separate upload form submissions). `download_staged.py` was run once and cleared only the first batch. The second batch sat in staging for days.
 - **Rule**: After processing community uploads, always run `download_staged.py --dry-run` one more time to check for additional batches. Contributors may upload photos incrementally.
 - **Prevention**: Add a final verification step to the upload pipeline: "Verify staging is empty."
+
+## Session 2026-02-13: Annotation Persistence Fix
+
+### Lesson 69: Production-origin data must NEVER be in deploy sync lists
+- **Mistake**: `annotations.json` was in both `OPTIONAL_SYNC_FILES` (init_railway_volume.py) and `DATA_FILES` (push_to_production.py). Users submit annotations on the live site, but the deploy pipeline would overwrite the production copy with the local empty one. The user's annotation appeared to vanish.
+- **Rule**: Data files written by users on production (annotations.json) must NOT be in OPTIONAL_SYNC_FILES or push DATA_FILES. They need their own pull mechanism (sync API endpoint) to flow production→local. The deploy must never touch them.
+- **Prevention**: Before adding a data file to any sync list, ask: "Who writes this file?" If production users → do NOT sync from bundle. If local ML pipeline → sync from bundle. Added deploy safety tests that assert annotations.json is NOT in sync lists. Added `/api/sync/annotations` pull endpoint.
