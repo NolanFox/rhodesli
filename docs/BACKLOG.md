@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 6.6 — February 12, 2026
-**Status**: 1641 tests passing, v0.28.2, 155 photos, 24 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 6.7 — February 12, 2026
+**Status**: 1733 tests passing, v0.29.0, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -125,14 +125,24 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-063 | Browser performance audit | OPEN | Use Claude Code with browser plugin to stress test page load, navigation speed, HTMX swap latency. |
 | FE-064 | Preload adjacent photos in gallery | PARTIAL | Implemented in Phase 2. Verify it's actually improving perceived performance. |
 
-### 2.8 User Analytics & Logging (MEDIUM Priority)
+### 2.8 Shareable Photo Experience (HIGH Priority)
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| FE-070 | Client-side event logging | OPEN | Track page views, click targets, time-on-page, navigation patterns for all users (logged in or not). |
-| FE-071 | Session recording / heatmaps | OPEN | Consider lightweight analytics (Plausible, PostHog, or custom). Privacy-respecting — no PII. |
-| FE-072 | Admin analytics dashboard | OPEN | How many people visited, how long they stayed, what they clicked, conversion (view → identify). |
-| FE-073 | Action logging for admin review | PARTIAL | Decision logging with timestamps exists (Phase 3). Needs admin UI to review audit trail. |
+| FE-070 | Public photo viewer at /photo/{id} | DONE | Museum-like shareable page: face overlays, person cards, CTA, gentle 404. 16 tests (2026-02-12) |
+| FE-071 | Front/back photo flip | DONE | CSS 3D flip animation, back_image + back_transcription metadata. 11 tests (2026-02-12) |
+| FE-072 | Open Graph meta tags | DONE | og:title/description/image/url, Twitter Card, dynamic description. 17 tests (2026-02-12) |
+| FE-073 | Share + download buttons | DONE | Web Share API + clipboard fallback, /photo/{id}/download, toast notification. 12 tests (2026-02-12) |
+| FE-074 | Internal links to public viewer | DONE | "Open Full Page" from modal, "Full Page" from face cards + photo grid. 5 tests (2026-02-12) |
+
+### 2.9 User Analytics & Logging (MEDIUM Priority)
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| FE-080 | Client-side event logging | OPEN | Track page views, click targets, time-on-page, navigation patterns for all users (logged in or not). |
+| FE-081 | Session recording / heatmaps | OPEN | Consider lightweight analytics (Plausible, PostHog, or custom). Privacy-respecting — no PII. |
+| FE-082 | Admin analytics dashboard | OPEN | How many people visited, how long they stayed, what they clicked, conversion (view → identify). |
+| FE-083 | Action logging for admin review | PARTIAL | Decision logging with timestamps exists (Phase 3). Needs admin UI to review audit trail. |
 
 ---
 
