@@ -1,0 +1,80 @@
+{
+  "job_id": "staged-20260210",
+  "status": "error",
+  "faces_extracted": 0,
+  "identities_created": [],
+  "updated_at": "2026-02-11T00:45:25.619488+00:00",
+  "total_files": 17,
+  "files_succeeded": 0,
+  "files_failed": 17,
+  "errors": [
+    {
+      "filename": "Mathilda_Capelouto_Capouano_from_Naturalization_Doc.tiff",
+      "error": "Photo inbox_staged-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc missing required fields: ['collection']"
+    },
+    {
+      "filename": "Esther_Diana__Taranto__Capouano_decl_of_intention.jpeg",
+      "error": "Photo inbox_staged-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention missing required fields: ['collection']"
+    },
+    {
+      "filename": "Laura_Franco_immigration_document_photo.jpg",
+      "error": "Photo inbox_staged-20260210_2_Laura_Franco_immigration_document_photo missing required fields: ['collection']"
+    },
+    {
+      "filename": "Felicita__Russo__Capelluto_-_Brazilian_immigration_card.jpg",
+      "error": "Photo inbox_staged-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card missing required fields: ['collection']"
+    },
+    {
+      "filename": "Mose_Capelluto_-_Brazilian_immigration_card.jpg",
+      "error": "Photo inbox_staged-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card missing required fields: ['collection']"
+    },
+    {
+      "filename": "rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n.jpg",
+      "error": "Photo inbox_staged-20260210_5_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n missing required fields: ['collection']"
+    },
+    {
+      "filename": "victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n.jpg",
+      "error": "Photo inbox_staged-20260210_6_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n missing required fields: ['collection']"
+    },
+    {
+      "filename": "Abraham_Rousso_family.jpg",
+      "error": "Photo inbox_staged-20260210_7_Abraham_Rousso_family missing required fields: ['collection']"
+    },
+    {
+      "filename": "mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n.jpg",
+      "error": "Photo inbox_staged-20260210_8_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n missing required fields: ['collection']"
+    },
+    {
+      "filename": "Rahamin_Capeluto_Declaration_Naturalization_w_Picture.jpg",
+      "error": "Photo inbox_staged-20260210_9_Rahamin_Capeluto_Declaration_Naturalization_w_Picture missing required fields: ['collection']"
+    },
+    {
+      "filename": "Marcos_Capelluto_immigration_card.jpeg",
+      "error": "Photo inbox_staged-20260210_10_Marcos_Capelluto_immigration_card missing required fields: ['collection']"
+    },
+    {
+      "filename": "abraham_almaleh_517958956_10172333855565346_6983007175757830190_n.jpg",
+      "error": "Photo inbox_staged-20260210_11_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n missing required fields: ['collection']"
+    },
+    {
+      "filename": "eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n.jpg",
+      "error": "Photo inbox_staged-20260210_12_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n missing required fields: ['collection']"
+    },
+    {
+      "filename": "Louis_Pizante___Rica_Mousafir.jpg",
+      "error": "Photo inbox_staged-20260210_13_Louis_Pizante___Rica_Mousafir missing required fields: ['collection']"
+    },
+    {
+      "filename": "grave_isaac_capeluto_90588193_133774507166.jpg",
+      "error": "Photo inbox_staged-20260210_14_grave_isaac_capeluto_90588193_133774507166 missing required fields: ['collection']"
+    },
+    {
+      "filename": "Wedding_of_David_Capouano_and_Selma_Capouya.jpeg",
+      "error": "Photo inbox_staged-20260210_15_Wedding_of_David_Capouano_and_Selma_Capouya missing required fields: ['collection']"
+    },
+    {
+      "filename": "David_Raymond_Capouano_-_declaration_of_intention_.jpg",
+      "error": "Photo inbox_staged-20260210_16_David_Raymond_Capouano_-_declaration_of_intention_ missing required fields: ['collection']"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "photos": {
+    "photo_1": {
+      "path": "/path/photo_1.jpg",
+      "face_ids": [
+        "face_a"
+      ],
+      "source": "Test Collection"
+    },
+    "photo_2": {
+      "path": "/path/photo_2.jpg",
+      "face_ids": [
+        "face_b"
+      ],
+      "source": ""
+    },
+    "photo_3": {
+      "path": "/path/photo_3.jpg",
+      "face_ids": [
+        "face_c"
+      ],
+      "source": ""
+    }
+  },
+  "face_to_photo": {
+    "face_a": "photo_1",
+    "face_b": "photo_2",
+    "face_c": "photo_3"
+  }
+}

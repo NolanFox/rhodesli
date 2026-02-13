@@ -1,0 +1,12 @@
+{
+  "job_id": "benatar-20260213b",
+  "status": "success",
+  "faces_extracted": 1,
+  "identities_created": [
+    "54682ede-9424-4295-abca-9317679e5636"
+  ],
+  "updated_at": "2026-02-13T18:49:26.721578+00:00",
+  "total_files": 1,
+  "files_succeeded": 1,
+  "files_failed": 0
+}

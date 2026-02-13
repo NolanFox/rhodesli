@@ -1,0 +1,102 @@
+{
+  "entries": [
+    {
+      "action": "approved",
+      "annotation_id": "test-ann-1",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:31:32.811079+00:00",
+      "details": "Wedding photo"
+    },
+    {
+      "action": "rejected",
+      "annotation_id": "test-ann-2",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:31:32.818756+00:00",
+      "details": "Wrong Name"
+    },
+    {
+      "action": "approved",
+      "annotation_id": "test-ann-1",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:31:52.348090+00:00",
+      "details": "Wedding photo"
+    },
+    {
+      "action": "rejected",
+      "annotation_id": "test-ann-2",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:31:52.354220+00:00",
+      "details": "Wrong Name"
+    },
+    {
+      "action": "approved",
+      "annotation_id": "test-ann-1",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.315451+00:00",
+      "details": "Wedding photo"
+    },
+    {
+      "action": "rejected",
+      "annotation_id": "test-ann-2",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.321748+00:00",
+      "details": "Wrong Name"
+    },
+    {
+      "action": "skipped",
+      "annotation_id": "test-ann-skip",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.327831+00:00",
+      "details": "Some Name"
+    },
+    {
+      "action": "skipped",
+      "annotation_id": "test-ann-skip-2",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.333732+00:00",
+      "details": "Test"
+    },
+    {
+      "action": "undone",
+      "annotation_id": "test-ann-undo",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.339458+00:00",
+      "details": "Reverted from approved to pending"
+    },
+    {
+      "action": "undone",
+      "annotation_id": "test-ann-undo-guest",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.344631+00:00",
+      "details": "Reverted from rejected to pending_unverified"
+    },
+    {
+      "action": "approved",
+      "annotation_id": "test-ann-audit",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.355154+00:00",
+      "details": "Test caption"
+    },
+    {
+      "action": "rejected",
+      "annotation_id": "test-ann-audit-reject",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.406029+00:00",
+      "details": "Test bio"
+    },
+    {
+      "action": "approved",
+      "annotation_id": "test-thumb-1",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.417521+00:00",
+      "details": "Test"
+    },
+    {
+      "action": "rejected",
+      "annotation_id": "test-thumb-2",
+      "admin": "admin",
+      "timestamp": "2026-02-13T20:33:46.423222+00:00",
+      "details": "Test bio"
+    }
+  ]
+}

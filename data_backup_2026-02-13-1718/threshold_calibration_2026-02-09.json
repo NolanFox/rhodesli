@@ -1,0 +1,49 @@
+{
+  "timestamp": "2026-02-09",
+  "thresholds": {
+    "VERY_HIGH": {
+      "max_distance": 0.8,
+      "precision": "~100%",
+      "recall": "~13%",
+      "use_case": "Slam-dunk matches. Safe to auto-suggest prominently."
+    },
+    "HIGH": {
+      "max_distance": 1.05,
+      "precision": "100%",
+      "recall": "~63%",
+      "use_case": "Confident suggestion. Zero FP in golden set."
+    },
+    "MODERATE": {
+      "max_distance": 1.15,
+      "precision": "~94%",
+      "recall": "~81%",
+      "use_case": "Show with 'likely match' label. FPs are family resemblance."
+    },
+    "LOW": {
+      "max_distance": 1.25,
+      "precision": "~69%",
+      "recall": "~91%",
+      "use_case": "Deep search / 'possible match'. Requires human judgment."
+    }
+  },
+  "current_config": {
+    "MATCH_THRESHOLD_HIGH": 1.0,
+    "MATCH_THRESHOLD_MEDIUM": 1.2
+  },
+  "recommended_config": {
+    "MATCH_THRESHOLD_VERY_HIGH": 0.8,
+    "MATCH_THRESHOLD_HIGH": 1.05,
+    "MATCH_THRESHOLD_MODERATE": 1.15,
+    "MATCH_THRESHOLD_LOW": 1.25
+  },
+  "evidence_sources": [
+    "data/golden_set_evaluation_2026-02-09.json",
+    "data/clustering_validation_2026-02-09.json"
+  ],
+  "key_findings": [
+    "Zero FP ceiling at distance < 1.05 (across 3713 negative pairs)",
+    "Family resemblance is primary FP source above 1.05",
+    "Optimal F1 at 1.15 (F1=0.871)",
+    "Raising HIGH threshold from 1.00 to 1.05 is risk-free"
+  ]
+}
