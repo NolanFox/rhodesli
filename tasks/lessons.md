@@ -351,3 +351,10 @@
 - **Mistake**: Match mode ignored `?filter=` entirely — `_get_best_match_pair()` had no filter parameter. Up Next thumbnails linked to `?current=UUID` without `&filter=X`, so clicking navigated to the unfiltered context. Promotion banners had empty `promotion_context` because grouping code never set it.
 - **Rule**: When a filter parameter (`?filter=X`) is active, every UI element must respect it: main content, Up Next thumbnails, action buttons, Skip button, and the decide endpoint. Breaking filter context is disorienting. Promotion banners must show specific context (which faces grouped) not generic text.
 - **Prevention**: Match mode now passes filter through the full HTMX chain. `identity_card_mini` accepts `triage_filter` param. `core/grouping.py` populates `promotion_context` with group member names. Rule added to `.claude/rules/ui-scalability.md`.
+
+## Session 2026-02-13: Suggest Button Fix
+
+### Lesson 64: Toasts inside modals are invisible if z-index is wrong
+- **Mistake**: `#toast-container` had `z-50` while `#photo-modal` had `z-[9999]`. Non-admin "Suggest" button in the face tag dropdown POSTed successfully to `/api/annotations/submit`, annotation was saved, toast was returned — but the toast rendered BEHIND the photo modal. User saw "nothing happens."
+- **Rule**: Toast container must ALWAYS have the highest z-index in the app — above all modals, overlays, and dropdowns. Any action inside a modal that returns a toast will be invisible if the toast z-index is lower.
+- **Prevention**: Z-index hierarchy is now: toast(10001) > guest-modal(10000) > photo-modal(9999). Comment in `photo_modal()` documents the hierarchy. E2E test + unit test verify the ordering.
