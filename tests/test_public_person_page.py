@@ -280,3 +280,138 @@ class TestPersonPageAppearsWithSection:
                 return
 
         pytest.skip("No confirmed identities with companions found")
+
+
+class TestPersonPageAnnotations:
+    """Approved annotations display on public person page."""
+
+    def test_approved_annotation_displays(self, client, tmp_path):
+        """Approved annotations show in 'Community Notes' section."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        # Get a real identity to test with
+        identity = get_any_identity()
+        if not identity:
+            pytest.skip("No identities available")
+        identity_id = identity["identity_id"]
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "test-ann-1": {
+                    "annotation_id": "test-ann-1",
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": identity_id,
+                    "value": "A mi querida Estrella",
+                    "status": "approved",
+                    "submitted_by": "test@example.com",
+                    "submitted_at": "2026-01-01T00:00:00+00:00",
+                    "confidence": "likely",
+                    "reason": "",
+                    "reviewed_by": "admin@example.com",
+                    "reviewed_at": "2026-01-01T01:00:00+00:00",
+                },
+            },
+        }
+        (tmp_path / "annotations.json").write_text(json.dumps(ann_data))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.get(f"/person/{identity_id}")
+
+        assert response.status_code == 200
+        assert "Community Notes" in response.text
+        assert "A mi querida Estrella" in response.text
+
+    def test_pending_annotations_hidden(self, client, tmp_path):
+        """Pending annotations do NOT show on public page."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        identity = get_any_identity()
+        if not identity:
+            pytest.skip("No identities available")
+        identity_id = identity["identity_id"]
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "test-ann-pending": {
+                    "annotation_id": "test-ann-pending",
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": identity_id,
+                    "value": "SECRET PENDING ANNOTATION",
+                    "status": "pending",
+                    "submitted_by": "test@example.com",
+                    "submitted_at": "2026-01-01T00:00:00+00:00",
+                    "confidence": "likely",
+                    "reason": "",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                },
+            },
+        }
+        (tmp_path / "annotations.json").write_text(json.dumps(ann_data))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.get(f"/person/{identity_id}")
+
+        assert response.status_code == 200
+        assert "SECRET PENDING ANNOTATION" not in response.text
+        assert "Community Notes" not in response.text
+
+    def test_duplicate_annotations_deduplicated(self, client, tmp_path):
+        """Duplicate annotation values are shown only once."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        identity = get_any_identity()
+        if not identity:
+            pytest.skip("No identities available")
+        identity_id = identity["identity_id"]
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "dup-1": {
+                    "annotation_id": "dup-1",
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": identity_id,
+                    "value": "Same text twice",
+                    "status": "approved",
+                    "submitted_by": "user@example.com",
+                    "submitted_at": "2026-01-01T00:00:00+00:00",
+                    "confidence": "likely",
+                    "reason": "",
+                    "reviewed_by": "admin@example.com",
+                    "reviewed_at": "2026-01-01T01:00:00+00:00",
+                },
+                "dup-2": {
+                    "annotation_id": "dup-2",
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": identity_id,
+                    "value": "Same text twice",
+                    "status": "approved",
+                    "submitted_by": "user@example.com",
+                    "submitted_at": "2026-01-01T00:01:00+00:00",
+                    "confidence": "likely",
+                    "reason": "",
+                    "reviewed_by": "admin@example.com",
+                    "reviewed_at": "2026-01-01T01:00:00+00:00",
+                },
+            },
+        }
+        (tmp_path / "annotations.json").write_text(json.dumps(ann_data))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.get(f"/person/{identity_id}")
+
+        # Should show only once despite two annotations with same value
+        assert response.text.count("Same text twice") == 1

@@ -8260,6 +8260,42 @@ def public_person_page(
             cls="mt-10 pt-8 border-t border-slate-800",
         )
 
+    # --- Approved annotations (bio, story, etc.) ---
+    annotations_section = None
+    try:
+        annotations_data = _load_annotations()
+        approved_anns = [
+            ann for ann in annotations_data.get("annotations", {}).values()
+            if ann.get("target_type") == "identity"
+            and ann.get("target_id") == person_id
+            and ann.get("status") == "approved"
+        ]
+        if approved_anns:
+            type_labels = {"bio": "Bio", "relationship": "Relationship", "story": "Story",
+                           "name_suggestion": "Name", "caption": "Caption"}
+            # Deduplicate by value
+            seen_values = set()
+            unique_anns = []
+            for ann in sorted(approved_anns, key=lambda a: a.get("submitted_at", "")):
+                if ann["value"] not in seen_values:
+                    seen_values.add(ann["value"])
+                    unique_anns.append(ann)
+            ann_items = []
+            for ann in unique_anns:
+                label = type_labels.get(ann["type"], ann["type"].title())
+                ann_items.append(Div(
+                    Span(f"{label}", cls="text-xs text-slate-500 font-medium block mb-0.5"),
+                    P(f"\u201c{ann['value']}\u201d", cls="text-slate-300 text-sm italic"),
+                    cls="py-2",
+                ))
+            annotations_section = Div(
+                H3("Community Notes", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+                *ann_items,
+                cls="mt-10 pt-8 border-t border-slate-800",
+            )
+    except Exception:
+        pass
+
     # --- Open Graph meta tags ---
     og_title = f"{display_name} — Rhodesli Heritage Archive"
     photo_count = len(photo_ids)
@@ -8432,6 +8468,9 @@ def public_person_page(
 
                     # Appears with section
                     appears_with_section if appears_with_section else None,
+
+                    # Approved community annotations
+                    annotations_section if annotations_section else None,
 
                     cls="max-w-5xl mx-auto px-6 py-10",
                 ),
