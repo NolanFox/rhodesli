@@ -15821,6 +15821,16 @@ def get(request):
     return data
 
 
+@rt("/api/sync/annotations")
+def get(request):
+    """Download annotations.json via sync token. For scripts/sync_from_production.py."""
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+    annotations = _load_annotations()
+    return annotations
+
+
 # --- Staged Files API (for downloading uploads from production to local ML) ---
 
 @rt("/api/sync/staged")
@@ -16014,9 +16024,9 @@ async def post(request):
 
     body = await request.json()
 
-    if not body.get("identities") and not body.get("photo_index"):
+    if not body.get("identities") and not body.get("photo_index") and not body.get("annotations"):
         return Response(
-            "Must provide 'identities' and/or 'photo_index' in request body",
+            "Must provide 'identities', 'photo_index', and/or 'annotations' in request body",
             status_code=400,
         )
 
@@ -16069,8 +16079,30 @@ async def post(request):
             "backup": backup_path.name,
         }
 
+    # Push annotations.json
+    if body.get("annotations"):
+        ann_data = body["annotations"]
+        if not isinstance(ann_data, dict):
+            return Response("annotations must be a JSON object", status_code=400)
+
+        fpath = data_path / "annotations.json"
+        backup_path = data_path / f"annotations.json.bak.{ts}"
+
+        if fpath.exists():
+            shutil.copy2(fpath, backup_path)
+
+        with open(fpath, "w") as f:
+            json.dump(ann_data, f, indent=2, ensure_ascii=False)
+
+        ann_count = len(ann_data.get("annotations", {}))
+        results["annotations"] = {
+            "status": "written",
+            "count": ann_count,
+            "backup": backup_path.name,
+        }
+
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -16078,6 +16110,7 @@ async def post(request):
     _skipped_neighbor_cache_key = None
     _photo_cache = None
     _face_to_photo_cache = None
+    _annotations_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 

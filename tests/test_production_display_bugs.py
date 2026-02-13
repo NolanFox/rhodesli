@@ -34,17 +34,18 @@ def test_required_data_files_includes_all_essentials():
     assert "embeddings.npy" in REQUIRED_DATA_FILES
 
 
-def test_annotations_json_in_sync_files():
-    """annotations.json must be synced to production to prevent stale test data.
+def test_annotations_json_not_in_sync_files():
+    """annotations.json must NOT be synced from bundle — it is production-origin data.
 
-    Without this, test data that leaked into the Railway volume's annotations.json
-    would never be overwritten by the clean version from git.
+    Users submit annotations via the web UI. Syncing from bundle would overwrite
+    real user submissions with the local empty copy. Use /api/sync/annotations
+    to pull production annotations to local instead.
     """
     from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
 
-    assert "annotations.json" in OPTIONAL_SYNC_FILES, (
-        "annotations.json must be in OPTIONAL_SYNC_FILES so that the clean "
-        "version from git overwrites any stale/contaminated data on the Railway volume."
+    assert "annotations.json" not in OPTIONAL_SYNC_FILES, (
+        "annotations.json must NOT be in OPTIONAL_SYNC_FILES — it is production-origin "
+        "data written by users. Syncing from bundle would destroy user submissions."
     )
 
 

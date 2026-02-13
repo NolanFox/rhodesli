@@ -181,12 +181,30 @@ def sync_from_api(dry_run: bool = False):
     print("  Fetching photo_index.json...")
     photo_index_data = fetch_json("/api/sync/photo-index")
 
+    print("  Fetching annotations.json...")
+    try:
+        annotations_data = fetch_json("/api/sync/annotations")
+    except SystemExit:
+        # Endpoint may not exist on older deployments
+        print("  Warning: annotations endpoint not available (older deployment?)")
+        annotations_data = None
+
     # Compare
     identities_file = DATA_DIR / "identities.json"
     photo_index_file = DATA_DIR / "photo_index.json"
+    annotations_file = DATA_DIR / "annotations.json"
 
     compare_and_print("Identities", identities_file, identities_data, summarize_identities)
     compare_and_print("Photo Index", photo_index_file, photo_index_data, summarize_photos)
+
+    if annotations_data:
+        ann_count = len(annotations_data.get("annotations", {}))
+        local_ann_count = 0
+        if annotations_file.exists():
+            with open(annotations_file) as f:
+                local_ann_count = len(json.load(f).get("annotations", {}))
+        print(f"\n  Annotations:")
+        print(f"    count: {local_ann_count} -> {ann_count}")
 
     if dry_run:
         print("\n  DRY RUN — no files written.")
@@ -194,7 +212,10 @@ def sync_from_api(dry_run: bool = False):
 
     # Back up
     print("\n  Backing up local files...")
-    for filepath in [identities_file, photo_index_file]:
+    files_to_backup = [identities_file, photo_index_file]
+    if annotations_data:
+        files_to_backup.append(annotations_file)
+    for filepath in files_to_backup:
         backup = backup_file(filepath)
         if backup:
             print(f"    {filepath.name} -> {backup.name}")
@@ -209,6 +230,11 @@ def sync_from_api(dry_run: bool = False):
     with open(photo_index_file, "w") as f:
         json.dump(photo_index_data, f, indent=2)
     print(f"  Wrote {photo_index_file}")
+
+    if annotations_data:
+        with open(annotations_file, "w") as f:
+            json.dump(annotations_data, f, indent=2, ensure_ascii=False)
+        print(f"  Wrote {annotations_file}")
 
     print("\nSync complete. Run 'git diff data/' to see changes.")
 

@@ -4,6 +4,7 @@ Tests the permission matrix and response format for:
 - GET /api/sync/status (public)
 - GET /api/sync/identities (token-authenticated)
 - GET /api/sync/photo-index (token-authenticated)
+- GET /api/sync/annotations (token-authenticated)
 - POST /api/sync/push (token-authenticated, writes data)
 """
 
@@ -319,3 +320,147 @@ class TestSyncPush:
             )
         assert response.status_code == 200
         assert (tmp_path / "identities.json").exists()
+
+    def test_pushes_annotations(self, client, tmp_path):
+        """Writes annotations.json when annotations key provided."""
+        from app.main import _invalidate_annotations_cache
+        existing = {"schema_version": 1, "annotations": {}}
+        (tmp_path / "annotations.json").write_text(json.dumps(existing))
+
+        new_data = {
+            "schema_version": 1,
+            "annotations": {
+                "ann-1": {
+                    "annotation_id": "ann-1",
+                    "type": "story",
+                    "target_type": "identity",
+                    "target_id": "test-id",
+                    "value": "Test annotation",
+                    "status": "pending",
+                    "submitted_by": "test@example.com",
+                },
+            },
+        }
+
+        with patch("app.main.SYNC_API_TOKEN", "test-token"), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.post(
+                "/api/sync/push",
+                headers={"Authorization": "Bearer test-token"},
+                json={"annotations": new_data},
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["results"]["annotations"]["status"] == "written"
+        assert data["results"]["annotations"]["count"] == 1
+
+        # Verify file was written
+        written = json.loads((tmp_path / "annotations.json").read_text())
+        assert "ann-1" in written["annotations"]
+
+        # Verify backup was created
+        backups = list(tmp_path.glob("annotations.json.bak.*"))
+        assert len(backups) == 1
+
+    def test_push_annotations_only_accepted(self, client, tmp_path):
+        """Push request with only annotations (no identities/photo_index) is valid."""
+        (tmp_path / "annotations.json").write_text('{"schema_version": 1, "annotations": {}}')
+
+        from app.main import _invalidate_annotations_cache
+        with patch("app.main.SYNC_API_TOKEN", "test-token"), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.post(
+                "/api/sync/push",
+                headers={"Authorization": "Bearer test-token"},
+                json={"annotations": {"schema_version": 1, "annotations": {"a": {"type": "story"}}}},
+            )
+        assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# GET /api/sync/annotations — requires valid RHODESLI_SYNC_TOKEN
+# ---------------------------------------------------------------------------
+
+class TestSyncAnnotations:
+    """Annotations endpoint requires a valid sync token."""
+
+    def test_rejects_without_token(self, client):
+        """Request without Authorization header gets 401."""
+        with patch("app.main.SYNC_API_TOKEN", "valid-token"):
+            response = client.get("/api/sync/annotations")
+        assert response.status_code == 401
+
+    def test_returns_annotations_with_valid_token(self, client, tmp_path):
+        """Valid token returns annotations JSON."""
+        from app.main import _invalidate_annotations_cache
+        test_data = {
+            "schema_version": 1,
+            "annotations": {
+                "ann-1": {
+                    "annotation_id": "ann-1",
+                    "type": "story",
+                    "value": "Test story",
+                    "status": "pending",
+                },
+            },
+        }
+        (tmp_path / "annotations.json").write_text(json.dumps(test_data))
+
+        with patch("app.main.SYNC_API_TOKEN", "test-token-123"), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.get(
+                "/api/sync/annotations",
+                headers={"Authorization": "Bearer test-token-123"},
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["schema_version"] == 1
+        assert "ann-1" in data["annotations"]
+
+    def test_returns_empty_when_no_annotations(self, client, tmp_path):
+        """Returns default empty structure when annotations.json is empty."""
+        from app.main import _invalidate_annotations_cache
+        (tmp_path / "annotations.json").write_text('{"schema_version": 1, "annotations": {}}')
+
+        with patch("app.main.SYNC_API_TOKEN", "test-token-123"), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.get(
+                "/api/sync/annotations",
+                headers={"Authorization": "Bearer test-token-123"},
+            )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["annotations"] == {}
+
+
+# ---------------------------------------------------------------------------
+# Deployment Safety — annotations must NOT be overwritten from bundle
+# ---------------------------------------------------------------------------
+
+class TestAnnotationDeploySafety:
+    """Verify annotations.json is not in deploy/push paths that overwrite production."""
+
+    def test_annotations_not_in_optional_sync_files(self):
+        """annotations.json must NOT be in OPTIONAL_SYNC_FILES (would overwrite on deploy)."""
+        from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+        assert "annotations.json" not in OPTIONAL_SYNC_FILES, \
+            "annotations.json must NOT be in OPTIONAL_SYNC_FILES — it is production-origin data"
+
+    def test_annotations_not_in_required_data_files(self):
+        """annotations.json must NOT be in REQUIRED_DATA_FILES."""
+        from scripts.init_railway_volume import REQUIRED_DATA_FILES
+        assert "annotations.json" not in REQUIRED_DATA_FILES, \
+            "annotations.json must NOT be in REQUIRED_DATA_FILES — it is production-origin data"
+
+    def test_annotations_not_in_push_data_files(self):
+        """annotations.json must NOT be pushed by push_to_production.py."""
+        import ast
+        from pathlib import Path
+        script_path = Path(__file__).parent.parent / "scripts" / "push_to_production.py"
+        source = script_path.read_text()
+        assert "annotations.json" not in source or "NOT pushed" in source, \
+            "push_to_production.py must NOT include annotations.json in DATA_FILES"

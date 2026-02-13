@@ -55,7 +55,8 @@ DATA_DIR = PROJECT_ROOT / "data"
 DATA_FILES = [
     "data/identities.json",
     "data/photo_index.json",
-    "data/annotations.json",
+    # NOTE: annotations.json is NOT pushed — it is production-origin data
+    # written by users. Pushing local copy would overwrite user submissions.
     "data/file_hashes.json",
     "data/golden_set.json",
     "data/proposals.json",

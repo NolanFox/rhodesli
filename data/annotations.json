@@ -1,4 +1,19 @@
 {
   "schema_version": 1,
-  "annotations": {}
+  "annotations": {
+    "recovered-001": {
+      "annotation_id": "recovered-001",
+      "type": "story",
+      "target_type": "identity",
+      "target_id": "54682ede-9424-4295-abca-9317679e5636",
+      "value": "A mi querida Estrella de tu hermano Samuel",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "poisson1957@hotmail.com",
+      "submitted_at": "2026-02-13T19:25:00+00:00",
+      "status": "pending",
+      "reviewed_by": null,
+      "reviewed_at": null
+    }
+  }
 }
