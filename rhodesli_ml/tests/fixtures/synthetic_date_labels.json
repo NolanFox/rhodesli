@@ -1,0 +1,1110 @@
+{
+  "schema_version": 2,
+  "labels": [
+    {
+      "photo_id": "photo_000",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1900,
+      "best_year_estimate": 1904,
+      "confidence": "high",
+      "probable_range": [
+        1895,
+        1915
+      ],
+      "decade_probabilities": {
+        "1900": 0.875,
+        "1910": 0.125
+      },
+      "location_estimate": "NYC",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1895,
+              1905
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1900s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_001",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1918,
+      "confidence": "medium",
+      "probable_range": [
+        1905,
+        1925
+      ],
+      "decade_probabilities": {
+        "1910": 0.588,
+        "1900": 0.171,
+        "1920": 0.241
+      },
+      "location_estimate": "Rhodes",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1905,
+              1915
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1910s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_002",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1929,
+      "confidence": "low",
+      "probable_range": [
+        1915,
+        1935
+      ],
+      "decade_probabilities": {
+        "1920": 0.614,
+        "1910": 0.202,
+        "1930": 0.184
+      },
+      "location_estimate": "Rhodes",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1925
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1920s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_003",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1937,
+      "confidence": "high",
+      "probable_range": [
+        1925,
+        1945
+      ],
+      "decade_probabilities": {
+        "1930": 0.726,
+        "1920": 0.187,
+        "1940": 0.087
+      },
+      "location_estimate": "Miami",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1935
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1930s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_004",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1944,
+      "confidence": "medium",
+      "probable_range": [
+        1935,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.773,
+        "1930": 0.114,
+        "1950": 0.113
+      },
+      "location_estimate": "NYC",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1940s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_005",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1951,
+      "confidence": "low",
+      "probable_range": [
+        1945,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.827,
+        "1940": 0.113,
+        "1960": 0.06
+      },
+      "location_estimate": "Miami",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1945,
+              1955
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1950s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_006",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1968,
+      "confidence": "high",
+      "probable_range": [
+        1955,
+        1975
+      ],
+      "decade_probabilities": {
+        "1960": 0.672,
+        "1950": 0.214,
+        "1970": 0.113
+      },
+      "location_estimate": "Rhodes",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1955,
+              1965
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1960s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_007",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1970,
+      "best_year_estimate": 1975,
+      "confidence": "medium",
+      "probable_range": [
+        1965,
+        1985
+      ],
+      "decade_probabilities": {
+        "1970": 0.566,
+        "1960": 0.222,
+        "1980": 0.213
+      },
+      "location_estimate": "NYC",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1965,
+              1975
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1970s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_008",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1980,
+      "best_year_estimate": 1981,
+      "confidence": "low",
+      "probable_range": [
+        1975,
+        1995
+      ],
+      "decade_probabilities": {
+        "1980": 0.596,
+        "1970": 0.227,
+        "1990": 0.177
+      },
+      "location_estimate": "NYC",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1975,
+              1985
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1980s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_009",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1990,
+      "best_year_estimate": 1992,
+      "confidence": "high",
+      "probable_range": [
+        1985,
+        2005
+      ],
+      "decade_probabilities": {
+        "1990": 0.625,
+        "1980": 0.199,
+        "2000": 0.177
+      },
+      "location_estimate": "Miami",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1985,
+              1995
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1990s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_010",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 2000,
+      "best_year_estimate": 2001,
+      "confidence": "medium",
+      "probable_range": [
+        1995,
+        2015
+      ],
+      "decade_probabilities": {
+        "2000": 0.755,
+        "1990": 0.245
+      },
+      "location_estimate": "NYC",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1995,
+              2005
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 2000s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_011",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1900,
+      "best_year_estimate": 1908,
+      "confidence": "low",
+      "probable_range": [
+        1895,
+        1915
+      ],
+      "decade_probabilities": {
+        "1900": 0.722,
+        "1910": 0.278
+      },
+      "location_estimate": "NYC",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1895,
+              1905
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1900s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_012",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1910,
+      "confidence": "high",
+      "probable_range": [
+        1905,
+        1925
+      ],
+      "decade_probabilities": {
+        "1910": 0.763,
+        "1900": 0.176,
+        "1920": 0.062
+      },
+      "location_estimate": "Miami",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1905,
+              1915
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1910s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_013",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1925,
+      "confidence": "medium",
+      "probable_range": [
+        1915,
+        1935
+      ],
+      "decade_probabilities": {
+        "1920": 0.599,
+        "1910": 0.171,
+        "1930": 0.231
+      },
+      "location_estimate": "NYC",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1925
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1920s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_014",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1934,
+      "confidence": "low",
+      "probable_range": [
+        1925,
+        1945
+      ],
+      "decade_probabilities": {
+        "1930": 0.623,
+        "1920": 0.274,
+        "1940": 0.103
+      },
+      "location_estimate": "NYC",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1935
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1930s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_015",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1946,
+      "confidence": "high",
+      "probable_range": [
+        1935,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.724,
+        "1930": 0.158,
+        "1950": 0.118
+      },
+      "location_estimate": "Tampa",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1940s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_016",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1951,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.563,
+        "1940": 0.323,
+        "1960": 0.114
+      },
+      "location_estimate": "Rhodes",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1945,
+              1955
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1950s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_017",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1969,
+      "confidence": "low",
+      "probable_range": [
+        1955,
+        1975
+      ],
+      "decade_probabilities": {
+        "1960": 0.593,
+        "1950": 0.183,
+        "1970": 0.224
+      },
+      "location_estimate": "Rhodes",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1955,
+              1965
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1960s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_018",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1970,
+      "best_year_estimate": 1978,
+      "confidence": "high",
+      "probable_range": [
+        1965,
+        1985
+      ],
+      "decade_probabilities": {
+        "1970": 0.61,
+        "1960": 0.287,
+        "1980": 0.103
+      },
+      "location_estimate": "Rhodes",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1965,
+              1975
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1970s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_019",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1980,
+      "best_year_estimate": 1985,
+      "confidence": "medium",
+      "probable_range": [
+        1975,
+        1995
+      ],
+      "decade_probabilities": {
+        "1980": 0.739,
+        "1970": 0.175,
+        "1990": 0.086
+      },
+      "location_estimate": "Rhodes",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1975,
+              1985
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1980s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_020",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1990,
+      "best_year_estimate": 1994,
+      "confidence": "low",
+      "probable_range": [
+        1985,
+        2005
+      ],
+      "decade_probabilities": {
+        "1990": 0.632,
+        "1980": 0.188,
+        "2000": 0.18
+      },
+      "location_estimate": "NYC",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1985,
+              1995
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1990s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_021",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 2000,
+      "best_year_estimate": 2008,
+      "confidence": "high",
+      "probable_range": [
+        1995,
+        2015
+      ],
+      "decade_probabilities": {
+        "2000": 0.871,
+        "1990": 0.129
+      },
+      "location_estimate": "NYC",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1995,
+              2005
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 2000s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_022",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1900,
+      "best_year_estimate": 1908,
+      "confidence": "medium",
+      "probable_range": [
+        1895,
+        1915
+      ],
+      "decade_probabilities": {
+        "1900": 0.809,
+        "1910": 0.191
+      },
+      "location_estimate": "Rhodes",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1895,
+              1905
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1900s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_023",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1910,
+      "best_year_estimate": 1914,
+      "confidence": "low",
+      "probable_range": [
+        1905,
+        1925
+      ],
+      "decade_probabilities": {
+        "1910": 0.719,
+        "1900": 0.139,
+        "1920": 0.141
+      },
+      "location_estimate": "NYC",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1905,
+              1915
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1910s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_024",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1927,
+      "confidence": "high",
+      "probable_range": [
+        1915,
+        1935
+      ],
+      "decade_probabilities": {
+        "1920": 0.637,
+        "1910": 0.263,
+        "1930": 0.1
+      },
+      "location_estimate": "Rhodes",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1925
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1920s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_025",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1934,
+      "confidence": "medium",
+      "probable_range": [
+        1925,
+        1945
+      ],
+      "decade_probabilities": {
+        "1930": 0.573,
+        "1920": 0.251,
+        "1940": 0.176
+      },
+      "location_estimate": "Tampa",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1935
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1930s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_026",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1944,
+      "confidence": "low",
+      "probable_range": [
+        1935,
+        1955
+      ],
+      "decade_probabilities": {
+        "1940": 0.762,
+        "1930": 0.154,
+        "1950": 0.084
+      },
+      "location_estimate": "Tampa",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1940s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_027",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1953,
+      "confidence": "high",
+      "probable_range": [
+        1945,
+        1965
+      ],
+      "decade_probabilities": {
+        "1950": 0.691,
+        "1940": 0.216,
+        "1960": 0.093
+      },
+      "location_estimate": "Rhodes",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1945,
+              1955
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1950s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_028",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1960,
+      "best_year_estimate": 1960,
+      "confidence": "medium",
+      "probable_range": [
+        1955,
+        1975
+      ],
+      "decade_probabilities": {
+        "1960": 0.531,
+        "1950": 0.284,
+        "1970": 0.185
+      },
+      "location_estimate": "Rhodes",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1955,
+              1965
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "reasoning_summary": "Synthetic label for testing, decade 1960s",
+      "created_at": "2026-02-13T00:00:00Z"
+    },
+    {
+      "photo_id": "photo_029",
+      "source": "gemini",
+      "model": "gemini-3-pro-preview",
+      "estimated_decade": 1970,
+      "best_year_estimate": 1971,
+      "confidence": "low",
+      "probable_range": [
+        1965,
+        1985
+      ],
+      "decade_probabilities": {
+        "1970": 0.553,
+        "1960": 0.296,
+        "1980": 0.152
+      },
+      "location_estimate": "NYC",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "test",
+            "strength": "moderate",
+            "suggested_range": [
+              1965,
+              1975
+            ]
+          }
+        ],
+        "fashion": [],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "reasoning_summary": "Synthetic label for testing, decade 1970s",
+      "created_at": "2026-02-13T00:00:00Z"
+    }
+  ]
+}

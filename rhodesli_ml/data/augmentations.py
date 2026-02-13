@@ -127,11 +127,11 @@ class GeometricDistortionTransform:
         for s, t in zip(source_coords, target_coords):
             matrix.append([t[0], t[1], 1, 0, 0, 0, -s[0]*t[0], -s[0]*t[1]])
             matrix.append([0, 0, 0, t[0], t[1], 1, -s[1]*t[0], -s[1]*t[1]])
-        A = np.matrix(matrix, dtype=np.float64)
+        A = np.array(matrix, dtype=np.float64)
         B = np.array([s for pair in source_coords for s in pair]).reshape(8)
         try:
-            res = np.dot(np.linalg.inv(A.T * A) * A.T, B)
-            return np.array(res).reshape(8).tolist()
+            res = np.linalg.lstsq(A, B, rcond=None)[0]
+            return res.tolist()
         except np.linalg.LinAlgError:
             return [1, 0, 0, 0, 1, 0, 0, 0]  # Identity transform on failure
 
