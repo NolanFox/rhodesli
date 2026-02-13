@@ -1,44 +1,139 @@
 """Generate silver date labels for photos using Gemini Vision API.
 
-Sends each undated photo to Gemini and asks for an approximate decade estimate.
-Outputs data/date_labels.json with structured estimates.
+Uses an evidence-first prompt architecture with decomposed analysis across
+4 evidence categories (print/format, fashion, environment, technology).
+Outputs structured JSON with decade probabilities, year estimates, and
+per-cue evidence ratings.
 
 Usage:
-    # Preview what would be labeled (no API calls)
+    # Dry run: process 3 photos, print results, show cost estimate
     python -m rhodesli_ml.scripts.generate_date_labels --dry-run
 
-    # Label first 10 photos
-    python -m rhodesli_ml.scripts.generate_date_labels --batch-size 10
+    # Test with free-tier model
+    python -m rhodesli_ml.scripts.generate_date_labels --dry-run --model gemini-3-flash-preview
+
+    # Full run with cost cap
+    python -m rhodesli_ml.scripts.generate_date_labels --model gemini-3-pro-preview --max-cost 5.00
 
     # Label all undated photos
-    python -m rhodesli_ml.scripts.generate_date_labels --batch-size 0
+    python -m rhodesli_ml.scripts.generate_date_labels --model gemini-3-pro-preview --batch-size 0
+
+Requires GEMINI_API_KEY environment variable. Get one at:
+    https://aistudio.google.com/apikey (free, takes 30 seconds)
 """
 
 import argparse
-import base64
 import json
+import os
+import re
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
-
-PROMPT = """You are analyzing a scanned family photograph from a Sephardic Jewish family
-originally from Rhodes, Greece. Many photos are from the 1920s-1970s, taken in Rhodes,
-New York City, Miami, or Tampa.
-
-Estimate the approximate decade this photograph was originally taken (not when it was scanned).
-Look at: clothing styles, hairstyles, photo quality/format, print characteristics,
-background details, and any visible text.
-
-Respond in JSON format only:
-{
-    "decade": 1940,
-    "confidence": "high",
-    "reasoning": "Brief explanation of visual cues used"
+# Cost per photo estimates (input + output tokens)
+# Per photo: ~1,790 input tokens (image + prompt) + ~2,000 output tokens
+MODEL_COSTS = {
+    "gemini-3-pro-preview": {
+        "input_per_million": 2.00,
+        "output_per_million": 12.00,
+        "per_photo": 0.028,
+        "note": "Best quality, SOTA vision reasoning",
+    },
+    "gemini-3-flash-preview": {
+        "input_per_million": 0.50,
+        "output_per_million": 3.00,
+        "per_photo": 0.007,
+        "note": "Free tier available, very good quality",
+    },
+    "gemini-2.5-flash": {
+        "input_per_million": 0.30,
+        "output_per_million": 2.50,
+        "per_photo": 0.006,
+        "note": "Stable, good price/performance",
+    },
 }
 
-Valid decades: 1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020.
-Confidence levels: "high" (strong visual cues), "medium" (some cues), "low" (uncertain).
+PROMPT = """You are a forensic photo analyst specializing in dating historical photographs
+from Sephardic Jewish communities, particularly from Rhodes (Dodecanese), Greece and
+diaspora communities in New York City, Miami, and Tampa, Florida.
+
+## Task
+Analyze this photograph and estimate when it was ORIGINALLY TAKEN (not when printed or scanned).
+
+## Analysis Method
+Examine FOUR independent evidence categories. For each, list ONLY what you can actually observe.
+Do NOT invent specific brand names, car models, or named fashion styles unless clearly readable
+in the image.
+
+### 1. Print/Physical Format
+Examine: border style (white, scalloped, deckled, borderless), color type (B&W, sepia, hand-tinted,
+color), print shape (square, rectangular, oval), paper surface (glossy, matte, textured), print size
+indicators, any visible studio stamps or markings.
+
+### 2. Fashion/Grooming
+Examine: clothing silhouettes (not brand names), hat styles, hairstyles, facial hair, jewelry,
+accessories. Note whether this appears to be everyday wear or formal/studio attire.
+
+### 3. Environmental/Geographic
+Examine: architecture style (Mediterranean stone, NYC brick, Miami Art Deco, Tampa bungalow),
+vegetation, street features, signage language, urban vs rural setting.
+
+### 4. Technological/Object Markers
+Examine: vehicles (general era, not specific models unless clearly visible), furniture style,
+appliances, lighting fixtures, photography equipment visible.
+
+## Cultural Context (IMPORTANT)
+These photos are from a Sephardic Jewish community. Account for:
+- Fashion in Rhodes and immigrant communities often LAGGED 5-15 years behind Paris/London mainstream
+- Studio portraits used deliberately conservative formal attire that can appear older than actual date
+- Early immigrant photos in the US often show a mix of old-world and new-world styles
+- Rhodes stone architecture spans centuries — it is a WEAK dating signal on its own
+
+## Output Rules
+- Rate each observed cue as STRONG, MODERATE, or WEAK indicator
+- Provide a suggested date range [start_year, end_year] for each cue
+- Distinguish between the capture date and any evidence of reprinting
+- If evidence is weak or ambiguous, say so — avoid overconfidence
+- When evidence conflicts, explain which signals are stronger and why
+- The decade_probabilities MUST sum to 1.0 and only include decades with >0.01 probability
+- best_year_estimate should be your best point estimate, NOT just the midpoint of a decade
+
+## Response Format (JSON only)
+{
+    "estimated_decade": 1940,
+    "best_year_estimate": 1937,
+    "confidence": "medium",
+    "probable_range": [1935, 1955],
+    "decade_probabilities": {
+        "1920": 0.05,
+        "1930": 0.15,
+        "1940": 0.55,
+        "1950": 0.20,
+        "1960": 0.05
+    },
+    "capture_vs_print": "Likely 1940s capture. Print characteristics consistent with original.",
+    "location_estimate": "Rhodes (stone masonry, Mediterranean vegetation)",
+    "is_color": false,
+    "evidence": {
+        "print_format": [
+            {"cue": "straight white border, ~3mm", "strength": "moderate", "suggested_range": [1930, 1955]}
+        ],
+        "fashion": [
+            {"cue": "men in wide-lapel suits with padded shoulders", "strength": "moderate", "suggested_range": [1940, 1948]}
+        ],
+        "environment": [
+            {"cue": "stone masonry arches, Mediterranean style", "strength": "weak", "suggested_range": [1900, 1950]}
+        ],
+        "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Adjusted +5 years from fashion cues due to Sephardic diaspora context",
+    "reasoning_summary": "Fashion cues suggest 1940s. Border style consistent. Stone architecture indicates Rhodes but is weak for dating."
+}
+
+Valid decades for probabilities: 1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000.
+Confidence levels: "high" (multiple strong cues agree), "medium" (moderate cues or some conflict), "low" (weak/ambiguous cues).
 """
 
 
@@ -60,7 +155,6 @@ def get_undated_photos(photos: dict) -> list[tuple[str, dict]]:
             continue
         date_taken = photo.get("date_taken", "")
         if date_taken:
-            # Check if it's a scan-era date (2000+) — not a real date
             try:
                 year = int(str(date_taken)[:4])
                 if year < 2000:
@@ -71,7 +165,7 @@ def get_undated_photos(photos: dict) -> list[tuple[str, dict]]:
     return undated
 
 
-def load_existing_labels(path: str = "data/date_labels.json") -> dict:
+def load_existing_labels(path: str) -> dict:
     """Load existing labels to avoid re-labeling."""
     labels_path = Path(path)
     if not labels_path.exists():
@@ -81,98 +175,158 @@ def load_existing_labels(path: str = "data/date_labels.json") -> dict:
     return {entry["photo_id"]: entry for entry in data.get("labels", [])}
 
 
-def encode_photo_base64(photo_path: str) -> str | None:
-    """Read a photo file and return base64-encoded string."""
-    p = Path(photo_path)
-    if not p.exists():
-        return None
-    with open(p, "rb") as f:
-        return base64.b64encode(f.read()).decode("utf-8")
+def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-preview") -> dict | None:
+    """Call Gemini Vision API with a photo and return parsed structured response.
 
-
-def call_gemini(image_b64: str, api_key: str, model: str = "gemini-2.0-flash") -> dict | None:
-    """Call Gemini Vision API with a photo and return parsed response.
-
-    Returns dict with {decade, confidence, reasoning} or None on failure.
+    Uses the google-genai SDK (new unified SDK).
+    Returns the full structured evidence dict or None on failure.
     """
-    import urllib.request
-    import urllib.error
+    from google import genai
+    from google.genai import types
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    client = genai.Client(api_key=api_key)
 
-    payload = {
-        "contents": [{
-            "parts": [
-                {"text": PROMPT},
-                {
-                    "inline_data": {
-                        "mime_type": "image/jpeg",
-                        "data": image_b64,
-                    }
-                },
-            ]
-        }],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "temperature": 0.1,
-        },
-    }
-
-    req = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    # Read image file
+    image_bytes = Path(image_path).read_bytes()
+    mime_type = "image/jpeg"
+    if image_path.lower().endswith(".png"):
+        mime_type = "image/png"
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            result = json.loads(resp.read().decode("utf-8"))
+        response = client.models.generate_content(
+            model=model,
+            contents=[
+                types.Content(
+                    parts=[
+                        types.Part.from_text(text=PROMPT),
+                        types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                    ]
+                )
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1,
+            ),
+        )
 
-        # Extract text from Gemini response
-        text = result["candidates"][0]["content"]["parts"][0]["text"]
+        # Parse response
+        text = response.text
+        if not text:
+            print("  WARNING: Empty response from Gemini")
+            return None
+
         parsed = json.loads(text)
 
-        # Validate
-        decade = parsed.get("decade")
+        # Validate required fields
+        decade = parsed.get("estimated_decade")
         if not isinstance(decade, int) or decade < 1900 or decade > 2030:
             print(f"  WARNING: Invalid decade {decade}, skipping")
             return None
 
-        return {
-            "decade": decade,
-            "confidence": parsed.get("confidence", "medium"),
-            "reasoning": parsed.get("reasoning", ""),
-        }
-    except (urllib.error.URLError, json.JSONDecodeError, KeyError, IndexError) as e:
+        # Validate decade_probabilities sum to ~1.0
+        probs = parsed.get("decade_probabilities", {})
+        if probs:
+            prob_sum = sum(probs.values())
+            if abs(prob_sum - 1.0) > 0.05:
+                print(f"  WARNING: decade_probabilities sum to {prob_sum:.3f}, normalizing")
+                probs = {k: v / prob_sum for k, v in probs.items()}
+                parsed["decade_probabilities"] = probs
+
+        return parsed
+
+    except json.JSONDecodeError as e:
+        print(f"  ERROR: Failed to parse JSON response: {e}")
+        # Try to extract JSON from markdown code blocks
+        if text:
+            json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+            if json_match:
+                try:
+                    return json.loads(json_match.group(1))
+                except json.JSONDecodeError:
+                    pass
+        return None
+    except Exception as e:
         print(f"  ERROR: Gemini API call failed: {e}")
         return None
 
 
-def save_labels(labels: list[dict], path: str = "data/date_labels.json"):
+def save_labels(labels: list[dict], path: str):
     """Save labels to JSON file with atomic write."""
     output = {
-        "schema_version": 1,
+        "schema_version": 2,
         "labels": labels,
     }
     tmp_path = Path(path).with_suffix(".tmp")
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(tmp_path, "w") as f:
         json.dump(output, f, indent=2)
     tmp_path.rename(path)
     print(f"Saved {len(labels)} labels to {path}")
 
 
+def print_summary(labels: list[dict]):
+    """Print a summary of labeling results."""
+    if not labels:
+        print("No labels to summarize.")
+        return
+
+    # Confidence distribution
+    conf_counts = {}
+    decade_counts = {}
+    for label in labels:
+        conf = label.get("confidence", "unknown")
+        conf_counts[conf] = conf_counts.get(conf, 0) + 1
+        decade = label.get("estimated_decade", 0)
+        decade_counts[decade] = decade_counts.get(decade, 0) + 1
+
+    print("\n--- Summary ---")
+    print(f"Total labels: {len(labels)}")
+
+    print("\nConfidence distribution:")
+    for conf in ["high", "medium", "low"]:
+        count = conf_counts.get(conf, 0)
+        pct = count / len(labels) * 100
+        bar = "#" * int(pct / 2)
+        print(f"  {conf:8s}: {count:3d} ({pct:5.1f}%) {bar}")
+
+    print("\nDecade distribution:")
+    for decade in sorted(decade_counts.keys()):
+        count = decade_counts[decade]
+        pct = count / len(labels) * 100
+        bar = "#" * int(pct / 2)
+        print(f"  {decade}s: {count:3d} ({pct:5.1f}%) {bar}")
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Generate date labels via Gemini Vision API")
-    parser.add_argument("--dry-run", action="store_true", help="Preview only, no API calls")
-    parser.add_argument("--batch-size", type=int, default=10,
-                        help="Number of photos to label (0 = all)")
-    parser.add_argument("--photo-dir", default="raw_photos",
-                        help="Directory containing photos")
-    parser.add_argument("--output", default="data/date_labels.json",
-                        help="Output labels file")
-    parser.add_argument("--model", default="gemini-2.0-flash",
-                        help="Gemini model to use")
+    parser = argparse.ArgumentParser(
+        description="Generate silver date labels via Gemini Vision API",
+        epilog="Get a Gemini API key at: https://aistudio.google.com/apikey",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="Process 3 photos, print results, show cost estimate, then STOP",
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=10,
+        help="Number of photos to label (0 = all, default: 10)",
+    )
+    parser.add_argument(
+        "--photo-dir", default="raw_photos",
+        help="Directory containing photos (default: raw_photos)",
+    )
+    parser.add_argument(
+        "--output", default="rhodesli_ml/data/date_labels.json",
+        help="Output labels file",
+    )
+    parser.add_argument(
+        "--model", default="gemini-3-pro-preview",
+        choices=list(MODEL_COSTS.keys()),
+        help="Gemini model to use (default: gemini-3-pro-preview)",
+    )
+    parser.add_argument(
+        "--max-cost", type=float, default=5.00,
+        help="Maximum estimated cost in USD before halting (default: $5.00)",
+    )
     args = parser.parse_args()
 
     # Load photos
@@ -188,64 +342,103 @@ def main():
     print(f"Already labeled: {len(existing)}")
     print(f"To label: {len(to_label)}")
 
-    if args.batch_size > 0:
-        to_label = to_label[:args.batch_size]
+    # Cost estimate
+    cost_info = MODEL_COSTS.get(args.model, MODEL_COSTS["gemini-3-pro-preview"])
+    total_count = len(to_label) if args.batch_size == 0 else min(args.batch_size, len(to_label))
+    estimated_cost = total_count * cost_info["per_photo"]
 
-    print(f"Batch size: {len(to_label)}")
-    print()
+    print(f"\nModel: {args.model} ({cost_info['note']})")
+    print(f"Estimated cost: ${estimated_cost:.2f} for {total_count} photos")
+    print(f"Cost per photo: ${cost_info['per_photo']:.4f}")
+    print(f"Max cost cap: ${args.max_cost:.2f}")
+
+    if estimated_cost > args.max_cost:
+        print(f"\nWARNING: Estimated cost (${estimated_cost:.2f}) exceeds max-cost (${args.max_cost:.2f})")
+        print(f"Reducing batch to {int(args.max_cost / cost_info['per_photo'])} photos")
+        total_count = int(args.max_cost / cost_info["per_photo"])
+
+    if args.batch_size > 0:
+        to_label = to_label[:min(args.batch_size, total_count)]
+    else:
+        to_label = to_label[:total_count]
 
     if args.dry_run:
-        print("DRY RUN — would label these photos:")
-        for pid, photo in to_label:
-            path = photo.get("path", photo.get("filename", "unknown"))
-            collection = photo.get("collection", "unknown")
-            print(f"  {pid[:12]}... | {collection} | {path}")
-        return
+        to_label = to_label[:3]
+        print(f"\nDRY RUN — processing {len(to_label)} photos:")
+
+    print()
 
     # Check for API key
-    import os
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
         print("ERROR: GEMINI_API_KEY environment variable not set")
-        print("Get a key at: https://aistudio.google.com/apikey")
+        print()
+        print("To get started:")
+        print("  1. Go to https://aistudio.google.com/apikey")
+        print("  2. Create a new API key (free, takes 30 seconds)")
+        print("  3. export GEMINI_API_KEY=your_key_here")
+        print(f"  4. python -m rhodesli_ml.scripts.generate_date_labels --dry-run --model {args.model}")
         sys.exit(1)
 
     # Process photos
     all_labels = list(existing.values())
     labeled_count = 0
     error_count = 0
+    running_cost = 0.0
 
     for i, (pid, photo) in enumerate(to_label):
         path = photo.get("path", photo.get("filename", ""))
         photo_path = Path(args.photo_dir) / Path(path).name
         collection = photo.get("collection", "unknown")
 
-        print(f"[{i+1}/{len(to_label)}] {pid[:12]}... | {collection} | {path}")
+        print(f"[{i+1}/{len(to_label)}] {pid[:16]} | {collection} | {Path(path).name}")
 
-        # Encode photo
-        image_b64 = encode_photo_base64(str(photo_path))
-        if image_b64 is None:
+        if not photo_path.exists():
             print(f"  SKIP: Photo file not found at {photo_path}")
             error_count += 1
             continue
 
+        # Check cost cap
+        running_cost += cost_info["per_photo"]
+        if running_cost > args.max_cost:
+            print(f"\n  HALT: Running cost (${running_cost:.2f}) exceeds max-cost (${args.max_cost:.2f})")
+            break
+
         # Call Gemini
-        result = call_gemini(image_b64, api_key, model=args.model)
+        result = call_gemini(str(photo_path), api_key, model=args.model)
         if result is None:
             error_count += 1
             continue
 
         label = {
             "photo_id": pid,
-            "decade": result["decade"],
-            "confidence": result["confidence"],
             "source": "gemini",
-            "reasoning": result["reasoning"],
+            "model": args.model,
+            "estimated_decade": result.get("estimated_decade"),
+            "best_year_estimate": result.get("best_year_estimate"),
+            "confidence": result.get("confidence", "medium"),
+            "probable_range": result.get("probable_range"),
+            "decade_probabilities": result.get("decade_probabilities", {}),
+            "location_estimate": result.get("location_estimate", ""),
+            "is_color": result.get("is_color", False),
+            "evidence": result.get("evidence", {}),
+            "cultural_lag_applied": result.get("cultural_lag_applied", False),
+            "cultural_lag_note": result.get("cultural_lag_note", ""),
+            "capture_vs_print": result.get("capture_vs_print", ""),
+            "reasoning_summary": result.get("reasoning_summary", ""),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
         all_labels.append(label)
         labeled_count += 1
 
-        print(f"  -> {result['decade']}s ({result['confidence']}): {result['reasoning'][:80]}")
+        # Print concise result
+        year = result.get("best_year_estimate", "?")
+        decade = result.get("estimated_decade", "?")
+        conf = result.get("confidence", "?")
+        loc = result.get("location_estimate", "?")
+        summary = result.get("reasoning_summary", "")[:80]
+        print(f"  -> circa {year} ({decade}s, {conf}) | {loc}")
+        print(f"     {summary}")
 
         # Rate limiting: 1 request per second
         if i < len(to_label) - 1:
@@ -255,9 +448,17 @@ def main():
     if labeled_count > 0:
         save_labels(all_labels, args.output)
 
-    print()
-    print(f"Summary: {labeled_count} labeled, {error_count} errors, "
+    print(f"\nResults: {labeled_count} labeled, {error_count} errors, "
           f"{len(all_labels)} total labels")
+    print(f"Estimated cost: ${running_cost:.2f}")
+
+    if args.dry_run:
+        remaining = len(get_undated_photos(photos)) - len(existing) - labeled_count
+        full_cost = remaining * cost_info["per_photo"]
+        print(f"\nFull run would label {remaining} more photos at ~${full_cost:.2f}")
+
+    # Print summary
+    print_summary(all_labels)
 
 
 if __name__ == "__main__":
