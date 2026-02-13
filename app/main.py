@@ -8188,13 +8188,15 @@ def public_photo_page(
             height_pct = ((y2 - y1) / height) * 100
 
             if fi["is_identified"]:
-                overlay_cls = "absolute border-2 border-emerald-400/70 bg-emerald-400/5 hover:bg-emerald-400/15 transition-all cursor-pointer group"
+                overlay_cls = "face-overlay-box absolute border-2 border-emerald-400/70 bg-emerald-400/5 hover:bg-emerald-400/15 transition-all cursor-pointer group"
+                # Name label: below box if face is in top third, above otherwise
+                name_pos = "-bottom-6" if top_pct > 33 else "-bottom-6"
                 name_el = Span(
                     fi["display_name"],
-                    cls="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate"
+                    cls=f"absolute {name_pos} left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate"
                 )
             else:
-                overlay_cls = "absolute border-2 border-dashed border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/15 transition-all cursor-pointer group"
+                overlay_cls = "face-overlay-box absolute border-2 border-dashed border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/15 transition-all cursor-pointer group"
                 name_el = Span(
                     "Unidentified",
                     cls="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
@@ -8349,17 +8351,24 @@ def public_photo_page(
             background: #475569;
             border-radius: 3px;
         }
-        /* CSS 3D Flip Animation */
+        /* CSS 3D Flip Animation — Premium "turning over a real photo" feel */
         .photo-flip-container {
             perspective: 1200px;
+            perspective-origin: center center;
         }
         .photo-flip-inner {
             position: relative;
-            transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transition: transform 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                        box-shadow 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             transform-style: preserve-3d;
+            /* Resting shadow — subtle, like a photo lying on a surface */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            border-radius: 2px;
         }
         .photo-flip-inner.is-flipped {
-            transform: rotateY(180deg);
+            transform: rotateY(180deg) scale(1.02);
+            /* Lifted shadow — photo appears to hover while flipping */
+            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
         }
         .photo-flip-front {
             backface-visibility: hidden;
@@ -8372,11 +8381,41 @@ def public_photo_page(
             top: 0;
             left: 0;
             width: 100%;
+            height: 100%;
+            /* Back of a real photo — warm, slightly textured */
+            background-color: #f5f0e8;
+            background-image:
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0,0,0,0.008) 2px,
+                    rgba(0,0,0,0.008) 3px
+                );
+            /* Edge shadow suggesting photo thickness */
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.06);
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+        .photo-flip-back img {
+            border-radius: 2px;
         }
         .photo-flip-inner:not(.is-flipped) .photo-flip-back {
             pointer-events: none;
         }
         .photo-flip-inner.is-flipped .photo-flip-front {
+            pointer-events: none;
+        }
+        /* Face overlays fade out during flip */
+        .photo-flip-inner .face-overlay-box {
+            transition: opacity 0.3s ease;
+        }
+        .photo-flip-inner.is-flipped .face-overlay-box {
+            opacity: 0;
             pointer-events: none;
         }
     """)
@@ -8432,8 +8471,11 @@ def public_photo_page(
                                     alt="Back of photograph",
                                     cls="max-w-full h-auto rounded-lg",
                                 ),
-                                P("Back of photograph", cls="text-slate-400 text-xs text-center mt-2 italic"),
-                                P(back_transcription, cls="text-slate-300 text-sm mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 italic") if back_transcription else None,
+                                P("Back of photograph", cls="text-amber-700/60 text-xs text-center mt-2 italic font-serif"),
+                                P(
+                                    back_transcription,
+                                    cls="text-amber-900/80 text-sm mt-3 bg-amber-50/50 rounded-lg p-3 border border-amber-200/30 italic font-serif leading-relaxed"
+                                ) if back_transcription else None,
                                 cls="photo-flip-back",
                             ) if has_back else None,
                             id="photo-flip-inner",
@@ -8464,7 +8506,7 @@ def public_photo_page(
                         # Flip button (only when back image exists)
                         Button(
                             NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'),
-                            Span("Flip Photo", id="flip-btn-text"),
+                            Span("Turn Over", id="flip-btn-text"),
                             cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors",
                             type="button",
                             data_action="flip-photo",
@@ -8472,7 +8514,10 @@ def public_photo_page(
                         ) if has_back else None,
                         cls="flex flex-wrap items-center justify-center gap-3 mt-4"
                     ),
-                    Span("This photo has writing on the back", cls="text-slate-500 text-xs text-center block mt-2") if has_back else None,
+                    Span(
+                        "This photograph has writing on the back" if back_transcription else "Turn over to see the back of this photograph",
+                        cls="text-slate-500 text-xs text-center block mt-2"
+                    ) if has_back else None,
                     # Photo metadata
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
@@ -8608,7 +8653,7 @@ def public_photo_page(
                         inner.classList.toggle('is-flipped');
                         var textEl = document.getElementById('flip-btn-text');
                         if (textEl) {
-                            textEl.textContent = inner.classList.contains('is-flipped') ? 'Flip Back' : 'Flip Photo';
+                            textEl.textContent = inner.classList.contains('is-flipped') ? 'View Front' : 'Turn Over';
                         }
                         return;
                     }

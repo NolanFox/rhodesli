@@ -90,7 +90,7 @@ class TestFlipUIWithBackImage:
         with patch("app.main.get_photo_metadata", return_value=patched):
             response = client.get(f"/photo/{real_photo_id}")
         html = response.text
-        assert "Flip Photo" in html
+        assert "Turn Over" in html
         assert "flip-photo-btn" in html
 
     def test_back_image_rendered(self, client, real_photo_id):
@@ -184,3 +184,84 @@ class TestBackImageMetadata:
         assert result is True
         meta = reg.get_metadata("test-photo")
         assert meta.get("back_transcription") == "Family photo, 1935"
+
+
+class TestPremiumFlipCSS:
+    """Premium flip animation CSS features."""
+
+    def test_perspective_on_container(self, client, real_photo_id):
+        """Flip container has perspective for 3D depth."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        patched = TestFlipUIWithBackImage._patch_photo_with_back(None, real_photo_id)
+        if not patched:
+            pytest.skip("Could not load photo data")
+        with patch("app.main.get_photo_metadata", return_value=patched):
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "perspective: 1200px" in html
+
+    def test_shadow_dynamics(self, client, real_photo_id):
+        """Flip animation includes dynamic shadow on flipped state."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        patched = TestFlipUIWithBackImage._patch_photo_with_back(None, real_photo_id)
+        if not patched:
+            pytest.skip("Could not load photo data")
+        with patch("app.main.get_photo_metadata", return_value=patched):
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Lifted shadow when flipped
+        assert "box-shadow" in html
+        assert "scale(1.02)" in html
+
+    def test_paper_texture_on_back(self, client, real_photo_id):
+        """Back side has paper texture CSS."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        patched = TestFlipUIWithBackImage._patch_photo_with_back(None, real_photo_id)
+        if not patched:
+            pytest.skip("Could not load photo data")
+        with patch("app.main.get_photo_metadata", return_value=patched):
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Paper color
+        assert "#f5f0e8" in html
+
+    def test_face_overlay_fade_css(self, client, real_photo_id):
+        """Face overlays fade out during flip via CSS."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        patched = TestFlipUIWithBackImage._patch_photo_with_back(None, real_photo_id)
+        if not patched:
+            pytest.skip("Could not load photo data")
+        with patch("app.main.get_photo_metadata", return_value=patched):
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "face-overlay-box" in html
+
+    def test_turn_over_button_text(self, client, real_photo_id):
+        """Flip button says 'Turn Over' not 'Flip Photo'."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        patched = TestFlipUIWithBackImage._patch_photo_with_back(None, real_photo_id)
+        if not patched:
+            pytest.skip("Could not load photo data")
+        with patch("app.main.get_photo_metadata", return_value=patched):
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "Turn Over" in html
+        assert "View Front" in html  # In JS handler
+
+    def test_view_front_in_flip_handler(self, client, real_photo_id):
+        """JS handler toggles between 'Turn Over' and 'View Front'."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        patched = TestFlipUIWithBackImage._patch_photo_with_back(None, real_photo_id)
+        if not patched:
+            pytest.skip("Could not load photo data")
+        with patch("app.main.get_photo_metadata", return_value=patched):
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "View Front" in html
+        assert "Turn Over" in html
