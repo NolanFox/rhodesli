@@ -14,6 +14,7 @@ import hashlib
 import io
 import json
 import logging
+import os
 import random
 import re
 import sys
@@ -64,6 +65,9 @@ static_path = Path(__file__).resolve().parent / "static"
 # Data and photos paths come from config, which handles STORAGE_DIR for Railway
 data_path = Path(DATA_DIR) if Path(DATA_DIR).is_absolute() else project_root / DATA_DIR
 photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_root / PHOTOS_DIR
+
+# Canonical site URL for Open Graph tags and sharing
+SITE_URL = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
 
 # No blanket auth — all GET routes are public.
 # Specific POST routes use @require_admin or @require_login decorators.
@@ -5421,7 +5425,28 @@ def landing_page(user=None) -> tuple:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4"))
     if user:
         nav_links.append(Span(user.email.split("@")[0], cls="text-xs text-slate-500 ml-4"))
-    return Title("Rhodesli - Rhodes-Capeluto Family Archive"), style, Div(
+    # Pick a hero image URL for OG (first available featured photo)
+    _og_hero_url = f"{SITE_URL}/static/crops/landing-hero.jpg"
+    _featured = _get_featured_photos(limit=1)
+    if _featured:
+        _hero_url = _featured[0].get("url", "")
+        _og_hero_url = _hero_url if _hero_url.startswith("http") else f"{SITE_URL}{_hero_url}"
+    _og_landing_desc = f"A living archive of {stats['photo_count']} photographs and {stats['named_count']} identified people from the Rhodes-Capeluto family. Help us preserve our shared heritage."
+    return (
+        Title("Rhodesli — Rhodes-Capeluto Family Archive"),
+        Meta(property="og:title", content="Rhodesli — Rhodes-Capeluto Family Archive"),
+        Meta(property="og:description", content=_og_landing_desc),
+        Meta(property="og:image", content=_og_hero_url),
+        Meta(property="og:url", content=SITE_URL),
+        Meta(property="og:type", content="website"),
+        Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary_large_image"),
+        Meta(name="twitter:title", content="Rhodesli — Rhodes-Capeluto Family Archive"),
+        Meta(name="twitter:description", content=_og_landing_desc),
+        Meta(name="twitter:image", content=_og_hero_url),
+        Meta(name="description", content=_og_landing_desc),
+        style,
+        Div(
         Nav(Div(A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"), Div(*nav_links, cls="hidden sm:flex items-center gap-6"), cls="max-w-6xl mx-auto px-6 flex items-center justify-between"), cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50", id="landing-nav"),
         Section(Div(*hero_photos, cls="hero-grid"), Div(cls="hero-overlay absolute inset-0"), Div(H1("Preserving the faces and stories of the Rhodes-Capeluto family", cls="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6 landing-animate max-w-3xl"), P("A living archive of our shared history, brought together by family and powered by careful research. Every photo tells a story. Every face is a connection.", cls="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl landing-animate landing-animate-delay-1"), Div(primary_cta, secondary_cta, cls="flex flex-wrap gap-4 landing-animate landing-animate-delay-2"), cls="absolute inset-0 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 md:pb-16"), cls="relative overflow-hidden pt-16", id="hero"),
         Section(Div(P("The archive so far", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-8 text-center"), Div(Div(Div(str(stats["photo_count"]), cls="text-4xl md:text-5xl font-bold text-white mb-1"), Div("photos preserved", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["named_count"]), cls="text-4xl md:text-5xl font-bold text-emerald-400 mb-1"), Div("people identified", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["total_faces"]), cls="text-4xl md:text-5xl font-bold text-amber-400 mb-1"), Div("faces detected", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), A(Div(str(stats["needs_help"]), cls="text-4xl md:text-5xl font-bold text-blue-400 mb-1"), Div("faces need your help", cls="text-sm text-slate-400"), href="/?section=to_review", cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-colors block"), cls="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"), cls="max-w-4xl mx-auto px-6"), cls="py-16 md:py-20", id="stats"),
@@ -5429,7 +5454,8 @@ def landing_page(user=None) -> tuple:
         Section(Div(H2(f"{stats['needs_help']} faces are waiting to be recognized", cls="text-2xl md:text-3xl font-bold text-white mb-4"), P("If you grew up hearing stories about the family, you might be the one who can put a name to a face. Every identification helps.", cls="text-slate-300 mb-8 max-w-xl mx-auto"), Div(primary_cta, A("Help Identify Faces", href="/?section=to_review", cls="inline-block px-8 py-4 border-2 border-blue-500 text-blue-300 text-lg font-semibold rounded-xl hover:border-blue-300 hover:text-white transition-colors"), cls="flex flex-wrap justify-center gap-4"), cls="text-center max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 bg-gradient-to-b from-slate-800/50 to-transparent border-t border-slate-800", id="cta"),
         Section(Div(H2("About this project", cls="text-xl font-bold text-white mb-4"), P("Rhodesli is a community effort to preserve the photographic heritage of the Rhodes-Capeluto family and the broader Sephardic community of Rhodes. These photos, spanning decades of family life across continents, represent irreplaceable memories that connect us to our shared roots.", cls="text-slate-400 leading-relaxed mb-4"), P("Using careful face detection technology, we have begun the work of identifying the people in these photographs. But technology can only do so much -- we need family members who remember these faces and their stories to help complete the picture.", cls="text-slate-400 leading-relaxed"), cls="max-w-3xl mx-auto px-6"), cls="py-16 md:py-20 border-t border-slate-800", id="about"),
         Footer(Div(Div(Span("Rhodesli", cls="text-lg font-bold text-white"), Span(" -- A family heritage project", cls="text-sm text-slate-500"), cls="flex items-baseline gap-1 flex-wrap"), Div(A("Photos", href="/?section=photos", cls="text-xs text-slate-500 hover:text-slate-300"), Span("|", cls="text-slate-700"), A("People", href="/?section=confirmed", cls="text-xs text-slate-500 hover:text-slate-300"), Span("|", cls="text-slate-700"), A("Review Inbox", href="/?section=to_review", cls="text-xs text-slate-500 hover:text-slate-300"), cls="flex items-center gap-2"), cls="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4"), cls="py-8 border-t border-slate-800"),
-        cls="min-h-screen bg-slate-900")
+        cls="min-h-screen bg-slate-900"),
+    )
 
 
 # =============================================================================
@@ -6022,7 +6048,29 @@ def landing_page(stats, featured_photos):
     # Duplicate names list for seamless scroll effect
     names_display = named_people + named_people if named_people else []
 
-    return Title("Rhodesli -- Jewish Community of Rhodes Photo Archive"), landing_style, landing_script, Div(
+    # OG meta tags for social sharing
+    _og_hero_url = f"{SITE_URL}/static/crops/landing-hero.jpg"
+    if featured_photos:
+        _hero_url = featured_photos[0].get("url", "")
+        _og_hero_url = _hero_url if _hero_url.startswith("http") else f"{SITE_URL}{_hero_url}"
+    _og_desc = f"A living archive of {stats['photo_count']} photographs and {stats['named_count']} identified people from the Jewish community of Rhodes. Help us preserve our shared heritage."
+
+    return (
+        Title("Rhodesli -- Jewish Community of Rhodes Photo Archive"),
+        Meta(property="og:title", content="Rhodesli -- Jewish Community of Rhodes Photo Archive"),
+        Meta(property="og:description", content=_og_desc),
+        Meta(property="og:image", content=_og_hero_url),
+        Meta(property="og:url", content=SITE_URL),
+        Meta(property="og:type", content="website"),
+        Meta(property="og:site_name", content="Rhodesli -- Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary_large_image"),
+        Meta(name="twitter:title", content="Rhodesli -- Jewish Community of Rhodes Photo Archive"),
+        Meta(name="twitter:description", content=_og_desc),
+        Meta(name="twitter:image", content=_og_hero_url),
+        Meta(name="description", content=_og_desc),
+        landing_style,
+        landing_script,
+    Div(
         # Navigation
         Nav(
             Div(
@@ -6306,6 +6354,7 @@ def landing_page(stats, featured_photos):
             cls="border-t border-amber-900/20"
         ),
         cls="min-h-screen landing-bg"
+    ),
     )
 
 
@@ -8080,16 +8129,51 @@ def public_photo_page(
         meta_parts.append(photo["source"])
     meta_line = " · ".join(meta_parts) if meta_parts else None
 
-    # --- OG description for potential future use ---
+    # --- Open Graph meta tag data ---
     total_faces = len(face_info_list)
     identified_count = len(identified_names)
 
-    # --- Build the page ---
+    # Build OG title and description
     page_title = photo.get("collection") or "Historical Photo"
-    if identified_names:
+    og_title = f"{page_title} — Rhodesli Heritage Archive"
+
+    if identified_count > 0:
         names_preview = ", ".join(identified_names[:3])
         if len(identified_names) > 3:
             names_preview += f", and {len(identified_names) - 3} more"
+        if unidentified_count > 0:
+            og_description = f"{identified_count} {'person' if identified_count == 1 else 'people'} identified: {names_preview}. Help identify the remaining {unidentified_count}."
+        else:
+            og_description = f"All {identified_count} {'person' if identified_count == 1 else 'people'} identified: {names_preview}."
+    elif total_faces > 0:
+        og_description = f"{total_faces} {'face' if total_faces == 1 else 'faces'} detected. Can you help identify anyone in this historical photo?"
+    else:
+        og_description = "A photograph from the Jewish heritage of Rhodes. Explore the archive."
+
+    # Photo URL for og:image (must be publicly accessible)
+    og_image_url = photo_url(filename)
+    if not og_image_url.startswith("http"):
+        og_image_url = f"{SITE_URL}{og_image_url}"
+    og_page_url = f"{SITE_URL}/photo/{photo_id}"
+
+    og_meta_tags = (
+        Meta(property="og:title", content=og_title),
+        Meta(property="og:description", content=og_description),
+        Meta(property="og:image", content=og_image_url),
+        Meta(property="og:url", content=og_page_url),
+        Meta(property="og:type", content="article"),
+        Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary_large_image"),
+        Meta(name="twitter:title", content=og_title),
+        Meta(name="twitter:description", content=og_description),
+        Meta(name="twitter:image", content=og_image_url),
+        Meta(name="description", content=og_description),
+    )
+    if has_dimensions:
+        og_meta_tags = og_meta_tags + (
+            Meta(property="og:image:width", content=str(width)),
+            Meta(property="og:image:height", content=str(height)),
+        )
 
     # Navigation
     nav_links = [
@@ -8167,7 +8251,8 @@ def public_photo_page(
     """)
 
     return (
-        Title(f"{page_title} - Rhodesli Heritage Archive"),
+        Title(f"{page_title} — Rhodesli Heritage Archive"),
+        *og_meta_tags,
         page_style,
         Main(
             # Top navigation bar
