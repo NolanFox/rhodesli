@@ -4337,6 +4337,7 @@ def face_card(
     photo_id: str = None,
     show_actions: bool = False,
     show_detach: bool = False,
+    is_admin: bool = True,
 ) -> Div:
     """
     Single face card with optional action buttons.
@@ -4351,6 +4352,7 @@ def face_card(
         photo_id: Photo ID for "View Photo" button
         show_actions: Whether to show action buttons
         show_detach: Whether to show "Detach" button (only when identity has > 1 face)
+        is_admin: Whether to show admin-only info (quality score)
     """
     if quality is None:
         # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
@@ -4418,8 +4420,8 @@ def face_card(
         Div(
             P(
                 f"Quality: {quality:.2f}",
-                cls="text-xs font-data text-slate-400"
-            ),
+                cls="text-xs font-data text-slate-500"
+            ) if is_admin and quality > 0 else None,
             Div(
                 view_photo_btn,
                 full_page_link,
@@ -4767,7 +4769,7 @@ def name_display(identity_id: str, name: str, is_admin: bool = True,
 FACES_PER_PAGE = 8
 
 
-def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach):
+def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_detach, is_admin=True):
     """Build face card elements from a list of face entries."""
     cards = []
     for face_entry in face_entries:
@@ -4788,6 +4790,7 @@ def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_det
                 identity_id=identity_id,
                 photo_id=photo_id,
                 show_detach=can_detach,
+                is_admin=is_admin,
             ))
         else:
             cards.append(Div(
@@ -4876,7 +4879,7 @@ def identity_card(
 
     # Show only first page of faces
     page_entries = all_face_ids[:FACES_PER_PAGE]
-    face_cards = _build_face_cards_for_entries(page_entries, crop_files, identity_id, can_detach)
+    face_cards = _build_face_cards_for_entries(page_entries, crop_files, identity_id, can_detach, is_admin=is_admin)
 
     if not face_cards:
         return None
@@ -8265,19 +8268,22 @@ def public_photo_page(
             width_pct = ((x2 - x1) / width) * 100
             height_pct = ((y2 - y1) / height) * 100
 
+            # Name label positioning: below box if face is near top (avoids clipping),
+            # above box if face is lower (more natural reading position)
+            name_above = top_pct > 15  # Face is below top 15% — put name above
+            name_pos_cls = "-top-6" if name_above else "-bottom-6"
+
             if fi["is_identified"]:
                 overlay_cls = "face-overlay-box absolute border-2 border-emerald-400/70 bg-emerald-400/5 hover:bg-emerald-400/15 transition-all cursor-pointer group"
-                # Name label: below box if face is in top third, above otherwise
-                name_pos = "-bottom-6" if top_pct > 33 else "-bottom-6"
                 name_el = Span(
                     fi["display_name"],
-                    cls=f"absolute {name_pos} left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate"
+                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate"
                 )
             else:
                 overlay_cls = "face-overlay-box absolute border-2 border-dashed border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/15 transition-all cursor-pointer group"
                 name_el = Span(
                     "Unidentified",
-                    cls="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                    cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
                 )
 
             # Click scrolls to person card
@@ -8289,6 +8295,7 @@ def public_photo_page(
                 cls=overlay_cls,
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
                 title=fi["display_name"],
+                id=f"overlay-{fi['identity_id']}" if fi["identity_id"] else None,
                 **{"_": scroll_script} if scroll_script else {},
             )
             face_overlays.append(overlay)
@@ -8319,6 +8326,17 @@ def public_photo_page(
                 cls="text-white hover:text-emerald-300 transition-colors"
             )
 
+        # Click handler: scroll to face overlay and pulse highlight
+        overlay_id = f"overlay-{fi['identity_id']}" if fi["identity_id"] else ""
+        click_script = f"""on click
+            set el to #{overlay_id}
+            if el
+                go to el smoothly
+                add .ring-2 .ring-yellow-400 to el
+                wait 1.5s
+                remove .ring-2 .ring-yellow-400 from el
+            end""" if overlay_id else ""
+
         person_cards.append(
             Div(
                 crop_el,
@@ -8328,7 +8346,9 @@ def public_photo_page(
                     cls="flex flex-col items-center"
                 ),
                 id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
-                cls=f"flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0"
+                cls=f"flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 cursor-pointer hover:bg-slate-700/50 transition-colors",
+                **{"_": click_script} if click_script else {},
+                title="Click to highlight in photo" if overlay_id else None,
             )
         )
 
@@ -8401,6 +8421,9 @@ def public_photo_page(
             position: relative;
             display: inline-block;
             max-width: 100%;
+            /* Padding for face overlay name labels that extend beyond photo edges */
+            padding-top: 1.5rem;
+            overflow: visible;
         }
         .photo-hero-container img.photo-hero {
             max-width: 100%;
