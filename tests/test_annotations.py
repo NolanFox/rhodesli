@@ -552,11 +552,19 @@ class TestAnnotationUndo:
 class TestAuditLog:
     """Tests for audit log and /admin/audit page."""
 
-    def test_audit_page_renders(self, client):
+    def test_audit_page_renders(self, client, tmp_path):
         """Audit log page renders without error."""
-        response = client.get("/admin/audit")
-        assert response.status_code == 200
-        assert "Audit" in response.text
+        audit_path = tmp_path / "audit_log.json"
+        audit_path.write_text(json.dumps({"entries": [
+            {"action": "approved", "annotation_id": "a1",
+             "admin": "admin@test.com",
+             "timestamp": "2026-01-01T00:00:00Z", "details": "Test"}
+        ]}))
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.get("/admin/audit")
+            assert response.status_code == 200
+            assert "Audit" in response.text
 
     def test_approve_creates_audit_entry(self, client, tmp_path):
         """Approving an annotation creates an audit log entry."""
