@@ -1,6 +1,20 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-13 (Session 24b — Guest/Visitor UX Fixes)
+Last updated: 2026-02-13 (Session 25 — Community Contributions v2)
+
+## Session 25 Completed
+- [x] Data backup before schema changes
+- [x] 11 Playwright e2e acceptance tests (SDD Phase 2)
+- [x] Annotation persistence verified working (Priority 1)
+- [x] Suggestion state visibility — inline "You suggested" confirmation (Priority 2)
+- [x] Admin approval face thumbnails (Priority 3)
+- [x] Help Identify UX: triage bar active state + "+N more" clickable (Priority 4)
+- [x] Annotation dedup — duplicate suggestions add confirmations (Priority 5)
+- [x] Admin skip + undo + audit log at /admin/audit (Priority 6)
+- [x] Community confirmation — "I Agree" buttons on existing suggestions (Priority 7)
+- [x] E2e test fix for tab state selector
+- [x] Documentation: CHANGELOG, ROADMAP, BACKLOG, PRD status, todo.md
+- [x] 1878 total tests (1856 baseline + 22 new)
 
 ## Session 24b Completed
 - [x] FIX 1: Welcome modal tests updated — old _welcome_modal → _welcome_banner (10 tests fixed)

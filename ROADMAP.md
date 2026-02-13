@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.31.0 · 1901 tests · 155 photos · 181 faces · 46 confirmed
+Current: v0.32.0 · 1878 tests · 155 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -97,6 +97,10 @@ Goal: Make the archive meaningful beyond face matching.
 - [x] AN-010–AN-014: Identity metadata display + annotations section (2026-02-10)
 - [x] BE-001–BE-006: Non-destructive merge with audit snapshots + annotation merging (2026-02-10)
 - [x] FE-033: Fuzzy name search with Levenshtein distance (2026-02-08)
+- [x] AN-030: Suggestion state visibility — inline "You suggested" confirmation in tag dropdown (2026-02-13)
+- [x] AN-031: Admin approval UX — face thumbnails, skip, undo, audit log at /admin/audit (2026-02-13)
+- [x] AN-032: Annotation dedup — duplicate suggestions add confirmations, community "I Agree" buttons (2026-02-13)
+- [x] FE-092: Triage bar active state + clickable "+N more" in Up Next carousels (2026-02-13)
 
 ## Phase D: ML Feedback & Intelligence
 Goal: Make the system learn from user actions.
@@ -145,6 +149,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-13: v0.32.0 — Community Contributions v2: Suggestion Lifecycle (Session 25): Suggestion state visibility (inline "You suggested" confirmation), admin approval face thumbnails + skip + undo + audit log, triage bar active state, clickable "+N more", annotation dedup with confirmation counting, community "I Agree" buttons. 11 e2e acceptance tests (4 passing, 7 skipped). 22 new unit tests. 1878 tests.
 - [x] 2026-02-13: v0.31.0 — ML Phase 1: Date Estimation Pipeline (Session 23): Complete training pipeline with CORAL ordinal regression on EfficientNet-B0 backbone. Gemini 3 Pro evidence-first date labeling script with cultural lag adjustment. Heritage-specific augmentations (sepia, film grain, scanning artifacts, fading). Regression gate evaluation suite. MLflow experiment tracking. Signal harvester refresh (959 confirmed, 510 rejected, 500 hard negatives). 53 ML tests. Decision provenance AD-039 through AD-045.
 - [x] 2026-02-13: v0.30.0 — Person Pages + Public Browsing (Session 22): Public person page at /person/{id} with hero avatar, face/photo toggle, "appears with" section, OG tags. Public /photos and /people browsing pages (no auth required). Person page links from photo viewer. "Public Page" link on identity cards. Upload pipeline verification tests. Cross-linked navigation (photo→person, person→photo, person→person). 60 new tests. 1848 tests
 - [x] 2026-02-12: v0.29.1 — Sharing Everywhere + The Photo Flip (Session 21): Consistent share buttons across all surfaces (Photos grid, Photo Context, People page, Focus Mode). Premium photo flip animation (perspective, dynamic shadow, lift, paper texture). Admin back image upload + transcription + batch association script. Non-destructive image orientation tools (rotate/flip/invert via CSS transforms). Photo viewer polish (overlay label clipping, admin-only quality scores, person card scroll-to-overlay). 36 new tests. 1769 tests

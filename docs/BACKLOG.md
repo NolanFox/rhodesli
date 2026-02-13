@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 6.9 — February 13, 2026
-**Status**: 1901 tests passing, v0.31.0, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 7.0 — February 13, 2026
+**Status**: 1878 tests passing, v0.32.0, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -138,6 +138,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-079 | Public photos/people browsing | DONE | /photos and /people, no auth, collection filter, sort. 21 tests (2026-02-13) |
 | FE-090 | Person links from photo viewer | DONE | Photo viewer cards link to /person/{id}, "See all photos". 4 tests (2026-02-13) |
 | FE-091 | Public Page link on identity cards | DONE | Confirmed cards have "Public Page" link to /person/{id}. 3 tests (2026-02-13) |
+| FE-092 | Triage bar active state | DONE | Active filter pill gets ring-2 highlight + brighter bg. "+N more" elements are clickable links. 4 tests (2026-02-13) |
 
 ### 2.9 User Analytics & Logging (MEDIUM Priority)
 
@@ -284,6 +285,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | AN-012 | Biographical notes | DONE | _identity_metadata_display() shows bio, birth/death, birthplace on identity cards (2026-02-10) |
 | AN-013 | Relationships | DONE | _identity_annotations_section() with relationship annotation type + display (2026-02-10) |
 | AN-014 | Generation tracking | DONE | Annotation + metadata system supports generation via relationship_notes (2026-02-10) |
+
+### 5.2b Suggestion Lifecycle (HIGH Priority)
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| AN-030 | Suggestion state visibility | DONE | Inline "You suggested: [name]" confirmation in face tag dropdown, replaces transient toast (2026-02-13) |
+| AN-031 | Admin approval UX | DONE | Face thumbnails on approval cards, skip/undo buttons, audit log at /admin/audit (2026-02-13) |
+| AN-032 | Annotation dedup + community confirmation | DONE | Duplicate suggestions add confirmations instead of creating duplicates. "I Agree" buttons on existing suggestions. Confirmation counting on admin cards. (2026-02-13) |
 
 ### 5.3 Genealogical Data (LONG-TERM)
 

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.32.0] - 2026-02-13
+
+### Added
+- **Suggestion state visibility** — After submitting a name suggestion, the face tag dropdown shows inline "You suggested: [name] — Pending review" confirmation instead of just a brief toast. Users can immediately see their suggestion was saved.
+- **Admin approval face thumbnails** — Approval cards now show the actual face crop and source photo context thumbnail, not just raw UUIDs. Cards have `data-annotation-id` for targeting.
+- **Admin skip + undo + audit log** — Skip button defers annotations for later review (shown at bottom of approvals page). Undo button on approved/rejected cards reverts to pending. Full audit log at `/admin/audit` with chronological entries.
+- **Triage bar active state** — Active filter pill gets `ring-2` highlight with brighter background. Inactive pills are visually muted. Clear distinction of current view.
+- **"+N more" clickable** — The "+N more" elements in Up Next carousels are now links that navigate to the full unidentified faces list.
+- **Annotation dedup** — Duplicate suggestions for the same face/name add confirmations to the existing annotation instead of creating duplicates. Same user can't confirm twice or confirm their own submission. Admin cards show confirmation count.
+- **Community confirmation** — Face tag dropdown shows existing pending suggestions with "I Agree" buttons. Other users can confirm suggestions without re-submitting, building community consensus.
+- **Acceptance tests** — 11 Playwright e2e tests for the suggestion lifecycle (4 passing, 7 skipped pending auth wiring).
+- 22 new unit tests covering all new features. Test count: 1856 → 1878.
+
 ## [v0.31.2] - 2026-02-13
 
 ### Fixed
