@@ -159,6 +159,90 @@ class TestTagSearchEndpoint:
                    call_kwargs.kwargs.get("exclude_id") == "current-id"
 
 
+class TestTagSearchNonAdmin:
+    """Tests for non-admin tag-search behavior (annotation-based)."""
+
+    def test_nonadmin_tag_search_returns_suggest_buttons(self, client, auth_enabled, regular_user):
+        """Non-admin tag search returns 'Suggest match' buttons, not merge buttons."""
+        with patch("app.main.load_registry") as mock_reg, \
+             patch("app.main.get_identity_for_face") as mock_get_id, \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main.resolve_face_image_url", return_value=None):
+            mock_get_id.return_value = {"identity_id": "source-id", "name": "Unknown"}
+            registry = MagicMock()
+            registry.search_identities.return_value = [
+                {"identity_id": "id-1", "name": "Leon Capeluto", "face_count": 5, "preview_face_id": "f1"},
+            ]
+            mock_reg.return_value = registry
+
+            resp = client.get("/api/face/tag-search?face_id=test-face&q=leon")
+            html = resp.text
+
+            assert "Leon Capeluto" in html
+            assert "Suggest match" in html
+            # Should use annotation endpoint, NOT direct merge
+            assert "/api/annotations/submit" in html
+            assert "/api/face/tag?" not in html
+
+    def test_nonadmin_create_shows_suggest_label(self, client, auth_enabled, regular_user):
+        """Non-admin 'Create' button says 'Suggest' and submits annotation."""
+        with patch("app.main.load_registry") as mock_reg, \
+             patch("app.main.get_identity_for_face") as mock_get_id, \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main.resolve_face_image_url", return_value=None):
+            mock_get_id.return_value = {"identity_id": "source-id", "name": "Unknown"}
+            registry = MagicMock()
+            registry.search_identities.return_value = []
+            mock_reg.return_value = registry
+
+            resp = client.get("/api/face/tag-search?face_id=test-face&q=Sarina+Benatar")
+            html = resp.text
+
+            assert 'Suggest &quot;Sarina Benatar&quot;' in html or 'Suggest "Sarina Benatar"' in html
+            assert "Submit for review" in html
+            assert "/api/annotations/submit" in html
+            assert "/api/face/create-identity" not in html
+
+    def test_admin_tag_search_still_returns_merge_buttons(self, client, auth_disabled):
+        """Admin tag search returns direct merge buttons (auth disabled = admin)."""
+        with patch("app.main.load_registry") as mock_reg, \
+             patch("app.main.get_identity_for_face", return_value=None), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main.resolve_face_image_url", return_value=None):
+            registry = MagicMock()
+            registry.search_identities.return_value = [
+                {"identity_id": "id-1", "name": "Leon Capeluto", "face_count": 5, "preview_face_id": "f1"},
+            ]
+            mock_reg.return_value = registry
+
+            resp = client.get("/api/face/tag-search?face_id=test-face&q=leon")
+            html = resp.text
+
+            assert "Leon Capeluto" in html
+            assert "/api/face/tag?" in html
+            assert "Suggest match" not in html
+
+    def test_anonymous_tag_search_returns_suggest_buttons(self, client, auth_enabled, no_user):
+        """Anonymous user tag search returns suggestion buttons (triggers login on submit)."""
+        with patch("app.main.load_registry") as mock_reg, \
+             patch("app.main.get_identity_for_face") as mock_get_id, \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main.resolve_face_image_url", return_value=None):
+            mock_get_id.return_value = {"identity_id": "source-id", "name": "Unknown"}
+            registry = MagicMock()
+            registry.search_identities.return_value = [
+                {"identity_id": "id-1", "name": "Leon Capeluto", "face_count": 5, "preview_face_id": "f1"},
+            ]
+            mock_reg.return_value = registry
+
+            resp = client.get("/api/face/tag-search?face_id=test-face&q=leon")
+            html = resp.text
+
+            assert "Leon Capeluto" in html
+            assert "Suggest match" in html
+            assert "/api/annotations/submit" in html
+
+
 class TestTagMergeEndpoint:
     """Tests for the /api/face/tag POST endpoint."""
 
