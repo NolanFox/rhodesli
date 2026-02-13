@@ -15453,9 +15453,15 @@ def get(sess=None):
         a for a in annotations["annotations"].values()
         if a.get("status") in ("pending", "pending_unverified")
     ]
+    skipped = [
+        a for a in annotations["annotations"].values()
+        if a.get("status") == "skipped"
+    ]
     # Sort: authenticated ("pending") before guest ("pending_unverified"), newest first within each group
     pending.sort(key=lambda a: a.get("submitted_at", ""), reverse=True)
     pending.sort(key=lambda a: 0 if a.get("status") == "pending" else 1)
+    # Append skipped at the end so they appear below pending
+    pending = pending + sorted(skipped, key=lambda a: a.get("submitted_at", ""), reverse=True)
 
     rows = []
     crop_files = get_crop_files()
@@ -15540,33 +15546,80 @@ def get(sess=None):
             except (json.JSONDecodeError, KeyError):
                 pass  # Fall through to generic rendering
 
+        # Build face thumbnail for identity-targeted annotations
+        face_thumb = None
+        photo_thumb = None
+        target_name = f"{a['target_type']} {a['target_id'][:12]}..."
+        if a["target_type"] == "identity":
+            try:
+                identity = registry.get_identity(a["target_id"])
+            except KeyError:
+                identity = None
+            if identity:
+                target_name = ensure_utf8_display(identity.get("name", "")) or f"Identity {a['target_id'][:8]}"
+                faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+                for fid in faces:
+                    url = resolve_face_image_url(fid, crop_files)
+                    if url:
+                        face_thumb = Img(src=url, alt=target_name,
+                                         cls="w-16 h-16 object-cover rounded border border-slate-600")
+                        # Get photo thumbnail for context
+                        photo_id = get_photo_id_for_face(fid)
+                        if photo_id:
+                            photo = _photo_cache.get(photo_id, {}) if _photo_cache else {}
+                            if photo.get("path"):
+                                photo_thumb = Img(
+                                    src=get_photo_url(photo["path"]),
+                                    alt="Photo context",
+                                    cls="w-12 h-12 object-cover rounded border border-slate-700 opacity-80"
+                                )
+                        break
+
         rows.append(Div(
             Div(
-                Span(a["type"].replace("_", " ").title(), cls="text-sm font-bold text-white"),
-                Span(f"for {a['target_type']} {a['target_id'][:12]}...",
-                      cls="text-xs text-slate-400 ml-2"),
-                guest_badge,
-                cls="flex items-center"
-            ),
-            P(f'Suggestion: "{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
-            P(f'Confidence: {a["confidence"]} | By: {a["submitted_by"]}',
-              cls="text-xs text-slate-500"),
-            P(f'Reason: {a.get("reason", "none")}', cls="text-xs text-slate-500") if a.get("reason") else None,
-            Div(
-                Button("Approve",
-                       hx_post=f"/admin/approvals/{ann_id}/approve",
-                       hx_target=f"#annotation-{ann_id}",
-                       hx_swap="outerHTML",
-                       cls="px-3 py-1 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-500"),
-                Button("Reject",
-                       hx_post=f"/admin/approvals/{ann_id}/reject",
-                       hx_target=f"#annotation-{ann_id}",
-                       hx_swap="outerHTML",
-                       cls="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-500"),
-                cls="flex gap-2 mt-3"
+                # Thumbnails on the left
+                Div(
+                    face_thumb or Div(cls="w-16 h-16 bg-slate-700 rounded flex items-center justify-center text-slate-500 text-2xl"),
+                    photo_thumb,
+                    cls="flex gap-2 items-start flex-shrink-0"
+                ) if face_thumb else None,
+                # Details on the right
+                Div(
+                    Div(
+                        Span(a["type"].replace("_", " ").title(), cls="text-sm font-bold text-white"),
+                        guest_badge,
+                        cls="flex items-center"
+                    ),
+                    P(target_name, cls="text-xs text-slate-400") if a["target_type"] == "identity" else None,
+                    P(f'"{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
+                    P(f'Confidence: {a["confidence"]} | By: {a["submitted_by"]}',
+                      cls="text-xs text-slate-500"),
+                    P(f'Reason: {a.get("reason", "none")}', cls="text-xs text-slate-500") if a.get("reason") else None,
+                    Div(
+                        Button("Approve",
+                               hx_post=f"/admin/approvals/{ann_id}/approve",
+                               hx_target=f"#annotation-{ann_id}",
+                               hx_swap="outerHTML",
+                               cls="px-3 py-1 text-sm bg-emerald-600 text-white rounded hover:bg-emerald-500"),
+                        Button("Skip",
+                               hx_post=f"/admin/approvals/{ann_id}/skip",
+                               hx_target=f"#annotation-{ann_id}",
+                               hx_swap="outerHTML",
+                               cls="px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-500"),
+                        Button("Reject",
+                               hx_post=f"/admin/approvals/{ann_id}/reject",
+                               hx_target=f"#annotation-{ann_id}",
+                               hx_swap="outerHTML",
+                               cls="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-500"),
+                        cls="flex gap-2 mt-3"
+                    ),
+                    cls="flex-1"
+                ),
+                cls="flex gap-4"
             ),
             cls="bg-slate-800 rounded-lg p-4 border border-slate-700",
-            id=f"annotation-{ann_id}"
+            id=f"annotation-{ann_id}",
+            data_annotation_id=ann_id,
         ))
 
     if not rows:
@@ -15578,8 +15631,12 @@ def get(sess=None):
     return Title("Annotation Approvals — Rhodesli"), Div(
         Div(
             H1("Pending Approvals", cls="text-2xl font-bold text-white"),
-            A("Back to Dashboard", href="/?section=to_review",
-              cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            Div(
+                A("Audit Log", href="/admin/audit",
+                  cls="text-sm text-slate-400 hover:text-slate-300 mr-4"),
+                A("Back to Dashboard", href="/?section=to_review",
+                  cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            ),
             cls="flex items-center justify-between mb-6"
         ),
         Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
@@ -15662,10 +15719,22 @@ def post(ann_id: str, sess=None):
         except (json.JSONDecodeError, KeyError):
             merge_label = "Merge executed"
 
+    _log_audit("approved", ann_id, user.email if user else "admin",
+               merge_label or ann["value"])
+
+    status_label = "APPROVED" if ann["type"] != "merge_suggestion" else "MERGED"
     return Div(
-        Span("APPROVED" if ann["type"] != "merge_suggestion" else "MERGED", cls="text-sm font-bold text-emerald-400"),
-        Span(f' — {merge_label or ann["value"]} (suggested by {ann["submitted_by"]})', cls="text-sm text-slate-400"),
-        cls="bg-emerald-900/20 rounded-lg p-4 border border-emerald-700",
+        Div(
+            Span(status_label, cls="text-sm font-bold text-emerald-400"),
+            Span(f' — {merge_label or ann["value"]} (suggested by {ann["submitted_by"]})', cls="text-sm text-slate-400"),
+            cls="flex-1"
+        ),
+        Button("Undo",
+               hx_post=f"/admin/approvals/{ann_id}/undo",
+               hx_target=f"#annotation-{ann_id}",
+               hx_swap="outerHTML",
+               cls="px-3 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-500 ml-2 flex-shrink-0"),
+        cls="bg-emerald-900/20 rounded-lg p-4 border border-emerald-700 flex items-center",
         id=f"annotation-{ann_id}"
     )
 
@@ -15794,11 +15863,164 @@ def post(ann_id: str, sess=None):
     ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
     _save_annotations(annotations)
 
+    _log_audit("rejected", ann_id, user.email if user else "admin", ann["value"])
+
     return Div(
-        Span("REJECTED", cls="text-sm font-bold text-red-400"),
-        Span(f' — "{ann["value"]}" by {ann["submitted_by"]}', cls="text-sm text-slate-400"),
-        cls="bg-red-900/20 rounded-lg p-4 border border-red-700",
+        Div(
+            Span("REJECTED", cls="text-sm font-bold text-red-400"),
+            Span(f' — "{ann["value"]}" by {ann["submitted_by"]}', cls="text-sm text-slate-400"),
+            cls="flex-1"
+        ),
+        Button("Undo",
+               hx_post=f"/admin/approvals/{ann_id}/undo",
+               hx_target=f"#annotation-{ann_id}",
+               hx_swap="outerHTML",
+               cls="px-3 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-500 ml-2 flex-shrink-0"),
+        cls="bg-red-900/20 rounded-lg p-4 border border-red-700 flex items-center",
         id=f"annotation-{ann_id}"
+    )
+
+
+@rt("/admin/approvals/{ann_id}/skip")
+def post(ann_id: str, sess=None):
+    """Skip an annotation for later review."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    user = get_current_user(sess)
+    annotations = _load_annotations()
+    ann = annotations["annotations"].get(ann_id)
+    if not ann:
+        return Response(to_xml(toast("Annotation not found.", "error")), status_code=404,
+                        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"})
+
+    from datetime import datetime, timezone
+    ann["status"] = "skipped"
+    ann["reviewed_by"] = user.email if user else "admin"
+    ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    _save_annotations(annotations)
+
+    _log_audit("skipped", ann_id, user.email if user else "admin", ann["value"])
+
+    return Div(
+        Div(
+            Span("SKIPPED", cls="text-sm font-bold text-amber-400"),
+            Span(f' — "{ann["value"]}" by {ann["submitted_by"]}', cls="text-sm text-slate-400"),
+            cls="flex-1"
+        ),
+        Button("Undo",
+               hx_post=f"/admin/approvals/{ann_id}/undo",
+               hx_target=f"#annotation-{ann_id}",
+               hx_swap="outerHTML",
+               cls="px-3 py-1 text-xs bg-slate-600 text-white rounded hover:bg-slate-500 ml-2 flex-shrink-0"),
+        cls="bg-amber-900/20 rounded-lg p-4 border border-amber-700 flex items-center",
+        id=f"annotation-{ann_id}"
+    )
+
+
+@rt("/admin/approvals/{ann_id}/undo")
+def post(ann_id: str, sess=None):
+    """Undo a previous approve/reject/skip — reverts annotation to pending."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    user = get_current_user(sess)
+    annotations = _load_annotations()
+    ann = annotations["annotations"].get(ann_id)
+    if not ann:
+        return Response(to_xml(toast("Annotation not found.", "error")), status_code=404,
+                        headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"})
+
+    from datetime import datetime, timezone
+    old_status = ann["status"]
+    ann["status"] = "pending" if ann.get("submitted_by") != "anonymous" else "pending_unverified"
+    ann["reviewed_by"] = None
+    ann["reviewed_at"] = None
+    _save_annotations(annotations)
+
+    _log_audit("undone", ann_id, user.email if user else "admin",
+               f"Reverted from {old_status} to {ann['status']}")
+
+    # Return the annotation back to its original pending card form
+    # Redirect browser to refresh the approvals page
+    return Response("", status_code=200,
+                    headers={"HX-Redirect": "/admin/approvals"})
+
+
+def _log_audit(action: str, annotation_id: str, admin: str, details: str = ""):
+    """Append an entry to the audit log."""
+    from datetime import datetime, timezone
+    audit_path = data_path / "audit_log.json"
+
+    audit = {"entries": []}
+    if audit_path.exists():
+        try:
+            audit = json.loads(audit_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, ValueError):
+            audit = {"entries": []}
+
+    audit["entries"].append({
+        "action": action,
+        "annotation_id": annotation_id,
+        "admin": admin,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "details": details,
+    })
+
+    audit_path.write_text(json.dumps(audit, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+@rt("/admin/audit")
+def get(sess=None):
+    """Admin audit log — shows all annotation review actions."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    audit_path = data_path / "audit_log.json"
+    entries = []
+    if audit_path.exists():
+        try:
+            audit = json.loads(audit_path.read_text(encoding="utf-8"))
+            entries = audit.get("entries", [])
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Most recent first
+    entries = list(reversed(entries))
+
+    rows = []
+    for entry in entries[:100]:
+        action_colors = {
+            "approved": "text-emerald-400",
+            "rejected": "text-red-400",
+            "skipped": "text-amber-400",
+            "undone": "text-slate-400",
+        }
+        color = action_colors.get(entry.get("action", ""), "text-slate-400")
+        rows.append(Div(
+            Span(entry.get("action", "unknown").upper(), cls=f"text-sm font-bold {color} w-24"),
+            Span(entry.get("details", "")[:80], cls="text-sm text-slate-300 flex-1 truncate"),
+            Span(entry.get("admin", ""), cls="text-xs text-slate-500 w-40 text-right"),
+            Span(entry.get("timestamp", "")[:19].replace("T", " "), cls="text-xs text-slate-600 w-36 text-right"),
+            cls="flex items-center gap-2 py-2 border-b border-slate-800"
+        ))
+
+    if not rows:
+        rows = [P("No audit entries yet.", cls="text-slate-400 text-center py-12")]
+
+    return Title("Audit Log — Rhodesli"), Div(
+        Div(
+            H1("Audit Log", cls="text-2xl font-bold text-white"),
+            A("Back to Approvals", href="/admin/approvals",
+              cls="text-sm text-indigo-400 hover:text-indigo-300"),
+            cls="flex items-center justify-between mb-6"
+        ),
+        P(f"{len(entries)} audit entries", cls="text-sm text-slate-400 mb-4"),
+        Div(*rows, cls="space-y-0"),
+        cls="max-w-4xl mx-auto p-6"
     )
 
 

@@ -186,6 +186,383 @@ class TestAnnotationApproval:
         assert saved["annotations"][ann_id]["status"] == "rejected"
 
 
+class TestAnnotationSkip:
+    """Tests for POST /admin/approvals/{ann_id}/skip."""
+
+    def test_skip_changes_status(self, client, tmp_path):
+        """Skipping an annotation sets status to 'skipped'."""
+        ann_id = "test-ann-skip"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "id-1",
+                    "value": "Some Name",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/skip")
+            assert response.status_code == 200
+            assert "SKIPPED" in response.text
+
+        saved = json.loads(ann_path.read_text())
+        assert saved["annotations"][ann_id]["status"] == "skipped"
+
+    def test_skip_response_has_undo_button(self, client, tmp_path):
+        """Skip response includes an Undo button."""
+        ann_id = "test-ann-skip-2"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "caption",
+                    "target_type": "photo",
+                    "target_id": "photo-1",
+                    "value": "Test",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/skip")
+            assert "Undo" in response.text
+
+
+class TestAnnotationUndo:
+    """Tests for POST /admin/approvals/{ann_id}/undo."""
+
+    def test_undo_reverts_to_pending(self, client, tmp_path):
+        """Undoing an approved annotation reverts it to pending."""
+        ann_id = "test-ann-undo"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "id-1",
+                    "value": "Some Name",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "approved",
+                    "reviewed_by": "admin@test.com",
+                    "reviewed_at": "2026-02-10T01:00:00Z",
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/undo",
+                                   follow_redirects=False)
+            assert response.status_code == 200
+
+        saved = json.loads(ann_path.read_text())
+        assert saved["annotations"][ann_id]["status"] == "pending"
+        assert saved["annotations"][ann_id]["reviewed_by"] is None
+
+    def test_undo_anonymous_reverts_to_pending_unverified(self, client, tmp_path):
+        """Undoing a guest annotation reverts to pending_unverified."""
+        ann_id = "test-ann-undo-guest"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": "id-1",
+                    "value": "Guest bio",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "anonymous",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "rejected",
+                    "reviewed_by": "admin@test.com",
+                    "reviewed_at": "2026-02-10T01:00:00Z",
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/undo",
+                                   follow_redirects=False)
+            assert response.status_code == 200
+
+        saved = json.loads(ann_path.read_text())
+        assert saved["annotations"][ann_id]["status"] == "pending_unverified"
+
+
+class TestAuditLog:
+    """Tests for audit log and /admin/audit page."""
+
+    def test_audit_page_renders(self, client):
+        """Audit log page renders without error."""
+        response = client.get("/admin/audit")
+        assert response.status_code == 200
+        assert "Audit" in response.text
+
+    def test_approve_creates_audit_entry(self, client, tmp_path):
+        """Approving an annotation creates an audit log entry."""
+        ann_id = "test-ann-audit"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "caption",
+                    "target_type": "photo",
+                    "target_id": "photo-1",
+                    "value": "Test caption",
+                    "confidence": "certain",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+        audit_path = tmp_path / "audit_log.json"
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/approve")
+            assert response.status_code == 200
+
+        assert audit_path.exists()
+        audit = json.loads(audit_path.read_text())
+        assert len(audit["entries"]) == 1
+        assert audit["entries"][0]["action"] == "approved"
+        assert audit["entries"][0]["annotation_id"] == ann_id
+
+    def test_reject_creates_audit_entry(self, client, tmp_path):
+        """Rejecting an annotation creates an audit log entry."""
+        ann_id = "test-ann-audit-reject"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": "id-1",
+                    "value": "Test bio",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+        audit_path = tmp_path / "audit_log.json"
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/reject")
+            assert response.status_code == 200
+
+        assert audit_path.exists()
+        audit = json.loads(audit_path.read_text())
+        assert len(audit["entries"]) == 1
+        assert audit["entries"][0]["action"] == "rejected"
+
+
+class TestApprovalCardThumbnails:
+    """Tests for face thumbnails on admin approval cards."""
+
+    def test_approval_response_includes_undo_button(self, client, tmp_path):
+        """Approve response includes Undo button."""
+        ann_id = "test-thumb-1"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "caption",
+                    "target_type": "photo",
+                    "target_id": "photo-1",
+                    "value": "Test",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/approve")
+            assert "Undo" in response.text
+            assert f"/admin/approvals/{ann_id}/undo" in response.text
+
+    def test_reject_response_includes_undo_button(self, client, tmp_path):
+        """Reject response includes Undo button."""
+        ann_id = "test-thumb-2"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": "id-1",
+                    "value": "Test bio",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.post(f"/admin/approvals/{ann_id}/reject")
+            assert "Undo" in response.text
+
+    def test_approvals_page_has_skip_button(self, client, tmp_path):
+        """Approval cards include a Skip button."""
+        ann_id = "test-skip-btn"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "caption",
+                    "target_type": "photo",
+                    "target_id": "photo-1",
+                    "value": "Test",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.get("/admin/approvals")
+            assert "Skip" in response.text
+            assert f"/admin/approvals/{ann_id}/skip" in response.text
+
+    def test_approvals_page_has_audit_link(self, client):
+        """Approvals page includes a link to the audit log."""
+        response = client.get("/admin/approvals")
+        assert response.status_code == 200
+        assert "/admin/audit" in response.text
+        assert "Audit Log" in response.text
+
+    def test_approval_card_has_data_annotation_id(self, client, tmp_path):
+        """Approval cards include data-annotation-id attribute for e2e testing."""
+        ann_id = "test-data-attr"
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                ann_id: {
+                    "annotation_id": ann_id,
+                    "type": "bio",
+                    "target_type": "identity",
+                    "target_id": "id-1",
+                    "value": "Test",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        from app.main import _invalidate_annotations_cache
+        _invalidate_annotations_cache()
+
+        with patch("app.main.data_path", tmp_path):
+            response = client.get("/admin/approvals")
+            assert f'data-annotation-id="{ann_id}"' in response.text
+
+
 class TestMyContributions:
     """Tests for /my-contributions page."""
 
