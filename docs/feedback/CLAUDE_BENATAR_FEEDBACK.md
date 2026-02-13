@@ -31,6 +31,15 @@
 | 12 | Submitted Sarina2.jpg via upload — "3 people, can't identify the one I know" | DONE | Photo processed: 3 faces detected, uploaded to R2, live on production. No ML matches at threshold 1.05 (low-confidence matches to Boulissa Pizanti, Rosa Sedikaro, Big Leon at 1.24-1.31). |
 | 13 | Upload flow lacks per-face annotation during submission | BACKLOG | Benatar wants to annotate which person they know during upload. Current flow only captures collection/source metadata. Would need face detection preview + name input fields. |
 
+## Identification UX Triage (Feb 13, 2026)
+
+| # | Feedback Item | Status | Resolution |
+|---|--------------|--------|------------|
+| 14 | "I can't create..." — face tag dropdown non-functional for non-admin | DONE | Tag dropdown endpoints (/api/face/tag, /api/face/create-identity) were admin-only. Non-admin users now see "Suggest match" and "Suggest [name]" buttons that submit annotations for review. |
+| 15 | "I go to face card... Nothing there either" — navigation after tagging | DONE | "Go to Face Card" button links to correct identity section. Was working but confusing after failed tag attempt. |
+| 16 | "I cannot merge her with your pictures" — merge is admin-only | DONE | Non-admin users now get suggestion workflow via annotation system. Same UX (type name, click), but creates annotation for admin review instead of direct merge. |
+| 17 | Share button opens OS share sheet instead of copying URL | DONE | Share button now copies to clipboard first with "Link copied!" toast. Mobile still gets native share sheet after copy. |
+
 ## Key Takeaways
 
 1. **Quality is the #1 complaint** — both image quality and browsing experience quality. The composite quality score + best-face selection addresses the browsing side. True image enhancement requires ML infrastructure (GFPGAN integration) without breaking face matching.

@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.31.1] - 2026-02-13
+
+### Fixed
+- **Share button copies to clipboard first** — On desktop, the share button now always copies the URL to clipboard with "Link copied!" toast. Previously opened the OS share sheet (confusing on desktop). Mobile still gets native share sheet after copy.
+- **Face tag dropdown works for non-admin users** — The "click face → type name → select" flow was admin-only: clicking any result returned 401/403. Now non-admin users see "Suggest match" and "Suggest [name]" buttons that submit name_suggestion annotations for admin review. Anonymous users get the guest-or-login modal.
+
+### Changed
+- Tag dropdown placeholder: "Type name to tag..." (admin) vs "Who is this person?" (non-admin)
+- 5 new tests (non-admin tag search, admin regression, anonymous flow, dropdown placeholders). Test count: 1846 → 1851.
+
 ## [v0.31.0] - 2026-02-13
 
 ### Added
