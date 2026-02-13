@@ -24,6 +24,13 @@
 | 10 | Need to enhance full pictures | PARTIAL | Enhancement toggle is future UX work. Quality scoring helps now by showing best available crop. |
 | 11 | Full picture should be prominent | DONE | "View Photo" links everywhere. Click any face crop to see full photo context. Photo view with face overlays. |
 
+## Community Submission (Feb 13, 2026)
+
+| # | Feedback Item | Status | Resolution |
+|---|--------------|--------|------------|
+| 12 | Submitted Sarina2.jpg via upload — "3 people, can't identify the one I know" | DONE | Photo processed: 3 faces detected, uploaded to R2, live on production. No ML matches at threshold 1.05 (low-confidence matches to Boulissa Pizanti, Rosa Sedikaro, Big Leon at 1.24-1.31). |
+| 13 | Upload flow lacks per-face annotation during submission | BACKLOG | Benatar wants to annotate which person they know during upload. Current flow only captures collection/source metadata. Would need face detection preview + name input fields. |
+
 ## Key Takeaways
 
 1. **Quality is the #1 complaint** — both image quality and browsing experience quality. The composite quality score + best-face selection addresses the browsing side. True image enhancement requires ML infrastructure (GFPGAN integration) without breaking face matching.

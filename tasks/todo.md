@@ -1,6 +1,20 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-13 (Session 23 — ML Phase 1: Date Estimation Pipeline)
+Last updated: 2026-02-13 (Session 23b — Push + Benatar Upload Processing)
+
+## Session 23b Completed
+- [x] Push session 23 ML pipeline (4 commits) to origin/main
+- [x] Download Benatar community submission (Sarina2.jpg, Job cf8d0446)
+- [x] Face detection: 3 faces extracted, 3 INBOX identities created
+- [x] Clustering: no strong matches (best LOW at 1.24 distance)
+- [x] Upload photo + 3 crops to R2
+- [x] Push data to production (156 photos, 373 identities)
+- [x] Fix ingest_inbox.py absolute path bug → relative paths
+- [x] Regression test for relative path invariant
+- [x] Clear staging, mark job processed
+- [x] Production verification: 156 photos, Community Submissions collection visible
+- [x] Update Benatar feedback tracker with submission status
+- [x] 1827 total tests (1826 app + 1 new)
 
 ## Session 23 Completed
 - [x] Decision provenance: DATE_ESTIMATION_DECISIONS.md + AD-039 through AD-045
