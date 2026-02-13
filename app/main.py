@@ -2879,10 +2879,14 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                     P(name, cls="text-lg font-semibold text-white mt-2"),
                     P(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400"),
                 ),
-                A("View Photo", href="#", cls="text-xs text-indigo-400 hover:text-indigo-300 mt-1 inline-block",
-                  hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}" if main_photo_id else None,
-                  hx_target="#photo-modal-content",
-                  **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
+                Div(
+                    A("View Photo", href="#", cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
+                      hx_get=f"/photo/{main_photo_id}/partial?face={main_face_id}&identity_id={identity_id}",
+                      hx_target="#photo-modal-content",
+                      **{"_": "on click remove .hidden from #photo-modal"},
+                    ),
+                    share_button(main_photo_id, style="link", label="Share"),
+                    cls="flex items-center gap-3 mt-1",
                 ) if main_photo_id else None,
                 # Additional faces
                 Div(*face_previews, cls="flex gap-2 mt-3") if face_previews else None,
@@ -2962,7 +2966,11 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str):
         return None
 
     return Div(
-        Div("Photo Context", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
+        Div(
+            Span("Photo Context", cls="text-xs font-medium text-slate-400 uppercase tracking-wide"),
+            share_button(photo_id, style="link", label="Share"),
+            cls="flex items-center justify-between mb-2",
+        ),
         Div(
             # Small photo thumbnail
             Button(
@@ -3618,11 +3626,15 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                         f"\U0001F4C1 {photo['source']}",
                         cls="text-xs text-slate-500 truncate"
                     ) if photo["source"] else None,
-                    A(
-                        "Full Page",
-                        href=f"/photo/{photo['photo_id']}",
-                        cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline",
-                        target="_blank",
+                    Span(
+                        share_button(photo['photo_id'], style="icon"),
+                        A(
+                            "Open",
+                            href=f"/photo/{photo['photo_id']}",
+                            cls="text-[10px] text-indigo-400 hover:text-indigo-300 underline ml-1",
+                            target="_blank",
+                        ),
+                        cls="flex items-center gap-0.5 flex-shrink-0",
                         **{"_": "on click halt the event's bubbling"},
                     ),
                     cls="flex items-center justify-between mt-0.5"
@@ -4205,6 +4217,47 @@ def era_badge(era: str) -> Span:
     )
 
 
+# Share icon SVG (three connected dots) — used everywhere for consistency
+_SHARE_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
+
+
+def share_button(photo_id: str, style: str = "icon", label: str = "Share"):
+    """
+    Reusable share button that copies the public photo URL.
+    Uses data-action="share-photo" for global event delegation.
+
+    style: "icon" (compact icon-only), "button" (icon + text), "link" (text link style)
+    """
+    url = f"/photo/{photo_id}"
+    if style == "button":
+        return Button(
+            NotStr(f'<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'),
+            label,
+            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+            type="button",
+            data_action="share-photo",
+            data_share_url=url,
+        )
+    elif style == "link":
+        return Button(
+            NotStr(_SHARE_ICON_SVG),
+            f" {label}",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1",
+            type="button",
+            data_action="share-photo",
+            data_share_url=url,
+        )
+    else:  # "icon" — compact, for grid overlays and card corners
+        return Button(
+            NotStr(_SHARE_ICON_SVG),
+            cls="p-1.5 bg-black/60 hover:bg-indigo-600 text-white rounded transition-colors",
+            type="button",
+            data_action="share-photo",
+            data_share_url=url,
+            title="Share this photo",
+        )
+
+
 def face_card(
     face_id: str,
     crop_url: str,
@@ -4256,14 +4309,12 @@ def face_card(
             type="button",
         )
 
-    # Full-page link to public photo viewer
+    # Share button for public photo viewer
     full_page_link = None
     if photo_id:
-        full_page_link = A(
-            "Full Page",
-            href=f"/photo/{photo_id}",
-            cls="text-xs text-indigo-400 hover:text-indigo-300 underline mt-1 ml-2",
-            target="_blank",
+        full_page_link = Span(
+            share_button(photo_id, style="link", label="Share"),
+            cls="mt-1 ml-2",
         )
 
     # Detach button (only if show_detach is True)
@@ -7139,6 +7190,44 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 }
             })();
         """),
+        # Global share utility functions (used by share buttons on all pages)
+        Script("""
+            function _sharePhotoUrl(url) {
+                if (navigator.share) {
+                    navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function(err) {
+                        if (err.name !== 'AbortError') { _copyAndToast(url); }
+                    });
+                } else {
+                    _copyAndToast(url);
+                }
+            }
+            function _copyAndToast(url) {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(url).then(function() {
+                        _showShareToast('Link copied!');
+                    }).catch(function() { _showShareToast('Could not copy link'); });
+                } else {
+                    var input = document.createElement('input');
+                    input.value = url;
+                    document.body.appendChild(input);
+                    input.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(input);
+                    _showShareToast('Link copied!');
+                }
+            }
+            function _showShareToast(message) {
+                var existing = document.getElementById('share-toast');
+                if (existing) existing.remove();
+                var toast = document.createElement('div');
+                toast.id = 'share-toast';
+                toast.textContent = message;
+                toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                document.body.appendChild(toast);
+                setTimeout(function() { toast.style.opacity = '0'; }, 2000);
+                setTimeout(function() { toast.remove(); }, 2500);
+            }
+        """),
         # Global event delegation for lightbox/photo navigation (BUG-001 fix).
         # ONE listener on document handles all nav clicks and keyboard events.
         # This never needs rebinding because it's on document, not swapped DOM.
@@ -7149,6 +7238,16 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 var btn = e.target.closest('[data-action]');
                 if (!btn) return;
                 var action = btn.getAttribute('data-action');
+
+                // Share photo (used across all surfaces)
+                if (action === 'share-photo') {
+                    var url = btn.getAttribute('data-share-url') || '';
+                    if (url && !url.startsWith('http')) {
+                        url = window.location.origin + url;
+                    }
+                    _sharePhotoUrl(url || window.location.href);
+                    return;
+                }
 
                 // Photo modal prev/next (Photos grid browsing)
                 if (action === 'photo-nav-prev' || action === 'photo-nav-next') {
@@ -7898,12 +7997,16 @@ def photo_view_content(
                     cls="text-slate-300 text-sm font-data font-medium"
                 ),
                 nav_counter,
-                A(
-                    "Open Full Page",
-                    href=f"/photo/{photo_id}",
-                    cls="text-xs text-indigo-400 hover:text-indigo-300 underline ml-auto",
-                    target="_blank",
-                    rel="noopener",
+                Span(
+                    share_button(photo_id, style="link", label="Share"),
+                    A(
+                        "Open",
+                        href=f"/photo/{photo_id}",
+                        cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
+                        target="_blank",
+                        rel="noopener",
+                    ),
+                    cls="ml-auto flex items-center gap-3",
                 ),
                 cls="flex items-center gap-2"
             ),
@@ -8456,26 +8559,48 @@ def public_photo_page(
                 ),
                 cls="py-8 border-t border-slate-800"
             ),
-            # Action button event handlers (global delegation pattern)
+            # Action button event handlers (standalone page — needs its own share/flip JS)
             Script("""
+                function _sharePhotoUrl(url) {
+                    if (navigator.share) {
+                        navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function(err) {
+                            if (err.name !== 'AbortError') { _copyAndToast(url); }
+                        });
+                    } else { _copyAndToast(url); }
+                }
+                function _copyAndToast(url) {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url).then(function() {
+                            _showShareToast('Link copied!');
+                        }).catch(function() { _showShareToast('Could not copy link'); });
+                    } else {
+                        var input = document.createElement('input');
+                        input.value = url;
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        _showShareToast('Link copied!');
+                    }
+                }
+                function _showShareToast(message) {
+                    var existing = document.getElementById('share-toast');
+                    if (existing) existing.remove();
+                    var toast = document.createElement('div');
+                    toast.id = 'share-toast';
+                    toast.textContent = message;
+                    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                    document.body.appendChild(toast);
+                    setTimeout(function() { toast.style.opacity = '0'; }, 2000);
+                    setTimeout(function() { toast.remove(); }, 2500);
+                }
                 document.addEventListener('click', function(e) {
-                    // Share button handler
                     var shareBtn = e.target.closest('[data-action="share-photo"]');
                     if (shareBtn) {
-                        var title = shareBtn.getAttribute('data-share-title') || 'Rhodesli Photo';
-                        var text = shareBtn.getAttribute('data-share-text') || '';
                         var url = shareBtn.getAttribute('data-share-url') || window.location.href;
-                        // Try native Web Share API first (mobile)
-                        if (navigator.share) {
-                            navigator.share({ title: title, text: text, url: url }).catch(function(err) {
-                                if (err.name !== 'AbortError') { copyToClipboard(url); }
-                            });
-                        } else {
-                            copyToClipboard(url);
-                        }
+                        _sharePhotoUrl(url);
                         return;
                     }
-                    // Flip button handler
                     var flipBtn = e.target.closest('[data-action="flip-photo"]');
                     if (flipBtn) {
                         var inner = document.getElementById('photo-flip-inner');
@@ -8488,35 +8613,6 @@ def public_photo_page(
                         return;
                     }
                 });
-                function copyToClipboard(url) {
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(url).then(function() {
-                            showShareToast('Link copied to clipboard!');
-                        }).catch(function() {
-                            showShareToast('Could not copy link');
-                        });
-                    } else {
-                        // Fallback for older browsers
-                        var input = document.createElement('input');
-                        input.value = url;
-                        document.body.appendChild(input);
-                        input.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(input);
-                        showShareToast('Link copied to clipboard!');
-                    }
-                }
-                function showShareToast(message) {
-                    var existing = document.getElementById('share-toast');
-                    if (existing) existing.remove();
-                    var toast = document.createElement('div');
-                    toast.id = 'share-toast';
-                    toast.textContent = message;
-                    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;';
-                    document.body.appendChild(toast);
-                    setTimeout(function() { toast.style.opacity = '0'; }, 2000);
-                    setTimeout(function() { toast.remove(); }, 2500);
-                }
             """),
             cls="min-h-screen bg-slate-900"
         ),

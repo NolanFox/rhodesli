@@ -59,7 +59,7 @@ class TestShareButton:
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         assert "navigator.share" in html
-        assert "copyToClipboard" in html
+        assert "_copyAndToast" in html
 
     def test_share_toast_function_present(self, client, real_photo_id):
         """Toast notification function is included."""
@@ -67,8 +67,8 @@ class TestShareButton:
             pytest.skip("No embeddings available")
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
-        assert "showShareToast" in html
-        assert "Link copied to clipboard" in html
+        assert "_showShareToast" in html
+        assert "Link copied" in html
 
     def test_share_action_attribute(self, client, real_photo_id):
         """Share button uses data-action pattern (event delegation)."""
