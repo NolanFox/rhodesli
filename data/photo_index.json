@@ -2026,6 +2026,17 @@
       "source_url": "",
       "width": 1280,
       "height": 852
+    },
+    "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n": {
+      "path": "raw_photos/472157630_10170853657825346_1042246886224871126_n.jpg",
+      "face_ids": [
+        "inbox_2ffb5a4fe9ee"
+      ],
+      "source": "Claude Benatar",
+      "collection": "Community Submissions",
+      "source_url": "",
+      "width": 1440,
+      "height": 2048
     }
   },
   "face_to_photo": {
@@ -2481,6 +2492,7 @@
     "inbox_4c646b9ae7c3": "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n",
     "inbox_b37589fa16b9": "inbox_benatar-20260213_0_Sarina2",
     "inbox_b0542d169e4a": "inbox_benatar-20260213_0_Sarina2",
-    "inbox_9e3e1edda122": "inbox_benatar-20260213_0_Sarina2"
+    "inbox_9e3e1edda122": "inbox_benatar-20260213_0_Sarina2",
+    "inbox_2ffb5a4fe9ee": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n"
   }
 }
