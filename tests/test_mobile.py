@@ -360,3 +360,57 @@ class TestPageResponds:
     def test_rejected_section_returns_200(self, client):
         response = client.get("/?section=rejected")
         assert response.status_code == 200
+
+
+class TestMobileOverflowPrevention:
+    """Elements must not cause horizontal overflow on mobile viewports."""
+
+    def test_main_content_has_overflow_hidden(self, client):
+        """Main content container prevents horizontal scroll from child elements."""
+        response = client.get("/?section=photos")
+        assert response.status_code == 200
+        assert "overflow-x-hidden" in response.text
+
+    def test_filter_bar_selects_have_max_width(self, client):
+        """Filter bar selects constrain width on mobile to prevent overflow."""
+        response = client.get("/?section=photos")
+        assert response.status_code == 200
+        assert "max-w-[10rem]" in response.text
+
+    def test_neighbors_sidebar_has_overflow_hidden(self):
+        """Neighbors sidebar prevents content from expanding the viewport."""
+        from app.main import neighbors_sidebar
+        from fasthtml.common import to_xml
+
+        html = to_xml(neighbors_sidebar("test-id", [], set()))
+        assert "overflow-hidden" in html
+
+    def test_neighbor_card_buttons_wrap_on_mobile(self):
+        """Neighbor card button group wraps below info on mobile."""
+        from app.main import neighbor_card
+        from fasthtml.common import to_xml
+
+        neighbor = {
+            "identity_id": "n-001",
+            "name": "Test Neighbor",
+            "state": "PROPOSED",
+            "distance": 0.85,
+            "confidence_gap": 10.0,
+            "co_occurrence": 0,
+            "can_merge": True,
+            "face_count": 1,
+            "anchor_face_ids": [],
+            "candidate_face_ids": [],
+        }
+        html = to_xml(neighbor_card(neighbor, "target-id", set()))
+        # Should wrap on mobile
+        assert "flex-wrap" in html
+        # Buttons should have margin-top on mobile
+        assert "mt-2 sm:mt-0" in html
+
+    def test_landing_nav_hidden_on_mobile(self, client):
+        """Landing page nav links are hidden on mobile (bottom tabs used instead)."""
+        response = client.get("/")
+        assert response.status_code == 200
+        # The archival landing page nav items container should be hidden on mobile
+        assert "hidden sm:flex" in response.text or "hidden md:flex" in response.text

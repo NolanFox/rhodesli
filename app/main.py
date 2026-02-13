@@ -3495,36 +3495,36 @@ def render_photos_section(counts: dict, registry, crop_files: set,
     filter_bar = Div(
         # Collection filter
         Div(
-            Label("Collection:", cls="text-sm text-slate-400 mr-2"),
+            Label("Collection:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *collection_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
-                    "focus:ring-2 focus:ring-indigo-500",
+                    "focus:ring-2 focus:ring-indigo-500 min-w-0 max-w-[10rem] sm:max-w-none truncate",
                 onchange=f"window.location.href='/?section=photos&filter_collection=' + encodeURIComponent(this.value) + '&filter_source={_fs}&sort_by={sort_by}'"
             ),
-            cls="flex items-center"
+            cls="flex items-center min-w-0"
         ),
         # Source filter
         Div(
-            Label("Source:", cls="text-sm text-slate-400 mr-2"),
+            Label("Source:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *source_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
-                    "focus:ring-2 focus:ring-indigo-500",
+                    "focus:ring-2 focus:ring-indigo-500 min-w-0 max-w-[10rem] sm:max-w-none truncate",
                 onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source=' + encodeURIComponent(this.value) + '&sort_by={sort_by}'"
             ),
-            cls="flex items-center"
+            cls="flex items-center min-w-0"
         ),
         # Sort
         Div(
-            Label("Sort:", cls="text-sm text-slate-400 mr-2"),
+            Label("Sort:", cls="text-sm text-slate-400 mr-2 flex-shrink-0"),
             Select(
                 *sort_options,
                 cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5 "
-                    "focus:ring-2 focus:ring-indigo-500",
+                    "focus:ring-2 focus:ring-indigo-500 min-w-0",
                 onchange=f"window.location.href='/?section=photos&filter_collection={_fc}&filter_source={_fs}&sort_by=' + this.value"
             ),
-            cls="flex items-center"
+            cls="flex items-center min-w-0"
         ),
         # Select toggle button
         Button(
@@ -4397,9 +4397,9 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
                 cls="flex-1 min-w-0 ml-3"),
             Div(compare_btn, merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                                   hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML"),
-                cls="flex items-center gap-2 flex-shrink-0 ml-2"),
-            cls="flex items-center gap-2"),
-        id=f"neighbor-{neighbor_id}", cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg"
+                cls="flex items-center gap-1 sm:gap-2 flex-shrink-0 sm:ml-2 mt-2 sm:mt-0"),
+            cls="flex flex-wrap sm:flex-nowrap items-center gap-2"),
+        id=f"neighbor-{neighbor_id}", cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg overflow-hidden"
     )
 
 def search_result_card(result: dict, target_identity_id: str, crop_files: set, user_role: str = "admin") -> Div:
@@ -4520,7 +4520,7 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
         type="button",
         **{"_": f"on click toggle .hidden on #neighbors-body-{identity_id} then if my.textContent == '▸ Expand' set my.textContent to '▾ Collapse' else set my.textContent to '▸ Expand'"},
     )
-    if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), toggle_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600")
+    if not neighbors: return Div(Div(P("No similar identities.", cls="text-slate-400 italic"), toggle_btn, cls="flex items-center justify-between"), manual_search_section(identity_id), cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600 overflow-hidden")
 
     # Mergeable neighbors get checkboxes for bulk operations
     mergeable = [n for n in neighbors if n.get("can_merge")]
@@ -4587,7 +4587,7 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
             Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected,
             id=f"neighbors-body-{identity_id}",
         ),
-        cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600",
+        cls="neighbors-sidebar p-4 bg-slate-700 rounded border border-slate-600 overflow-hidden",
     )
 
 
@@ -5422,7 +5422,7 @@ def landing_page(user=None) -> tuple:
     if user:
         nav_links.append(Span(user.email.split("@")[0], cls="text-xs text-slate-500 ml-4"))
     return Title("Rhodesli - Rhodes-Capeluto Family Archive"), style, Div(
-        Nav(Div(A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"), Div(*nav_links, cls="flex items-center gap-6"), cls="max-w-6xl mx-auto px-6 flex items-center justify-between"), cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50", id="landing-nav"),
+        Nav(Div(A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"), Div(*nav_links, cls="hidden sm:flex items-center gap-6"), cls="max-w-6xl mx-auto px-6 flex items-center justify-between"), cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50", id="landing-nav"),
         Section(Div(*hero_photos, cls="hero-grid"), Div(cls="hero-overlay absolute inset-0"), Div(H1("Preserving the faces and stories of the Rhodes-Capeluto family", cls="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-6 landing-animate max-w-3xl"), P("A living archive of our shared history, brought together by family and powered by careful research. Every photo tells a story. Every face is a connection.", cls="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl landing-animate landing-animate-delay-1"), Div(primary_cta, secondary_cta, cls="flex flex-wrap gap-4 landing-animate landing-animate-delay-2"), cls="absolute inset-0 flex flex-col justify-end px-6 md:px-12 lg:px-16 pb-12 md:pb-16"), cls="relative overflow-hidden pt-16", id="hero"),
         Section(Div(P("The archive so far", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-8 text-center"), Div(Div(Div(str(stats["photo_count"]), cls="text-4xl md:text-5xl font-bold text-white mb-1"), Div("photos preserved", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["named_count"]), cls="text-4xl md:text-5xl font-bold text-emerald-400 mb-1"), Div("people identified", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), Div(Div(str(stats["total_faces"]), cls="text-4xl md:text-5xl font-bold text-amber-400 mb-1"), Div("faces detected", cls="text-sm text-slate-400"), cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50"), A(Div(str(stats["needs_help"]), cls="text-4xl md:text-5xl font-bold text-blue-400 mb-1"), Div("faces need your help", cls="text-sm text-slate-400"), href="/?section=to_review", cls="stat-card text-center p-6 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-colors block"), cls="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"), cls="max-w-4xl mx-auto px-6"), cls="py-16 md:py-20", id="stats"),
         Section(Div(P("How it works", cls="text-sm font-semibold text-indigo-400 uppercase tracking-wider mb-4 text-center"), H2("Help us piece together our family history", cls="text-2xl md:text-3xl font-bold text-white text-center mb-12"), Div(step_card(browse_icon, "Browse Photos", "Explore our growing collection of family photographs spanning generations and continents -- from Rhodes to New York and beyond."), Div(NotStr(arrow_svg), cls="hidden md:flex items-center justify-center"), step_card(identify_icon, "Help Identify People", "Do you recognize someone? Your knowledge of the family is invaluable. Confirm names, suggest identifications, or note who you remember."), Div(NotStr(arrow_svg), cls="hidden md:flex items-center justify-center"), step_card(connect_icon, "Connect with History", "Each identification connects a face to a story, strengthening our family tree and preserving memories for future generations."), cls="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4 items-start"), cls="max-w-5xl mx-auto px-6"), cls="py-16 md:py-20 border-t border-slate-800", id="how-it-works"),
@@ -6031,7 +6031,7 @@ def landing_page(stats, featured_photos):
                     Span("Photo Archive", cls="text-xs text-amber-400/60 ml-2 hidden md:inline tracking-widest uppercase"),
                     cls="flex items-baseline"
                 ),
-                Div(*nav_items, cls="flex items-center gap-4 md:gap-6"),
+                Div(*nav_items, cls="hidden sm:flex items-center gap-4 md:gap-6"),
                 cls="max-w-6xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between flex-wrap gap-3"
             ),
             cls="border-b border-amber-900/30 bg-black/20 backdrop-blur-sm sticky top-0 z-50"
@@ -6713,6 +6713,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
         html, body {
             height: 100%;
             margin: 0;
+            overflow-x: hidden;
         }
         body {
             background-color: #0f172a;
@@ -6978,7 +6979,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 main_content,
                 cls="max-w-6xl mx-auto px-4 sm:px-8 py-6 pb-20 lg:pb-6"
             ),
-            cls="main-content min-h-screen"
+            cls="main-content min-h-screen overflow-x-hidden"
         ),
         # Mobile bottom tabs
         mobile_tabs,
@@ -10586,6 +10587,7 @@ def get(sess=None):
         html, body {
             height: 100%;
             margin: 0;
+            overflow-x: hidden;
         }
         body {
             background-color: #0f172a;
@@ -10723,7 +10725,7 @@ def get(sess=None):
                 upload_area(existing_sources=existing_sources, existing_collections=existing_collections),
                 cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="main-content min-h-screen"
+            cls="main-content min-h-screen overflow-x-hidden"
         ),
         sidebar_script,
         cls="h-full"
@@ -11390,7 +11392,7 @@ def get(sess=None):
                 reviewed_section if reviewed_section else "",
                 cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="main-content min-h-screen"
+            cls="main-content min-h-screen overflow-x-hidden"
         ),
         sidebar_script,
         cls="h-full"
@@ -11508,7 +11510,7 @@ def get(sess=None):
                 ),
                 cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
             ),
-            cls="main-content min-h-screen"
+            cls="main-content min-h-screen overflow-x-hidden"
         ),
         sidebar_script,
         cls="h-full"
