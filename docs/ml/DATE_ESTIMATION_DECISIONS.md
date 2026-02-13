@@ -132,6 +132,52 @@ Heritage photos have domain-specific degradation patterns absent from standard a
 
 ---
 
+## Decision 8: Rich Metadata Extraction in Single Gemini Pass (AD-048)
+
+### What we chose
+Expand the Gemini prompt to extract scene description, visible text (OCR), keywords, setting classification, photo type, people count, condition assessment, and clothing notes — all alongside existing date estimation fields in a single API call.
+
+### Cost analysis
+- Image input tokens: ~1,790 per photo (~95% of per-photo cost)
+- Existing output: ~2,000 tokens (structured date evidence JSON)
+- Additional metadata output: ~500-800 tokens (scene, text, keywords, classifications)
+- Additional cost per photo: ~$0.006-0.010 output tokens
+- Total additional cost for 157 photos: ~$1.00-1.50
+- This is on top of a $4.27 base cost — <35% increase for dramatically richer data
+
+### What fields we extract and why
+
+| Field | Type | Why valuable |
+|-------|------|-------------|
+| `scene_description` | string (2-3 sentences) | Full-text search: "wedding", "outdoor", "family group" |
+| `visible_text` | string or null | OCR of inscriptions, dates, captions written on photos. Automates manual work (e.g., "A mi querida Estrella de tu hermano Samuel") |
+| `keywords` | list[string] (5-15) | Faceted search and filtering. Tags like "studio", "military", "hat", "fez" |
+| `setting` | enum | Structured classification for filtering: indoor_studio, outdoor_urban, etc. |
+| `photo_type` | enum | Structured classification: formal_portrait, group_photo, wedding, etc. |
+| `people_count` | int | Cross-validates face detection count (Gemini sees 5 people but InsightFace found 3 → investigate) |
+| `condition` | enum | Triage for restoration priority: excellent, good, fair, poor |
+| `clothing_notes` | string | Cultural documentation + cross-validates date estimation evidence |
+
+### What we excluded and why
+
+| Field | Why excluded |
+|-------|-------------|
+| Emotion/mood | Unreliable on historical photos, low inter-rater agreement between models |
+| Color palette | Not useful for genealogy search use cases |
+| Object bounding boxes | Overkill for metadata; scene_description covers this in natural language |
+| Artistic style | Not actionable for archive users |
+
+### Why NOT a separate API call
+Paying for image input tokens twice would roughly double the cost from $4.27 to $8.54 — with no quality benefit. The same model context that analyzes fashion cues for dating can simultaneously describe the scene and read inscriptions.
+
+### Why NOT a local model (BLIP-2, LLaVA)
+- Lower quality on degraded historical photos vs Gemini 3 Pro's SOTA vision
+- Adds local GPU/CPU inference infrastructure
+- Heritage-specific context (Sephardic community, Rhodes architecture) requires instruction-following that smaller models handle poorly
+- Cost is negligible at our scale (157 photos × $0.035 = $5.50 total)
+
+---
+
 ## Research References
 
 1. **MyHeritage PhotoDater** (Aug 2023): Tens of thousands of training photos, within 5 years ~60%. blog.myheritage.com/2023/08/introducing-photodater

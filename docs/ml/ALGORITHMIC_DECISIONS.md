@@ -391,12 +391,38 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rationale**: First real community contribution (poisson1957@hotmail.com suggesting "Sarina Benatar Saragossi") validated the entire contribution pipeline. This data has both sentimental and functional value as test fixtures for the approval flow.
 - **Affects**: All data migration scripts, `scripts/backup_data.sh`.
 
+### AD-048: Rich Photo Metadata Extraction in Single Gemini Pass
+- **Date**: 2026-02-13
+- **Context**: We're already paying ~$0.028 per photo for Gemini Vision date estimation. Image input tokens represent ~95% of API cost. Output tokens are nearly free (~$0.001 additional per photo).
+- **Decision**: Expand the Gemini prompt to extract scene description, visible text (OCR), keywords, setting, photo type, people count, condition, and clothing notes alongside existing date estimation fields — all in a single API call.
+- **Rationale**: For 157 photos, additional cost is pennies on a $4.27 total. Metadata enables semantic search ("wedding", "outdoor Rhodes"), automates OCR of handwritten inscriptions, and cross-validates face detection (Gemini people_count vs detected faces).
+- **Fields included** (high value):
+  - `scene_description`: 2-3 sentence natural language description for full-text search
+  - `visible_text`: OCR of handwriting, captions, inscriptions (automates manual transcription)
+  - `keywords`: 5-15 searchable tags for faceted search and filtering
+  - `setting`: indoor_studio | outdoor_urban | outdoor_rural | indoor_home | indoor_other | outdoor_other | unknown
+  - `photo_type`: formal_portrait | group_photo | candid | document | postcard | wedding | funeral | school | military | religious_ceremony | other
+  - `people_count`: integer, cross-referenced against face detection count
+  - `condition`: excellent | good | fair | poor
+  - `clothing_notes`: fashion/attire description (cultural documentation + date cross-validation)
+- **Fields excluded** (and why):
+  - Emotion/mood analysis: unreliable on historical photos, low inter-rater agreement
+  - Color palette: not useful for genealogy search
+  - Detailed object bounding boxes: overkill, covered by scene_description
+  - Artistic style classification: not actionable for users
+- **Rejected alternatives**:
+  - Separate API call for metadata: wasteful, pays for image tokens twice
+  - Local model (BLIP-2, LLaVA): lower quality on historical photos, adds infra complexity
+  - Manual tagging: doesn't scale past 50 photos
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (prompt + label construction), `rhodesli_ml/data/date_labels.py` (schema), test fixtures.
+- **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 8.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-048)
+1. Add a new entry with AD-XXX format (next: AD-049)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

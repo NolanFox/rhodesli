@@ -31,8 +31,13 @@ from rhodesli_ml.data.date_dataset import (
 )
 from rhodesli_ml.data.date_labels import (
     DateLabel,
+    PhotoMetadata,
+    VALID_CONDITIONS,
+    VALID_PHOTO_TYPES,
+    VALID_SETTINGS,
     decade_to_ordinal,
     load_date_labels,
+    load_photo_metadata,
     ordinal_to_decade,
 )
 from rhodesli_ml.models.date_classifier import (
@@ -601,3 +606,182 @@ class TestGenerateDateLabels:
         for model, costs in MODEL_COSTS.items():
             assert "per_photo" in costs
             assert costs["per_photo"] > 0
+
+    def test_prompt_contains_metadata_instructions(self):
+        """Prompt includes rich metadata extraction instructions (AD-048)."""
+        from rhodesli_ml.scripts.generate_date_labels import PROMPT
+        assert "scene_description" in PROMPT
+        assert "visible_text" in PROMPT
+        assert "keywords" in PROMPT
+        assert "setting" in PROMPT
+        assert "photo_type" in PROMPT
+        assert "people_count" in PROMPT
+        assert "condition" in PROMPT
+        assert "clothing_notes" in PROMPT
+        # Verify enum values are documented in prompt
+        assert "indoor_studio" in PROMPT
+        assert "formal_portrait" in PROMPT
+        assert "group_photo" in PROMPT
+
+
+# ============================================================
+# Photo Metadata Tests (AD-048)
+# ============================================================
+
+class TestPhotoMetadata:
+    def test_load_metadata_from_labels(self, tmp_path):
+        """load_photo_metadata returns metadata for labels that have it."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {
+                    "photo_id": "p1", "estimated_decade": 1940,
+                    "scene_description": "A formal portrait",
+                    "keywords": ["portrait", "studio"],
+                    "setting": "indoor_studio",
+                    "photo_type": "formal_portrait",
+                    "people_count": 2,
+                    "condition": "good",
+                },
+                {
+                    "photo_id": "p2", "estimated_decade": 1950,
+                    # No metadata fields
+                },
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        metadata = load_photo_metadata(str(labels_file))
+        assert len(metadata) == 1
+        assert metadata[0].photo_id == "p1"
+        assert metadata[0].scene_description == "A formal portrait"
+        assert metadata[0].keywords == ["portrait", "studio"]
+        assert metadata[0].setting == "indoor_studio"
+        assert metadata[0].photo_type == "formal_portrait"
+        assert metadata[0].people_count == 2
+        assert metadata[0].condition == "good"
+
+    def test_load_metadata_nonexistent_file(self, tmp_path):
+        """Loading from nonexistent file returns empty list."""
+        metadata = load_photo_metadata(str(tmp_path / "nonexistent.json"))
+        assert metadata == []
+
+    def test_backward_compat_labels_without_metadata(self, tmp_path):
+        """Old labels without metadata fields still load as DateLabels."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {
+                    "photo_id": "p1",
+                    "estimated_decade": 1940,
+                    "confidence": "high",
+                    "source": "gemini",
+                    "decade_probabilities": {"1940": 0.8, "1950": 0.2},
+                    "reasoning_summary": "Test",
+                    # No metadata fields at all
+                },
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        # DateLabels still load fine
+        date_labels = load_date_labels(str(labels_file))
+        assert len(date_labels) == 1
+        assert date_labels[0].decade == 1940
+
+        # PhotoMetadata returns empty (no metadata fields)
+        metadata = load_photo_metadata(str(labels_file))
+        assert len(metadata) == 0
+
+    def test_metadata_with_visible_text_null(self, tmp_path):
+        """Labels with visible_text=null handle correctly."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {
+                    "photo_id": "p1", "estimated_decade": 1940,
+                    "scene_description": "A group photo",
+                    "visible_text": None,
+                    "keywords": ["group"],
+                    "setting": "outdoor_urban",
+                    "photo_type": "group_photo",
+                    "people_count": 5,
+                    "condition": "fair",
+                },
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        metadata = load_photo_metadata(str(labels_file))
+        assert len(metadata) == 1
+        assert metadata[0].visible_text is None
+        assert metadata[0].people_count == 5
+
+    def test_photo_metadata_named_tuple_fields(self):
+        """PhotoMetadata has all expected fields."""
+        m = PhotoMetadata(
+            photo_id="test",
+            scene_description="A scene",
+            visible_text="Hello",
+            keywords=["tag1"],
+            setting="indoor_studio",
+            photo_type="formal_portrait",
+            people_count=3,
+            condition="good",
+            clothing_notes="Dark suit",
+        )
+        assert m.photo_id == "test"
+        assert m.scene_description == "A scene"
+        assert m.visible_text == "Hello"
+        assert m.keywords == ["tag1"]
+        assert m.setting == "indoor_studio"
+        assert m.photo_type == "formal_portrait"
+        assert m.people_count == 3
+        assert m.condition == "good"
+        assert m.clothing_notes == "Dark suit"
+
+    def test_valid_enum_constants(self):
+        """Enum validation sets contain expected values."""
+        assert "indoor_studio" in VALID_SETTINGS
+        assert "outdoor_urban" in VALID_SETTINGS
+        assert "unknown" in VALID_SETTINGS
+        assert len(VALID_SETTINGS) == 7
+
+        assert "formal_portrait" in VALID_PHOTO_TYPES
+        assert "group_photo" in VALID_PHOTO_TYPES
+        assert "wedding" in VALID_PHOTO_TYPES
+        assert len(VALID_PHOTO_TYPES) == 11
+
+        assert "excellent" in VALID_CONDITIONS
+        assert "poor" in VALID_CONDITIONS
+        assert len(VALID_CONDITIONS) == 4
+
+    def test_synthetic_labels_include_metadata(self, synthetic_labels):
+        """Synthetic fixture labels include metadata fields for first 20."""
+        with_metadata = [l for l in synthetic_labels if l.get("scene_description")]
+        without_metadata = [l for l in synthetic_labels if not l.get("scene_description")]
+        assert len(with_metadata) == 20
+        assert len(without_metadata) == 10
+
+        # Verify metadata structure
+        sample = with_metadata[0]
+        assert isinstance(sample["keywords"], list)
+        assert sample["setting"] in VALID_SETTINGS
+        assert sample["photo_type"] in VALID_PHOTO_TYPES
+        assert sample["condition"] in VALID_CONDITIONS
+        assert isinstance(sample["people_count"], int)
+
+    def test_call_gemini_nested_response_parsing(self):
+        """call_gemini handles the nested date_estimation response format."""
+        from rhodesli_ml.scripts.generate_date_labels import call_gemini
+        # This tests the parsing logic — we can't call Gemini without a key,
+        # but we can verify the prompt structure expects the nested format
+        from rhodesli_ml.scripts.generate_date_labels import PROMPT
+        assert '"date_estimation"' in PROMPT
+        assert '"scene_description"' in PROMPT

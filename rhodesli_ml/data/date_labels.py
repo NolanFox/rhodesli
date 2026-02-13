@@ -1,10 +1,13 @@
-"""Date label loading and management for date estimation model.
+"""Date label and photo metadata loading for the ML pipeline.
 
 Loads silver labels (Gemini API estimates) and gold labels (user corrections)
 from date_labels.json. Merges them with gold-overrides-silver semantics.
 
 Schema v2 labels include structured evidence, decade probabilities, and
 year-level estimates alongside decade classifications.
+
+Rich metadata fields (AD-048) are optional — older labels without them
+load correctly with None/empty defaults.
 """
 
 import json
@@ -22,6 +25,35 @@ class DateLabel(NamedTuple):
     probable_range: tuple[int, int] | None  # e.g., (1935, 1955)
     decade_probabilities: dict[str, float]  # e.g., {"1930": 0.15, "1940": 0.55}
     reasoning: str  # Summary reasoning
+
+
+class PhotoMetadata(NamedTuple):
+    """Rich metadata extracted from a photo via Gemini Vision (AD-048).
+
+    All fields are Optional — older labels without metadata still load fine.
+    """
+    photo_id: str
+    scene_description: str | None  # 2-3 sentence description
+    visible_text: str | None  # OCR of inscriptions/captions, or None
+    keywords: list[str]  # 5-15 searchable tags
+    setting: str | None  # indoor_studio, outdoor_urban, etc.
+    photo_type: str | None  # formal_portrait, group_photo, etc.
+    people_count: int | None  # Number of visible people
+    condition: str | None  # excellent, good, fair, poor
+    clothing_notes: str | None  # Brief clothing/accessory description
+
+
+# Valid enum values for validation
+VALID_SETTINGS = frozenset({
+    "indoor_studio", "outdoor_urban", "outdoor_rural",
+    "indoor_home", "indoor_other", "outdoor_other", "unknown",
+})
+VALID_PHOTO_TYPES = frozenset({
+    "formal_portrait", "group_photo", "candid", "document",
+    "postcard", "wedding", "funeral", "school", "military",
+    "religious_ceremony", "other",
+})
+VALID_CONDITIONS = frozenset({"excellent", "good", "fair", "poor"})
 
 
 def load_date_labels(path: str = "rhodesli_ml/data/date_labels.json") -> list[DateLabel]:
@@ -63,6 +95,48 @@ def load_date_labels(path: str = "rhodesli_ml/data/date_labels.json") -> list[Da
             by_photo[label.photo_id] = label
 
     return list(by_photo.values())
+
+
+def load_photo_metadata(path: str = "rhodesli_ml/data/date_labels.json") -> list[PhotoMetadata]:
+    """Load rich photo metadata from labels file (AD-048).
+
+    Returns PhotoMetadata for labels that have metadata fields.
+    Labels without metadata fields are silently skipped.
+    """
+    labels_path = Path(path)
+    if not labels_path.exists():
+        return []
+
+    with open(labels_path) as f:
+        data = json.load(f)
+
+    raw_labels = data.get("labels", [])
+    metadata_list = []
+
+    for entry in raw_labels:
+        # Skip entries without any metadata fields
+        has_metadata = any(
+            entry.get(k) is not None
+            for k in ("scene_description", "visible_text", "keywords",
+                       "setting", "photo_type", "people_count",
+                       "condition", "clothing_notes")
+        )
+        if not has_metadata:
+            continue
+
+        metadata_list.append(PhotoMetadata(
+            photo_id=entry["photo_id"],
+            scene_description=entry.get("scene_description"),
+            visible_text=entry.get("visible_text"),
+            keywords=entry.get("keywords", []),
+            setting=entry.get("setting"),
+            photo_type=entry.get("photo_type"),
+            people_count=entry.get("people_count"),
+            condition=entry.get("condition"),
+            clothing_notes=entry.get("clothing_notes"),
+        ))
+
+    return metadata_list
 
 
 def decade_to_ordinal(decade: int) -> int:

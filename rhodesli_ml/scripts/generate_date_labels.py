@@ -1,9 +1,12 @@
-"""Generate silver date labels for photos using Gemini Vision API.
+"""Generate silver date labels and rich metadata for photos using Gemini Vision API.
 
 Uses an evidence-first prompt architecture with decomposed analysis across
 4 evidence categories (print/format, fashion, environment, technology).
-Outputs structured JSON with decade probabilities, year estimates, and
-per-cue evidence ratings.
+Outputs structured JSON with decade probabilities, year estimates,
+per-cue evidence ratings, plus rich photo metadata (scene description,
+OCR, keywords, setting, photo type, people count, condition, clothing).
+
+See AD-048 for the rich metadata extraction decision rationale.
 
 Usage:
     # Dry run: process 3 photos, print results, show cost estimate
@@ -32,24 +35,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 # Cost per photo estimates (input + output tokens)
-# Per photo: ~1,790 input tokens (image + prompt) + ~2,000 output tokens
+# Per photo: ~1,790 input tokens (image + prompt) + ~2,800 output tokens
+# (increased from ~2,000 due to rich metadata fields — AD-048)
 MODEL_COSTS = {
     "gemini-3-pro-preview": {
         "input_per_million": 2.00,
         "output_per_million": 12.00,
-        "per_photo": 0.028,
+        "per_photo": 0.037,
         "note": "Best quality, SOTA vision reasoning",
     },
     "gemini-3-flash-preview": {
         "input_per_million": 0.50,
         "output_per_million": 3.00,
-        "per_photo": 0.007,
+        "per_photo": 0.010,
         "note": "Free tier available, very good quality",
     },
     "gemini-2.5-flash": {
         "input_per_million": 0.30,
         "output_per_million": 2.50,
-        "per_photo": 0.006,
+        "per_photo": 0.008,
         "note": "Stable, good price/performance",
     },
 }
@@ -101,39 +105,69 @@ These photos are from a Sephardic Jewish community. Account for:
 
 ## Response Format (JSON only)
 {
-    "estimated_decade": 1940,
-    "best_year_estimate": 1937,
-    "confidence": "medium",
-    "probable_range": [1935, 1955],
-    "decade_probabilities": {
-        "1920": 0.05,
-        "1930": 0.15,
-        "1940": 0.55,
-        "1950": 0.20,
-        "1960": 0.05
+    "date_estimation": {
+        "estimated_decade": 1940,
+        "best_year_estimate": 1937,
+        "confidence": "medium",
+        "probable_range": [1935, 1955],
+        "decade_probabilities": {
+            "1920": 0.05,
+            "1930": 0.15,
+            "1940": 0.55,
+            "1950": 0.20,
+            "1960": 0.05
+        },
+        "capture_vs_print": "Likely 1940s capture. Print characteristics consistent with original.",
+        "location_estimate": "Rhodes (stone masonry, Mediterranean vegetation)",
+        "is_color": false,
+        "evidence": {
+            "print_format": [
+                {"cue": "straight white border, ~3mm", "strength": "moderate", "suggested_range": [1930, 1955]}
+            ],
+            "fashion": [
+                {"cue": "men in wide-lapel suits with padded shoulders", "strength": "moderate", "suggested_range": [1940, 1948]}
+            ],
+            "environment": [
+                {"cue": "stone masonry arches, Mediterranean style", "strength": "weak", "suggested_range": [1900, 1950]}
+            ],
+            "technology": []
+        },
+        "cultural_lag_applied": true,
+        "cultural_lag_note": "Adjusted +5 years from fashion cues due to Sephardic diaspora context",
+        "reasoning_summary": "Fashion cues suggest 1940s. Border style consistent. Stone architecture indicates Rhodes but is weak for dating."
     },
-    "capture_vs_print": "Likely 1940s capture. Print characteristics consistent with original.",
-    "location_estimate": "Rhodes (stone masonry, Mediterranean vegetation)",
-    "is_color": false,
-    "evidence": {
-        "print_format": [
-            {"cue": "straight white border, ~3mm", "strength": "moderate", "suggested_range": [1930, 1955]}
-        ],
-        "fashion": [
-            {"cue": "men in wide-lapel suits with padded shoulders", "strength": "moderate", "suggested_range": [1940, 1948]}
-        ],
-        "environment": [
-            {"cue": "stone masonry arches, Mediterranean style", "strength": "weak", "suggested_range": [1900, 1950]}
-        ],
-        "technology": []
-    },
-    "cultural_lag_applied": true,
-    "cultural_lag_note": "Adjusted +5 years from fashion cues due to Sephardic diaspora context",
-    "reasoning_summary": "Fashion cues suggest 1940s. Border style consistent. Stone architecture indicates Rhodes but is weak for dating."
+    "scene_description": "Formal studio portrait of a middle-aged man and two women. The man stands in the center wearing a dark suit. The women are seated on either side in light-colored dresses. A painted backdrop depicts a garden scene.",
+    "visible_text": "A mi querida Estrella de tu hermano Samuel",
+    "keywords": ["formal portrait", "studio", "family group", "suit", "lace collar", "painted backdrop"],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 3,
+    "condition": "good",
+    "clothing_notes": "Man in dark three-piece suit with pocket watch chain. Younger woman in light embroidered dress. Older woman in dark dress with lace collar."
 }
 
 Valid decades for probabilities: 1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000.
 Confidence levels: "high" (multiple strong cues agree), "medium" (moderate cues or some conflict), "low" (weak/ambiguous cues).
+
+## Additional Metadata Instructions
+
+In addition to date estimation, extract the following metadata:
+
+scene_description: 2-3 sentences describing what is visible in the photo. Include people, their arrangement, the setting, and any notable objects. Write as if describing the photo to someone who cannot see it.
+
+visible_text: If there is ANY handwritten or printed text visible on or around the photo (inscriptions, captions, dates written on the photo, text on clothing, signs, documents), transcribe it exactly. Include the original language. If no text is visible, return null.
+
+keywords: 5-15 searchable tags covering: people descriptors (man, woman, child, elderly), setting (studio, outdoor, home), occasion (wedding, funeral, school, military), objects (hat, umbrella, car), and any culturally specific items (fez, traditional dress).
+
+setting: Classify as one of: indoor_studio, outdoor_urban, outdoor_rural, indoor_home, indoor_other, outdoor_other, unknown.
+
+photo_type: Classify as one of: formal_portrait, group_photo, candid, document, postcard, wedding, funeral, school, military, religious_ceremony, other.
+
+people_count: How many people are visible in the photo (include partially visible people). Return 0 if no people are visible.
+
+condition: Rate the physical condition of the photo: excellent, good, fair, poor. Consider fading, tears, stains, and damage.
+
+clothing_notes: Brief description of notable clothing and accessories. This is valuable for both cultural documentation and date estimation cross-validation.
 """
 
 
@@ -217,22 +251,35 @@ def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-previe
 
         parsed = json.loads(text)
 
+        # Handle nested date_estimation structure (new format) or flat (legacy)
+        date_est = parsed.get("date_estimation", parsed)
+
         # Validate required fields
-        decade = parsed.get("estimated_decade")
+        decade = date_est.get("estimated_decade")
         if not isinstance(decade, int) or decade < 1900 or decade > 2030:
             print(f"  WARNING: Invalid decade {decade}, skipping")
             return None
 
         # Validate decade_probabilities sum to ~1.0
-        probs = parsed.get("decade_probabilities", {})
+        probs = date_est.get("decade_probabilities", {})
         if probs:
             prob_sum = sum(probs.values())
             if abs(prob_sum - 1.0) > 0.05:
                 print(f"  WARNING: decade_probabilities sum to {prob_sum:.3f}, normalizing")
                 probs = {k: v / prob_sum for k, v in probs.items()}
-                parsed["decade_probabilities"] = probs
+                date_est["decade_probabilities"] = probs
 
-        return parsed
+        # Flatten date_estimation fields to top level for storage,
+        # then merge in rich metadata fields
+        if "date_estimation" in parsed:
+            result = dict(date_est)
+            for key in ("scene_description", "visible_text", "keywords",
+                        "setting", "photo_type", "people_count",
+                        "condition", "clothing_notes"):
+                result[key] = parsed.get(key)
+            return result
+        else:
+            return parsed
 
     except json.JSONDecodeError as e:
         print(f"  ERROR: Failed to parse JSON response: {e}")
@@ -414,6 +461,7 @@ def main():
             "photo_id": pid,
             "source": "gemini",
             "model": args.model,
+            # Date estimation fields
             "estimated_decade": result.get("estimated_decade"),
             "best_year_estimate": result.get("best_year_estimate"),
             "confidence": result.get("confidence", "medium"),
@@ -426,6 +474,15 @@ def main():
             "cultural_lag_note": result.get("cultural_lag_note", ""),
             "capture_vs_print": result.get("capture_vs_print", ""),
             "reasoning_summary": result.get("reasoning_summary", ""),
+            # Rich metadata fields (AD-048)
+            "scene_description": result.get("scene_description"),
+            "visible_text": result.get("visible_text"),
+            "keywords": result.get("keywords", []),
+            "setting": result.get("setting"),
+            "photo_type": result.get("photo_type"),
+            "people_count": result.get("people_count"),
+            "condition": result.get("condition"),
+            "clothing_notes": result.get("clothing_notes"),
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         all_labels.append(label)
@@ -439,6 +496,35 @@ def main():
         summary = result.get("reasoning_summary", "")[:80]
         print(f"  -> circa {year} ({decade}s, {conf}) | {loc}")
         print(f"     {summary}")
+
+        # Print rich metadata (AD-048)
+        scene = result.get("scene_description")
+        if scene:
+            print(f"     Scene: {scene[:100]}")
+        visible_text = result.get("visible_text")
+        if visible_text:
+            print(f"     Text: \"{visible_text[:80]}\"")
+        keywords = result.get("keywords", [])
+        if keywords:
+            print(f"     Tags: {', '.join(keywords[:8])}")
+        setting = result.get("setting")
+        photo_type = result.get("photo_type")
+        people = result.get("people_count")
+        condition = result.get("condition")
+        meta_parts = []
+        if setting:
+            meta_parts.append(setting)
+        if photo_type:
+            meta_parts.append(photo_type)
+        if people is not None:
+            meta_parts.append(f"{people} people")
+        if condition:
+            meta_parts.append(f"condition: {condition}")
+        if meta_parts:
+            print(f"     Meta: {' | '.join(meta_parts)}")
+        clothing = result.get("clothing_notes")
+        if clothing:
+            print(f"     Clothing: {clothing[:100]}")
 
         # Rate limiting: 1 request per second
         if i < len(to_label) - 1:

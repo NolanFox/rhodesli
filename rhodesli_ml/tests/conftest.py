@@ -65,12 +65,18 @@ def synthetic_labels_with_images(tmp_path):
 
 
 def _generate_synthetic_labels() -> list[dict]:
-    """Generate 30 synthetic date labels covering all decades."""
+    """Generate 30 synthetic date labels covering all decades.
+
+    Includes rich metadata fields (AD-048) for testing.
+    """
     import random
     random.seed(42)
 
     decades = [1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, 1990, 2000]
     confidences = ["high", "medium", "low"]
+    settings = ["indoor_studio", "outdoor_urban", "outdoor_rural", "indoor_home", "unknown"]
+    photo_types = ["formal_portrait", "group_photo", "candid", "document", "wedding"]
+    conditions = ["excellent", "good", "fair", "poor"]
     labels = []
 
     for i in range(30):
@@ -95,7 +101,22 @@ def _generate_synthetic_labels() -> list[dict]:
         total = sum(probs.values())
         probs = {k: round(v / total, 3) for k, v in probs.items()}
 
-        labels.append({
+        # Rich metadata (AD-048) — some labels have it, some don't (backward compat)
+        has_metadata = i < 20  # First 20 have metadata, last 10 don't
+        metadata_fields = {}
+        if has_metadata:
+            metadata_fields = {
+                "scene_description": f"Synthetic scene for photo {i}. A {photo_types[i % len(photo_types)]} from the {decade}s.",
+                "visible_text": f"Test inscription {i}" if i % 3 == 0 else None,
+                "keywords": ["test", photo_types[i % len(photo_types)], settings[i % len(settings)]],
+                "setting": settings[i % len(settings)],
+                "photo_type": photo_types[i % len(photo_types)],
+                "people_count": (i % 5) + 1,
+                "condition": conditions[i % len(conditions)],
+                "clothing_notes": f"Test clothing description for photo {i}" if i % 2 == 0 else None,
+            }
+
+        label = {
             "photo_id": f"photo_{i:03d}",
             "source": "gemini",
             "model": "gemini-3-pro-preview",
@@ -117,6 +138,8 @@ def _generate_synthetic_labels() -> list[dict]:
             "capture_vs_print": "",
             "reasoning_summary": f"Synthetic label for testing, decade {decade}s",
             "created_at": "2026-02-13T00:00:00Z",
-        })
+        }
+        label.update(metadata_fields)
+        labels.append(label)
 
     return labels
