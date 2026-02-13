@@ -859,3 +859,90 @@ class TestMultiWordAndMatching:
             leon_pos = text.index("Leon Capeluto")
             betty_pos = text.index("Betty Capeluto")
             assert leon_pos < betty_pos, "Full match (Leon) should appear before partial (Betty)"
+
+
+class TestSearchResultCardCompare:
+    """Manual search results must have Compare button before Merge."""
+
+    def test_search_result_card_has_compare_button(self):
+        """search_result_card renders a Compare button that opens comparison modal."""
+        from app.main import search_result_card
+        from fasthtml.common import to_xml
+
+        result = {
+            "identity_id": "result-id-123",
+            "name": "Test Person",
+            "face_count": 3,
+            "preview_face_id": None,
+        }
+
+        html = to_xml(search_result_card(result, "target-id-456", set()))
+        assert "Compare" in html
+        assert "/api/identity/target-id-456/compare/result-id-123" in html
+        assert "#compare-modal-content" in html
+
+    def test_search_result_card_has_merge_button(self):
+        """search_result_card still renders a Merge button for admin."""
+        from app.main import search_result_card
+        from fasthtml.common import to_xml
+
+        result = {
+            "identity_id": "result-id-123",
+            "name": "Test Person",
+            "face_count": 1,
+            "preview_face_id": None,
+        }
+
+        html = to_xml(search_result_card(result, "target-id-456", set(), user_role="admin"))
+        assert "Merge" in html
+        assert "/api/identity/target-id-456/merge/result-id-123" in html
+
+    def test_search_result_card_merge_is_outline_style(self):
+        """Merge button should be outline (secondary) so Compare is more prominent."""
+        from app.main import search_result_card
+        from fasthtml.common import to_xml
+
+        result = {
+            "identity_id": "result-id-123",
+            "name": "Test Person",
+            "face_count": 2,
+            "preview_face_id": None,
+        }
+
+        html = to_xml(search_result_card(result, "target-id-456", set(), user_role="admin"))
+        # Merge should use border/outline style, not filled bg-blue-600
+        assert "bg-blue-600" not in html
+        assert "border-blue-500" in html
+
+    def test_search_result_card_compare_before_merge(self):
+        """Compare button appears before Merge button in HTML order."""
+        from app.main import search_result_card
+        from fasthtml.common import to_xml
+
+        result = {
+            "identity_id": "result-id-123",
+            "name": "Test Person",
+            "face_count": 1,
+            "preview_face_id": None,
+        }
+
+        html = to_xml(search_result_card(result, "target-id-456", set()))
+        compare_pos = html.index("Compare")
+        merge_pos = html.index("Merge")
+        assert compare_pos < merge_pos, "Compare must appear before Merge"
+
+    def test_search_result_card_contributor_suggest_merge(self):
+        """Contributor gets Suggest Merge button, not Merge."""
+        from app.main import search_result_card
+        from fasthtml.common import to_xml
+
+        result = {
+            "identity_id": "result-id-123",
+            "name": "Test Person",
+            "face_count": 1,
+            "preview_face_id": None,
+        }
+
+        html = to_xml(search_result_card(result, "target-id-456", set(), user_role="contributor"))
+        assert "Suggest Merge" in html
+        assert "Compare" in html

@@ -4425,6 +4425,17 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
                 cls="w-12 h-12 object-cover rounded border border-slate-600"
             )
 
+    # Compare button -- opens side-by-side comparison modal (same pattern as neighbor_card)
+    compare_btn = Button(
+        "Compare",
+        cls="px-2 py-1 text-xs font-bold border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20",
+        hx_get=f"/api/identity/{target_identity_id}/compare/{result_id}",
+        hx_target="#compare-modal-content",
+        hx_swap="innerHTML",
+        **{"_": "on click remove .hidden from #compare-modal"},
+        type="button",
+    )
+
     # Merge button -- role-aware: admin merges directly, contributor suggests
     if user_role == "contributor":
         merge_btn = Button(
@@ -4438,7 +4449,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
     else:
         merge_btn = Button(
             "Merge",
-            cls="px-2 py-1 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+            cls="px-2 py-1 text-xs font-bold border border-blue-500/50 text-blue-400 rounded hover:bg-blue-500/20",
             hx_post=f"/api/identity/{target_identity_id}/merge/{result_id}?source=manual_search",
             hx_target=f"#identity-{target_identity_id}",
             hx_swap="outerHTML",
@@ -4456,7 +4467,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
                 Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-xs text-slate-400 ml-2"),
                 cls="flex items-center ml-2 flex-1 min-w-0"
             ),
-            merge_btn,
+            Div(compare_btn, merge_btn, cls="flex items-center gap-1 flex-shrink-0 ml-2"),
             cls="flex items-center"
         ),
         id=f"search-result-{result_id}",
