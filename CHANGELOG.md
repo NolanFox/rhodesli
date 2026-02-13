@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.29.0] - 2026-02-12
+
+### Added
+- **Public photo viewer** (`/photo/{id}`): Shareable, museum-like page with face overlays, person cards, and call-to-action. No auth required. Every photo in the archive is now linkable.
+- **Front/back photo flip**: CSS 3D flip animation for photos with back images (handwriting, stamps). `back_image` and `back_transcription` fields in photo metadata model.
+- **Open Graph meta tags**: Rich social sharing previews on `/photo/{id}` and landing page. Dynamic descriptions with identified/unidentified counts. Twitter Card support.
+- **Web Share API**: Native mobile sharing (share sheet) with clipboard copy fallback on desktop. Toast notification for link copy.
+- **Photo download**: `/photo/{id}/download` endpoint serves original file with Content-Disposition header (local) or redirects to R2 (production).
+- **Internal UX links**: "Open Full Page" in photo modal, "Full Page" on face cards and photos grid. Every photo reachable via shareable URL.
+- **SITE_URL constant**: Module-level canonical URL for OG tags and sharing.
+- 61 new tests (public viewer, flip, OG tags, share/download, internal links). Test count: 1733.
+
 ## [v0.28.3] - 2026-02-12
 
 ### Fixed

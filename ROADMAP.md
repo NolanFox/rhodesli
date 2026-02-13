@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.28.3 · 1672 tests · 155 photos · 181 faces · 24 confirmed · 16 proposals ready
+Current: v0.29.0 · 1733 tests · 155 photos · 181 faces · 46 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -66,6 +66,11 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] BE-020: Admin data export endpoint (2026-02-06)
 - [x] BE-021: Production-to-local sync script (2026-02-10)
 - [x] BE-022: Staged upload download API + processing pipeline (2026-02-10)
+- [x] FE-070: Public shareable photo viewer at /photo/{id} (2026-02-12)
+- [x] FE-071: Front/back photo flip with CSS 3D animation (2026-02-12)
+- [x] FE-072: Open Graph meta tags for social sharing (2026-02-12)
+- [x] FE-073: Web Share API + download buttons (2026-02-12)
+- [x] FE-074: Internal UX links to public photo viewer (2026-02-12)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -122,6 +127,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-12: v0.29.0 — The Shareable Moment (Session 20): Public photo viewer at /photo/{id} with face overlays and person cards, front/back photo flip with CSS 3D animation, Open Graph meta tags for rich social sharing, Web Share API + download buttons, internal UX links to public viewer. Museum-like warm design. 61 new tests. 1733 tests
 - [x] 2026-02-12: v0.28.3 — Recurring Bug Fixes (Session 19f): Annotations sync to Railway volume, mobile horizontal overflow fix (overflow-x:hidden + responsive wrapping), manual search Compare button, pending upload thumbnail fallback. 12 new tests. 1672 tests
 - [x] 2026-02-12: v0.28.2 — Data Safety & Admin Fixes (Session 19e): Removed test data from production (5 annotations, 46 history entries), quality scores influence Help Identify ordering, admin staging preview endpoint, duplicate Focus Mode button removal, feedback tracking architecture. 6 new tests. 1641 tests
 - [x] 2026-02-12: v0.28.1 — Quality & Documentation (Session 19d): Face quality scoring (AD-038, composite 0-100), quality-aware thumbnail selection, larger face crops globally, hover effects. Photo enhancement research doc, discovery UX rules, feedback tracker. 13 new tests. 1635 tests
