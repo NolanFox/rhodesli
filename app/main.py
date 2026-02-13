@@ -5155,7 +5155,8 @@ def login_modal() -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-8 relative border border-slate-700"
         ),
         id="login-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9998]"
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9998]",
+        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
     )
 
 
@@ -5221,7 +5222,8 @@ def _guest_or_login_modal(form_data: dict) -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-8 relative border border-slate-700"
         ),
         id="guest-or-login-modal",
-        cls="fixed inset-0 flex items-center justify-center p-4 z-[10000]"
+        cls="fixed inset-0 flex items-center justify-center p-4 z-[10000]",
+        **{"_": "on keydown[key=='Escape'] remove my children"},
     )
 
 
@@ -5315,7 +5317,8 @@ def confirm_modal() -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-6 relative border border-slate-700"
         ),
         id="confirm-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9997]"
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9997]",
+        **{"_": "on keydown[key=='Escape'] add .hidden to me"},
     )
 
 

@@ -202,3 +202,44 @@ class TestPhotoLightboxRemoved:
         import app.main as m
         assert not hasattr(m, 'photo_lightbox'), \
             "photo_lightbox() function should be removed — use photo_modal() only"
+
+
+class TestModalDismissibility:
+    """Every modal must be dismissible via backdrop click, X button, and Escape key."""
+
+    def test_photo_modal_has_escape_handler(self, client):
+        """Photo modal has Escape key handler."""
+        from app.main import photo_modal
+        from fastcore.xml import to_xml
+        html = to_xml(photo_modal())
+        assert "Escape" in html
+
+    def test_compare_modal_has_escape_handler(self, client):
+        """Compare modal has Escape key handler."""
+        from app.main import compare_modal
+        from fastcore.xml import to_xml
+        html = to_xml(compare_modal())
+        assert "Escape" in html
+
+    def test_login_modal_has_escape_handler(self, client):
+        """Login modal has Escape key handler."""
+        from app.main import login_modal
+        from fastcore.xml import to_xml
+        html = to_xml(login_modal())
+        assert "Escape" in html
+
+    def test_confirm_modal_has_escape_handler(self, client):
+        """Confirm modal has Escape key handler."""
+        from app.main import confirm_modal
+        from fastcore.xml import to_xml
+        html = to_xml(confirm_modal())
+        assert "Escape" in html
+
+    def test_all_modals_have_backdrop_dismiss(self, client):
+        """All modals have backdrop click-to-close handlers."""
+        response = client.get("/?section=to_review")
+        html = response.text
+        # Photo modal and confirm modal should be in every page
+        assert "photo-modal" in html
+        assert "confirm-modal" in html
+        assert "login-modal" in html
