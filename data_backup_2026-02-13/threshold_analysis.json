@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-02-08T02:30:00Z",
+  "description": "Golden set evaluation after AD-001 fix (multi-anchor matching)",
+  "golden_set_stats": {
+    "total_mappings": 90,
+    "unique_identities": 23,
+    "unique_photos": 42,
+    "total_pairs": 4005,
+    "same_identity_pairs": 292,
+    "different_identity_pairs": 3713
+  },
+  "same_identity_distance_stats": {
+    "min": 0.4943,
+    "max": 1.3929,
+    "mean": 0.9927,
+    "median": 0.9847
+  },
+  "different_identity_distance_stats": {
+    "min": 1.0502,
+    "max": 1.537,
+    "mean": 1.3751,
+    "median": 1.382
+  },
+  "thresholds": {
+    "1.00": {
+      "precision": 1.0,
+      "recall": 0.5342,
+      "f1": 0.6964,
+      "accuracy": 0.966,
+      "tp": 156,
+      "fp": 0,
+      "tn": 3713,
+      "fn": 136,
+      "note": "RECOMMENDED for automated clustering. Zero false positives."
+    },
+    "1.20": {
+      "precision": 0.8699,
+      "recall": 0.8699,
+      "f1": 0.8699,
+      "accuracy": 0.981,
+      "tp": 254,
+      "fp": 38,
+      "tn": 3675,
+      "fn": 38,
+      "note": "All false positives are genetically-related family members (Capelutos)."
+    }
+  },
+  "false_positive_analysis": {
+    "dominant_confusion_pairs": [
+      "Big Leon Capeluto <-> Victor Capelluto (father/son)",
+      "Rosa Sedikaro <-> Sol Sedikaro (siblings)",
+      "Betty Capeluto Fox <-> Victoria Capuano Capeluto (family)",
+      "Betty Capeluto Fox <-> Anita Capeluto Franco (family)",
+      "Selma Capeluto <-> Betty Capeluto Fox (family)"
+    ],
+    "conclusion": "Family resemblance is the primary source of false positives in this archive. This is expected for a single-family photo collection."
+  },
+  "recommendation": {
+    "clustering_threshold": 1.0,
+    "rationale": "At 1.0, precision is 100% (no false positives). The cost of a false positive (manual undo, ~5 clicks) far exceeds the cost of a false negative (manual merge, ~2 clicks). The user can always manually merge missed matches via Find Similar."
+  }
+}

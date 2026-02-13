@@ -1,0 +1,109 @@
+{
+  "timestamp": "2026-02-10T04:30:10.391953+00:00",
+  "golden_set_stats": {
+    "total_mappings": 90,
+    "unique_identities": 23,
+    "unique_photos": 42
+  },
+  "embedding_stats": {
+    "total_embeddings": 547,
+    "total_pairs": 4005,
+    "same_identity_pairs": 292,
+    "different_identity_pairs": 3713
+  },
+  "distance_stats": {
+    "same_identity": {
+      "min": 0.4943,
+      "max": 1.3929,
+      "mean": 0.9927,
+      "median": 0.9847
+    },
+    "different_identity": {
+      "min": 1.0502,
+      "max": 1.537,
+      "mean": 1.3751,
+      "median": 1.382
+    }
+  },
+  "threshold_sweep": {
+    "0.70": {
+      "precision": 1.0,
+      "recall": 0.0514,
+      "f1": 0.0977,
+      "fp": 0,
+      "fn": 277
+    },
+    "0.80": {
+      "precision": 1.0,
+      "recall": 0.1336,
+      "f1": 0.2356,
+      "fp": 0,
+      "fn": 253
+    },
+    "0.90": {
+      "precision": 1.0,
+      "recall": 0.3116,
+      "f1": 0.4752,
+      "fp": 0,
+      "fn": 201
+    },
+    "1.00": {
+      "precision": 1.0,
+      "recall": 0.5342,
+      "f1": 0.6964,
+      "fp": 0,
+      "fn": 136
+    },
+    "1.05": {
+      "precision": 1.0,
+      "recall": 0.6336,
+      "f1": 0.7757,
+      "fp": 0,
+      "fn": 107
+    },
+    "1.10": {
+      "precision": 0.9862,
+      "recall": 0.7363,
+      "f1": 0.8431,
+      "fp": 3,
+      "fn": 77
+    },
+    "1.15": {
+      "precision": 0.944,
+      "recall": 0.8082,
+      "f1": 0.8708,
+      "fp": 14,
+      "fn": 56
+    },
+    "1.20": {
+      "precision": 0.8699,
+      "recall": 0.8699,
+      "f1": 0.8699,
+      "fp": 38,
+      "fn": 38
+    }
+  },
+  "optimal_f1_threshold": 1.15,
+  "zero_fp_ceiling": 1.05,
+  "key_false_positive_patterns": [
+    {
+      "pattern": "Family resemblance: Big Leon Capeluto vs Victor Capelluto",
+      "min_distance": 1.0739,
+      "count": 12,
+      "note": "Likely father/son or close relatives. Dominant FP source."
+    },
+    {
+      "pattern": "Family resemblance: Rosa Sedikaro vs Sol Sedikaro",
+      "min_distance": 1.0502,
+      "count": 2,
+      "note": "Closest different-identity pair. Same photo, possibly couple."
+    },
+    {
+      "pattern": "In-law resemblance: Betty Capeluto Fox vs others",
+      "min_distance": 1.1253,
+      "count": 8,
+      "note": "Betty Capeluto Fox confused with Anita Franco, Victoria Capuano"
+    }
+  ],
+  "statistical_note": "Golden set has 90 mappings across 23 identities, generating 4005 pairwise comparisons. This is sufficient for threshold evaluation. The clean separation below 1.05 (zero false positives) is a strong signal. False positives above 1.05 are dominated by family resemblance, not random confusion."
+}

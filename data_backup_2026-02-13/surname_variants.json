@@ -1,0 +1,72 @@
+{
+    "schema_version": 1,
+    "community": "Rhodes Jewish (Rhodesli)",
+    "notes": "Surname variant groups for cross-variant matching. Transliterations from Ladino/Turkish/Greek/Hebrew produce many spelling variations. Auto-generated from confirmed identities, manually reviewed.",
+    "variant_groups": [
+        {
+            "canonical": "Capeluto",
+            "variants": ["Capelluto", "Capelouto", "Capouano", "Capuano", "Capelutto"],
+            "notes": "Ladino surname, many transliterations. Capuano/Capouano are Italianized forms."
+        },
+        {
+            "canonical": "Hasson",
+            "variants": ["Hassan", "Hason", "Asson", "Hasan"],
+            "notes": "Sephardic surname, Arabic origin (Hassan = handsome/good)"
+        },
+        {
+            "canonical": "Hazan",
+            "variants": ["Hazzan", "Chazan", "Kazan"],
+            "notes": "Sephardic surname, Hebrew origin (cantor/prayer leader)"
+        },
+        {
+            "canonical": "Franco",
+            "variants": ["Franko", "Francos"],
+            "notes": "Sephardic surname common in Rhodes and Turkey"
+        },
+        {
+            "canonical": "Israel",
+            "variants": ["Israil", "Yisrael"],
+            "notes": "Biblical name used as surname"
+        },
+        {
+            "canonical": "Pizante",
+            "variants": ["Pizanti", "Pisante", "Pisanti"],
+            "notes": "Sephardic surname, Italian-influenced spelling"
+        },
+        {
+            "canonical": "Almaleh",
+            "variants": ["Almalech", "Almalekh", "Almalechi"],
+            "notes": "Sephardic surname"
+        },
+        {
+            "canonical": "Sedikaro",
+            "variants": ["Sidikaro", "Tsedikaro"],
+            "notes": "Rhodes Sephardic surname"
+        },
+        {
+            "canonical": "Surmani",
+            "variants": ["Surmanli", "Sourmani"],
+            "notes": "Possibly of Turkish origin"
+        },
+        {
+            "canonical": "Mazal",
+            "variants": ["Mazel", "Mazaltov", "Mazzal"],
+            "notes": "Hebrew origin (luck/fortune)"
+        },
+        {
+            "canonical": "Louza",
+            "variants": ["Loza", "Luza"],
+            "notes": "Sephardic surname"
+        },
+        {
+            "canonical": "Moussafer",
+            "variants": ["Musafer", "Mousafer", "Musafir"],
+            "notes": "Arabic/Turkish origin (traveler)"
+        },
+        {
+            "canonical": "Schapiro",
+            "variants": ["Shapiro", "Shapira", "Schapira"],
+            "notes": "Ashkenazi surname, geographic origin (Speyer, Germany)"
+        }
+    ]
+}

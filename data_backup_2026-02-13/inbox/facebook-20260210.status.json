@@ -1,0 +1,17 @@
+{
+  "job_id": "facebook-20260210",
+  "status": "success",
+  "faces_extracted": 6,
+  "identities_created": [
+    "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+    "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+    "1c1ecee7-b1ac-4358-a544-064980030728",
+    "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+    "6a97c774-f66d-4edc-9e55-699d958336fd",
+    "5e5fd083-aa46-40f2-878e-7d341204025d"
+  ],
+  "updated_at": "2026-02-11T00:56:25.753343+00:00",
+  "total_files": 4,
+  "files_succeeded": 4,
+  "files_failed": 0
+}

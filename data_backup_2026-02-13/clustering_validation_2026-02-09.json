@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-02-10T04:29:31.840820+00:00",
+  "source_report": "clustering_report_2026-02-07.txt",
+  "threshold": 1.0,
+  "total_proposed": 32,
+  "agreed": 0,
+  "disagreed": 0,
+  "skipped": 32,
+  "rejected": 0,
+  "precision": null,
+  "coverage": 0.0,
+  "by_distance_band": {
+    "0.50-0.70": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 10,
+      "rejected": 0
+    },
+    "0.70-0.80": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 9,
+      "rejected": 0
+    },
+    "0.80-0.90": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 5,
+      "rejected": 0
+    },
+    "0.90-1.00": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 8,
+      "rejected": 0
+    }
+  },
+  "by_identity": {
+    "Moise Capeluto": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 11,
+      "rejected": 0,
+      "best_distance": 0.5151,
+      "worst_distance": 0.9997
+    },
+    "Big Leon Capeluto": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 6,
+      "rejected": 0,
+      "best_distance": 0.5982,
+      "worst_distance": 0.877
+    },
+    "Victoria Cukran Capeluto": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 10,
+      "rejected": 0,
+      "best_distance": 0.603,
+      "worst_distance": 0.9704
+    },
+    "Victoria Capuano Capeluto": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 3,
+      "rejected": 0,
+      "best_distance": 0.7789,
+      "worst_distance": 0.9279
+    },
+    "Betty Capeluto": {
+      "agreed": 0,
+      "disagreed": 0,
+      "skipped": 2,
+      "rejected": 0,
+      "best_distance": 0.909,
+      "worst_distance": 0.9675
+    }
+  },
+  "disagreements": [],
+  "agreed_details": [],
+  "statistical_caveat": "Sample size of 0 validated matches is INSUFFICIENT for confident threshold calibration. Treat as directional, not definitive. Target: 50+ validated matches for reliable calibration."
+}

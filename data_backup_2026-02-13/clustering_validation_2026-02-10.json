@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-02-10T05:22:24.035041+00:00",
+  "source_report": "clustering_report_2026-02-07.txt",
+  "threshold": 1.05,
+  "total_proposed": 0,
+  "agreed": 0,
+  "disagreed": 0,
+  "skipped": 0,
+  "rejected": 0,
+  "precision": null,
+  "coverage": null,
+  "by_distance_band": {},
+  "by_identity": {},
+  "disagreements": [],
+  "agreed_details": [],
+  "statistical_caveat": "Sample size of 0 validated matches is INSUFFICIENT for confident threshold calibration. Treat as directional, not definitive. Target: 50+ validated matches for reliable calibration."
+}

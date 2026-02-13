@@ -1,0 +1,16 @@
+{
+  "total_mappings": 125,
+  "unique_identities": 23,
+  "single_face_identities": 8,
+  "multi_face_identities": 15,
+  "rich_identities": 7,
+  "same_person_pairs": 698,
+  "different_person_pairs": 7052,
+  "collections": 4,
+  "collection_breakdown": {
+    "Betty Capeluto Miami Collection": 39,
+    "Vida Capeluto NYC Collection": 82,
+    "Nace Capeluto Tampa Collection": 3,
+    "Newspapers.com": 1
+  }
+}
