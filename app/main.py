@@ -8518,6 +8518,46 @@ def public_photo_page(
                         "This photograph has writing on the back" if back_transcription else "Turn over to see the back of this photograph",
                         cls="text-slate-500 text-xs text-center block mt-2"
                     ) if has_back else None,
+                    # Admin: Upload back image (only shown to admin when no back image)
+                    Div(
+                        Div(
+                            P("Admin: Add a back image", cls="text-slate-400 text-xs font-medium mb-2"),
+                            Form(
+                                Input(type="file", name="file", accept=".jpg,.jpeg,.png,.webp",
+                                      cls="text-xs text-slate-300 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:bg-slate-600 file:text-white hover:file:bg-slate-500"),
+                                Div(
+                                    Input(type="text", name="back_transcription", placeholder="Transcribe writing on back (optional)...",
+                                          cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"),
+                                    Button("Upload", type="submit",
+                                           cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg"),
+                                    cls="flex gap-2 mt-2",
+                                ),
+                                hx_post=f"/api/photo/{photo_id}/back-image",
+                                hx_target="#back-upload-result",
+                                hx_swap="innerHTML",
+                                hx_encoding="multipart/form-data",
+                            ),
+                            Div(id="back-upload-result", cls="mt-2"),
+                        ),
+                        cls="mt-4 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50"
+                    ) if is_admin and not has_back else None,
+                    # Admin: Update transcription (when back exists but no transcription)
+                    Div(
+                        Form(
+                            Input(type="text", name="back_transcription",
+                                  placeholder="Transcribe writing on back...",
+                                  value=back_transcription or "",
+                                  cls="flex-1 bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white placeholder-slate-500"),
+                            Button("Save", type="submit",
+                                   cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg"),
+                            hx_post=f"/api/photo/{photo_id}/back-transcription",
+                            hx_target="#transcription-result",
+                            hx_swap="innerHTML",
+                            cls="flex gap-2",
+                        ),
+                        Div(id="transcription-result", cls="mt-1"),
+                        cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50"
+                    ) if is_admin and has_back else None,
                     # Photo metadata
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
@@ -10937,6 +10977,80 @@ def post(photo_id: str, date_taken: str = "", location: str = "",
     save_photo_registry(photo_registry)
 
     return toast(f"Photo metadata updated ({len(metadata)} field(s)).", "success")
+
+
+@rt("/api/photo/{photo_id}/back-image")
+async def post(photo_id: str, file: UploadFile = None, back_transcription: str = "", sess=None):
+    """Upload a back image for a photo and optionally add transcription. Admin-only."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if not file or not file.filename:
+        return toast("No file selected.", "warning")
+
+    # Validate file type
+    ext = Path(file.filename).suffix.lower()
+    if ext not in {".jpg", ".jpeg", ".png", ".webp"}:
+        return toast(f"File type '{ext}' not allowed. Use .jpg, .png, or .webp.", "error")
+
+    # Read file content
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:  # 50MB limit
+        return toast("File too large. Maximum is 50 MB.", "error")
+
+    # Generate back image filename: {original_stem}_back{ext}
+    photo_registry = load_photo_registry()
+    photo = photo_registry.get_photo(photo_id)
+    if not photo:
+        return toast("Photo not found.", "error")
+
+    original_path = photo.get("path", photo.get("filename", ""))
+    original_stem = Path(original_path).stem
+    back_filename = f"{original_stem}_back{ext}"
+
+    # Save to raw_photos/ (local dev) or staging (production)
+    raw_photos_dir = Path("raw_photos")
+    if raw_photos_dir.exists():
+        save_path = raw_photos_dir / back_filename
+        save_path.write_bytes(content)
+    else:
+        # Staging for production upload
+        staging_dir = data_path / "staging" / "back_images"
+        staging_dir.mkdir(parents=True, exist_ok=True)
+        save_path = staging_dir / back_filename
+        save_path.write_bytes(content)
+
+    # Update photo metadata
+    metadata = {"back_image": back_filename}
+    if back_transcription.strip():
+        metadata["back_transcription"] = back_transcription.strip()
+    photo_registry.set_metadata(photo_id, metadata)
+    save_photo_registry(photo_registry)
+
+    return Div(
+        P(f"Back image uploaded: {back_filename}", cls="text-emerald-400 text-sm"),
+        P("The 'Turn Over' button is now available on this photo.", cls="text-slate-400 text-xs mt-1"),
+        cls="p-2",
+    )
+
+
+@rt("/api/photo/{photo_id}/back-transcription")
+def post(photo_id: str, back_transcription: str = "", sess=None):
+    """Update the back transcription for a photo. Admin-only."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if not back_transcription.strip():
+        return toast("No transcription provided.", "warning")
+
+    photo_registry = load_photo_registry()
+    if not photo_registry.set_metadata(photo_id, {"back_transcription": back_transcription.strip()}):
+        return toast("Photo not found.", "error")
+    save_photo_registry(photo_registry)
+
+    return toast("Transcription saved.", "success")
 
 
 @rt("/api/onboarding/discover")

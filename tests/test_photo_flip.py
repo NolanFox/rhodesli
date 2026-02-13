@@ -265,3 +265,134 @@ class TestPremiumFlipCSS:
         html = response.text
         assert "View Front" in html
         assert "Turn Over" in html
+
+
+class TestBackImageUpload:
+    """Tests for back image upload endpoint."""
+
+    def test_upload_requires_admin(self, client, real_photo_id):
+        """Back image upload requires admin auth."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=None):
+            response = client.post(
+                f"/api/photo/{real_photo_id}/back-image",
+                headers={"HX-Request": "true"},
+            )
+        assert response.status_code == 401
+
+    def test_upload_rejects_no_file(self, client, real_photo_id):
+        """Upload endpoint rejects request with no file."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.post(
+                f"/api/photo/{real_photo_id}/back-image",
+                headers={"HX-Request": "true"},
+            )
+        assert response.status_code == 200
+        assert "No file" in response.text
+
+    def test_upload_rejects_invalid_type(self, client, real_photo_id):
+        """Upload endpoint rejects non-image files."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import io
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.post(
+                f"/api/photo/{real_photo_id}/back-image",
+                files={"file": ("test.txt", io.BytesIO(b"hello"), "text/plain")},
+                headers={"HX-Request": "true"},
+            )
+        assert response.status_code == 200
+        assert "not allowed" in response.text
+
+    def test_upload_saves_metadata(self, client, real_photo_id):
+        """Successful upload sets back_image in photo metadata."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import io
+        mock_registry = MagicMock()
+        mock_registry.get_photo.return_value = {"path": "test_photo.jpg", "filename": "test_photo.jpg"}
+        mock_registry.set_metadata.return_value = True
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_photo_registry", return_value=mock_registry), \
+             patch("app.main.save_photo_registry"):
+            response = client.post(
+                f"/api/photo/{real_photo_id}/back-image",
+                files={"file": ("back.jpg", io.BytesIO(b"\xff\xd8\xff\xe0"), "image/jpeg")},
+                headers={"HX-Request": "true"},
+            )
+        assert response.status_code == 200
+        assert "uploaded" in response.text.lower() or "Back image" in response.text
+        # Verify metadata was set
+        mock_registry.set_metadata.assert_called_once()
+        call_args = mock_registry.set_metadata.call_args
+        assert "back_image" in call_args[0][1]
+
+
+class TestBackTranscriptionEndpoint:
+    """Tests for back transcription endpoint."""
+
+    def test_transcription_requires_admin(self, client, real_photo_id):
+        """Transcription update requires admin auth."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=None):
+            response = client.post(
+                f"/api/photo/{real_photo_id}/back-transcription",
+                data={"back_transcription": "Test transcription"},
+                headers={"HX-Request": "true"},
+            )
+        assert response.status_code == 401
+
+    def test_transcription_saves(self, client, real_photo_id):
+        """Transcription is saved to photo metadata."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        mock_registry = MagicMock()
+        mock_registry.set_metadata.return_value = True
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_photo_registry", return_value=mock_registry), \
+             patch("app.main.save_photo_registry"):
+            response = client.post(
+                f"/api/photo/{real_photo_id}/back-transcription",
+                data={"back_transcription": "To my dear family, 1935"},
+                headers={"HX-Request": "true"},
+            )
+        assert response.status_code == 200
+        mock_registry.set_metadata.assert_called_once()
+
+
+class TestAdminUploadUI:
+    """Admin back image upload UI on public photo page."""
+
+    def test_upload_form_shown_for_admin(self, client, real_photo_id):
+        """Admin sees upload form when photo has no back image."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user") as mock_user:
+            mock_user.return_value = MagicMock(is_admin=True, email="admin@test.com")
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "Add a back image" in html
+        assert "back-image" in html
+
+    def test_upload_form_hidden_for_non_admin(self, client, real_photo_id):
+        """Non-admin users don't see upload form."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Default (no auth) is treated as admin in dev, so test with explicit non-admin
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user") as mock_user:
+            mock_user.return_value = MagicMock(is_admin=False, email="user@test.com")
+            response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "Add a back image" not in html
