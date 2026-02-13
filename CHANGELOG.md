@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.29.1] - 2026-02-12
+
+### Added
+- **Consistent share button**: Reusable `share_button()` helper with 3 styles (icon, button, link). Web Share API + clipboard fallback. Added to Photos grid, Photo Context modal, People page face cards, and Focus Mode (main card + photo context panel). Replaces inconsistent "Full Page"/"Open Full Page" text.
+- **Admin back image upload**: `POST /api/photo/{id}/back-image` file upload endpoint (admin only). `POST /api/photo/{id}/back-transcription` for handwriting transcription. Admin upload form shown on public photo viewer when no back image exists.
+- **Batch back association**: `scripts/associate_backs.py` scans for `{name}_back.{ext}` files and links them to front photos. `--dry-run` default.
+- **Non-destructive image orientation**: `parse_transform_to_css()` and `parse_transform_to_filter()` convert stored transform strings to CSS. `image_transform_toolbar()` admin UI with rotate/flip/invert/reset. `POST /api/photo/{id}/transform` endpoint. `transform` and `back_transform` added to PhotoRegistry metadata allowlist.
+- **Person card scroll-to-overlay**: Clicking a person card scrolls to the corresponding face overlay with a pulse highlight animation. Overlay IDs (`#overlay-{identity_id}`) for scroll targeting.
+- 36 new tests (share buttons, flip animation, back upload, orientation tools, viewer polish). Test count: 1733 → 1769.
+
+### Changed
+- **Premium photo flip**: Perspective 1200px, dynamic box-shadow on flip, scale(1.02) lift, paper texture (#f5f0e8 + inner shadow), face overlay fade during flip. Button text "Flip Photo"→"Turn Over", "Flip Back"→"View Front".
+- **Face overlay label positioning**: Name labels appear below face box when face is in top 15% of image (prevents clipping). Above box otherwise.
+- **Quality scores admin-only**: `face_card()` now accepts `is_admin` parameter. Quality scores hidden for non-admin visitors. Hidden when score is 0.
+- **Photo container padding**: `padding-top: 1.5rem` on photo hero container prevents overlay label clipping at top edge.
+
 ## [v0.29.0] - 2026-02-12
 
 ### Added

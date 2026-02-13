@@ -18,8 +18,8 @@ UPDATE this file when completing feedback-related work.
 | Claude Benatar | Post backs of photos | DONE | FE-071: front/back flip with CSS 3D animation, back_image + back_transcription metadata |
 | Claude Benatar | Photos too poor quality | DONE | AD-038 quality scoring |
 | Claude Benatar | Need enhancement | Planned: UX-only toggle | PHOTO_ENHANCEMENT_RESEARCH.md |
-| Claude Benatar | Adoption concerns | IN PROGRESS: shareable photo pages + OG meta tags for viral loop | FE-070–074 |
-| Claude Benatar | Low community engagement | IN PROGRESS: public photo viewer as compelling first experience | FE-070 public_photo_page() |
+| Claude Benatar | Adoption concerns | DONE: shareable pages + OG meta + share buttons everywhere | FE-070–077, share_button() |
+| Claude Benatar | Low community engagement | DONE: public viewer + consistent share buttons on every surface | FE-070, FE-075 share_button() |
 | Manual testing | Quality ordering broken | DONE (this session) | AD-038, _sort_skipped_by_actionability |
 | Manual testing | Test data in production | DONE (this session) | .claude/rules/data-safety.md |
 | Manual testing | Pending uploads broken | DONE (this session) | /admin/staging-preview endpoint |
@@ -30,6 +30,12 @@ UPDATE this file when completing feedback-related work.
 | Session 20 | Share + download buttons | DONE | FE-073: Web Share API + clipboard fallback, download with Content-Disposition |
 | Session 20 | Front/back photo flip | DONE | FE-071: CSS 3D flip, back_image/back_transcription metadata fields |
 | Session 20 | Internal links to viewer | DONE | FE-074: "Open Full Page" / "Full Page" links from modal, face cards, photos grid |
+| Session 21 | Consistent share buttons | DONE | FE-075: share_button() helper, 3 styles, Web Share API + clipboard fallback |
+| Session 21 | Premium photo flip | DONE | FE-076: perspective, shadow dynamics, paper texture, face overlay fade |
+| Session 21 | Admin back image upload | DONE | BE-024: file upload endpoint, transcription editor, batch association script |
+| Session 21 | Image orientation tools | DONE | BE-025: rotate/flip/invert via CSS transforms, admin toolbar, metadata storage |
+| Session 21 | Quality scores admin-only | DONE | FE-077: face_card(is_admin=) hides quality for non-admin |
+| Session 21 | Overlay label clipping | DONE | FE-077: dynamic positioning below box when face in top 15% |
 
 ## Strategic Insights (from Claude Benatar conversation, Feb 2026)
 

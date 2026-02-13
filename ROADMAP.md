@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.29.0 · 1733 tests · 155 photos · 181 faces · 46 confirmed · 16 proposals ready
+Current: v0.29.1 · 1769 tests · 155 photos · 181 faces · 46 confirmed · 16 proposals ready
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -71,6 +71,11 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] FE-072: Open Graph meta tags for social sharing (2026-02-12)
 - [x] FE-073: Web Share API + download buttons (2026-02-12)
 - [x] FE-074: Internal UX links to public photo viewer (2026-02-12)
+- [x] FE-075: Consistent share button across all surfaces — Web Share API + clipboard fallback on Photos grid, Photo Context modal, People page, Focus Mode (2026-02-12)
+- [x] FE-076: Premium photo flip animation — perspective, dynamic shadow, scale lift, paper texture, face overlay fade (2026-02-12)
+- [x] BE-024: Admin back image upload — file upload endpoint + transcription editor + batch association script (2026-02-12)
+- [x] BE-025: Non-destructive image orientation — rotate/flip/invert via CSS transforms stored as metadata (2026-02-12)
+- [x] FE-077: Photo viewer polish — overlay label clipping fix, quality scores admin-only, person card scroll-to-overlay (2026-02-12)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -127,6 +132,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-12: v0.29.1 — Sharing Everywhere + The Photo Flip (Session 21): Consistent share buttons across all surfaces (Photos grid, Photo Context, People page, Focus Mode). Premium photo flip animation (perspective, dynamic shadow, lift, paper texture). Admin back image upload + transcription + batch association script. Non-destructive image orientation tools (rotate/flip/invert via CSS transforms). Photo viewer polish (overlay label clipping, admin-only quality scores, person card scroll-to-overlay). 36 new tests. 1769 tests
 - [x] 2026-02-12: v0.29.0 — The Shareable Moment (Session 20): Public photo viewer at /photo/{id} with face overlays and person cards, front/back photo flip with CSS 3D animation, Open Graph meta tags for rich social sharing, Web Share API + download buttons, internal UX links to public viewer. Museum-like warm design. 61 new tests. 1733 tests
 - [x] 2026-02-12: v0.28.3 — Recurring Bug Fixes (Session 19f): Annotations sync to Railway volume, mobile horizontal overflow fix (overflow-x:hidden + responsive wrapping), manual search Compare button, pending upload thumbnail fallback. 12 new tests. 1672 tests
 - [x] 2026-02-12: v0.28.2 — Data Safety & Admin Fixes (Session 19e): Removed test data from production (5 annotations, 46 history entries), quality scores influence Help Identify ordering, admin staging preview endpoint, duplicate Focus Mode button removal, feedback tracking architecture. 6 new tests. 1641 tests
