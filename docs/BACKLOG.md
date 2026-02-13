@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 6.8 — February 12, 2026
-**Status**: 1769 tests passing, v0.29.1, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 6.9 — February 13, 2026
+**Status**: 1848 tests passing, v0.30.0, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -134,6 +134,10 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-072 | Open Graph meta tags | DONE | og:title/description/image/url, Twitter Card, dynamic description. 17 tests (2026-02-12) |
 | FE-073 | Share + download buttons | DONE | Web Share API + clipboard fallback, /photo/{id}/download, toast notification. 12 tests (2026-02-12) |
 | FE-074 | Internal links to public viewer | DONE | "Open Full Page" from modal, "Full Page" from face cards + photo grid. 5 tests (2026-02-12) |
+| FE-078 | Public person page | DONE | /person/{id}: hero avatar, face/photo toggle, appears with, OG tags. 23 tests (2026-02-13) |
+| FE-079 | Public photos/people browsing | DONE | /photos and /people, no auth, collection filter, sort. 21 tests (2026-02-13) |
+| FE-090 | Person links from photo viewer | DONE | Photo viewer cards link to /person/{id}, "See all photos". 4 tests (2026-02-13) |
+| FE-091 | Public Page link on identity cards | DONE | Confirmed cards have "Public Page" link to /person/{id}. 3 tests (2026-02-13) |
 
 ### 2.9 User Analytics & Logging (MEDIUM Priority)
 

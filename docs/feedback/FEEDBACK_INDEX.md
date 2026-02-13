@@ -36,6 +36,10 @@ UPDATE this file when completing feedback-related work.
 | Session 21 | Image orientation tools | DONE | BE-025: rotate/flip/invert via CSS transforms, admin toolbar, metadata storage |
 | Session 21 | Quality scores admin-only | DONE | FE-077: face_card(is_admin=) hides quality for non-admin |
 | Session 21 | Overlay label clipping | DONE | FE-077: dynamic positioning below box when face in top 15% |
+| Session 22 | Public person pages | DONE | FE-078: /person/{id} with avatar, face/photo toggle, appears with, OG tags |
+| Session 22 | Public browsing pages | DONE | FE-079: /photos and /people, no auth, collection filter, sort |
+| Session 22 | Person links from photos | DONE | FE-080: photo viewer cards link to /person/{id}, "See all photos" |
+| Session 22 | Public page link on cards | DONE | FE-081: identity cards have "Public Page" link to /person/{id} |
 
 ## Strategic Insights (from Claude Benatar conversation, Feb 2026)
 

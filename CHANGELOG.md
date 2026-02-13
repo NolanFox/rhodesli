@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.30.0] - 2026-02-13
+
+### Added
+- **Public person page** (`/person/{id}`): Shareable page for each identified person with circular avatar, name, status badge, stats line, and share button. Face/photo gallery toggle. "Appears with" section showing co-appearing identified people with cross-links. OG meta tags for social sharing.
+- **Public photos page** (`/photos`): Browse all archive photos with collection filter and sort (newest/oldest/most faces). No admin controls. Each photo links to `/photo/{id}`.
+- **Public people page** (`/people`): Browse all identified people with sort (A-Z/most photos/newest). Each person links to `/person/{id}`.
+- **Person links from photo viewer**: Person cards on `/photo/{id}` now link to `/person/{id}` instead of internal admin view. "See all photos" link for identified people.
+- **"Public Page" link on identity cards**: Confirmed identity cards on the admin People page have a link to `/person/{id}` (opens in new tab).
+- **Pipeline script verification tests**: 8 tests verifying all upload pipeline scripts have correct CLI interfaces.
+- 59 new tests (person page, person links, public browsing, people page links, pipeline scripts). Test count: 1789 → 1848.
+
+### Changed
+- Navigation links on public pages (photo viewer, person page) now point to `/photos` and `/people` instead of `/?section=photos` and `/?section=confirmed`.
+- "Explore More Photos" links updated to `/photos`.
+- Cross-linked navigation structure: photo → person (cards), person → photo (gallery), person → person ("appears with").
+
 ## [v0.29.1] - 2026-02-12
 
 ### Added
