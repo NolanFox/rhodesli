@@ -4916,6 +4916,16 @@ def identity_card(
         type="button",
     ) if total_faces > 0 else None
 
+    # View Public Page link (for confirmed identities with real names)
+    view_public_link = None
+    if state == "CONFIRMED" and not name.startswith("Unidentified") and not name.startswith("Identity "):
+        view_public_link = A(
+            "\U0001f517 Public Page",
+            href=f"/person/{identity_id}",
+            cls="px-3 py-1.5 text-sm font-medium text-slate-400 border border-slate-600 rounded-lg hover:text-indigo-300 hover:border-indigo-500/30 transition-colors",
+            target="_blank",
+        )
+
     # Find Similar button (loads neighbors via HTMX) -- scrolls into view after swap
     find_similar_btn = Button(
         "\U0001f50d Find Similar",
@@ -4970,6 +4980,7 @@ def identity_card(
                 sort_dropdown,
                 view_all_photos_btn,
                 find_similar_btn,
+                view_public_link,
                 cls="flex items-center gap-3"
             ),
             cls="identity-card-header flex items-center justify-between mb-3"
