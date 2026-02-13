@@ -186,6 +186,164 @@ class TestAnnotationApproval:
         assert saved["annotations"][ann_id]["status"] == "rejected"
 
 
+class TestAnnotationDedup:
+    """Tests for duplicate annotation deduplication."""
+
+    def test_duplicate_submission_adds_confirmation(self, client, tmp_path):
+        """Submitting the same suggestion again adds a confirmation instead of a new annotation."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "existing-ann": {
+                    "annotation_id": "existing-ann",
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "target-id-1",
+                    "value": "Leon Capeluto",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user1@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                    "confirmations": [],
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        mock_user = MagicMock()
+        mock_user.email = "user2@test.com"  # Different user
+
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=mock_user), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.post(
+                "/api/annotations/submit",
+                data={
+                    "target_type": "identity",
+                    "target_id": "target-id-1",
+                    "annotation_type": "name_suggestion",
+                    "value": "Leon Capeluto",
+                }
+            )
+            assert response.status_code == 200
+
+        saved = json.loads(ann_path.read_text())
+        # Should still be 1 annotation, not 2
+        assert len(saved["annotations"]) == 1
+        ann = saved["annotations"]["existing-ann"]
+        assert len(ann["confirmations"]) == 1
+        assert ann["confirmations"][0]["by"] == "user2@test.com"
+
+    def test_same_user_cannot_confirm_twice(self, client, tmp_path):
+        """Same user submitting again does not add duplicate confirmation."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "existing-ann": {
+                    "annotation_id": "existing-ann",
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "target-id-1",
+                    "value": "Leon Capeluto",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user1@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                    "confirmations": [],
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        mock_user = MagicMock()
+        mock_user.email = "user1@test.com"  # Same user as original submitter
+
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=mock_user), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.post(
+                "/api/annotations/submit",
+                data={
+                    "target_type": "identity",
+                    "target_id": "target-id-1",
+                    "annotation_type": "name_suggestion",
+                    "value": "Leon Capeluto",
+                }
+            )
+            assert response.status_code == 200
+
+        saved = json.loads(ann_path.read_text())
+        assert len(saved["annotations"]) == 1
+        # No confirmation added (same user as submitter)
+        assert len(saved["annotations"]["existing-ann"]["confirmations"]) == 0
+
+    def test_different_name_creates_new_annotation(self, client, tmp_path):
+        """Different name for same target creates a new annotation."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        ann_data = {
+            "schema_version": 1,
+            "annotations": {
+                "existing-ann": {
+                    "annotation_id": "existing-ann",
+                    "type": "name_suggestion",
+                    "target_type": "identity",
+                    "target_id": "target-id-1",
+                    "value": "Leon Capeluto",
+                    "confidence": "likely",
+                    "reason": "",
+                    "submitted_by": "user1@test.com",
+                    "submitted_at": "2026-02-10T00:00:00Z",
+                    "status": "pending",
+                    "reviewed_by": None,
+                    "reviewed_at": None,
+                    "confirmations": [],
+                }
+            }
+        }
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps(ann_data))
+
+        mock_user = MagicMock()
+        mock_user.email = "user2@test.com"
+
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=mock_user), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            response = client.post(
+                "/api/annotations/submit",
+                data={
+                    "target_type": "identity",
+                    "target_id": "target-id-1",
+                    "annotation_type": "name_suggestion",
+                    "value": "Different Name",  # Different value
+                }
+            )
+            assert response.status_code == 200
+
+        saved = json.loads(ann_path.read_text())
+        # Should now be 2 annotations (different names)
+        assert len(saved["annotations"]) == 2
+
+
 class TestAnnotationSkip:
     """Tests for POST /admin/approvals/{ann_id}/skip."""
 

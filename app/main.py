@@ -15201,21 +15201,51 @@ def post(target_type: str, target_id: str, annotation_type: str,
         status = "pending"
 
     annotations = _load_annotations()
-    annotations["annotations"][ann_id] = {
-        "annotation_id": ann_id,
-        "type": annotation_type,
-        "target_type": target_type,  # "identity" or "photo"
-        "target_id": target_id,
-        "value": value.strip(),
-        "confidence": confidence,
-        "reason": reason.strip() if reason else "",
-        "submitted_by": submitted_by,
-        "submitted_at": datetime.now(timezone.utc).isoformat(),
-        "status": status,
-        "reviewed_by": None,
-        "reviewed_at": None,
-    }
-    _save_annotations(annotations)
+
+    # Dedup: check for existing annotation with same target + value + type (still pending)
+    existing_ann = None
+    for existing in annotations["annotations"].values():
+        if (existing.get("target_id") == target_id
+                and existing.get("type") == annotation_type
+                and existing.get("value", "").strip().lower() == value.strip().lower()
+                and existing.get("status") in ("pending", "pending_unverified")):
+            existing_ann = existing
+            break
+
+    if existing_ann:
+        # Add a confirmation to the existing annotation instead of creating a new one
+        if "confirmations" not in existing_ann:
+            existing_ann["confirmations"] = []
+        # Prevent same user from confirming twice
+        already_confirmed = any(
+            c.get("by") == submitted_by for c in existing_ann["confirmations"]
+        )
+        # Also check if they are the original submitter
+        is_original_submitter = existing_ann.get("submitted_by") == submitted_by
+        if not already_confirmed and not is_original_submitter:
+            existing_ann["confirmations"].append({
+                "by": submitted_by,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+        _save_annotations(annotations)
+        ann_id = existing_ann["annotation_id"]
+    else:
+        annotations["annotations"][ann_id] = {
+            "annotation_id": ann_id,
+            "type": annotation_type,
+            "target_type": target_type,  # "identity" or "photo"
+            "target_id": target_id,
+            "value": value.strip(),
+            "confidence": confidence,
+            "reason": reason.strip() if reason else "",
+            "submitted_by": submitted_by,
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "status": status,
+            "reviewed_by": None,
+            "reviewed_at": None,
+            "confirmations": [],
+        }
+        _save_annotations(annotations)
 
     # If submitted from face tag dropdown, return inline confirmation + OOB toast
     if reason and reason.startswith("face_tag:") and annotation_type == "name_suggestion":
@@ -15612,8 +15642,10 @@ def get(sess=None):
                     ),
                     P(target_name, cls="text-xs text-slate-400") if a["target_type"] == "identity" else None,
                     P(f'"{a["value"]}"', cls="text-sm text-slate-300 mt-1"),
-                    P(f'Confidence: {a["confidence"]} | By: {a["submitted_by"]}',
-                      cls="text-xs text-slate-500"),
+                    P(f'By: {a["submitted_by"]}' + (
+                        f', confirmed by {len(a.get("confirmations", []))} other{"s" if len(a.get("confirmations", [])) != 1 else ""}'
+                        if a.get("confirmations") else ""
+                    ), cls="text-xs text-slate-500"),
                     P(f'Reason: {a.get("reason", "none")}', cls="text-xs text-slate-500") if a.get("reason") else None,
                     Div(
                         Button("Approve",
