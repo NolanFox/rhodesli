@@ -8159,6 +8159,475 @@ def photo_view_content(
     )
 
 
+def public_person_page(
+    person_id: str,
+    view: str = "faces",
+    user=None,
+    is_admin: bool = False,
+) -> tuple:
+    """
+    Build the public shareable person page.
+
+    Shows all photos of a specific identified person — the page you share
+    when you want to say "Look at all these photos of Aunt Selma!"
+    No authentication required.
+    """
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(person_id)
+    except KeyError:
+        identity = None
+
+    # Check for merged identities
+    if identity and identity.get("merged_into"):
+        identity = None
+
+    if not identity:
+        style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+        return (
+            Title("Person Not Found - Rhodesli"),
+            style_404,
+            Main(
+                Nav(
+                    Div(
+                        A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                        cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16"
+                    ),
+                    cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800"
+                ),
+                Div(
+                    Div(
+                        Span("404", cls="text-6xl font-bold text-slate-700 block mb-4"),
+                        H1("Person not found", cls="text-2xl font-serif font-bold text-white mb-3"),
+                        P("This person hasn't been identified in our archive yet.", cls="text-slate-400 mb-8"),
+                        A("Explore the Archive", href="/?section=photos",
+                          cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"),
+                        cls="text-center"
+                    ),
+                    cls="flex items-center justify-center min-h-[60vh]"
+                ),
+                cls="min-h-screen bg-slate-900"
+            ),
+        )
+
+    raw_name = ensure_utf8_display(identity.get("name"))
+    display_name = raw_name or f"Person {person_id[:8]}"
+    state = identity.get("state", "INBOX")
+    is_confirmed = state == "CONFIRMED" and not display_name.startswith("Unidentified")
+    from urllib.parse import quote as _url_quote
+
+    # Get all face IDs for this person
+    anchor_ids = identity.get("anchor_ids", [])
+    candidate_ids = identity.get("candidate_ids", [])
+    all_face_ids = anchor_ids + candidate_ids
+    face_id_strings = [f if isinstance(f, str) else f.get("face_id", "") for f in all_face_ids]
+
+    # Get photos where this person appears
+    photo_reg = load_photo_registry()
+    photo_ids = photo_reg.get_photos_for_faces(face_id_strings)
+    crop_files = get_crop_files()
+
+    # Get best face crop for avatar
+    best_face_id = get_best_face_id(all_face_ids)
+    avatar_url = resolve_face_image_url(best_face_id, crop_files) if best_face_id and crop_files else None
+
+    # Get collections this person appears in
+    collections = set()
+    for pid in photo_ids:
+        pm = get_photo_metadata(pid)
+        if pm and pm.get("collection"):
+            collections.add(pm["collection"])
+
+    # --- Build face gallery items ---
+    face_gallery_items = []
+    for face_id_entry in all_face_ids:
+        fid = face_id_entry if isinstance(face_id_entry, str) else face_id_entry.get("face_id", "")
+        crop_url = resolve_face_image_url(fid, crop_files) if crop_files else None
+        if not crop_url:
+            continue
+        # Find the photo for this face
+        face_photo_id = get_photo_id_for_face(fid)
+        face_photo = get_photo_metadata(face_photo_id) if face_photo_id else None
+        source_label = ""
+        if face_photo:
+            source_label = face_photo.get("collection", "") or face_photo.get("source", "") or ""
+
+        face_gallery_items.append(
+            A(
+                Img(
+                    src=crop_url,
+                    alt=f"{display_name}",
+                    cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors",
+                    onerror="this.style.display='none'",
+                ),
+                P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]") if source_label else None,
+                href=f"/photo/{face_photo_id}" if face_photo_id else "#",
+                cls="flex flex-col items-center group",
+                title=f"View photo of {display_name}",
+            )
+        )
+
+    # --- Build photo gallery items ---
+    photo_gallery_items = []
+    for pid in sorted(photo_ids):
+        pm = get_photo_metadata(pid)
+        if not pm:
+            continue
+        filename = pm["filename"]
+        collection_label = pm.get("collection", "") or ""
+        photo_gallery_items.append(
+            A(
+                Div(
+                    Img(
+                        src=photo_url(filename),
+                        alt=f"Photo featuring {display_name}",
+                        cls="w-full h-48 sm:h-56 object-cover rounded-lg",
+                        loading="lazy",
+                    ),
+                    cls="relative overflow-hidden rounded-lg",
+                ),
+                P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate") if collection_label else None,
+                href=f"/photo/{pid}",
+                cls="flex flex-col group",
+                title=f"View photo of {display_name}",
+            )
+        )
+
+    # --- Build "Appears with" section ---
+    appears_with = []
+    for pid in photo_ids:
+        pm = get_photo_metadata(pid)
+        if not pm:
+            continue
+        for face_data in pm.get("faces", []):
+            other_fid = face_data.get("face_id", "")
+            if other_fid in face_id_strings:
+                continue  # skip self
+            other_identity = get_identity_for_face(registry, other_fid)
+            if not other_identity:
+                continue
+            other_id = other_identity["identity_id"]
+            other_state = other_identity.get("state", "")
+            other_name = ensure_utf8_display(other_identity.get("name", ""))
+            if other_state != "CONFIRMED" or other_name.startswith("Unidentified"):
+                continue
+            if other_id == person_id:
+                continue
+            # Avoid duplicates
+            if any(a["id"] == other_id for a in appears_with):
+                continue
+            other_best_face = get_best_face_id(
+                other_identity.get("anchor_ids", []) + other_identity.get("candidate_ids", [])
+            )
+            other_crop = resolve_face_image_url(other_best_face, crop_files) if other_best_face and crop_files else None
+            appears_with.append({
+                "id": other_id,
+                "name": other_name,
+                "crop_url": other_crop,
+            })
+
+    appears_with_section = None
+    if appears_with:
+        companion_cards = []
+        shown = appears_with[:8]
+        for companion in shown:
+            crop_el = Img(
+                src=companion["crop_url"],
+                alt=companion["name"],
+                cls="w-12 h-12 rounded-full object-cover border-2 border-slate-700",
+                onerror="this.style.display='none'",
+            ) if companion["crop_url"] else Div(
+                Span("?", cls="text-lg text-slate-500"),
+                cls="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center",
+            )
+            companion_cards.append(
+                A(
+                    crop_el,
+                    Span(companion["name"], cls="text-xs text-slate-400 mt-1 text-center truncate max-w-[80px]"),
+                    href=f"/person/{companion['id']}",
+                    cls="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity",
+                    title=f"View {companion['name']}",
+                )
+            )
+        if len(appears_with) > 8:
+            companion_cards.append(
+                Span(f"+{len(appears_with) - 8} more", cls="text-xs text-slate-500 self-center ml-2")
+            )
+        appears_with_section = Div(
+            H3("Often appears with", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+            Div(*companion_cards, cls="flex flex-wrap gap-4 items-start"),
+            cls="mt-10 pt-8 border-t border-slate-800",
+        )
+
+    # --- Open Graph meta tags ---
+    og_title = f"{display_name} — Rhodesli Heritage Archive"
+    photo_count = len(photo_ids)
+    collection_count = len(collections)
+    if photo_count > 0:
+        og_description = f"Appears in {photo_count} {'photo' if photo_count == 1 else 'photos'} across {collection_count} {'collection' if collection_count == 1 else 'collections'}. Help identify more photos of {display_name}."
+    else:
+        og_description = f"{display_name} in the Rhodesli Heritage Archive. Explore photographs from the Jewish community of Rhodes."
+
+    og_image_url = avatar_url or ""
+    if og_image_url and not og_image_url.startswith("http"):
+        og_image_url = f"{SITE_URL}{og_image_url}"
+    og_page_url = f"{SITE_URL}/person/{person_id}"
+
+    og_meta_tags = (
+        Meta(property="og:title", content=og_title),
+        Meta(property="og:description", content=og_description),
+        Meta(property="og:image", content=og_image_url),
+        Meta(property="og:url", content=og_page_url),
+        Meta(property="og:type", content="profile"),
+        Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary"),
+        Meta(name="twitter:title", content=og_title),
+        Meta(name="twitter:description", content=og_description),
+        Meta(name="twitter:image", content=og_image_url),
+        Meta(name="description", content=og_description),
+    )
+
+    # --- Navigation ---
+    nav_links = [
+        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    # --- View toggle ---
+    faces_active = view != "photos"
+    toggle = Div(
+        A(
+            "Faces",
+            href=f"/person/{person_id}?view=faces",
+            cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
+                "bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
+            ),
+        ),
+        A(
+            "Photos",
+            href=f"/person/{person_id}?view=photos",
+            cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
+                "bg-indigo-600 text-white" if not faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
+            ),
+        ),
+        cls="flex gap-1 bg-slate-800/50 p-1 rounded-xl",
+    )
+
+    # --- Gallery content ---
+    gallery_items = face_gallery_items if faces_active else photo_gallery_items
+    gallery_count = len(gallery_items)
+    gallery_grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4" if faces_active else "grid grid-cols-2 sm:grid-cols-3 gap-4"
+
+    if gallery_items:
+        gallery_content = Div(*gallery_items, cls=gallery_grid_cls)
+    else:
+        gallery_content = Div(
+            P("No photos available yet.", cls="text-slate-500 text-center py-8"),
+        )
+
+    # --- Status badge ---
+    if is_confirmed:
+        badge = Span("Identified", cls="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20")
+    else:
+        badge = Span("Under Review", cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20")
+
+    # --- Stats line ---
+    stats_parts = []
+    if photo_count > 0:
+        stats_parts.append(f"Appears in {photo_count} {'photo' if photo_count == 1 else 'photos'}")
+    if collection_count > 0:
+        stats_parts.append(f"{collection_count} {'collection' if collection_count == 1 else 'collections'}")
+    stats_line = " · ".join(stats_parts) if stats_parts else None
+
+    # --- Page style ---
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+    """)
+
+    # --- Share button ---
+    share_btn = Button(
+        NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'),
+        "Share",
+        cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
+        type="button",
+        data_action="share-photo",
+        data_share_url=og_page_url,
+    )
+
+    return (
+        Title(f"{display_name} — Rhodesli Heritage Archive"),
+        *og_meta_tags,
+        page_style,
+        Main(
+            # Top navigation bar
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(
+                        *nav_links,
+                        A("Explore More Photos", href="/?section=photos",
+                          cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4"),
+                        cls="hidden sm:flex items-center gap-6"
+                    ),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16"
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50"
+            ),
+
+            # Hero section
+            Section(
+                Div(
+                    # Avatar
+                    Div(
+                        Img(
+                            src=avatar_url,
+                            alt=display_name,
+                            cls="w-32 h-32 rounded-full object-cover border-4 border-emerald-500/30 shadow-lg shadow-emerald-500/10",
+                            onerror="this.style.display='none'",
+                        ) if avatar_url else Div(
+                            Span(display_name[0].upper() if display_name else "?", cls="text-4xl font-serif text-slate-400"),
+                            cls="w-32 h-32 rounded-full bg-slate-800 border-4 border-slate-700 flex items-center justify-center",
+                        ),
+                        cls="flex justify-center mb-6",
+                    ),
+                    # Name + badge
+                    Div(
+                        H1(display_name, cls="text-3xl sm:text-4xl font-serif font-bold text-white mb-3"),
+                        badge,
+                        cls="text-center mb-3",
+                    ),
+                    # Stats line
+                    P(stats_line, cls="text-slate-400 text-sm text-center mb-6") if stats_line else None,
+                    # Action buttons
+                    Div(
+                        share_btn,
+                        cls="flex justify-center gap-3 mb-8",
+                    ),
+                    cls="max-w-3xl mx-auto pt-12 pb-8 px-6",
+                ),
+                cls="border-b border-slate-800",
+            ),
+
+            # Gallery section
+            Section(
+                Div(
+                    # Section header with toggle
+                    Div(
+                        H2(
+                            f"{'Faces' if faces_active else 'Photos'} of {display_name}",
+                            cls="text-xl font-serif font-semibold text-white",
+                        ),
+                        Div(
+                            toggle,
+                            Span(f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}", cls="text-xs text-slate-500 ml-3 self-center"),
+                            cls="flex items-center",
+                        ),
+                        cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
+                    ),
+                    gallery_content,
+
+                    # Appears with section
+                    appears_with_section if appears_with_section else None,
+
+                    cls="max-w-5xl mx-auto px-6 py-10",
+                ),
+            ),
+
+            # CTA section
+            Section(
+                Div(
+                    H3(f"Do you have more photos of {display_name}?", cls="text-lg font-serif text-white mb-2"),
+                    P("Upload your family photos to help us build a more complete picture.", cls="text-slate-400 text-sm mb-4"),
+                    A("Upload Photos", href="/?section=upload",
+                      cls="inline-block px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"),
+                    cls="text-center",
+                ),
+                cls="py-12 border-t border-slate-800",
+            ),
+
+            # Footer
+            Div(
+                Div(
+                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    Div(
+                        A("Photos", href="/?section=photos", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        Span("·", cls="text-slate-700"),
+                        A("People", href="/?section=confirmed", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        cls="flex items-center gap-2 mt-2"
+                    ),
+                    cls="max-w-5xl mx-auto px-6 flex flex-col items-center"
+                ),
+                cls="py-8 border-t border-slate-800",
+            ),
+
+            # Share JS (standalone page needs its own)
+            Script("""
+                function _sharePhotoUrl(url) {
+                    if (navigator.share) {
+                        navigator.share({ title: 'Rhodesli', url: url }).catch(function(err) {
+                            if (err.name !== 'AbortError') { _copyAndToast(url); }
+                        });
+                    } else { _copyAndToast(url); }
+                }
+                function _copyAndToast(url) {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(url).then(function() {
+                            _showShareToast('Link copied!');
+                        }).catch(function() { _showShareToast('Could not copy link'); });
+                    } else {
+                        var input = document.createElement('input');
+                        input.value = url;
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        _showShareToast('Link copied!');
+                    }
+                }
+                function _showShareToast(message) {
+                    var existing = document.getElementById('share-toast');
+                    if (existing) existing.remove();
+                    var toast = document.createElement('div');
+                    toast.id = 'share-toast';
+                    toast.textContent = message;
+                    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+                    document.body.appendChild(toast);
+                    setTimeout(function() { toast.style.opacity = '0'; }, 2000);
+                    setTimeout(function() { toast.remove(); }, 2500);
+                }
+                document.addEventListener('click', function(e) {
+                    var shareBtn = e.target.closest('[data-action="share-photo"]');
+                    if (shareBtn) {
+                        var url = shareBtn.getAttribute('data-share-url') || window.location.href;
+                        _sharePhotoUrl(url);
+                        return;
+                    }
+                });
+            """),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/person/{person_id}")
+def get(person_id: str, view: str = "faces", sess=None):
+    """
+    Public shareable person page showing all photos of a specific person.
+
+    No authentication required — anyone can view.
+
+    Query params:
+    - view: "faces" (default) or "photos" — gallery view mode
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+    return public_person_page(person_id, view=view, user=user, is_admin=user_is_admin)
+
+
 def public_photo_page(
     photo_id: str,
     selected_face_id: str = None,
