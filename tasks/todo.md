@@ -1,6 +1,14 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-13 (Session 23b — Push + Benatar Upload Processing)
+Last updated: 2026-02-13 (Session 24 — Emergency UX Triage)
+
+## Session 24 Completed
+- [x] Share button copies to clipboard first (not OS share sheet)
+- [x] Face tag dropdown works for non-admin users (annotation-based suggestions)
+- [x] 5 new tests (non-admin tag search, admin regression, dropdown placeholders)
+- [x] Benatar feedback tracker updated (items 14-17)
+- [x] Production verified: share button, non-admin tagging, annotation flow
+- [x] 1851 total tests
 
 ## Session 23b Completed
 - [x] Push session 23 ML pipeline (4 commits) to origin/main
