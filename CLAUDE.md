@@ -76,6 +76,9 @@ When compacting, always preserve:
 - Any test commands that need to run
 - Active bug descriptions and root causes
 
+## Scripts
+- `./scripts/backup_data.sh` — One-command data backup with git commit. Run before any session that touches data.
+
 ## Key Docs (read on-demand, not upfront)
 - `docs/architecture/` — OVERVIEW, DATA_MODEL, PERMISSIONS, PHOTO_STORAGE
 - `docs/design/` — MERGE_DESIGN, FUTURE_COMMUNITY
