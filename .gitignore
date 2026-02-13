@@ -71,6 +71,10 @@ data/*
 !data/proposals.json
 !data/surname_variants.json
 
+# ML experiment tracking
+rhodesli_ml/mlruns/
+rhodesli_ml/checkpoints/
+
 # Scientific Instrumentation Runtime
 logs/
 evaluation/run_log.jsonl

@@ -88,10 +88,11 @@ def main():
     train_labels, val_labels = create_train_val_split(labels, train_ratio=train_ratio)
     print(f"Train: {len(train_labels)}, Val: {len(val_labels)}")
 
-    # Dry-run mode: limit data
+    # Dry-run mode: limit data and skip pretrained weights
     if args.dry_run:
         train_labels = train_labels[:10]
         val_labels = val_labels[:5] if len(val_labels) >= 5 else val_labels[:2]
+        model_cfg["pretrained"] = False  # Skip weight download in dry-run
         print(f"DRY RUN: Using {len(train_labels)} train, {len(val_labels)} val samples")
 
     # Create transforms

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.31.0] - 2026-02-13
+
+### Added
+- **Date estimation training pipeline** (ML-040): Complete CORAL ordinal regression model with EfficientNet-B0 backbone for predicting photo decades (1900s–2000s). Heritage-specific augmentations (sepia, film grain, scanning artifacts, resolution degradation, JPEG compression, geometric distortion, fading). Soft label training via KL divergence from Gemini decade probability distributions. PyTorch Lightning + MLflow experiment tracking.
+- **Gemini evidence-first date labeling** (ML-041): Rewrote `generate_date_labels.py` with structured prompt architecture — 4 independent evidence categories (print format, fashion, environment, technology), per-cue strength ratings, cultural lag adjustment for Sephardic diaspora communities. Supports Gemini 3 Pro/Flash models with cost guardrails and dry-run mode.
+- **Regression gate** (ML-042): Mandatory evaluation suite before production deployment — adjacent accuracy >= 0.70, MAE <= 1.5 decades, per-decade recall >= 0.20, calibration check. CLI: `python -m rhodesli_ml.scripts.run_evaluation`.
+- **MLflow experiment tracking** (ML-043): Local file-based tracking at `rhodesli_ml/mlruns/`. First experiment `rhodesli_date_estimation` logged with synthetic data dry-run.
+- **Signal harvester refresh**: 959 confirmed pairs (+12), 510 rejected pairs (+481 from 29), 500 hard negatives. Rejection signal 17x increase strengthens calibration training feasibility.
+- **Decision provenance**: AD-039 through AD-045 in `ALGORITHMIC_DECISIONS.md`. `docs/ml/DATE_ESTIMATION_DECISIONS.md` with 7 detailed decisions including rejected alternatives.
+- 53 new ML pipeline tests (CORAL loss, ordinal probabilities, dataset creation, augmentations, model forward/backward, regression gate, label generation). Synthetic test fixtures (30 labels + 30 images).
+
+### Changed
+- `rhodesli_ml/pyproject.toml`: Added torchvision, updated Pillow/scikit-learn versions, switched to `google-genai` SDK.
+- Training dry-run skips pretrained weight download for faster pipeline validation.
+- `.gitignore`: Added `rhodesli_ml/mlruns/` and `rhodesli_ml/checkpoints/`.
+
 ## [v0.30.0] - 2026-02-13
 
 ### Added

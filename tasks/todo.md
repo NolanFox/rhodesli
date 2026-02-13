@@ -1,6 +1,19 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-12 (Session 19f — Recurring Bug Fixes)
+Last updated: 2026-02-13 (Session 23 — ML Phase 1: Date Estimation Pipeline)
+
+## Session 23 Completed
+- [x] Decision provenance: DATE_ESTIMATION_DECISIONS.md + AD-039 through AD-045
+- [x] ML environment setup: venv, pyproject.toml (torchvision, google-genai SDK)
+- [x] Gemini evidence-first date labeling script (cultural lag, 4 evidence categories, cost guardrails)
+- [x] CORAL date classifier: EfficientNet-B0 backbone, soft label KL divergence
+- [x] Heritage augmentations: sepia, film grain, scanning artifacts, resolution degradation, JPEG compression, geometric distortion, fading
+- [x] Regression gate: adjacent accuracy ≥0.70, MAE ≤1.5, per-decade recall ≥0.20
+- [x] 53 ML pipeline tests + synthetic test fixtures (30 labels + 30 images)
+- [x] MLflow experiment tracking initialized (first experiment logged)
+- [x] Signal harvester refresh: 959 confirmed pairs, 510 rejected pairs (+17x), 500 hard negatives
+- [x] Documentation: README, CHANGELOG v0.31.0, ROADMAP, BACKLOG, current_ml_audit.md
+- [x] 1879 total tests (1826 app + 53 ML)
 
 ## Session 19f Completed
 - [x] Bug 1: annotations.json added to OPTIONAL_SYNC_FILES for Railway volume sync
@@ -97,10 +110,13 @@ Last updated: 2026-02-12 (Session 19f — Recurring Bug Fixes)
 - [ ] Smoke test all fixes on live site
 
 ## Near-Term (Next 1-2 Weeks)
-- [ ] ML-050: Run `generate_date_labels.py` to silver-label all 155 photos via Gemini
-- [ ] ML-051: Train similarity calibration model on 947 pairs + 29 rejections
-- [ ] ML-052: MLS vs Euclidean golden set evaluation (does sigma_sq help?)
-- [ ] BE-014: Canonical name registry (variant spellings)
+- [ ] ML-050: Date UX integration — display estimated decade + confidence on photo viewer
+- [ ] ML-051: Run `generate_date_labels.py` to silver-label all 155 photos via Gemini
+- [ ] ML-052: Train date estimation model on real labels, pass regression gate
+- [ ] ML-053: Integrate date labeling into upload orchestrator (process_uploads.py)
+- [ ] ML-054: Multi-pass Gemini — re-label low-confidence photos with Flash model
+- [ ] ML-060: Train similarity calibration model on 959 pairs + 510 rejections
+- [ ] ML-061: MLS vs Euclidean golden set evaluation (does sigma_sq help?)
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
 - [ ] FE-041: "Help Identify" mode for non-admin users
 - [ ] FE-040–FE-043: Skipped faces workflow for non-admin users

@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.30.0 · 1848 tests · 155 photos · 181 faces · 46 confirmed
+Current: v0.31.0 · 1901 tests · 155 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -16,6 +16,7 @@ Current: v0.30.0 · 1848 tests · 155 photos · 181 faces · 46 confirmed
 - ~~Face count / collection stats~~ FIXED — canonical functions, 19 regression tests
 - JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
 - Contributor roles implemented (ROLE-002/003) — needs first real contributor to test
+- ML date estimation pipeline ready (CORAL + EfficientNet-B0 + Gemini labeling) — needs UX integration
 
 ## Active Bugs (P0)
 - [x] BUG-001: Lightbox arrows disappear after first photo — fixed with event delegation (2026-02-08)
@@ -109,6 +110,14 @@ Goal: Make the system learn from user actions.
 - [x] ML-011: Golden set diversity analysis — script + dashboard section (2026-02-10)
 - [x] ML-013: Evaluation dashboard — /admin/ml-dashboard with stats, thresholds, golden set (2026-02-10)
 - [x] ML-021: Calibrated confidence labels (VERY HIGH/HIGH/MODERATE/LOW) (2026-02-09)
+- [x] ML-040: Date estimation training pipeline — CORAL ordinal regression, EfficientNet-B0, heritage augmentations (2026-02-13, AD-039–AD-045)
+- [x] ML-041: Gemini evidence-first date labeling — structured prompt with cultural lag (2026-02-13, AD-041–AD-042)
+- [x] ML-042: Regression gate for date model — adjacent accuracy ≥0.70, MAE ≤1.5 (2026-02-13)
+- [x] ML-043: MLflow experiment tracking initialized (2026-02-13)
+- [ ] ML-050: Date UX integration — display estimated decade + confidence on photo viewer, admin override
+- [ ] ML-051: Date label pipeline — integrate generate_date_labels.py into upload orchestrator
+- [ ] ML-052: New upload auto-dating — run date estimation on newly uploaded photos
+- [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling with Flash model
 - [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
 
 ## Phase E: Collaboration & Growth
@@ -136,6 +145,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-13: v0.31.0 — ML Phase 1: Date Estimation Pipeline (Session 23): Complete training pipeline with CORAL ordinal regression on EfficientNet-B0 backbone. Gemini 3 Pro evidence-first date labeling script with cultural lag adjustment. Heritage-specific augmentations (sepia, film grain, scanning artifacts, fading). Regression gate evaluation suite. MLflow experiment tracking. Signal harvester refresh (959 confirmed, 510 rejected, 500 hard negatives). 53 ML tests. Decision provenance AD-039 through AD-045.
 - [x] 2026-02-13: v0.30.0 — Person Pages + Public Browsing (Session 22): Public person page at /person/{id} with hero avatar, face/photo toggle, "appears with" section, OG tags. Public /photos and /people browsing pages (no auth required). Person page links from photo viewer. "Public Page" link on identity cards. Upload pipeline verification tests. Cross-linked navigation (photo→person, person→photo, person→person). 60 new tests. 1848 tests
 - [x] 2026-02-12: v0.29.1 — Sharing Everywhere + The Photo Flip (Session 21): Consistent share buttons across all surfaces (Photos grid, Photo Context, People page, Focus Mode). Premium photo flip animation (perspective, dynamic shadow, lift, paper texture). Admin back image upload + transcription + batch association script. Non-destructive image orientation tools (rotate/flip/invert via CSS transforms). Photo viewer polish (overlay label clipping, admin-only quality scores, person card scroll-to-overlay). 36 new tests. 1769 tests
 - [x] 2026-02-12: v0.29.0 — The Shareable Moment (Session 20): Public photo viewer at /photo/{id} with face overlays and person cards, front/back photo flip with CSS 3D animation, Open Graph meta tags for rich social sharing, Web Share API + download buttons, internal UX links to public viewer. Museum-like warm design. 61 new tests. 1733 tests

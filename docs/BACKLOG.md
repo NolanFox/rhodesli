@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
 **Version**: 6.9 — February 13, 2026
-**Status**: 1848 tests passing, v0.30.0, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
+**Status**: 1901 tests passing, v0.31.0, 155 photos, 46 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -212,7 +212,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 | ID | Item | Status | Notes |
 |----|------|--------|-------|
-| ML-001 | User actions don't improve predictions | IN PROGRESS | Signal harvester created (`rhodesli_ml/data/signal_harvester.py`): extracts 947 confirmed pairs + 29 rejections. ML pipeline scaffold in `rhodesli_ml/`. Next: train calibration model. |
+| ML-001 | User actions don't improve predictions | DONE | Signal harvester: 959 confirmed pairs, 510 rejected pairs, 500 hard negatives. Date estimation pipeline complete (2026-02-13) |
 | ML-002 | Rejection memory (AD-004) | VERIFIED | "Not Same" pairs are stored and excluded from future suggestions. Commit 8042c85 verified working. |
 | ML-003 | Confirmed matches → golden set | PARTIAL | Golden set exists but needs automated rebuild when new confirmations happen. |
 | ML-004 | Dynamic threshold calibration | DONE | AD-013: four-tier system (VERY_HIGH/HIGH/MODERATE/LOW) from golden set evaluation (2026-02-09) |
@@ -245,6 +245,19 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ML-030 | ArcFace comparison | OPEN | Evaluate ArcFace against current AdaFace PFE using golden set. May improve on old/damaged photos. |
 | ML-031 | Ensemble approach | OPEN | Run multiple models and combine scores. Higher accuracy but slower. Only worth it if single-model accuracy plateaus. |
 | ML-032 | Fine-tuning feasibility | OPEN | With enough confirmed identities (~100+), could fine-tune on this specific archive's characteristics. |
+
+### 4.5 Date Estimation Pipeline (NEW)
+
+| ID | Item | Status | Notes |
+|----|------|--------|-------|
+| ML-040 | Date estimation training pipeline | DONE | CORAL ordinal regression, EfficientNet-B0, heritage augmentations, MLflow tracking. AD-039–AD-045. 53 tests. (2026-02-13) |
+| ML-041 | Gemini evidence-first date labeling | DONE | Structured prompt with 4 evidence categories, cultural lag for Sephardic diaspora, cost guardrails, dry-run mode. AD-041–AD-042. (2026-02-13) |
+| ML-042 | Regression gate for date model | DONE | Adjacent accuracy ≥0.70, MAE ≤1.5 decades, per-decade recall ≥0.20, calibration check. (2026-02-13) |
+| ML-043 | MLflow experiment tracking | DONE | Local file-based tracking at rhodesli_ml/mlruns/. First experiment logged. (2026-02-13) |
+| ML-050 | Date UX integration | OPEN | Display estimated decade + confidence on photo viewer and photo grid. Admin override to correct ML estimates. Gold label overrides silver. |
+| ML-051 | Date label pipeline integration | OPEN | Integrate generate_date_labels.py into upload orchestrator (process_uploads.py). Auto-label new photos after ingestion. |
+| ML-052 | New upload auto-dating | OPEN | Run trained date estimation model on newly uploaded photos. Store predictions in photo metadata. |
+| ML-053 | Multi-pass Gemini strategy | OPEN | Re-label low-confidence photos with Gemini Flash for cost efficiency. Use Pro only for ambiguous cases. |
 
 ---
 
@@ -421,7 +434,7 @@ Based on research of latest Claude Code patterns (Feb 2026):
 | ID | Item | Notes |
 |----|------|-------|
 | AI-001 | Auto-caption generation | Use vision models to describe photo content: "Group of people at a formal dinner." |
-| AI-002 | Photo era estimation | ML model to estimate decade from visual cues (clothing, film grain, color palette). |
+| AI-002 | Photo era estimation | IN PROGRESS — Date estimation pipeline built (Session 23). Gemini labeling + CORAL model + regression gate ready. Next: generate labels on real photos, train, evaluate, integrate into UI. |
 | AI-003 | Photo restoration | AI-powered cleanup of damaged/faded photos. |
 | AI-004 | Handwriting recognition | For photos with text on the back (common in old archives). |
 | AI-005 | Story generation | Given a set of photos of the same person across decades, generate a biographical narrative draft. |
@@ -488,6 +501,8 @@ All 8 bugs fixed (BUG-001 through BUG-008). 103+ new tests. Event delegation pat
 | `data/embeddings.npy` | Face embeddings (~550 faces) |
 | `data/golden_set.json` | ML evaluation baseline |
 | `data/clustering_report_2026-02-07.txt` | 35 proposed matches |
+| `docs/ml/DATE_ESTIMATION_DECISIONS.md` | Date estimation decision provenance (7 decisions) |
+| `rhodesli_ml/` | ML pipeline package (training, evaluation, data, models) |
 
 ## Appendix: Lessons That Should Inform Future Work
 

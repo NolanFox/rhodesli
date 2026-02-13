@@ -1,6 +1,6 @@
 # Current ML Audit
 
-**Generated**: 2026-02-11 | **Scope**: Face detection, embeddings, similarity, signal inventory
+**Generated**: 2026-02-13 | **Scope**: Face detection, embeddings, similarity, signal inventory, date estimation
 
 ---
 
@@ -77,8 +77,8 @@ From golden set evaluation (125 mappings, 23 identities, 4005 pairs):
 
 ### Confirmed Identities
 
-- **Active identities**: 266 (369 total, 103 merged) | **By state**: 44 CONFIRMED, 221 SKIPPED, 1 CONTESTED
-- **Confirmed with >1 face**: 18 identities | **Total confirmed same-person pairs**: 947
+- **Active identities**: 266 (369 total, 103 merged) | **By state**: 46 CONFIRMED, 219 SKIPPED, 1 CONTESTED
+- **Confirmed with >1 face**: 18 identities | **Total confirmed same-person pairs**: 959
 
 | Identity | Faces | Pairs |
 |----------|-------|-------|
@@ -95,7 +95,8 @@ From golden set evaluation (125 mappings, 23 identities, 4005 pairs):
 
 ### Rejection Signal
 
-- **Total rejection entries**: 58 (31 identities) | **Unique cross-identity rejection pairs**: 29
+- **Total rejection entries**: 1020+ (100+ identities) | **Unique cross-identity rejection pairs**: 510
+- **Hard negatives** (high-similarity different-person pairs): 500
 
 ### Golden Set & Total Faces
 
@@ -108,13 +109,14 @@ From golden set evaluation (125 mappings, 23 identities, 4005 pairs):
 
 | Signal | Needed | Available | Status |
 |--------|--------|-----------|--------|
-| Confirmed same-person pairs | 50+ | 947 | SUFFICIENT |
-| Cross-identity rejections | 20+ | 29 | SUFFICIENT (barely) |
+| Confirmed same-person pairs | 50+ | 959 | SUFFICIENT |
+| Cross-identity rejections | 20+ | 510 | SUFFICIENT (strong) |
+| Hard negatives | 100+ | 500 | SUFFICIENT |
 | Distinct confirmed identities | 10+ | 18 (multi-face) | SUFFICIENT |
 | Golden set size | 50+ mappings | 125 | SUFFICIENT |
 
-**Verdict**: Signal is **sufficient for a basic calibration model** (e.g., logistic
-regression on distance features).
+**Verdict**: Signal is **sufficient for calibration model training**. Rejection signal
+grew 17x (29→510) between sessions, enabling robust negative boundary learning.
 
 ### Key Risks
 
@@ -122,13 +124,31 @@ regression on distance features).
    is 32%. Risk of overfitting to Capeluto family features.
 2. **MLS unused at runtime**: sigma_sq infrastructure exists but `neighbors.py` and
    `cluster_new_faces.py` use raw Euclidean. Could improve low-quality face matching.
-3. **Thin rejection signal**: 29 pairs meets minimum but more would strengthen boundaries.
-4. **Single-family corpus**: All subjects share family resemblance, making the calibration
+3. **Single-family corpus**: All subjects share family resemblance, making the calibration
    harder than typical face verification (no easy negatives).
 
 ### Priority Improvements
 
-1. **Increase rejection signal** to 50+ pairs by triaging ambiguous matches
+1. ~~**Increase rejection signal** to 50+ pairs by triaging ambiguous matches~~ DONE (510 pairs)
 2. **Diversify positive signal**: Confirm identities with 1-3 faces rather than adding
    more faces to already-large identities
 3. **Evaluate MLS vs Euclidean** on the golden set to determine if sigma_sq helps
+
+---
+
+## 6. Date Estimation Pipeline (NEW — Session 23)
+
+**Status**: Training pipeline complete, awaiting real Gemini labels.
+
+| Component | File | Status |
+|-----------|------|--------|
+| Gemini labeling | `rhodesli_ml/scripts/generate_date_labels.py` | Ready (needs API key) |
+| Training | `rhodesli_ml/training/train_date.py` | Complete (dry-run verified) |
+| Model | `rhodesli_ml/models/date_classifier.py` | CORAL + EfficientNet-B0 |
+| Evaluation | `rhodesli_ml/evaluation/regression_gate.py` | Gates: adj_acc≥0.70, MAE≤1.5 |
+| Augmentations | `rhodesli_ml/data/augmentations.py` | 7 heritage-specific transforms |
+| MLflow | `rhodesli_ml/mlruns/` | Experiment initialized |
+| Tests | `rhodesli_ml/tests/test_date_estimation.py` | 53 tests passing |
+| Decisions | AD-039 through AD-045 | Documented |
+
+**Next steps**: Generate real labels → Train → Pass regression gate → Integrate into UI
