@@ -631,3 +631,24 @@ class TestPendingUploadsPhotoPreview:
         with patch("app.main.data_path", tmp_path):
             response = admin_client.get("/admin/staging-preview/nonexistent/photo.jpg")
             assert response.status_code == 404
+
+    def test_thumbnail_has_onerror_fallback(self, admin_client, tmp_path):
+        """Thumbnail img tags include onerror fallback for graceful degradation."""
+        pending_data = {
+            "uploads": {
+                "test-job": {
+                    "job_id": "test-job",
+                    "status": "staged",
+                    "submitted_at": "2026-02-12T00:00:00Z",
+                    "uploader_email": "admin@test.com",
+                    "file_count": 1,
+                    "files": ["photo1.jpg"],
+                }
+            }
+        }
+        with patch("app.main._load_pending_uploads", return_value=pending_data):
+            response = admin_client.get("/admin/pending")
+            assert response.status_code == 200
+            assert "onerror" in response.text
+            # Fallback div shows filename when image fails
+            assert "photo1" in response.text

@@ -11240,10 +11240,16 @@ def get(sess=None):
             for fname in upload_files[:6]:
                 if fname.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
                     thumb_url = f"/admin/staging-preview/{quote(job_id)}/{quote(fname)}"
+                    # Graceful fallback: show filename label if image fails to load
                     preview_thumbs.append(
-                        Img(src=thumb_url, alt=fname, loading="lazy",
-                            cls="w-16 h-16 object-cover rounded border border-slate-600",
-                            title=fname)
+                        Div(
+                            Img(src=thumb_url, alt=fname, loading="lazy",
+                                cls="w-16 h-16 object-cover rounded border border-slate-600",
+                                title=fname,
+                                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'"),
+                            Div(fname[:12], cls="w-16 h-16 bg-slate-700 border border-slate-600 rounded text-[8px] text-slate-400 items-center justify-center text-center p-1 hidden"),
+                            cls="flex-shrink-0"
+                        )
                     )
             remaining = len(upload_files) - 6
             if remaining > 0:
