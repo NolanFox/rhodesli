@@ -7906,16 +7906,376 @@ def photo_view_content(
     )
 
 
+def public_photo_page(
+    photo_id: str,
+    selected_face_id: str = None,
+    user=None,
+    is_admin: bool = False,
+) -> tuple:
+    """
+    Build the public shareable photo page.
+
+    This is the beautiful, museum-like page that gets shared on social media.
+    Shows the photo with face overlays, person cards, and a call to action.
+    No authentication required.
+    """
+    photo = get_photo_metadata(photo_id)
+    if not photo:
+        # Gentle 404 page
+        style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+        return (
+            Title("Photo Not Found - Rhodesli"),
+            style_404,
+            Main(
+                Nav(
+                    Div(
+                        A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                        cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16"
+                    ),
+                    cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800"
+                ),
+                Div(
+                    Div(
+                        Span("404", cls="text-6xl font-bold text-slate-700 block mb-4"),
+                        H1("Photo not found", cls="text-2xl font-serif font-bold text-white mb-3"),
+                        P("This photo hasn't been added to the archive yet.", cls="text-slate-400 mb-8"),
+                        A("Explore the Archive", href="/?section=photos",
+                          cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"),
+                        cls="text-center"
+                    ),
+                    cls="flex items-center justify-center min-h-[60vh]"
+                ),
+                cls="min-h-screen bg-slate-900"
+            ),
+        )
+
+    filename = photo["filename"]
+    width, height = get_photo_dimensions(filename)
+    has_dimensions = width > 0 and height > 0
+    registry = load_registry()
+    from urllib.parse import quote as _url_quote
+
+    # Collect face info for overlays and person cards
+    face_info_list = []
+    identified_names = []
+    unidentified_count = 0
+    crop_files = get_crop_files()
+
+    for face_data in photo.get("faces", []):
+        face_id = face_data["face_id"]
+        bbox = face_data.get("bbox", [])
+        identity = get_identity_for_face(registry, face_id)
+        raw_name = identity.get("name", "Unidentified") if identity else "Unidentified"
+        display_name = ensure_utf8_display(raw_name)
+        identity_id = identity["identity_id"] if identity else None
+        state = identity.get("state", "INBOX") if identity else None
+        is_identified = state == "CONFIRMED" and not display_name.startswith("Unidentified")
+
+        # Get crop URL for person card
+        crop_url = resolve_face_image_url(face_id, crop_files) if crop_files else None
+
+        if is_identified:
+            identified_names.append(display_name)
+        else:
+            unidentified_count += 1
+
+        face_info_list.append({
+            "face_id": face_id,
+            "bbox": bbox,
+            "display_name": display_name,
+            "identity_id": identity_id,
+            "state": state,
+            "is_identified": is_identified,
+            "crop_url": crop_url,
+        })
+
+    # --- Build face overlays (simplified for public view — no admin actions) ---
+    face_overlays = []
+    if has_dimensions:
+        for fi in face_info_list:
+            bbox = fi["bbox"]
+            if not bbox or len(bbox) < 4:
+                continue
+            x1, y1, x2, y2 = bbox
+            left_pct = (x1 / width) * 100
+            top_pct = (y1 / height) * 100
+            width_pct = ((x2 - x1) / width) * 100
+            height_pct = ((y2 - y1) / height) * 100
+
+            if fi["is_identified"]:
+                overlay_cls = "absolute border-2 border-emerald-400/70 bg-emerald-400/5 hover:bg-emerald-400/15 transition-all cursor-pointer group"
+                name_el = Span(
+                    fi["display_name"],
+                    cls="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-emerald-300 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[200%] truncate"
+                )
+            else:
+                overlay_cls = "absolute border-2 border-dashed border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/15 transition-all cursor-pointer group"
+                name_el = Span(
+                    "Unidentified",
+                    cls="absolute -bottom-6 left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                )
+
+            # Click scrolls to person card
+            scroll_target = f"person-{fi['identity_id']}" if fi["identity_id"] else ""
+            scroll_script = f"on click go to #{scroll_target} smoothly" if scroll_target else ""
+
+            overlay = Div(
+                name_el,
+                cls=overlay_cls,
+                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+                title=fi["display_name"],
+                **{"_": scroll_script} if scroll_script else {},
+            )
+            face_overlays.append(overlay)
+
+    # --- Build person cards strip ---
+    person_cards = []
+    for fi in face_info_list:
+        card_border = "border-emerald-500/30" if fi["is_identified"] else "border-slate-600/50"
+        badge = Span("Identified", cls="text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full") if fi["is_identified"] else Span("Unidentified", cls="text-[10px] text-amber-400/70 bg-amber-500/10 px-1.5 py-0.5 rounded-full")
+
+        crop_el = Img(
+            src=fi["crop_url"],
+            alt=fi["display_name"],
+            cls="w-20 h-20 rounded-full object-cover border-2 " + ("border-emerald-500/50" if fi["is_identified"] else "border-slate-600"),
+            onerror="this.style.display='none'"
+        ) if fi["crop_url"] else Div(
+            Span("?", cls="text-2xl text-slate-500"),
+            cls="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center"
+        )
+
+        # Link to identity page for identified people
+        name_el = fi["display_name"]
+        if fi["is_identified"] and fi["identity_id"]:
+            section = _section_for_state(fi["state"])
+            name_el = A(
+                fi["display_name"],
+                href=f"/?section={section}&view=browse#identity-{fi['identity_id']}",
+                cls="text-white hover:text-emerald-300 transition-colors"
+            )
+
+        person_cards.append(
+            Div(
+                crop_el,
+                Div(
+                    P(name_el, cls="text-sm font-medium text-white mt-2 text-center") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center"),
+                    badge,
+                    cls="flex flex-col items-center"
+                ),
+                id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
+                cls=f"flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0"
+            )
+        )
+
+    # --- Photo metadata line ---
+    meta_parts = []
+    if photo.get("collection"):
+        meta_parts.append(photo["collection"])
+    if photo.get("source"):
+        meta_parts.append(photo["source"])
+    meta_line = " · ".join(meta_parts) if meta_parts else None
+
+    # --- OG description for potential future use ---
+    total_faces = len(face_info_list)
+    identified_count = len(identified_names)
+
+    # --- Build the page ---
+    page_title = photo.get("collection") or "Historical Photo"
+    if identified_names:
+        names_preview = ", ".join(identified_names[:3])
+        if len(identified_names) > 3:
+            names_preview += f", and {len(identified_names) - 3} more"
+
+    # Navigation
+    nav_links = [
+        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+        .photo-hero-container {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .photo-hero-container img.photo-hero {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 0.5rem;
+        }
+        .photo-hero-container .face-overlay-public {
+            box-sizing: border-box;
+        }
+        .photo-hero-container .face-overlay-public:hover {
+            z-index: 10;
+        }
+        .person-strip {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            scrollbar-width: thin;
+            scrollbar-color: #475569 transparent;
+        }
+        .person-strip::-webkit-scrollbar {
+            height: 6px;
+        }
+        .person-strip::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+    """)
+
+    return (
+        Title(f"{page_title} - Rhodesli Heritage Archive"),
+        page_style,
+        Main(
+            # Top navigation bar
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(
+                        *nav_links,
+                        A("Explore More Photos", href="/?section=photos",
+                          cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4"),
+                        cls="hidden sm:flex items-center gap-6"
+                    ),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16"
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50"
+            ),
+
+            # Hero photo section
+            Section(
+                Div(
+                    # Photo with overlays
+                    Div(
+                        Img(
+                            src=photo_url(filename),
+                            alt=f"Historical photograph from {photo.get('collection', 'the Rhodes diaspora')}",
+                            cls="photo-hero max-w-full h-auto rounded-lg",
+                        ),
+                        *face_overlays,
+                        # Overlay legend
+                        Div(
+                            Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-emerald-400 mr-1"),
+                            Span("Identified", cls="text-slate-300 mr-3"),
+                            Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"),
+                            Span("Unidentified", cls="text-slate-300"),
+                            cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm",
+                        ) if face_overlays else None,
+                        cls="photo-hero-container relative mx-auto"
+                    ),
+                    # Photo metadata
+                    Div(
+                        P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
+                        P(
+                            f"{total_faces} {'person' if total_faces == 1 else 'people'} detected · "
+                            f"{identified_count} identified",
+                            cls="text-slate-500 text-xs mt-1"
+                        ),
+                        P(
+                            A(photo.get("source_url", ""), href=photo.get("source_url", ""),
+                              target="_blank", rel="noopener",
+                              cls="text-indigo-400/70 hover:text-indigo-300 text-xs underline"),
+                            cls="mt-1"
+                        ) if photo.get("source_url") else None,
+                        cls="mt-4 text-center"
+                    ),
+                    cls="max-w-[900px] mx-auto"
+                ),
+                cls="px-4 sm:px-6 pt-8 pb-6"
+            ),
+
+            # People in this photo
+            Section(
+                Div(
+                    H2(
+                        f"{'People' if total_faces != 1 else 'Person'} in this photo",
+                        cls="text-lg font-serif font-semibold text-white mb-4"
+                    ),
+                    Div(
+                        *person_cards,
+                        cls="person-strip"
+                    ) if person_cards else P("No faces detected in this photo.", cls="text-slate-500 text-sm"),
+                    cls="max-w-[900px] mx-auto"
+                ),
+                cls="px-4 sm:px-6 py-6 border-t border-slate-800/50"
+            ) if face_info_list else None,
+
+            # Call to action
+            Section(
+                Div(
+                    H2(
+                        "Do you recognize someone?",
+                        cls="text-xl font-serif font-bold text-white mb-3"
+                    ),
+                    P(
+                        "Help us identify the people in this photograph. Your family knowledge could be the key to preserving our shared history.",
+                        cls="text-slate-400 leading-relaxed mb-6 max-w-lg mx-auto"
+                    ),
+                    Div(
+                        A(
+                            "I Can Help Identify",
+                            href="/?section=to_review",
+                            cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"
+                        ),
+                        A(
+                            "Browse All Photos",
+                            href="/?section=photos",
+                            cls="inline-block px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-slate-400 hover:text-white transition-colors"
+                        ),
+                        cls="flex flex-wrap justify-center gap-4"
+                    ),
+                    cls="text-center max-w-2xl mx-auto"
+                ),
+                cls="px-4 sm:px-6 py-12 border-t border-slate-800/50"
+            ) if unidentified_count > 0 else None,
+
+            # Footer
+            Footer(
+                Div(
+                    P(
+                        Span("Rhodesli", cls="font-bold text-white"),
+                        " — Preserving the visual heritage of the Jews of Rhodes",
+                        cls="text-slate-500 text-sm"
+                    ),
+                    Div(
+                        A("Home", href="/", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        Span("·", cls="text-slate-700"),
+                        A("Photos", href="/?section=photos", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        Span("·", cls="text-slate-700"),
+                        A("People", href="/?section=confirmed", cls="text-xs text-slate-500 hover:text-slate-300"),
+                        cls="flex items-center gap-2"
+                    ),
+                    cls="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3"
+                ),
+                cls="py-8 border-t border-slate-800"
+            ),
+            cls="min-h-screen bg-slate-900"
+        ),
+    )
+
+
 @rt("/photo/{photo_id}")
 def get(photo_id: str, face: str = None, sess=None):
     """
-    Render photo view with face overlays.
+    Public shareable photo page with face overlays and person cards.
+
+    This is the page people share on Facebook, WhatsApp, email, etc.
+    No authentication required — anyone can view.
 
     Query params:
     - face: Optional face_id to highlight
     """
-    user_is_admin = (get_current_user(sess or {}).is_admin if get_current_user(sess or {}) else False) if is_auth_enabled() else True
-    return photo_view_content(photo_id, selected_face_id=face, is_admin=user_is_admin)
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+    return public_photo_page(photo_id, selected_face_id=face, user=user, is_admin=user_is_admin)
 
 
 @rt("/photo/{photo_id}/partial")
