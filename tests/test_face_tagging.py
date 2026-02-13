@@ -370,24 +370,37 @@ class TestSuggestButtonSubmission:
         assert ann["value"] == "Mary Maria Capelouto Hassid"
         assert ann["reason"] == "face_tag:face-1:matched_to:target-id-789"
 
-    def test_anonymous_suggest_shows_guest_modal(self, client, auth_enabled, no_user):
-        """Anonymous user gets guest-or-login modal with preserved form data."""
-        resp = client.post(
-            "/api/annotations/submit",
-            data={
-                "target_type": "identity",
-                "target_id": "source-id-123",
-                "annotation_type": "name_suggestion",
-                "value": "Sarina Benatar Saragossi",
-                "confidence": "likely",
-                "reason": "face_tag:face-1:new_name",
-            },
-        )
+    def test_anonymous_suggest_saves_directly(self, client, auth_enabled, no_user, tmp_path):
+        """Anonymous user suggestion saves directly as pending_unverified (no modal)."""
+        import json
+        from app.main import _invalidate_annotations_cache
+
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps({"schema_version": 1, "annotations": {}}))
+
+        with patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
+            resp = client.post(
+                "/api/annotations/submit",
+                data={
+                    "target_type": "identity",
+                    "target_id": "source-id-123",
+                    "annotation_type": "name_suggestion",
+                    "value": "Sarina Benatar Saragossi",
+                    "confidence": "likely",
+                    "reason": "face_tag:face-1:new_name",
+                },
+            )
         assert resp.status_code == 200
-        assert "guest-or-login-modal" in resp.text
-        # Modal should preserve the annotation data for re-submission
-        assert "Continue as guest" in resp.text
-        assert "Sign in" in resp.text
+        assert "thanks" in resp.text.lower()
+        # No modal — direct submission
+        assert "Continue as guest" not in resp.text
+        # Annotation saved as anonymous
+        saved = json.loads(ann_path.read_text())
+        assert len(saved["annotations"]) == 1
+        ann = list(saved["annotations"].values())[0]
+        assert ann["submitted_by"] == "anonymous"
+        assert ann["status"] == "pending_unverified"
 
     def test_toast_z_index_above_photo_modal(self, client):
         """Toast container must have higher z-index than the photo modal."""

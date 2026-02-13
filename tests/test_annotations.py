@@ -35,10 +35,16 @@ def annotations_file(tmp_path):
 class TestAnnotationSubmit:
     """Tests for POST /api/annotations/submit."""
 
-    def test_annotation_submit_anonymous_shows_guest_modal(self, client):
-        """Anonymous users get guest-or-login modal instead of 401."""
+    def test_annotation_submit_anonymous_saves_directly(self, client, tmp_path):
+        """Anonymous users save directly as pending_unverified (no modal)."""
+        from app.main import _invalidate_annotations_cache
+        ann_path = tmp_path / "annotations.json"
+        ann_path.write_text(json.dumps({"schema_version": 1, "annotations": {}}))
+
         with patch("app.main.is_auth_enabled", return_value=True), \
-             patch("app.main.get_current_user", return_value=None):
+             patch("app.main.get_current_user", return_value=None), \
+             patch("app.main.data_path", tmp_path):
+            _invalidate_annotations_cache()
             response = client.post(
                 "/api/annotations/submit",
                 data={
@@ -49,7 +55,9 @@ class TestAnnotationSubmit:
                 }
             )
             assert response.status_code == 200
-            assert "guest-or-login-modal" in response.text
+            assert "thanks" in response.text.lower()
+            # No modal shown
+            assert "guest-or-login-modal" not in response.text
 
     def test_annotation_submit_creates_record(self, client, tmp_path):
         """Logged-in user can submit a name suggestion."""

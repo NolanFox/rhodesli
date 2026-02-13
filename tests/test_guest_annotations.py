@@ -30,11 +30,11 @@ def tmp_annotations(tmp_path):
     _invalidate_annotations_cache()
 
 
-class TestAnonymousSubmitReturnsGuestModal:
-    """POST /api/annotations/submit as anonymous returns guest-or-login modal, not 401."""
+class TestAnonymousSubmitFrictionless:
+    """POST /api/annotations/submit as anonymous saves directly — no modal."""
 
-    def test_anonymous_submit_returns_guest_modal(self, client, tmp_annotations):
-        """Anonymous user submitting annotation gets guest-or-login modal (200, not 401)."""
+    def test_anonymous_submit_saves_directly(self, client, tmp_annotations):
+        """Anonymous user submitting annotation saves directly with toast (no modal)."""
         with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
             resp = client.post(
@@ -48,12 +48,13 @@ class TestAnonymousSubmitReturnsGuestModal:
                 headers={"HX-Request": "true"},
             )
             assert resp.status_code == 200
-            assert "guest-or-login-modal" in resp.text
-            assert "Continue as guest" in resp.text
-            assert "Sign in" in resp.text
+            assert "thanks" in resp.text.lower()
+            # Should NOT show the guest modal
+            assert "Continue as guest" not in resp.text
+            assert "Sign in to save" not in resp.text
 
-    def test_modal_contains_hidden_form_data(self, client, tmp_annotations):
-        """Returned modal embeds original form fields as hidden inputs."""
+    def test_anonymous_submit_creates_unverified_annotation(self, client, tmp_annotations):
+        """Anonymous submission creates a pending_unverified annotation."""
         with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
             resp = client.post(
@@ -63,19 +64,21 @@ class TestAnonymousSubmitReturnsGuestModal:
                     "target_id": "test-id-123",
                     "annotation_type": "name_suggestion",
                     "value": "Leon Capeluto",
-                    "confidence": "certain",
                 },
                 headers={"HX-Request": "true"},
             )
             assert resp.status_code == 200
-            # Hidden inputs should preserve the original form data
-            assert 'value="identity"' in resp.text or "identity" in resp.text
-            assert "test-id-123" in resp.text
-            assert "name_suggestion" in resp.text
-            assert "Leon Capeluto" in resp.text
 
-    def test_empty_value_rejected_before_modal(self, client, tmp_annotations):
-        """Empty input returns 400 validation error, not the guest modal."""
+            # Verify annotation was saved
+            ann_data = json.loads((tmp_annotations / "annotations.json").read_text())
+            anns = list(ann_data["annotations"].values())
+            assert len(anns) == 1
+            assert anns[0]["value"] == "Leon Capeluto"
+            assert anns[0]["submitted_by"] == "anonymous"
+            assert anns[0]["status"] == "pending_unverified"
+
+    def test_empty_value_rejected(self, client, tmp_annotations):
+        """Empty input returns 400 validation error."""
         with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
             resp = client.post(
@@ -90,8 +93,8 @@ class TestAnonymousSubmitReturnsGuestModal:
             )
             assert resp.status_code == 400
 
-    def test_logged_in_submit_unchanged(self, client, tmp_annotations):
-        """Authenticated users still get the normal submission flow."""
+    def test_logged_in_submit_saves_as_pending(self, client, tmp_annotations):
+        """Authenticated users save as pending (not pending_unverified)."""
         mock_user = MagicMock()
         mock_user.email = "user@example.com"
         mock_user.is_admin = False
@@ -109,9 +112,33 @@ class TestAnonymousSubmitReturnsGuestModal:
                 },
             )
             assert resp.status_code == 200
-            assert "pending" in resp.text.lower() or "thanks" in resp.text.lower()
-            # Should NOT contain the guest modal
-            assert "guest-or-login-modal" not in resp.text
+            assert "thanks" in resp.text.lower()
+
+            # Verify saved as pending (not unverified)
+            ann_data = json.loads((tmp_annotations / "annotations.json").read_text())
+            ann = list(ann_data["annotations"].values())[0]
+            assert ann["submitted_by"] == "user@example.com"
+            assert ann["status"] == "pending"
+
+    def test_local_dev_submit_saves_as_local_dev(self, client, tmp_annotations):
+        """Auth-disabled (local dev) saves with submitted_by='local_dev'."""
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.get_current_user", return_value=None):
+            resp = client.post(
+                "/api/annotations/submit",
+                data={
+                    "target_type": "identity",
+                    "target_id": "test-id-123",
+                    "annotation_type": "name_suggestion",
+                    "value": "Leon Capeluto",
+                },
+            )
+            assert resp.status_code == 200
+
+            ann_data = json.loads((tmp_annotations / "annotations.json").read_text())
+            ann = list(ann_data["annotations"].values())[0]
+            assert ann["submitted_by"] == "local_dev"
+            assert ann["status"] == "pending"
 
 
 class TestGuestSubmit:

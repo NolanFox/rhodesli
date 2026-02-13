@@ -5238,177 +5238,62 @@ def _get_onboarding_surnames() -> list[str]:
         return []
 
 
-def _welcome_modal(sess) -> Div:
+def _welcome_banner() -> Div:
     """
-    Smart onboarding modal with surname recognition (FE-052 + Session 19c).
-    Step 1: Surname grid — "Do you recognize any family names?"
-    Step 2: Discovery — show matching identities (via HTMX)
-    Step 3: Call to action — browse, help identify, or upload
+    Dismissible welcome banner for first-time visitors (replaces modal wall).
 
-    Shows once per user using a persistent cookie (1 year expiry).
+    Shows a non-blocking top bar with context about the archive.
+    Dismissed via X button; uses rhodesli_welcomed cookie (1 year).
+    Content is immediately visible underneath — no overlay, no blocking.
     """
-    surnames = _get_onboarding_surnames()
-
-    # Build surname buttons for Step 1
-    surname_buttons = []
-    for name in surnames:
-        surname_buttons.append(
-            Button(
-                name,
-                type="button",
-                cls="onboarding-surname px-4 py-2 text-sm rounded-lg border border-slate-600 "
-                    "text-slate-300 hover:border-amber-400 hover:text-amber-200 "
-                    "transition-all duration-200 cursor-pointer",
-                data_surname=name,
-            )
-        )
-
     return Div(
         Div(
             Div(
-                # Step 1: Surname recognition
-                Div(
-                    H2("Welcome to Rhodesli", cls="text-xl font-bold text-white mb-2"),
-                    P("A heritage photo archive for the Jewish community of Rhodes.",
-                      cls="text-sm text-slate-400 mb-4"),
-                    P("Do you recognize any of these family names?",
-                      cls="text-sm text-amber-200 font-medium mb-3"),
-                    Div(*surname_buttons, cls="flex flex-wrap gap-2 mb-4") if surname_buttons else None,
-                    Div(
-                        Button(
-                            "These names are new to me",
-                            type="button",
-                            cls="text-xs text-slate-500 hover:text-slate-300 underline",
-                            data_action="onboarding-skip-surnames",
-                        ),
-                        Button(
-                            "Show me what you found",
-                            type="button",
-                            cls="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg "
-                                "hover:bg-amber-500 disabled:opacity-50 disabled:cursor-not-allowed",
-                            id="onboarding-discover-btn",
-                            disabled="true",
-                            data_action="onboarding-discover",
-                        ),
-                        cls="flex items-center justify-between gap-3 mt-2",
-                    ),
-                    id="onboarding-step-1",
-                ),
-                # Step 2: Discovery results (HTMX target)
-                Div(
-                    id="onboarding-step-2",
-                    cls="hidden",
-                ),
-                # Step 3: Call to action
-                Div(
-                    H2("Start exploring", cls="text-lg font-bold text-white mb-3"),
-                    Div(
-                        A("Browse Photos", href="/?section=photos",
-                          cls="block px-4 py-3 bg-slate-700 rounded-lg text-center text-white "
-                              "hover:bg-slate-600 transition-colors",
-                          data_action="onboarding-close"),
-                        A("Help Identify Faces", href="/?section=skipped",
-                          cls="block px-4 py-3 bg-amber-600/20 border border-amber-500/30 rounded-lg "
-                              "text-center text-amber-200 hover:bg-amber-600/30 transition-colors",
-                          data_action="onboarding-close"),
-                        A("View Identified People", href="/?section=confirmed",
-                          cls="block px-4 py-3 bg-slate-700 rounded-lg text-center text-white "
-                              "hover:bg-slate-600 transition-colors",
-                          data_action="onboarding-close"),
-                        cls="grid gap-2",
-                    ),
-                    id="onboarding-step-3",
-                    cls="hidden",
-                ),
-                cls="bg-slate-800 rounded-xl p-6 border border-slate-700 max-w-lg w-full mx-4 "
-                    "max-h-[90vh] overflow-y-auto"
+                Span("Welcome to Rhodesli", cls="font-semibold text-amber-100"),
+                Span(" — ", cls="text-amber-300/60 hidden sm:inline"),
+                Span("a heritage photo archive for the Jewish community of Rhodes. ",
+                     cls="text-amber-200/80 hidden sm:inline"),
+                Span("Know someone in these photos? Tap their face to help identify them.",
+                     cls="text-amber-200/80 hidden sm:inline"),
+                # Mobile: shorter copy
+                Span(" — Tap a face to help identify someone.",
+                     cls="text-amber-200/80 sm:hidden"),
+                cls="flex-1 text-sm",
             ),
-            cls="fixed inset-0 bg-black/60 flex items-center justify-center z-[9998]",
-            id="welcome-modal",
+            Button(
+                Svg(
+                    Path(d="M6 18L18 6M6 6l12 12"),
+                    cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24",
+                    stroke_width="2", stroke_linecap="round", stroke_linejoin="round",
+                ),
+                type="button",
+                cls="text-amber-300/60 hover:text-white ml-3 p-1 min-w-[28px] min-h-[28px] flex items-center justify-center",
+                data_action="welcome-banner-dismiss",
+                aria_label="Dismiss welcome banner",
+            ),
+            cls="max-w-6xl mx-auto px-4 sm:px-8 flex items-center",
         ),
         Script("""
             (function() {
-                // Check if already welcomed
                 var welcomed = document.cookie.split(';').some(function(c) {
                     return c.trim().startsWith('rhodesli_welcomed=');
                 });
                 if (welcomed) {
-                    var el = document.getElementById('welcome-modal');
-                    if (el) el.classList.add('hidden');
-                    return;
+                    var el = document.getElementById('welcome-banner');
+                    if (el) el.remove();
                 }
-
-                var selectedSurnames = [];
-
-                // Surname toggle buttons
                 document.addEventListener('click', function(e) {
-                    var btn = e.target.closest('.onboarding-surname');
-                    if (btn) {
-                        var name = btn.getAttribute('data-surname');
-                        var idx = selectedSurnames.indexOf(name);
-                        if (idx >= 0) {
-                            selectedSurnames.splice(idx, 1);
-                            btn.classList.remove('border-amber-400', 'text-amber-200', 'bg-amber-400/10');
-                            btn.classList.add('border-slate-600', 'text-slate-300');
-                        } else {
-                            selectedSurnames.push(name);
-                            btn.classList.add('border-amber-400', 'text-amber-200', 'bg-amber-400/10');
-                            btn.classList.remove('border-slate-600', 'text-slate-300');
-                        }
-                        var discBtn = document.getElementById('onboarding-discover-btn');
-                        if (discBtn) {
-                            discBtn.disabled = selectedSurnames.length === 0;
-                        }
-                    }
-                });
-
-                // Discover button — fetch matching people
-                document.addEventListener('click', function(e) {
-                    var action = e.target.closest('[data-action]');
-                    if (!action) return;
-                    var act = action.getAttribute('data-action');
-
-                    if (act === 'onboarding-discover' && selectedSurnames.length > 0) {
-                        // Save surnames to cookie
-                        document.cookie = 'rhodesli_interest_surnames=' +
-                            encodeURIComponent(selectedSurnames.join(',')) +
-                            '; path=/; max-age=31536000; SameSite=Lax';
-
-                        // Fetch matching people via HTMX-like fetch
-                        var url = '/api/onboarding/discover?surnames=' +
-                            encodeURIComponent(selectedSurnames.join(','));
-                        fetch(url).then(function(r) { return r.text(); }).then(function(html) {
-                            var step2 = document.getElementById('onboarding-step-2');
-                            if (step2) {
-                                step2.innerHTML = html;
-                                step2.classList.remove('hidden');
-                            }
-                            var step1 = document.getElementById('onboarding-step-1');
-                            if (step1) step1.classList.add('hidden');
-                        });
-                    }
-
-                    if (act === 'onboarding-skip-surnames') {
-                        // Skip to step 3 (CTA)
+                    var action = e.target.closest('[data-action="welcome-banner-dismiss"]');
+                    if (action) {
                         document.cookie = 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax';
-                        document.getElementById('onboarding-step-1').classList.add('hidden');
-                        document.getElementById('onboarding-step-3').classList.remove('hidden');
-                    }
-
-                    if (act === 'onboarding-continue') {
-                        // Move from step 2 to step 3
-                        document.getElementById('onboarding-step-2').classList.add('hidden');
-                        document.getElementById('onboarding-step-3').classList.remove('hidden');
-                    }
-
-                    if (act === 'onboarding-close') {
-                        document.cookie = 'rhodesli_welcomed=1; path=/; max-age=31536000; SameSite=Lax';
-                        var modal = document.getElementById('welcome-modal');
-                        if (modal) modal.classList.add('hidden');
+                        var banner = document.getElementById('welcome-banner');
+                        if (banner) banner.remove();
                     }
                 });
             })();
         """),
+        id="welcome-banner",
+        cls="bg-amber-900/40 border-b border-amber-700/30 py-2",
     )
 
 
@@ -7179,6 +7064,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
         sidebar(counts, section, user=user),
         # Main content (offset for sidebar, bottom padding for mobile tabs)
         Main(
+            # First-time welcome banner (non-blocking, dismissible)
+            _welcome_banner() if not user else None,
             # Admin dashboard banner (only for admins)
             _admin_dashboard_banner(counts, section) if user_is_admin else None,
             Div(
@@ -7199,8 +7086,6 @@ def get(section: str = None, view: str = "focus", current: str = None,
         Div(id="guest-or-login-modal"),
         # Styled confirmation modal (replaces native browser confirm())
         confirm_modal(),
-        # First-time welcome modal (FE-052)
-        _welcome_modal(sess),
         sidebar_script,
         # Client-side instant name filter with fuzzy matching (FE-030/FE-031/FE-033)
         Script("""
@@ -15229,8 +15114,8 @@ def _merge_annotations(source_id: str, target_id: str):
 def post(target_type: str, target_id: str, annotation_type: str,
          value: str, confidence: str = "likely", reason: str = "", sess=None):
     """
-    Submit an annotation. Logged-in users save directly; anonymous users
-    get a guest-or-login modal that preserves their input.
+    Submit an annotation. Saves directly for all users — no modal interruption.
+    Anonymous users save as pending_unverified; logged-in users save as pending.
     Types: name_suggestion, caption, date, location, story, relationship
     """
     # Validate value BEFORE auth check — empty input is always 400
@@ -15243,32 +15128,20 @@ def post(target_type: str, target_id: str, annotation_type: str,
 
     user = get_current_user(sess) if sess is not None else None
 
-    # Anonymous user with auth enabled: show guest-or-login modal
-    if is_auth_enabled() and not user:
-        form_data = {
-            "target_type": target_type,
-            "target_id": target_id,
-            "annotation_type": annotation_type,
-            "value": value,
-            "confidence": confidence,
-            "reason": reason,
-        }
-        modal = _guest_or_login_modal(form_data)
-        return Response(
-            to_xml(modal),
-            headers={
-                "HX-Retarget": "#guest-or-login-modal",
-                "HX-Reswap": "outerHTML",
-            }
-        )
-
-    # Auth disabled (local dev) or authenticated user — save directly
-    if is_auth_enabled() and not user:
-        return Response("", status_code=401)
-
     import uuid
     from datetime import datetime, timezone
     ann_id = str(uuid.uuid4())
+
+    # Determine status and submitter based on auth state
+    if user:
+        submitted_by = user.email
+        status = "pending"
+    elif is_auth_enabled():
+        submitted_by = "anonymous"
+        status = "pending_unverified"
+    else:
+        submitted_by = "local_dev"
+        status = "pending"
 
     annotations = _load_annotations()
     annotations["annotations"][ann_id] = {
@@ -15279,16 +15152,16 @@ def post(target_type: str, target_id: str, annotation_type: str,
         "value": value.strip(),
         "confidence": confidence,
         "reason": reason.strip() if reason else "",
-        "submitted_by": user.email if user else "local_dev",
+        "submitted_by": submitted_by,
         "submitted_at": datetime.now(timezone.utc).isoformat(),
-        "status": "pending",
+        "status": status,
         "reviewed_by": None,
         "reviewed_at": None,
     }
     _save_annotations(annotations)
 
     return Response(
-        to_xml(toast("Thanks! Your suggestion is pending admin review.", "success")),
+        to_xml(toast("Thanks! Your suggestion has been submitted for review.", "success")),
         headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
     )
 
