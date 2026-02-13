@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.28.3] - 2026-02-12
+
+### Fixed
+- **Annotations sync**: `annotations.json` added to `OPTIONAL_SYNC_FILES` so clean data reaches Railway volume, clearing stale test entries from `/admin/approvals`.
+- **Mobile horizontal overflow**: `overflow-x: hidden` on html/body, filter bar selects capped at 10rem on mobile, neighbor card buttons wrap on mobile, landing page nav hidden on mobile. Fixes 470px e2e overflow.
+- **Pending upload thumbnails**: Graceful fallback shows filename when staging-preview images fail to load (onerror handler) instead of broken image icons.
+
+### Added
+- **Manual search Compare button**: Search results in Focus Mode now show Compare (primary) and Merge (secondary, outline) buttons. Users can view side-by-side comparison before merging.
+- 12 new tests (annotations sync, search compare, mobile overflow, thumbnail fallback). Test count: 1653 + 19 e2e = 1672.
+
 ## [v0.28.2] - 2026-02-12
 
 ### Fixed

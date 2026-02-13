@@ -1,6 +1,14 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-12 (Session 19e — Data Safety, Quality Ranking, Admin Fixes)
+Last updated: 2026-02-12 (Session 19f — Recurring Bug Fixes)
+
+## Session 19f Completed
+- [x] Bug 1: annotations.json added to OPTIONAL_SYNC_FILES for Railway volume sync
+- [x] Bug 2: Pending upload thumbnails have graceful onerror fallback
+- [x] Bug 3: Mobile horizontal overflow fixed (overflow-x:hidden, responsive wrapping, nav hidden)
+- [x] Bug 4: Manual search results now show Compare button before Merge
+- [x] E2E sidebar test updated (Confirmed → People rename)
+- [x] 12 new tests (1672 total including 19 e2e)
 
 ## Session 19e Completed
 - [x] Fix test data pollution: removed 5 test annotations + 46 contaminated history entries from production
