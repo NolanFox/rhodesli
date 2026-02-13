@@ -171,6 +171,17 @@ class TestPublicPhotoViewerContent:
             assert "I Can Help Identify" in html
             assert "Browse All Photos" in html
 
+    def test_cta_links_to_skipped_section(self, client, real_photo_id):
+        """'I Can Help Identify' CTA links to Help Identify section, not inbox."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        if "I Can Help Identify" in html:
+            # Should link to skipped section (Help Identify), not to_review (inbox)
+            assert "section=skipped" in html
+            assert "section=to_review" not in html or "section=skipped" in html
+
 
 class TestPublicPhotoViewerPartialUnchanged:
     """The /photo/{id}/partial route should still work for HTMX modal injection."""

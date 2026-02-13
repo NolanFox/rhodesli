@@ -5726,7 +5726,7 @@ def landing_page(stats, featured_photos):
     nav_items = [
         A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
-        A("Help Identify", href="/?section=to_review", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("Help Identify", href="/?section=skipped", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("About", href="/about", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
     ]
     if auth_enabled:
@@ -6146,7 +6146,7 @@ def landing_page(stats, featured_photos):
                         # CTA buttons
                         Div(
                             A("Start Exploring", href="/?section=photos", cls="btn-primary"),
-                            A("Help Identify", href="/?section=to_review", cls="btn-secondary"),
+                            A("Help Identify", href="/?section=skipped", cls="btn-secondary"),
                             cls="mt-8 flex flex-wrap gap-4 justify-center"
                         ),
                         cls="text-center animate-fade-in-up"
@@ -6269,7 +6269,7 @@ def landing_page(stats, featured_photos):
                     cls="flex justify-center gap-5 md:gap-8 flex-wrap"
                 ) if mystery_faces else None,
                 Div(
-                    A("Help Identify People", href="/?section=to_review",
+                    A("Help Identify People", href="/?section=skipped",
                       cls="btn-primary mt-8 inline-block"),
                     cls="text-center"
                 ),
@@ -8922,6 +8922,11 @@ def public_photo_page(
             "crop_url": crop_url,
         })
 
+    # First unidentified face from this photo — for contextual "Help Identify" CTA
+    first_unidentified_id = next(
+        (fi["identity_id"] for fi in face_info_list if not fi["is_identified"] and fi["identity_id"]),
+        None)
+
     # --- Build face overlays (simplified for public view — no admin actions) ---
     face_overlays = []
     if has_dimensions:
@@ -9379,7 +9384,7 @@ def public_photo_page(
                 cls="px-4 sm:px-6 py-6 border-t border-slate-800/50"
             ) if face_info_list else None,
 
-            # Call to action
+            # Call to action — link to first unidentified face from this photo
             Section(
                 Div(
                     H2(
@@ -9393,12 +9398,13 @@ def public_photo_page(
                     Div(
                         A(
                             "I Can Help Identify",
-                            href="/?section=to_review",
+                            href=(f"/?section=skipped&current={first_unidentified_id}"
+                                  if first_unidentified_id else "/?section=skipped"),
                             cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"
                         ),
                         A(
                             "Browse All Photos",
-                            href="/?section=photos",
+                            href="/photos",
                             cls="inline-block px-6 py-3 border border-slate-600 text-slate-300 font-medium rounded-lg hover:border-slate-400 hover:text-white transition-colors"
                         ),
                         cls="flex flex-wrap justify-center gap-4"
