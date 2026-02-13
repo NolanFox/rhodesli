@@ -1,0 +1,12 @@
+{
+  "job_id": "findagrave-20260210",
+  "status": "success",
+  "faces_extracted": 1,
+  "identities_created": [
+    "9b41ba49-7cde-4f76-bc43-341e320db6a9"
+  ],
+  "updated_at": "2026-02-11T00:55:11.449504+00:00",
+  "total_files": 1,
+  "files_succeeded": 1,
+  "files_failed": 0
+}

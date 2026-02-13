@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "annotations": {
+    "bafdac34-815d-490a-b465-1698cd4183bd": {
+      "annotation_id": "bafdac34-815d-490a-b465-1698cd4183bd",
+      "type": "bio",
+      "target_type": "identity",
+      "target_id": "54682ede-9424-4295-abca-9317679e5636",
+      "value": "A mi querida Estrella de tu hermano Samuel",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "poisson1957@hotmail.com",
+      "submitted_at": "2026-02-13T19:26:07.040641+00:00",
+      "status": "approved",
+      "reviewed_by": "nolanfox@gmail.com",
+      "reviewed_at": "2026-02-13T19:41:26.838998+00:00"
+    },
+    "c6d3b32e-d6b3-4b35-aa74-b117f27fd85e": {
+      "annotation_id": "c6d3b32e-d6b3-4b35-aa74-b117f27fd85e",
+      "type": "bio",
+      "target_type": "identity",
+      "target_id": "54682ede-9424-4295-abca-9317679e5636",
+      "value": "A mi querida Estrella de tu hermano Samuel",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "poisson1957@hotmail.com",
+      "submitted_at": "2026-02-13T19:28:10.588014+00:00",
+      "status": "approved",
+      "reviewed_by": "nolanfox@gmail.com",
+      "reviewed_at": "2026-02-13T19:41:19.444080+00:00"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "job_id": "staged-20260210-140508",
+  "status": "success",
+  "faces_extracted": 2,
+  "identities_created": [],
+  "updated_at": "2026-02-10T19:05:08.353625+00:00",
+  "total_files": 2,
+  "files_succeeded": 2,
+  "files_failed": 0
+}
