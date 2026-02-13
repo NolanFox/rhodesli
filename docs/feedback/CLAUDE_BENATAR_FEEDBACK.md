@@ -1,7 +1,7 @@
 # Claude Benatar Feedback Tracker
 
 **Reviewer:** Claude Benatar (family member, non-technical user)
-**Last updated:** 2026-02-12
+**Last updated:** 2026-02-13
 
 ## Original Feedback (~Feb 2026)
 
@@ -30,6 +30,7 @@
 |---|--------------|--------|------------|
 | 12 | Submitted Sarina2.jpg via upload — "3 people, can't identify the one I know" | DONE | Photo processed: 3 faces detected, uploaded to R2, live on production. No ML matches at threshold 1.05 (low-confidence matches to Boulissa Pizanti, Rosa Sedikaro, Big Leon at 1.24-1.31). |
 | 13 | Upload flow lacks per-face annotation during submission | BACKLOG | Benatar wants to annotate which person they know during upload. Current flow only captures collection/source metadata. Would need face detection preview + name input fields. |
+| 18 | Second photo (472157630) stuck in staging — never downloaded/processed | DONE | Photo was uploaded in a separate batch from Sarina2.jpg. download_staged.py was only run once (Session 23b) and cleared only the first batch. Second photo sat in staging until Session 25. Now processed: 1 face detected, uploaded to R2, live in Community Submissions. |
 
 ## Identification UX Triage (Feb 13, 2026)
 

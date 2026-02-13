@@ -358,3 +358,25 @@
 - **Mistake**: `#toast-container` had `z-50` while `#photo-modal` had `z-[9999]`. Non-admin "Suggest" button in the face tag dropdown POSTed successfully to `/api/annotations/submit`, annotation was saved, toast was returned — but the toast rendered BEHIND the photo modal. User saw "nothing happens."
 - **Rule**: Toast container must ALWAYS have the highest z-index in the app — above all modals, overlays, and dropdowns. Any action inside a modal that returns a toast will be invisible if the toast z-index is lower.
 - **Prevention**: Z-index hierarchy is now: toast(10001) > guest-modal(10000) > photo-modal(9999). Comment in `photo_modal()` documents the hierarchy. E2E test + unit test verify the ordering.
+
+## Session 2026-02-13: Community Upload Processing
+
+### Lesson 65: push_to_production.py must be run AFTER ingest completes, not before
+- **Mistake**: `push_to_production.py` committed `data/embeddings.npy` before ingest_inbox finished writing the new face to it. The committed version had 657 entries (156 photos), but the working copy had 658 entries (157 photos). Production never got the new embedding.
+- **Rule**: The full upload pipeline sequence must be: (1) download → (2) ingest → (3) upload to R2 → (4) push to production. Step 4 must come LAST and include ALL modified data files. Verify with `git diff --stat` before pushing.
+- **Prevention**: After `push_to_production.py`, always run `git status` to check for unstaged changes to data files. If any exist, the push was incomplete.
+
+### Lesson 66: identities.json "history" key is REQUIRED — ingest_inbox doesn't write it
+- **Mistake**: `core/ingest_inbox.py` writes identities.json with only `schema_version` and `identities` keys, omitting `history`. `IdentityRegistry.load()` requires `history` and throws `ValueError` when it's missing. `load_registry()` catches the error and returns an empty registry → 0 identities on production.
+- **Rule**: Any code that writes identities.json MUST include the `history` key (even if empty: `[]`). Use `IdentityRegistry.save()` for all writes, never `json.dump()` directly.
+- **Prevention**: The ingest pipeline should load via `IdentityRegistry.load()`, modify, then save via `registry.save()` to preserve the full schema.
+
+### Lesson 67: sync push must invalidate ALL in-memory caches, not just some
+- **Mistake**: `/api/sync/push` invalidated `_photo_registry_cache` and `_face_data_cache` but missed `_photo_cache` and `_face_to_photo_cache`. After pushing new photo data, the photos page showed stale data.
+- **Rule**: When adding a new in-memory cache, add it to the sync push invalidation list. Grep for `= None` patterns in the push handler.
+- **Prevention**: Added `_photo_cache = None` and `_face_to_photo_cache = None` to the sync push cache invalidation block.
+
+### Lesson 68: Multiple community uploads may come in separate batches
+- **Mistake**: Assumed the contributor uploaded 2 photos in 1 batch. They actually uploaded in 2 separate batches (2 separate upload form submissions). `download_staged.py` was run once and cleared only the first batch. The second batch sat in staging for days.
+- **Rule**: After processing community uploads, always run `download_staged.py --dry-run` one more time to check for additional batches. Contributors may upload photos incrementally.
+- **Prevention**: Add a final verification step to the upload pipeline: "Verify staging is empty."
