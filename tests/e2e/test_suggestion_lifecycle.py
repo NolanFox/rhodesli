@@ -235,7 +235,7 @@ def test_help_identify_more_is_clickable(page, app_server):
 
 def test_tab_state_visually_distinct(page, app_server):
     """Active tab should have distinct styling from inactive tab."""
-    _goto(page, f"{app_server}/?section=to_review&view=browse")
+    _goto(page, f"{app_server}/?section=to_review&view=browse&filter=ready")
     page.wait_for_timeout(1000)
 
     # Find the triage pills/tabs
@@ -248,9 +248,9 @@ def test_tab_state_visually_distinct(page, app_server):
     # Get the active filter from URL or check visual state
     # When on default view, "Ready to Confirm" should look active
 
-    # Get computed styles or classes
-    ready_classes = ready_pill.evaluate("el => el.className || el.closest('[class]')?.className || ''")
-    unmatched_classes = unmatched_pill.evaluate("el => el.className || el.closest('[class]')?.className || ''")
+    # Get classes from the pill container (A element), not the inner text Span
+    ready_classes = ready_pill.evaluate("el => el.closest('a')?.className || el.parentElement?.className || el.className || ''")
+    unmatched_classes = unmatched_pill.evaluate("el => el.closest('a')?.className || el.parentElement?.className || el.className || ''")
 
     # The active tab should have visually distinct styling
     # Check for "active", "selected", "ring", "border-2", or brighter opacity
@@ -268,7 +268,7 @@ def test_tab_state_visually_distinct(page, app_server):
     page.wait_for_timeout(500)
 
     new_unmatched_classes = unmatched_pill.evaluate(
-        "el => el.className || el.closest('[class]')?.className || ''"
+        "el => el.closest('a')?.className || el.parentElement?.className || el.className || ''"
     )
     has_unmatched_active = any(
         indicator in new_unmatched_classes
