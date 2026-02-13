@@ -8785,14 +8785,19 @@ def public_photo_page(
             cls="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center"
         )
 
-        # Link to identity page for identified people
+        # Link to person page for identified people
         name_el = fi["display_name"]
+        see_all_link = None
         if fi["is_identified"] and fi["identity_id"]:
-            section = _section_for_state(fi["state"])
             name_el = A(
                 fi["display_name"],
-                href=f"/?section={section}&view=browse#identity-{fi['identity_id']}",
+                href=f"/person/{fi['identity_id']}",
                 cls="text-white hover:text-emerald-300 transition-colors"
+            )
+            see_all_link = A(
+                "See all photos \u2192",
+                href=f"/person/{fi['identity_id']}",
+                cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 transition-colors",
             )
 
         # Click handler: scroll to face overlay and pulse highlight
@@ -8812,6 +8817,7 @@ def public_photo_page(
                 Div(
                     P(name_el, cls="text-sm font-medium text-white mt-2 text-center") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center"),
                     badge,
+                    see_all_link,
                     cls="flex flex-col items-center"
                 ),
                 id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
