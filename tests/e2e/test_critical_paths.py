@@ -414,3 +414,54 @@ def test_identity_lightbox_navigation(page, app_server):
             assert has_nav, (
                 f"Identity has {total} photos but no lightbox prev/next buttons"
             )
+
+
+# ---------------------------------------------------------------------------
+# Toast z-index above photo modal
+# ---------------------------------------------------------------------------
+
+def test_toast_container_above_photo_modal(page, app_server):
+    """Toast z-index must be higher than photo modal so toasts from inside modal are visible."""
+    _goto(page, f"{app_server}/?section=photos")
+
+    # Check z-index class values (photo-modal is hidden so computed style returns 'auto')
+    toast_cls = page.evaluate("""
+        () => {
+            const tc = document.getElementById('toast-container');
+            return tc ? tc.className : null;
+        }
+    """)
+    modal_cls = page.evaluate("""
+        () => {
+            const pm = document.getElementById('photo-modal');
+            return pm ? pm.className : null;
+        }
+    """)
+
+    assert toast_cls is not None, "toast-container not found"
+    assert modal_cls is not None, "photo-modal not found"
+    # Toast must use z-[10001], modal uses z-[9999]
+    assert "z-[10001]" in toast_cls, f"toast-container missing z-[10001], has: {toast_cls}"
+    assert "z-[9999]" in modal_cls, f"photo-modal missing z-[9999], has: {modal_cls}"
+
+
+def test_tag_dropdown_opens_in_photo_modal(page, app_server):
+    """Clicking a face overlay opens the tag dropdown inside the photo modal."""
+    _open_photo_modal(page, app_server)
+
+    # Find a face overlay (non-confirmed faces have the tag dropdown)
+    overlays = page.locator(".face-overlay-box[data-face-id]")
+    if overlays.count() == 0:
+        pytest.skip("No face overlays in this photo")
+
+    # Click the first overlay to open its tag dropdown
+    overlays.first.click()
+    page.wait_for_timeout(300)
+
+    # A tag dropdown should now be visible (not hidden)
+    visible_dropdown = page.locator(".tag-dropdown:not(.hidden)")
+    assert visible_dropdown.count() > 0, "Tag dropdown did not open on face click"
+
+    # The dropdown should have a search input
+    search_input = visible_dropdown.locator("input[name='q']")
+    assert search_input.count() > 0, "Tag dropdown missing search input"

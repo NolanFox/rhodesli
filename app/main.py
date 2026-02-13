@@ -1451,7 +1451,7 @@ def toast_container() -> Div:
     """
     return Div(
         id="toast-container",
-        cls="fixed top-4 right-4 z-50 flex flex-col gap-2"
+        cls="fixed top-4 right-4 z-[10001] flex flex-col gap-2"
     )
 
 
@@ -5012,7 +5012,8 @@ def photo_modal() -> Div:
     Hidden by default, shown via HTMX when "View Photo" is clicked.
 
     Z-index hierarchy:
-    - Modal container: z-[9999] (above everything including toasts at z-50)
+    - Toast container: z-[10001] (above all modals — always visible)
+    - Modal container: z-[9999] (above page content)
     - Backdrop: absolute, no z-index (first child, renders behind content)
     - Content: relative, no z-index (second child, renders above backdrop)
     """
@@ -5220,7 +5221,7 @@ def _guest_or_login_modal(form_data: dict) -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-8 relative border border-slate-700"
         ),
         id="guest-or-login-modal",
-        cls="fixed inset-0 flex items-center justify-center p-4 z-[9999]"
+        cls="fixed inset-0 flex items-center justify-center p-4 z-[10000]"
     )
 
 
