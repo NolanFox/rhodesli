@@ -457,12 +457,28 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rejected**: Removing JSON constraint entirely for free-form reasoning — loses structured extraction capability which is the whole point.
 - **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (PROMPT constant).
 
+### AD-051: Gemini 3 Flash Labeling Results and Post-Processing
+- **Date**: 2026-02-14
+- **Context**: Full labeling run of 157 photos using Gemini 3 Flash Preview, with one fallback to Gemini 2.5 Flash and post-processing cleanup.
+- **Results**:
+  - 157/157 photos labeled (156 via gemini-3-flash-preview, 1 via gemini-2.5-flash fallback)
+  - Total cost: ~$2.22 (gemini-3-pro-preview for the main run)
+  - The 1 failed photo (472157630...jpg) hit 504 DEADLINE_EXCEEDED on 3-flash consistently; 2.5-flash succeeded and found a dated inscription ("19 de Agosto 1928")
+  - 67.4% decade agreement between 2.5 and 3.0 Flash across 43 overlapping photos (mean year diff: 3.6 years)
+  - Systematic recency bias in 2.5 Flash: in all 14 decade disagreements, 2.5 dated photos LATER than 3.0
+  - 3.0 Flash shows superior early-20th-century dating (studio stamps, fur rug props, specific fashion sub-cues)
+- **Post-processing**: 14 invalid `controlled_tags` stripped (13 "Formal_Portrait", 1 "Indoor_Other" — not in the valid enum). These tags were hallucinated by the model despite the strict list in the prompt.
+- **Training**: CORAL model retrained on cleaned 157-photo dataset. Val accuracy 62.9%, MAE 0.486 decades (statistically equivalent to previous 65.7%/0.46 — random seed variation on n=35 val set).
+- **Decision**: Gemini 3 Flash labels are sufficient for CORAL training as silver labels, not ground truth. The 2.5 Flash fallback is acceptable for photos that time out. Post-processing tag validation is mandatory.
+- **Rejected**: Manual labeling — cost-prohibitive for 157+ photos. The Gemini labels provide a good enough signal for decade-level classification.
+- **Affects**: `rhodesli_ml/data/date_labels.json`, `rhodesli_ml/scripts/generate_date_labels.py`, `rhodesli_ml/training/train_date.py`.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-051)
+1. Add a new entry with AD-XXX format (next: AD-052)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

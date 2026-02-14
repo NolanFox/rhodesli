@@ -942,8 +942,7 @@
       "condition": "excellent",
       "clothing_notes": "The child wears a sleeveless white dress with dark polka dots, featuring ruffled trim at the shoulders and a dark ribbon belt at the waist. A larger piece of matching or coordinating ruffled fabric is draped across the lap.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         2
@@ -2346,8 +2345,7 @@
       "condition": "good",
       "clothing_notes": "Infant gown with lace-edged neckline and large, dark-colored (likely silk or satin) ribbons tied in bows on the shoulders.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         1
@@ -3087,8 +3085,7 @@
       "condition": "good",
       "clothing_notes": "White infant gown with smocking and pleating details on the chest; hair is styled in a small top tuft or knot.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         0
@@ -6240,8 +6237,7 @@
       "condition": "fair",
       "clothing_notes": "The subject wears a dark double-breasted suit with four visible buttons, a high stiff detachable stand-up collar, a dark narrow four-in-hand tie, and dark leather lace-up shoes.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         20
@@ -8530,8 +8526,7 @@
       "condition": "good",
       "clothing_notes": "Boy in a pinstriped suit jacket with matching knickerbockers, a white shirt with a high stiff detachable collar, a dark necktie, dark knee-high socks, and dark leather lace-up shoes.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         14
@@ -10541,8 +10536,7 @@
       "condition": "excellent",
       "clothing_notes": "White short-sleeved collared shirt worn under a light-colored knit sweater vest with a ribbed hem. He is wearing dark and light patterned shorts, possibly houndstooth.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         5
@@ -12488,8 +12482,7 @@
       "condition": "good",
       "clothing_notes": "The man in the portrait wears a dark business suit with notched lapels and a wide necktie featuring a bold, light-colored pattern, typical of post-war American men's fashion.",
       "controlled_tags": [
-        "Document",
-        "Formal_Portrait"
+        "Document"
       ],
       "subject_ages": [
         50
@@ -12937,8 +12930,7 @@
       "condition": "fair",
       "clothing_notes": "Simple white infant garment; hospital-style identification bracelet visible on the right wrist.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         0
@@ -13407,7 +13399,6 @@
       "condition": "good",
       "clothing_notes": "Woman in a dark short-sleeved dress with a brooch; man in a light-colored two-piece suit with a dark necktie.",
       "controlled_tags": [
-        "Indoor_Other",
         "Casual",
         "Group_Portrait"
       ],
@@ -13864,8 +13855,7 @@
       "clothing_notes": "Patterned blouse with leaf/floral print; hair styled in mid-1940s rolls; dark lipstick.",
       "controlled_tags": [
         "Studio",
-        "Document",
-        "Formal_Portrait"
+        "Document"
       ],
       "subject_ages": [
         24
@@ -13965,8 +13955,7 @@
       "condition": "good",
       "clothing_notes": "The subject wears a dark suit jacket, a white dress shirt, a dark narrow necktie, and a white pocket square.",
       "controlled_tags": [
-        "Document",
-        "Formal_Portrait"
+        "Document"
       ],
       "subject_ages": [
         52
@@ -15948,8 +15937,7 @@
       "condition": "good",
       "clothing_notes": "Infant wearing a white short-sleeved romper with a striped bib-style front featuring blue and red vertical stripes and a large white button on the shoulder strap.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         1
@@ -16057,8 +16045,7 @@
       "condition": "fair",
       "clothing_notes": "The subject is unclothed, which was a common artistic choice for infant photography during this era to symbolize purity.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         1
@@ -16149,8 +16136,7 @@
       "condition": "good",
       "clothing_notes": "Light-colored (likely white or cream) infant gown or dress featuring short sleeves and a delicate lace or embroidered trim at the neckline.",
       "controlled_tags": [
-        "Studio",
-        "Formal_Portrait"
+        "Studio"
       ],
       "subject_ages": [
         1
@@ -18553,6 +18539,105 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "created_at": "2026-02-14T09:04:09.877158+00:00"
+    },
+    {
+      "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1928,
+      "confidence": "high",
+      "probable_range": [
+        1927,
+        1929
+      ],
+      "decade_probabilities": {
+        "1920": 0.95,
+        "1930": 0.05
+      },
+      "location_estimate": "Indoor studio, no specific geographic indicators.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Sepia tone, monochrome print",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1940
+            ]
+          },
+          {
+            "cue": "Straight white border, typical for studio prints",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1940
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man's suit with structured shoulders and moderate-width lapels",
+            "strength": "strong",
+            "suggested_range": [
+              1925,
+              1935
+            ]
+          },
+          {
+            "cue": "Neatly parted and slicked-back hairstyle",
+            "strength": "strong",
+            "suggested_range": [
+              1920,
+              1935
+            ]
+          },
+          {
+            "cue": "Patterned tie and white pocket square as formal accessories",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1935
+            ]
+          }
+        ],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "Explicit date '1928' found in inscription, which aligns well with fashion cues, negating the need for cultural lag adjustment.",
+      "capture_vs_print": "The inscription '19 de Agosto 1928' strongly indicates the capture date. The print characteristics (sepia tone, border) are consistent with an original print from this era.",
+      "reasoning_summary": "The most compelling evidence is the handwritten inscription '19 de Agosto 1928' directly on the photograph. This explicit date is strongly corroborated by the man's formal attire, including the suit's silhouette and lapel width, and his neatly styled hair, all of which are characteristic of the late 1920s. The sepia tone and straight white border are also consistent with this period.",
+      "scene_description": "A formal, sepia-toned studio portrait of a young man from the chest up. He is looking directly at the camera with a serious expression. He wears a dark suit, a patterned tie, and a white pocket square. The background is a plain, graduated studio backdrop, darker at the bottom and lighter towards the top.",
+      "visible_text": "A mi querida Estrella de tu hermano Samuel. 19 de Agosto 1928.",
+      "keywords": [
+        "formal portrait",
+        "studio",
+        "man",
+        "suit",
+        "tie",
+        "pocket square",
+        "inscription",
+        "sepia",
+        "1920s",
+        "Sephardic"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Man wears a dark, single-breasted suit jacket with moderate-width lapels, a white collared shirt, a patterned tie (possibly silk), and a neatly folded white pocket square. A small, round white lapel pin is visible on his left lapel.",
+      "controlled_tags": [
+        "Studio",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        25
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "created_at": "2026-02-14T13:31:39.603717+00:00",
+      "note": "Labeled with gemini-2.5-flash (3-flash timed out with 504)"
     }
   ]
 }
