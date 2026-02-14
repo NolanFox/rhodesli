@@ -142,6 +142,7 @@ def evaluate_model(
     photos_dir: str = "raw_photos",
     gate_config: dict | None = None,
     num_classes: int = NUM_DECADES,
+    photo_index: dict | None = None,
 ) -> GateResult:
     """Run full evaluation on a date estimation model.
 
@@ -170,6 +171,7 @@ def evaluate_model(
     dataset = DateEstimationDataset(
         labels=labels,
         photos_dir=photos_dir,
+        photo_index=photo_index,
         transform=transform,
         num_classes=num_classes,
     )

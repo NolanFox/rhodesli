@@ -53,11 +53,21 @@ def main():
         sys.exit(1)
     print(f"Loaded {len(labels)} labels")
 
+    # Load photo index for path resolution
+    photo_index_path = Path("data/photo_index.json")
+    photo_index = {}
+    if photo_index_path.exists():
+        with open(photo_index_path) as f:
+            pi_data = json.load(f)
+        photo_index = pi_data.get("photos", {})
+        print(f"Loaded photo index: {len(photo_index)} photos")
+
     # Run evaluation
     result = evaluate_model(
         model=model,
         labels=labels,
         photos_dir=args.photos_dir,
+        photo_index=photo_index,
     )
 
     # Print report
