@@ -430,6 +430,161 @@ def _get_best_proposal_for_identity(identity_id: str) -> dict | None:
     return min(proposals, key=lambda p: p.get("distance", float("inf")))
 
 
+# =============================================================================
+# DISCOVERY LAYER CACHES (date labels + search index)
+# =============================================================================
+
+_date_labels_cache = None
+_search_index_cache = None
+
+
+def _load_date_labels() -> dict:
+    """Load date labels from ML pipeline output, keyed by photo_id for O(1) lookup."""
+    global _date_labels_cache
+    if _date_labels_cache is not None:
+        return _date_labels_cache
+
+    _date_labels_cache = {}
+    ml_data_path = Path(__file__).resolve().parent.parent / "rhodesli_ml" / "data" / "date_labels.json"
+    if not ml_data_path.exists():
+        return _date_labels_cache
+
+    try:
+        with open(ml_data_path) as f:
+            data = json.load(f)
+        for label in data.get("labels", []):
+            pid = label.get("photo_id", "")
+            if pid:
+                _date_labels_cache[pid] = label
+    except Exception as e:
+        logging.warning(f"Failed to load date labels: {e}")
+
+    return _date_labels_cache
+
+
+def _load_search_index() -> list:
+    """Load photo search index for in-memory keyword search."""
+    global _search_index_cache
+    if _search_index_cache is not None:
+        return _search_index_cache
+
+    _search_index_cache = []
+    search_path = data_path / "photo_search_index.json"
+    if not search_path.exists():
+        return _search_index_cache
+
+    try:
+        with open(search_path) as f:
+            data = json.load(f)
+        _search_index_cache = data.get("documents", [])
+    except Exception as e:
+        logging.warning(f"Failed to load search index: {e}")
+
+    return _search_index_cache
+
+
+def _get_decade_counts() -> dict:
+    """Compute photo counts per decade from the search index."""
+    docs = _load_search_index()
+    counts = {}
+    for doc in docs:
+        decade = doc.get("estimated_decade")
+        if decade:
+            counts[decade] = counts.get(decade, 0) + 1
+    return dict(sorted(counts.items()))
+
+
+def _get_tag_counts() -> dict:
+    """Compute photo counts per controlled tag from the search index."""
+    docs = _load_search_index()
+    counts = {}
+    for doc in docs:
+        for tag in doc.get("controlled_tags", []):
+            counts[tag] = counts.get(tag, 0) + 1
+    return dict(sorted(counts.items(), key=lambda x: -x[1]))
+
+
+def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list:
+    """Search photos using in-memory index. Returns matching documents with match reason."""
+    docs = _load_search_index()
+    results = []
+    query_lower = query.lower().strip() if query else ""
+
+    for doc in docs:
+        # Apply decade filter
+        if decade and doc.get("estimated_decade") != decade:
+            continue
+
+        # Apply tag filter
+        if tag and tag not in doc.get("controlled_tags", []):
+            continue
+
+        # Apply text search
+        match_reason = None
+        if query_lower:
+            searchable = doc.get("searchable_text", "").lower()
+            if query_lower not in searchable:
+                continue
+            # Determine match reason
+            tags_lower = " ".join(doc.get("controlled_tags", [])).lower()
+            if query_lower in tags_lower:
+                match_reason = "tags"
+            else:
+                match_reason = "scene"
+        elif not decade and not tag:
+            pass  # No filters, include all
+
+        results.append({**doc, "match_reason": match_reason})
+
+    return results
+
+
+def _get_date_badge(photo_id: str) -> tuple:
+    """Get date badge text, confidence, and tooltip for a photo.
+
+    Returns (badge_text, confidence, tooltip) or (None, None, None) if no label.
+    """
+    labels = _load_date_labels()
+    label = labels.get(photo_id)
+    if not label:
+        return None, None, None
+
+    decade = label.get("estimated_decade")
+    if not decade:
+        return None, None, None
+
+    badge_text = f"c. {decade}s"
+    confidence = label.get("confidence", "medium")
+    best_year = label.get("best_year_estimate", "")
+    prob_range = label.get("probable_range", [])
+    range_str = f"{prob_range[0]}\u2013{prob_range[1]}" if len(prob_range) == 2 else ""
+    tooltip = f"Best estimate: {best_year} (range: {range_str})" if best_year and range_str else f"Estimated: {decade}s"
+
+    return badge_text, confidence, tooltip
+
+
+def _render_date_badge_overlay(photo_id: str) -> Span:
+    """Render a date badge overlay for a photo card. Returns None if no label."""
+    date_text, date_conf, date_tooltip = _get_date_badge(photo_id)
+    if not date_text:
+        return None
+
+    if date_conf == "high":
+        cls = "bg-amber-800/80 text-amber-100"
+    elif date_conf == "medium":
+        cls = "bg-amber-800/50 border border-amber-600/50 text-amber-200/90"
+    else:
+        cls = "border border-dashed border-amber-600/40 text-amber-400/60"
+
+    return Span(
+        date_text,
+        cls=f"absolute bottom-2 right-2 text-[11px] font-serif px-1.5 py-0.5 rounded backdrop-blur-sm {cls}",
+        title=date_tooltip,
+        data_testid="date-badge",
+        data_confidence=date_conf,
+    )
+
+
 def _compute_triage_counts(to_review: list) -> dict:
     """Categorize inbox identities by actionability for the triage bar.
 
@@ -3682,6 +3837,8 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                     *face_avatars,
                     cls="absolute bottom-2 left-2 flex"
                 ) if face_avatars else None,
+                # Date badge
+                _render_date_badge_overlay(photo["photo_id"]),
                 cls="aspect-[4/3] overflow-hidden relative"
             ),
             # Photo info
@@ -8691,6 +8848,25 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
     photo_cards = []
     for photo in photos:
         badge_cls = "bg-emerald-600/80" if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0 else "bg-black/70"
+
+        # Date badge (bottom-left, confidence-styled)
+        date_text, date_conf, date_tooltip = _get_date_badge(photo["photo_id"])
+        date_badge = None
+        if date_text:
+            if date_conf == "high":
+                date_cls = "bg-amber-800/80 text-amber-100"
+            elif date_conf == "medium":
+                date_cls = "bg-amber-800/50 border border-amber-600/50 text-amber-200/90"
+            else:
+                date_cls = "border border-dashed border-amber-600/40 text-amber-400/60"
+            date_badge = Span(
+                date_text,
+                cls=f"absolute bottom-2 left-2 text-[11px] font-serif px-1.5 py-0.5 rounded backdrop-blur-sm {date_cls}",
+                title=date_tooltip,
+                data_testid="date-badge",
+                data_confidence=date_conf,
+            )
+
         photo_cards.append(
             A(
                 Div(
@@ -8703,6 +8879,7 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
                         f"{photo['confirmed_count']}/{photo['face_count']}" if photo["confirmed_count"] > 0 else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
                         cls=f"absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm {badge_cls}",
                     ) if photo["face_count"] > 0 else None,
+                    date_badge,
                     cls="aspect-[4/3] overflow-hidden relative",
                 ),
                 Div(
@@ -16484,7 +16661,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -16493,6 +16670,8 @@ async def post(request):
     _photo_cache = None
     _face_to_photo_cache = None
     _annotations_cache = None
+    _date_labels_cache = None
+    _search_index_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 
