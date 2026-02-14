@@ -631,14 +631,19 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     if not label:
         return None
 
-    # Build search index entry for tags/scene
+    # Build search index entry for tags/scene (check both photo_id and cache_photo_id)
     docs = _load_search_index()
-    search_doc = next((d for d in docs if d.get("photo_id") == photo_id), None)
+    search_doc = next((d for d in docs if d.get("photo_id") == photo_id or d.get("cache_photo_id") == photo_id), None)
+
+    # Track which specific fields have been human-corrected
+    _date_is_human = label.get("source") == "human"
 
     def _field(title, content, field_key="ai", expanded=False):
-        """Render a collapsible subsection with provenance styling."""
-        source = label.get("source", "gemini")
-        is_human = source == "human" or field_key == "human"
+        """Render a collapsible subsection with provenance styling.
+
+        field_key: 'ai' (default), 'human' (force verified), or 'date' (uses date-specific source).
+        """
+        is_human = field_key == "human" or (field_key == "date" and _date_is_human)
         border_cls = "border-emerald-500/40 bg-emerald-950/20" if is_human else "border-indigo-500/40 bg-indigo-950/20"
         icon = "\u2713" if is_human else "\u2728"
         provenance_text = "Verified" if is_human else "AI Estimated"
@@ -675,15 +680,66 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             "medium": "bg-amber-500/20 text-amber-400",
             "low": "bg-red-500/20 text-red-400",
         }.get(confidence, "bg-slate-500/20 text-slate-400")
+        # Correction pencil button (visible to all, triggers form or login prompt)
+        pencil_btn = Button(
+            "\u270f\ufe0f",
+            cls="text-xs text-slate-500 hover:text-white transition-colors ml-2 px-1",
+            data_testid="correct-date",
+            data_action="toggle-date-correction",
+            data_photo_id=photo_id,
+            title="Correct this date",
+            type="button",
+        )
+        # Inline correction form (hidden by default, shown on pencil click)
+        correction_form = Div(
+            Form(
+                Div(
+                    Label("Actual year:", fr="correction-year-input", cls="text-[11px] text-slate-400 mr-2"),
+                    Input(
+                        type="number",
+                        name="correction_year",
+                        id="correction-year-input",
+                        min="1850", max="2030",
+                        placeholder=str(best_year or decade),
+                        cls="w-20 bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white",
+                        data_testid="correction-year",
+                    ),
+                    Button(
+                        "Submit",
+                        cls="ml-2 px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
+                        data_testid="correction-submit",
+                        type="submit",
+                    ),
+                    Button(
+                        "Cancel",
+                        cls="ml-1 px-2 py-1 text-xs text-slate-400 hover:text-white transition-colors",
+                        type="button",
+                        data_action="toggle-date-correction",
+                    ),
+                    cls="flex items-center mt-2",
+                ),
+                hx_post=f"/api/photo/{photo_id}/correct-date",
+                hx_target=f"#date-section-{photo_id[:8]}",
+                hx_swap="outerHTML",
+            ),
+            id=f"date-correction-form-{photo_id[:8]}",
+            cls="hidden",
+        )
         date_content = Div(
-            P(f"circa {best_year}" if best_year else f"{decade}s", cls="text-lg font-serif text-amber-200 mb-1"),
+            Div(
+                P(f"circa {best_year}" if best_year else f"{decade}s", cls="text-lg font-serif text-amber-200 mb-1 inline"),
+                pencil_btn,
+                cls="flex items-center",
+            ),
             Div(
                 Span(f"Confidence: {confidence}", cls=f"text-[11px] px-2 py-0.5 rounded-full {conf_badge_cls}"),
                 Span(f"Range: {range_str}", cls="text-[11px] text-slate-500 ml-2") if range_str else None,
                 cls="flex items-center gap-2"
             ),
+            correction_form,
+            id=f"date-section-{photo_id[:8]}",
         )
-        sections.append(_field("Date Estimate", date_content, expanded=True))
+        sections.append(_field("Date Estimate", date_content, field_key="date", expanded=True))
 
     # Scene description
     scene = label.get("scene_description", "")
@@ -8026,6 +8082,115 @@ def post(photo_id: str, sess, source_url: str = ""):
     )
 
 
+def _load_corrections_log() -> dict:
+    """Load corrections log. Creates file if it doesn't exist."""
+    corrections_path = data_path / "corrections_log.json"
+    if not corrections_path.exists():
+        return {"schema_version": 1, "corrections": []}
+    try:
+        with open(corrections_path) as f:
+            return json.load(f)
+    except Exception:
+        return {"schema_version": 1, "corrections": []}
+
+
+def _save_corrections_log(data: dict):
+    """Save corrections log atomically."""
+    corrections_path = data_path / "corrections_log.json"
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(data_path), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp_path, str(corrections_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+
+@rt("/api/photo/{photo_id}/correct-date")
+async def post(photo_id: str, correction_year: int = None, sess=None):
+    """Submit a date correction for a photo. Updates date labels and logs the correction.
+
+    Auth: any logged-in user can correct (or admin when auth disabled).
+    Returns updated date section HTML via HTMX swap.
+    """
+    if is_auth_enabled():
+        user = get_current_user(sess or {})
+        if not user:
+            return Response("", status_code=401)
+        contributor_email = user.email
+        contributor_type = "admin" if user.is_admin else "registered"
+    else:
+        contributor_email = "local"
+        contributor_type = "admin"
+
+    if not correction_year or correction_year < 1850 or correction_year > 2030:
+        return Div(
+            Span("Invalid year (1850-2030)", cls="text-sm text-red-400"),
+            id=f"date-section-{photo_id[:8]}",
+        )
+
+    # Load current label
+    labels = _load_date_labels()
+    label = labels.get(photo_id)
+    if not label:
+        return Div(
+            Span("No date label found", cls="text-sm text-red-400"),
+            id=f"date-section-{photo_id[:8]}",
+        )
+
+    # Record correction
+    import uuid
+    from datetime import datetime, timezone
+    old_decade = label.get("estimated_decade")
+    old_year = label.get("best_year_estimate")
+    new_decade = (correction_year // 10) * 10
+
+    correction_entry = {
+        "id": f"corr_{uuid.uuid4().hex[:12]}",
+        "photo_id": photo_id,
+        "field": "estimated_decade",
+        "old_value": {"decade": old_decade, "year": old_year},
+        "new_value": {"decade": new_decade, "year": correction_year},
+        "old_source": label.get("source", "gemini"),
+        "new_source": "human",
+        "contributor_email": contributor_email,
+        "contributor_type": contributor_type,
+        "status": "applied",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+
+    # Save correction log
+    log = _load_corrections_log()
+    log["corrections"].append(correction_entry)
+    _save_corrections_log(log)
+
+    # Update the in-memory label cache
+    label["estimated_decade"] = new_decade
+    label["best_year_estimate"] = correction_year
+    label["confidence"] = "high"
+    label["source"] = "human"
+    label["probable_range"] = [correction_year - 2, correction_year + 2]
+
+    # Return updated date section with verified styling
+    return Div(
+        Div(
+            P(f"circa {correction_year}", cls="text-lg font-serif text-amber-200 mb-1 inline"),
+            Span("\u2713 Verified", cls="text-[11px] text-emerald-400 ml-2"),
+            cls="flex items-center",
+        ),
+        Div(
+            Span("Confidence: high", cls="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400"),
+            cls="flex items-center gap-2"
+        ),
+        P("Thanks! Your correction helps improve our AI.", cls="text-[11px] text-emerald-400/70 mt-2 italic"),
+        id=f"date-section-{photo_id[:8]}",
+        data_testid="verified-field",
+    )
+
+
 def photo_view_content(
     photo_id: str,
     selected_face_id: str = None,
@@ -8973,6 +9138,19 @@ def public_person_page(
                     if (shareBtn) {
                         var url = shareBtn.getAttribute('data-share-url') || window.location.href;
                         _sharePhotoUrl(url);
+                        return;
+                    }
+                    var toggleBtn = e.target.closest('[data-action="toggle-date-correction"]');
+                    if (toggleBtn) {
+                        var photoId = toggleBtn.getAttribute('data-photo-id') || toggleBtn.closest('[data-photo-id]')?.getAttribute('data-photo-id');
+                        if (!photoId) {
+                            var form = document.querySelector('[id^="date-correction-form-"]');
+                            if (form) form.classList.toggle('hidden');
+                            return;
+                        }
+                        var formId = 'date-correction-form-' + photoId.substring(0, 8);
+                        var form = document.getElementById(formId);
+                        if (form) form.classList.toggle('hidden');
                         return;
                     }
                 });
