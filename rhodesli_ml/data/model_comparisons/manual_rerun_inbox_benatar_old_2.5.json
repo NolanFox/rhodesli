@@ -1,0 +1,43 @@
+{
+  "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+  "source": "gemini",
+  "model": "gemini-2.5-flash",
+  "source_method": "api",
+  "estimated_decade": 1920,
+  "best_year_estimate": 1928,
+  "confidence": "high",
+  "probable_range": [1927, 1929],
+  "decade_probabilities": {"1920": 0.95, "1930": 0.05},
+  "location_estimate": "Indoor studio, no specific geographic indicators.",
+  "is_color": false,
+  "evidence": {
+    "print_format": [
+      {"cue": "Sepia tone, monochrome print", "strength": "moderate", "suggested_range": [1910, 1940]},
+      {"cue": "Straight white border, typical for studio prints", "strength": "moderate", "suggested_range": [1910, 1940]}
+    ],
+    "fashion": [
+      {"cue": "Man's suit with structured shoulders and moderate-width lapels", "strength": "strong", "suggested_range": [1925, 1935]},
+      {"cue": "Neatly parted and slicked-back hairstyle", "strength": "strong", "suggested_range": [1920, 1935]},
+      {"cue": "Patterned tie and white pocket square as formal accessories", "strength": "moderate", "suggested_range": [1920, 1935]}
+    ],
+    "environment": [],
+    "technology": []
+  },
+  "cultural_lag_applied": false,
+  "cultural_lag_note": "Explicit date '1928' found in inscription, which aligns well with fashion cues, negating the need for cultural lag adjustment.",
+  "capture_vs_print": "The inscription '19 de Agosto 1928' strongly indicates the capture date. The print characteristics (sepia tone, border) are consistent with an original print from this era.",
+  "reasoning_summary": "The most compelling evidence is the handwritten inscription '19 de Agosto 1928' directly on the photograph. This explicit date is strongly corroborated by the man's formal attire, including the suit's silhouette and lapel width, and his neatly styled hair, all of which are characteristic of the late 1920s. The sepia tone and straight white border are also consistent with this period.",
+  "scene_description": "A formal, sepia-toned studio portrait of a young man from the chest up. He is looking directly at the camera with a serious expression. He wears a dark suit, a patterned tie, and a white pocket square. The background is a plain, graduated studio backdrop, darker at the bottom and lighter towards the top.",
+  "visible_text": "A mi querida Estrella de tu hermano Samuel. 19 de Agosto 1928.",
+  "keywords": ["formal portrait", "studio", "man", "suit", "tie", "pocket square", "inscription", "sepia", "1920s", "Sephardic"],
+  "setting": "indoor_studio",
+  "photo_type": "formal_portrait",
+  "people_count": 1,
+  "condition": "good",
+  "clothing_notes": "Man wears a dark, single-breasted suit jacket with moderate-width lapels, a white collared shirt, a patterned tie (possibly silk), and a neatly folded white pocket square. A small, round white lapel pin is visible on his left lapel.",
+  "controlled_tags": ["Studio", "Formal_Event"],
+  "subject_ages": [25],
+  "prompt_version": "v2_rich_metadata",
+  "created_at": "2026-02-14T13:31:39.603717+00:00",
+  "note": "Labeled with gemini-2.5-flash (3-flash timed out with 504)"
+}
