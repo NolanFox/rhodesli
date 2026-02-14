@@ -259,7 +259,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | ML-045 | Temporal consistency auditor | DONE | Birth/death/age cross-checks + missed face detection. Found 16 missed-face photos. AD-054. 31 tests. (2026-02-14) |
 | ML-046 | Search metadata export | DONE | Full-text search index from Gemini labels. 250 docs in photo_search_index.json. AD-055. 22 tests. (2026-02-14) |
 | ML-047 | CORAL model retrain with 250 labels | DONE | +59% training data. MLflow tracked. (2026-02-14) |
-| ML-050 | Date UX integration | OPEN | Display estimated decade + confidence on photo viewer and photo grid. Admin override to correct ML estimates. Gold label overrides silver. |
+| ML-050 | Date UX integration | DONE | Display estimated decade + confidence on photo viewer and photo grid. Admin override to correct ML estimates. Gold label overrides silver. Completed 2026-02-14. |
 | ML-051 | Date label pipeline integration | OPEN | Integrate generate_date_labels.py into upload orchestrator (process_uploads.py). Auto-label new photos after ingestion. |
 | ML-052 | New upload auto-dating | OPEN | Run trained date estimation model on newly uploaded photos. Store predictions in photo metadata. |
 | ML-053 | Multi-pass Gemini strategy | OPEN | Re-label low-confidence photos with Gemini Flash for cost efficiency. Use Pro only for ambiguous cases. |

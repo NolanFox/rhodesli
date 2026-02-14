@@ -520,12 +520,48 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rejected**: Per-field search indices — over-engineered for 250 documents. Elasticsearch/Typesense — infrastructure overkill at current scale.
 - **Affects**: `rhodesli_ml/scripts/export_search_metadata.py`, `data/photo_search_index.json`, `rhodesli_ml/tests/test_export_search.py` (22 tests).
 
+### AD-056: In-Memory Photo Search (No External Engine)
+
+- **Date**: 2026-02-14
+- **Context**: Need search/filter for 250 photos with text descriptions, tags, decades.
+- **Decision**: In-memory Python substring matching, no Elasticsearch/Typesense/Meilisearch.
+- **Rationale**: At <1000 docs, in-memory search is <1ms with zero infrastructure. External engines add deployment complexity for no benefit at this scale.
+- **Rejected**: Elasticsearch (overkill), SQLite FTS (adds persistence layer), client-side search (can't filter server-rendered HTML).
+- **Affects**: `app/main.py` (`_search_photos`, `_load_search_index`).
+
+### AD-057: Dual-Keyed Date Label Cache
+
+- **Date**: 2026-02-14
+- **Context**: photo_index.json uses inbox_* IDs for community photos, _photo_cache uses SHA256 IDs. Date labels reference photo_index IDs.
+- **Decision**: Load date labels keyed by BOTH their original photo_index ID AND a computed SHA256 alias. Same object referenced by two keys.
+- **Rationale**: Avoids changing upstream ID generation. O(1) lookup from either ID system. Memory overhead negligible (pointer aliasing, not duplication).
+- **Rejected**: Converting all IDs to one format (breaks backward compat), lookup fallback chains (O(n) worst case).
+- **Affects**: `app/main.py` (`_load_date_labels`, `_load_search_index`).
+
+### AD-058: Per-Field Provenance Tracking
+
+- **Date**: 2026-02-14
+- **Context**: When admin corrects a date, the label source changes to "human". But other AI fields (scene, tags, evidence) should still show AI provenance.
+- **Decision**: Track provenance per field, not per label. Currently using field_key parameter in `_field()` renderer. `corrections_log.json` records which specific field was corrected.
+- **Rationale**: A date correction doesn't validate the scene description. Users need to know which fields are AI vs verified.
+- **Rejected**: Global label-level source (all fields show as verified after any correction).
+- **Affects**: `app/main.py` (`_build_ai_analysis_section`, `_field`).
+
+### AD-059: Correction Priority Scoring for Active Learning
+
+- **Date**: 2026-02-14
+- **Context**: 250 photos with varying AI confidence. Admin time is limited. Need to prioritize which photos to review first.
+- **Decision**: Priority = (1 - confidence_numeric) * range_width_normalized * (1 + temporal_conflict_flag). Low confidence + wide range = high priority.
+- **Rationale**: Active learning principle: human corrections are most valuable where the model is least certain. Wide date ranges indicate the model couldn't narrow down.
+- **Rejected**: Random order (wastes admin time), chronological (ignores model uncertainty), pure confidence sort (ignores range width information).
+- **Affects**: `app/main.py` (`_compute_correction_priority`, `/admin/review-queue`).
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-056)
+1. Add a new entry with AD-XXX format (next: AD-060)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

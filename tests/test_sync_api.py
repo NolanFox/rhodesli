@@ -464,3 +464,31 @@ class TestAnnotationDeploySafety:
         source = script_path.read_text()
         assert "annotations.json" not in source or "NOT pushed" in source, \
             "push_to_production.py must NOT include annotations.json in DATA_FILES"
+
+
+class TestCorrectionsLogDeploySafety:
+    """Verify corrections_log.json is not in deploy/push paths that overwrite production.
+
+    corrections_log.json is production-origin data — written by users submitting date
+    corrections via the UI. Must NEVER be overwritten by deploy pipeline.
+    """
+
+    def test_corrections_log_not_in_optional_sync_files(self):
+        """corrections_log.json must NOT be in OPTIONAL_SYNC_FILES."""
+        from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+        assert "corrections_log.json" not in OPTIONAL_SYNC_FILES, \
+            "corrections_log.json must NOT be in OPTIONAL_SYNC_FILES — it is production-origin data"
+
+    def test_corrections_log_not_in_required_data_files(self):
+        """corrections_log.json must NOT be in REQUIRED_DATA_FILES."""
+        from scripts.init_railway_volume import REQUIRED_DATA_FILES
+        assert "corrections_log.json" not in REQUIRED_DATA_FILES, \
+            "corrections_log.json must NOT be in REQUIRED_DATA_FILES — it is production-origin data"
+
+    def test_corrections_log_not_in_push_data_files(self):
+        """corrections_log.json must NOT be pushed by push_to_production.py."""
+        from pathlib import Path
+        script_path = Path(__file__).parent.parent / "scripts" / "push_to_production.py"
+        source = script_path.read_text()
+        assert "corrections_log.json" not in source or "NOT pushed" in source, \
+            "push_to_production.py must NOT include corrections_log.json in DATA_FILES"

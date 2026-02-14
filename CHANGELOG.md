@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.34.0] — 2026-02-14
+
+### Added
+- Date badges on photo cards (/photos page) with confidence-based styling (solid/outlined/dashed)
+- AI Analysis metadata panel on photo detail pages with collapsible subsections (date, scene, tags, evidence, ages)
+- Decade filtering with pill navigation on /photos
+- Keyword search on /photos with match reason labels
+- Tag filtering with top-8 tag pills on /photos
+- Date correction flow: inline pencil→form→submit with corrections_log.json
+- Per-field provenance styling (indigo/AI vs emerald/verified)
+- Admin review queue at /admin/review-queue with priority scoring
+- Confirm AI endpoint for quick admin validation
+- 12 e2e acceptance tests (Playwright) for all discovery features
+
+### Fixed
+- Photo ID mismatch: dual-keyed date labels cache maps both inbox_* and SHA256 IDs
+- Search index also maps inbox IDs to SHA256 for proper filtering on /photos
+
+### Technical
+- AD-056: In-memory photo search (no external engine)
+- AD-057: Dual-keyed date label cache
+- AD-058: Per-field provenance tracking
+- AD-059: Correction priority scoring
+
 ## [v0.33.0] - 2026-02-14
 
 ### Added
