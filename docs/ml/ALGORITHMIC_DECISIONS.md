@@ -417,12 +417,37 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (prompt + label construction), `rhodesli_ml/data/date_labels.py` (schema), test fixtures.
 - **Full analysis**: `docs/ml/DATE_ESTIMATION_DECISIONS.md` Decision 8.
 
+### AD-049: Pre-Labeling Prompt Refinements Based on External Review
+- **Date**: 2026-02-13
+- **Context**: Two external reviewers (an assistant and an ML expert) evaluated the AD-048 rich metadata schema before the first Gemini labeling run. Feedback evaluated against project constraints (157 photos, one developer, portfolio project, budget-conscious).
+- **Accepted proposals**:
+  - **Controlled tags**: Fixed enum `controlled_tags` field alongside free-text keywords. Prevents vocabulary drift ("hat" vs "headwear" vs "fedora"). Existing enums cover photo-level classification; controlled_tags covers scene/occasion categories for filtering.
+  - **Ladino/Solitreo awareness**: Explicitly prime Gemini for Ladino (Judeo-Spanish), French, Italian, and Solitreo script. Prevent silent normalization of Ladino to standard Spanish.
+  - **Subject ages**: Flat integer list `subject_ages`. Cheap output, enables future temporal cross-validation against known birth years.
+  - **Prompt version tracking**: `prompt_version` string field for reproducibility.
+- **Accepted but deferred** (needs Gemini data first):
+  - Simple temporal impossibility check (photo_year < person_birth_year → flag)
+  - People count discrepancy flag (gemini_people_count > face_detection_count → flag)
+- **Rejected proposals** (with reasoning):
+  - Full taxonomy expansion (cultural_elements, religious_indicators, military_indicators as separate arrays): Too granular for 157 photos. Most arrays empty. controlled_tags covers high-value categories.
+  - Nested visible_text object: Already have flat fields. Nesting adds parsing fragility for zero benefit.
+  - Per-person structured estimates (age_range, gender, role per person): Gemini's person indexing won't reliably map to InsightFace face ordering. Flat subject_ages captures useful signal.
+  - Bayesian temporal plausibility scoring: Premature. ~46 identified people with unknown birth year coverage and zero date estimates. Can't build or validate without data.
+  - Relationship detection from photos: Unreliable — positioning norms vary by culture and era.
+  - Full model/prompt/schema version tracking infrastructure: Overkill at 157 photos. Simple prompt_version string sufficient.
+  - 10-photo gold standard benchmark: Premature. Run Gemini first, spot-check, iterate.
+  - Schema restructure to deep nesting: Increases Gemini JSON malformation risk.
+  - Automatic English translation of visible text: Adds output tokens and cost for marginal value.
+  - Uncertainty propagation system: Data structures already support it. Deferred until temporal validator exists.
+- **Sources**: External review by ML expert (Feb 2026), assistant review (Feb 2026).
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (prompt + label construction), `rhodesli_ml/data/date_labels.py` (schema), test fixtures.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-049)
+1. Add a new entry with AD-XXX format (next: AD-050)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

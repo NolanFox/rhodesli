@@ -101,7 +101,12 @@ def _generate_synthetic_labels() -> list[dict]:
         total = sum(probs.values())
         probs = {k: round(v / total, 3) for k, v in probs.items()}
 
-        # Rich metadata (AD-048) — some labels have it, some don't (backward compat)
+        controlled_tag_options = [
+            "Studio", "Outdoor", "Formal_Event", "Group_Portrait", "Casual",
+            "Wedding", "Military", "Document", "Postcard", "Beach",
+        ]
+
+        # Rich metadata (AD-048, AD-049) — some labels have it, some don't (backward compat)
         has_metadata = i < 20  # First 20 have metadata, last 10 don't
         metadata_fields = {}
         if has_metadata:
@@ -109,11 +114,15 @@ def _generate_synthetic_labels() -> list[dict]:
                 "scene_description": f"Synthetic scene for photo {i}. A {photo_types[i % len(photo_types)]} from the {decade}s.",
                 "visible_text": f"Test inscription {i}" if i % 3 == 0 else None,
                 "keywords": ["test", photo_types[i % len(photo_types)], settings[i % len(settings)]],
+                "controlled_tags": [controlled_tag_options[i % len(controlled_tag_options)],
+                                     controlled_tag_options[(i + 3) % len(controlled_tag_options)]],
                 "setting": settings[i % len(settings)],
                 "photo_type": photo_types[i % len(photo_types)],
                 "people_count": (i % 5) + 1,
                 "condition": conditions[i % len(conditions)],
                 "clothing_notes": f"Test clothing description for photo {i}" if i % 2 == 0 else None,
+                "subject_ages": [20 + i, 30 + i] if i % 2 == 0 else [40 + i],
+                "prompt_version": "v2_rich_metadata",
             }
 
         label = {

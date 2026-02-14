@@ -178,6 +178,31 @@ Paying for image input tokens twice would roughly double the cost from $4.27 to 
 
 ---
 
+## Decision 9: External Review Refinements (AD-049)
+
+### What we changed
+Three targeted additions to the Gemini prompt before the first full labeling run, based on external reviewer feedback.
+
+### What was accepted
+1. **Controlled tags**: A fixed enum `controlled_tags` field alongside free-text keywords. Prevents vocabulary drift ("hat" vs "headwear" vs "fedora") without constraining the open-ended keywords field.
+2. **Ladino/Solitreo awareness**: Explicit prompt instructions for Ladino (Judeo-Spanish), Solitreo script, French, Italian. Prevents silent normalization of Ladino spelling to standard Spanish.
+3. **Subject ages**: Flat `subject_ages` integer list (left-to-right). Cheap output tokens, enables future cross-validation against known birth years.
+4. **Prompt version tracking**: Simple `prompt_version` string ("v2_rich_metadata") for reproducibility.
+
+### What was deferred
+- Temporal impossibility check (photo_year < birth_year): needs Gemini data first.
+- People count discrepancy flag (Gemini > InsightFace): needs Gemini data first.
+
+### What was rejected
+Per-person structured objects, deep nesting, full taxonomy expansion, Bayesian scoring, relationship detection, translation fields, formal benchmarking suite, and version tracking infrastructure. See AD-049 in `ALGORITHMIC_DECISIONS.md` for full reasoning on each rejection.
+
+### Impact on cost
+- Additional output tokens per photo: ~50-100 (controlled_tags list + subject_ages list)
+- Total additional cost for 157 photos: <$0.20
+- Negligible impact on JSON compliance risk
+
+---
+
 ## Research References
 
 1. **MyHeritage PhotoDater** (Aug 2023): Tens of thousands of training photos, within 5 years ~60%. blog.myheritage.com/2023/08/introducing-photodater

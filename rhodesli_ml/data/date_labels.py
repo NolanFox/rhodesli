@@ -28,7 +28,7 @@ class DateLabel(NamedTuple):
 
 
 class PhotoMetadata(NamedTuple):
-    """Rich metadata extracted from a photo via Gemini Vision (AD-048).
+    """Rich metadata extracted from a photo via Gemini Vision (AD-048, AD-049).
 
     All fields are Optional — older labels without metadata still load fine.
     """
@@ -36,14 +36,23 @@ class PhotoMetadata(NamedTuple):
     scene_description: str | None  # 2-3 sentence description
     visible_text: str | None  # OCR of inscriptions/captions, or None
     keywords: list[str]  # 5-15 searchable tags
+    controlled_tags: list[str]  # Values from VALID_CONTROLLED_TAGS only (AD-049)
     setting: str | None  # indoor_studio, outdoor_urban, etc.
     photo_type: str | None  # formal_portrait, group_photo, etc.
     people_count: int | None  # Number of visible people
     condition: str | None  # excellent, good, fair, poor
     clothing_notes: str | None  # Brief clothing/accessory description
+    subject_ages: list[int]  # Estimated ages left-to-right (AD-049)
+    prompt_version: str | None  # Prompt version for reproducibility (AD-049)
 
 
 # Valid enum values for validation
+VALID_CONTROLLED_TAGS = frozenset({
+    "Studio", "Outdoor", "Beach", "Street", "Home_Interior",
+    "Synagogue", "Cemetery", "Wedding", "Funeral", "Religious_Ceremony",
+    "School", "Military", "Formal_Event", "Casual", "Group_Portrait",
+    "Document", "Postcard",
+})
 VALID_SETTINGS = frozenset({
     "indoor_studio", "outdoor_urban", "outdoor_rural",
     "indoor_home", "indoor_other", "outdoor_other", "unknown",
@@ -129,11 +138,14 @@ def load_photo_metadata(path: str = "rhodesli_ml/data/date_labels.json") -> list
             scene_description=entry.get("scene_description"),
             visible_text=entry.get("visible_text"),
             keywords=entry.get("keywords", []),
+            controlled_tags=entry.get("controlled_tags", []),
             setting=entry.get("setting"),
             photo_type=entry.get("photo_type"),
             people_count=entry.get("people_count"),
             condition=entry.get("condition"),
             clothing_notes=entry.get("clothing_notes"),
+            subject_ages=entry.get("subject_ages", []),
+            prompt_version=entry.get("prompt_version"),
         ))
 
     return metadata_list

@@ -156,8 +156,11 @@ In addition to date estimation, extract the following metadata:
 scene_description: 2-3 sentences describing what is visible in the photo. Include people, their arrangement, the setting, and any notable objects. Write as if describing the photo to someone who cannot see it.
 
 visible_text: If there is ANY handwritten or printed text visible on or around the photo (inscriptions, captions, dates written on the photo, text on clothing, signs, documents), transcribe it exactly. Include the original language. If no text is visible, return null.
+IMPORTANT for visible text: Inscriptions on these photos may be in Ladino (Judeo-Spanish), French, Italian, Greek, or English. Handwritten text may use Solitreo (Sephardic cursive Hebrew script). DO NOT normalize Ladino spelling to standard Spanish. Preserve the original orthography exactly. For the visible_text_language field, detect the language. For visible_text_script field, classify as: Latin, Hebrew, Solitreo, Mixed, or Unknown.
 
 keywords: 5-15 searchable tags covering: people descriptors (man, woman, child, elderly), setting (studio, outdoor, home), occasion (wedding, funeral, school, military), objects (hat, umbrella, car), and any culturally specific items (fez, traditional dress).
+
+controlled_tags: Choose ALL that apply from this strict list (do not invent new values): ["Studio", "Outdoor", "Beach", "Street", "Home_Interior", "Synagogue", "Cemetery", "Wedding", "Funeral", "Religious_Ceremony", "School", "Military", "Formal_Event", "Casual", "Group_Portrait", "Document", "Postcard"]
 
 setting: Classify as one of: indoor_studio, outdoor_urban, outdoor_rural, indoor_home, indoor_other, outdoor_other, unknown.
 
@@ -168,6 +171,8 @@ people_count: How many people are visible in the photo (include partially visibl
 condition: Rate the physical condition of the photo: excellent, good, fair, poor. Consider fading, tears, stains, and damage.
 
 clothing_notes: Brief description of notable clothing and accessories. This is valuable for both cultural documentation and date estimation cross-validation.
+
+subject_ages: Estimate the approximate age of each visible person as an integer list, ordered left-to-right as they appear in the photo. Example: [45, 12, 8]. If uncertain, give your best estimate. This helps with identity matching.
 """
 
 
@@ -274,8 +279,9 @@ def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-previe
         if "date_estimation" in parsed:
             result = dict(date_est)
             for key in ("scene_description", "visible_text", "keywords",
-                        "setting", "photo_type", "people_count",
-                        "condition", "clothing_notes"):
+                        "controlled_tags", "setting", "photo_type",
+                        "people_count", "condition", "clothing_notes",
+                        "subject_ages"):
                 result[key] = parsed.get(key)
             return result
         else:
@@ -483,6 +489,10 @@ def main():
             "people_count": result.get("people_count"),
             "condition": result.get("condition"),
             "clothing_notes": result.get("clothing_notes"),
+            # New fields (AD-049)
+            "controlled_tags": result.get("controlled_tags", []),
+            "subject_ages": result.get("subject_ages", []),
+            "prompt_version": "v2_rich_metadata",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         all_labels.append(label)
@@ -522,6 +532,12 @@ def main():
             meta_parts.append(f"condition: {condition}")
         if meta_parts:
             print(f"     Meta: {' | '.join(meta_parts)}")
+        controlled = result.get("controlled_tags", [])
+        if controlled:
+            print(f"     Controlled: {', '.join(controlled)}")
+        ages = result.get("subject_ages", [])
+        if ages:
+            print(f"     Ages: {ages}")
         clothing = result.get("clothing_notes")
         if clothing:
             print(f"     Clothing: {clothing[:100]}")

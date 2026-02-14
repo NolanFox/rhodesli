@@ -33,6 +33,7 @@ from rhodesli_ml.data.date_labels import (
     DateLabel,
     PhotoMetadata,
     VALID_CONDITIONS,
+    VALID_CONTROLLED_TAGS,
     VALID_PHOTO_TYPES,
     VALID_SETTINGS,
     decade_to_ordinal,
@@ -730,21 +731,27 @@ class TestPhotoMetadata:
             scene_description="A scene",
             visible_text="Hello",
             keywords=["tag1"],
+            controlled_tags=["Studio", "Formal_Event"],
             setting="indoor_studio",
             photo_type="formal_portrait",
             people_count=3,
             condition="good",
             clothing_notes="Dark suit",
+            subject_ages=[45, 12],
+            prompt_version="v2_rich_metadata",
         )
         assert m.photo_id == "test"
         assert m.scene_description == "A scene"
         assert m.visible_text == "Hello"
         assert m.keywords == ["tag1"]
+        assert m.controlled_tags == ["Studio", "Formal_Event"]
         assert m.setting == "indoor_studio"
         assert m.photo_type == "formal_portrait"
         assert m.people_count == 3
         assert m.condition == "good"
         assert m.clothing_notes == "Dark suit"
+        assert m.subject_ages == [45, 12]
+        assert m.prompt_version == "v2_rich_metadata"
 
     def test_valid_enum_constants(self):
         """Enum validation sets contain expected values."""
@@ -762,6 +769,15 @@ class TestPhotoMetadata:
         assert "poor" in VALID_CONDITIONS
         assert len(VALID_CONDITIONS) == 4
 
+    def test_valid_controlled_tags_constants(self):
+        """Controlled tags validation set contains all expected values."""
+        assert "Studio" in VALID_CONTROLLED_TAGS
+        assert "Wedding" in VALID_CONTROLLED_TAGS
+        assert "Military" in VALID_CONTROLLED_TAGS
+        assert "Postcard" in VALID_CONTROLLED_TAGS
+        assert "Group_Portrait" in VALID_CONTROLLED_TAGS
+        assert len(VALID_CONTROLLED_TAGS) == 17
+
     def test_synthetic_labels_include_metadata(self, synthetic_labels):
         """Synthetic fixture labels include metadata fields for first 20."""
         with_metadata = [l for l in synthetic_labels if l.get("scene_description")]
@@ -777,6 +793,15 @@ class TestPhotoMetadata:
         assert sample["condition"] in VALID_CONDITIONS
         assert isinstance(sample["people_count"], int)
 
+        # Verify AD-049 fields
+        assert isinstance(sample["controlled_tags"], list)
+        assert len(sample["controlled_tags"]) > 0
+        for tag in sample["controlled_tags"]:
+            assert tag in VALID_CONTROLLED_TAGS, f"Invalid controlled tag: {tag}"
+        assert isinstance(sample["subject_ages"], list)
+        assert all(isinstance(a, int) for a in sample["subject_ages"])
+        assert sample["prompt_version"] == "v2_rich_metadata"
+
     def test_call_gemini_nested_response_parsing(self):
         """call_gemini handles the nested date_estimation response format."""
         from rhodesli_ml.scripts.generate_date_labels import call_gemini
@@ -785,3 +810,59 @@ class TestPhotoMetadata:
         from rhodesli_ml.scripts.generate_date_labels import PROMPT
         assert '"date_estimation"' in PROMPT
         assert '"scene_description"' in PROMPT
+
+    def test_prompt_contains_controlled_tags(self):
+        """Prompt includes controlled_tags instruction (AD-049)."""
+        from rhodesli_ml.scripts.generate_date_labels import PROMPT
+        assert "controlled_tags" in PROMPT
+        assert "Studio" in PROMPT
+        assert "Group_Portrait" in PROMPT
+        assert "do not invent new values" in PROMPT
+
+    def test_prompt_contains_ladino_awareness(self):
+        """Prompt includes Ladino/Solitreo awareness instructions (AD-049)."""
+        from rhodesli_ml.scripts.generate_date_labels import PROMPT
+        assert "Ladino" in PROMPT
+        assert "Solitreo" in PROMPT
+        assert "DO NOT normalize Ladino spelling" in PROMPT
+
+    def test_prompt_contains_subject_ages(self):
+        """Prompt includes subject_ages instruction (AD-049)."""
+        from rhodesli_ml.scripts.generate_date_labels import PROMPT
+        assert "subject_ages" in PROMPT
+        assert "left-to-right" in PROMPT
+
+    def test_backward_compat_labels_without_new_fields(self, tmp_path):
+        """Old labels without AD-049 fields still load as PhotoMetadata."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {
+                    "photo_id": "p_old", "estimated_decade": 1930,
+                    "scene_description": "An old label without new fields",
+                    "keywords": ["old", "test"],
+                    "setting": "indoor_studio",
+                    "photo_type": "formal_portrait",
+                    "people_count": 1,
+                    "condition": "fair",
+                    # No controlled_tags, subject_ages, or prompt_version
+                },
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        metadata = load_photo_metadata(str(labels_file))
+        assert len(metadata) == 1
+        assert metadata[0].controlled_tags == []
+        assert metadata[0].subject_ages == []
+        assert metadata[0].prompt_version is None
+
+    def test_controlled_tags_validation(self):
+        """All controlled tags in enum are from the defined set."""
+        valid = {"Studio", "Outdoor", "Beach", "Street", "Home_Interior",
+                 "Synagogue", "Cemetery", "Wedding", "Funeral",
+                 "Religious_Ceremony", "School", "Military", "Formal_Event",
+                 "Casual", "Group_Portrait", "Document", "Postcard"}
+        assert VALID_CONTROLLED_TAGS == valid
