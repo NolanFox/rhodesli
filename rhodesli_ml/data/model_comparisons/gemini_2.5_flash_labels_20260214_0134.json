@@ -1,0 +1,4976 @@
+[
+  {
+    "photo_id": "a3d2695fe0804844",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1979,
+    "confidence": "high",
+    "probable_range": [
+      1977,
+      1983
+    ],
+    "decade_probabilities": {
+      "1970": 0.65,
+      "1980": 0.35
+    },
+    "location_estimate": "Indoor formal venue, likely in a US diaspora community (e.g., NYC, Miami, Tampa) given the contemporary fashion and general setting.",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Color photograph with noticeable color shift (slight yellowing/fading), typical of consumer color prints from the late 1970s to early 1980s.",
+          "strength": "moderate",
+          "suggested_range": [
+            1977,
+            1983
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Younger woman's voluminous, layered, shoulder-length hairstyle with soft curls.",
+          "strength": "strong",
+          "suggested_range": [
+            1978,
+            1982
+          ]
+        },
+        {
+          "cue": "Younger woman's dark, sheer-sleeved dress with a V-neck and a subtle pattern/texture.",
+          "strength": "moderate",
+          "suggested_range": [
+            1977,
+            1983
+          ]
+        },
+        {
+          "cue": "Older woman's large, light-colored framed eyeglasses.",
+          "strength": "moderate",
+          "suggested_range": [
+            1970,
+            1985
+          ]
+        },
+        {
+          "cue": "Man's classic black tuxedo with a white shirt, black bow tie, and white boutonni\u00e8re.",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Formal indoor setting with decorative wall molding/paneling, a patterned red and gold carpet, and a wall sconce with electric candle-like lights.",
+          "strength": "moderate",
+          "suggested_range": [
+            1970,
+            1985
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Wall sconce with electric candle-like lights, common in formal venues.",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion appears contemporary for the era, suggesting minimal or no cultural lag for this formal event in a likely modern diaspora setting (e.g., US).",
+    "capture_vs_print": "Likely original capture and print from the same period, given the color characteristics and overall appearance of the scan.",
+    "reasoning_summary": "The most compelling evidence for dating comes from the younger woman's hairstyle and dress, which are highly characteristic of the late 1970s to very early 1980s. The older woman's large eyeglasses and the overall color rendition of the photograph (slight fading/yellowing) strongly support this timeframe. The formal indoor setting and the man's classic tuxedo are consistent with this period.",
+    "scene_description": "Three people, two women and one man, are posing in a formal indoor setting. The man stands in the center, wearing a tuxedo and a white kippah, holding a drink. A younger woman stands behind and to his right, smiling. An older woman is seated in a wooden chair in the foreground, looking towards the camera. The background features decorative wall paneling and a patterned red carpet.",
+    "visible_text": null,
+    "keywords": [
+      "formal event",
+      "family group",
+      "tuxedo",
+      "kippah",
+      "cocktail dress",
+      "eyeglasses",
+      "indoor",
+      "banquet",
+      "Sephardic",
+      "Jewish",
+      "group portrait"
+    ],
+    "setting": "indoor_other",
+    "photo_type": "group_photo",
+    "people_count": 3,
+    "condition": "good",
+    "clothing_notes": "Man wears a black tuxedo with a white shirt, black bow tie, white boutonni\u00e8re, and a white kippah. Younger woman wears a dark, possibly sheer or textured, long-sleeved dress with a V-neck and a gold chain necklace. Older woman wears a patterned long-sleeved dress, a light blue sheer scarf, and large framed eyeglasses.",
+    "controlled_tags": [
+      "Formal_Event",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      70,
+      85,
+      30
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:16:37.896504+00:00"
+  },
+  {
+    "photo_id": "a09088b188d5f4f5",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1910,
+    "best_year_estimate": 1918,
+    "confidence": "medium",
+    "probable_range": [
+      1915,
+      1923
+    ],
+    "decade_probabilities": {
+      "1900": 0.05,
+      "1910": 0.65,
+      "1920": 0.25,
+      "1930": 0.05
+    },
+    "location_estimate": "Indoor studio, no specific geographic indicators.",
+    "is_color": false,
+    "evidence": [
+      {
+        "cue": "Sepia-toned photographic print, rectangular, borderless, matte surface",
+        "strength": "moderate",
+        "suggested_range": [
+          1900,
+          1930
+        ]
+      },
+      {
+        "cue": "Boy's attire: collared shirt with sleeves rolled, knitted tie, knee-length knickers, dark long stockings, high lace-up boots",
+        "strength": "strong",
+        "suggested_range": [
+          1910,
+          1925
+        ]
+      },
+      {
+        "cue": "Boy's short, curly hairstyle",
+        "strength": "moderate",
+        "suggested_range": [
+          1910,
+          1925
+        ]
+      },
+      {
+        "cue": "Ornate carved wooden armchair with upholstered seat and back (damask-like pattern), used as a studio prop",
+        "strength": "moderate",
+        "suggested_range": [
+          1900,
+          1930
+        ]
+      },
+      {
+        "cue": "Plain studio backdrop and patterned rug",
+        "strength": "weak",
+        "suggested_range": [
+          1900,
+          1940
+        ]
+      }
+    ],
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "While Sephardic communities might exhibit fashion lag, children's everyday/semi-formal wear in a studio setting tends to be more contemporary, and the specific fashion elements (knitted tie, knickers, boots) are strong indicators for the 1910s-early 1920s across broader Western fashion trends.",
+    "capture_vs_print": "Likely an original capture and print from the estimated period. The sepia tone and physical characteristics are consistent with early 20th-century photographic processes.",
+    "reasoning_summary": "The strongest dating cues come from the boy's fashion, particularly the knitted tie, knee-length knickers with long stockings, and high lace-up boots, which were highly prevalent in the 1910s and early 1920s. The sepia tone and style of the studio prop (armchair) are consistent with this period.",
+    "scene_description": "A formal studio portrait of a young boy seated in an ornate carved wooden armchair. The boy is looking directly at the camera with a neutral expression. He is dressed in a collared shirt, knitted tie, knickers, long stockings, and lace-up boots. The background is a plain, light-colored studio backdrop, and a patterned rug is visible on the floor.",
+    "visible_text": null,
+    "keywords": [
+      "boy",
+      "child",
+      "studio portrait",
+      "formal",
+      "knitted tie",
+      "knickers",
+      "boots",
+      "armchair",
+      "sepia",
+      "early 20th century"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "The boy wears a light-colored, vertically striped collared shirt with sleeves rolled up to the forearms. He has a dark, possibly knitted, narrow tie. His lower body is clad in dark knee-length knickers, dark long stockings, and sturdy, high-top, lace-up leather boots.",
+    "controlled_tags": [
+      "Studio"
+    ],
+    "subject_ages": [
+      11
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:17:02.646697+00:00"
+  },
+  {
+    "photo_id": "f50118e7db8d6ac5",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1980,
+    "best_year_estimate": 1982,
+    "confidence": "high",
+    "probable_range": [
+      1981,
+      1983
+    ],
+    "decade_probabilities": {
+      "1970": 0.2,
+      "1980": 0.75,
+      "1990": 0.05
+    },
+    "location_estimate": "Unknown (likely US diaspora, e.g., NYC, Miami, or Tampa)",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Color photograph with significant orange color shift, glossy surface. Faint date stamp '82 3 1' visible in bottom right corner.",
+          "strength": "strong",
+          "suggested_range": [
+            1981,
+            1982
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Man with short, curly hair and thick-framed glasses (thick plastic frames); wearing a short-sleeved polo shirt and shorts. Baby in a t-shirt.",
+          "strength": "strong",
+          "suggested_range": [
+            1975,
+            1985
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor domestic setting with patterned curtains and plain walls visible in the background.",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Plastic high chair with a white tray; clear plastic baby bottle with a red nipple/spout and green cap.",
+          "strength": "strong",
+          "suggested_range": [
+            1975,
+            1985
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "This is a casual, domestic scene in a modern setting, likely in the US diaspora, where cultural lag is less pronounced.",
+    "capture_vs_print": "The faint date stamp '82 3 1' suggests the photo was printed in March 1982. The capture date would be very close to this, likely late 1981 or early 1982. The color shift is consistent with an original print from this era.",
+    "reasoning_summary": "A faint date stamp '82 3 1' strongly suggests a print date of March 1982, placing the capture date very close to this. Other cues like the color photograph characteristics (orange shift), man's fashion (glasses, hair), and baby product technology (plastic high chair and bottle) are all highly consistent with the late 1970s to early 1980s, corroborating the date stamp.",
+    "scene_description": "A candid indoor photograph showing a man and a baby. The man, wearing glasses and a polo shirt, is smiling at the baby, who is seated in a high chair and laughing. A plastic baby bottle with a red nipple is on the high chair tray. The background shows patterned curtains and a plain wall.",
+    "visible_text": "82 3 1",
+    "keywords": [
+      "man",
+      "baby",
+      "high chair",
+      "baby bottle",
+      "indoor",
+      "candid",
+      "family",
+      "laughing",
+      "glasses",
+      "polo shirt",
+      "domestic"
+    ],
+    "setting": "indoor_home",
+    "photo_type": "candid",
+    "people_count": 2,
+    "condition": "fair",
+    "clothing_notes": "Man wears a light-colored, short-sleeved polo shirt and shorts. Baby wears a light-colored short-sleeved t-shirt.",
+    "controlled_tags": [
+      "Home_Interior",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      32,
+      0
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:17:22.934872+00:00"
+  },
+  {
+    "photo_id": "213d4dcc10a7745d",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1942,
+    "confidence": "medium",
+    "probable_range": [
+      1938,
+      1948
+    ],
+    "decade_probabilities": {
+      "1930": 0.3,
+      "1940": 0.6,
+      "1950": 0.1
+    },
+    "location_estimate": "United States (likely Florida or another Southern state, given the screened porch and house style).",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph, rectangular shape, straight white border (~2-3mm)",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        },
+        {
+          "cue": "Appears to be a glossy or semi-matte surface, typical for amateur snapshots",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Young child in a simple, light-colored sleeveless dress or romper",
+          "strength": "moderate",
+          "suggested_range": [
+            1938,
+            1950
+          ]
+        },
+        {
+          "cue": "Child's natural-looking curly hair, shoulder-length",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1950
+          ]
+        },
+        {
+          "cue": "Dark, simple shoes (possibly Mary Janes or sandals) on the child",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Wooden house with vertical siding on the upper portion and a screened porch",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1950
+          ]
+        },
+        {
+          "cue": "Brick foundation visible beneath the wooden structure of the house",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1950
+          ]
+        },
+        {
+          "cue": "Lush green grass and a large tree trunk, indicating a temperate or subtropical climate",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Not applied as this is a child's casual photo in a US setting, where fashion lag is less pronounced than for formal wear or in Rhodes.",
+    "capture_vs_print": "Likely original capture, print characteristics consistent with the era of capture.",
+    "reasoning_summary": "The architectural style of the house, particularly the wooden structure with a screened porch and brick foundation, is highly characteristic of American vernacular architecture from the 1920s-1950s, especially in warmer climates. The child's simple, sleeveless dress and natural curly hairstyle are consistent with casual children's fashion of the late 1930s through the 1940s. The print format also aligns with this period. These cues collectively point to a mid-20th century capture.",
+    "scene_description": "A young child, likely a girl, with curly hair, sits on a patterned blanket on a grassy lawn. Behind her is a large tree trunk and a two-story wooden house featuring a screened porch on the upper level and a brick foundation. The setting appears to be a sunny outdoor backyard or side yard.",
+    "visible_text": null,
+    "keywords": [
+      "child",
+      "girl",
+      "outdoor",
+      "backyard",
+      "house",
+      "screened porch",
+      "tree",
+      "grass",
+      "casual",
+      "portrait",
+      "american architecture"
+    ],
+    "setting": "outdoor_home",
+    "photo_type": "candid",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young child wearing a light-colored, simple sleeveless dress or romper. Dark, simple shoes are visible on her feet.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual"
+    ],
+    "subject_ages": [
+      3
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:17:46.122056+00:00"
+  },
+  {
+    "photo_id": "2b0e354d49e51d29",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1972,
+    "confidence": "high",
+    "probable_range": [
+      1968,
+      1976
+    ],
+    "decade_probabilities": {
+      "1960": 0.3,
+      "1970": 0.65,
+      "1980": 0.05
+    },
+    "location_estimate": "Likely a home in the US (New York City, Miami, or Tampa) due to the presence of a window-mounted air conditioning unit and general interior style.",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Straight white border, typical of consumer snapshots.",
+          "strength": "moderate",
+          "suggested_range": [
+            1960,
+            1980
+          ]
+        },
+        {
+          "cue": "Color photograph, significant fading and color shift (magenta/red cast) characteristic of early consumer color prints.",
+          "strength": "strong",
+          "suggested_range": [
+            1965,
+            1985
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's short, styled, somewhat voluminous hairstyle.",
+          "strength": "strong",
+          "suggested_range": [
+            1968,
+            1976
+          ]
+        },
+        {
+          "cue": "Simple, short-sleeved dress with a patterned neckline/collar, consistent with casual wear of the era.",
+          "strength": "moderate",
+          "suggested_range": [
+            1968,
+            1978
+          ]
+        },
+        {
+          "cue": "Gold medallion pendant necklace and gold bracelet.",
+          "strength": "moderate",
+          "suggested_range": [
+            1965,
+            1980
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor home setting with pleated curtains and a multi-pane window.",
+          "strength": "weak",
+          "suggested_range": [
+            1950,
+            1980
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Window-mounted air conditioning unit visible below the window.",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1980
+          ]
+        },
+        {
+          "cue": "Simple, modern-style wooden chairs and tableware.",
+          "strength": "moderate",
+          "suggested_range": [
+            1960,
+            1980
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Not applied, as the setting and objects suggest a modern, likely US, home environment where fashion and technology would align with mainstream trends.",
+    "capture_vs_print": "Likely 1970s capture. Print characteristics (color fading, border style) are consistent with an original consumer color print from that era.",
+    "reasoning_summary": "Multiple strong cues consistently point to the late 1960s to mid-1970s. The woman's hairstyle, the style of her dress, the characteristics of the color print (fading and color shift), and especially the visible window-mounted air conditioning unit all align with this period. The setting appears to be a modern US home.",
+    "scene_description": "A candid indoor photograph of a middle-aged woman standing at a table, seemingly preparing or serving a meal. She is holding a small, light-colored item in her hands. The table is set with cups and plates. In the background, a window with a multi-pane design and a window-mounted air conditioning unit are visible, flanked by pleated curtains.",
+    "visible_text": null,
+    "keywords": [
+      "woman",
+      "indoor",
+      "home",
+      "candid",
+      "meal",
+      "table",
+      "dining",
+      "domestic",
+      "everyday",
+      "air conditioner",
+      "1970s",
+      "portrait"
+    ],
+    "setting": "indoor_home",
+    "photo_type": "candid",
+    "people_count": 1,
+    "condition": "fair",
+    "clothing_notes": "The woman wears a dark, short-sleeved dress with a patterned trim around the neckline. She has a gold medallion pendant necklace and a gold-colored bracelet on her left wrist.",
+    "controlled_tags": [
+      "Home_Interior",
+      "Casual"
+    ],
+    "subject_ages": [
+      55
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:18:02.548357+00:00"
+  },
+  {
+    "photo_id": "d4fd0727068369ec",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1950,
+    "best_year_estimate": 1959,
+    "confidence": "high",
+    "probable_range": [
+      1956,
+      1963
+    ],
+    "decade_probabilities": {
+      "1950": 0.75,
+      "1960": 0.25
+    },
+    "location_estimate": "An American amusement park or resort, possibly Disneyland (Anaheim, California) or a similar themed park/hotel.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white snapshot print with straight white borders, slightly uneven on one side, typical of consumer photography.",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Men in short-sleeved collared shirts (one plaid, one solid), tucked into trousers. Women in patterned short-sleeved dresses or light tops. Children in patterned short-sleeved shirts and shorts. Sunglasses on one woman. All casual wear.",
+          "strength": "strong",
+          "suggested_range": [
+            1956,
+            1963
+          ]
+        },
+        {
+          "cue": "Children's short-sleeved shirts and shorts, with white socks and casual shoes.",
+          "strength": "strong",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Ornate, multi-story building with decorative railings, columns, and scalloped awnings with fringe. Ornate street lamp and decorative cast-iron bench. Lush vegetation. This architectural style is highly characteristic of American amusement parks or grand resorts, strongly resembling Disneyland's Main Street, U.S.A.",
+          "strength": "strong",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Small, compact camera visible around one woman's neck, consistent with 35mm consumer cameras of the late 1950s/early 1960s.",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion appears contemporary for a US leisure setting; no significant lag applied as this is not a formal portrait or Old World setting.",
+    "capture_vs_print": "Likely 1950s-early 1960s capture. Print characteristics are consistent with an original snapshot from that era.",
+    "reasoning_summary": "All evidence categories strongly converge on the late 1950s to early 1960s. The distinctive architecture, particularly its resemblance to Disneyland (opened 1955), provides a strong 'terminus post quem'. Fashion and visible technology are perfectly consistent with this period for casual American leisure wear.",
+    "scene_description": "A multi-generational family group of six people poses outdoors in front of an ornate, multi-story building with decorative railings and scalloped awnings. The group consists of two older men, two women, a young boy, and a young girl, all dressed in casual summer attire. An ornate street lamp and a decorative cast-iron bench are visible in the foreground, surrounded by lush vegetation.",
+    "visible_text": null,
+    "keywords": [
+      "family",
+      "group portrait",
+      "outdoor",
+      "vacation",
+      "amusement park",
+      "resort",
+      "casual",
+      "summer",
+      "men",
+      "women",
+      "children",
+      "sunglasses",
+      "camera",
+      "ornate architecture",
+      "awnings",
+      "street lamp",
+      "bench"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "group_photo",
+    "people_count": 6,
+    "condition": "good",
+    "clothing_notes": "Man on left in light, short-sleeved collared shirt and dark trousers. Woman behind boy in light top, wearing a camera. Man in center-right in plaid short-sleeved shirt over a t-shirt. Woman next to him in a patterned short-sleeved dress and sunglasses. Boy in patterned short-sleeved shirt and dark shorts. Girl in light short-sleeved top and light shorts, holding a light-colored bag or jacket. All wearing casual shoes and socks.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      62,
+      33,
+      7,
+      63,
+      58,
+      11
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:18:22.704510+00:00"
+  },
+  {
+    "photo_id": "6f512d921837bc0c",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1935,
+    "confidence": "medium",
+    "probable_range": [
+      1930,
+      1940
+    ],
+    "decade_probabilities": {
+      "1920": 0.15,
+      "1930": 0.65,
+      "1940": 0.2
+    },
+    "location_estimate": "Unknown (studio setting)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia tone (monochrome, warm brown)",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1945
+          ]
+        },
+        {
+          "cue": "Straight white border, approximately 1-2mm wide, slightly uneven",
+          "strength": "moderate",
+          "suggested_range": [
+            1915,
+            1940
+          ]
+        },
+        {
+          "cue": "Rectangular print shape",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Men's fedora-style hats with distinct crease and brim",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        },
+        {
+          "cue": "Men's single-breasted suits with moderate-to-narrow lapels",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        },
+        {
+          "cue": "Narrow neckties",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        },
+        {
+          "cue": "Clean-shaven faces and neat, short hairstyles",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1940
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, dark studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues (hats, suit lapels, ties) suggest mainstream styles of the 1920s to early 1930s. Applying a 5-10 year lag for Sephardic communities, especially for formal studio attire, shifts the capture date into the 1930s.",
+    "capture_vs_print": "Likely 1930s capture. Print characteristics (sepia tone, white border) are consistent with original prints from that era.",
+    "reasoning_summary": "The strongest indicators are the men's fashion, particularly the style of fedora hats, suits, and ties, which align with mainstream trends of the 1920s to early 1930s. Applying the cultural lag for Sephardic communities, this places the photo firmly in the 1930s. The print format is consistent with this period.",
+    "scene_description": "Three young men, likely in their late teens or early twenties, are posed in a formal studio portrait. They are arranged in a slight diagonal, looking towards the camera. The background is a plain, dark, undifferentiated studio backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "young men",
+      "group portrait",
+      "formal",
+      "studio",
+      "hats",
+      "suits",
+      "ties",
+      "sepia",
+      "1930s",
+      "Sephardic"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 3,
+    "condition": "good",
+    "clothing_notes": "All three men wear dark, single-breasted suits with white collared shirts and neckties. Each man wears a fedora-style hat with a creased crown and a ribbon band. The man on the left has a pocket square.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      20,
+      22,
+      19
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:18:44.438969+00:00"
+  },
+  {
+    "photo_id": "d2edd80e5cf9c308",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1945,
+    "confidence": "medium",
+    "probable_range": [
+      1940,
+      1950
+    ],
+    "decade_probabilities": {
+      "1930": 0.1,
+      "1940": 0.7,
+      "1950": 0.2
+    },
+    "location_estimate": "Urban United States (e.g., New York City, Miami, or Tampa) based on brick architecture and English signage.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph with a straight white border, approximately 3-5mm wide",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1955
+          ]
+        },
+        {
+          "cue": "Glossy paper surface with visible scratches, typical of amateur snapshots",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's hairstyle: short, curly, styled upwards, consistent with 'victory rolls' or 'pageboy' styles",
+          "strength": "strong",
+          "suggested_range": [
+            1942,
+            1948
+          ]
+        },
+        {
+          "cue": "Woman's attire: short-sleeved collared striped dress or blouse, appearing as everyday wear",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1950
+          ]
+        },
+        {
+          "cue": "Younger boy's attire: jacket, tie, and shorts, a common formal or semi-formal outfit for young boys",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Brick building facade with barred windows and a decorative metal door/gate",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        },
+        {
+          "cue": "Urban setting with paved sidewalk/street",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Visible 'FOR SALE' sign on the building wall, with 'W.G. BARKER' below it",
+          "strength": "strong",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Considered, but less pronounced due to likely US urban setting (English signage, brick architecture) where mainstream fashion trends would be adopted more quickly than in Rhodes.",
+    "capture_vs_print": "Likely 1940s capture. Print characteristics are consistent with an original snapshot from that era.",
+    "reasoning_summary": "The woman's hairstyle is a strong indicator for the mid-1940s. The children's clothing and the print format are consistent with this period. The brick architecture and English 'FOR SALE' sign strongly suggest an urban US location, reducing the impact of cultural lag typically seen in Rhodes.",
+    "scene_description": "A group portrait of a young woman and two boys standing outdoors in front of a brick building. The woman stands behind the boys, smiling, with her arms around them. The younger boy is in the foreground, also smiling, wearing a jacket and shorts. The older boy is slightly behind and to the left of the younger boy, also smiling. The background features a brick wall with barred windows and a decorative metal door.",
+    "visible_text": "FOR SALE\nW.G. BARKER",
+    "keywords": [
+      "group portrait",
+      "outdoor",
+      "urban",
+      "family",
+      "children",
+      "woman",
+      "brick building",
+      "for sale sign",
+      "snapshot",
+      "casual"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "group_photo",
+    "people_count": 3,
+    "condition": "good",
+    "clothing_notes": "The woman wears a light-colored, short-sleeved, collared shirt or dress with vertical stripes. The older boy wears a light-colored shirt. The younger boy wears a dark jacket, a light shirt, a tie, and dark shorts. All three have short, curly hair.",
+    "controlled_tags": [
+      "Outdoor",
+      "Group_Portrait",
+      "Casual"
+    ],
+    "subject_ages": [
+      9,
+      5,
+      22
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:19:04.492048+00:00"
+  },
+  {
+    "photo_id": "e7bf01dc576851b0",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1948,
+    "confidence": "medium",
+    "probable_range": [
+      1945,
+      1955
+    ],
+    "decade_probabilities": {
+      "1930": 0.05,
+      "1940": 0.6,
+      "1950": 0.3,
+      "1960": 0.05
+    },
+    "location_estimate": "Unknown (studio setting)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph with a straight white border, consistent with mid-20th century printing techniques.",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1965
+          ]
+        },
+        {
+          "cue": "Rectangular print shape, glossy or semi-glossy paper surface.",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Baby's polka-dot dress with ruffled sleeves and a simple belt, a style common for children's wear in the mid-20th century.",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1955
+          ]
+        },
+        {
+          "cue": "Baby's short, curly hairstyle, typical for infants of the era.",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio backdrop, providing no specific geographic or environmental dating cues.",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            2000
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "The doll held by the baby, with its painted features and general construction, appears consistent with toys manufactured in the 1940s-1950s.",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1958
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Cultural lag is less applicable to infant clothing and studio photography styles, which tend to be more universal.",
+    "capture_vs_print": "Likely 1940s-1950s capture. Print characteristics are consistent with an original print from that period.",
+    "reasoning_summary": "The combination of the black and white print format, the style of the baby's dress, and particularly the appearance of the doll strongly suggest a mid-20th century date, most likely the 1940s to early 1950s. The studio setting offers no specific geographic or architectural clues.",
+    "scene_description": "A smiling baby is seated, looking directly at the camera. The baby wears a light-colored polka-dot dress with ruffled sleeves and a dark belt. The baby holds a doll dressed in a matching polka-dot outfit. The background is a plain, light-colored studio backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "baby",
+      "infant",
+      "child",
+      "portrait",
+      "studio",
+      "doll",
+      "polka dots",
+      "dress",
+      "smiling",
+      "toy"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Baby wears a light-colored, possibly white or cream, sleeveless dress with small dark polka dots and ruffled trim on the shoulders. A thin, dark belt is visible around the waist.",
+    "controlled_tags": [
+      "Studio"
+    ],
+    "subject_ages": [
+      0
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:19:23.798598+00:00"
+  },
+  {
+    "photo_id": "2360df5bb36d25d0",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1942,
+    "confidence": "medium",
+    "probable_range": [
+      1938,
+      1948
+    ],
+    "decade_probabilities": {
+      "1930": 0.35,
+      "1940": 0.55,
+      "1950": 0.1
+    },
+    "location_estimate": "Unknown (studio portrait, no environmental cues)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white print, rectangular format, matte surface",
+          "strength": "moderate",
+          "suggested_range": [
+            1925,
+            1955
+          ]
+        },
+        {
+          "cue": "Minor edge damage at top, consistent with age and handling/mounting",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Young boy's short, neatly combed hair with a side part",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        },
+        {
+          "cue": "Short-sleeved collared shirt, possibly a polo style or button-down with rolled sleeves",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1955
+          ]
+        },
+        {
+          "cue": "Dark plaid pattern visible under the shirt, likely a tie or part of a vest/sweater",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio background",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Simple dark studio prop (table or surface) in foreground",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Children's fashion in basic studio portraits tends to be more universal and less subject to significant cultural lag compared to adult formal wear.",
+    "capture_vs_print": "Likely original capture and print from the same era. Print characteristics are consistent with the estimated capture date.",
+    "reasoning_summary": "The sepia tone and print quality are consistent with mid-20th century photography. The strongest indicators are the boy's neat haircut and the style of his collared shirt with a plaid element, which were very common for children's portraits from the late 1930s through the 1940s. The overall aesthetic points to this period.",
+    "scene_description": "A close-up studio portrait of a young boy, approximately 4-6 years old. He is positioned with his chin resting on his clasped hands, which are placed on a dark, plain surface. He wears a light-colored, short-sleeved collared shirt, with a dark plaid pattern visible underneath. The background is a plain, light color.",
+    "visible_text": null,
+    "keywords": [
+      "young boy",
+      "child",
+      "portrait",
+      "studio",
+      "sepia",
+      "short hair",
+      "collared shirt",
+      "plaid",
+      "formal pose"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young boy in a light-colored, short-sleeved collared shirt. A dark plaid pattern is visible, likely a tie or a vest/sweater worn underneath. His hair is short and neatly combed with a side part.",
+    "controlled_tags": [
+      "Studio"
+    ],
+    "subject_ages": [
+      5
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:19:41.271478+00:00"
+  },
+  {
+    "photo_id": "ab9cc3ebce2d510c",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1935,
+    "confidence": "medium",
+    "probable_range": [
+      1930,
+      1940
+    ],
+    "decade_probabilities": {
+      "1920": 0.2,
+      "1930": 0.6,
+      "1940": 0.2
+    },
+    "location_estimate": "Arlington, USA (based on studio stamp 'NEWMAN 152 ARLINGTON')",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white print with an embossed, multi-layered white border featuring rounded corners. Faint studio stamp 'NEWMAN 152 ARLINGTON' visible at the bottom center.",
+          "strength": "strong",
+          "suggested_range": [
+            1925,
+            1945
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Baby wearing a light-colored, possibly eyelet lace, romper or dress with prominent ribbon bows on the shoulders. Short bangs hairstyle.",
+          "strength": "moderate",
+          "suggested_range": [
+            1925,
+            1945
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, dark studio backdrop. Child seated on a fluffy, fur-like studio prop.",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1950
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The studio stamp indicates a US location (Arlington), so the Rhodes fashion lag is not directly applicable to the capture date. However, the formal studio style is consistent with traditional preferences in immigrant communities.",
+    "capture_vs_print": "The print characteristics, including the embossed border and sepia tone, are consistent with an original print from the capture period.",
+    "reasoning_summary": "The strongest evidence comes from the print format, specifically the embossed border style and the studio stamp 'NEWMAN 152 ARLINGTON', which points to a US studio active in the 1920s-1940s. The specific border style was most popular in the late 1920s and 1930s. The baby's formal attire and hairstyle are consistent with this period. All cues align well for a mid-1930s estimate.",
+    "scene_description": "A formal studio portrait of a baby or toddler, seated on a fluffy, dark, fur-like prop. The child is wearing a light-colored, possibly white or cream, lacy romper or dress adorned with large ribbon bows on the shoulders and a delicate chain necklace. The background is a plain, dark studio backdrop.",
+    "visible_text": "NEWMAN 152 ARLINGTON",
+    "keywords": [
+      "baby",
+      "toddler",
+      "child",
+      "formal portrait",
+      "studio",
+      "fur prop",
+      "lace",
+      "ribbons",
+      "necklace",
+      "sepia",
+      "arlington"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Baby wears a light-colored, possibly white or cream, eyelet lace romper or dress with large ribbon bows on the shoulders and a delicate chain necklace. The outfit appears to be formal studio attire.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      1
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:20:03.987160+00:00"
+  },
+  {
+    "photo_id": "b9f591a56e25b71a",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1960,
+    "confidence": "medium",
+    "probable_range": [
+      1958,
+      1965
+    ],
+    "decade_probabilities": {
+      "1940": 0.05,
+      "1950": 0.45,
+      "1960": 0.45,
+      "1970": 0.05
+    },
+    "location_estimate": "Florida (Miami or Tampa) due to palm trees and casual American fashion styles.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "straight white border, black and white print, rectangular shape, glossy surface",
+          "strength": "moderate",
+          "suggested_range": [
+            1945,
+            1965
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "men in short-sleeved collared shirts (polo/sport shirt style)",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        },
+        {
+          "cue": "women in cardigans over patterned dresses (paisley/plaid), knee-length or just below",
+          "strength": "strong",
+          "suggested_range": [
+            1958,
+            1965
+          ]
+        },
+        {
+          "cue": "younger woman with hair in a ponytail",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1965
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "palm trees and lush green grass visible in background, suggesting warm climate",
+          "strength": "weak",
+          "suggested_range": [
+            1940,
+            1970
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "structured shoulder bag carried by one woman",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues are consistent with late 1950s to early 1960s American mainstream styles. A minimal lag (0-5 years) is assumed for a Sephardic community in the US, placing it firmly in this period.",
+    "capture_vs_print": "Likely 1950s-1960s capture. Print characteristics are consistent with an original snapshot from that era.",
+    "reasoning_summary": "Strong fashion cues (women's dresses, cardigans, men's casual shirts, young woman's ponytail and shoulder bag) point to the late 1950s to early 1960s. The black and white print with a straight border is consistent with this period for amateur photography. Palm trees suggest a warm climate like Florida.",
+    "scene_description": "A group of six people, three men and three women, are gathered outdoors on a sunny day. They are standing and kneeling on a grassy lawn, with palm trees and dense foliage visible in the background. The group appears to be casually posed for a photograph in what looks like a backyard.",
+    "visible_text": null,
+    "keywords": [
+      "family group",
+      "outdoor",
+      "casual",
+      "palm trees",
+      "lawn",
+      "men",
+      "women",
+      "cardigan",
+      "patterned dress",
+      "ponytail",
+      "shoulder bag",
+      "Florida"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "group_photo",
+    "people_count": 6,
+    "condition": "good",
+    "clothing_notes": "Man on left wears a short-sleeved collared shirt and dark trousers. Woman in center-back wears a dark top and scarf. Man on right wears a plaid short-sleeved shirt and light trousers, glasses. Woman on right-back wears a light cardigan over a patterned dress. Woman kneeling center-front wears a light cardigan over a patterned dress and a pearl necklace. Woman kneeling right-front wears a cardigan over a patterned dress and carries a small structured shoulder bag, hair in a ponytail.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      60,
+      65,
+      65,
+      55,
+      40,
+      25
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:20:27.200626+00:00"
+  },
+  {
+    "photo_id": "6a62687aec225e39",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1963,
+    "confidence": "high",
+    "probable_range": [
+      1962,
+      1963
+    ],
+    "decade_probabilities": {
+      "1950": 0.05,
+      "1960": 0.95
+    },
+    "location_estimate": "Likely Florida (Miami or Tampa) due to the presence of a palm tree and suburban architecture, consistent with Sephardic diaspora communities in warm climates.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Vertical stamp 'MAY 63' on right edge",
+          "strength": "strong",
+          "suggested_range": [
+            1963,
+            1963
+          ]
+        },
+        {
+          "cue": "Straight white border, typical of mid-20th century snapshots",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        },
+        {
+          "cue": "Black and white photograph",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1970
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Middle-aged woman's sleeveless patterned shift dress",
+          "strength": "moderate",
+          "suggested_range": [
+            1958,
+            1965
+          ]
+        },
+        {
+          "cue": "Middle-aged man's short-sleeved knit polo shirt",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        },
+        {
+          "cue": "Elderly man's short-sleeved plaid shirt",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        },
+        {
+          "cue": "Elderly woman's short, styled hair and scarf",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        },
+        {
+          "cue": "Young girl's dress style and small shoulder bag",
+          "strength": "moderate",
+          "suggested_range": [
+            1958,
+            1965
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Palm tree visible in background, suggesting a warm climate",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            2000
+          ]
+        },
+        {
+          "cue": "Suburban-style building partially visible in background",
+          "strength": "weak",
+          "suggested_range": [
+            1940,
+            1970
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Eyeglasses held by elderly woman, common style for the era",
+          "strength": "weak",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The explicit 'MAY 63' print date and contemporary fashion styles strongly suggest this photo was taken in a community that adopted mainstream styles without significant lag, or the direct print date overrides general lag assumptions.",
+    "capture_vs_print": "The 'MAY 63' stamp indicates the print date. For snapshots of this era, the capture date is typically very close to the print date, likely within a few months, making 1963 the most probable capture year. Fashion styles are highly consistent with early 1960s.",
+    "reasoning_summary": "The 'MAY 63' stamp on the print is the strongest indicator, pointing to a capture date in 1963. Fashion styles, including the women's shift dress and men's casual knit and plaid shirts, are highly consistent with early 1960s mainstream trends. The outdoor setting with a palm tree suggests a warm climate, aligning with known Sephardic diaspora locations in Florida.",
+    "scene_description": "Five individuals, comprising two elderly adults, two middle-aged adults, and one young girl, are posing casually outdoors. They stand in a grassy area in front of dense green foliage, with a palm tree and a light-colored building partially visible in the background. All subjects are looking towards the camera.",
+    "visible_text": "MAY\n63",
+    "keywords": [
+      "family group",
+      "outdoor",
+      "casual",
+      "palm tree",
+      "suburban",
+      "elderly man",
+      "elderly woman",
+      "middle-aged woman",
+      "young girl",
+      "plaid shirt",
+      "knit polo",
+      "shift dress",
+      "snapshot"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "group_photo",
+    "people_count": 5,
+    "condition": "good",
+    "clothing_notes": "The elderly woman on the far left wears a dark dress with a striped top and a short-sleeved cardigan, a scarf around her neck, and flat shoes, holding eyeglasses. The elderly man behind her wears a short-sleeved plaid shirt and glasses. The middle-aged woman in the center wears a sleeveless patterned shift dress and flat shoes. The young girl wears a dark dress or skirt with a lighter top and carries a small shoulder bag. The middle-aged man on the right wears a short-sleeved knit polo shirt and dark trousers.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      70,
+      75,
+      45,
+      10,
+      50
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:20:46.809996+00:00"
+  },
+  {
+    "photo_id": "a718d5fc861cef12",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1966,
+    "confidence": "medium",
+    "probable_range": [
+      1960,
+      1972
+    ],
+    "decade_probabilities": {
+      "1950": 0.05,
+      "1960": 0.8,
+      "1970": 0.15
+    },
+    "location_estimate": "Ambiguous, possibly an outdoor or semi-outdoor setting in a residential area.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white print, borderless (full-bleed)",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1975
+          ]
+        },
+        {
+          "cue": "Glossy paper surface",
+          "strength": "weak",
+          "suggested_range": [
+            1950,
+            1980
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's high, voluminous bouffant hairstyle",
+          "strength": "strong",
+          "suggested_range": [
+            1962,
+            1968
+          ]
+        },
+        {
+          "cue": "Woman's sleeveless, knee-length shift dress with abstract pattern and draped neckline",
+          "strength": "strong",
+          "suggested_range": [
+            1963,
+            1969
+          ]
+        },
+        {
+          "cue": "Child's Mary Jane style shoes",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1970
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored wall and paved/tiled ground, suggesting an outdoor or semi-outdoor setting",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            2000
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Adjusted slightly later in the 1960s due to potential cultural lag in Sephardic communities, though the styles are strongly indicative of the mid-1960s mainstream.",
+    "capture_vs_print": "Likely 1960s capture. Print characteristics (sepia tone, borderless) are consistent with original prints from that era.",
+    "reasoning_summary": "The woman's bouffant hairstyle and sleeveless, knee-length shift dress with an abstract pattern are strong indicators for the mid-1960s. The sepia tone and borderless print are consistent with this era. While cultural lag is considered, these styles were widely adopted, suggesting a capture date firmly within the 1960s.",
+    "scene_description": "A young woman holds a small child, both standing against a plain, light-colored wall. The woman is smiling at the camera, while the child looks slightly off to the side. The setting appears to be outdoors or a semi-enclosed space.",
+    "visible_text": null,
+    "keywords": [
+      "woman",
+      "child",
+      "mother",
+      "daughter",
+      "portrait",
+      "outdoor",
+      "casual",
+      "bouffant",
+      "shift dress",
+      "1960s fashion",
+      "family"
+    ],
+    "setting": "outdoor_other",
+    "photo_type": "group_photo",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Woman wears a sleeveless, knee-length shift dress with an abstract pattern and a high bouffant hairstyle. She has small stud earrings and a ring. The child wears a light-colored, possibly patterned dress and Mary Jane style shoes.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      2,
+      28
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:21:06.122384+00:00"
+  },
+  {
+    "photo_id": "9af0e8f2d3ca3479",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1920,
+    "best_year_estimate": 1929,
+    "confidence": "medium",
+    "probable_range": [
+      1927,
+      1933
+    ],
+    "decade_probabilities": {
+      "1920": 0.6,
+      "1930": 0.35,
+      "1910": 0.03,
+      "1940": 0.02
+    },
+    "location_estimate": "Unknown (studio portrait, no specific geographic indicators)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned monochrome print",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1940
+          ]
+        },
+        {
+          "cue": "Rectangular image with an embossed or printed rounded-corner inner frame effect",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Bride's dress with dropped waistline, knee-length underlay, and layered lace/sheer fabric",
+          "strength": "strong",
+          "suggested_range": [
+            1924,
+            1930
+          ]
+        },
+        {
+          "cue": "Bride's cloche-style headpiece with floral embellishments and long sheer veil",
+          "strength": "strong",
+          "suggested_range": [
+            1924,
+            1930
+          ]
+        },
+        {
+          "cue": "Bride's large, cascading bouquet with long ribbons",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        },
+        {
+          "cue": "Groom's dark tuxedo with white bow tie and slicked-back hair",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor studio setting with a painted backdrop featuring a patterned wall design",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues are strongly 1920s mainstream. A slight lag of 2-5 years has been considered, pushing the estimate into the late 1920s to very early 1930s for a Sephardic community.",
+    "capture_vs_print": "Likely 1920s-early 1930s capture. Print characteristics are consistent with the original capture period.",
+    "reasoning_summary": "The bride's dress silhouette, cloche-style headpiece, and the print's inner frame style are strong indicators of the mid-to-late 1920s. Considering a slight cultural lag for Sephardic communities, the early 1930s is also plausible, but the fashion elements are distinctly 1920s.",
+    "scene_description": "Formal studio portrait of a young couple, likely a wedding. The bride, on the left, wears a layered lace dress with a dropped waist and a cloche-style veil, holding a large bouquet with ribbons. The groom, on the right, is in a dark tuxedo. They stand against a painted backdrop with a patterned design.",
+    "visible_text": null,
+    "keywords": [
+      "wedding",
+      "couple",
+      "bride",
+      "groom",
+      "formal portrait",
+      "studio",
+      "1920s fashion",
+      "veil",
+      "tuxedo",
+      "bouquet",
+      "lace dress",
+      "sepia"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "wedding",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Bride wears a white, layered, knee-length lace dress with a dropped waist, a cloche-style headpiece with floral details, and a long sheer veil. She carries a large bouquet with long ribbons. Groom wears a dark tuxedo with a white bow tie, white shirt, and a boutonni\u00e8re.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      23,
+      24
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:21:24.933180+00:00"
+  },
+  {
+    "photo_id": "499c2c0e37d27d22",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1973,
+    "confidence": "medium",
+    "probable_range": [
+      1970,
+      1978
+    ],
+    "decade_probabilities": {
+      "1960": 0.2,
+      "1970": 0.7,
+      "1980": 0.1
+    },
+    "location_estimate": "Likely a home in a diaspora community (e.g., New York City, Miami, or Tampa, Florida) given the modern interior and toy.",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Full color photograph with noticeable yellowing and color shift, straight white border, slightly uneven cut",
+          "strength": "strong",
+          "suggested_range": [
+            1965,
+            1985
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Child wearing a short-sleeved, collared, ribbed (corduroy-like) one-piece romper with a front zipper",
+          "strength": "moderate",
+          "suggested_range": [
+            1968,
+            1978
+          ]
+        },
+        {
+          "cue": "Child's short hair with bangs",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1980
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain indoor walls and blue-grey carpeted floor",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1985
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Plastic pull-toy resembling a xylophone with colored bars and red wheels, consistent with popular mass-produced children's toys of the era (e.g., Fisher-Price style)",
+          "strength": "strong",
+          "suggested_range": [
+            1965,
+            1978
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Not applicable for this photo, as it depicts a young child in a contemporary home setting with a mass-produced toy, likely from a diaspora community.",
+    "capture_vs_print": "Likely 1970s capture. Print characteristics (color shift, border style) are consistent with an original consumer print from that era.",
+    "reasoning_summary": "The color photograph exhibits typical fading and color shift characteristic of consumer prints from the 1970s. The child's ribbed romper style and, most significantly, the plastic pull-toy (resembling popular Fisher-Price designs of the era) strongly indicate a capture date in the early to mid-1970s. The indoor home setting is generic but consistent with this period.",
+    "scene_description": "A young child, likely a toddler, sits barefoot on a blue-grey carpet, smiling broadly at the camera. The child is wearing an orange ribbed romper and holds a string attached to a colorful pull-toy, which resembles a xylophone with red wheels. The background consists of plain, light-colored walls.",
+    "visible_text": null,
+    "keywords": [
+      "child",
+      "toddler",
+      "boy",
+      "indoor",
+      "home",
+      "carpet",
+      "toy",
+      "pull toy",
+      "xylophone",
+      "smiling",
+      "barefoot",
+      "romper",
+      "candid"
+    ],
+    "setting": "indoor_home",
+    "photo_type": "candid",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young child wearing a short-sleeved, collared, orange/rust-colored ribbed (corduroy-like) one-piece romper with a front zipper. Barefoot.",
+    "controlled_tags": [
+      "Home_Interior",
+      "Casual",
+      "Candid"
+    ],
+    "subject_ages": [
+      1
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:21:44.667040+00:00"
+  },
+  {
+    "photo_id": "4be78d8c8cb1611d",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1937,
+    "confidence": "medium",
+    "probable_range": [
+      1933,
+      1942
+    ],
+    "decade_probabilities": {
+      "1920": 0.05,
+      "1930": 0.6,
+      "1940": 0.3,
+      "1950": 0.05
+    },
+    "location_estimate": "New York City (brick architecture, 'ENE AVE' street sign, 'OLD GOLD' cigarette sign)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1965
+          ]
+        },
+        {
+          "cue": "Straight white border, approximately 5-10mm",
+          "strength": "moderate",
+          "suggested_range": [
+            1925,
+            1955
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Middle boy in open-collar knit shirt and V-neck sweater/cardigan",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        },
+        {
+          "cue": "Youngest boy in dark jacket with light stripes on sleeves (sailor-style jacket) and tie",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        },
+        {
+          "cue": "Children's short, curly hairstyles",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Brick building architecture, typical of American urban settings",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Visible street sign fragment 'ENE AVE'",
+          "strength": "strong",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        },
+        {
+          "cue": "Sign for 'OLD GOLD' cigarettes visible in doorway",
+          "strength": "strong",
+          "suggested_range": [
+            1926,
+            1955
+          ]
+        },
+        {
+          "cue": "'FOR SALE' sign on building",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Photo appears to be taken in an American urban setting (likely NYC), so Rhodes-specific fashion lag is not applied.",
+    "capture_vs_print": "Likely 1930s-1940s capture. Print characteristics are consistent with an original print from that era.",
+    "reasoning_summary": "Strong environmental cues, including brick architecture, a street sign fragment 'ENE AVE', and a prominent 'OLD GOLD' cigarette sign, firmly place this photograph in an American urban setting, most likely New York City. The 'OLD GOLD' brand was introduced in 1926 and was highly popular through the 1930s and 1940s. The children's casual clothing styles, particularly the V-neck sweaters and the youngest boy's sailor-style jacket, align well with the mid-to-late 1930s and early 1940s. The 'FOR SALE' sign could suggest the economic climate of the Great Depression era.",
+    "scene_description": "Three boys are posing outdoors on a sidewalk in front of a brick building. The two younger boys are smiling broadly, while the older boy in the middle has a slight smile. The building features decorative brickwork, metal window grates, and a storefront entrance with multiple signs, including 'FOR SALE' and 'OLD GOLD' cigarette advertisements.",
+    "visible_text": "ENE AVE, FOR SALE, OLD GOLD, OLD GOLD, OLD GOLD",
+    "keywords": [
+      "boys",
+      "children",
+      "group portrait",
+      "outdoor",
+      "urban",
+      "brick building",
+      "street",
+      "storefront",
+      "signage",
+      "casual wear",
+      "sweater",
+      "jacket",
+      "New York City"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "group_photo",
+    "people_count": 3,
+    "condition": "fair",
+    "clothing_notes": "The boy on the left wears a striped undershirt under a dark V-neck sweater. The middle boy wears an open-collar light-colored shirt under a dark V-neck sweater or cardigan. The boy on the right wears a dark jacket with light stripes on the sleeves, a light collared shirt, and a dark tie.",
+    "controlled_tags": [
+      "Outdoor",
+      "Street",
+      "Group_Portrait",
+      "Casual"
+    ],
+    "subject_ages": [
+      8,
+      14,
+      6
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:22:04.862388+00:00"
+  },
+  {
+    "photo_id": "b9aa84ba4717fbc9",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1943,
+    "confidence": "high",
+    "probable_range": [
+      1942,
+      1944
+    ],
+    "decade_probabilities": {
+      "1930": 0.02,
+      "1940": 0.95,
+      "1950": 0.03
+    },
+    "location_estimate": "United States (based on US military uniform and 'U.S.A.' emblem on the frame). Specific city not discernible.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Handwritten date '2/12/43' on the mounting card",
+          "strength": "strong",
+          "suggested_range": [
+            1943,
+            1943
+          ]
+        },
+        {
+          "cue": "Studio portrait mounted on cardstock folder with patriotic 'U.S.A.' emblem (eagle with flags)",
+          "strength": "strong",
+          "suggested_range": [
+            1940,
+            1945
+          ]
+        },
+        {
+          "cue": "Black and white photograph",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        },
+        {
+          "cue": "Scalloped/deckled edge on the photo mounting card",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "US Army military uniform (jacket, tie, garrison cap with insignia)",
+          "strength": "strong",
+          "suggested_range": [
+            1941,
+            1945
+          ]
+        },
+        {
+          "cue": "Short, neat military haircut",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1960
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, dark studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Not applicable; the photo features a US military uniform and a clear handwritten date, which are direct indicators of the period in the US.",
+    "capture_vs_print": "The handwritten date '2/12/43' is a strong indicator of the capture date. The print format and uniform style are consistent with an original print from that period.",
+    "reasoning_summary": "The handwritten date '2/12/43' is the strongest evidence, directly indicating the year. This is strongly corroborated by the US Army uniform and the patriotic 'U.S.A.' emblem on the photo's mounting card, all pointing to the World War II era. There is no conflicting evidence.",
+    "scene_description": "Head-and-shoulders studio portrait of a young man in a US military uniform. He is looking directly at the camera with a neutral expression. The background is a plain, dark color. The black and white photograph is mounted on a light-colored cardstock frame with red and blue borders, a scalloped outer edge, and a patriotic eagle emblem at the top.",
+    "visible_text": "2/12/43\nU.S.A.\nWith Love\nyour nephew\nPat M. Mozal",
+    "keywords": [
+      "man",
+      "young man",
+      "military",
+      "uniform",
+      "soldier",
+      "studio",
+      "portrait",
+      "WWII",
+      "patriotic",
+      "inscription",
+      "nephew",
+      "Mozal",
+      "garrison cap"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young man wearing a dark US Army uniform jacket with a light-colored tie and a garrison cap adorned with an insignia. The uniform appears to be a standard service uniform of the World War II era.",
+    "controlled_tags": [
+      "Studio",
+      "Military",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      20
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:22:24.596288+00:00"
+  },
+  {
+    "photo_id": "fb02c461c554c830",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1950,
+    "best_year_estimate": 1953,
+    "confidence": "medium",
+    "probable_range": [
+      1950,
+      1960
+    ],
+    "decade_probabilities": {
+      "1940": 0.1,
+      "1950": 0.75,
+      "1960": 0.15
+    },
+    "location_estimate": "Indoor studio, likely in a US diaspora community (NYC, Miami, or Tampa) given the contemporary fashion adoption.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1970
+          ]
+        },
+        {
+          "cue": "Straight white border, approximately 3-5mm",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1965
+          ]
+        },
+        {
+          "cue": "Fine-grained textured paper surface (visible in crops)",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1965
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Sculpted, curled hairstyle with volume at the sides, swept up from the face",
+          "strength": "strong",
+          "suggested_range": [
+            1950,
+            1958
+          ]
+        },
+        {
+          "cue": "Off-the-shoulder formal dress, dark in color",
+          "strength": "strong",
+          "suggested_range": [
+            1950,
+            1960
+          ]
+        },
+        {
+          "cue": "Sparkling stud earrings and a matching choker-style necklace",
+          "strength": "moderate",
+          "suggested_range": [
+            1945,
+            1965
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1970
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues are strongly indicative of early to mid-1950s mainstream styles. If from a Sephardic diaspora community in the US, the lag might be minimal for this type of formal, contemporary attire. If from Rhodes, a 5-10 year lag could push it slightly later, but the specific hairstyle doesn't strongly support a date much beyond the late 1950s.",
+    "capture_vs_print": "Likely 1950s capture. Print characteristics (B&W, straight border, textured surface) are consistent with original production from that era.",
+    "reasoning_summary": "The woman's sculpted, curled hairstyle and off-the-shoulder formal dress are strong indicators of early to mid-1950s fashion. The black and white print with a straight border and textured surface is consistent with this period. The studio setting provides no specific environmental or technological dating cues. Considering potential cultural lag, the style still firmly places it within the 1950s, possibly extending to very early 1960s.",
+    "scene_description": "A formal studio portrait of a young adult woman, smiling and looking slightly upwards. She is positioned from the chest up, wearing an off-the-shoulder dark dress and prominent sparkling jewelry. The background is a plain, light-colored studio backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "formal portrait",
+      "studio",
+      "woman",
+      "young adult",
+      "off-shoulder dress",
+      "jewelry",
+      "earrings",
+      "necklace",
+      "curled hair",
+      "glamorous"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Woman wears a dark, off-the-shoulder formal dress, likely velvet or satin. She has large, sparkling stud earrings and a matching choker-style necklace. Her hair is styled in sculpted curls with volume at the sides.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      28
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:22:43.834120+00:00"
+  },
+  {
+    "photo_id": "1135ba51e1bf5a1a",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1920,
+    "best_year_estimate": 1924,
+    "confidence": "high",
+    "probable_range": [
+      1924,
+      1924
+    ],
+    "decade_probabilities": {
+      "1920": 1.0
+    },
+    "location_estimate": "Buenos Aires, Argentina (based on inscription 'Bs Aires').",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Rectangular print, no visible border, matte surface",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1930
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Women's hairstyles: short, curly bobs, typical of the 1920s",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1929
+          ]
+        },
+        {
+          "cue": "Women's dresses: simple, straight-cut, knee-length with large, embroidered flat collars (Peter Pan style)",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1929
+          ]
+        },
+        {
+          "cue": "Woman on left wearing Mary Jane style shoes with a strap",
+          "strength": "moderate",
+          "suggested_range": [
+            1915,
+            1930
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain studio backdrop, suggesting an indoor studio setting",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Ornate, carved studio chair used as a prop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1930
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The explicit date in the inscription 'Junio 1\u00ba/1924' provides a precise capture/inscription date. Fashion cues are consistent with this date, so no lag adjustment is necessary.",
+    "capture_vs_print": "The handwritten inscription 'Junio 1\u00ba/1924' indicates the photo was taken or inscribed on that date. Print characteristics (sepia tone, paper type) are consistent with an original print from the early 1920s.",
+    "reasoning_summary": "The most definitive evidence is the handwritten inscription 'Bs Aires, Junio 1\u00ba/1924', which provides a precise date. This is strongly supported by the women's fashion, particularly their bobbed hairstyles and dress styles, which are characteristic of the early to mid-1920s. The sepia tone and print format are also consistent with this era. All cues align to confirm the date provided by the inscription.",
+    "scene_description": "A formal studio portrait featuring two young women. One woman is seated on an ornate, carved studio chair, while the other is perched on the armrest behind her. Both women are smiling at the camera. The background is a plain, light-colored studio backdrop.",
+    "visible_text": "Bs Aires, Junio 1\u00ba/1924\nA mi querida prima\nde nuestro\nSol\nAmor y afecto de tu prima\nRosita Sidicaro",
+    "keywords": [
+      "formal portrait",
+      "studio",
+      "two women",
+      "young women",
+      "cousins",
+      "curly hair",
+      "bobbed hair",
+      "dresses",
+      "1920s fashion",
+      "Buenos Aires",
+      "inscription"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 2,
+    "condition": "fair",
+    "clothing_notes": "Both women wear dark, long-sleeved, knee-length dresses with large, embroidered flat collars. The woman on the left wears dark Mary Jane-style shoes. The woman on the right has a light-colored ribbon or clip in her curly hair.",
+    "controlled_tags": [
+      "Studio",
+      "Group_Portrait",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      20,
+      22
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:23:01.172839+00:00"
+  },
+  {
+    "photo_id": "e4744bb6247f1174",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1920,
+    "best_year_estimate": 1928,
+    "confidence": "medium",
+    "probable_range": [
+      1925,
+      1935
+    ],
+    "decade_probabilities": {
+      "1910": 0.05,
+      "1920": 0.45,
+      "1930": 0.4,
+      "1940": 0.1
+    },
+    "location_estimate": "Unknown (studio setting), but consistent with a studio in Rhodes or diaspora communities.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Matte or semi-matte paper surface",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1940
+          ]
+        },
+        {
+          "cue": "Irregular, torn edges, no distinct printed border",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Child's short bowl cut with bangs",
+          "strength": "moderate",
+          "suggested_range": [
+            1915,
+            1940
+          ]
+        },
+        {
+          "cue": "White short-sleeved shirt with a large Peter Pan collar",
+          "strength": "strong",
+          "suggested_range": [
+            1910,
+            1935
+          ]
+        },
+        {
+          "cue": "Dark shorts or bloomers with visible suspenders",
+          "strength": "strong",
+          "suggested_range": [
+            1915,
+            1935
+          ]
+        },
+        {
+          "cue": "Knee-high socks and dark lace-up boots",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1930
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Mottled, dark studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Plain, textured studio floor covering",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Simple dark wooden stool with turned legs, common studio prop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1940
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Considered potential lag for children's fashion in Sephardic communities, but the core style elements are strong indicators for the interwar period, making significant lag less likely for this specific attire.",
+    "capture_vs_print": "Likely original capture and print from the 1920s-1930s. The torn edges, stains, and scratches are indicators of physical damage and age, not reprinting.",
+    "reasoning_summary": "The child's clothing style, particularly the Peter Pan collar shirt, shorts with suspenders, and lace-up boots, are strong indicators pointing to the 1910s-1930s. The sepia tone and general print characteristics are consistent with this era. The combination of these fashion elements is most prevalent in the 1920s to early 1930s.",
+    "scene_description": "Full-length studio portrait of a young child, likely a boy, standing next to a small dark wooden stool. The child looks directly at the camera with a neutral expression. The background is a mottled, dark studio backdrop, and the floor appears to be a textured studio covering.",
+    "visible_text": null,
+    "keywords": [
+      "child",
+      "boy",
+      "studio",
+      "portrait",
+      "formal",
+      "shorts",
+      "boots",
+      "peter pan collar",
+      "stool",
+      "sepia",
+      "young"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "fair",
+    "clothing_notes": "Young child wearing a white short-sleeved shirt with a large, rounded Peter Pan collar, dark shorts or bloomers held up by suspenders, knee-high socks, and dark lace-up boots. The child's hair is styled in a short bowl cut with bangs.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      3
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:23:20.787076+00:00"
+  },
+  {
+    "photo_id": "7911d4fdbf128d91",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1930,
+    "confidence": "medium",
+    "probable_range": [
+      1920,
+      1940
+    ],
+    "decade_probabilities": {
+      "1910": 0.05,
+      "1920": 0.4,
+      "1930": 0.4,
+      "1940": 0.15
+    },
+    "location_estimate": "New York City, USA (based on studio mark)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia tone, rectangular print, matte surface, straight border. Faint debossed studio mark visible in the bottom right corner, partially readable as 'NEW YORK'.",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1945
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Baby wearing a light-colored garment with ruffled or ribboned shoulder straps. Posed on a fur throw/rug. This appears to be formal studio attire for a baby.",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1940
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor studio setting with a painted backdrop depicting a soft, abstract landscape or cloudy sky. The studio mark indicates New York.",
+          "strength": "moderate",
+          "suggested_range": [
+            1915,
+            1945
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "No specific technological markers visible. The fur throw is a common studio prop of the era.",
+          "strength": "weak",
+          "suggested_range": [
+            1910,
+            1940
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Not applicable; studio baby portraits in New York City would generally follow mainstream American trends.",
+    "capture_vs_print": "Likely 1920s-1930s capture. Print characteristics are consistent with an original print from that era.",
+    "reasoning_summary": "The sepia tone, studio backdrop, fur prop, and baby's attire are all highly consistent with studio photography from the 1920s and 1930s in the United States. The 'NEW YORK' studio mark confirms the location. While some elements could extend into the early 1940s, the overall aesthetic feels earlier.",
+    "scene_description": "A sepia-toned studio portrait of an infant, likely between 6-12 months old, seated on a plush fur rug or throw. The baby is wearing a light-colored garment with ruffled shoulder straps. The background is a painted studio backdrop with a soft, abstract, cloudy appearance.",
+    "visible_text": "NEW YORK",
+    "keywords": [
+      "baby",
+      "infant",
+      "portrait",
+      "studio",
+      "fur",
+      "sepia",
+      "New York",
+      "formal",
+      "child",
+      "photography",
+      "backdrop"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Infant wearing a light-colored, possibly white or cream, sleeveless garment with prominent ruffles or ribbons on the shoulder straps.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      0
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:23:40.051007+00:00"
+  },
+  {
+    "photo_id": "ab10679b23dbdcf9",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1938,
+    "confidence": "medium",
+    "probable_range": [
+      1935,
+      1942
+    ],
+    "decade_probabilities": {
+      "1920": 0.02,
+      "1930": 0.6,
+      "1940": 0.35,
+      "1950": 0.03
+    },
+    "location_estimate": "Rhodes, Greece (confirmed by 'FOTO RODES' watermark)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Faint watermark 'FOTO RODES' in bottom left corner",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1944
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Man's double-breasted suit with wide lapels",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        },
+        {
+          "cue": "Women's and girl's dresses with Peter Pan collars and puffed sleeves",
+          "strength": "strong",
+          "suggested_range": [
+            1930,
+            1940
+          ]
+        },
+        {
+          "cue": "Women's short bob hairstyles, some with finger waves",
+          "strength": "strong",
+          "suggested_range": [
+            1928,
+            1938
+          ]
+        },
+        {
+          "cue": "Boy's wide-legged pleated trousers and open-collar shirt",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain studio backdrop, suggesting an indoor setting",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues, particularly women's styles, are characteristic of the 1930s. A 5-10 year lag for Sephardic communities in Rhodes or diaspora would place this in the late 1930s to early 1940s. The 'FOTO RODES' watermark strongly suggests a pre-WWII capture date, as the Jewish community of Rhodes was largely deported in 1944.",
+    "capture_vs_print": "This appears to be an original print from the capture era, given the sepia tone and watermark. No clear signs of reprinting.",
+    "reasoning_summary": "The combination of 1930s fashion styles (Peter Pan collars, bob hairstyles, man's suit) and the 'FOTO RODES' watermark strongly points to a capture date in the late 1930s. The historical context of the Rhodes Jewish community makes a date after 1944 highly improbable. Applying a cultural lag to the fashion trends further supports a late 1930s to very early 1940s timeframe.",
+    "scene_description": "A formal studio portrait of a family group of six people: a man, three women, a girl, and a boy. They are arranged in two rows against a plain, light-colored studio backdrop. The man stands on the right, the boy on the left, and two women stand behind the seated woman. The girl stands on the far right, next to the man.",
+    "visible_text": "FOTO RODES",
+    "keywords": [
+      "family portrait",
+      "studio",
+      "formal",
+      "man",
+      "woman",
+      "girl",
+      "boy",
+      "suit",
+      "dress",
+      "Peter Pan collar",
+      "Rhodes",
+      "Sephardic"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 6,
+    "condition": "good",
+    "clothing_notes": "Man in a light-colored double-breasted suit with a tie and pocket watch chain. Seated woman in a dark dress with a white Peter Pan collar and a decorative bow, holding a clutch. Standing woman (back left) in a plaid blouse with a bow. Standing woman (back center) in a light dress with a small bow. Girl in a light dress with a white Peter Pan collar, puffed sleeves, and a belt, wearing Mary Jane shoes with socks. Boy in a light short-sleeved shirt with an open collar and wide-legged pleated trousers.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      11,
+      23,
+      33,
+      24,
+      38,
+      9
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:24:01.384446+00:00"
+  },
+  {
+    "photo_id": "3a317b0f99b0d2e0",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1940,
+    "confidence": "medium",
+    "probable_range": [
+      1938,
+      1945
+    ],
+    "decade_probabilities": {
+      "1930": 0.4,
+      "1940": 0.5,
+      "1950": 0.1
+    },
+    "location_estimate": "Cannot determine from image (outdoor, generic trees)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph with a deckled/scalloped left border and straight borders on other sides (some damage visible)",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1950
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's simple, dark-colored dress with a V-neckline and a wide, flat collar, short sleeves, and a belted waist",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1948
+          ]
+        },
+        {
+          "cue": "Woman's wavy, pulled-back hairstyle",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        },
+        {
+          "cue": "Simple beaded necklace",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Out-of-focus outdoor background with trees and foliage",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion appears to be everyday wear, not formal studio attire, and does not show significant 'old-world' elements that would suggest a lag.",
+    "capture_vs_print": "Likely 1930s-1940s capture. Print characteristics (deckled edge, B&W) are consistent with original period printing.",
+    "reasoning_summary": "The woman's dress style, particularly the wide collar and simple silhouette, along with her hairstyle, strongly suggest the late 1930s to early 1940s. The deckled border style on the print is also consistent with this period. The outdoor setting and baby's clothing offer weak dating cues.",
+    "scene_description": "A smiling woman holds a baby outdoors. The woman has curly hair and is wearing a simple, dark-colored dress with a wide collar and a necklace. The baby, also smiling, is wearing a light-colored romper and is looking towards the viewer. The background is out of focus, showing trees and foliage.",
+    "visible_text": null,
+    "keywords": [
+      "woman",
+      "baby",
+      "child",
+      "outdoor",
+      "candid",
+      "family",
+      "smile",
+      "trees",
+      "dress",
+      "necklace",
+      "curly hair"
+    ],
+    "setting": "outdoor_other",
+    "photo_type": "candid",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Woman in a dark, short-sleeved dress with a V-neck and a wide, flat collar, possibly belted. She wears a simple beaded necklace and small earrings. Baby in a light-colored, possibly knitted, romper or one-piece outfit.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      45,
+      0
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:24:17.352644+00:00"
+  },
+  {
+    "photo_id": "c99f4d6366aafd62",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1945,
+    "confidence": "medium",
+    "probable_range": [
+      1942,
+      1948
+    ],
+    "decade_probabilities": {
+      "1930": 0.05,
+      "1940": 0.85,
+      "1950": 0.1
+    },
+    "location_estimate": "Likely a residential area in a warm climate, possibly Florida (Miami/Tampa) or a similar US region, given the vegetation and building style.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photographic print, rectangular, with a narrow, slightly uneven white border. Matte surface.",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1955
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Young girl's short-sleeved dress with patterned trim, curly hair with a bow, white ankle socks, and dark Mary Jane shoes.",
+          "strength": "strong",
+          "suggested_range": [
+            1940,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Simple residential building with multi-pane windows, grassy yard, common bushes/trees.",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "No specific technological markers visible.",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Cultural lag for fashion is less applicable for a young child's casual wear in an outdoor setting, as these styles were fairly universal in the US during this period.",
+    "capture_vs_print": "Likely 1940s capture. Print characteristics are consistent with an original snapshot from that era.",
+    "reasoning_summary": "The strongest dating cues come from the young girl's fashion, including her dress style, hair, and shoes, which are highly characteristic of the 1940s. The black and white print format and border style are consistent with this period. The environmental cues are generic and do not strongly narrow the date or location.",
+    "scene_description": "A young girl stands in a grassy yard in front of a light-colored house. Two large, multi-pane windows are visible on the house, reflecting trees. Bushes flank the girl on either side, and the ground is covered in grass.",
+    "visible_text": null,
+    "keywords": [
+      "young girl",
+      "child",
+      "outdoor",
+      "residential",
+      "house",
+      "garden",
+      "dress",
+      "curly hair",
+      "candid",
+      "snapshot"
+    ],
+    "setting": "outdoor_home",
+    "photo_type": "candid",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "The young girl wears a light-colored, short-sleeved dress with a patterned trim on the front and sleeves. She has curly hair adorned with a light-colored bow, white ankle socks, and dark Mary Jane style shoes.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual"
+    ],
+    "subject_ages": [
+      3
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:24:36.512755+00:00"
+  },
+  {
+    "photo_id": "84f57c7ea2ab2931",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1910,
+    "best_year_estimate": 1917,
+    "confidence": "medium",
+    "probable_range": [
+      1910,
+      1925
+    ],
+    "decade_probabilities": {
+      "1900": 0.1,
+      "1910": 0.6,
+      "1920": 0.25,
+      "1930": 0.05
+    },
+    "location_estimate": "New York City (specifically 152 Rivington St, Lower East Side)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned monochrome photograph",
+          "strength": "strong",
+          "suggested_range": [
+            1900,
+            1930
+          ]
+        },
+        {
+          "cue": "Photo mounted on a thick, multi-layered cardboard mat with an octagonal opening, then within a larger folder",
+          "strength": "strong",
+          "suggested_range": [
+            1905,
+            1925
+          ]
+        },
+        {
+          "cue": "Studio name 'Newman Studio 152 Rivington St N.Y.C.' printed on the mat and embossed on the photo",
+          "strength": "strong",
+          "suggested_range": [
+            1905,
+            1925
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Child's bob haircut with bangs",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1925
+          ]
+        },
+        {
+          "cue": "Child's simple, light-colored dress with ruffles/lace",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1925
+          ]
+        },
+        {
+          "cue": "Headband with a bow worn by the child",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1925
+          ]
+        },
+        {
+          "cue": "Knee-high ribbed socks and Mary Jane style shoes",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1925
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor studio setting with a plain, dark backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1930
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Ornate carved wooden studio chair",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1930
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Photo taken in New York City, where fashion trends were more contemporary than in Rhodes. Child's fashion typically lags less than adult formal wear.",
+    "capture_vs_print": "The print format, including the matting and studio markings, is consistent with the original capture date. This is not a reprint.",
+    "reasoning_summary": "Multiple strong cues from the print format (sepia tone, elaborate matting, studio imprint) and moderate cues from the child's fashion (bob haircut, dress style, headband) consistently point to the 1910s to early 1920s. The studio address confirms the NYC location, which aligns with these early 20th-century styles.",
+    "scene_description": "A sepia-toned studio portrait of a young child, likely a girl, seated in an ornate wooden chair. The child is wearing a light-colored, ruffled dress, knee-high socks, and dark Mary Jane shoes. Her hair is cut in a bob with bangs, adorned with a white headband and bow. The background is a plain, dark studio backdrop.",
+    "visible_text": "Newman Studio\n152 RIVINGTON ST\nN.Y.C.\n(Embossed stamp on photo: NEWMAN 152 RIVINGTON ST N.Y.C.)",
+    "keywords": [
+      "child",
+      "girl",
+      "portrait",
+      "studio",
+      "formal",
+      "dress",
+      "bob haircut",
+      "headband",
+      "bow",
+      "chair",
+      "New York City",
+      "Lower East Side",
+      "Newman Studio"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young child in a light-colored, possibly white or cream, ruffled dress. Wears knee-high ribbed socks and dark Mary Jane style shoes. A simple white headband with a bow adorns her hair. A small bracelet is visible on her right wrist.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      4
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:24:57.057322+00:00"
+  },
+  {
+    "photo_id": "a3e9117c543a8600",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1962,
+    "confidence": "high",
+    "probable_range": [
+      1960,
+      1963
+    ],
+    "decade_probabilities": {
+      "1950": 0.1,
+      "1960": 0.9
+    },
+    "location_estimate": "Outdoor residential setting, possibly a garden or courtyard in a warm climate, consistent with Miami or Tampa, Florida.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Straight white border, black and white print, glossy surface, typical of mid-20th century snapshots",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1965
+          ]
+        },
+        {
+          "cue": "Vertical inscription 'MAY 63' on the right border, indicating print date",
+          "strength": "strong",
+          "suggested_range": [
+            1963,
+            1963
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Younger woman's short, styled curly hair, 3/4 sleeve blazer over patterned blouse, dark skirt, and structured top-handle handbag",
+          "strength": "strong",
+          "suggested_range": [
+            1958,
+            1964
+          ]
+        },
+        {
+          "cue": "Older woman's short, neatly styled white hair, knee-length sleeveless dress with matching cardigan, and small structured handbag",
+          "strength": "strong",
+          "suggested_range": [
+            1958,
+            1964
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Outdoor garden/courtyard setting with hedges, grass, and a light-colored building in the background",
+          "strength": "weak",
+          "suggested_range": [
+            1950,
+            1965
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Structured handbags carried by both women",
+          "strength": "moderate",
+          "suggested_range": [
+            1958,
+            1964
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion styles are contemporary for the early 1960s, suggesting minimal to no cultural lag, likely taken in a diaspora community (NYC, Miami, or Tampa) where trends were adopted quickly.",
+    "capture_vs_print": "The 'MAY 63' inscription indicates the print date. Fashion and accessories are highly consistent with the early 1960s, suggesting the photo was captured very close to this print date, likely in 1962 or 1963.",
+    "reasoning_summary": "The 'MAY 63' inscription on the print is a strong indicator of the print date. The fashion and accessory styles of both women are highly consistent with the late 1950s to early 1960s, aligning perfectly with a capture date very close to the print date. The outdoor setting is generic but suggests a warm climate.",
+    "scene_description": "Two women, one younger and one older, stand outdoors in a sunny garden or courtyard. They are smiling and looking towards the camera. The younger woman on the left wears a blazer and skirt, holding a structured handbag. The older woman on the right wears a dress and matching cardigan, holding a smaller handbag and a folded light-colored garment over her arm. Hedges and a light-colored building are visible in the background.",
+    "visible_text": "MAY\n63",
+    "keywords": [
+      "women",
+      "outdoor",
+      "garden",
+      "snapshot",
+      "casual",
+      "dresses",
+      "blazers",
+      "handbags",
+      "hedges",
+      "1960s",
+      "family"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "candid",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Younger woman in dark blazer with 3/4 sleeves, patterned blouse, dark skirt, brooch on lapel, and a structured top-handle handbag. Older woman in a knee-length sleeveless dress, matching cardigan with three large buttons, necklace with pendant, brooch on cardigan, small structured handbag, and a folded light-colored garment draped over her arm.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      50,
+      70
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:25:20.116013+00:00"
+  },
+  {
+    "photo_id": "2e5836aeceae8c6d",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1963,
+    "confidence": "high",
+    "probable_range": [
+      1963,
+      1963
+    ],
+    "decade_probabilities": {
+      "1950": 0.01,
+      "1960": 0.98,
+      "1970": 0.01
+    },
+    "location_estimate": "United States, likely a theme park (e.g., Disneyland)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Straight white border, typical of snapshot prints",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        },
+        {
+          "cue": "Black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1970
+          ]
+        },
+        {
+          "cue": "Vertical stamp 'MAY 63' on the right edge",
+          "strength": "strong",
+          "suggested_range": [
+            1963,
+            1963
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Men in short-sleeved collared shirts, one with a cap, one with a jacket over a plaid shirt; casual wear",
+          "strength": "strong",
+          "suggested_range": [
+            1958,
+            1968
+          ]
+        },
+        {
+          "cue": "Women in short-sleeved patterned dresses/tops, one with large, cat-eye style sunglasses",
+          "strength": "strong",
+          "suggested_range": [
+            1958,
+            1968
+          ]
+        },
+        {
+          "cue": "Children in short-sleeved shirts and shorts",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1970
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Ornate Victorian-style architecture with decorative railings, lampposts, and scalloped awnings, strongly resembling a US theme park (e.g., Disneyland's Main Street U.S.A.)",
+          "strength": "strong",
+          "suggested_range": [
+            1955,
+            1970
+          ]
+        },
+        {
+          "cue": "Manicured outdoor setting with benches and flower beds",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1970
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Compact camera with a strap around one man's neck",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1970
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The setting appears to be a US theme park, not Rhodes. Fashion for casual wear in this context would be contemporary with mainstream US styles, making the typical Sephardic fashion lag less relevant.",
+    "capture_vs_print": "The 'MAY 63' stamp is a strong indicator of the processing/print date, which for a snapshot is typically very close to the original capture date. All other evidence aligns with this date.",
+    "reasoning_summary": "The 'MAY 63' date stamp is the strongest evidence, directly indicating the year 1963. This is strongly corroborated by the casual fashion styles, the type of camera visible, and the distinctive Victorian-style theme park architecture, which points to a post-1955 setting in the US. All cues are highly consistent.",
+    "scene_description": "A multi-generational family group of six people poses outdoors in front of an ornate Victorian-style building with decorative railings and scalloped awnings, resembling a theme park. Two older men, two women, and two children are visible. An ornate bench and flower beds are in the foreground.",
+    "visible_text": "MAY\n63",
+    "keywords": [
+      "family",
+      "group portrait",
+      "outdoor",
+      "theme park",
+      "casual",
+      "summer",
+      "men",
+      "women",
+      "children",
+      "sunglasses",
+      "camera",
+      "Victorian architecture",
+      "awnings",
+      "bench",
+      "flowers",
+      "vacation"
+    ],
+    "setting": "outdoor_urban",
+    "photo_type": "group_photo",
+    "people_count": 6,
+    "condition": "good",
+    "clothing_notes": "One older man wears a light, short-sleeved collared shirt, light trousers, and a cap, with a camera around his neck. Another older man wears a plaid short-sleeved shirt under a jacket. One woman wears a patterned short-sleeved dress and large, dark sunglasses. Another woman wears a light short-sleeved top and skirt. A boy wears a patterned short-sleeved shirt and shorts. A girl wears a t-shirt and shorts, holding a light-colored garment.",
+    "controlled_tags": [
+      "Outdoor",
+      "Group_Portrait",
+      "Casual"
+    ],
+    "subject_ages": [
+      65,
+      35,
+      60,
+      8,
+      65,
+      11
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:25:43.295829+00:00"
+  },
+  {
+    "photo_id": "31dfdd1c087047ba",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1945,
+    "confidence": "medium",
+    "probable_range": [
+      1940,
+      1950
+    ],
+    "decade_probabilities": {
+      "1930": 0.1,
+      "1940": 0.7,
+      "1950": 0.2
+    },
+    "location_estimate": "Likely a US diaspora community (e.g., NYC, Miami, Tampa) due to the American brand 'Baby Butler'.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white rectangular print with straight white border, glossy surface, consistent with mid-century snapshots.",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Man's casual short-sleeved collared shirt, open at the neck.",
+          "strength": "moderate",
+          "suggested_range": [
+            1938,
+            1955
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Outdoor setting with a large tree trunk in the background.",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Wooden high chair/playpen with 'BABY BUTLER' brand name visible on the tray. This brand was prominent in the US from the late 1930s through the 1950s.",
+          "strength": "strong",
+          "suggested_range": [
+            1938,
+            1955
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The 'BABY BUTLER' brand is American. Its presence suggests the photo was likely taken in a US diaspora community (e.g., NYC, Miami, Tampa), where cultural lag for manufactured goods would not apply.",
+    "capture_vs_print": "Likely 1940s capture. Print characteristics are consistent with an original snapshot from that era.",
+    "reasoning_summary": "The 'BABY BUTLER' brand on the high chair is the strongest dating cue, pointing to the 1940s to early 1950s. The man's casual fashion and the black and white snapshot print style are consistent with this period. Given the American brand, a US location is highly probable, negating the need for a significant cultural lag adjustment.",
+    "scene_description": "A candid black and white photograph shows a man and a baby outdoors. The baby is seated in a wooden high chair or playpen, holding a teether or toy, with a small dog-shaped toy on the tray. The man is kneeling or crouching beside the baby, smiling broadly and looking at the baby. A large tree trunk is visible in the background.",
+    "visible_text": "BABY BUTLER",
+    "keywords": [
+      "baby",
+      "man",
+      "father",
+      "child",
+      "high chair",
+      "playpen",
+      "toy",
+      "dog toy",
+      "outdoor",
+      "candid",
+      "family",
+      "tree",
+      "black and white"
+    ],
+    "setting": "outdoor_other",
+    "photo_type": "candid",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "The man wears a light-colored, short-sleeved or rolled-up sleeve collared shirt. The baby wears a simple light-colored long-sleeved top.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      0,
+      30
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:26:06.627326+00:00"
+  },
+  {
+    "photo_id": "a8a1730722a4cdeb",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1942,
+    "confidence": "medium",
+    "probable_range": [
+      1935,
+      1950
+    ],
+    "decade_probabilities": {
+      "1930": 0.3,
+      "1940": 0.5,
+      "1950": 0.2
+    },
+    "location_estimate": "Unknown (indoor studio/home setting, no geographic markers)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned monochrome print",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1955
+          ]
+        },
+        {
+          "cue": "Straight white border, rectangular print",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Baby in simple light-colored gown/dress",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1960
+          ]
+        },
+        {
+          "cue": "Small tuft of hair tied on top of head",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1960
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored draped fabric background, suggesting indoor studio or controlled home setting",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Baby's attire and general studio portrait style are less subject to significant cultural lag compared to adult fashion trends. The photographic style itself is the primary dating cue.",
+    "capture_vs_print": "Likely original capture and print from the same era. Print characteristics are consistent with the estimated capture date.",
+    "reasoning_summary": "The sepia tone and straight white border are the strongest indicators, pointing to the 1930s-1950s. The baby's clothing and hairstyle are not strong dating cues, being relatively timeless. The plain background offers no specific dating or geographic information. The overall photographic style is consistent with mid-20th century practices.",
+    "scene_description": "A close-up portrait of an infant lying on a light-colored, draped fabric background. The baby is wearing a simple, light-colored gown and has a small tuft of hair tied on top of its head. The baby is looking slightly to the right with a neutral expression, with one hand clenched.",
+    "visible_text": null,
+    "keywords": [
+      "baby",
+      "infant",
+      "portrait",
+      "studio",
+      "indoor",
+      "sepia",
+      "child",
+      "gown",
+      "topknot"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Light-colored, possibly embroidered, baby gown or dress.",
+    "controlled_tags": [
+      "Studio"
+    ],
+    "subject_ages": [
+      0
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:26:23.891946+00:00"
+  },
+  {
+    "photo_id": "60abad85a1fe454b",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1940,
+    "best_year_estimate": 1947,
+    "confidence": "medium",
+    "probable_range": [
+      1940,
+      1955
+    ],
+    "decade_probabilities": {
+      "1930": 0.1,
+      "1940": 0.5,
+      "1950": 0.35,
+      "1960": 0.05
+    },
+    "location_estimate": "Unknown (studio setting provides no geographic clues).",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white photograph",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1960
+          ]
+        },
+        {
+          "cue": "Soft vignette effect around subjects, blending into a plain background, no hard border visible",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1955
+          ]
+        },
+        {
+          "cue": "Rectangular print shape, matte or semi-matte paper surface",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Older boy with short, neat, side-parted hair",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1955
+          ]
+        },
+        {
+          "cue": "Older boy wearing a light-colored collared shirt and a small bow tie",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1955
+          ]
+        },
+        {
+          "cue": "Younger boy with short, neat hair and a light-colored collared shirt (possibly sailor-style)",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1955
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio background",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Children's fashion and general studio portrait styles tend to have less pronounced cultural lag compared to adult fashion trends, especially for basic, timeless attire.",
+    "capture_vs_print": "Likely original capture and print from the same era. The sepia tone is characteristic of photographic processes or aesthetic choices common during the mid-20th century.",
+    "reasoning_summary": "The sepia tone, soft vignette, and the children's neat, simple clothing styles (collared shirts, bow tie, short haircuts) are consistent with studio portraits from the 1940s to early 1950s. The plain studio background offers no additional dating information, but the overall aesthetic points to this mid-century period.",
+    "scene_description": "Studio portrait of two young boys. The older boy, appearing to be around 5-7 years old, is positioned slightly behind and to the right, smiling at the camera. He wears a light-colored collared shirt and a small bow tie. The younger boy, an infant or toddler, is in the foreground to the left, looking upwards with a surprised expression. He also wears a light-colored collared shirt. The background is a plain, light studio backdrop with a soft vignette effect.",
+    "visible_text": null,
+    "keywords": [
+      "children",
+      "boys",
+      "brothers",
+      "studio portrait",
+      "formal portrait",
+      "bow tie",
+      "collared shirt",
+      "sepia",
+      "infant",
+      "toddler",
+      "childhood",
+      "siblings"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Older boy in a light-colored collared shirt with a small bow tie. Younger boy in a light-colored collared shirt, possibly a sailor-style collar.",
+    "controlled_tags": [
+      "Studio",
+      "Group_Portrait",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      1,
+      6
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:26:43.261683+00:00"
+  },
+  {
+    "photo_id": "2c611f120c15aa4a",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1960,
+    "best_year_estimate": 1963,
+    "confidence": "high",
+    "probable_range": [
+      1962,
+      1964
+    ],
+    "decade_probabilities": {
+      "1950": 0.2,
+      "1960": 0.75,
+      "1970": 0.05
+    },
+    "location_estimate": "Warm climate location, possibly Florida (Miami/Tampa) or a Mediterranean region, given the architecture and vegetation. Not definitively Rhodes.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph with straight white border, approximately 3-5mm wide. 'MAY 63' stamped vertically on the right edge.",
+          "strength": "strong",
+          "suggested_range": [
+            1963,
+            1963
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman in dark fitted suit with 3/4 sleeves and structured handbag, neat bouffant-style hair.",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1965
+          ]
+        },
+        {
+          "cue": "Man in light-colored sport coat, white shirt with open collar, no tie.",
+          "strength": "moderate",
+          "suggested_range": [
+            1958,
+            1965
+          ]
+        },
+        {
+          "cue": "Young girl in plaid skirt, collared shirt, and knitted cardigan; hair in a high ponytail/bun.",
+          "strength": "moderate",
+          "suggested_range": [
+            1958,
+            1965
+          ]
+        },
+        {
+          "cue": "Women's hairstyles are short, neat, and wavy, consistent with early 1960s trends.",
+          "strength": "strong",
+          "suggested_range": [
+            1960,
+            1965
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Light-colored building with external shutters, lush green vegetation (large-leafed tree, bushes), well-maintained lawn.",
+          "strength": "moderate",
+          "suggested_range": [
+            1950,
+            1970
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Structured handbag carried by one woman, typical of late 1950s/early 1960s.",
+          "strength": "moderate",
+          "suggested_range": [
+            1955,
+            1965
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The explicit print date and contemporary fashion styles suggest minimal to no cultural lag for this specific photograph, indicating the community was keeping pace with mainstream fashion trends by this period.",
+    "capture_vs_print": "The 'MAY 63' stamp indicates the print date. Fashion and object markers are highly consistent with this period, suggesting the photograph was originally captured in 1963 or very close to it (e.g., late 1962).",
+    "reasoning_summary": "The 'MAY 63' stamp on the print is the strongest indicator, pointing to a print date in May 1963. All fashion and accessory cues (women's suits, hairstyles, man's sport coat, girl's outfit, handbag) are highly consistent with the early 1960s, corroborating a capture date around 1963. The outdoor setting with Mediterranean/tropical architecture and vegetation is also consistent with this era in a warm climate.",
+    "scene_description": "A group of six people (five women and one man) are gathered outdoors in front of a light-colored building with multiple windows and external shutters. Lush green vegetation, including a large-leafed tree and bushes, is visible around them. The group appears to be posing for a casual portrait in a sunny garden or yard.",
+    "visible_text": "MAY\n63",
+    "keywords": [
+      "family group",
+      "outdoor",
+      "garden",
+      "building",
+      "shutters",
+      "vegetation",
+      "women",
+      "man",
+      "girl",
+      "casual",
+      "portrait",
+      "1960s",
+      "sephardic"
+    ],
+    "setting": "outdoor_home",
+    "photo_type": "group_photo",
+    "people_count": 6,
+    "condition": "good",
+    "clothing_notes": "Young girl in plaid skirt, collared shirt, and knitted cardigan. Woman behind her in patterned top and light cardigan. Woman in center in dark knee-length coat. Woman behind her in light top/dress. Woman to the right in dark fitted suit with 3/4 sleeves, small brooch, and structured handbag. Man in light-colored sport coat and matching trousers, white shirt with open collar.",
+    "controlled_tags": [
+      "Outdoor",
+      "Group_Portrait",
+      "Casual"
+    ],
+    "subject_ages": [
+      11,
+      40,
+      65,
+      60,
+      40,
+      55
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:27:03.717952+00:00"
+  },
+  {
+    "photo_id": "7d0344045ba73cba",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1933,
+    "confidence": "medium",
+    "probable_range": [
+      1930,
+      1938
+    ],
+    "decade_probabilities": {
+      "1920": 0.1,
+      "1930": 0.7,
+      "1940": 0.2
+    },
+    "location_estimate": "United States (residential architecture style, possibly Florida given the prompt's focus on diaspora communities)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white print",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Straight white border, unevenly torn/damaged edges",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1950
+          ]
+        },
+        {
+          "cue": "Significant crazing/cracking on print surface",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's short, bobbed hair with waves around the face",
+          "strength": "strong",
+          "suggested_range": [
+            1928,
+            1935
+          ]
+        },
+        {
+          "cue": "Woman's midi-length dress with puffed sleeves, decorative white collar, and a belt with a buckle, indicating a slightly dropped or natural waistline",
+          "strength": "strong",
+          "suggested_range": [
+            1930,
+            1936
+          ]
+        },
+        {
+          "cue": "Man's three-piece suit with relatively narrow lapels, white shirt, and patterned tie",
+          "strength": "moderate",
+          "suggested_range": [
+            1925,
+            1938
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Brick house with a covered porch, balustrades, and decorative trim (dentil molding), featuring an arched window",
+          "strength": "strong",
+          "suggested_range": [
+            1900,
+            1940
+          ]
+        },
+        {
+          "cue": "Lush green vegetation (shrubs/bushes) in a residential setting",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Architecture strongly indicates a US location, not Rhodes, so the Rhodes-specific fashion lag is not applied. Fashion cues are interpreted based on mainstream US trends.",
+    "capture_vs_print": "Likely 1930s capture. Print characteristics (sepia tone, border style, and physical degradation) are consistent with an original print from that era.",
+    "reasoning_summary": "The strongest dating cues come from the woman's hairstyle and dress silhouette, which are highly characteristic of the early to mid-1930s. The man's suit is consistent with this period. The architectural style of the house strongly suggests a US location, reinforcing the interpretation of fashion trends without significant cultural lag. Print characteristics are also consistent with this timeframe.",
+    "scene_description": "An outdoor black and white portrait of a man and a woman standing in front of a brick house. The woman, on the left, wears a dress with a decorative collar and a flower on her shoulder, with her arm around the man's waist. The man, on the right, wears a three-piece suit with a boutonni\u00e8re and pocket square. The background features a residential building with a covered porch, balustrades, and an arched window, surrounded by lush vegetation.",
+    "visible_text": null,
+    "keywords": [
+      "man",
+      "woman",
+      "couple",
+      "outdoor",
+      "residential",
+      "house",
+      "brick",
+      "porch",
+      "balustrade",
+      "suit",
+      "dress",
+      "bobbed hair",
+      "1930s",
+      "portrait",
+      "family"
+    ],
+    "setting": "outdoor_home",
+    "photo_type": "formal_portrait",
+    "people_count": 2,
+    "condition": "fair",
+    "clothing_notes": "The woman wears a dark, midi-length dress with puffed sleeves, a white decorative collar, a belt with a buckle, and a flower corsage on her left shoulder. The man wears a dark three-piece suit with a white collared shirt, a patterned tie, a boutonni\u00e8re on his left lapel, and a white pocket square.",
+    "controlled_tags": [
+      "Outdoor",
+      "Group_Portrait",
+      "Casual"
+    ],
+    "subject_ages": [
+      30,
+      32
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:27:25.074045+00:00"
+  },
+  {
+    "photo_id": "f9391021bf1f8bac",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1976,
+    "confidence": "high",
+    "probable_range": [
+      1973,
+      1980
+    ],
+    "decade_probabilities": {
+      "1960": 0.02,
+      "1970": 0.9,
+      "1980": 0.08
+    },
+    "location_estimate": "Unknown (studio portrait, no specific geographic markers)",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Full color photographic print with slight magenta color shift, common for C-prints of the era",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1985
+          ]
+        },
+        {
+          "cue": "Straight, narrow white border on the left edge, otherwise borderless",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        },
+        {
+          "cue": "Glossy paper surface with minor surface scratches/dust",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Boy's hairstyle, relatively long, covering ears, with a 'mop top' or 'bowl cut' style",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1979
+          ]
+        },
+        {
+          "cue": "Boy's long-sleeved button-down shirt with a button-down collar and a patterned stripe fabric",
+          "strength": "moderate",
+          "suggested_range": [
+            1973,
+            1982
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            2000
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion cues (hairstyle, casual shirt) are consistent with mainstream 1970s US styles. Cultural lag is not strongly applied as the specific community context (Rhodes vs. US diaspora) is not evident, and children's casual wear often follows trends more closely.",
+    "capture_vs_print": "Likely original capture and print from the 1970s. The color shift is typical of consumer color prints from that era, indicating it is not a modern reprint.",
+    "reasoning_summary": "The full-color print with a characteristic magenta color shift, combined with the boy's distinct 1970s hairstyle and casual button-down shirt, strongly indicates a capture date in the mid-to-late 1970s.",
+    "scene_description": "A head-and-shoulders studio portrait of a young boy. He has dark hair and is looking directly at the camera with a neutral expression. He is wearing a light-colored, long-sleeved, button-down shirt with a subtle patterned stripe. The background is a plain, light gray or blue studio backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "child",
+      "boy",
+      "portrait",
+      "studio",
+      "casual",
+      "shirt",
+      "1970s",
+      "hairstyle"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "The boy wears a light-colored, long-sleeved button-down shirt with a button-down collar. The fabric has a subtle, broken vertical stripe pattern in a darker shade of red/pink.",
+    "controlled_tags": [
+      "Studio",
+      "Casual"
+    ],
+    "subject_ages": [
+      8
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:27:42.014498+00:00"
+  },
+  {
+    "photo_id": "f5b8639dd443d0b8",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1938,
+    "confidence": "medium",
+    "probable_range": [
+      1935,
+      1945
+    ],
+    "decade_probabilities": {
+      "1920": 0.05,
+      "1930": 0.5,
+      "1940": 0.4,
+      "1950": 0.05
+    },
+    "location_estimate": "Indoor home setting, possibly Rhodes or a diaspora community (NYC, Miami, Tampa). No strong specific geographic markers.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white print, straight white border, matte surface with minor cracking/crazing",
+          "strength": "moderate",
+          "suggested_range": [
+            1925,
+            1950
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Men in short-sleeved collared shirts and casual trousers",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        },
+        {
+          "cue": "Woman with dark hair styled up and a patterned short-sleeved dress",
+          "strength": "moderate",
+          "suggested_range": [
+            1935,
+            1948
+          ]
+        },
+        {
+          "cue": "Child in a patterned short-sleeved shirt",
+          "strength": "weak",
+          "suggested_range": [
+            1930,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor home setting with plain walls, wooden furniture, and a tiled floor with a geometric pattern",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1950
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Boxy white enamel refrigerator with visible hinges and latch",
+          "strength": "strong",
+          "suggested_range": [
+            1928,
+            1945
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Considered potential lag for Rhodes, but casual fashion and appliance style appear relatively contemporary for the 1930s-1940s, suggesting the photo could be from either Rhodes or a diaspora community.",
+    "capture_vs_print": "Likely original capture and print from the 1930s-1940s. The print condition is consistent with its age.",
+    "reasoning_summary": "The most compelling evidence for dating comes from the style of the refrigerator and the casual clothing, both strongly pointing to the 1930s to early 1940s. The sepia tone and print characteristics are consistent with this period. The setting is an indoor home.",
+    "scene_description": "A family group of four people (two men, one woman, one child) are seated around a wooden table in what appears to be a home interior. A white, boxy refrigerator is visible on the left, and a cabinet with various items on the right. Framed portraits hang on the wall behind them.",
+    "visible_text": null,
+    "keywords": [
+      "family",
+      "home",
+      "indoor",
+      "group portrait",
+      "refrigerator",
+      "table",
+      "casual",
+      "men",
+      "woman",
+      "child",
+      "framed portraits"
+    ],
+    "setting": "indoor_home",
+    "photo_type": "group_photo",
+    "people_count": 4,
+    "condition": "good",
+    "clothing_notes": "The man on the left wears a short-sleeved collared shirt and light-colored trousers. The woman in the middle wears a patterned short-sleeved dress. The man on the right wears a short-sleeved collared shirt and light-colored trousers. The child wears a patterned short-sleeved shirt and dark shorts/skirt.",
+    "controlled_tags": [
+      "Home_Interior",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      45,
+      35,
+      40,
+      5
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:28:01.684220+00:00"
+  },
+  {
+    "photo_id": "4a9dee395e1150b2",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1933,
+    "confidence": "medium",
+    "probable_range": [
+      1928,
+      1937
+    ],
+    "decade_probabilities": {
+      "1920": 0.25,
+      "1930": 0.65,
+      "1940": 0.1
+    },
+    "location_estimate": "Indoor studio, no specific geographic indicators.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned black and white photograph",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        },
+        {
+          "cue": "Rectangular print, borderless or trimmed",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1940
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Woman's cloche-style wedding veil, close-fitting with floral/beaded embellishments, covering ears and forehead",
+          "strength": "strong",
+          "suggested_range": [
+            1925,
+            1932
+          ]
+        },
+        {
+          "cue": "Woman's hairstyle appears to be a bob under the veil",
+          "strength": "strong",
+          "suggested_range": [
+            1925,
+            1932
+          ]
+        },
+        {
+          "cue": "Man's slicked-back hair, short on sides",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        },
+        {
+          "cue": "Man's formal tuxedo with white bow tie and stiff shirt",
+          "strength": "moderate",
+          "suggested_range": [
+            1920,
+            1935
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor studio setting with a mottled, indistinct painted backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Adjusted +3-7 years from mainstream fashion cues due to Sephardic community context, especially for formal wear in a diaspora or traditional setting.",
+    "capture_vs_print": "Likely 1930s capture. Print characteristics (sepia tone, paper surface) are consistent with an original print from that era.",
+    "reasoning_summary": "The woman's cloche-style wedding veil and bobbed hairstyle are strong indicators of late 1920s to early 1930s mainstream fashion. The man's slicked-back hair and tuxedo are also consistent with this period. Applying a cultural lag of 3-7 years for a Sephardic community, particularly for a formal event like a wedding, places the capture date in the early to mid-1930s.",
+    "scene_description": "Formal studio portrait of a young couple on their wedding day. The man stands to the left, wearing a tuxedo, looking towards the viewer. The woman is seated to the right, wearing a wedding dress with a cloche-style veil and holding a large, round bouquet of roses and ferns. They are posed against a mottled, painted studio backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "wedding",
+      "couple",
+      "formal portrait",
+      "studio",
+      "bride",
+      "groom",
+      "tuxedo",
+      "wedding dress",
+      "veil",
+      "bouquet",
+      "roses",
+      "fern",
+      "sepia"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "wedding",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Man wears a dark tuxedo with a white stiff-collared shirt and white bow tie. Woman wears a light-colored wedding dress, possibly lace or embroidered, with a distinctive cloche-style veil adorned with floral/beaded elements. She also wears a pearl necklace.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event",
+      "Group_Portrait",
+      "Wedding"
+    ],
+    "subject_ages": [
+      27,
+      24
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:28:24.112683+00:00"
+  },
+  {
+    "photo_id": "3e53fd3c015350c8",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1910,
+    "best_year_estimate": 1917,
+    "confidence": "medium",
+    "probable_range": [
+      1910,
+      1925
+    ],
+    "decade_probabilities": {
+      "1900": 0.1,
+      "1910": 0.6,
+      "1920": 0.25,
+      "1930": 0.05
+    },
+    "location_estimate": "New York City (based on studio imprint)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Mounted photograph on thick cardboard mat with embossed decorative border and studio imprint",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1925
+          ]
+        },
+        {
+          "cue": "Sepia-toned monochrome print",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1940
+          ]
+        },
+        {
+          "cue": "Studio imprint 'A. Smith 351 GRAND ST. N.Y.'",
+          "strength": "strong",
+          "suggested_range": [
+            1900,
+            1930
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Young man in formal tailcoat tuxedo, white pique waistcoat, white bow tie, and stiff winged collar shirt",
+          "strength": "moderate",
+          "suggested_range": [
+            1905,
+            1925
+          ]
+        },
+        {
+          "cue": "Neatly parted and slicked-back short hairstyle",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1930
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Indoor studio setting with plain dark backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1940
+          ]
+        },
+        {
+          "cue": "Studio prop: ornate fluted column and potted plant",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1940
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "The conservative nature of formal studio attire and potential for styles to linger in immigrant communities is factored into the suggested date ranges, but no specific numerical lag adjustment is applied as the combined evidence points to a consistent period.",
+    "capture_vs_print": "Likely original capture and print from the same period, as the mat style is integral to the presentation.",
+    "reasoning_summary": "The combination of the mounted, embossed print format and the specific style of formal wear (tailcoat, stiff winged collar, pique waistcoat) strongly points to the 1910s, with a possible extension into the very early 1920s. The studio location in New York City is consistent with this period for immigrant communities. Studio props and sepia tone are broadly consistent with this timeframe.",
+    "scene_description": "A formal studio portrait of a young man standing. He is dressed in a dark tailcoat tuxedo with a white pique waistcoat and a white bow tie. He leans with his right hand on an ornate, fluted column prop, next to which a potted plant with long, broad leaves is visible. The background is a plain, dark studio backdrop.",
+    "visible_text": "A. Smith\n351 GRAND ST.\nN.Y.",
+    "keywords": [
+      "young man",
+      "formal portrait",
+      "studio",
+      "tuxedo",
+      "tailcoat",
+      "bow tie",
+      "waistcoat",
+      "potted plant",
+      "column",
+      "New York City",
+      "A. Smith studio"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young man wears a dark tailcoat tuxedo, white pique waistcoat, white bow tie, and a stiff winged collar shirt. His hair is neatly parted and slicked back.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      20
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:28:48.584881+00:00"
+  },
+  {
+    "photo_id": "64f868771ecbf5ee",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1930,
+    "confidence": "medium",
+    "probable_range": [
+      1925,
+      1935
+    ],
+    "decade_probabilities": {
+      "1910": 0.05,
+      "1920": 0.45,
+      "1930": 0.5
+    },
+    "location_estimate": "Studio portrait, no specific geographic indicators.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Sepia-toned monochrome print, mounted on a thicker card stock with a straight inner border and a torn/deckled bottom edge on the mount",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1935
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Bride's dress features a straight, columnar silhouette with a dropped waistline, mid-calf length, lace overlays, and metallic/sequined vertical embellishments on the skirt",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1929
+          ]
+        },
+        {
+          "cue": "Bride's hairstyle is a bob, partially visible under the veil, consistent with 1920s trends",
+          "strength": "strong",
+          "suggested_range": [
+            1920,
+            1929
+          ]
+        },
+        {
+          "cue": "Groom wears a classic black tuxedo with a white bow tie and stiff-front shirt",
+          "strength": "weak",
+          "suggested_range": [
+            1910,
+            1940
+          ]
+        },
+        {
+          "cue": "Groom wears round, wire-rimmed spectacles",
+          "strength": "moderate",
+          "suggested_range": [
+            1910,
+            1930
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1950
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues (especially bride's dress and hair) are strongly indicative of the 1920s. A 5-10 year cultural lag has been applied to account for adoption rates in Sephardic communities, pushing the estimate into the late 1920s to early 1930s.",
+    "capture_vs_print": "Likely 1920s-1930s capture. Print characteristics (sepia tone, mounting style) are consistent with an original print from that era.",
+    "reasoning_summary": "The bride's dress silhouette, dropped waist, lace and sequin embellishments, and bobbed hairstyle are very strong indicators of 1920s fashion. The groom's round spectacles also align with this period. Applying a cultural lag of 5-10 years for Sephardic communities, the most probable capture date falls in the late 1920s to early 1930s. The sepia tone and mounted print style are consistent with this timeframe.",
+    "scene_description": "Formal studio portrait of a young couple on their wedding day. The bride, on the left, wears a light-colored, lace and sequined drop-waist wedding dress with a short veil and holds a large bouquet of dark roses. The groom, on the right, stands beside her in a black tuxedo with a white bow tie and round spectacles. They are posed against a plain, light-colored studio backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "wedding",
+      "formal portrait",
+      "studio",
+      "couple",
+      "bride",
+      "groom",
+      "tuxedo",
+      "wedding dress",
+      "veil",
+      "bouquet",
+      "lace",
+      "sequins",
+      "glasses",
+      "1920s fashion",
+      "Sephardic"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "wedding",
+    "people_count": 2,
+    "condition": "good",
+    "clothing_notes": "Bride wears a light-colored, possibly white or ivory, lace wedding dress with a dropped waist and metallic/sequined panels on the skirt, reaching mid-calf. She has a short veil attached to a decorative headpiece and holds a large bouquet of dark roses with ribbons. Groom wears a black tuxedo with a white stiff-front shirt and white bow tie, and round wire-rimmed glasses.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      22,
+      23
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:29:15.514570+00:00"
+  },
+  {
+    "photo_id": "54f65d27507cd5f7",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1975,
+    "confidence": "high",
+    "probable_range": [
+      1972,
+      1978
+    ],
+    "decade_probabilities": {
+      "1960": 0.05,
+      "1970": 0.9,
+      "1980": 0.05
+    },
+    "location_estimate": "Indoor studio, likely in a US diaspora community (e.g., New York City, Miami, or Tampa) given the contemporary fashion.",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Color photograph with significant magenta color shift, typical of early color prints (e.g., Kodacolor, Agfacolor) from the 1960s-1980s that have degraded over time.",
+          "strength": "moderate",
+          "suggested_range": [
+            1965,
+            1985
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Boy's shaggy, medium-length hair with bangs, covering the ears.",
+          "strength": "strong",
+          "suggested_range": [
+            1968,
+            1978
+          ]
+        },
+        {
+          "cue": "Shirt with a very wide, pointed collar extending over the jacket lapels.",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1978
+          ]
+        },
+        {
+          "cue": "Jacket with very wide, pointed lapels and prominent decorative topstitching.",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1978
+          ]
+        },
+        {
+          "cue": "Jacket with patch pockets featuring pointed flaps and large, decorative, gold-toned buttons.",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1978
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain, light-colored studio backdrop (curtain or drape).",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            2000
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Fashion cues are very strong for the 1970s. For a child in a US diaspora community, these widespread styles would likely be contemporary rather than significantly lagged.",
+    "capture_vs_print": "Likely original capture and print from the 1970s, showing typical color degradation for that era.",
+    "reasoning_summary": "The boy's shaggy hairstyle, the very wide, pointed shirt collar, and the jacket's wide lapels with decorative topstitching are all highly characteristic of mid-1970s fashion. The color shift in the print is also consistent with color photography from that era.",
+    "scene_description": "A headshot of a smiling young boy, approximately 8-12 years old, wearing a dark blazer over a light-colored shirt. He has medium-length, shaggy hair with bangs. The background is a plain, light-colored curtain or drape, indicating an indoor studio setting.",
+    "visible_text": null,
+    "keywords": [
+      "boy",
+      "child",
+      "portrait",
+      "studio",
+      "formal",
+      "blazer",
+      "wide collar",
+      "1970s fashion",
+      "shaggy hair",
+      "smiling"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "fair",
+    "clothing_notes": "Young boy wearing a dark blazer with very wide, pointed lapels and prominent white topstitching. The blazer has two large, round, gold-toned buttons for closure and two patch pockets with pointed flaps, each secured with a smaller matching button. He wears a light-colored (possibly light blue or white) shirt underneath with an equally wide, pointed collar extending over the blazer lapels.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      10
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:29:33.850448+00:00"
+  },
+  {
+    "photo_id": "dcba1494381b12cb",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1930,
+    "best_year_estimate": 1938,
+    "confidence": "medium",
+    "probable_range": [
+      1935,
+      1945
+    ],
+    "decade_probabilities": {
+      "1920": 0.05,
+      "1930": 0.5,
+      "1940": 0.4,
+      "1950": 0.05
+    },
+    "location_estimate": "Rhodes or another Mediterranean/subtropical location (based on vegetation)",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph",
+          "strength": "weak",
+          "suggested_range": [
+            1900,
+            1965
+          ]
+        },
+        {
+          "cue": "Irregular, torn edges, no formal border, consistent with a snapshot",
+          "strength": "weak",
+          "suggested_range": [
+            1920,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Women's short, bob-style haircuts, popular in the 1930s and early 1940s",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        },
+        {
+          "cue": "Man's casual suit jacket and diagonally striped tie, consistent with 1930s-early 1940s styles",
+          "strength": "moderate",
+          "suggested_range": [
+            1930,
+            1945
+          ]
+        },
+        {
+          "cue": "Simple, everyday dresses for women and girl",
+          "strength": "weak",
+          "suggested_range": [
+            1925,
+            1950
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Outdoor setting with tall trees featuring long, narrow leaves (possibly eucalyptus) and visible fruit clusters (possibly bananas or similar subtropical fruit)",
+          "strength": "moderate",
+          "suggested_range": [
+            1900,
+            1960
+          ]
+        }
+      ],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues are consistent with mainstream styles of the 1930s to early 1940s. A slight lag of 5-10 years for Sephardic communities, especially in a Mediterranean setting like Rhodes, places the photo firmly in the late 1930s to early 1940s.",
+    "capture_vs_print": "Likely 1930s-1940s capture. The physical condition (tears, creases, scratches) indicates an older, original print or an early copy.",
+    "reasoning_summary": "The most indicative cues are the women's bob hairstyles and the man's suit and tie, which strongly suggest the 1930s to early 1940s. The outdoor setting with specific vegetation supports a Mediterranean or subtropical climate, consistent with Rhodes or diaspora communities. The print format is a black and white snapshot, which is broadly consistent with this period. Applying cultural lag, the late 1930s to very early 1940s is the most probable timeframe.",
+    "scene_description": "A casual outdoor group portrait of five people, two men, two women, and one young girl. They are arranged in two rows, with three seated in the front and two standing behind. The background features lush, tall trees with long, narrow leaves and visible fruit clusters, suggesting a warm, possibly subtropical or Mediterranean environment. The photo is a black and white snapshot.",
+    "visible_text": null,
+    "keywords": [
+      "family group",
+      "outdoor",
+      "casual",
+      "trees",
+      "bob haircut",
+      "suit",
+      "tie",
+      "Mediterranean",
+      "Rhodes",
+      "diaspora",
+      "snapshot"
+    ],
+    "setting": "outdoor_other",
+    "photo_type": "group_photo",
+    "people_count": 5,
+    "condition": "poor",
+    "clothing_notes": "One man is seated on the left in a light-colored collared shirt. Another man is seated on the right in a light-colored suit jacket and a diagonally striped tie. A young girl is seated in the center front in a light-colored, simple dress. Two women stand in the back, one in a light-colored dress and the other in a darker dress, both with short sleeves. All women and the girl have short, bob-style haircuts.",
+    "controlled_tags": [
+      "Outdoor",
+      "Casual",
+      "Group_Portrait"
+    ],
+    "subject_ages": [
+      42,
+      10,
+      32,
+      33,
+      43
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:29:55.042133+00:00"
+  },
+  {
+    "photo_id": "9411826ba358db3c",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1975,
+    "confidence": "high",
+    "probable_range": [
+      1973,
+      1977
+    ],
+    "decade_probabilities": {
+      "1960": 0.05,
+      "1970": 0.85,
+      "1980": 0.1
+    },
+    "location_estimate": "Likely United States (urban/suburban setting), possibly a synagogue, community center, or professional studio.",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Full color print with characteristic color shift (slight yellowing/red cast) and grain typical of consumer color photography of the era. Borderless print with glossy surface.",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1985
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Long, straight, center-parted hair with a slight flip or curl at the ends, a popular style for young women.",
+          "strength": "strong",
+          "suggested_range": [
+            1972,
+            1978
+          ]
+        },
+        {
+          "cue": "White/cream zippered robe or gown, likely ceremonial attire.",
+          "strength": "moderate",
+          "suggested_range": [
+            1965,
+            1980
+          ]
+        },
+        {
+          "cue": "Visible dental braces.",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1980
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Distinctive wooden paneling or screen in the background with abstract, carved, or routed vertical elements, a common interior design feature in the 1960s and 1970s.",
+          "strength": "moderate",
+          "suggested_range": [
+            1965,
+            1979
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Overall photographic characteristics (color rendition, saturation, contrast, grain) consistent with consumer color photography processes of the 1970s.",
+          "strength": "strong",
+          "suggested_range": [
+            1970,
+            1980
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Not applicable; the fashion and photographic cues are consistent with mainstream US trends for youth during this period, suggesting a direct reflection of the era rather than a lag.",
+    "capture_vs_print": "This is an original color print, likely captured and printed around the same time. The color degradation is typical of prints from the 1970s.",
+    "reasoning_summary": "Multiple strong cues, including the specific color print characteristics, the subject's hairstyle, and the background decor, consistently point to the mid-1970s. The ceremonial attire further suggests a formal event during this period.",
+    "scene_description": "A formal, waist-up portrait of a young girl, likely in her early teens, smiling directly at the camera. She is wearing a light-colored, long-sleeved, zippered robe or gown. She holds a dark, hardbound book with gold embossing in her hands. The background features a distinctive wooden paneling or screen with abstract, carved vertical elements.",
+    "visible_text": null,
+    "keywords": [
+      "girl",
+      "youth",
+      "portrait",
+      "formal",
+      "ceremony",
+      "robe",
+      "gown",
+      "book",
+      "wood_paneling",
+      "1970s",
+      "braces",
+      "indoor"
+    ],
+    "setting": "indoor_other",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "The subject wears a white or cream-colored long-sleeved robe with a zipper closure down the front. A simple gold-toned ring is visible on her right hand.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      13
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:30:13.270107+00:00"
+  },
+  {
+    "photo_id": "c17cf4916422570d",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1970,
+    "best_year_estimate": 1975,
+    "confidence": "medium",
+    "probable_range": [
+      1968,
+      1982
+    ],
+    "decade_probabilities": {
+      "1960": 0.2,
+      "1970": 0.6,
+      "1980": 0.2
+    },
+    "location_estimate": "Unknown (studio setting)",
+    "is_color": true,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Full color print with noticeable yellowing/fading and magenta color shift, characteristic of older C-prints",
+          "strength": "strong",
+          "suggested_range": [
+            1965,
+            1985
+          ]
+        },
+        {
+          "cue": "Straight white border with slightly rounded corners on the image area itself",
+          "strength": "moderate",
+          "suggested_range": [
+            1960,
+            1985
+          ]
+        },
+        {
+          "cue": "Rectangular print shape, semi-glossy surface",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Baby wearing a long-sleeved top/onesie with a small, repeating floral or abstract pattern in light blue/green and yellow/orange on a cream background",
+          "strength": "moderate",
+          "suggested_range": [
+            1970,
+            1985
+          ]
+        }
+      ],
+      "environment": [
+        {
+          "cue": "Plain light blue-grey studio backdrop",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ],
+      "technology": [
+        {
+          "cue": "Baby lying on a light blue textured blanket (possibly knitted or woven)",
+          "strength": "weak",
+          "suggested_range": [
+            1960,
+            1990
+          ]
+        }
+      ]
+    },
+    "cultural_lag_applied": false,
+    "cultural_lag_note": "Cultural lag is less applicable to baby clothing and universal photographic print technologies.",
+    "capture_vs_print": "Likely 1970s capture. Print characteristics are consistent with an original color print from that era, showing typical aging.",
+    "reasoning_summary": "The most significant dating cues come from the color print's characteristics, including the specific type of color shift and the border style, which strongly suggest a period from the late 1960s through the early 1980s. The baby's patterned clothing style is also consistent with this timeframe. The studio setting and generic blanket offer weak dating signals.",
+    "scene_description": "Close-up studio portrait of a smiling baby lying on its stomach, with hands clasped in front. The baby has dark hair and is wearing a patterned long-sleeved top. It is positioned on a light blue textured blanket against a plain light blue-grey background.",
+    "visible_text": null,
+    "keywords": [
+      "baby",
+      "infant",
+      "portrait",
+      "studio",
+      "smiling",
+      "happy",
+      "patterned clothing",
+      "blanket",
+      "indoor"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Baby wears a light-colored long-sleeved top or onesie with a small, repeating pattern in light blue/green and yellow/orange on a cream background.",
+    "controlled_tags": [
+      "Studio"
+    ],
+    "subject_ages": [
+      0
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:30:29.328931+00:00"
+  },
+  {
+    "photo_id": "7b5c587d31b33946",
+    "source": "gemini",
+    "model": "gemini-2.5-flash",
+    "estimated_decade": 1950,
+    "best_year_estimate": 1952,
+    "confidence": "medium",
+    "probable_range": [
+      1947,
+      1957
+    ],
+    "decade_probabilities": {
+      "1940": 0.35,
+      "1950": 0.6,
+      "1960": 0.05
+    },
+    "location_estimate": "Indoor studio, no specific geographic indicators.",
+    "is_color": false,
+    "evidence": {
+      "print_format": [
+        {
+          "cue": "Black and white photograph, rectangular shape, straight white border (~2-3mm), glossy surface",
+          "strength": "moderate",
+          "suggested_range": [
+            1940,
+            1960
+          ]
+        }
+      ],
+      "fashion": [
+        {
+          "cue": "Young man's short, neatly combed, slightly wavy hairstyle, styled back from the forehead",
+          "strength": "moderate",
+          "suggested_range": [
+            1948,
+            1958
+          ]
+        },
+        {
+          "cue": "Dark suit jacket with moderately wide lapels",
+          "strength": "moderate",
+          "suggested_range": [
+            1945,
+            1955
+          ]
+        },
+        {
+          "cue": "Patterned tie with diagonal stripes and small geometric motifs",
+          "strength": "moderate",
+          "suggested_range": [
+            1947,
+            1957
+          ]
+        }
+      ],
+      "environment": [],
+      "technology": []
+    },
+    "cultural_lag_applied": true,
+    "cultural_lag_note": "Fashion cues are consistent with mainstream late 1940s-early 1950s. Given the subject's youth and likely diaspora setting (if not Rhodes), a significant lag is less probable, but a slight adjustment towards the later end of the range is considered.",
+    "capture_vs_print": "Likely original capture and print from the same period. Print characteristics are consistent with the estimated capture date.",
+    "reasoning_summary": "The young man's hairstyle, suit, and patterned tie are strong indicators for the late 1940s to early 1950s. The black and white print with a straight border is consistent with this period. No environmental or technological cues are present, making fashion the primary dating evidence.",
+    "scene_description": "Head and shoulders studio portrait of a young man. He is looking slightly to his right with a neutral expression. He wears a dark suit, white shirt, and a patterned tie against a plain, light-colored backdrop.",
+    "visible_text": null,
+    "keywords": [
+      "young man",
+      "formal portrait",
+      "studio",
+      "suit",
+      "tie",
+      "hairstyle",
+      "clean-shaven",
+      "headshot"
+    ],
+    "setting": "indoor_studio",
+    "photo_type": "formal_portrait",
+    "people_count": 1,
+    "condition": "good",
+    "clothing_notes": "Young man wears a dark single-breasted suit jacket, a white collared shirt, and a patterned tie with diagonal stripes and small geometric motifs. His hair is short, dark, and neatly combed back.",
+    "controlled_tags": [
+      "Studio",
+      "Formal_Event"
+    ],
+    "subject_ages": [
+      20
+    ],
+    "prompt_version": "v2_rich_metadata",
+    "created_at": "2026-02-14T06:30:47.329418+00:00"
+  }
+]

@@ -214,16 +214,21 @@ def load_existing_labels(path: str) -> dict:
     return {entry["photo_id"]: entry for entry in data.get("labels", [])}
 
 
-def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-preview") -> dict | None:
+def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-preview",
+                max_retries: int = 5) -> dict | None:
     """Call Gemini Vision API with a photo and return parsed structured response.
 
     Uses the google-genai SDK (new unified SDK).
+    Retries on 429 (rate limit) and 503 (overloaded) with exponential backoff.
     Returns the full structured evidence dict or None on failure.
     """
     from google import genai
     from google.genai import types
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options={"timeout": 60_000},  # 60s timeout per request
+    )
 
     # Read image file
     image_bytes = Path(image_path).read_bytes()
@@ -231,76 +236,90 @@ def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-previe
     if image_path.lower().endswith(".png"):
         mime_type = "image/png"
 
-    try:
-        response = client.models.generate_content(
-            model=model,
-            contents=[
-                types.Content(
-                    parts=[
-                        types.Part.from_text(text=PROMPT),
-                        types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                    ]
-                )
-            ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.1,
-            ),
-        )
+    text = None
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=[
+                    types.Content(
+                        parts=[
+                            types.Part.from_text(text=PROMPT),
+                            types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                        ]
+                    )
+                ],
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    temperature=0.1,
+                ),
+            )
 
-        # Parse response
-        text = response.text
-        if not text:
-            print("  WARNING: Empty response from Gemini")
+            # Parse response
+            text = response.text
+            if not text:
+                print("  WARNING: Empty response from Gemini")
+                return None
+
+            parsed = json.loads(text)
+
+            # Handle nested date_estimation structure (new format) or flat (legacy)
+            date_est = parsed.get("date_estimation", parsed)
+
+            # Validate required fields
+            decade = date_est.get("estimated_decade")
+            if not isinstance(decade, int) or decade < 1900 or decade > 2030:
+                print(f"  WARNING: Invalid decade {decade}, skipping")
+                return None
+
+            # Validate decade_probabilities sum to ~1.0
+            probs = date_est.get("decade_probabilities", {})
+            if probs:
+                prob_sum = sum(probs.values())
+                if abs(prob_sum - 1.0) > 0.05:
+                    print(f"  WARNING: decade_probabilities sum to {prob_sum:.3f}, normalizing")
+                    probs = {k: v / prob_sum for k, v in probs.items()}
+                    date_est["decade_probabilities"] = probs
+
+            # Flatten date_estimation fields to top level for storage,
+            # then merge in rich metadata fields
+            if "date_estimation" in parsed:
+                result = dict(date_est)
+                for key in ("scene_description", "visible_text", "keywords",
+                            "controlled_tags", "setting", "photo_type",
+                            "people_count", "condition", "clothing_notes",
+                            "subject_ages"):
+                    result[key] = parsed.get(key)
+                return result
+            else:
+                return parsed
+
+        except json.JSONDecodeError as e:
+            print(f"  ERROR: Failed to parse JSON response: {e}")
+            # Try to extract JSON from markdown code blocks
+            if text:
+                json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+                if json_match:
+                    try:
+                        return json.loads(json_match.group(1))
+                    except json.JSONDecodeError:
+                        pass
+            return None
+        except Exception as e:
+            err_str = str(e)
+            if ("429" in err_str or "503" in err_str or "UNAVAILABLE" in err_str
+                    or "RESOURCE_EXHAUSTED" in err_str or "timeout" in err_str.lower()
+                    or "TimeoutError" in type(e).__name__):
+                wait = min(9 * (2 ** attempt), 120)  # 9s, 18s, 36s, 72s, 120s
+                print(f"  RETRY ({attempt+1}/{max_retries}): {err_str[:80]}... waiting {wait}s",
+                      flush=True)
+                time.sleep(wait)
+                continue
+            print(f"  ERROR: Gemini API call failed: {e}", flush=True)
             return None
 
-        parsed = json.loads(text)
-
-        # Handle nested date_estimation structure (new format) or flat (legacy)
-        date_est = parsed.get("date_estimation", parsed)
-
-        # Validate required fields
-        decade = date_est.get("estimated_decade")
-        if not isinstance(decade, int) or decade < 1900 or decade > 2030:
-            print(f"  WARNING: Invalid decade {decade}, skipping")
-            return None
-
-        # Validate decade_probabilities sum to ~1.0
-        probs = date_est.get("decade_probabilities", {})
-        if probs:
-            prob_sum = sum(probs.values())
-            if abs(prob_sum - 1.0) > 0.05:
-                print(f"  WARNING: decade_probabilities sum to {prob_sum:.3f}, normalizing")
-                probs = {k: v / prob_sum for k, v in probs.items()}
-                date_est["decade_probabilities"] = probs
-
-        # Flatten date_estimation fields to top level for storage,
-        # then merge in rich metadata fields
-        if "date_estimation" in parsed:
-            result = dict(date_est)
-            for key in ("scene_description", "visible_text", "keywords",
-                        "controlled_tags", "setting", "photo_type",
-                        "people_count", "condition", "clothing_notes",
-                        "subject_ages"):
-                result[key] = parsed.get(key)
-            return result
-        else:
-            return parsed
-
-    except json.JSONDecodeError as e:
-        print(f"  ERROR: Failed to parse JSON response: {e}")
-        # Try to extract JSON from markdown code blocks
-        if text:
-            json_match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
-            if json_match:
-                try:
-                    return json.loads(json_match.group(1))
-                except json.JSONDecodeError:
-                    pass
-        return None
-    except Exception as e:
-        print(f"  ERROR: Gemini API call failed: {e}")
-        return None
+    print(f"  ERROR: All {max_retries} retries exhausted")
+    return None
 
 
 def save_labels(labels: list[dict], path: str):
@@ -438,13 +457,15 @@ def main():
     labeled_count = 0
     error_count = 0
     running_cost = 0.0
+    start_time = time.time()
 
     for i, (pid, photo) in enumerate(to_label):
         path = photo.get("path", photo.get("filename", ""))
         photo_path = Path(args.photo_dir) / Path(path).name
         collection = photo.get("collection", "unknown")
 
-        print(f"[{i+1}/{len(to_label)}] {pid[:16]} | {collection} | {Path(path).name}")
+        print(f"[{i+1}/{len(to_label)}] {pid[:16]} | {collection} | {Path(path).name}",
+              flush=True)
 
         if not photo_path.exists():
             print(f"  SKIP: Photo file not found at {photo_path}")
@@ -542,9 +563,20 @@ def main():
         if clothing:
             print(f"     Clothing: {clothing[:100]}")
 
-        # Rate limiting: 1 request per second
+        # Progress report every 10 photos, incremental save every 5
+        if labeled_count > 0 and labeled_count % 5 == 0:
+            save_labels(all_labels, args.output)
+        if labeled_count > 0 and labeled_count % 10 == 0:
+            elapsed = time.time() - start_time
+            rate = labeled_count / elapsed * 60
+            print(f"\n  --- Progress: {labeled_count} labeled, {error_count} errors, "
+                  f"${running_cost:.2f} cost, {rate:.1f} photos/min ---\n")
+
+        # Rate limiting: 1.5s between requests to avoid 429/503
         if i < len(to_label) - 1:
-            time.sleep(1.0)
+            time.sleep(3)
+
+    elapsed = time.time() - start_time
 
     # Save results
     if labeled_count > 0:
@@ -553,6 +585,7 @@ def main():
     print(f"\nResults: {labeled_count} labeled, {error_count} errors, "
           f"{len(all_labels)} total labels")
     print(f"Estimated cost: ${running_cost:.2f}")
+    print(f"Time elapsed: {elapsed/60:.1f} minutes")
 
     if args.dry_run:
         remaining = len(get_undated_photos(photos)) - len(existing) - labeled_count

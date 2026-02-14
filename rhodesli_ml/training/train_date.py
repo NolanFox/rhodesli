@@ -83,6 +83,16 @@ def main():
 
     print(f"Loaded {len(labels)} labels")
 
+    # Load photo_index for path resolution
+    photo_index_path = data_cfg.get("photo_index_path", "data/photo_index.json")
+    photo_index = {}
+    if Path(photo_index_path).exists():
+        import json as _json
+        with open(photo_index_path) as f:
+            pi_data = _json.load(f)
+        photo_index = pi_data.get("photos", pi_data)
+        print(f"Loaded photo index: {len(photo_index)} photos")
+
     # Split train/val
     train_ratio = data_cfg.get("train_split", 0.8)
     train_labels, val_labels = create_train_val_split(labels, train_ratio=train_ratio)
@@ -104,12 +114,14 @@ def main():
     train_dataset = DateEstimationDataset(
         labels=train_labels,
         photos_dir=photos_dir,
+        photo_index=photo_index,
         transform=train_transform,
         num_classes=num_classes,
     )
     val_dataset = DateEstimationDataset(
         labels=val_labels,
         photos_dir=photos_dir,
+        photo_index=photo_index,
         transform=val_transform,
         num_classes=num_classes,
     )
