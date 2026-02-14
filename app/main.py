@@ -16802,6 +16802,202 @@ def get(sess=None):
     )
 
 
+# --- Admin Review Queue (Feature 5: Active Learning Priority Queue) ---
+
+
+def _compute_correction_priority(label: dict) -> float:
+    """Compute priority score for a photo date label.
+
+    Higher score = more urgent to review.
+    Score formula from PRD 005:
+      (1 - confidence_numeric) * range_width_normalized * (1 + temporal_conflict_flag)
+    """
+    confidence = label.get("confidence", "medium")
+    conf_numeric = {"high": 0.9, "medium": 0.6, "low": 0.3}.get(confidence, 0.5)
+
+    prob_range = label.get("probable_range", [])
+    if len(prob_range) == 2:
+        range_width = abs(prob_range[1] - prob_range[0])
+    else:
+        range_width = 20  # Default wide range if unknown
+    range_normalized = range_width / 50.0
+
+    # temporal_conflict_flag would come from audit data — for now, default to 0
+    temporal_flag = 0
+
+    return (1.0 - conf_numeric) * range_normalized * (1.0 + temporal_flag)
+
+
+def _get_priority_reason(label: dict) -> str:
+    """Generate human-readable reason for review priority."""
+    reasons = []
+    confidence = label.get("confidence", "medium")
+    if confidence == "low":
+        reasons.append("Low confidence")
+    prob_range = label.get("probable_range", [])
+    if len(prob_range) == 2:
+        width = abs(prob_range[1] - prob_range[0])
+        if width >= 15:
+            reasons.append(f"Wide date range ({prob_range[0]}\u2013{prob_range[1]})")
+    return " \u00b7 ".join(reasons) if reasons else "Routine review"
+
+
+@rt("/admin/review-queue")
+def get(sess=None):
+    """Admin review queue — photos sorted by correction priority score."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    labels = _load_date_labels()
+    _build_caches()
+
+    # Score all photos, exclude already-verified ones and duplicates
+    scored = []
+    seen_labels = set()  # Track by label id() to skip dual-keyed duplicates
+    for photo_id, label in labels.items():
+        if id(label) in seen_labels:
+            continue
+        seen_labels.add(id(label))
+        if label.get("source") == "human":
+            continue  # Already verified
+        # Prefer SHA256 cache ID for display (matches _photo_cache and /photo/{id} URLs)
+        cache_id = photo_id
+        if photo_id.startswith("inbox_"):
+            # Check if there's a SHA256 alias that maps to a _photo_cache entry
+            for k, v in labels.items():
+                if v is label and not k.startswith("inbox_"):
+                    cache_id = k
+                    break
+        photo_id = cache_id
+        score = _compute_correction_priority(label)
+        scored.append((photo_id, label, score))
+
+    # Sort by priority (highest first)
+    scored.sort(key=lambda x: -x[2])
+
+    # Build review items
+    items = []
+    for photo_id, label, score in scored[:50]:  # Show top 50
+        decade = label.get("estimated_decade", "")
+        best_year = label.get("best_year_estimate", "")
+        confidence = label.get("confidence", "medium")
+        reason = _get_priority_reason(label)
+
+        # Get photo filename for thumbnail
+        photo_data = (_photo_cache or {}).get(photo_id)
+        if not photo_data:
+            # Try looking up by cache_photo_id
+            for pid, pdata in (_photo_cache or {}).items():
+                if pid == photo_id:
+                    photo_data = pdata
+                    break
+        filename = photo_data.get("filename", "") if photo_data else ""
+
+        conf_cls = {
+            "high": "text-emerald-400",
+            "medium": "text-amber-400",
+            "low": "text-red-400",
+        }.get(confidence, "text-slate-400")
+
+        items.append(
+            Div(
+                A(
+                    Img(
+                        src=photo_url(filename) if filename else "",
+                        cls="w-20 h-20 object-cover rounded",
+                        loading="lazy",
+                    ),
+                    href=f"/photo/{photo_id}",
+                    cls="shrink-0",
+                ) if filename else Div(cls="w-20 h-20 bg-slate-800 rounded"),
+                Div(
+                    Div(
+                        Span(f"c. {best_year}" if best_year else f"{decade}s", cls="font-serif text-amber-200"),
+                        Span(f" ({confidence})", cls=f"text-xs {conf_cls} ml-1"),
+                        cls="mb-1",
+                    ),
+                    P(reason, cls="text-xs text-slate-400 mb-2"),
+                    Div(
+                        A("Confirm AI", href=f"/api/photo/{photo_id}/confirm-date",
+                          cls="text-xs px-2 py-1 bg-emerald-600/30 text-emerald-400 rounded hover:bg-emerald-600/50 transition-colors",
+                          hx_post=f"/api/photo/{photo_id}/confirm-date",
+                          hx_target=f"#review-{photo_id[:8]}",
+                          hx_swap="outerHTML"),
+                        A("View & Correct", href=f"/photo/{photo_id}",
+                          cls="text-xs px-2 py-1 bg-indigo-600/30 text-indigo-400 rounded hover:bg-indigo-600/50 transition-colors"),
+                        cls="flex gap-2",
+                    ),
+                    cls="flex-1",
+                ),
+                Div(
+                    Span(f"{score:.3f}", cls="text-[10px] text-slate-600 font-mono"),
+                    cls="shrink-0",
+                ),
+                cls="flex items-start gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50",
+                id=f"review-{photo_id[:8]}",
+                data_testid="review-item",
+                data_priority=f"{score:.4f}",
+            )
+        )
+
+    if not items:
+        items = [P("All photos have been reviewed!", cls="text-slate-400 text-center py-12")]
+
+    return Title("Review Queue \u2014 Rhodesli"), Div(
+        Div(
+            H1("Date Review Queue", cls="text-2xl font-bold text-white"),
+            P(f"{len(scored)} photos need review", cls="text-sm text-slate-400"),
+            cls="mb-6",
+        ),
+        Div(*items, cls="space-y-2"),
+        cls="max-w-3xl mx-auto p-6",
+    )
+
+
+@rt("/api/photo/{photo_id}/confirm-date")
+async def post(photo_id: str, sess=None):
+    """Confirm AI date estimate — sets source to 'human' without changing the value."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    labels = _load_date_labels()
+    label = labels.get(photo_id)
+    if not label:
+        return Div(Span("Label not found", cls="text-red-400"), id=f"review-{photo_id[:8]}")
+
+    # Log confirmation
+    import uuid
+    from datetime import datetime, timezone
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    correction_entry = {
+        "id": f"corr_{uuid.uuid4().hex[:12]}",
+        "photo_id": photo_id,
+        "field": "estimated_decade",
+        "old_value": {"decade": label.get("estimated_decade"), "year": label.get("best_year_estimate")},
+        "new_value": {"decade": label.get("estimated_decade"), "year": label.get("best_year_estimate")},
+        "old_source": label.get("source", "gemini"),
+        "new_source": "human",
+        "contributor_email": user.email if user else "local",
+        "contributor_type": "admin",
+        "status": "confirmed",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    log = _load_corrections_log()
+    log["corrections"].append(correction_entry)
+    _save_corrections_log(log)
+
+    # Update in-memory label
+    label["source"] = "human"
+
+    return Div(
+        Span("\u2713 Confirmed", cls="text-emerald-400 text-sm"),
+        cls="p-3 bg-emerald-950/30 rounded-lg border border-emerald-700/30 text-center",
+        id=f"review-{photo_id[:8]}",
+    )
+
+
 # --- Sync API Endpoints (token-authenticated, for scripts/sync_from_production.py) ---
 
 def _check_sync_token(request):
