@@ -439,7 +439,12 @@ _search_index_cache = None
 
 
 def _load_date_labels() -> dict:
-    """Load date labels from ML pipeline output, keyed by photo_id for O(1) lookup."""
+    """Load date labels from ML pipeline output, keyed by photo_id for O(1) lookup.
+
+    Labels are indexed by BOTH their original photo_index ID (e.g. inbox_*)
+    AND the SHA256 cache ID used by _photo_cache. This dual-keying handles
+    the ID mismatch between photo_index.json and the embeddings-based cache.
+    """
     global _date_labels_cache
     if _date_labels_cache is not None:
         return _date_labels_cache
@@ -449,6 +454,18 @@ def _load_date_labels() -> dict:
     if not ml_data_path.exists():
         return _date_labels_cache
 
+    # Build filename → photo_index_id mapping for cross-referencing
+    filename_to_index_id = {}
+    try:
+        from core.photo_registry import PhotoRegistry
+        photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+        for pid in photo_registry._photos:
+            path = photo_registry.get_photo_path(pid)
+            if path:
+                filename_to_index_id[Path(path).name] = pid
+    except Exception:
+        pass
+
     try:
         with open(ml_data_path) as f:
             data = json.load(f)
@@ -456,6 +473,18 @@ def _load_date_labels() -> dict:
             pid = label.get("photo_id", "")
             if pid:
                 _date_labels_cache[pid] = label
+                # Also key by SHA256 cache ID if the original is an inbox_* ID
+                if pid.startswith("inbox_"):
+                    # Extract filename from photo_index path, compute SHA256 ID
+                    path = None
+                    try:
+                        path = photo_registry.get_photo_path(pid)
+                    except Exception:
+                        pass
+                    if path:
+                        fname = Path(path).name
+                        sha_id = hashlib.sha256(fname.encode("utf-8")).hexdigest()[:16]
+                        _date_labels_cache[sha_id] = label
     except Exception as e:
         logging.warning(f"Failed to load date labels: {e}")
 
@@ -463,7 +492,11 @@ def _load_date_labels() -> dict:
 
 
 def _load_search_index() -> list:
-    """Load photo search index for in-memory keyword search."""
+    """Load photo search index for in-memory keyword search.
+
+    For inbox photos, adds a SHA256-based alias photo_id so that
+    _photo_cache lookups match search results.
+    """
     global _search_index_cache
     if _search_index_cache is not None:
         return _search_index_cache
@@ -473,10 +506,33 @@ def _load_search_index() -> list:
     if not search_path.exists():
         return _search_index_cache
 
+    # Build inbox_id → SHA256 ID mapping for cross-referencing
+    index_to_sha = {}
+    try:
+        from core.photo_registry import PhotoRegistry
+        photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+        for pid in photo_registry._photos:
+            if pid.startswith("inbox_"):
+                path = photo_registry.get_photo_path(pid)
+                if path:
+                    fname = Path(path).name
+                    sha_id = hashlib.sha256(fname.encode("utf-8")).hexdigest()[:16]
+                    index_to_sha[pid] = sha_id
+    except Exception:
+        pass
+
     try:
         with open(search_path) as f:
             data = json.load(f)
-        _search_index_cache = data.get("documents", [])
+        docs = data.get("documents", [])
+        # Add SHA256 alias for inbox photos so _photo_cache keys match
+        for doc in docs:
+            pid = doc.get("photo_id", "")
+            if pid in index_to_sha:
+                doc["cache_photo_id"] = index_to_sha[pid]
+            else:
+                doc["cache_photo_id"] = pid
+        _search_index_cache = docs
     except Exception as e:
         logging.warning(f"Failed to load search index: {e}")
 
@@ -561,6 +617,153 @@ def _get_date_badge(photo_id: str) -> tuple:
     tooltip = f"Best estimate: {best_year} (range: {range_str})" if best_year and range_str else f"Estimated: {decade}s"
 
     return badge_text, confidence, tooltip
+
+
+def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
+    """Build the AI Analysis metadata panel for a photo detail page.
+
+    Shows date estimate, scene description, tags, visible text, evidence, subject ages.
+    Each subsection has provenance styling (AI = indigo, human = emerald).
+    Returns None if no AI data available for this photo.
+    """
+    labels = _load_date_labels()
+    label = labels.get(photo_id)
+    if not label:
+        return None
+
+    # Build search index entry for tags/scene
+    docs = _load_search_index()
+    search_doc = next((d for d in docs if d.get("photo_id") == photo_id), None)
+
+    def _field(title, content, field_key="ai", expanded=False):
+        """Render a collapsible subsection with provenance styling."""
+        source = label.get("source", "gemini")
+        is_human = source == "human" or field_key == "human"
+        border_cls = "border-emerald-500/40 bg-emerald-950/20" if is_human else "border-indigo-500/40 bg-indigo-950/20"
+        icon = "\u2713" if is_human else "\u2728"
+        provenance_text = "Verified" if is_human else "AI Estimated"
+        provenance_cls = "text-emerald-400" if is_human else "text-indigo-400"
+
+        return Details(
+            Summary(
+                Div(
+                    Span(icon, cls="mr-1.5"),
+                    Span(title, cls="text-sm font-medium text-white"),
+                    Span(f" \u2014 {provenance_text}", cls=f"text-[10px] {provenance_cls} ml-2"),
+                    cls="flex items-center"
+                ),
+                cls="cursor-pointer list-none select-none py-2 px-3 hover:bg-slate-800/50 rounded-lg transition-colors"
+            ),
+            Div(content, cls="px-3 pb-3 text-sm text-slate-300 leading-relaxed"),
+            cls=f"border-l-2 {border_cls} rounded-lg mb-2",
+            open=expanded,
+            data_provenance="human" if is_human else "ai",
+            data_testid="verified-field" if is_human else None,
+        )
+
+    sections = []
+
+    # Date estimate
+    decade = label.get("estimated_decade")
+    best_year = label.get("best_year_estimate")
+    confidence = label.get("confidence", "medium")
+    prob_range = label.get("probable_range", [])
+    if decade:
+        range_str = f"{prob_range[0]}\u2013{prob_range[1]}" if len(prob_range) == 2 else ""
+        conf_badge_cls = {
+            "high": "bg-emerald-500/20 text-emerald-400",
+            "medium": "bg-amber-500/20 text-amber-400",
+            "low": "bg-red-500/20 text-red-400",
+        }.get(confidence, "bg-slate-500/20 text-slate-400")
+        date_content = Div(
+            P(f"circa {best_year}" if best_year else f"{decade}s", cls="text-lg font-serif text-amber-200 mb-1"),
+            Div(
+                Span(f"Confidence: {confidence}", cls=f"text-[11px] px-2 py-0.5 rounded-full {conf_badge_cls}"),
+                Span(f"Range: {range_str}", cls="text-[11px] text-slate-500 ml-2") if range_str else None,
+                cls="flex items-center gap-2"
+            ),
+        )
+        sections.append(_field("Date Estimate", date_content, expanded=True))
+
+    # Scene description
+    scene = label.get("scene_description", "")
+    if not scene and search_doc:
+        # Fall back to searchable text (first sentence)
+        st = search_doc.get("searchable_text", "")
+        scene = st.split(".")[0] + "." if "." in st else st[:200]
+    if scene:
+        sections.append(_field("Scene", P(scene)))
+
+    # Visible text (OCR)
+    visible_text = label.get("visible_text", "")
+    if visible_text:
+        sections.append(_field("Visible Text", P(visible_text, cls="italic font-mono text-xs text-slate-400")))
+
+    # Tags
+    tags = label.get("controlled_tags") or (search_doc.get("controlled_tags") if search_doc else None)
+    if tags:
+        tag_pills = [
+            A(
+                t.replace("_", " "),
+                href=f"/photos?tag={quote(t)}",
+                cls="px-2 py-0.5 text-[11px] bg-slate-700/60 text-slate-300 rounded-full hover:bg-indigo-600/40 hover:text-white transition-colors",
+                data_testid="ai-tag",
+            )
+            for t in tags
+        ]
+        sections.append(_field("Tags", Div(*tag_pills, cls="flex flex-wrap gap-1.5")))
+
+    # Dating evidence
+    evidence = label.get("evidence", {})
+    if evidence:
+        evidence_items = []
+        for category, cues in evidence.items():
+            if not isinstance(cues, list):
+                continue
+            for cue in cues[:3]:  # Max 3 per category
+                cue_text = cue.get("cue", "") if isinstance(cue, dict) else str(cue)
+                strength = cue.get("strength", "") if isinstance(cue, dict) else ""
+                if cue_text:
+                    strength_cls = {"strong": "text-emerald-400", "moderate": "text-amber-400", "weak": "text-slate-500"}.get(strength, "text-slate-500")
+                    evidence_items.append(
+                        Li(
+                            Span(cue_text, cls="text-slate-400"),
+                            Span(f" ({strength})", cls=f"text-[10px] {strength_cls}") if strength else None,
+                            cls="text-xs mb-1"
+                        )
+                    )
+        if evidence_items:
+            sections.append(_field("Dating Evidence", Ul(*evidence_items, cls="list-disc list-inside space-y-0.5")))
+
+    # Subject ages
+    ages = label.get("subject_ages")
+    if ages:
+        if isinstance(ages, list):
+            ages_text = ", ".join(str(a) for a in ages)
+        elif isinstance(ages, str):
+            ages_text = ages
+        else:
+            ages_text = str(ages)
+        if ages_text:
+            sections.append(_field("Subject Ages", P(ages_text)))
+
+    if not sections:
+        return None
+
+    return Section(
+        Div(
+            Div(
+                Span("\u2728", cls="text-lg mr-2"),
+                H2("AI Analysis", cls="text-lg font-serif font-semibold text-white inline"),
+                cls="flex items-center mb-1",
+            ),
+            P("Estimated by AI \u2014 help us verify", cls="text-[11px] text-indigo-400/70 mb-4"),
+            *sections,
+            cls="max-w-[900px] mx-auto",
+            data_testid="ai-analysis",
+        ),
+        cls="px-4 sm:px-6 py-6 border-t border-slate-800/50",
+    )
 
 
 def _render_date_badge_overlay(photo_id: str) -> Span:
@@ -8817,7 +9020,7 @@ def get(filter_collection: str = "", sort_by: str = "newest",
     search_photo_ids = None
     if search_q or decade or tag:
         search_results = _search_photos(query=search_q, decade=decade, tag=tag)
-        search_photo_ids = {r["photo_id"]: r.get("match_reason") for r in search_results}
+        search_photo_ids = {r.get("cache_photo_id", r["photo_id"]): r.get("match_reason") for r in search_results}
 
     # Gather photos with metadata
     photos = []
@@ -9776,6 +9979,9 @@ def public_photo_page(
                 ),
                 cls="px-4 sm:px-6 py-6 border-t border-slate-800/50"
             ) if face_info_list else None,
+
+            # AI Analysis panel (from date labels + search index)
+            _build_ai_analysis_section(photo_id, is_admin),
 
             # Call to action — link to first unidentified face from this photo
             Section(
