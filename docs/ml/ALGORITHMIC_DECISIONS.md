@@ -465,20 +465,33 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
   - Total cost: ~$2.22 (gemini-3-pro-preview for the main run)
   - The 1 failed photo (472157630...jpg) hit 504 DEADLINE_EXCEEDED on 3-flash consistently; 2.5-flash succeeded and found a dated inscription ("19 de Agosto 1928")
   - 67.4% decade agreement between 2.5 and 3.0 Flash across 43 overlapping photos (mean year diff: 3.6 years)
-  - Systematic recency bias in 2.5 Flash: in all 14 decade disagreements, 2.5 dated photos LATER than 3.0
+  - Systematic recency bias in 2.5 Flash: in ALL 14 decade disagreements, 2.5 dated photos LATER than 3.0 (directional, not random noise)
+  - Max gap: 19 years on photo ab9cc3eb (baby portrait) — 3.0 identified Lower East Side studio stamp → 1916, 2.5 misread address → 1935
   - 3.0 Flash shows superior early-20th-century dating (studio stamps, fur rug props, specific fashion sub-cues)
+- **Mixing models implication**: If combining labels from 2.5 and 3.0 models, the 2.5 labels will systematically skew newer. For the one 2.5-labeled photo (the 504 fallback), the "1928" date may be later than what 3.0 would estimate — though in this case the date is anchored by a handwritten inscription ("19 de Agosto 1928"), making the bias less relevant.
 - **Post-processing**: 14 invalid `controlled_tags` stripped (13 "Formal_Portrait", 1 "Indoor_Other" — not in the valid enum). These tags were hallucinated by the model despite the strict list in the prompt.
 - **Training**: CORAL model retrained on cleaned 157-photo dataset. Val accuracy 62.9%, MAE 0.486 decades (statistically equivalent to previous 65.7%/0.46 — random seed variation on n=35 val set).
 - **Decision**: Gemini 3 Flash labels are sufficient for CORAL training as silver labels, not ground truth. The 2.5 Flash fallback is acceptable for photos that time out. Post-processing tag validation is mandatory.
 - **Rejected**: Manual labeling — cost-prohibitive for 157+ photos. The Gemini labels provide a good enough signal for decade-level classification.
 - **Affects**: `rhodesli_ml/data/date_labels.json`, `rhodesli_ml/scripts/generate_date_labels.py`, `rhodesli_ml/training/train_date.py`.
 
+### AD-052: Batch Labeling Infrastructure and Data Provenance
+- **Date**: 2026-02-14
+- **Context**: After labeling 157 photos, need infrastructure for scaling to 500+ and tracking how each label was generated.
+- **Decisions**:
+  1. **`source_method` field**: Each label tracks generation method — `"api"` (Python script), `"web_manual"` (pasted from gemini.google.com), `"imported"` (bulk external). More extensible than a boolean flag. All 157 existing labels backfilled as `"api"`.
+  2. **`clean_labels.py`**: Reusable validation script strips invalid controlled_tags, flags suspicious decades/ages/mismatches. Idempotent, `--dry-run` safe. Catches Gemini hallucinated enum values (AD-051 found 14).
+  3. **`add_manual_label.py`**: Helper for web UI paste workflow. Validates schema, archives replaced labels, sets `source_method="web_manual"`. For photos that time out on the API (504 DEADLINE_EXCEEDED).
+  4. **`batch_label.sh`**: Unattended overnight wrapper. Adaptive rate limiting (doubles sleep on >50% failure rate), 10-minute pause after 3 consecutive failures, Ctrl+C safe (incremental saves). Insurance for 500+ photo runs.
+- **Rejected**: Simple retry loop without batching — no cost tracking, no rate limit adaptation, no logging.
+- **Affects**: `rhodesli_ml/scripts/clean_labels.py`, `rhodesli_ml/scripts/add_manual_label.py`, `rhodesli_ml/scripts/batch_label.sh`, `rhodesli_ml/scripts/generate_date_labels.py`, `rhodesli_ml/data/date_labels.json`.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-052)
+1. Add a new entry with AD-XXX format (next: AD-053)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

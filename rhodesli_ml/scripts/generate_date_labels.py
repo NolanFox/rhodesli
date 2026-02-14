@@ -514,6 +514,7 @@ def main():
             "controlled_tags": result.get("controlled_tags", []),
             "subject_ages": result.get("subject_ages", []),
             "prompt_version": "v2_rich_metadata",
+            "source_method": "api",
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         all_labels.append(label)

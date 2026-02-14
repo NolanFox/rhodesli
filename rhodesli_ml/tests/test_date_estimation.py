@@ -866,3 +866,262 @@ class TestPhotoMetadata:
                  "Religious_Ceremony", "School", "Military", "Formal_Event",
                  "Casual", "Group_Portrait", "Document", "Postcard"}
         assert VALID_CONTROLLED_TAGS == valid
+
+
+# ============================================================
+# Clean Labels Script Tests
+# ============================================================
+
+from rhodesli_ml.scripts.clean_labels import clean_labels
+
+
+def _make_clean_label(photo_id="p1", **overrides):
+    """Build a minimal valid label entry for testing."""
+    label = {
+        "photo_id": photo_id,
+        "estimated_decade": 1940,
+        "confidence": "high",
+        "controlled_tags": ["Studio", "Formal_Event"],
+        "subject_ages": [30, 45],
+        "people_count": 2,
+        "scene_description": "A formal portrait of two people in a studio.",
+    }
+    label.update(overrides)
+    return label
+
+
+def _write_labels(path, labels):
+    """Write a date_labels.json file with the given labels list."""
+    with open(path, "w") as f:
+        json.dump({"schema_version": 2, "labels": labels}, f)
+
+
+class TestCleanLabels:
+    def test_clean_labels_no_issues(self, tmp_path):
+        """Clean labels file returns modified=False, all counts zero."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [_make_clean_label()])
+
+        result = clean_labels(labels_path)
+        assert result["modified"] is False
+        assert result["total_labels"] == 1
+        assert result["invalid_tags_removed"] == 0
+        assert result["suspicious_decades"] == []
+        assert result["invalid_ages"] == []
+        assert result["people_count_mismatches"] == []
+        assert result["missing_scene_descriptions"] == 0
+
+    def test_clean_labels_removes_invalid_tags(self, tmp_path):
+        """Labels with invalid controlled_tags get them stripped."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label(controlled_tags=["Studio", "INVALID_TAG", "Outdoor", "BadTag"]),
+        ])
+
+        result = clean_labels(labels_path)
+        assert result["invalid_tags_removed"] == 2
+        assert result["modified"] is True
+
+        # Verify the file was actually modified
+        with open(labels_path) as f:
+            data = json.load(f)
+        assert data["labels"][0]["controlled_tags"] == ["Studio", "Outdoor"]
+
+    def test_clean_labels_flags_suspicious_decades(self, tmp_path):
+        """Decades <1870 or >2020 are flagged."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label("p1", estimated_decade=1850),
+            _make_clean_label("p2", estimated_decade=2030),
+            _make_clean_label("p3", estimated_decade=1940),
+        ])
+
+        result = clean_labels(labels_path)
+        assert len(result["suspicious_decades"]) == 2
+        flagged_ids = [item[0] for item in result["suspicious_decades"]]
+        assert "p1" in flagged_ids
+        assert "p2" in flagged_ids
+
+    def test_clean_labels_flags_invalid_ages(self, tmp_path):
+        """Ages outside 0-110 are flagged."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label("p1", subject_ages=[-5, 30]),
+            _make_clean_label("p2", subject_ages=[25, 150]),
+            _make_clean_label("p3", subject_ages=[10, 80]),
+        ])
+
+        result = clean_labels(labels_path)
+        assert len(result["invalid_ages"]) == 2
+        flagged_ids = [item[0] for item in result["invalid_ages"]]
+        assert "p1" in flagged_ids
+        assert "p2" in flagged_ids
+
+    def test_clean_labels_flags_people_count_mismatch(self, tmp_path):
+        """Diff >1 between people_count and len(subject_ages) is flagged."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label("p1", people_count=5, subject_ages=[30]),
+            _make_clean_label("p2", people_count=2, subject_ages=[30, 45]),  # OK, diff=0
+            _make_clean_label("p3", people_count=3, subject_ages=[30, 45]),  # OK, diff=1
+        ])
+
+        result = clean_labels(labels_path)
+        assert len(result["people_count_mismatches"]) == 1
+        assert result["people_count_mismatches"][0][0] == "p1"
+        assert result["people_count_mismatches"][0][1] == 5  # people_count
+        assert result["people_count_mismatches"][0][2] == 1  # len(ages)
+
+    def test_clean_labels_flags_missing_scene_description(self, tmp_path):
+        """Counts missing scene_description fields."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label("p1", scene_description=""),
+            _make_clean_label("p2", scene_description=None),
+            _make_clean_label("p3"),  # has scene_description
+        ])
+
+        result = clean_labels(labels_path)
+        assert result["missing_scene_descriptions"] == 2
+
+    def test_clean_labels_dry_run_no_modify(self, tmp_path):
+        """With dry_run=True, file is NOT modified even with issues."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label(controlled_tags=["Studio", "BOGUS"]),
+        ])
+        original_content = labels_path.read_text()
+
+        result = clean_labels(labels_path, dry_run=True)
+        assert result["invalid_tags_removed"] == 1
+        assert result["modified"] is False
+
+        # File content unchanged
+        assert labels_path.read_text() == original_content
+
+    def test_clean_labels_idempotent(self, tmp_path):
+        """Running twice produces same result; second run reports no changes."""
+        labels_path = tmp_path / "date_labels.json"
+        _write_labels(labels_path, [
+            _make_clean_label(controlled_tags=["Studio", "JUNK"]),
+        ])
+
+        result1 = clean_labels(labels_path)
+        assert result1["invalid_tags_removed"] == 1
+        assert result1["modified"] is True
+
+        result2 = clean_labels(labels_path)
+        assert result2["invalid_tags_removed"] == 0
+        assert result2["modified"] is False
+
+    def test_clean_labels_nonexistent_file(self, tmp_path):
+        """Returns empty summary, no crash for nonexistent file."""
+        result = clean_labels(tmp_path / "does_not_exist.json")
+        assert result["total_labels"] == 0
+        assert result["invalid_tags_removed"] == 0
+        assert result["suspicious_decades"] == []
+        assert result["invalid_ages"] == []
+        assert result["people_count_mismatches"] == []
+        assert result["missing_scene_descriptions"] == 0
+        assert result["modified"] is False
+
+
+# ============================================================
+# Add Manual Label Script Tests
+# ============================================================
+
+from rhodesli_ml.scripts.add_manual_label import (
+    parse_json_input,
+    flatten_gemini_response,
+    validate_label,
+    build_label,
+)
+
+
+class TestAddManualLabel:
+    def test_parse_json_string(self):
+        """Parses valid JSON string."""
+        result = parse_json_input('{"estimated_decade": 1940, "confidence": "high"}')
+        assert result["estimated_decade"] == 1940
+        assert result["confidence"] == "high"
+
+    def test_flatten_gemini_response(self):
+        """Flattens nested date_estimation into a flat dict."""
+        nested = {
+            "date_estimation": {
+                "estimated_decade": 1930,
+                "confidence": "medium",
+                "decade_probabilities": {"1930": 0.7, "1940": 0.3},
+            },
+            "scene_description": "A studio portrait",
+            "keywords": ["portrait"],
+            "controlled_tags": ["Studio"],
+            "setting": "indoor_studio",
+            "photo_type": "formal_portrait",
+            "people_count": 1,
+            "condition": "good",
+            "clothing_notes": "Dark suit",
+            "subject_ages": [40],
+            "visible_text": None,
+        }
+        flat = flatten_gemini_response(nested)
+        assert flat["estimated_decade"] == 1930
+        assert flat["confidence"] == "medium"
+        assert flat["scene_description"] == "A studio portrait"
+        assert flat["keywords"] == ["portrait"]
+        assert flat["controlled_tags"] == ["Studio"]
+        assert flat["setting"] == "indoor_studio"
+        assert flat["people_count"] == 1
+
+    def test_validate_label_valid(self):
+        """Valid label passes validation with no errors."""
+        label = {
+            "estimated_decade": 1940,
+            "confidence": "high",
+            "decade_probabilities": {"1930": 0.2, "1940": 0.6, "1950": 0.2},
+        }
+        errors = validate_label(label)
+        assert errors == []
+
+    def test_validate_label_missing_decade(self):
+        """Missing estimated_decade fails validation."""
+        label = {
+            "confidence": "high",
+            "decade_probabilities": {"1940": 1.0},
+        }
+        errors = validate_label(label)
+        assert any("estimated_decade" in e for e in errors)
+
+    def test_validate_label_invalid_confidence(self):
+        """Bad confidence value fails validation."""
+        label = {
+            "estimated_decade": 1940,
+            "confidence": "very_high",
+            "decade_probabilities": {"1940": 1.0},
+        }
+        errors = validate_label(label)
+        assert any("confidence" in e for e in errors)
+
+    def test_validate_label_probs_sum_wrong(self):
+        """Probabilities that don't sum to ~1.0 fail validation."""
+        label = {
+            "estimated_decade": 1940,
+            "confidence": "high",
+            "decade_probabilities": {"1930": 0.1, "1940": 0.2},
+        }
+        errors = validate_label(label)
+        assert any("sum to ~1.0" in e for e in errors)
+
+    def test_build_label_sets_source_method(self):
+        """Output has source_method='web_manual'."""
+        result = {
+            "estimated_decade": 1940,
+            "confidence": "high",
+            "decade_probabilities": {"1940": 0.8, "1950": 0.2},
+        }
+        label = build_label("test_photo", result, "gemini-3-flash-preview")
+        assert label["source_method"] == "web_manual"
+        assert label["photo_id"] == "test_photo"
+        assert label["model"] == "gemini-3-flash-preview"
+        assert label["source"] == "gemini"
+        assert label["estimated_decade"] == 1940
