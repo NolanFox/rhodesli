@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.33.0] - 2026-02-14
+
+### Added
+- **116 new community photos processed** — Downloaded from staging, face detection (InsightFace buffalo_l), embeddings generated, uploaded to R2, pushed to production. Archive now at 271 photos, 1061 embeddings, 775 identities, 100 match proposals.
+- **250 Gemini 3 Flash date labels** — Labeled 93 new photos in 3 passes (multi-pass retry for 504 DEADLINE_EXCEEDED errors). 81.2% high confidence, 18.8% medium. Decade distribution: 1940s dominant (28.4%), followed by 1950s (17.6%), 1920s (14.0%).
+- **Temporal consistency auditor** (AD-054): `audit_temporal_consistency.py` checks for impossible date combinations (photo before birth, after death), age mismatches, and people count discrepancies. Found 16 photos with potentially missed faces.
+- **Search metadata export** (AD-055): `export_search_metadata.py` builds full-text search index from Gemini labels — scene descriptions, keywords, clothing notes, visible text, location estimates. Output: `data/photo_search_index.json` (250 documents, schema v1).
+- **CORAL model retrained** with 250 labels (up from 157, +59% more training data). MLflow experiment tracking. Results: 73.2% exact accuracy, 96.0% adjacent accuracy, MAE 0.32 decades. Gate passes except 1980s recall (0/7 samples).
+- 53 new tests (31 temporal audit + 22 search export). ML test count: 84 → 137.
+- Decision provenance: AD-053 (scale-up labeling), AD-054 (temporal auditing), AD-055 (search metadata).
+
+### Fixed
+- Search state badge test updated to accept "Inbox" badge text alongside existing states.
+- Evaluation script now loads photo_index for proper path resolution.
+
 ## [v0.32.0] - 2026-02-13
 
 ### Added

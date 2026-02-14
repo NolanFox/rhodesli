@@ -1,6 +1,23 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-13 (Session 25 — Community Contributions v2)
+Last updated: 2026-02-14 (Session 26 — ML Phase 2: Scale-Up + Tooling)
+
+## Session 26 Completed
+- [x] Download 116 community photos from staging (271 total photos)
+- [x] Face detection + embeddings (1061 total embeddings, 775 identities)
+- [x] Upload new photos/crops to R2
+- [x] Push to production, clustering (100 proposals)
+- [x] Label 93 new photos with Gemini 3 Flash (250 total labels, 3 passes)
+- [x] Post-labeling validation: 9 invalid Formal_Portrait tags cleaned
+- [x] Build temporal consistency auditor (31 tests)
+- [x] Build search metadata export (22 tests)
+- [x] Run audit: 0 temporal flags, 16 missed-face photos
+- [x] Run export: 250 search documents in photo_search_index.json
+- [x] Retrain CORAL model with 250 labels (+59% data), MLflow tracked
+- [x] All ML tests pass (137/137)
+- [x] All app tests pass (1557/1557 + 1 fixed search badge test)
+- [x] Documentation: AD-053–AD-055, CHANGELOG v0.33.0, ROADMAP, BACKLOG, todo.md
+- [x] Docs sync verified
 
 ## Session 25 Completed
 - [x] Data backup before schema changes
@@ -155,8 +172,8 @@ Last updated: 2026-02-13 (Session 25 — Community Contributions v2)
 
 ## Near-Term (Next 1-2 Weeks)
 - [ ] ML-050: Date UX integration — display estimated decade + confidence on photo viewer
-- [ ] ML-051: Run `generate_date_labels.py` to silver-label all 155 photos via Gemini
-- [ ] ML-052: Train date estimation model on real labels, pass regression gate
+- [x] ML-051: Silver-label all photos via Gemini (250/271 labeled, 4 persistent timeouts)
+- [x] ML-052: Train date estimation model on real labels (250 labels, MLflow tracked)
 - [ ] ML-053: Integrate date labeling into upload orchestrator (process_uploads.py)
 - [ ] ML-054: Multi-pass Gemini — re-label low-confidence photos with Flash model
 - [ ] ML-060: Train similarity calibration model on 959 pairs + 510 rejections

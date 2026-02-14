@@ -486,12 +486,46 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rejected**: Simple retry loop without batching — no cost tracking, no rate limit adaptation, no logging.
 - **Affects**: `rhodesli_ml/scripts/clean_labels.py`, `rhodesli_ml/scripts/add_manual_label.py`, `rhodesli_ml/scripts/batch_label.sh`, `rhodesli_ml/scripts/generate_date_labels.py`, `rhodesli_ml/data/date_labels.json`.
 
+### AD-053: Scale-Up Labeling — 250 Photos with Multi-Pass Retry
+
+- **Date**: 2026-02-14
+- **Context**: Needed to label 116 newly uploaded community photos (total 271 photos in archive). Gemini 3 Flash API returned 504 DEADLINE_EXCEEDED errors for ~30% of requests.
+- **Decisions**:
+  1. **Multi-pass retry strategy**: Run labeling 3 times. Pass 1: 81/114 success (33 errors). Pass 2: 6 more (4 errors). Pass 3: 6 more (4 persistent failures). Total: 250/254 labeled (98.4%).
+  2. **Accept 4 permanent failures**: Photos asher_touriel, isaac_jack_levy, morris_touriel, and one other consistently time out. These are likely large/complex images that exceed Gemini's processing window. Will retry in future sessions or use manual labeling (AD-052 add_manual_label.py).
+  3. **Post-labeling validation**: `clean_labels.py` run after each pass. Removed 9 invalid Formal_Portrait tags hallucinated by Gemini. Flagged 3 people_count mismatches (pre-existing, not auto-fixed).
+- **Rejected**: Single-pass with higher timeout — Gemini API doesn't expose timeout configuration.
+- **Affects**: `rhodesli_ml/data/date_labels.json` (250 labels), `rhodesli_ml/scripts/generate_date_labels.py`.
+
+### AD-054: Temporal Consistency Auditing
+
+- **Date**: 2026-02-14
+- **Context**: With 250 date labels and growing identity metadata (birth_year, death_year), need automated checks for impossible date combinations (e.g., photo dated before subject's birth).
+- **Decisions**:
+  1. **Three-tier flagging**: IMPOSSIBLE (photo before birth or after death), SUSPICIOUS (age mismatch >20 years), INFORMATIONAL (missed face counts). Different severity enables prioritized review.
+  2. **People count discrepancy detection**: Compares Gemini's people_count with InsightFace's detected face_ids. Flags photos where Gemini sees more people than InsightFace detected — indicates missed faces that could be re-processed.
+  3. **Identity-photo mapping**: Builds cross-reference from identities (anchor_ids + candidate_ids) through face_to_photo mapping to photo labels. Skips merged identities.
+- **Rejected**: Manual spot-checking — doesn't scale. Embedding-based age estimation — out of scope for current pipeline.
+- **Affects**: `rhodesli_ml/scripts/audit_temporal_consistency.py`, `rhodesli_ml/tests/test_audit_temporal.py` (31 tests).
+
+### AD-055: Search Metadata Export for Full-Text Photo Search
+
+- **Date**: 2026-02-14
+- **Context**: 250 photos have rich metadata (scene descriptions, keywords, clothing notes, visible text, location estimates) from Gemini labeling. Need to make this searchable.
+- **Decisions**:
+  1. **Concatenated searchable_text field**: Scene description + visible text + keywords + clothing notes + location estimate, in that order. Single field enables simple full-text search without faceted indexing.
+  2. **Controlled tags as structured facets**: Preserved separately from free text for future faceted filtering (e.g., "show all Studio photos from 1940s").
+  3. **Schema version 1**: Output file includes `schema_version` for future format changes. Documents include photo_id, decade, people_count, tags, source_method alongside searchable text.
+  4. **Dry-run mode**: Default behavior computes and displays summary without writing. Explicit flag required to write output.
+- **Rejected**: Per-field search indices — over-engineered for 250 documents. Elasticsearch/Typesense — infrastructure overkill at current scale.
+- **Affects**: `rhodesli_ml/scripts/export_search_metadata.py`, `data/photo_search_index.json`, `rhodesli_ml/tests/test_export_search.py` (22 tests).
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-053)
+1. Add a new entry with AD-XXX format (next: AD-056)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
