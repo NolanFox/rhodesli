@@ -106,20 +106,6 @@ These photos are from a Sephardic Jewish community. Account for:
 ## Response Format (JSON only)
 {
     "date_estimation": {
-        "estimated_decade": 1940,
-        "best_year_estimate": 1937,
-        "confidence": "medium",
-        "probable_range": [1935, 1955],
-        "decade_probabilities": {
-            "1920": 0.05,
-            "1930": 0.15,
-            "1940": 0.55,
-            "1950": 0.20,
-            "1960": 0.05
-        },
-        "capture_vs_print": "Likely 1940s capture. Print characteristics consistent with original.",
-        "location_estimate": "Rhodes (stone masonry, Mediterranean vegetation)",
-        "is_color": false,
         "evidence": {
             "print_format": [
                 {"cue": "straight white border, ~3mm", "strength": "moderate", "suggested_range": [1930, 1955]}
@@ -134,7 +120,21 @@ These photos are from a Sephardic Jewish community. Account for:
         },
         "cultural_lag_applied": true,
         "cultural_lag_note": "Adjusted +5 years from fashion cues due to Sephardic diaspora context",
-        "reasoning_summary": "Fashion cues suggest 1940s. Border style consistent. Stone architecture indicates Rhodes but is weak for dating."
+        "capture_vs_print": "Likely 1940s capture. Print characteristics consistent with original.",
+        "location_estimate": "Rhodes (stone masonry, Mediterranean vegetation)",
+        "is_color": false,
+        "reasoning_summary": "Fashion cues suggest 1940s. Border style consistent. Stone architecture indicates Rhodes but is weak for dating.",
+        "estimated_decade": 1940,
+        "best_year_estimate": 1937,
+        "confidence": "medium",
+        "probable_range": [1935, 1955],
+        "decade_probabilities": {
+            "1920": 0.05,
+            "1930": 0.15,
+            "1940": 0.55,
+            "1950": 0.20,
+            "1960": 0.05
+        }
     },
     "scene_description": "Formal studio portrait of a middle-aged man and two women. The man stands in the center wearing a dark suit. The women are seated on either side in light-colored dresses. A painted backdrop depicts a garden scene.",
     "visible_text": "A mi querida Estrella de tu hermano Samuel",

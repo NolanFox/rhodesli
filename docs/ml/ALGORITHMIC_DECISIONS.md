@@ -442,12 +442,27 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Sources**: External review by ML expert (Feb 2026), assistant review (Feb 2026).
 - **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (prompt + label construction), `rhodesli_ml/data/date_labels.py` (schema), test fixtures.
 
+### AD-050: Reasoning-Before-Conclusion JSON Ordering
+- **Date**: 2026-02-13
+- **Context**: The Gemini prompt's JSON example placed `estimated_decade` and `best_year_estimate` BEFORE `evidence` and `reasoning_summary`. Since LLM token generation is sequential (earlier output influences later output), the model was committing to a date before generating its reasoning.
+- **Decision**: Reorder JSON schema so `evidence` and `reasoning_summary` fields precede `estimated_decade`, `best_year_estimate`, `confidence`, `probable_range`, and `decade_probabilities`. The model now analyzes visual evidence as it generates those fields, then commits to a date estimate grounded in the analysis it just produced.
+- **Rationale**: Multiple studies confirm JSON key ordering affects LLM output quality:
+  - "Let Me Speak Freely?" (Tam et al., 2024): Forcing strict JSON during reasoning causes 10-15% performance degradation. Two-step approach improves accuracy from 48% to 61%.
+  - Dataiku structured generation guide (2025): Recommends structuring JSON so reasoning is generated before outcomes.
+  - "Thought of Structure" paradigm (Lu et al., 2025): 44.89% improvement by encouraging structural reasoning before generation.
+  - ACL 2025 VLM CoT paper (Zhang et al.): Training on short answers without rationales degrades reasoning task performance.
+- **Cost**: Zero. Same fields, same token count, different ordering.
+- **Accepted**: JSON field reordering in prompt — evidence → cultural_lag → capture_vs_print → location → reasoning_summary → estimated_decade → confidence → probabilities.
+- **Rejected**: Two-step approach (free reasoning then structured formatting) — adds complexity and doubles API calls. Single-pass with correct field ordering captures most of the benefit.
+- **Rejected**: Removing JSON constraint entirely for free-form reasoning — loses structured extraction capability which is the whole point.
+- **Affects**: `rhodesli_ml/scripts/generate_date_labels.py` (PROMPT constant).
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-050)
+1. Add a new entry with AD-XXX format (next: AD-051)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
