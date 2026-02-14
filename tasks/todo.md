@@ -1,6 +1,19 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-14 (Session 26 — ML Phase 2: Scale-Up + Tooling)
+Last updated: 2026-02-14 (Session 27 — Discovery Layer Implementation)
+
+## Session 27 Completed
+- [x] Phase 0: Identify unlabeled photos (21/271 unlabeled, 7.7%)
+- [x] Phase 1: 12 e2e acceptance tests (all FAIL initially per SDD)
+- [x] Phase 2: Date badges on photo cards with confidence styling
+- [x] Phase 3: Decade filtering, keyword search, tag filtering on /photos
+- [x] Phase 4: AI Analysis metadata panel on photo detail pages
+- [x] Phase 5: Date correction flow with provenance tracking
+- [x] Phase 6: Admin review queue with priority scoring
+- [x] Phase 7: 83 new unit tests (1961 total), 12 e2e tests (all passing)
+- [x] Phase 8: AD-056–059, CHANGELOG v0.34.0, ROADMAP ML-050, BACKLOG synced
+- [x] Deploy safety: corrections_log.json NOT in sync lists (production-origin data)
+- [x] Photo ID mismatch fix: dual-keyed caches for inbox_*/SHA256 cross-reference
 
 ## Session 26 Completed
 - [x] Download 116 community photos from staging (271 total photos)
@@ -171,7 +184,7 @@ Last updated: 2026-02-14 (Session 26 — ML Phase 2: Scale-Up + Tooling)
 - [ ] Smoke test all fixes on live site
 
 ## Near-Term (Next 1-2 Weeks)
-- [ ] ML-050: Date UX integration — display estimated decade + confidence on photo viewer
+- [x] ML-050: Date UX integration — display estimated decade + confidence on photo viewer (2026-02-14, Session 27)
 - [x] ML-051: Silver-label all photos via Gemini (250/271 labeled, 4 persistent timeouts)
 - [x] ML-052: Train date estimation model on real labels (250 labels, MLflow tracked)
 - [ ] ML-053: Integrate date labeling into upload orchestrator (process_uploads.py)
