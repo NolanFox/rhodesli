@@ -141,7 +141,8 @@ def test_keyword_search_returns_results(app_server, page):
     assert search_input.count() > 0, "Expected a search input on /photos page"
 
     search_input.fill("studio")
-    page.wait_for_timeout(1000)  # Wait for debounced search
+    search_input.press("Enter")
+    page.wait_for_timeout(SETTLE_MS)
 
     # Results should appear (studio is a common tag in the archive)
     photo_cards = page.locator("a[href^='/photo/']")

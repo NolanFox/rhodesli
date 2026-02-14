@@ -8795,18 +8795,29 @@ def get(person_id: str, view: str = "faces", sess=None):
 
 
 @rt("/photos")
-def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
+def get(filter_collection: str = "", sort_by: str = "newest",
+        decade: int = None, search_q: str = "", tag: str = "", sess=None):
     """
     Public photos browsing page — grid of all archive photos.
 
     No authentication required. Each photo links to /photo/{id}.
-    No admin actions visible.
+    Supports decade filtering, keyword search, and tag filtering via query params.
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
 
     _build_caches()
     registry = load_registry()
-    crop_files = get_crop_files()
+
+    # Get decade and tag counts for filter pills
+    decade_counts = _get_decade_counts()
+    tag_counts = _get_tag_counts()
+
+    # Search-based filtering (uses search index for text, decade, tag)
+    search_results = None
+    search_photo_ids = None
+    if search_q or decade or tag:
+        search_results = _search_photos(query=search_q, decade=decade, tag=tag)
+        search_photo_ids = {r["photo_id"]: r.get("match_reason") for r in search_results}
 
     # Gather photos with metadata
     photos = []
@@ -8817,6 +8828,9 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
             collections_set.add(collection)
         # Apply collection filter
         if filter_collection and collection != filter_collection:
+            continue
+        # Apply search/decade/tag filter
+        if search_photo_ids is not None and photo_id_val not in search_photo_ids:
             continue
 
         face_count = len(photo_data.get("faces", []))
@@ -8832,6 +8846,7 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
             "collection": collection,
             "face_count": face_count,
             "confirmed_count": confirmed_count,
+            "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
         })
 
     collections = sorted(collections_set)
@@ -8867,6 +8882,15 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
                 data_confidence=date_conf,
             )
 
+        # Match reason label when search is active
+        match_label = None
+        if photo.get("match_reason"):
+            match_label = Div(
+                Span(f"Matched: {photo['match_reason']}", cls="text-[10px] text-indigo-300/70 italic"),
+                cls="px-2 pb-1",
+                data_testid="match-reason",
+            )
+
         photo_cards.append(
             A(
                 Div(
@@ -8886,13 +8910,28 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
                     P(photo["collection"] or "", cls="text-xs text-slate-500 truncate"),
                     cls="p-2",
                 ) if photo["collection"] else None,
+                match_label,
                 href=f"/photo/{photo['photo_id']}",
                 cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition-colors group block",
             )
         )
 
-    # Collection filter
-    from urllib.parse import quote as _url_quote
+    # Build filter URL helper
+    from urllib.parse import quote as _url_quote, urlencode as _url_encode
+
+    def _filter_url(**overrides):
+        """Build /photos URL preserving current filters with overrides."""
+        params = {"filter_collection": filter_collection, "sort_by": sort_by,
+                  "search_q": search_q, "tag": tag}
+        if decade:
+            params["decade"] = str(decade)
+        params.update({k: v for k, v in overrides.items() if v})
+        # Remove empty/None params
+        params = {k: v for k, v in params.items() if v}
+        qs = _url_encode(params)
+        return f"/photos?{qs}" if qs else "/photos"
+
+    # Collection + sort dropdowns
     collection_options = [Option("All Collections", value="")]
     for c in collections:
         collection_options.append(Option(c, value=c, selected=(filter_collection == c)))
@@ -8903,12 +8942,55 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
         Option("Most Faces", value="most_faces", selected=(sort_by == "most_faces")),
     ]
 
+    # Decade pills
+    decade_pills = [
+        A("All",
+          href=_filter_url(decade=""),
+          cls="px-3 py-1 text-xs rounded-full transition-colors font-serif "
+              + ("bg-amber-700 text-white" if not decade else "bg-slate-800 text-slate-400 hover:text-white border border-slate-700"))
+    ]
+    for dec, count in decade_counts.items():
+        is_active = decade == dec
+        decade_pills.append(
+            A(f"{dec}s ({count})",
+              href=_filter_url(decade=str(dec)),
+              cls="px-3 py-1 text-xs rounded-full transition-colors font-serif "
+                  + ("bg-amber-700 text-white" if is_active else "bg-slate-800 text-slate-400 hover:text-white border border-slate-700"),
+              data_testid="decade-pill")
+        )
+
+    # Tag pills (top 8)
+    top_tags = list(tag_counts.items())[:8]
+    tag_pills = []
+    for tag_name, tag_count in top_tags:
+        display_name = tag_name.replace("_", " ")
+        is_active = tag == tag_name
+        tag_pills.append(
+            A(f"{display_name} ({tag_count})",
+              href=_filter_url(tag=tag_name if not is_active else ""),
+              cls="px-2.5 py-1 text-[11px] rounded-full transition-colors "
+                  + ("bg-indigo-600 text-white" if is_active else "bg-slate-800/60 text-slate-400 hover:text-white border border-slate-700/50"),
+              data_testid="tag-pill")
+        )
+
     nav_links = [
         A("Photos", href="/photos", cls="text-white text-sm font-medium"),
         A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    # Active filter summary
+    active_filters = []
+    if decade:
+        active_filters.append(f"{decade}s")
+    if tag:
+        active_filters.append(tag.replace("_", " "))
+    if search_q:
+        active_filters.append(f'"{search_q}"')
+    subtitle = f"Showing {len(photos)} photo{'s' if len(photos) != 1 else ''}"
+    if active_filters:
+        subtitle += f" matching {' + '.join(active_filters)}"
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -8930,29 +9012,52 @@ def get(filter_collection: str = "", sort_by: str = "newest", sess=None):
             Section(
                 Div(
                     H1("Photos", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P(f"{len(photos)} historical photograph{'s' if len(photos) != 1 else ''} from the Rhodes diaspora", cls="text-slate-400 text-sm"),
-                    cls="max-w-6xl mx-auto px-6 pt-10 pb-6",
+                    P(subtitle, cls="text-slate-400 text-sm"),
+                    cls="max-w-6xl mx-auto px-6 pt-10 pb-4",
                 ),
             ),
             Section(
                 Div(
-                    # Filter/sort bar
+                    # Decade timeline pills
+                    Div(*decade_pills, cls="flex flex-wrap gap-2 mb-3") if decade_pills else None,
+                    # Search + tag row
+                    Div(
+                        # Search input
+                        Div(
+                            Input(
+                                type="text",
+                                name="search_q",
+                                value=search_q,
+                                placeholder="Search scenes, text, people...",
+                                cls="bg-slate-800 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 w-full sm:w-64 focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 placeholder-slate-500",
+                                data_testid="photo-search",
+                                onkeydown=f"if(event.key==='Enter')window.location.href='/photos?search_q='+encodeURIComponent(this.value)+'&decade={decade or ''}&tag={_url_quote(tag)}&filter_collection={_url_quote(filter_collection)}&sort_by={sort_by}'",
+                            ),
+                            cls="flex-shrink-0",
+                        ),
+                        # Tag pills
+                        Div(*tag_pills, cls="flex flex-wrap gap-1.5") if tag_pills else None,
+                        cls="flex flex-wrap items-center gap-3 mb-3",
+                    ),
+                    # Collection/sort dropdowns
                     Div(
                         Select(
                             *collection_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
-                            onchange=f"window.location.href='/photos?filter_collection=' + encodeURIComponent(this.value) + '&sort_by={sort_by}'",
+                            onchange=f"window.location.href='/photos?filter_collection=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}'",
                         ),
                         Select(
                             *sort_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
-                            onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by=' + this.value",
+                            onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by=' + this.value + '&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}'",
                         ),
-                        cls="flex flex-wrap gap-3 mb-6",
+                        Span(f"{len(photos)} result{'s' if len(photos) != 1 else ''}", cls="text-xs text-slate-500 ml-auto"),
+                        cls="flex flex-wrap items-center gap-3 mb-6",
                     ),
                     # Photo grid
-                    Div(*photo_cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4") if photo_cards else Div(
+                    Div(*photo_cards, id="photo-grid", cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4") if photo_cards else Div(
                         P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
+                        A("Clear filters", href="/photos", cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2"),
                     ),
                     cls="max-w-6xl mx-auto px-6 pb-10",
                 ),
