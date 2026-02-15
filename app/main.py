@@ -10628,9 +10628,79 @@ def get(face_id: str = "", limit: int = 20, sess=None):
     return _compare_results_grid(results, crop_files)
 
 
+def _save_compare_upload(content: bytes, filename: str, faces: list, results: list) -> str:
+    """Persist a compare upload to uploads/compare/ with metadata.
+
+    Returns the upload UUID.
+    """
+    import uuid as _uuid
+    from pathlib import Path as _Path
+
+    upload_id = str(_uuid.uuid4())[:12]
+    upload_dir = _Path("uploads/compare")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    suffix = _Path(filename).suffix or ".jpg"
+    image_path = upload_dir / f"{upload_id}{suffix}"
+    image_path.write_bytes(content)
+
+    # Save metadata
+    meta = {
+        "upload_id": upload_id,
+        "uploaded_at": datetime.now().isoformat(),
+        "original_filename": filename,
+        "faces_detected": len(faces),
+        "top_match": {
+            "identity_name": results[0].get("identity_name", "Unknown") if results else None,
+            "confidence_pct": results[0].get("confidence_pct", 0) if results else 0,
+            "tier": results[0].get("tier", "WEAK") if results else None,
+        },
+    }
+    meta_path = upload_dir / f"{upload_id}_meta.json"
+    meta_path.write_text(json.dumps(meta, indent=2))
+
+    return upload_id
+
+
+def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str) -> object:
+    """Build a face selector UI for multi-face uploads."""
+    face_buttons = []
+    for i, face in enumerate(faces):
+        bbox = face.get("bbox", [0, 0, 0, 0])
+        if hasattr(bbox, 'tolist'):
+            bbox = bbox.tolist()
+        x1, y1, x2, y2 = [int(v) for v in bbox[:4]]
+        w = x2 - x1
+        h = y2 - y1
+
+        face_buttons.append(
+            Button(
+                f"Face {i + 1}",
+                hx_post=f"/api/compare/upload/select?upload_id={upload_id}&face_idx={i}",
+                hx_target="#compare-results",
+                hx_swap="innerHTML",
+                cls=f"px-3 py-1.5 text-sm rounded-lg border transition-colors "
+                    f"{'bg-amber-600 border-amber-500 text-white' if i == 0 else 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}",
+                data_testid=f"face-select-{i}",
+            )
+        )
+
+    return Div(
+        P(f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected. Select which face to compare:",
+          cls="text-sm text-slate-400 mb-3"),
+        Div(*face_buttons, cls="flex flex-wrap gap-2 justify-center"),
+        cls="text-center mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50",
+        data_testid="face-selector-upload",
+    )
+
+
 @rt("/api/compare/upload")
 async def post(photo: UploadFile = None, sess=None):
-    """Upload a photo for face comparison (local dev only — requires InsightFace)."""
+    """Upload a photo for face comparison (local dev only — requires InsightFace).
+
+    Persists uploads to uploads/compare/ for later retrieval.
+    Supports multi-face detection with face selection.
+    """
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
 
@@ -10644,12 +10714,15 @@ async def post(photo: UploadFile = None, sess=None):
             id="compare-results",
         )
 
-    import tempfile
     from pathlib import Path as _Path
+    import tempfile
 
-    # Save uploaded file to temp location
+    # Read upload content
     content = await photo.read()
-    suffix = _Path(photo.filename or "upload.jpg").suffix or ".jpg"
+    original_filename = photo.filename or "upload.jpg"
+    suffix = _Path(original_filename).suffix or ".jpg"
+
+    # Save to temp for face detection
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(content)
         tmp_path = _Path(tmp.name)
@@ -10659,10 +10732,11 @@ async def post(photo: UploadFile = None, sess=None):
         if not faces:
             return Div(
                 P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
+                P("Try uploading a clearer photo with visible faces.", cls="text-slate-500 text-center text-sm mt-2"),
                 id="compare-results",
             )
 
-        # Use the first detected face's embedding
+        # Compare first face by default
         query_embedding = faces[0]["mu"]
         face_data = get_face_data()
         registry = load_registry()
@@ -10673,7 +10747,51 @@ async def post(photo: UploadFile = None, sess=None):
             query_embedding, face_data, registry=registry,
             limit=20,
         )
-        return _compare_results_grid(results, crop_files)
+
+        # Persist the upload
+        upload_id = _save_compare_upload(content, original_filename, faces, results)
+
+        # Save face embeddings for face selection
+        upload_dir = _Path("uploads/compare")
+        import pickle
+        embeddings_path = upload_dir / f"{upload_id}_faces.pkl"
+        face_save_data = [{"mu": f["mu"].tolist(), "bbox": f.get("bbox", [0,0,0,0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()} for f in faces]
+        embeddings_path.write_bytes(pickle.dumps(face_save_data))
+
+        # Build response
+        parts = []
+
+        # Multi-face selector (if more than one face)
+        if len(faces) > 1:
+            parts.append(_build_face_selector_for_upload(upload_id, faces, ""))
+
+        # Results grid
+        parts.append(_compare_results_grid(results, crop_files))
+
+        # Contribute CTA
+        user = get_current_user(sess or {}) if is_auth_enabled() else None
+        if user:
+            parts.append(
+                Div(
+                    P("Want to add this photo to the archive?", cls="text-sm text-slate-400 mb-2"),
+                    A("Add to Archive", href=f"/upload?from_compare={upload_id}",
+                      cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+                    cls="text-center mt-6 p-4 bg-slate-800/30 rounded-lg border border-dashed border-slate-700",
+                    data_testid="contribute-cta",
+                )
+            )
+        elif is_auth_enabled():
+            parts.append(
+                Div(
+                    P("Sign in to contribute this photo to the archive", cls="text-sm text-slate-400 mb-2"),
+                    A("Sign In", href="/login",
+                      cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block"),
+                    cls="text-center mt-6 p-4 bg-slate-800/30 rounded-lg border border-dashed border-slate-700",
+                    data_testid="contribute-cta",
+                )
+            )
+
+        return Div(*parts, id="compare-results")
     except Exception as e:
         return Div(
             P(f"Error processing photo: {str(e)}", cls="text-red-500 text-center py-4"),
@@ -10681,6 +10799,63 @@ async def post(photo: UploadFile = None, sess=None):
         )
     finally:
         tmp_path.unlink(missing_ok=True)
+
+
+@rt("/api/compare/upload/select")
+def post(upload_id: str = "", face_idx: int = 0, sess=None):
+    """Select a specific face from a multi-face upload for comparison."""
+    from pathlib import Path as _Path
+    import pickle
+
+    embeddings_path = _Path("uploads/compare") / f"{upload_id}_faces.pkl"
+    if not embeddings_path.exists():
+        return Div(P("Upload not found. Please re-upload the photo.", cls="text-amber-500 text-center py-4"))
+
+    face_save_data = pickle.loads(embeddings_path.read_bytes())
+    if face_idx < 0 or face_idx >= len(face_save_data):
+        return Div(P("Invalid face selection.", cls="text-amber-500 text-center py-4"))
+
+    query_embedding = np.array(face_save_data[face_idx]["mu"], dtype=np.float32)
+    face_data = get_face_data()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    from core.neighbors import find_similar_faces
+    results = find_similar_faces(
+        query_embedding, face_data, registry=registry,
+        limit=20,
+    )
+
+    parts = []
+
+    # Face selector with updated active state
+    if len(face_save_data) > 1:
+        face_buttons = []
+        for i in range(len(face_save_data)):
+            is_active = i == face_idx
+            face_buttons.append(
+                Button(
+                    f"Face {i + 1}",
+                    hx_post=f"/api/compare/upload/select?upload_id={upload_id}&face_idx={i}",
+                    hx_target="#compare-results",
+                    hx_swap="innerHTML",
+                    cls=f"px-3 py-1.5 text-sm rounded-lg border transition-colors "
+                        f"{'bg-amber-600 border-amber-500 text-white' if is_active else 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}",
+                    data_testid=f"face-select-{i}",
+                )
+            )
+        parts.append(
+            Div(
+                P(f"Comparing Face {face_idx + 1} of {len(face_save_data)}:",
+                  cls="text-sm text-slate-400 mb-3"),
+                Div(*face_buttons, cls="flex flex-wrap gap-2 justify-center"),
+                cls="text-center mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50",
+                data_testid="face-selector-upload",
+            )
+        )
+
+    parts.append(_compare_results_grid(results, crop_files))
+    return Div(*parts, id="compare-results")
 
 
 def public_photo_page(
