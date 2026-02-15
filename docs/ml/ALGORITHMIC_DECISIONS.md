@@ -607,12 +607,35 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rejected**: (1) Reuse `find_nearest_neighbors()` with a fake identity wrapper — adds unnecessary complexity and breaks the identity-level co-occurrence check. (2) Cosine similarity instead of Euclidean — the entire pipeline uses Euclidean and thresholds are calibrated for it (AD-013). (3) Approximate nearest neighbors (FAISS/Annoy) — 775 embeddings is trivial for brute force (<10ms), ANN overhead not justified.
 - **Affects**: `core/neighbors.py`, `app/main.py` (/compare route, /api/compare endpoint).
 
+### AD-067: Kinship Calibration — Empirical Distance Thresholds
+- **Date**: 2026-02-15
+- **Context**: The compare tool used hardcoded distance thresholds (AD-013 golden set) without empirical calibration against confirmed identity clusters. We have 46 confirmed identities, 18 with multiple faces (959 same-person pairs), and 13 surname variant groups.
+- **Decision**: Compute three distance distributions from confirmed data: SAME_PERSON (intra-identity pairs), SAME_FAMILY (cross-identity, shared surname group), DIFFERENT_PERSON (cross-identity, different surname groups). Derive thresholds from the same_person distribution: strong_match < P75 (1.163), possible_match < P95 (1.315), similar_features < different_person P25 (1.365).
+- **Key finding**: Family resemblance is NOT reliably separable from different-person distances (Cohen's d = 0.43, small effect). Same-person vs different is strongly separable (d = 2.54). The compare tool uses same-person-derived thresholds, not a kinship model.
+- **Rejected**: (1) Kinship-based tiers (identity/family/community) — family resemblance signal too weak in embedding space (d=0.43) to be useful. (2) Hardcoded thresholds without calibration — no empirical basis. (3) MLS-based calibration — runtime pipeline uses Euclidean, thresholds should match.
+- **Assumptions**: Shared surname ≈ same family (heuristic via surname_variants.json). Heritage archive context (photos span 60+ years).
+- **Affects**: `rhodesli_ml/analysis/kinship_calibration.py`, `rhodesli_ml/data/model_comparisons/kinship_thresholds.json`, `core/neighbors.py` (threshold loading).
+
+### AD-068: Compare Result Tiering — Same-Person-Derived Model
+- **Date**: 2026-02-15
+- **Context**: Compare results were a flat list with confidence badges. Users need grouped sections to quickly identify strong matches vs exploratory results.
+- **Decision**: Four-tier model: STRONG MATCH (< P75 same_person), POSSIBLE MATCH (< P95 same_person), SIMILAR (< P25 different_person), WEAK (above all thresholds). CDF-based confidence percentages using sigmoid approximation of the empirical same_person distribution. Results grouped into titled sections with tier-specific styling and cross-links.
+- **Rejected**: (1) "Family Resemblance" tier — Cohen's d = 0.43 means labeling results as "possible relative" would have >40% false positive rate. Scientifically dishonest. (2) Linear similarity percentage — doesn't reflect the actual probability distribution. (3) Flat result list — forces users to manually scan for strong matches.
+- **Affects**: `core/neighbors.py` (find_similar_faces), `app/main.py` (_compare_results_grid, _compare_result_card).
+
+### AD-069: Upload Persistence — Local Storage with Metadata
+- **Date**: 2026-02-15
+- **Context**: Compare uploads were ephemeral (temp files deleted after comparison). Users lose results on page navigation, and admins can't review uploaded photos.
+- **Decision**: Persist uploads to `uploads/compare/{uuid}.{ext}` with metadata JSON alongside. Store face embeddings via pickle for multi-face selection. Multi-face uploads show a face selector UI. "Contribute to Archive" CTA for authenticated users.
+- **Rejected**: (1) R2 upload — adds latency and cost for a local-only feature (InsightFace not on production). (2) Session-based persistence — cookies expire, doesn't survive page reload. (3) Client-side storage — can't persist embeddings in the browser.
+- **Affects**: `app/main.py` (/api/compare/upload, /api/compare/upload/select, _save_compare_upload, _build_face_selector_for_upload).
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-066)
+1. Add a new entry with AD-XXX format (next: AD-070)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

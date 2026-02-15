@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.37.0] — 2026-02-15
+
+### Added
+- **Kinship calibration** — empirical distance thresholds from 46 confirmed identities (959 same-person pairs, 385 same-family pairs, 605 different-person pairs)
+  - Key finding: family resemblance (Cohen's d=0.43) is NOT reliably separable from different-person distances — same-person identity matching (d=2.54) remains strong
+  - Script: `python -m rhodesli_ml.analysis.kinship_calibration`
+  - Output: `rhodesli_ml/data/model_comparisons/kinship_thresholds.json`
+- **Tiered compare results** — results grouped into Identity Matches (green), Possible Matches (amber), Similar Faces (blue), and Other Faces
+  - CDF-based confidence percentages replace linear similarity scores
+  - Calibrated thresholds: strong match <1.16, possible match <1.31, similar features <1.36
+  - Person page and timeline cross-links for confirmed identity matches
+- **Upload persistence** — uploaded photos saved to `uploads/compare/` with metadata JSON
+  - Multi-face detection: when >1 face found, shows face selector buttons
+  - `/api/compare/upload/select` endpoint for switching between faces via HTMX
+  - "Contribute to Archive" CTA for authenticated users, sign-in prompt for others
+- 30 new tests (2046 total): kinship thresholds, tiered results, confidence percentages, upload persistence, cross-links
+- Decision provenance: AD-067 (kinship calibration), AD-068 (tiered display), AD-069 (upload persistence)
+
 ## [v0.36.0] — 2026-02-15
 
 ### Added

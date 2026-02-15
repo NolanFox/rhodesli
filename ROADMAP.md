@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.36.0 · 2016 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.37.0 · 2046 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -92,6 +92,9 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] FE-107: Timeline mobile nav — links visible on all screen sizes (2026-02-15)
 - [x] FE-110: Face Comparison Tool — /compare with face selector, similarity search, upload (2026-02-15)
 - [x] FE-111: Compare navigation — link added to all nav bars across the site (2026-02-15)
+- [x] ML-065: Kinship calibration — empirical thresholds from 959 same-person, 385 same-family, 605 different-person pairs (2026-02-15)
+- [x] FE-112: Tiered compare results — Identity Matches / Possible / Similar / Other with CDF confidence (2026-02-15)
+- [x] FE-113: Compare upload persistence — saved to uploads/compare/ with metadata + multi-face selection (2026-02-15)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -165,7 +168,13 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 
 ## Planned Sessions
 
-### Session 32: Birth Date Estimation
+### Session 32: Compare Intelligence (COMPLETED 2026-02-15)
+- [x] Kinship calibration from confirmed identity data (AD-067)
+- [x] Tiered compare results — strong match, possible, similar (AD-068)
+- [x] Upload persistence + multi-face support (AD-069)
+- [x] 30 new tests (2046 total)
+
+### Session 33: Birth Date Estimation
 - Use photo dates + subject ages to infer birth years
 - Validate against known birth years (from identity metadata)
 - Display on person pages and timeline age overlays
@@ -190,6 +199,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-15: v0.37.0 — Compare Intelligence (Session 32): Kinship calibration from 46 confirmed identities (959 same-person, 385 same-family, 605 different-person pairs). Key finding: family resemblance (d=0.43) not reliably separable from different-person in embedding space. Tiered compare results (strong/possible/similar/weak) with CDF-based confidence percentages. Upload persistence + multi-face detection + face selection UI. 30 new tests (2046 total). Decision provenance AD-067–AD-069.
 - [x] 2026-02-15: v0.36.0 — Timeline Polish + Face Comparison (Session 31): Context event era filtering, sticky controls, multi-person filter, collection filter, mobile nav for timeline. Face Comparison tool at /compare with archive face selector, similarity search, upload support, navigation integration. PRD stubs 008-011. 14 new tests (2016 total). Decision provenance AD-064–AD-065.
 - [x] 2026-02-15: v0.35.0 — Timeline Story Engine (Session 30): Vertical chronological timeline at /timeline with decade markers, 15 verified Rhodes historical events inline, person filter with age overlay, confidence interval bars, share button, year range filtering. Navigation links across all pages. 28 unit + 11 e2e tests. Decision provenance AD-062–AD-063.
 - [x] 2026-02-15: v0.34.1 — ML Training Fix (Session 29): Hash-based train/val split (AD-060), diagnosed CORAL regression from gemini-2.5-flash labels (−12.5 pp accuracy). Added training_eligible field + --exclude-models flag (AD-061). 3 new ML tests (140 total).

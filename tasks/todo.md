@@ -1,6 +1,19 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-15 (Session 31 — Timeline Polish + Face Comparison)
+Last updated: 2026-02-15 (Session 32 — Compare Intelligence)
+
+## Session 32 Completed
+- [x] Kinship calibration: 959 same-person, 385 same-family, 605 different-person pairs
+- [x] Key finding: family resemblance (Cohen's d=0.43) not reliably separable
+- [x] Tiered compare results: STRONG MATCH / POSSIBLE / SIMILAR / WEAK
+- [x] CDF-based confidence percentages (sigmoid approximation)
+- [x] Person page + timeline cross-links in compare results
+- [x] Upload persistence: uploads/compare/{uuid} with metadata
+- [x] Multi-face detection + face selector UI
+- [x] "Contribute to Archive" CTA (auth-aware)
+- [x] AD-067 (kinship calibration), AD-068 (tiered display), AD-069 (upload persistence)
+- [x] 30 new tests (2046 total)
+- [x] Documentation: CHANGELOG v0.37.0, ROADMAP, BACKLOG, PRD status
 
 ## Session 31 Completed
 - [x] Fix 1: Context events filtered to person's era (±30/+10 years)

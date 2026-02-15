@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 9.0 — February 15, 2026
-**Status**: 2016 tests passing, v0.36.0, 271 photos, 46 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 10.0 — February 15, 2026
+**Status**: 2046 tests passing, v0.37.0, 271 photos, 46 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -311,6 +311,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-104 | Timeline multi-person filter | DONE | ?people= param, merged view, highlighted names. v0.36.0 (2026-02-15) |
 | FE-106 | Timeline era filtering | DONE | Context events filtered to person's photo date range. v0.36.0 (2026-02-15) |
 | FE-110 | Face Comparison Tool | DONE | /compare with face selector, similarity search, upload. v0.36.0 (2026-02-15) |
+| ML-065 | Kinship calibration | DONE | Empirical thresholds from 959 same-person, 385 family, 605 different pairs. v0.37.0 (2026-02-15) |
+| FE-112 | Tiered compare results | DONE | Identity Matches / Possible / Similar / Other with CDF confidence. v0.37.0 (2026-02-15) |
+| FE-113 | Upload persistence | DONE | Saved to uploads/compare/ + multi-face detection + face selection. v0.37.0 (2026-02-15) |
 
 ---
 
