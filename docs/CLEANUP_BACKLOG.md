@@ -12,6 +12,7 @@ Updated after each session.
 - [ ] Verify all 157 original labels have source_method="api" backfill
 - [ ] Confirm AD-051 has full 2.5-vs-3.0 bias documentation
 - [ ] Spot-check 5 random labels from community batch for quality
+- [ ] Re-label 9 gemini-2.5-flash photos with gemini-3-flash (or remove from training) — these hurt model accuracy by ~12%
 
 ### API Key Hygiene
 - [x] Rotate Gemini API key (rotated 2026-02-15)
@@ -48,5 +49,10 @@ Updated after each session.
 - [x] Failure pattern analysis — 504 errors are infrastructure-side, NOT file-size related (Session 28)
 - [x] gemini-2.5-flash fallback: 9/9 success on photos that 3-flash couldn't handle (Session 28)
 - [x] CORAL model retrained with 271 labels (best val_accuracy=60.3%, val_MAE=0.534) (Session 28)
+- [x] Diagnosed regression: old rng-based split had 19% val overlap between runs (Session 29)
+- [x] Fixed: hash-based train/val split — stable across dataset size changes (Session 29)
+- [x] Retrained 250 labels (hash split): acc=67.9%, MAE=0.358 (Session 29)
+- [x] Retrained 271 labels (hash split): acc=55.4%, MAE=0.607 (Session 29)
+- [x] Confirmed: 21 new labels (9 gemini-2.5-flash) genuinely hurt model — not just split noise
 - [x] photo_search_index.json regenerated with 271 documents (Session 28)
 - [x] Failure analysis saved to rhodesli_ml/data/model_comparisons/failure_analysis.md (Session 28)

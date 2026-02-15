@@ -199,27 +199,26 @@ def create_train_val_split(
 ) -> tuple[list[dict], list[dict]]:
     """Split labels into train and validation sets, stratified by decade.
 
+    Uses a hash-based assignment so each photo's train/val membership is
+    stable regardless of how many other photos are in the dataset.  Adding
+    or removing labels never reshuffles existing assignments.
+
     Returns:
         (train_labels, val_labels)
     """
-    rng = np.random.RandomState(seed)
-
-    # Group by decade
-    by_decade: dict[int, list[dict]] = {}
-    for label in labels:
-        decade = label.get("estimated_decade", 0)
-        if decade not in by_decade:
-            by_decade[decade] = []
-        by_decade[decade].append(label)
+    import hashlib
 
     train_labels = []
     val_labels = []
 
-    for decade in sorted(by_decade.keys()):
-        items = by_decade[decade]
-        rng.shuffle(items)
-        split_idx = max(1, int(len(items) * train_ratio))
-        train_labels.extend(items[:split_idx])
-        val_labels.extend(items[split_idx:])
+    for label in labels:
+        photo_id = label.get("photo_id", "")
+        # Deterministic hash: same photo_id always maps to the same bucket
+        h = hashlib.md5(f"{photo_id}:{seed}".encode()).hexdigest()
+        bucket = int(h[:8], 16) / 0xFFFFFFFF  # uniform in [0, 1]
+        if bucket < train_ratio:
+            train_labels.append(label)
+        else:
+            val_labels.append(label)
 
     return train_labels, val_labels

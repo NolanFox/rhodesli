@@ -556,12 +556,22 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rejected**: Random order (wastes admin time), chronological (ignores model uncertainty), pure confidence sort (ignores range width information).
 - **Affects**: `app/main.py` (`_compute_correction_priority`, `/admin/review-queue`).
 
+### AD-060: Hash-Based Train/Val Split (NOT Sequential RNG)
+
+- **Date**: 2026-02-15
+- **Context**: Model metrics degraded 73.2% → 60.3% when adding 21 labels (250 → 271). Investigation revealed the rng-based stratified split produced only 19% val set overlap between runs — metrics were incomparable.
+- **Decision**: Use `md5(photo_id:seed)` hash to deterministically assign each photo to train or val. Each photo's assignment is independent of dataset size.
+- **Rejected**: `np.random.RandomState(42)` with per-decade shuffle — adding labels to ANY decade shifts the RNG state for all subsequent decades, causing massive val set churn.
+- **Trade-off**: Hash split is not stratified by decade (1920s has 37% val vs 20% target). But stability across dataset changes is more important than perfect stratification at n=271.
+- **Result**: With stable split, 250 labels → acc=67.9%, MAE=0.358; 271 labels → acc=55.4%, MAE=0.607. Confirmed the 21 new labels genuinely hurt (not split noise). 9 gemini-2.5-flash labels are primary suspects.
+- **Affects**: `rhodesli_ml/data/date_dataset.py` (`create_train_val_split`).
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-060)
+1. Add a new entry with AD-XXX format (next: AD-061)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
