@@ -1,6 +1,23 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-14 (Session 27 — Discovery Layer Implementation)
+Last updated: 2026-02-15 (Session 30 — Timeline Story Engine)
+
+## Session 30 Completed
+- [x] PRD: docs/prds/timeline-story-engine.md
+- [x] Historical date verification: 15 events cross-referenced from Yad Vashem, Rhodes Jewish Museum, etc.
+- [x] data/rhodes_context_events.json: 15 curated events (1522-1997)
+- [x] 11 e2e acceptance tests (all FAIL initially per SDD, then 11/11 PASS)
+- [x] /timeline route: vertical timeline with decade markers, photo cards, context events
+- [x] Person filter with HTMX + age overlay when birth_year available
+- [x] Confidence interval bars on timeline photo cards
+- [x] Share button with clipboard copy
+- [x] Year range filtering (?start=1920&end=1950)
+- [x] Context events toggle (?context=off)
+- [x] Navigation links: sidebar, landing page, /photos, /people
+- [x] 28 unit tests (context events loader, route handler, navigation, data validation)
+- [x] Fix: KeyError on invalid person filter ID
+- [x] Cache invalidation for context events in sync push
+- [x] Documentation: AD-062/063, CHANGELOG v0.35.0, ROADMAP, BACKLOG
 
 ## Session 27 Completed
 - [x] Phase 0: Identify unlabeled photos (21/271 unlabeled, 7.7%)

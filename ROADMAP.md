@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.34.1 · 1878 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.35.0 · 2002 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -81,6 +81,10 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] FE-079: Public /photos and /people browsing pages — no auth required, collection filter, sort (2026-02-13)
 - [x] FE-090: Person page links from photo viewer — cards link to /person/{id}, "See all photos" link (2026-02-13)
 - [x] FE-091: "Public Page" link on identity cards — opens /person/{id} in new tab (2026-02-13)
+- [x] FE-100: Timeline Story Engine — /timeline with vertical chronological view, decade markers, context events (2026-02-15)
+- [x] FE-101: Person filter + age overlay on timeline (2026-02-15)
+- [x] FE-102: Share button + year range filter on timeline (2026-02-15)
+- [x] DATA-010: Rhodes historical context events — 15 curated events (1522-1997), source-verified (2026-02-15)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -153,6 +157,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-15: v0.35.0 — Timeline Story Engine (Session 30): Vertical chronological timeline at /timeline with decade markers, 15 verified Rhodes historical events inline, person filter with age overlay, confidence interval bars, share button, year range filtering. Navigation links across all pages. 28 unit + 11 e2e tests. Decision provenance AD-062–AD-063.
 - [x] 2026-02-15: v0.34.1 — ML Training Fix (Session 29): Hash-based train/val split (AD-060), diagnosed CORAL regression from gemini-2.5-flash labels (−12.5 pp accuracy). Added training_eligible field + --exclude-models flag (AD-061). 3 new ML tests (140 total).
 - [x] 2026-02-14: v0.34.0 — Discovery Layer (Session 27): Date badges on photo cards, AI Analysis metadata panel, decade/search/tag filtering, date correction flow with provenance tracking, admin review queue with priority scoring. Dual-keyed label cache for photo ID mismatch. 12 e2e + XX unit tests. Decision provenance AD-056–AD-059.
 - [x] 2026-02-14: v0.33.0 — ML Phase 2: Scale-Up Labeling + Tooling (Session 26): Processed 116 community photos (271 total). 250 Gemini 3 Flash date labels (+59% data). Temporal consistency auditor (AD-054). Search metadata export (AD-055). CORAL model retrained with MLflow. 53 new ML tests (137 total). Decision provenance AD-053–AD-055.

@@ -576,12 +576,28 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Implementation**: `training_eligible` field in `data/date_labels.json`; `--exclude-models` and `--include-all` flags in `train_date.py`; `training_only` param in `load_labels_from_file()`; `generate_date_labels.py` sets `training_eligible` based on model.
 - **Affects**: `rhodesli_ml/data/date_dataset.py`, `rhodesli_ml/training/train_date.py`, `rhodesli_ml/scripts/generate_date_labels.py`, `data/date_labels.json`.
 
+### AD-062: Timeline Data Model — Merged Photo + Context Event Stream
+- **Date**: 2026-02-15
+- **Context**: How to present 271 dated photos alongside Rhodes historical events on a vertical timeline.
+- **Decision**: Merge photo search index entries and historical context events into a single chronological stream, sorted by year, grouped by decade. Photos use `best_year_estimate` from Gemini date labels; context events come from curated `rhodes_context_events.json`. Person filter uses face-to-photo reverse lookup.
+- **Rejected**: (1) Separate photo timeline + event timeline side-by-side — too complex for mobile, and the interleaving is the whole point. (2) D3/JS-based horizontal timeline — violates the FastHTML/server-side rendering constraint. (3) Swimlane layout by person — requires relationship data not yet available.
+- **Implementation**: `/timeline` route in `app/main.py`, `_load_context_events()`, `data/rhodes_context_events.json`.
+- **Affects**: `app/main.py`, `data/rhodes_context_events.json`.
+
+### AD-063: Historical Context Events — Rhodes-Specific, Source-Verified
+- **Date**: 2026-02-15
+- **Context**: What historical events to include alongside family photos, and how to verify accuracy.
+- **Decision**: 15 curated events spanning 1522–1997 with explicit source citations (Yad Vashem, Jewish Community of Rhodes, Rhodes Jewish Museum, Cambridge UP, HistoryLink). Categories: holocaust, persecution, liberation, immigration, community, political. Each event has a distinct visual style by category.
+- **Rejected**: (1) Auto-generated events from Wikipedia — accuracy for heritage projects requires human curation. (2) Fine-grained daily timeline — too sparse at 271 photos. (3) Generic world history events — irrelevant to the Rhodesli diaspora story.
+- **Key facts verified**: 1,673 deported July 23 1944 (not July 24), ~151 survived, 24-day journey to Auschwitz (longest of any community), arrival August 16 1944.
+- **Affects**: `data/rhodes_context_events.json`.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-062)
+1. Add a new entry with AD-XXX format (next: AD-064)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

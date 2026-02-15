@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.35.0] — 2026-02-15
+
+### Added
+- **Timeline Story Engine** — `/timeline` route with vertical chronological view of the archive
+- Decade markers with proportional grouping of photos by estimated year
+- 15 historical context events for Rhodes Jewish community (1522–1997), source-verified from Yad Vashem, Rhodes Jewish Museum, Cambridge UP, and others
+- Confidence interval bars on timeline photo cards showing probable date ranges
+- Person filter dropdown (HTMX) — filter timeline to show only one person's photos
+- Age overlay on photo cards when person filter active and birth_year available
+- "Share This Story" button with clipboard copy for filtered timeline URLs
+- Year range filtering via URL params (`?start=1920&end=1950`)
+- Context events toggle (`?context=off` to hide historical events)
+- Timeline link added to sidebar navigation, landing page, /photos, /people nav bars
+- `data/rhodes_context_events.json` — curated historical events with categories and sources
+- 28 unit tests + 11 e2e acceptance tests for timeline features
+- Decision provenance: AD-062 (timeline data model), AD-063 (historical context events)
+
+### Fixed
+- Graceful handling of invalid person ID in timeline filter (was throwing KeyError)
+
 ## [v0.34.1] — 2026-02-15
 
 ### Fixed
