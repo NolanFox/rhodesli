@@ -105,7 +105,7 @@ def main():
 
     # Tag filtering returns results
     check("Tag filter works",
-          f"{PROD_URL}/photos?tag=group_photo",
+          f"{PROD_URL}/photos?tag=Group_Portrait",
           [],
           ["No photos match your filters"])
 
