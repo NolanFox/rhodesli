@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "events": [
+    {
+      "year": 1522,
+      "title": "Ottoman Conquest of Rhodes",
+      "description": "Ottoman Turks conquer Rhodes from the Knights of St. John, beginning four centuries of relative religious freedom for the Jewish community.",
+      "category": "political",
+      "source": "Jewish Community of Rhodes (jewishrhodes.org)"
+    },
+    {
+      "year": 1577,
+      "title": "Kahal Shalom Synagogue Founded",
+      "description": "The Kahal Shalom Synagogue is established in the Jewish quarter of Rhodes — today the oldest surviving synagogue in Greece.",
+      "category": "community",
+      "source": "Rhodes Jewish Museum"
+    },
+    {
+      "year": 1888,
+      "title": "Alliance Israélite Universelle School Opens",
+      "description": "The Alliance Israélite Universelle opens a school on Rhodes, bringing modern French-language education to the community alongside traditional Ladino culture.",
+      "category": "community",
+      "source": "Jewish Virtual Library"
+    },
+    {
+      "year": 1904,
+      "title": "First Rhodesli in Seattle",
+      "description": "Nissim Alhadeff arrives in Seattle from Rhodes — the first known Rhodesli on the American West Coast, beginning a chain of immigration.",
+      "category": "immigration",
+      "source": "HistoryLink.org (File 864)"
+    },
+    {
+      "year": 1910,
+      "title": "Brotherhood League of Rhodes (New York)",
+      "description": "The Brotherhood League of Rhodes is organized in New York City by Rhodesli immigrants, forming the nucleus of what becomes a thriving Sephardic community.",
+      "category": "immigration",
+      "source": "Avotaynu Online"
+    },
+    {
+      "year": 1912,
+      "title": "Italian Conquest of Rhodes",
+      "description": "Italy conquers Rhodes and the Dodecanese from the Ottoman Empire during the Italo-Turkish War. The Jewish community numbers approximately 4,500 — its historical peak.",
+      "category": "political",
+      "source": "Jewish Community of Rhodes (jewishrhodes.org)"
+    },
+    {
+      "year": 1914,
+      "title": "Ezra Bessaroth Congregation (Seattle)",
+      "description": "Ezra Bessaroth Congregation is incorporated in Seattle, evolving from earlier mutual aid societies. By this time roughly 600 Sephardic Jews live in the city, many from Rhodes.",
+      "category": "immigration",
+      "source": "HistoryLink.org"
+    },
+    {
+      "year": 1923,
+      "title": "Treaty of Lausanne",
+      "description": "The Treaty of Lausanne formally cedes the Dodecanese islands to Italy. Under Governor Mario Lago, Greek, Turkish, and Jewish communities coexist under relatively benign administration.",
+      "category": "political",
+      "source": "Cambridge University Press"
+    },
+    {
+      "year": 1938,
+      "month": 11,
+      "title": "Italian Racial Laws",
+      "description": "Mussolini enacts the Leggi Razziali (Racial Laws). On Rhodes, the rabbinical seminary is closed and Jews who became Italian citizens after 1919 are ordered to relinquish citizenship. Approximately 2,000 Jews flee Rhodes over the following months — to the Americas, Africa, and Palestine.",
+      "category": "persecution",
+      "source": "Jewish Virtual Library; Yad Vashem"
+    },
+    {
+      "year": 1943,
+      "month": 9,
+      "title": "German Occupation of Rhodes",
+      "description": "Following Italy's armistice with the Allies on September 8, the German Wehrmacht occupies Rhodes on September 11. For ten months the remaining Jewish community of roughly 1,800 lives under German military rule.",
+      "category": "persecution",
+      "source": "Yad Vashem; Jewish Community of Rhodes"
+    },
+    {
+      "year": 1944,
+      "month": 7,
+      "day": 23,
+      "title": "Deportation of Rhodes Jews",
+      "description": "1,673 Jews are rounded up and marched to the port of Rhodes, loaded onto three boats. Combined with 94 Jews from Kos, approximately 1,767 people begin the longest journey of any community sent to Auschwitz — 24 days by sea and sealed cattle car. Approximately 151 survive. Over 90% are murdered.",
+      "category": "holocaust",
+      "source": "Yad Vashem; Jewish Community of Rhodes (jewishrhodes.org); Claims Conference"
+    },
+    {
+      "year": 1944,
+      "month": 8,
+      "day": 16,
+      "title": "Arrival at Auschwitz-Birkenau",
+      "description": "After 24 days — 7 days at sea, detention at Haidari camp near Athens, and 13 days in sealed cattle cars — the transport from Rhodes arrives at Auschwitz-Birkenau. Approximately 1,200 are sent directly to the gas chambers.",
+      "category": "holocaust",
+      "source": "Yad Vashem; UW Stroum Center for Jewish Studies"
+    },
+    {
+      "year": 1945,
+      "month": 5,
+      "title": "Liberation of Rhodes",
+      "description": "The German garrison surrenders Rhodes to the British on May 8, 1945. The island comes under British military administration. Of the roughly 1,800 Jews on Rhodes at the time of deportation, only about 151 survive the camps.",
+      "category": "liberation",
+      "source": "Jewish Community of Rhodes (jewishrhodes.org)"
+    },
+    {
+      "year": 1947,
+      "title": "Dodecanese Ceded to Greece",
+      "description": "The Treaty of Paris formally transfers the Dodecanese islands from Italy to Greece. Most surviving Rhodesli Jews have already emigrated to Israel, the United States, or Africa. Approximately 50 Jews remain on Rhodes.",
+      "category": "political",
+      "source": "Greek City Times; Treaty of Paris (1947)"
+    },
+    {
+      "year": 1997,
+      "title": "Jewish Museum of Rhodes Founded",
+      "description": "The Jewish Museum of Rhodes is established in the old Jewish quarter, La Judería, preserving the history and heritage of the community that once numbered 4,500.",
+      "category": "community",
+      "source": "Rhodes Jewish Museum (rhodesjewishmuseum.org)"
+    }
+  ]
+}
