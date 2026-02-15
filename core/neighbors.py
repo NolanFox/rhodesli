@@ -217,6 +217,90 @@ def batch_best_neighbor_distances(identity_ids, registry, face_data):
     return results
 
 
+def find_similar_faces(query_embedding, face_data, registry=None, limit=20, exclude_face_ids=None):
+    """
+    Find the most similar faces to a query embedding across the entire archive.
+
+    Unlike find_nearest_neighbors() which operates at the identity level,
+    this works at the individual face level — returning each face with its
+    distance, identity info, and photo context.
+
+    Args:
+        query_embedding: 512-dim numpy array (the face to compare)
+        face_data: dict mapping face_id -> {"mu": embedding, ...}
+        registry: IdentityRegistry (optional, for name lookup)
+        limit: max results to return
+        exclude_face_ids: set of face_ids to exclude from results
+
+    Returns:
+        list of dicts with: face_id, distance, identity_id, identity_name, state
+    """
+    if query_embedding is None or len(face_data) == 0:
+        return []
+
+    exclude = exclude_face_ids or set()
+    query = np.array(query_embedding).reshape(1, -1)
+
+    # Build candidate matrix
+    candidate_ids = []
+    candidate_embs = []
+    for fid, fdata in face_data.items():
+        if fid in exclude:
+            continue
+        if "mu" in fdata:
+            candidate_ids.append(fid)
+            candidate_embs.append(fdata["mu"])
+
+    if not candidate_embs:
+        return []
+
+    candidate_matrix = np.vstack(candidate_embs)
+    dists = cdist(query, candidate_matrix, metric='euclidean').flatten()
+
+    # Sort by distance
+    sorted_indices = np.argsort(dists)
+
+    # Build identity lookup if registry provided
+    face_to_identity = {}
+    if registry:
+        for ident in registry.list_identities():
+            if ident.get("merged_into"):
+                continue
+            iid = ident["identity_id"]
+            name = ident.get("name", "Unknown")
+            state = ident.get("state", "INBOX")
+            for entry in ident.get("anchor_ids", []) + ident.get("candidate_ids", []):
+                fid = entry if isinstance(entry, str) else entry.get("face_id", "")
+                face_to_identity[fid] = {"identity_id": iid, "name": name, "state": state}
+
+    results = []
+    for idx in sorted_indices[:limit]:
+        fid = candidate_ids[idx]
+        dist = float(dists[idx])
+        ident_info = face_to_identity.get(fid, {})
+
+        # Confidence tier
+        if dist < 0.80:
+            confidence = "VERY HIGH"
+        elif dist < 1.00:
+            confidence = "HIGH"
+        elif dist < 1.20:
+            confidence = "MODERATE"
+        else:
+            confidence = "LOW"
+
+        results.append({
+            "face_id": fid,
+            "distance": dist,
+            "confidence": confidence,
+            "identity_id": ident_info.get("identity_id", ""),
+            "identity_name": ident_info.get("name", "Unknown"),
+            "state": ident_info.get("state", "INBOX"),
+        })
+
+    return results
+
+
 def sort_faces_by_outlier_score(identity_id, registry, face_data):
     """
     Sort faces by distance from the identity's ad-hoc centroid.
