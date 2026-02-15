@@ -560,6 +560,34 @@ def _get_tag_counts() -> dict:
     return dict(sorted(counts.items(), key=lambda x: -x[1]))
 
 
+_context_events_cache = None
+
+
+def _load_context_events() -> list:
+    """Load Rhodes historical context events from JSON file.
+
+    Returns list of event dicts with year, title, description, category, source.
+    Cached after first load.
+    """
+    global _context_events_cache
+    if _context_events_cache is not None:
+        return _context_events_cache
+
+    context_path = data_path / "rhodes_context_events.json"
+    try:
+        if context_path.exists():
+            with open(context_path) as f:
+                data = json.load(f)
+            _context_events_cache = data.get("events", [])
+        else:
+            _context_events_cache = []
+    except Exception as e:
+        logging.warning(f"Failed to load context events: {e}")
+        _context_events_cache = []
+
+    return _context_events_cache
+
+
 def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list:
     """Search photos using in-memory index. Returns matching documents with match reason."""
     docs = _load_search_index()
@@ -2189,6 +2217,12 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
+                A(
+                    Span("\U0001f4c5", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Timeline", cls="sidebar-label ml-2"),
+                    href="/timeline",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
                 A(
                     Span("📖", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("About", cls="sidebar-label ml-2"),
@@ -6211,6 +6245,7 @@ def landing_page(stats, featured_photos):
     nav_items = [
         A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("Help Identify", href="/?section=skipped", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("About", href="/about", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
     ]
@@ -9359,6 +9394,7 @@ def get(filter_collection: str = "", sort_by: str = "newest",
     nav_links = [
         A("Photos", href="/photos", cls="text-white text-sm font-medium"),
         A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -9529,6 +9565,7 @@ def get(sort_by: str = "name", sess=None):
     nav_links = [
         A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("People", href="/people", cls="text-white text-sm font-medium"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -9587,6 +9624,491 @@ def get(sort_by: str = "name", sess=None):
                     cls="text-center",
                 ),
                 cls="py-12 border-t border-slate-800",
+            ),
+            # Footer
+            Div(
+                Div(
+                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
+                ),
+                cls="py-8 border-t border-slate-800",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/timeline")
+def get(person: str = "", start: int = None, end: int = None,
+        context: str = "on", sess=None):
+    """
+    Public timeline page — chronological story of the archive.
+
+    Shows photos and historical context events on a vertical timeline,
+    grouped by decade. Supports person filter (with age overlay),
+    year range filter, and shareable URLs.
+
+    Query params:
+        person: identity_id to filter by
+        start: start year for range filter
+        end: end year for range filter
+        context: "on" (default) or "off" to toggle context events
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    _build_caches()
+    registry = load_registry()
+    photo_reg = load_photo_registry()
+    crop_files = get_crop_files()
+
+    # Load data sources
+    search_docs = _load_search_index()
+    date_labels = _load_date_labels()
+    context_events = _load_context_events() if context != "off" else []
+
+    # Build person lookup for filter
+    confirmed = [
+        i for i in registry.list_identities(state=IdentityState.CONFIRMED)
+        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
+    ]
+    confirmed.sort(key=lambda x: (x.get("name") or "").lower())
+
+    # If person filter active, find which photo_ids contain that person's faces
+    person_identity = None
+    person_photo_ids = None
+    if person:
+        person_identity = registry.get_identity(person)
+        if person_identity:
+            face_ids = [f if isinstance(f, str) else f.get("face_id", "")
+                        for f in person_identity.get("anchor_ids", []) + person_identity.get("candidate_ids", [])]
+            person_photo_ids = set()
+            for fid in face_ids:
+                pid = get_photo_id_for_face(fid)
+                if pid:
+                    person_photo_ids.add(pid)
+
+    # Build timeline entries from photos
+    timeline_entries = []
+    for doc in search_docs:
+        photo_id = doc.get("cache_photo_id", doc.get("photo_id", ""))
+        best_year = doc.get("best_year_estimate")
+        decade = doc.get("estimated_decade")
+        if not best_year and not decade:
+            continue
+
+        year = best_year or decade
+        if not year:
+            continue
+
+        # Apply year range filter
+        if start and year < start:
+            continue
+        if end and year > end:
+            continue
+
+        # Apply person filter
+        if person_photo_ids is not None and photo_id not in person_photo_ids:
+            continue
+
+        # Get date label details
+        label = date_labels.get(photo_id, {})
+        prob_range = label.get("probable_range", [])
+        confidence = label.get("confidence", "medium")
+
+        # Get photo metadata
+        photo_data = (_photo_cache or {}).get(photo_id, {})
+        filename = photo_data.get("filename", "")
+
+        # Get collection
+        collection = photo_data.get("collection", "")
+
+        # Count identified people in photo
+        faces = photo_data.get("faces", [])
+        people_names = []
+        for face in faces:
+            fid = face.get("face_id", "")
+            ident = get_identity_for_face(registry, fid)
+            if ident and ident.get("state") == "CONFIRMED" and not ident.get("name", "").startswith("Unidentified"):
+                people_names.append(ident["name"])
+
+        timeline_entries.append({
+            "type": "photo",
+            "year": year,
+            "decade": decade or (year // 10 * 10),
+            "photo_id": photo_id,
+            "filename": filename,
+            "collection": collection,
+            "confidence": confidence,
+            "prob_range": prob_range,
+            "people": people_names,
+            "scene": label.get("scene_description", ""),
+        })
+
+    # Add context events
+    for event in context_events:
+        year = event.get("year", 0)
+        if start and year < start:
+            continue
+        if end and year > end:
+            continue
+
+        timeline_entries.append({
+            "type": "context",
+            "year": year,
+            "decade": year // 10 * 10,
+            "title": event.get("title", ""),
+            "description": event.get("description", ""),
+            "category": event.get("category", ""),
+            "source": event.get("source", ""),
+        })
+
+    # Sort by year
+    timeline_entries.sort(key=lambda e: e["year"])
+
+    # Group by decade
+    decades_order = []
+    decades_map = {}
+    for entry in timeline_entries:
+        dec = entry["decade"]
+        if dec not in decades_map:
+            decades_map[dec] = []
+            decades_order.append(dec)
+        decades_map[dec].append(entry)
+
+    # Compute age if person has birth_year
+    person_birth_year = None
+    if person_identity:
+        # Check metadata for birth_year
+        meta = person_identity.get("metadata", {}) or {}
+        by = meta.get("birth_year")
+        if by:
+            try:
+                person_birth_year = int(by)
+            except (ValueError, TypeError):
+                pass
+
+    # Build person filter options
+    person_options = [Option("All people", value="")]
+    # Only include people who appear in 2+ photos
+    for ident in confirmed:
+        iid = ident["identity_id"]
+        face_ids = [f if isinstance(f, str) else f.get("face_id", "")
+                    for f in ident.get("anchor_ids", []) + ident.get("candidate_ids", [])]
+        photo_count = len(photo_reg.get_photos_for_faces(face_ids))
+        if photo_count >= 2:
+            name = ensure_utf8_display(ident.get("name", ""))
+            selected = (person == iid)
+            person_options.append(Option(f"{name} ({photo_count} photos)", value=iid, selected=selected))
+
+    # Story header
+    if person_identity:
+        person_name = ensure_utf8_display(person_identity.get("name", ""))
+        story_title = f"{person_name}\u2019s Life in Photos"
+        story_subtitle = ""
+        if person_birth_year:
+            story_subtitle = f"Born {person_birth_year}"
+    elif start and end:
+        story_title = f"Rhodes, {start}\u2013{end}"
+        story_subtitle = f"{len([e for e in timeline_entries if e['type'] == 'photo'])} photos in this period"
+    else:
+        story_title = "A Century of Rhodes"
+        photo_count = len([e for e in timeline_entries if e["type"] == "photo"])
+        event_count = len([e for e in timeline_entries if e["type"] == "context"])
+        story_subtitle = f"{photo_count} photos \u00b7 {event_count} historical events"
+
+    # Category colors for context events
+    category_colors = {
+        "holocaust": "border-red-700/60 bg-red-950/30",
+        "persecution": "border-red-800/50 bg-red-950/20",
+        "liberation": "border-emerald-700/50 bg-emerald-950/20",
+        "immigration": "border-blue-700/50 bg-blue-950/20",
+        "community": "border-amber-700/50 bg-amber-950/20",
+        "political": "border-slate-600/50 bg-slate-800/30",
+    }
+
+    # Build timeline UI
+    from urllib.parse import quote as _url_quote, urlencode as _url_encode
+
+    def _timeline_url(**overrides):
+        params = {}
+        if person:
+            params["person"] = person
+        if start:
+            params["start"] = str(start)
+        if end:
+            params["end"] = str(end)
+        if context != "on":
+            params["context"] = context
+        params.update({k: str(v) for k, v in overrides.items() if v})
+        qs = _url_encode(params)
+        return f"/timeline?{qs}" if qs else "/timeline"
+
+    # Render decade sections
+    decade_sections = []
+    for dec in decades_order:
+        entries = decades_map[dec]
+
+        # Decade marker
+        marker = Div(
+            Div(
+                Span(f"{dec}s", cls="text-lg font-serif font-bold text-amber-400/80"),
+                cls="bg-slate-900 px-3 py-1 relative z-10",
+            ),
+            cls="flex items-center justify-center my-6",
+            data_testid="decade-marker",
+        )
+
+        # Entry cards
+        cards = []
+        for entry in entries:
+            if entry["type"] == "photo":
+                # Confidence bar
+                prob = entry.get("prob_range", [])
+                conf = entry.get("confidence", "medium")
+                conf_bar = None
+                if prob and len(prob) == 2:
+                    # Bar width relative to range span
+                    range_span = prob[1] - prob[0]
+                    if conf == "high":
+                        bar_cls = "bg-amber-500/60"
+                    elif conf == "medium":
+                        bar_cls = "bg-amber-500/35"
+                    else:
+                        bar_cls = "bg-amber-500/20"
+                    conf_bar = Div(
+                        Div(
+                            cls=f"h-full rounded-full {bar_cls}",
+                            style=f"width: 100%",
+                        ),
+                        Span(f"{prob[0]}\u2013{prob[1]}", cls="text-[9px] text-slate-500 ml-2 whitespace-nowrap"),
+                        cls="flex items-center gap-1 mt-1.5",
+                        data_testid="confidence-bar",
+                        title=f"Estimated range: {prob[0]}\u2013{prob[1]} ({conf} confidence)",
+                    )
+
+                # Date badge
+                badge_text = f"c. {entry['decade']}s"
+                if conf == "high":
+                    date_cls = "bg-amber-800/80 text-amber-100"
+                elif conf == "medium":
+                    date_cls = "bg-amber-800/50 border border-amber-600/50 text-amber-200/90"
+                else:
+                    date_cls = "border border-dashed border-amber-600/40 text-amber-400/60"
+
+                # Age badge (when person filter active and birth year known)
+                age_badge = None
+                if person_birth_year and entry.get("year"):
+                    age = entry["year"] - person_birth_year
+                    if 0 <= age <= 120:
+                        age_badge = Span(
+                            f"Age ~{age}",
+                            cls="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/50 text-indigo-300 border border-indigo-700/30",
+                            data_testid="age-badge",
+                        )
+
+                # People names
+                people_line = None
+                if entry.get("people"):
+                    names = ", ".join(entry["people"][:4])
+                    if len(entry["people"]) > 4:
+                        names += f" +{len(entry['people']) - 4} more"
+                    people_line = P(names, cls="text-xs text-slate-400 mt-1 truncate")
+
+                card = A(
+                    Div(
+                        # Photo thumbnail
+                        Div(
+                            Img(
+                                src=photo_url(entry["filename"]),
+                                cls="w-full h-full object-cover",
+                                loading="lazy",
+                            ),
+                            Span(
+                                badge_text,
+                                cls=f"absolute bottom-1.5 left-1.5 text-[10px] font-serif px-1.5 py-0.5 rounded backdrop-blur-sm {date_cls}",
+                                data_testid="date-badge",
+                                data_confidence=conf,
+                            ),
+                            cls="aspect-[4/3] overflow-hidden relative rounded-t-lg",
+                        ),
+                        # Card details
+                        Div(
+                            Div(
+                                Span(f"c. {entry['year']}", cls="text-xs font-serif text-amber-400/80"),
+                                age_badge,
+                                cls="flex items-center gap-2",
+                            ),
+                            people_line,
+                            P(entry.get("collection", ""), cls="text-[10px] text-slate-600 mt-0.5") if entry.get("collection") else None,
+                            conf_bar,
+                            cls="p-3",
+                        ),
+                        cls="bg-slate-800/70 rounded-lg border border-slate-700/50 hover:border-amber-700/30 transition-colors w-full",
+                    ),
+                    href=f"/photo/{entry['photo_id']}",
+                    cls="block",
+                    data_testid="timeline-photo-card",
+                )
+                cards.append(Div(card, cls="ml-8 sm:ml-12 mb-4"))
+
+            else:  # context event
+                cat = entry.get("category", "")
+                color_cls = category_colors.get(cat, "border-slate-600/50 bg-slate-800/30")
+
+                # Category icon
+                cat_icons = {
+                    "holocaust": "\U0001f56f\ufe0f",
+                    "persecution": "\u26a0\ufe0f",
+                    "liberation": "\u2728",
+                    "immigration": "\U0001f6a2",
+                    "community": "\U0001f3db\ufe0f",
+                    "political": "\U0001f3db\ufe0f",
+                }
+                icon = cat_icons.get(cat, "\U0001f4cd")
+
+                card = Div(
+                    Div(
+                        Div(
+                            Span(icon, cls="text-base"),
+                            Div(
+                                Span(str(entry["year"]), cls="text-xs font-serif text-slate-300 font-medium"),
+                                H3(entry["title"], cls="text-sm font-medium text-white leading-snug",
+                                   data_testid="context-event-title"),
+                                cls="flex-1",
+                            ),
+                            cls="flex items-start gap-2.5",
+                        ),
+                        P(entry["description"], cls="text-xs text-slate-400 leading-relaxed mt-2"),
+                        P(entry.get("source", ""), cls="text-[9px] text-slate-600 mt-2 italic") if entry.get("source") else None,
+                        cls=f"p-4 rounded-lg border-l-4 {color_cls}",
+                    ),
+                    cls="ml-8 sm:ml-12 mb-4",
+                    data_testid="timeline-context-event",
+                )
+                cards.append(card)
+
+        decade_sections.append(Div(marker, *cards))
+
+    # Navigation links (matches /photos and /people pattern)
+    nav_links = [
+        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-white text-sm font-medium"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+        .timeline-line {
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent 0%, #D4A574 5%, #D4A574 95%, transparent 100%);
+        }
+        @media (min-width: 640px) {
+            .timeline-line { left: 1.5rem; }
+        }
+    """)
+
+    # Share button JS (clipboard copy)
+    share_js = Script("""
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action="share-story"]');
+            if (!btn) return;
+            navigator.clipboard.writeText(window.location.href).then(function() {
+                var toast = document.getElementById('timeline-toast');
+                if (toast) {
+                    toast.textContent = 'Link copied!';
+                    toast.classList.remove('opacity-0');
+                    toast.classList.add('opacity-100');
+                    setTimeout(function() {
+                        toast.classList.remove('opacity-100');
+                        toast.classList.add('opacity-0');
+                    }, 2000);
+                }
+            });
+        });
+    """)
+
+    return (
+        Title(f"{story_title} — Rhodesli Heritage Archive"),
+        Meta(property="og:title", content=f"{story_title} — Rhodesli Heritage Archive"),
+        Meta(property="og:description", content=story_subtitle),
+        Meta(name="description", content=f"Timeline of the Jewish community of Rhodes. {story_subtitle}"),
+        page_style,
+        share_js,
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            # Header
+            Section(
+                Div(
+                    H1(story_title, cls="text-3xl font-serif font-bold text-white mb-2"),
+                    P(story_subtitle, cls="text-slate-400 text-sm"),
+                    cls="max-w-4xl mx-auto px-6 pt-10 pb-4",
+                ),
+            ),
+            # Controls
+            Section(
+                Div(
+                    # Person filter
+                    Div(
+                        Span("Person:", cls="text-sm text-slate-400 mr-2"),
+                        Select(
+                            *person_options,
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            data_testid="person-filter",
+                            onchange=f"window.location.href='/timeline?person=' + encodeURIComponent(this.value) + '&start={start or ''}&end={end or ''}&context={context}'",
+                        ),
+                        cls="flex items-center gap-2",
+                    ),
+                    # Share button
+                    Div(
+                        Button(
+                            "\U0001f517 Share This Story",
+                            cls="px-3 py-1.5 text-sm bg-slate-800 text-slate-300 rounded-lg border border-slate-700 hover:border-amber-700/30 hover:text-white transition-colors",
+                            data_action="share-story",
+                            data_testid="share-story-btn",
+                        ),
+                        # Toast
+                        Div(
+                            "",
+                            id="timeline-toast",
+                            cls="opacity-0 transition-opacity duration-300 text-xs text-emerald-400 ml-3",
+                        ),
+                        cls="flex items-center",
+                    ),
+                    cls="max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4 pb-6",
+                ),
+            ),
+            # Timeline
+            Section(
+                Div(
+                    # The vertical line
+                    Div(cls="timeline-line", data_testid="timeline-line"),
+                    # Decade sections
+                    *decade_sections,
+                    # Empty state
+                    Div(
+                        P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
+                        A("View full timeline", href="/timeline", cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2"),
+                    ) if not decade_sections else None,
+                    cls="relative",
+                    data_testid="timeline-container",
+                    id="timeline",
+                ),
+                cls="max-w-4xl mx-auto px-6 pb-16",
             ),
             # Footer
             Div(
@@ -17348,7 +17870,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -17359,6 +17881,7 @@ async def post(request):
     _annotations_cache = None
     _date_labels_cache = None
     _search_index_cache = None
+    _context_events_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 
