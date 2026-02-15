@@ -217,6 +217,58 @@ def batch_best_neighbor_distances(identity_ids, registry, face_data):
     return results
 
 
+def _load_kinship_thresholds() -> dict | None:
+    """Load calibrated kinship thresholds if available."""
+    import json
+    from pathlib import Path as _Path
+    thresholds_path = _Path(__file__).resolve().parent.parent / "rhodesli_ml" / "data" / "model_comparisons" / "kinship_thresholds.json"
+    if not thresholds_path.exists():
+        return None
+    with open(thresholds_path) as f:
+        return json.load(f)
+
+
+# Cache kinship thresholds at module level (loaded once)
+_kinship_cache = None
+
+
+def _get_kinship_thresholds() -> dict:
+    """Get kinship thresholds with caching. Falls back to defaults if file missing."""
+    global _kinship_cache
+    if _kinship_cache is None:
+        loaded = _load_kinship_thresholds()
+        if loaded and "recommended_thresholds" in loaded:
+            _kinship_cache = loaded["recommended_thresholds"]
+        else:
+            # Fallback defaults matching AD-013 calibration
+            _kinship_cache = {
+                "strong_match": 1.05,
+                "possible_match": 1.25,
+                "similar_features": 1.40,
+            }
+    return _kinship_cache
+
+
+def _compute_confidence_pct(dist: float, same_person_stats: dict | None) -> int:
+    """Compute a confidence percentage based on where dist falls in the same_person distribution.
+
+    Uses a sigmoid approximation of the empirical CDF:
+    P(same_person | distance) = 1 / (1 + exp((dist - mean) / (std * 1.5)))
+
+    Returns integer percentage 0-99.
+    """
+    if same_person_stats and same_person_stats.get("n", 0) > 0:
+        mean = same_person_stats["mean"]
+        std = same_person_stats["std"]
+        if std > 0:
+            # Sigmoid CDF approximation — higher distance = lower confidence
+            z = (dist - mean) / (std * 1.5)
+            confidence = 1.0 / (1.0 + np.exp(z))
+            return max(1, min(99, int(confidence * 100)))
+    # Fallback: linear scale
+    return max(1, min(99, int((2.0 - dist) / 2.0 * 100)))
+
+
 def find_similar_faces(query_embedding, face_data, registry=None, limit=20, exclude_face_ids=None):
     """
     Find the most similar faces to a query embedding across the entire archive.
@@ -224,6 +276,12 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
     Unlike find_nearest_neighbors() which operates at the identity level,
     this works at the individual face level — returning each face with its
     distance, identity info, and photo context.
+
+    Uses calibrated kinship thresholds (AD-067) for tier classification:
+    - STRONG MATCH: likely the same person (high confidence)
+    - POSSIBLE MATCH: same person with age/pose variation
+    - SIMILAR: similar features, identity uncertain
+    - WEAK: below meaningful similarity threshold
 
     Args:
         query_embedding: 512-dim numpy array (the face to compare)
@@ -233,7 +291,8 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
         exclude_face_ids: set of face_ids to exclude from results
 
     Returns:
-        list of dicts with: face_id, distance, identity_id, identity_name, state
+        list of dicts with: face_id, distance, tier, confidence_pct,
+                           identity_id, identity_name, state
     """
     if query_embedding is None or len(face_data) == 0:
         return []
@@ -273,26 +332,45 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
                 fid = entry if isinstance(entry, str) else entry.get("face_id", "")
                 face_to_identity[fid] = {"identity_id": iid, "name": name, "state": state}
 
+    # Load calibrated thresholds (AD-067)
+    thresholds = _get_kinship_thresholds()
+    strong_t = thresholds["strong_match"]
+    possible_t = thresholds["possible_match"]
+    similar_t = thresholds["similar_features"]
+
+    # Load same_person stats for confidence percentage
+    kinship_data = _load_kinship_thresholds()
+    sp_stats = kinship_data.get("same_person") if kinship_data else None
+
     results = []
     for idx in sorted_indices[:limit]:
         fid = candidate_ids[idx]
         dist = float(dists[idx])
         ident_info = face_to_identity.get(fid, {})
 
-        # Confidence tier
-        if dist < 0.80:
-            confidence = "VERY HIGH"
-        elif dist < 1.00:
-            confidence = "HIGH"
-        elif dist < 1.20:
+        # Tier classification using calibrated thresholds
+        if dist < strong_t:
+            tier = "STRONG MATCH"
+            confidence = "VERY HIGH" if dist < 0.80 else "HIGH"
+        elif dist < possible_t:
+            tier = "POSSIBLE MATCH"
             confidence = "MODERATE"
-        else:
+        elif dist < similar_t:
+            tier = "SIMILAR"
             confidence = "LOW"
+        else:
+            tier = "WEAK"
+            confidence = "LOW"
+
+        # CDF-based confidence percentage
+        confidence_pct = _compute_confidence_pct(dist, sp_stats)
 
         results.append({
             "face_id": fid,
             "distance": dist,
+            "tier": tier,
             "confidence": confidence,
+            "confidence_pct": confidence_pct,
             "identity_id": ident_info.get("identity_id", ""),
             "identity_name": ident_info.get("name", "Unknown"),
             "state": ident_info.get("state", "INBOX"),

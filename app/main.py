@@ -10435,8 +10435,99 @@ def get(face_id: str = "", sess=None):
     )
 
 
+def _compare_result_card(result: dict, crop_files: set, index: int) -> object | None:
+    """Build a single compare result card."""
+    fid = result["face_id"]
+    dist = result["distance"]
+    tier = result.get("tier", "WEAK")
+    confidence_pct = result.get("confidence_pct", 50)
+    name = ensure_utf8_display(result.get("identity_name", "Unknown"))
+    state = result.get("state", "")
+    identity_id = result.get("identity_id", "")
+
+    crop_url = resolve_face_image_url(fid, crop_files)
+    if not crop_url:
+        return None
+
+    photo_id = get_photo_id_for_face(fid)
+    photo_link = f"/photo/{photo_id}" if photo_id else "#"
+
+    # Tier-specific styling
+    tier_styles = {
+        "STRONG MATCH": {
+            "border": "border-emerald-700/50 hover:border-emerald-500/50",
+            "badge_cls": "text-emerald-400 bg-emerald-900/30 border-emerald-700/50",
+            "ring": "ring-2 ring-emerald-500/30",
+        },
+        "POSSIBLE MATCH": {
+            "border": "border-amber-700/50 hover:border-amber-500/50",
+            "badge_cls": "text-amber-400 bg-amber-900/30 border-amber-700/50",
+            "ring": "ring-1 ring-amber-500/20",
+        },
+        "SIMILAR": {
+            "border": "border-blue-700/30 hover:border-blue-500/30",
+            "badge_cls": "text-blue-400 bg-blue-900/30 border-blue-700/50",
+            "ring": "",
+        },
+        "WEAK": {
+            "border": "border-slate-700/30 hover:border-slate-600/30",
+            "badge_cls": "text-slate-400 bg-slate-800/50 border-slate-700/50",
+            "ring": "",
+        },
+    }
+    style = tier_styles.get(tier, tier_styles["WEAK"])
+
+    # State badge
+    state_badge = None
+    if state == "CONFIRMED":
+        state_badge = Span("Identified", cls="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30")
+
+    # Person page link (for confirmed identities)
+    person_link = None
+    if state == "CONFIRMED" and identity_id:
+        person_link = A(
+            f"View {name.split()[0]}'s page",
+            href=f"/person/{identity_id}",
+            cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-1",
+        )
+
+    # Timeline link (for confirmed identities with metadata)
+    timeline_link = None
+    if state == "CONFIRMED" and identity_id:
+        timeline_link = A(
+            "Timeline",
+            href=f"/timeline?person={identity_id}",
+            cls="text-[10px] text-slate-400 hover:text-indigo-300 block text-center",
+        )
+
+    display_name = name if state == "CONFIRMED" else f"Face #{index + 1}"
+
+    return Div(
+        A(
+            Img(src=crop_url, cls=f"w-20 h-20 rounded-full object-cover mx-auto {style['ring']}"),
+            href=photo_link,
+            cls="block",
+        ),
+        Div(
+            P(display_name, cls="text-sm text-white font-medium mt-2 truncate text-center"),
+            Div(
+                Span(f"{confidence_pct}%", cls=f"text-xs font-medium px-2 py-0.5 rounded border {style['badge_cls']}"),
+                state_badge,
+                cls="flex items-center justify-center gap-2 mt-1",
+            ),
+            A("View Photo", href=photo_link, cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2") if photo_id else None,
+            person_link,
+            timeline_link,
+            cls="px-2",
+        ),
+        cls=f"bg-slate-800/70 rounded-lg border {style['border']} p-4 transition-colors",
+        data_testid="compare-result",
+        data_tier=tier.lower().replace(" ", "-"),
+    )
+
+
 def _compare_results_grid(results: list, crop_files: set) -> object:
-    """Build the results grid for face comparison."""
+    """Build the tiered results grid for face comparison (AD-067/AD-068)."""
     if not results:
         return Div(
             P("No similar faces found.", cls="text-slate-500 text-center py-8"),
@@ -10445,68 +10536,73 @@ def _compare_results_grid(results: list, crop_files: set) -> object:
 
     _build_caches()
 
-    cards = []
+    # Group results by tier
+    tier_order = ["STRONG MATCH", "POSSIBLE MATCH", "SIMILAR", "WEAK"]
+    tiered: dict[str, list] = {t: [] for t in tier_order}
     for i, result in enumerate(results):
-        fid = result["face_id"]
-        dist = result["distance"]
-        confidence = result["confidence"]
-        name = ensure_utf8_display(result.get("identity_name", "Unknown"))
-        state = result.get("state", "")
-        identity_id = result.get("identity_id", "")
+        tier = result.get("tier", "WEAK")
+        card = _compare_result_card(result, crop_files, i)
+        if card:
+            tiered[tier].append(card)
 
-        # Get face crop URL
-        crop_url = resolve_face_image_url(fid, crop_files)
-        if not crop_url:
+    # Build sections
+    sections = []
+
+    tier_config = {
+        "STRONG MATCH": {
+            "title": "Identity Matches",
+            "subtitle": "Very likely the same person",
+            "icon": "text-emerald-400",
+            "border": "border-emerald-800/30",
+            "testid": "tier-strong-match",
+        },
+        "POSSIBLE MATCH": {
+            "title": "Possible Matches",
+            "subtitle": "Same person with age or pose variation",
+            "icon": "text-amber-400",
+            "border": "border-amber-800/20",
+            "testid": "tier-possible-match",
+        },
+        "SIMILAR": {
+            "title": "Similar Faces",
+            "subtitle": "Similar features found in archive",
+            "icon": "text-blue-400",
+            "border": "border-blue-800/20",
+            "testid": "tier-similar",
+        },
+        "WEAK": {
+            "title": "Other Faces",
+            "subtitle": "Lower similarity",
+            "icon": "text-slate-500",
+            "border": "border-slate-800/20",
+            "testid": "tier-weak",
+        },
+    }
+
+    total_shown = 0
+    for tier in tier_order:
+        cards = tiered[tier]
+        if not cards:
             continue
-
-        # Get photo URL for this face
-        photo_id = get_photo_id_for_face(fid)
-        photo_link = f"/photo/{photo_id}" if photo_id else "#"
-
-        # Similarity percentage (inverse of distance, capped)
-        similarity_pct = max(0, min(100, int((2.0 - dist) / 2.0 * 100)))
-
-        # Confidence color
-        conf_colors = {
-            "VERY HIGH": "text-emerald-400 bg-emerald-900/30 border-emerald-700/50",
-            "HIGH": "text-blue-400 bg-blue-900/30 border-blue-700/50",
-            "MODERATE": "text-amber-400 bg-amber-900/30 border-amber-700/50",
-            "LOW": "text-slate-400 bg-slate-800/50 border-slate-700/50",
-        }
-        conf_cls = conf_colors.get(confidence, conf_colors["LOW"])
-
-        # State badge
-        state_badge = None
-        if state == "CONFIRMED":
-            state_badge = Span("Identified", cls="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30")
-        elif state in ("PROPOSED", "INBOX"):
-            state_badge = Span("Unidentified", cls="text-[9px] px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-500 border border-slate-700/30")
-
-        card = Div(
-            A(
-                Img(src=crop_url, cls="w-20 h-20 rounded-full object-cover mx-auto"),
-                href=photo_link,
-                cls="block",
-            ),
+        total_shown += len(cards)
+        cfg = tier_config[tier]
+        sections.append(
             Div(
-                P(name if state == "CONFIRMED" else f"Face #{i+1}", cls="text-sm text-white font-medium mt-2 truncate text-center"),
                 Div(
-                    Span(f"{similarity_pct}%", cls=f"text-xs font-medium px-2 py-0.5 rounded border {conf_cls}"),
-                    state_badge,
-                    cls="flex items-center justify-center gap-2 mt-1",
+                    H3(cfg["title"], cls=f"text-base font-serif {cfg['icon']}"),
+                    Span(f"{len(cards)} result{'s' if len(cards) != 1 else ''} — {cfg['subtitle']}",
+                         cls="text-xs text-slate-500 ml-2"),
+                    cls="flex items-baseline gap-1 mb-3",
                 ),
-                Span(confidence.title(), cls="text-[10px] text-slate-500 block text-center mt-0.5"),
-                A("View Photo", href=photo_link, cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2") if photo_id else None,
-                cls="px-2",
-            ),
-            cls="bg-slate-800/70 rounded-lg border border-slate-700/50 p-4 hover:border-amber-700/30 transition-colors",
-            data_testid="compare-result",
+                Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"),
+                cls=f"mb-6 pb-4 border-b {cfg['border']}",
+                data_testid=cfg["testid"],
+            )
         )
-        cards.append(card)
 
     return Div(
-        H2(f"Top {len(cards)} Matches", cls="text-lg font-serif text-white mb-4"),
-        Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"),
+        H2(f"{total_shown} Match{'es' if total_shown != 1 else ''}", cls="text-lg font-serif text-white mb-4"),
+        *sections,
         id="compare-results",
         data_testid="compare-results",
     )
