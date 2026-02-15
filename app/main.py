@@ -6246,6 +6246,7 @@ def landing_page(stats, featured_photos):
         A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("Timeline", href="/timeline", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("Help Identify", href="/?section=skipped", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
         A("About", href="/about", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
     ]
@@ -8959,6 +8960,8 @@ def public_person_page(
     nav_links = [
         A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -9395,6 +9398,7 @@ def get(filter_collection: str = "", sort_by: str = "newest",
         A("Photos", href="/photos", cls="text-white text-sm font-medium"),
         A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -9566,6 +9570,7 @@ def get(sort_by: str = "name", sess=None):
         A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("People", href="/people", cls="text-white text-sm font-medium"),
         A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -9640,20 +9645,22 @@ def get(sort_by: str = "name", sess=None):
 
 
 @rt("/timeline")
-def get(person: str = "", start: int = None, end: int = None,
-        context: str = "on", sess=None):
+def get(person: str = "", people: str = "", start: int = None, end: int = None,
+        context: str = "on", collection: str = "", sess=None):
     """
     Public timeline page — chronological story of the archive.
 
     Shows photos and historical context events on a vertical timeline,
-    grouped by decade. Supports person filter (with age overlay),
-    year range filter, and shareable URLs.
+    grouped by decade. Supports person/multi-person filter (with age overlay),
+    year range filter, collection filter, and shareable URLs.
 
     Query params:
-        person: identity_id to filter by
+        person: single identity_id to filter by (backwards compat)
+        people: comma-separated identity_ids for multi-person filter
         start: start year for range filter
         end: end year for range filter
         context: "on" (default) or "off" to toggle context events
+        collection: collection name to filter by
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
 
@@ -9674,22 +9681,38 @@ def get(person: str = "", start: int = None, end: int = None,
     ]
     confirmed.sort(key=lambda x: (x.get("name") or "").lower())
 
-    # If person filter active, find which photo_ids contain that person's faces
-    person_identity = None
+    # Resolve person filter — support both single and multi-person
+    person_ids = []
+    if people:
+        person_ids = [p.strip() for p in people.split(",") if p.strip()]
+    elif person:
+        person_ids = [person]
+
+    person_identities = []
     person_photo_ids = None
-    if person:
-        try:
-            person_identity = registry.get_identity(person)
-        except KeyError:
-            person_identity = None
-        if person_identity:
+    # Map photo_id -> set of person names appearing in it (for multi-person cards)
+    photo_person_map = {}
+    if person_ids:
+        person_photo_ids = set()
+        for pid in person_ids:
+            try:
+                ident = registry.get_identity(pid)
+            except KeyError:
+                continue
+            if not ident:
+                continue
+            person_identities.append(ident)
             face_ids = [f if isinstance(f, str) else f.get("face_id", "")
-                        for f in person_identity.get("anchor_ids", []) + person_identity.get("candidate_ids", [])]
-            person_photo_ids = set()
+                        for f in ident.get("anchor_ids", []) + ident.get("candidate_ids", [])]
+            pname = ensure_utf8_display(ident.get("name", ""))
             for fid in face_ids:
-                pid = get_photo_id_for_face(fid)
-                if pid:
-                    person_photo_ids.add(pid)
+                photo_id = get_photo_id_for_face(fid)
+                if photo_id:
+                    person_photo_ids.add(photo_id)
+                    photo_person_map.setdefault(photo_id, set()).add(pname)
+
+    # For backwards compat, keep person_identity for single-person features (age badge)
+    person_identity = person_identities[0] if len(person_identities) == 1 else None
 
     # Build timeline entries from photos
     timeline_entries = []
@@ -9714,17 +9737,19 @@ def get(person: str = "", start: int = None, end: int = None,
         if person_photo_ids is not None and photo_id not in person_photo_ids:
             continue
 
-        # Get date label details
-        label = date_labels.get(photo_id, {})
-        prob_range = label.get("probable_range", [])
-        confidence = label.get("confidence", "medium")
-
         # Get photo metadata
         photo_data = (_photo_cache or {}).get(photo_id, {})
         filename = photo_data.get("filename", "")
 
-        # Get collection
-        collection = photo_data.get("collection", "")
+        # Get collection and apply collection filter
+        photo_collection = photo_data.get("collection", "")
+        if collection and photo_collection != collection:
+            continue
+
+        # Get date label details
+        label = date_labels.get(photo_id, {})
+        prob_range = label.get("probable_range", [])
+        confidence = label.get("confidence", "medium")
 
         # Count identified people in photo
         faces = photo_data.get("faces", [])
@@ -9735,18 +9760,33 @@ def get(person: str = "", start: int = None, end: int = None,
             if ident and ident.get("state") == "CONFIRMED" and not ident.get("name", "").startswith("Unidentified"):
                 people_names.append(ident["name"])
 
+        # For multi-person, note which filtered people appear in this photo
+        highlighted_people = []
+        if photo_person_map and photo_id in photo_person_map:
+            highlighted_people = sorted(photo_person_map[photo_id])
+
         timeline_entries.append({
             "type": "photo",
             "year": year,
             "decade": decade or (year // 10 * 10),
             "photo_id": photo_id,
             "filename": filename,
-            "collection": collection,
+            "collection": photo_collection,
             "confidence": confidence,
             "prob_range": prob_range,
             "people": people_names,
+            "highlighted_people": highlighted_people,
             "scene": label.get("scene_description", ""),
         })
+
+    # When person filter active, compute photo date range for era filtering
+    person_era_start = None
+    person_era_end = None
+    if person_photo_ids is not None and timeline_entries:
+        photo_years = [e["year"] for e in timeline_entries if e["type"] == "photo"]
+        if photo_years:
+            person_era_start = min(photo_years) - 30  # 30 years before earliest photo
+            person_era_end = max(photo_years) + 10    # 10 years after latest photo
 
     # Add context events
     for event in context_events:
@@ -9755,6 +9795,11 @@ def get(person: str = "", start: int = None, end: int = None,
             continue
         if end and year > end:
             continue
+
+        # Filter context events to person's era when person filter is active
+        if person_era_start is not None:
+            if year < person_era_start or year > person_era_end:
+                continue
 
         timeline_entries.append({
             "type": "context",
@@ -9791,9 +9836,9 @@ def get(person: str = "", start: int = None, end: int = None,
             except (ValueError, TypeError):
                 pass
 
-    # Build person filter options
-    person_options = [Option("All people", value="")]
-    # Only include people who appear in 2+ photos
+    # Build person filter options (checkboxes for multi-select)
+    person_filter_items = []
+    selected_person_ids = set(person_ids)
     for ident in confirmed:
         iid = ident["identity_id"]
         face_ids = [f if isinstance(f, str) else f.get("face_id", "")
@@ -9801,16 +9846,42 @@ def get(person: str = "", start: int = None, end: int = None,
         photo_count = len(photo_reg.get_photos_for_faces(face_ids))
         if photo_count >= 2:
             name = ensure_utf8_display(ident.get("name", ""))
-            selected = (person == iid)
-            person_options.append(Option(f"{name} ({photo_count} photos)", value=iid, selected=selected))
+            person_filter_items.append({
+                "id": iid, "name": name, "count": photo_count,
+                "selected": iid in selected_person_ids,
+            })
+
+    # Also build backwards-compatible <select> options for single-person
+    person_options = [Option("All people", value="")]
+    for item in person_filter_items:
+        person_options.append(Option(
+            f"{item['name']} ({item['count']} photos)",
+            value=item["id"], selected=item["selected"],
+        ))
+
+    # Build collection list for filter dropdown
+    all_collections = sorted(set(
+        ((_photo_cache or {}).get(pid, {}).get("collection", "") or "")
+        for pid in (_photo_cache or {})
+    ))
+    all_collections = [c for c in all_collections if c]
 
     # Story header
-    if person_identity:
+    if len(person_identities) > 1:
+        names = [ensure_utf8_display(pi.get("name", "")) for pi in person_identities]
+        story_title = " & ".join(names)
+        photo_count = len([e for e in timeline_entries if e["type"] == "photo"])
+        story_subtitle = f"{photo_count} photos across {len(person_identities)} people"
+    elif person_identity:
         person_name = ensure_utf8_display(person_identity.get("name", ""))
         story_title = f"{person_name}\u2019s Life in Photos"
         story_subtitle = ""
         if person_birth_year:
             story_subtitle = f"Born {person_birth_year}"
+    elif collection:
+        story_title = collection
+        photo_count = len([e for e in timeline_entries if e["type"] == "photo"])
+        story_subtitle = f"{photo_count} photos in this collection"
     elif start and end:
         story_title = f"Rhodes, {start}\u2013{end}"
         story_subtitle = f"{len([e for e in timeline_entries if e['type'] == 'photo'])} photos in this period"
@@ -9835,14 +9906,18 @@ def get(person: str = "", start: int = None, end: int = None,
 
     def _timeline_url(**overrides):
         params = {}
-        if person:
-            params["person"] = person
+        if len(person_ids) > 1:
+            params["people"] = ",".join(person_ids)
+        elif len(person_ids) == 1:
+            params["person"] = person_ids[0]
         if start:
             params["start"] = str(start)
         if end:
             params["end"] = str(end)
         if context != "on":
             params["context"] = context
+        if collection:
+            params["collection"] = collection
         params.update({k: str(v) for k, v in overrides.items() if v})
         qs = _url_encode(params)
         return f"/timeline?{qs}" if qs else "/timeline"
@@ -9910,13 +9985,29 @@ def get(person: str = "", start: int = None, end: int = None,
                             data_testid="age-badge",
                         )
 
-                # People names
+                # People names (highlight filtered people in multi-person mode)
                 people_line = None
+                highlighted = entry.get("highlighted_people", [])
                 if entry.get("people"):
-                    names = ", ".join(entry["people"][:4])
-                    if len(entry["people"]) > 4:
-                        names += f" +{len(entry['people']) - 4} more"
-                    people_line = P(names, cls="text-xs text-slate-400 mt-1 truncate")
+                    if len(person_identities) > 1 and highlighted:
+                        # Bold the filtered people, dim the others
+                        parts = []
+                        for name in entry["people"][:4]:
+                            if name in highlighted:
+                                parts.append(Span(name, cls="text-amber-300 font-medium"))
+                            else:
+                                parts.append(Span(name))
+                            parts.append(", ")
+                        if parts:
+                            parts.pop()  # remove trailing comma
+                        if len(entry["people"]) > 4:
+                            parts.append(f" +{len(entry['people']) - 4} more")
+                        people_line = P(*parts, cls="text-xs text-slate-400 mt-1 truncate")
+                    else:
+                        names = ", ".join(entry["people"][:4])
+                        if len(entry["people"]) > 4:
+                            names += f" +{len(entry['people']) - 4} more"
+                        people_line = P(names, cls="text-xs text-slate-400 mt-1 truncate")
 
                 card = A(
                     Div(
@@ -9998,6 +10089,7 @@ def get(person: str = "", start: int = None, end: int = None,
         A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("Timeline", href="/timeline", cls="text-white text-sm font-medium"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -10049,7 +10141,7 @@ def get(person: str = "", start: int = None, end: int = None,
             Nav(
                 Div(
                     A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
-                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
                     cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
@@ -10062,7 +10154,7 @@ def get(person: str = "", start: int = None, end: int = None,
                     cls="max-w-4xl mx-auto px-6 pt-10 pb-4",
                 ),
             ),
-            # Controls
+            # Controls (sticky below nav)
             Section(
                 Div(
                     # Person filter
@@ -10072,10 +10164,22 @@ def get(person: str = "", start: int = None, end: int = None,
                             *person_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
                             data_testid="person-filter",
-                            onchange=f"window.location.href='/timeline?person=' + encodeURIComponent(this.value) + '&start={start or ''}&end={end or ''}&context={context}'",
+                            onchange=f"window.location.href='/timeline?person=' + encodeURIComponent(this.value) + '&start={start or ''}&end={end or ''}&context={context}&collection=' + encodeURIComponent('{collection or ''}')",
                         ),
                         cls="flex items-center gap-2",
                     ),
+                    # Collection filter
+                    Div(
+                        Span("Collection:", cls="text-sm text-slate-400 mr-2"),
+                        Select(
+                            Option("All collections", value=""),
+                            *[Option(c, value=c, selected=(collection == c)) for c in all_collections],
+                            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                            data_testid="collection-filter",
+                            onchange=f"window.location.href='/timeline?collection=' + encodeURIComponent(this.value) + '&person={person or ''}&people={people or ''}&start={start or ''}&end={end or ''}&context={context}'",
+                        ),
+                        cls="flex items-center gap-2",
+                    ) if all_collections else None,
                     # Share button
                     Div(
                         Button(
@@ -10092,8 +10196,9 @@ def get(person: str = "", start: int = None, end: int = None,
                         ),
                         cls="flex items-center",
                     ),
-                    cls="max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4 pb-6",
+                    cls="max-w-4xl mx-auto px-6 flex flex-wrap items-center justify-between gap-4 py-3",
                 ),
+                cls="sticky top-16 z-40 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800/50",
             ),
             # Timeline
             Section(
@@ -10125,6 +10230,361 @@ def get(person: str = "", start: int = None, end: int = None,
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
+# ---- Face Comparison Tool ----
+
+
+@rt("/compare")
+def get(face_id: str = "", sess=None):
+    """
+    Face comparison page — find similar faces in the archive.
+
+    Users can select an existing face from the archive to find matches,
+    or upload a photo (local dev only, InsightFace required).
+
+    Query params:
+        face_id: optional face_id to pre-select for comparison
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    _build_caches()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    # If face_id provided, run comparison immediately
+    results_html = None
+    selected_face_url = None
+    selected_identity_name = None
+    if face_id:
+        face_data = get_face_data()
+        if face_id in face_data:
+            from core.neighbors import find_similar_faces
+            selected_face_url = resolve_face_image_url(face_id, crop_files)
+            # Find the identity name for this face
+            ident = get_identity_for_face(registry, face_id)
+            if ident:
+                selected_identity_name = ensure_utf8_display(ident.get("name", "Unknown"))
+            results = find_similar_faces(
+                face_data[face_id]["mu"], face_data, registry=registry,
+                limit=20, exclude_face_ids={face_id},
+            )
+            results_html = _compare_results_grid(results, crop_files)
+
+    # Build face selector — confirmed identities with face crops
+    confirmed = [
+        i for i in registry.list_identities(state=IdentityState.CONFIRMED)
+        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
+    ]
+    confirmed.sort(key=lambda x: (x.get("name") or "").lower())
+
+    face_options = []
+    for ident in confirmed:
+        name = ensure_utf8_display(ident.get("name", ""))
+        faces = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+        for entry in faces[:1]:  # Just first face per identity
+            fid = entry if isinstance(entry, str) else entry.get("face_id", "")
+            crop_url = resolve_face_image_url(fid, crop_files)
+            if crop_url:
+                face_options.append({"face_id": fid, "name": name, "crop_url": crop_url})
+
+    # Navigation
+    nav_links = [
+        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-white text-sm font-medium"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    # Face selector grid
+    face_grid = Div(
+        *[
+            A(
+                Div(
+                    Img(src=opt["crop_url"], cls="w-16 h-16 rounded-full object-cover"),
+                    P(opt["name"], cls="text-[10px] text-slate-400 mt-1 text-center truncate w-20"),
+                    cls="flex flex-col items-center",
+                ),
+                href=f"/compare?face_id={opt['face_id']}",
+                cls=f"p-2 rounded-lg hover:bg-slate-700/50 transition-colors {'bg-amber-900/30 ring-1 ring-amber-500/50' if opt['face_id'] == face_id else ''}",
+                data_testid="face-option",
+            )
+            for opt in face_options
+        ],
+        cls="flex flex-wrap gap-3 justify-center",
+        data_testid="face-selector",
+    )
+
+    # Search/filter for face selector
+    face_search = Div(
+        Input(
+            type="text",
+            placeholder="Search by name...",
+            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2 w-full max-w-xs",
+            data_testid="face-search",
+            oninput="var q=this.value.toLowerCase();document.querySelectorAll('[data-testid=face-option]').forEach(function(el){el.style.display=el.textContent.toLowerCase().includes(q)?'':'none'})",
+        ),
+        cls="flex justify-center mb-4",
+    )
+
+    # Selected face display
+    selected_section = None
+    if selected_face_url:
+        selected_section = Div(
+            H3("Comparing", cls="text-sm text-slate-400 mb-2"),
+            Div(
+                Img(src=selected_face_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-amber-500"),
+                P(selected_identity_name or "Unknown", cls="text-sm text-white mt-2 font-medium"),
+                cls="flex flex-col items-center",
+            ),
+            cls="text-center mb-6",
+        )
+
+    # Upload section (graceful degradation)
+    upload_section = Div(
+        H3("Or Upload a Photo", cls="text-sm text-slate-400 mb-3"),
+        Form(
+            Div(
+                Input(type="file", name="photo", accept="image/*",
+                      cls="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600/20 file:text-indigo-300 hover:file:bg-indigo-600/30"),
+                cls="mb-3",
+            ),
+            Button("Compare Faces", type="submit",
+                   cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"),
+            action="/api/compare/upload",
+            method="post",
+            enctype="multipart/form-data",
+            hx_post="/api/compare/upload",
+            hx_target="#compare-results",
+            hx_swap="innerHTML",
+            hx_indicator="#upload-spinner",
+            data_testid="upload-form",
+        ),
+        Div(id="upload-spinner", cls="htmx-indicator text-center py-2",
+            children=[Span("Analyzing...", cls="text-slate-400 text-sm")]),
+        cls="border border-dashed border-slate-700 rounded-lg p-6 text-center mt-8",
+        data_testid="upload-area",
+    )
+
+    return (
+        Title("Compare Faces \u2014 Rhodesli Heritage Archive"),
+        Meta(property="og:title", content="Compare Faces \u2014 Rhodesli Heritage Archive"),
+        Meta(property="og:description", content="Find similar faces in the Rhodes Jewish heritage photo archive"),
+        page_style,
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            # Header
+            Section(
+                Div(
+                    H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
+                    P("Select a person from the archive to find similar faces, or upload a photo to search.",
+                      cls="text-slate-400 text-sm"),
+                    cls="max-w-4xl mx-auto px-6 pt-10 pb-6",
+                ),
+            ),
+            # Selected face
+            Section(
+                Div(selected_section, cls="max-w-4xl mx-auto px-6") if selected_section else None,
+            ),
+            # Face selector
+            Section(
+                Div(
+                    H2("Select a Person", cls="text-lg font-serif text-white mb-4"),
+                    face_search,
+                    face_grid,
+                    cls="max-w-4xl mx-auto px-6 pb-6",
+                ),
+            ),
+            # Results
+            Section(
+                Div(
+                    results_html if results_html else Div(
+                        P("Select a person above to see similar faces in the archive.",
+                          cls="text-slate-500 text-center py-8"),
+                        id="compare-results",
+                    ),
+                    cls="max-w-4xl mx-auto px-6 pb-8",
+                ),
+            ),
+            # Upload
+            Section(
+                Div(upload_section, cls="max-w-4xl mx-auto px-6 pb-16"),
+            ),
+            # Footer
+            Div(
+                Div(
+                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
+                ),
+                cls="py-8 border-t border-slate-800",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+def _compare_results_grid(results: list, crop_files: set) -> object:
+    """Build the results grid for face comparison."""
+    if not results:
+        return Div(
+            P("No similar faces found.", cls="text-slate-500 text-center py-8"),
+            id="compare-results",
+        )
+
+    _build_caches()
+
+    cards = []
+    for i, result in enumerate(results):
+        fid = result["face_id"]
+        dist = result["distance"]
+        confidence = result["confidence"]
+        name = ensure_utf8_display(result.get("identity_name", "Unknown"))
+        state = result.get("state", "")
+        identity_id = result.get("identity_id", "")
+
+        # Get face crop URL
+        crop_url = resolve_face_image_url(fid, crop_files)
+        if not crop_url:
+            continue
+
+        # Get photo URL for this face
+        photo_id = get_photo_id_for_face(fid)
+        photo_link = f"/photo/{photo_id}" if photo_id else "#"
+
+        # Similarity percentage (inverse of distance, capped)
+        similarity_pct = max(0, min(100, int((2.0 - dist) / 2.0 * 100)))
+
+        # Confidence color
+        conf_colors = {
+            "VERY HIGH": "text-emerald-400 bg-emerald-900/30 border-emerald-700/50",
+            "HIGH": "text-blue-400 bg-blue-900/30 border-blue-700/50",
+            "MODERATE": "text-amber-400 bg-amber-900/30 border-amber-700/50",
+            "LOW": "text-slate-400 bg-slate-800/50 border-slate-700/50",
+        }
+        conf_cls = conf_colors.get(confidence, conf_colors["LOW"])
+
+        # State badge
+        state_badge = None
+        if state == "CONFIRMED":
+            state_badge = Span("Identified", cls="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30")
+        elif state in ("PROPOSED", "INBOX"):
+            state_badge = Span("Unidentified", cls="text-[9px] px-1.5 py-0.5 rounded bg-slate-800/50 text-slate-500 border border-slate-700/30")
+
+        card = Div(
+            A(
+                Img(src=crop_url, cls="w-20 h-20 rounded-full object-cover mx-auto"),
+                href=photo_link,
+                cls="block",
+            ),
+            Div(
+                P(name if state == "CONFIRMED" else f"Face #{i+1}", cls="text-sm text-white font-medium mt-2 truncate text-center"),
+                Div(
+                    Span(f"{similarity_pct}%", cls=f"text-xs font-medium px-2 py-0.5 rounded border {conf_cls}"),
+                    state_badge,
+                    cls="flex items-center justify-center gap-2 mt-1",
+                ),
+                Span(confidence.title(), cls="text-[10px] text-slate-500 block text-center mt-0.5"),
+                A("View Photo", href=photo_link, cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2") if photo_id else None,
+                cls="px-2",
+            ),
+            cls="bg-slate-800/70 rounded-lg border border-slate-700/50 p-4 hover:border-amber-700/30 transition-colors",
+            data_testid="compare-result",
+        )
+        cards.append(card)
+
+    return Div(
+        H2(f"Top {len(cards)} Matches", cls="text-lg font-serif text-white mb-4"),
+        Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"),
+        id="compare-results",
+        data_testid="compare-results",
+    )
+
+
+@rt("/api/compare")
+def get(face_id: str = "", limit: int = 20, sess=None):
+    """API endpoint for face comparison — returns results HTML partial."""
+    if not face_id:
+        return Div(P("No face selected.", cls="text-slate-500 text-center py-4"))
+
+    face_data = get_face_data()
+    if face_id not in face_data:
+        return Div(P("Face not found in archive.", cls="text-amber-500 text-center py-4"))
+
+    from core.neighbors import find_similar_faces
+    registry = load_registry()
+    crop_files = get_crop_files()
+    results = find_similar_faces(
+        face_data[face_id]["mu"], face_data, registry=registry,
+        limit=limit, exclude_face_ids={face_id},
+    )
+    return _compare_results_grid(results, crop_files)
+
+
+@rt("/api/compare/upload")
+async def post(photo: UploadFile = None, sess=None):
+    """Upload a photo for face comparison (local dev only — requires InsightFace)."""
+    if not photo:
+        return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
+
+    try:
+        from core.ingest_inbox import extract_faces
+    except ImportError:
+        return Div(
+            P("Face detection requires InsightFace, which is only available in the local development environment.",
+              cls="text-amber-500 text-center py-4"),
+            P("Browse the archive above to compare existing faces.", cls="text-slate-500 text-center text-sm mt-2"),
+            id="compare-results",
+        )
+
+    import tempfile
+    from pathlib import Path as _Path
+
+    # Save uploaded file to temp location
+    content = await photo.read()
+    suffix = _Path(photo.filename or "upload.jpg").suffix or ".jpg"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = _Path(tmp.name)
+
+    try:
+        faces, _, _ = extract_faces(tmp_path)
+        if not faces:
+            return Div(
+                P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
+                id="compare-results",
+            )
+
+        # Use the first detected face's embedding
+        query_embedding = faces[0]["mu"]
+        face_data = get_face_data()
+        registry = load_registry()
+        crop_files = get_crop_files()
+
+        from core.neighbors import find_similar_faces
+        results = find_similar_faces(
+            query_embedding, face_data, registry=registry,
+            limit=20,
+        )
+        return _compare_results_grid(results, crop_files)
+    except Exception as e:
+        return Div(
+            P(f"Error processing photo: {str(e)}", cls="text-red-500 text-center py-4"),
+            id="compare-results",
+        )
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 def public_photo_page(
@@ -10389,6 +10849,8 @@ def public_photo_page(
     nav_links = [
         A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
         A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
     ]
     if is_auth_enabled() and not user:
         nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))

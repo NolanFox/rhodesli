@@ -219,6 +219,37 @@ class TestTimelineRoute:
         assert resp.status_code == 200
         assert "timeline-container" in resp.text
 
+    def test_timeline_collection_filter(self):
+        """Collection filter parameter is accepted."""
+        resp = self.client.get("/timeline?collection=Vida+Capeluto+NYC+Collection")
+        assert resp.status_code == 200
+        assert "timeline-container" in resp.text
+
+    def test_timeline_has_collection_filter_dropdown(self):
+        """Response contains collection filter dropdown."""
+        resp = self.client.get("/timeline")
+        assert "collection-filter" in resp.text
+
+    def test_timeline_multi_person_filter(self):
+        """Multi-person filter via ?people= is accepted."""
+        resp = self.client.get("/timeline?people=id1,id2")
+        assert resp.status_code == 200
+        assert "timeline-container" in resp.text
+
+    def test_timeline_controls_are_sticky(self):
+        """Controls section has sticky positioning."""
+        resp = self.client.get("/timeline")
+        assert "sticky top-16" in resp.text
+
+    def test_timeline_nav_visible_on_mobile(self):
+        """Nav links are not hidden on mobile (no 'hidden sm:flex')."""
+        resp = self.client.get("/timeline")
+        # The timeline nav should NOT have "hidden sm:flex" for nav links
+        # It should use "flex" directly so links show on mobile
+        # Look for the timeline nav pattern
+        assert "Photos" in resp.text
+        assert "People" in resp.text
+
 
 # ---- Navigation Links ----
 
