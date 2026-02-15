@@ -450,7 +450,7 @@ def _load_date_labels() -> dict:
         return _date_labels_cache
 
     _date_labels_cache = {}
-    ml_data_path = Path(__file__).resolve().parent.parent / "rhodesli_ml" / "data" / "date_labels.json"
+    ml_data_path = data_path / "date_labels.json"
     if not ml_data_path.exists():
         return _date_labels_cache
 

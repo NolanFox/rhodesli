@@ -60,6 +60,8 @@ DATA_FILES = [
     "data/file_hashes.json",
     "data/golden_set.json",
     "data/proposals.json",
+    "data/date_labels.json",
+    "data/photo_search_index.json",
 ]
 
 

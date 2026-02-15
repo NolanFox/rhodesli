@@ -70,6 +70,8 @@ data/*
 !data/embeddings.npy
 !data/proposals.json
 !data/surname_variants.json
+!data/date_labels.json
+!data/photo_search_index.json
 
 # ML experiment tracking
 rhodesli_ml/mlruns/
