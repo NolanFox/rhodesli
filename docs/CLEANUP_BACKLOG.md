@@ -6,12 +6,7 @@ Updated after each session.
 ## Open Items
 
 ### ML Pipeline Cleanup
-- [ ] 21 unlabeled photos (community batch-20260214) — retry with API, then manual fallback
-- [ ] 2 small files (<50KB) — investigate if real photos or artifacts
-- [ ] 4 photos with repeated 504 DEADLINE_EXCEEDED — analyze file sizes, try resize
-- [ ] Failure pattern analysis — correlate file size/dimensions with API failures
-- [ ] Retrain CORAL after new labels added
-- [ ] Regenerate photo_search_index.json after new labels
+- [ ] Add `--fallback-model` flag to generate_date_labels.py for automatic 2.5-flash retry
 
 ### Data Quality
 - [ ] Verify all 157 original labels have source_method="api" backfill
@@ -19,7 +14,7 @@ Updated after each session.
 - [ ] Spot-check 5 random labels from community batch for quality
 
 ### API Key Hygiene
-- [ ] Rotate Gemini API key (exposed in Session 26 logs)
+- [x] Rotate Gemini API key (rotated 2026-02-15)
 - [ ] Add GEMINI_API_KEY to ~/.zshrc so Claude Code doesn't echo it
 - [ ] Verify no API keys in git history
 
@@ -48,3 +43,10 @@ Updated after each session.
 - [x] Date badges deployed to production (Session 27)
 - [x] Deploy fix: date_labels.json + photo_search_index.json added to pipeline
 - [x] AI Analysis panel wired into Photo Context modal (Session 28)
+- [x] 271/271 photos labeled — 0 unlabeled remaining (Session 28)
+- [x] 2 small files (<50KB) investigated — valid photos, not artifacts (Session 28)
+- [x] Failure pattern analysis — 504 errors are infrastructure-side, NOT file-size related (Session 28)
+- [x] gemini-2.5-flash fallback: 9/9 success on photos that 3-flash couldn't handle (Session 28)
+- [x] CORAL model retrained with 271 labels (best val_accuracy=60.3%, val_MAE=0.534) (Session 28)
+- [x] photo_search_index.json regenerated with 271 documents (Session 28)
+- [x] Failure analysis saved to rhodesli_ml/data/model_comparisons/failure_analysis.md (Session 28)

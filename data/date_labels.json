@@ -1870,7 +1870,7 @@
       "cultural_lag_note": "In NYC Sephardic immigrant communities, children's clothing (like the patriotic military-style jacket) often mirrored mainstream American trends of the WWII era, while older siblings might retain slightly more conservative layered knitwear.",
       "capture_vs_print": "Likely an original 1940s capture and print; the physical wear is consistent with the era.",
       "reasoning_summary": "The strongest dating signal is the youngest child's military-style jacket, which was a highly popular fashion for boys in the United States during the late 1930s and throughout World War II. The 'Old Gold' signage and Brooklyn-specific real estate sign further anchor the photo to the early 1940s NYC urban environment.",
-      "scene_description": "A casual outdoor group portrait of three young males—two children and one young man—posing closely together on a city sidewalk. They are positioned in front of a light-colored brick building that features 'Old Gold' cigarette advertisements on the door and a 'For Sale' sign on the wall. The youngest child on the right smiles broadly while wearing a formal military-style jacket and tie.",
+      "scene_description": "A casual outdoor group portrait of three young males\u2014two children and one young man\u2014posing closely together on a city sidewalk. They are positioned in front of a light-colored brick building that features 'Old Gold' cigarette advertisements on the door and a 'For Sale' sign on the wall. The youngest child on the right smiles broadly while wearing a formal military-style jacket and tie.",
       "visible_text": "OLD GOLD\nOLD GOLD\nOLD GOLD\nFOR SALE\nNE AVE\nBKLYN",
       "keywords": [
         "boys",
@@ -2106,7 +2106,7 @@
       "cultural_lag_applied": true,
       "cultural_lag_note": "The inscription provides an exact date of 1924. The fashion is highly contemporary with early 1920s Western trends, suggesting this Sephardic family in Buenos Aires was closely following current styles.",
       "capture_vs_print": "Original 1924 capture and print; the ink aging is consistent with the paper's oxidation.",
-      "reasoning_summary": "The photograph is explicitly dated June 1, 1924, in the handwritten inscription. The fashion cues—specifically the oversized embroidered collars and Mary Jane shoes—are textbook examples of early 1920s youth attire, confirming the written date.",
+      "reasoning_summary": "The photograph is explicitly dated June 1, 1924, in the handwritten inscription. The fashion cues\u2014specifically the oversized embroidered collars and Mary Jane shoes\u2014are textbook examples of early 1920s youth attire, confirming the written date.",
       "scene_description": "A formal studio portrait of two young women, likely sisters or cousins. One woman is seated in an ornate, curved wooden chair while the other perches on the armrest behind her; both wear dark, long-sleeved dresses with prominent embroidered collars and look directly at the camera with soft smiles.",
       "visible_text": "Bs. Aires, Junio 1/1924\nA mi querida prima\nen prueba de nuestro\nafecto\nRosa y Sol\nSidicaro",
       "keywords": [
@@ -2873,7 +2873,7 @@
       "cultural_lag_note": "The presence of a precise machine-printed processing date ('MAY 68') makes cultural lag adjustments for fashion unnecessary.",
       "capture_vs_print": "Capture date is May 1968 or slightly earlier; print is the original processing from that month.",
       "reasoning_summary": "The date is explicitly stamped on the photo border as 'MAY 68'. All other visual cues, including fashion and the resort-style environment, are perfectly consistent with this date.",
-      "scene_description": "A group of six people—two older men, two women, a young boy, and a girl—pose together outdoors. They are standing in a sunny area featuring large, dark, fringed patio umbrellas and white decorative fencing, with a Victorian-style building visible in the background.",
+      "scene_description": "A group of six people\u2014two older men, two women, a young boy, and a girl\u2014pose together outdoors. They are standing in a sunny area featuring large, dark, fringed patio umbrellas and white decorative fencing, with a Victorian-style building visible in the background.",
       "visible_text": "MAY 68",
       "keywords": [
         "family",
@@ -4886,7 +4886,7 @@
       "cultural_lag_applied": true,
       "cultural_lag_note": "Minimal lag applied; children in US Sephardic diaspora communities (NYC/Florida) typically adopted local American fashion trends rapidly for school and social integration.",
       "capture_vs_print": "Likely an original snapshot print from the time of capture.",
-      "reasoning_summary": "The subject's attire—specifically the plaid dress with a Peter Pan collar and the cardigan—is a quintessential mid-1950s look for young girls. The suburban backyard environment with a clothesline and utility wires further supports a post-WWII date in a US-based community.",
+      "reasoning_summary": "The subject's attire\u2014specifically the plaid dress with a Peter Pan collar and the cardigan\u2014is a quintessential mid-1950s look for young girls. The suburban backyard environment with a clothesline and utility wires further supports a post-WWII date in a US-based community.",
       "scene_description": "A candid outdoor portrait of a young girl smiling at the camera. She is standing in a residential backyard in front of a tall, dense hedge, with a clothesline and overhead power lines visible in the background.",
       "visible_text": null,
       "keywords": [
@@ -6318,7 +6318,7 @@
       "evidence": {
         "print_format": [
           {
-            "cue": "Square format with white border and 'SEP • 68' date stamp on the right margin",
+            "cue": "Square format with white border and 'SEP \u2022 68' date stamp on the right margin",
             "strength": "strong",
             "suggested_range": [
               1968,
@@ -6378,7 +6378,7 @@
       "capture_vs_print": "The 'SEP 68' stamp indicates the processing date. The photo was likely taken in the summer of 1968.",
       "reasoning_summary": "The date stamp 'SEP 68' provides a definitive upper bound for the print. The woman's bouffant hairstyle and geometric dress are iconic of the mid-to-late 1960s. The square format is consistent with 126 film introduced in 1963.",
       "scene_description": "A woman with a bouffant hairstyle sits outdoors on a folding chair, holding a laughing toddler on her lap. In the background, two children are playing on a paved area near a basketball hoop, surrounded by grass and trees.",
-      "visible_text": "SEP • 68",
+      "visible_text": "SEP \u2022 68",
       "keywords": [
         "woman",
         "toddler",
@@ -6749,7 +6749,7 @@
       "photo_type": "formal_portrait",
       "people_count": 1,
       "condition": "good",
-      "clothing_notes": "Dark tuxedo jacket with satin-faced lapels; white wing-collar shirt with a pleated marcella or piqué bib; small dark bow tie.",
+      "clothing_notes": "Dark tuxedo jacket with satin-faced lapels; white wing-collar shirt with a pleated marcella or piqu\u00e9 bib; small dark bow tie.",
       "controlled_tags": [
         "Studio",
         "Formal_Event"
@@ -8116,7 +8116,7 @@
       "cultural_lag_applied": true,
       "cultural_lag_note": "The Art Deco border and the girls' clothing styles are highly consistent with mid-1930s international trends. In Sephardic communities, these styles remained popular into the early 1940s.",
       "capture_vs_print": "Original capture and print appear contemporaneous based on the integrated border style.",
-      "reasoning_summary": "The combination of the specific Art Deco border and the girls' clothing—particularly the wide cape collar and the hairstyle of the eldest—strongly indicates the mid-to-late 1930s. The casual outdoor setting is typical of family snapshots of this era.",
+      "reasoning_summary": "The combination of the specific Art Deco border and the girls' clothing\u2014particularly the wide cape collar and the hairstyle of the eldest\u2014strongly indicates the mid-to-late 1930s. The casual outdoor setting is typical of family snapshots of this era.",
       "scene_description": "Three young girls, likely sisters, pose for a casual outdoor portrait in front of a dense backdrop of leafy trees. The girl on the left stands with a slight tilt, the youngest stands in the center, and the oldest girl kneels on the right with her arm around the middle child.",
       "visible_text": null,
       "keywords": [
@@ -8949,7 +8949,7 @@
       "photo_type": "wedding",
       "people_count": 2,
       "condition": "good",
-      "clothing_notes": "Bride: Floor-length white gown, long lace veil with Juliet cap headpiece, white gloves. Groom: Formal evening dress (tails), white piqué waistcoat, white bow tie, boutonniere, and silk top hat.",
+      "clothing_notes": "Bride: Floor-length white gown, long lace veil with Juliet cap headpiece, white gloves. Groom: Formal evening dress (tails), white piqu\u00e9 waistcoat, white bow tie, boutonniere, and silk top hat.",
       "controlled_tags": [
         "Studio",
         "Wedding",
@@ -10261,7 +10261,7 @@
       "cultural_lag_applied": false,
       "cultural_lag_note": "In the New York City immigrant context, particularly the Lower East Side, bridal fashion tended to follow contemporary American trends closely to signal integration and success, reducing the typical lag seen in Rhodes.",
       "capture_vs_print": "Original capture and print from the mid-1920s, confirmed by the integrated studio marking.",
-      "reasoning_summary": "The specific studio address on Rivington Street (a known Sephardic enclave) combined with the very distinct 1920s bridal silhouette—specifically the Juliet cap and the mid-calf, drop-waist dress—points definitively to the mid-to-late 1920s.",
+      "reasoning_summary": "The specific studio address on Rivington Street (a known Sephardic enclave) combined with the very distinct 1920s bridal silhouette\u2014specifically the Juliet cap and the mid-calf, drop-waist dress\u2014points definitively to the mid-to-late 1920s.",
       "scene_description": "A formal wedding portrait of a bride and groom taken in a professional studio. The bride stands on the left in a white 1920s-style dress with a long lace veil, holding a large cascading bouquet. The groom stands to her right, though a significant portion of his figure and the right side of the photograph are missing due to physical damage.",
       "visible_text": "Gus Studio 156 RIVINGTON ST. NEW YORK",
       "keywords": [
@@ -11649,7 +11649,7 @@
       "cultural_lag_note": "While the community is Sephardic, the setting appears to be a US home (likely Florida). The adoption of casual American summer wear suggests minimal lag from mainstream US 1950s trends compared to photos taken in Rhodes.",
       "capture_vs_print": "Capture date and print characteristics are consistent with the mid-1950s.",
       "reasoning_summary": "The combination of sleeveless floral dresses, the man's short-sleeved camp-collar shirt, and the mid-century domestic furniture strongly points to the mid-1950s. The casual, relaxed nature of the photo suggests a US diaspora setting rather than a formal portrait from Rhodes.",
-      "scene_description": "A group portrait of eight people—three women, one man, and four children—gathered in a domestic living room. They are posed around a floral-patterned armchair in front of a large window, with an ornate lamp visible on the right. The atmosphere is casual and familial, likely a summer gathering.",
+      "scene_description": "A group portrait of eight people\u2014three women, one man, and four children\u2014gathered in a domestic living room. They are posed around a floral-patterned armchair in front of a large window, with an ornate lamp visible on the right. The atmosphere is casual and familial, likely a summer gathering.",
       "visible_text": null,
       "keywords": [
         "family group",
@@ -12565,7 +12565,7 @@
       "capture_vs_print": "Portrait likely captured mid-1940s; advertisement printed circa 1948 to coincide with the Asheville Tourists' championship season.",
       "reasoning_summary": "The text provides specific geographic and topical markers. The reference to Asheville's 'Greatest Season of Baseball' likely refers to the 1948 championship season of the Asheville Tourists. The subject, Zeb Capuano, was a known Sephardic businessman in the area. The fashion and typography are highly consistent with the late 1940s.",
       "scene_description": "A newspaper advertisement for the Lido Restaurant in Asheville, North Carolina, featuring a black and white portrait of its manager, Zeb Capuano. The ad includes a 'Howdy Boys' greeting and a welcome to baseball players, mentioning the restaurant's location at 68 Patton Avenue and its specialty in steaks and seafood.",
-      "visible_text": "WELCOME BALL PLAYERS\n“HOWDY BOYS”\nManager Lido Restaurant Zeb And All “The Boys” Are Glad To See You!\nBest Wishes For Asheville’s Greatest Season Of Baseball\nAfter The Game Stop By The LIDO RESTAURANT\n68 PATTON AVENUE\nFor A Delicious Steak Or A Full Course Dinner\nSteaks — Chops — Seafoods A Specialty\nInternationally Famous Chef\nMiller’s High Life Beer\nZEB CAPUANO",
+      "visible_text": "WELCOME BALL PLAYERS\n\u201cHOWDY BOYS\u201d\nManager Lido Restaurant Zeb And All \u201cThe Boys\u201d Are Glad To See You!\nBest Wishes For Asheville\u2019s Greatest Season Of Baseball\nAfter The Game Stop By The LIDO RESTAURANT\n68 PATTON AVENUE\nFor A Delicious Steak Or A Full Course Dinner\nSteaks \u2014 Chops \u2014 Seafoods A Specialty\nInternationally Famous Chef\nMiller\u2019s High Life Beer\nZEB CAPUANO",
       "keywords": [
         "advertisement",
         "newspaper",
@@ -14050,8 +14050,8 @@
       "cultural_lag_note": "The date is explicitly provided by official consular stamps; fashion is contemporary to the 1963 date.",
       "capture_vs_print": "The photograph was likely taken in 1963 specifically for this consular qualification form.",
       "reasoning_summary": "The document contains an explicit date stamp of September 27, 1963. The subject's appearance is consistent with a man aged 52 (born 1911). The fashion and document style are perfectly aligned with the early 1960s.",
-      "scene_description": "A formal Brazilian consular qualification form (Ficha Consular de Qualificação) for Moise Capelluto. The document features a black and white passport-style portrait of a middle-aged man in a suit and tie, along with typewritten biographical details and official stamps.",
-      "visible_text": "REPÚBLICA DOS ESTADOS UNIDOS DO BRASIL\nModêlo S. C. 139\nFICHA CONSULAR DE QUALIFICAÇÃO\nEsta ficha, expedida em duas vias, será entregue à Policia Maritima e à Imigração no pôrto de destino\nNome por extenso Moise Capelluto\nAdmitido em território nacional em carácter TEMPORÁRIO\nNos termos do art. 7 letra a do Dec. Lei 7967 de 18 - 9 - 45\nLugar e data de nascimento Rhodes 11-2-1911\nNacionalidade italiana Estado civil casado\nFiliação (nome do Pai e da Mãe) Isaac Capelluto e Scapa Mazal tov\nProfissão diretor\nResidência no país de origem Claridge hotel\nPassaporte n. 2464348P expedido Cons. de Italia em Elisabethville na data 5-7-1957\nvisado sob. n. 17143\nConsulado Geral do Brasil em Bs. Aires\n27 SET 1963\nJ. B. L. de Andrada\nCônsul - Adjunto",
+      "scene_description": "A formal Brazilian consular qualification form (Ficha Consular de Qualifica\u00e7\u00e3o) for Moise Capelluto. The document features a black and white passport-style portrait of a middle-aged man in a suit and tie, along with typewritten biographical details and official stamps.",
+      "visible_text": "REP\u00daBLICA DOS ESTADOS UNIDOS DO BRASIL\nMod\u00ealo S. C. 139\nFICHA CONSULAR DE QUALIFICA\u00c7\u00c3O\nEsta ficha, expedida em duas vias, ser\u00e1 entregue \u00e0 Policia Maritima e \u00e0 Imigra\u00e7\u00e3o no p\u00f4rto de destino\nNome por extenso Moise Capelluto\nAdmitido em territ\u00f3rio nacional em car\u00e1cter TEMPOR\u00c1RIO\nNos termos do art. 7 letra a do Dec. Lei 7967 de 18 - 9 - 45\nLugar e data de nascimento Rhodes 11-2-1911\nNacionalidade italiana Estado civil casado\nFilia\u00e7\u00e3o (nome do Pai e da M\u00e3e) Isaac Capelluto e Scapa Mazal tov\nProfiss\u00e3o diretor\nResid\u00eancia no pa\u00eds de origem Claridge hotel\nPassaporte n. 2464348P expedido Cons. de Italia em Elisabethville na data 5-7-1957\nvisado sob. n. 17143\nConsulado Geral do Brasil em Bs. Aires\n27 SET 1963\nJ. B. L. de Andrada\nC\u00f4nsul - Adjunto",
       "keywords": [
         "Moise Capelluto",
         "Rhodes",
@@ -14371,7 +14371,7 @@
       "capture_vs_print": "The photograph was likely taken in 1963 specifically for this tourist card application, or reused from a recent passport (c. 1952-1963).",
       "reasoning_summary": "The image is an official document (Brazilian Tourist Card) for Marcos Capelluto, dated October 3, 1963. The subject was born in Rhodes (Rodi) and was a naturalized Argentine citizen. The photo is a standard ID portrait consistent with the early 1960s.",
       "scene_description": "A black and white identification photograph of a middle-aged man, Marcos Capelluto, attached to a Brazilian tourist card. The man is dressed in formal attire (suit and tie) and faces the camera directly. The document features typewritten details in Portuguese and Spanish, along with official stamps from the Brazilian Consulate in Buenos Aires.",
-      "visible_text": "Ficha de Turista Cidadão de País Americano para uma Estada de Trinta Dias no Brasil. Nome por extenso MARCOS CAPELLUTO. Admitido no Brasil em carácter de turismo nos têrmos da lei nº 2526, de 5 de Julho de 1955. Lugar e data de nascimento RODI - Italia. Nacionalidade ARGENTINA NATUR. Estado civil CASADO. Filiação (nome do pai e da mãe) ISACCO - MATILDE SCAPA. Profissão CONTADOR. Residência no país de origen MEDRANO 506 - Cap. Fed. FECHA DE NATURALIZACION 20-8-1952. Passaporte nº 1346214 expedido pelas autoridades de POLICIA FEDERAL na data 03 NOV 1952. Remetida ao Consulado GERAL do Brasil em BUENOS AIRES de 03 OCTUBRE de 1963. ASSINATURA DO PORTADOR: M Capelluto.",
+      "visible_text": "Ficha de Turista Cidad\u00e3o de Pa\u00eds Americano para uma Estada de Trinta Dias no Brasil. Nome por extenso MARCOS CAPELLUTO. Admitido no Brasil em car\u00e1cter de turismo nos t\u00earmos da lei n\u00ba 2526, de 5 de Julho de 1955. Lugar e data de nascimento RODI - Italia. Nacionalidade ARGENTINA NATUR. Estado civil CASADO. Filia\u00e7\u00e3o (nome do pai e da m\u00e3e) ISACCO - MATILDE SCAPA. Profiss\u00e3o CONTADOR. Resid\u00eancia no pa\u00eds de origen MEDRANO 506 - Cap. Fed. FECHA DE NATURALIZACION 20-8-1952. Passaporte n\u00ba 1346214 expedido pelas autoridades de POLICIA FEDERAL na data 03 NOV 1952. Remetida ao Consulado GERAL do Brasil em BUENOS AIRES de 03 OCTUBRE de 1963. ASSINATURA DO PORTADOR: M Capelluto.",
       "keywords": [
         "Marcos Capelluto",
         "Rhodes",
@@ -14743,7 +14743,7 @@
       "capture_vs_print": "Capture date is June 8, 1941 (wedding date). Print date is early July 1941 (based on 'Glorious Fourth' headline).",
       "reasoning_summary": "The text explicitly identifies the wedding of Selma Capouya and David Capouano on June 8. The headline 'Glorious Fourth Also Deadly' indicates the paper was published shortly after July 4th. Historical records confirm the marriage of this couple in Montgomery in 1941. The fashion and typography are perfectly consistent with this date.",
       "scene_description": "A newspaper clipping from The Montgomery Advertiser featuring a formal bridal portrait of Selma Capouya. The bride stands in a long satin gown with a significant train. Accompanying text describes the wedding ceremony at Temple Etz Ahayem, and an adjacent advertisement features a woman's face promoting a beauty salon.",
-      "visible_text": "THE MONTGOMERY ADVERTISER\nMiss Capouya And Mr. Capouano Wed—\nMiss Selma Capouya became the bride of David Capouano at a fashionable ceremony which took place in the evening of June 8, at Temple Etz Ahayem...\nIS RECENT BRIDE: Mrs. David Capouano, before her marriage which took place June 8, at Temple Etz Ahayem, was Miss Selma Capouya, the wedding being an event of interest to the wide circle of the friends of the bride and groom.\nMONTGOMERY FAIR AIR CONDITIONED BEAUTY SALON\nIf You're Out in The Sun THEN\nGlorious Fourth Also Deadly;",
+      "visible_text": "THE MONTGOMERY ADVERTISER\nMiss Capouya And Mr. Capouano Wed\u2014\nMiss Selma Capouya became the bride of David Capouano at a fashionable ceremony which took place in the evening of June 8, at Temple Etz Ahayem...\nIS RECENT BRIDE: Mrs. David Capouano, before her marriage which took place June 8, at Temple Etz Ahayem, was Miss Selma Capouya, the wedding being an event of interest to the wide circle of the friends of the bride and groom.\nMONTGOMERY FAIR AIR CONDITIONED BEAUTY SALON\nIf You're Out in The Sun THEN\nGlorious Fourth Also Deadly;",
       "keywords": [
         "wedding",
         "bride",
@@ -15282,7 +15282,7 @@
         ],
         "fashion": [
           {
-            "cue": "oversized white hair bows positioned over the ears (coiffure à la mode style)",
+            "cue": "oversized white hair bows positioned over the ears (coiffure \u00e0 la mode style)",
             "strength": "strong",
             "suggested_range": [
               1912,
@@ -15338,7 +15338,7 @@
       "cultural_lag_applied": false,
       "cultural_lag_note": "As an NYC studio portrait from the Lower East Side, the subject reflects contemporary American immigrant aspirations and local studio trends rather than old-world lag.",
       "capture_vs_print": "Original capture. The print and its decorative mount are contemporaneous.",
-      "reasoning_summary": "The specific style of the Newman Studio mount and the girl's fashion—particularly the oversized hair bows and lace-up boots—are classic markers of the late 1910s. The Rivington Street address places this firmly in the heart of the NYC Jewish immigrant community during its peak period of growth.",
+      "reasoning_summary": "The specific style of the Newman Studio mount and the girl's fashion\u2014particularly the oversized hair bows and lace-up boots\u2014are classic markers of the late 1910s. The Rivington Street address places this firmly in the heart of the NYC Jewish immigrant community during its peak period of growth.",
       "scene_description": "A formal studio portrait of a young girl, approximately five years old, seated in a dark wooden armchair. She is dressed in a light-colored ruffled dress and wears prominent white bows in her hair. The photograph is presented in a professional brown cardstock folder with gold-embossed studio details.",
       "visible_text": "The Newman Studio 152 RIVINGTON ST. N.Y.C. NEWMAN 152 RIVINGTON ST.",
       "keywords": [
@@ -18666,8 +18666,8 @@
       "cultural_lag_note": "As this is an official identification photograph for a consular document, the photo was almost certainly taken within months of the 1963 filing date. Cultural lag in fashion is negligible for dating official ID captures.",
       "capture_vs_print": "Capture date is contemporary with the document date of 1963.",
       "reasoning_summary": "The document is explicitly dated September 27, 1963, by a Brazilian consular stamp in Buenos Aires. The subject's age (born 1915, appearing approximately 48) and her hairstyle/attire are perfectly consistent with this date.",
-      "scene_description": "A Brazilian consular qualification form (Ficha Consular de Qualificação) featuring a black and white identification photograph of a middle-aged woman. The woman is positioned in the upper right, wearing a dark coat and a patterned scarf; the rest of the document contains typewritten personal details and official stamps.",
-      "visible_text": "REPÚBLICA DOS ESTADOS UNIDOS DO BRASIL\nModêlo S. C. 139\nFICHA CONSULAR DE QUALIFICAÇÃO\nEsta ficha, expedida em duas vias, será entregue à Policia Maritima e à Imigração no pôrto de destino\nNome por extenso Felicita Russo in Capelluto\nAdmitido em território nacional em carácter TEMPORÁRIO\nNos termos do art. 7 letra A do Dec. Lei 7967 de 18 - 9 - 45\nLugar e data de nascimento Rodi 2-1-15\nNacionalidade italiana Estado civil casada\nFiliação (nome do Pai e da Mae) Israel Rachel e Bomor Abilamo\nProfissão P. Domesticas\nResidência no país de origem Claridge Hotel nesta\nPassaporte n. 2464349P expedido Cons Italiano em Elisabethville na data 5-7-57\nvisado sob. n. 17142\nASSINATURA DO PORTADOR: Capelluto\nConsulado Geral do Brasil em Bs. Aires\n27 SET 1963\nJ. B. L. de Andrada Cônsul-Adjunto",
+      "scene_description": "A Brazilian consular qualification form (Ficha Consular de Qualifica\u00e7\u00e3o) featuring a black and white identification photograph of a middle-aged woman. The woman is positioned in the upper right, wearing a dark coat and a patterned scarf; the rest of the document contains typewritten personal details and official stamps.",
+      "visible_text": "REP\u00daBLICA DOS ESTADOS UNIDOS DO BRASIL\nMod\u00ealo S. C. 139\nFICHA CONSULAR DE QUALIFICA\u00c7\u00c3O\nEsta ficha, expedida em duas vias, ser\u00e1 entregue \u00e0 Policia Maritima e \u00e0 Imigra\u00e7\u00e3o no p\u00f4rto de destino\nNome por extenso Felicita Russo in Capelluto\nAdmitido em territ\u00f3rio nacional em car\u00e1cter TEMPOR\u00c1RIO\nNos termos do art. 7 letra A do Dec. Lei 7967 de 18 - 9 - 45\nLugar e data de nascimento Rodi 2-1-15\nNacionalidade italiana Estado civil casada\nFilia\u00e7\u00e3o (nome do Pai e da Mae) Israel Rachel e Bomor Abilamo\nProfiss\u00e3o P. Domesticas\nResid\u00eancia no pa\u00eds de origem Claridge Hotel nesta\nPassaporte n. 2464349P expedido Cons Italiano em Elisabethville na data 5-7-57\nvisado sob. n. 17142\nASSINATURA DO PORTADOR: Capelluto\nConsulado Geral do Brasil em Bs. Aires\n27 SET 1963\nJ. B. L. de Andrada C\u00f4nsul-Adjunto",
       "keywords": [
         "consular document",
         "ID photo",
@@ -19199,7 +19199,7 @@
         ],
         "technology": [
           {
-            "cue": "Typewritten text on a Brazilian consular form (Ficha Consular de Qualificação)",
+            "cue": "Typewritten text on a Brazilian consular form (Ficha Consular de Qualifica\u00e7\u00e3o)",
             "strength": "strong",
             "suggested_range": [
               1945,
@@ -19213,7 +19213,7 @@
       "capture_vs_print": "The bottom photograph was likely captured shortly before the document date of January 1951. The top photograph appears to be an earlier capture, likely from the late 1930s or early 1940s.",
       "reasoning_summary": "The primary document is explicitly dated January 16, 1951. The fashion in the attached photograph, specifically the 'Bold Look' wide patterned tie, is highly characteristic of the 1948-1952 period. The subject's stated birth year of 1915 makes him 35 years old in 1951, which matches his physical appearance in the lower photo.",
       "scene_description": "Two identification documents for a man named Franz (Francesco) Capelluto. The top document is a French-language biographical entry with a small portrait; the bottom is a formal Brazilian consular qualification form from 1951 featuring a larger ID portrait of the man in a suit and patterned tie.",
-      "visible_text": "CAPELLUTO Franz Italien Agent Commercial. Né à Rhodes, le 15 juillet 1915. Ayant obtenu le diplôme de comptable, il se rend au Congo Belge en 1937, où il est engagé par la firme « Tarica Fres et Cie », à Jadotville. REPÚBLICA DOS ESTADOS UNIDOS DO BRASIL FICHA CONSULAR DE QUALIFICAÇÃO... FRANCESCO (FRANZ) CAPELLUTO... Rhodes... 15/7/1915... italiana... solteiro... Salomon e Rachel Capelluto... comerciante... Jadotville, Congo Belga... 30/12/1947... Cape Town... 16 de janeiro de 1951",
+      "visible_text": "CAPELLUTO Franz Italien Agent Commercial. N\u00e9 \u00e0 Rhodes, le 15 juillet 1915. Ayant obtenu le dipl\u00f4me de comptable, il se rend au Congo Belge en 1937, o\u00f9 il est engag\u00e9 par la firme \u00ab Tarica Fres et Cie \u00bb, \u00e0 Jadotville. REP\u00daBLICA DOS ESTADOS UNIDOS DO BRASIL FICHA CONSULAR DE QUALIFICA\u00c7\u00c3O... FRANCESCO (FRANZ) CAPELLUTO... Rhodes... 15/7/1915... italiana... solteiro... Salomon e Rachel Capelluto... comerciante... Jadotville, Congo Belga... 30/12/1947... Cape Town... 16 de janeiro de 1951",
       "keywords": [
         "ID photo",
         "passport photo",
@@ -19567,9 +19567,9 @@
       "cultural_lag_applied": false,
       "cultural_lag_note": "Dating is primarily driven by the explicit biographical text accompanying the photo, which tracks the subject's life from 1905 to 1938.",
       "capture_vs_print": "Capture likely late 1930s. The image shown is a halftone reproduction in a printed publication.",
-      "reasoning_summary": "The accompanying text provides a detailed biography of Haïm David Capelouto, born in Rhodes in 1905. It tracks his career in the Belgian Congo up to June 1938 and his subsequent move to Mweka. The subject appears to be in his mid-30s, which aligns perfectly with the 1938-1940 period. The tropical attire and background match the Congo setting described.",
+      "reasoning_summary": "The accompanying text provides a detailed biography of Ha\u00efm David Capelouto, born in Rhodes in 1905. It tracks his career in the Belgian Congo up to June 1938 and his subsequent move to Mweka. The subject appears to be in his mid-30s, which aligns perfectly with the 1938-1940 period. The tropical attire and background match the Congo setting described.",
       "scene_description": "A small black and white portrait of a man in his thirties, wearing a wide-brimmed tropical hat and a light shirt. He is positioned to the right of a French biographical text. The background is out of focus but suggests an outdoor tropical setting with trees.",
-      "visible_text": "CAPELOUTO Haïm. David Italien\nCommerçant. Né à Rhodes le 25 mai 1905.\nIl y est employé de bureau jusqu'au moment de son départ pour le Congo Belge. Arrivé à la Colonie par ses propres moyens, le 6 novembre 1926, il y est engagé pendant 5 mois par la firme « Franco », à Jadotville, puis il s'y installe commerçant à son compte. En juin 1932 il cesse son commerce et entre au service de la firme « Alzraki », à Jadotville, puis il passe à la maison « Amato Fres » où il reste jusqu'en juin 1938, ayant été détaché entretemps à Port Francqui et Kamina. Depuis 1938, il s'est installé commerçant à son compte à Mweka.",
+      "visible_text": "CAPELOUTO Ha\u00efm. David Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes le 25 mai 1905.\nIl y est employ\u00e9 de bureau jusqu'au moment de son d\u00e9part pour le Congo Belge. Arriv\u00e9 \u00e0 la Colonie par ses propres moyens, le 6 novembre 1926, il y est engag\u00e9 pendant 5 mois par la firme \u00ab Franco \u00bb, \u00e0 Jadotville, puis il s'y installe commer\u00e7ant \u00e0 son compte. En juin 1932 il cesse son commerce et entre au service de la firme \u00ab Alzraki \u00bb, \u00e0 Jadotville, puis il passe \u00e0 la maison \u00ab Amato Fres \u00bb o\u00f9 il reste jusqu'en juin 1938, ayant \u00e9t\u00e9 d\u00e9tach\u00e9 entretemps \u00e0 Port Francqui et Kamina. Depuis 1938, il s'est install\u00e9 commer\u00e7ant \u00e0 son compte \u00e0 Mweka.",
       "keywords": [
         "man",
         "hat",
@@ -19679,9 +19679,9 @@
       "capture_vs_print": "Original photo likely taken circa 1942 based on biographical text. The current image is a halftone reproduction from a printed publication, likely from the 1950s.",
       "reasoning_summary": "The accompanying text provides a specific biography ending in 1942. The subject, born in 1910, appears to be in his early 30s, which aligns perfectly with the 1942 date mentioned in the text. The halftone pattern indicates this is a scan from a commemorative book or directory.",
       "scene_description": "A head-and-shoulders portrait of a young man with dark, wavy hair. He is wearing a dark suit jacket, a white collared shirt, and a dark patterned necktie. The image is a halftone reproduction accompanied by a biographical text in French.",
-      "visible_text": "CAPELUTO Josué Italien\nColon. Né à Rhodes le 21 juillet 1910\nEn 1928, il arrive au Congo, au service de la firme Capeluto à Jadotville. Un an plus tard, il s'engage à Luena comme agent commercial chez Sadis Frères. En 1931, il s'installe commerçant à Luena et à Kikole, en 1942 à Lubudi.",
+      "visible_text": "CAPELUTO Josu\u00e9 Italien\nColon. N\u00e9 \u00e0 Rhodes le 21 juillet 1910\nEn 1928, il arrive au Congo, au service de la firme Capeluto \u00e0 Jadotville. Un an plus tard, il s'engage \u00e0 Luena comme agent commercial chez Sadis Fr\u00e8res. En 1931, il s'installe commer\u00e7ant \u00e0 Luena et \u00e0 Kikole, en 1942 \u00e0 Lubudi.",
       "keywords": [
-        "Josué Capeluto",
+        "Josu\u00e9 Capeluto",
         "Rhodes",
         "Belgian Congo",
         "Jadotville",
@@ -19911,7 +19911,7 @@
       "capture_vs_print": "The image is a scan of a printed page. The original photographs were likely taken between 1945 and 1950, shortly before the publication of this directory.",
       "reasoning_summary": "The text provides a terminus post quem of 1939. The subjects, born in 1902 and 1903, appear to be in their mid-to-late 40s, suggesting a date in the late 1940s. The halftone printing and layout are consistent with post-WWII community 'Livres d'Or' or directories.",
       "scene_description": "A page from a printed directory featuring two black and white portraits of men with accompanying biographical text in French. The top portrait shows Ezra Benatar, and the bottom shows Izaak Benatar, both born in Rhodes and living in the Belgian Congo.",
-      "visible_text": "BENATAR Ezra Italien\nGérant de Firme. Né à Rhodes, le 15 juin 1902.\nEn 1921 il arrive à Elisabethville, occupe plu-\nsieurs postes dans une même firme, et est ac-\ntuellement gérant de la firme Benatar Bros à\nAlbertville.\n\nBENATAR Izaak Belge\nCommerçant. Né à Rhodes, le 10 août 1903.\nIl fait ses études à Rhodes pour les y finir\nen 1919. De 1927 à 1933 il réside à Elisabeth-\nville où il est employé dans une société Eli-\nsabethvilloise. A partir de 1939 il s'installe à\nson compte comme commerçant à Kipushi.",
+      "visible_text": "BENATAR Ezra Italien\nG\u00e9rant de Firme. N\u00e9 \u00e0 Rhodes, le 15 juin 1902.\nEn 1921 il arrive \u00e0 Elisabethville, occupe plu-\nsieurs postes dans une m\u00eame firme, et est ac-\ntuellement g\u00e9rant de la firme Benatar Bros \u00e0\nAlbertville.\n\nBENATAR Izaak Belge\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes, le 10 ao\u00fbt 1903.\nIl fait ses \u00e9tudes \u00e0 Rhodes pour les y finir\nen 1919. De 1927 \u00e0 1933 il r\u00e9side \u00e0 Elisabeth-\nville o\u00f9 il est employ\u00e9 dans une soci\u00e9t\u00e9 Eli-\nsabethvilloise. A partir de 1939 il s'installe \u00e0\nson compte comme commer\u00e7ant \u00e0 Kipushi.",
       "keywords": [
         "Sephardic",
         "Rhodes",
@@ -20121,7 +20121,7 @@
       "capture_vs_print": "The portrait was likely captured circa 1947-1948 for inclusion in a biographical directory published shortly thereafter. The image shown is a halftone reproduction.",
       "reasoning_summary": "The text provides a definitive timeline, mentioning a move in 1947. The subject, born in 1911, appears to be in his late 30s, which aligns perfectly with a late 1940s date. The halftone printing and fashion are consistent with this period.",
       "scene_description": "A biographical entry from a printed publication featuring a head-and-shoulders portrait of a man named Salvator Alhadeff. The man is positioned on the right, wearing a dark suit and patterned tie, while the left side contains a biographical summary in French detailing his business career in the Belgian Congo and Ruanda-Urundi.",
-      "visible_text": "ALHADEFF Salvator Belge\nCommerçant. Né à Rhodes, en 1911.\nEn 1928, il arrive au Congo à ses frais et s'installe à son compte à Albertville.\nEn 1934, il s'installe à Costermansville et en 1947 à Usumbura (café, quinine).\nSa firme à Usumbura, a des succursales à Costermansville et dans tout le Ruanda-Urundi.\nBureau à New-York.",
+      "visible_text": "ALHADEFF Salvator Belge\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes, en 1911.\nEn 1928, il arrive au Congo \u00e0 ses frais et s'installe \u00e0 son compte \u00e0 Albertville.\nEn 1934, il s'installe \u00e0 Costermansville et en 1947 \u00e0 Usumbura (caf\u00e9, quinine).\nSa firme \u00e0 Usumbura, a des succursales \u00e0 Costermansville et dans tout le Ruanda-Urundi.\nBureau \u00e0 New-York.",
       "keywords": [
         "Salvator Alhadeff",
         "Rhodes",
@@ -20363,9 +20363,9 @@
       "cultural_lag_applied": false,
       "cultural_lag_note": "The text provides specific biographical dates (1946 graduation) which anchor the photos to the mid-to-late 1940s, aligning with the visual fashion cues.",
       "capture_vs_print": "Original photos likely taken c. 1946-1948. This image is a halftone reproduction from a printed commemorative book, likely published c. 1948-1952.",
-      "reasoning_summary": "The text explicitly states Moïse Cadranel finished his studies in 1946 and is 'currently' working as a mechanic. Joseph Cadranel's biography ends with his service starting in 1938 and subsequent travel. The ages of the subjects (Joseph born 1922, Moïse born 1929) in the portraits appear to be mid-20s and late-teens respectively, placing the capture date firmly in the late 1940s.",
-      "scene_description": "Two black and white portrait photographs of young men, Joseph and Moïse Cadranel, arranged vertically with accompanying biographical text in French. Joseph (top) is shown in a formal suit and tie, while Moïse (bottom) is in a more casual open-collared shirt; both are presented in a formal ID-style format typical of a community directory.",
-      "visible_text": "CADRANEL Joseph Italien\nAgent Amato Frères. Né à Milas (Turquie), le 25 octobre 1922.\nIl commence ses études à Rhodes et les termine à Elisabethville où il est arrivé, en 1936. Depuis 1938 il est au service de la firme « Amato Frères », section douane; il a voyagé dans la majorité des provinces du Congo Belge.\n\nCADRANEL Moïse Italien\nMécanicien. Né à Rhodes, le 26 mars 1929.\nIl débute ses études à Elisabethville pour les finir à Jadotville en 1946. Actuellement il travaille comme mécanicien au Garage Central d'Elisabethville.",
+      "reasoning_summary": "The text explicitly states Mo\u00efse Cadranel finished his studies in 1946 and is 'currently' working as a mechanic. Joseph Cadranel's biography ends with his service starting in 1938 and subsequent travel. The ages of the subjects (Joseph born 1922, Mo\u00efse born 1929) in the portraits appear to be mid-20s and late-teens respectively, placing the capture date firmly in the late 1940s.",
+      "scene_description": "Two black and white portrait photographs of young men, Joseph and Mo\u00efse Cadranel, arranged vertically with accompanying biographical text in French. Joseph (top) is shown in a formal suit and tie, while Mo\u00efse (bottom) is in a more casual open-collared shirt; both are presented in a formal ID-style format typical of a community directory.",
+      "visible_text": "CADRANEL Joseph Italien\nAgent Amato Fr\u00e8res. N\u00e9 \u00e0 Milas (Turquie), le 25 octobre 1922.\nIl commence ses \u00e9tudes \u00e0 Rhodes et les termine \u00e0 Elisabethville o\u00f9 il est arriv\u00e9, en 1936. Depuis 1938 il est au service de la firme \u00ab Amato Fr\u00e8res \u00bb, section douane; il a voyag\u00e9 dans la majorit\u00e9 des provinces du Congo Belge.\n\nCADRANEL Mo\u00efse Italien\nM\u00e9canicien. N\u00e9 \u00e0 Rhodes, le 26 mars 1929.\nIl d\u00e9bute ses \u00e9tudes \u00e0 Elisabethville pour les finir \u00e0 Jadotville en 1946. Actuellement il travaille comme m\u00e9canicien au Garage Central d'Elisabethville.",
       "keywords": [
         "portrait",
         "man",
@@ -20383,7 +20383,7 @@
       "photo_type": "document",
       "people_count": 2,
       "condition": "good",
-      "clothing_notes": "Joseph wears a dark suit with a patterned tie and white shirt. Moïse wears a light-colored, open-collared shirt, likely reflecting his trade as a mechanic mentioned in the text.",
+      "clothing_notes": "Joseph wears a dark suit with a patterned tie and white shirt. Mo\u00efse wears a light-colored, open-collared shirt, likely reflecting his trade as a mechanic mentioned in the text.",
       "controlled_tags": [
         "Studio",
         "Group_Portrait",
@@ -20478,7 +20478,7 @@
       "capture_vs_print": "The photograph was likely captured in the late 1930s or early 1940s. The image shown is a halftone reproduction from a later publication, likely a community directory.",
       "reasoning_summary": "The subject, Simon Israel, was born in 1891. In the photo, he appears to be in his late 40s or early 50s, which points to a date around 1938-1945. The fashion (tie width and collar style) and the biographical text mentioning his career in the Congo 'since then' (after 1921) support a mid-career portrait from the late 1930s or early 1940s.",
       "scene_description": "A formal head-and-shoulders portrait of a middle-aged man. He is dressed in a dark suit jacket, a light-colored shirt, and a patterned tie. He has a receding hairline, slicked-back hair, and a neutral, serious expression.",
-      "visible_text": "ISRAEL Simon Belge\nTailleur. Né à Rhodes, le 5 octobre 1891.\nSes études terminées en 1905, il s’embarque en 1909 pour l’Amérique du Sud où il fait son apprentissage de tailleur. De 1914 à 1921, il est tailleur en Palestine. Puis, il arrive au Congo et s’installe à Elisabethville où il est depuis lors marchand-tailleur.",
+      "visible_text": "ISRAEL Simon Belge\nTailleur. N\u00e9 \u00e0 Rhodes, le 5 octobre 1891.\nSes \u00e9tudes termin\u00e9es en 1905, il s\u2019embarque en 1909 pour l\u2019Am\u00e9rique du Sud o\u00f9 il fait son apprentissage de tailleur. De 1914 \u00e0 1921, il est tailleur en Palestine. Puis, il arrive au Congo et s\u2019installe \u00e0 Elisabethville o\u00f9 il est depuis lors marchand-tailleur.",
       "keywords": [
         "man",
         "portrait",
@@ -20832,7 +20832,7 @@
         "1950": 0.85,
         "1960": 0.05
       },
-      "location_estimate": "Belgian Congo (based on text context), likely a studio in Elisabethville (Lubumbashi) or Léopoldville (Kinshasa).",
+      "location_estimate": "Belgian Congo (based on text context), likely a studio in Elisabethville (Lubumbashi) or L\u00e9opoldville (Kinshasa).",
       "is_color": false,
       "evidence": {
         "print_format": [
@@ -20888,8 +20888,8 @@
       "cultural_lag_note": "Subjects are successful merchants in the Belgian Congo; while they likely followed European business standards, the conservative nature of Sephardic merchant portraits often retains styles for several years.",
       "capture_vs_print": "Original photos likely taken in the early-to-mid 1950s for a commercial directory. The image shown is a halftone print from that publication.",
       "reasoning_summary": "The subjects' ages (born 1904 and 1907) appear to be late 40s to early 50s in the photos. Combined with the 1950s-style eyeglasses and the mention of the 'Congo Belge' (pre-1960), a date in the mid-1950s is most probable.",
-      "scene_description": "Two individual head-and-shoulder portraits of brothers Haïm and Barouh Capelouto, presented side-by-side on a page of a French-language biographical directory. Both men are dressed in formal suits and ties, looking directly or slightly off-camera with serious expressions.",
-      "visible_text": "CAPELOUTO Frères (Haïm et Barouh)\n\nCommerçants. Nés à Rhodes, respectivement le 15 janvier 1904 et le 7 août 1907.\nHaïm Capelouto arrive au Congo Belge le 15 décembre 1925, tandis que son frère Barouh y arrive le 7 juin 1926. Ils fondent et dirigent la maison Capelouto Frères, qui s'occupe d'importation directe de tous articles de traite en général et possède un atelier de confection pour la vente en gros.\n\nHaïm Capelouto Barouh Capelouto",
+      "scene_description": "Two individual head-and-shoulder portraits of brothers Ha\u00efm and Barouh Capelouto, presented side-by-side on a page of a French-language biographical directory. Both men are dressed in formal suits and ties, looking directly or slightly off-camera with serious expressions.",
+      "visible_text": "CAPELOUTO Fr\u00e8res (Ha\u00efm et Barouh)\n\nCommer\u00e7ants. N\u00e9s \u00e0 Rhodes, respectivement le 15 janvier 1904 et le 7 ao\u00fbt 1907.\nHa\u00efm Capelouto arrive au Congo Belge le 15 d\u00e9cembre 1925, tandis que son fr\u00e8re Barouh y arrive le 7 juin 1926. Ils fondent et dirigent la maison Capelouto Fr\u00e8res, qui s'occupe d'importation directe de tous articles de traite en g\u00e9n\u00e9ral et poss\u00e8de un atelier de confection pour la vente en gros.\n\nHa\u00efm Capelouto Barouh Capelouto",
       "keywords": [
         "portrait",
         "brothers",
@@ -21128,7 +21128,7 @@
       "capture_vs_print": "The image is a halftone reproduction from a printed publication. The capture date is likely very close to the publication date (c. 1950-1952).",
       "reasoning_summary": "The text provides a specific biography: born 1912, arrived in Congo 1928, and 'currently' (actuellement) operating in Luluabourg after 1937. The subject appears to be approximately 35-40 years old, which aligns with a date around 1947-1952. The printing style is consistent with mid-century colonial directories.",
       "scene_description": "A black and white halftone portrait of a man, Alexandre Avzaradel, appearing in a biographical document. He is shown from the chest up, wearing a light-colored collared shirt, positioned against a soft-focus background of trees or garden foliage.",
-      "visible_text": "AVZARADEL Alexandre Italien\nCommerçant. Né en l'île de Rhodes, le 1 janvier 1912.\nIl arrive au Congo Belge en octobre 1928, par ses propres moyens, alors qu'il n'est âgé que de 16 ans. Tout d'abord agent commercial pour la firme « Notrica et Capeluto » à Elisabethville, il passe, en 1930, au service de la maison « Vigano et Habib » à Dilolo. Puis il s'installe à son compte à Jadotville, jusqu'en 1933 ; il passe alors à la Cie Amato Frères à Luluabourg. En 1937 il s'installe à nouveau à son compte : il tient actuellement un commerce à Luluabourg.",
+      "visible_text": "AVZARADEL Alexandre Italien\nCommer\u00e7ant. N\u00e9 en l'\u00eele de Rhodes, le 1 janvier 1912.\nIl arrive au Congo Belge en octobre 1928, par ses propres moyens, alors qu'il n'est \u00e2g\u00e9 que de 16 ans. Tout d'abord agent commercial pour la firme \u00ab Notrica et Capeluto \u00bb \u00e0 Elisabethville, il passe, en 1930, au service de la maison \u00ab Vigano et Habib \u00bb \u00e0 Dilolo. Puis il s'installe \u00e0 son compte \u00e0 Jadotville, jusqu'en 1933 ; il passe alors \u00e0 la Cie Amato Fr\u00e8res \u00e0 Luluabourg. En 1937 il s'installe \u00e0 nouveau \u00e0 son compte : il tient actuellement un commerce \u00e0 Luluabourg.",
       "keywords": [
         "Alexandre Avzaradel",
         "Rhodes",
@@ -21444,7 +21444,7 @@
       "capture_vs_print": "Capture likely circa 1934. This is a printed reproduction in a biographical directory.",
       "reasoning_summary": "The biographical text explicitly tracks the subject's life up to 1934, when he took over a business in Stanleyville. Born in 1906, the subject appears to be approximately 28 years old in the photo, which aligns perfectly with the 1934 date. The printing style is characteristic of colonial-era 'Who's Who' directories published in the mid-1930s.",
       "scene_description": "A small black and white ID-style portrait of a man, Isaac Cohen, positioned to the right of a biographical text block in French. The man is facing slightly left, wearing a dark suit jacket, a white collared shirt, and a dark tie.",
-      "visible_text": "COHEN Isaac Italien\nCommerçant. Né à l'île de Rhodes, le 17 juillet 1906.\nEn 1928, il arrive au Congo, engagé par contrat au service de la maison R. J. Franco. Il s'établit à Elisabethville, comme agent commercial. Ultérieurement, il réside à Lubudi, Kipushi, Luena en Kabondo-Dianda, toujours comme gérant de magasin pour la même maison. En 1934, il reprend une maison de commerce général à Stanleyville.",
+      "visible_text": "COHEN Isaac Italien\nCommer\u00e7ant. N\u00e9 \u00e0 l'\u00eele de Rhodes, le 17 juillet 1906.\nEn 1928, il arrive au Congo, engag\u00e9 par contrat au service de la maison R. J. Franco. Il s'\u00e9tablit \u00e0 Elisabethville, comme agent commercial. Ult\u00e9rieurement, il r\u00e9side \u00e0 Lubudi, Kipushi, Luena en Kabondo-Dianda, toujours comme g\u00e9rant de magasin pour la m\u00eame maison. En 1934, il reprend une maison de commerce g\u00e9n\u00e9ral \u00e0 Stanleyville.",
       "keywords": [
         "Isaac Cohen",
         "Rhodes",
@@ -21876,7 +21876,7 @@
       "capture_vs_print": "The image is a halftone reproduction in a publication. The capture date is likely very close to the publication date (c. 1950).",
       "reasoning_summary": "The text provides a definitive biography: born 1918, moved to Africa in 1936 and 1942. The 'current' status mentions a New York office and the city name 'Costermansville'. Costermansville was renamed Bukavu in 1953, providing a firm upper bound for the text. The subject appears to be in his early 30s, which aligns with a date around 1950 (1918 + 32).",
       "scene_description": "A head-and-shoulders portrait of a man in a suit and tie, positioned to the right of a block of French text. The man has dark, wavy hair and a serious expression. The text describes the life and business ventures of Masliah Alhadeff, a merchant from Rhodes operating in Central Africa and New York.",
-      "visible_text": "ALHADEFF Masliah Italien\nCommerçant. Né à Rhodes en 1918.\nIl obtient le diplôme commercial. En 1936, il rejoint son frère à Costermansville. En 1942, il vient à Usumbura où il s'occupe des plantations du Kivu et Ruanda-Urundi. Actuellement : siège à Usumbura, Succursales à Costermansville et tout le Ruanda-Urundi; Bureau à New-York.",
+      "visible_text": "ALHADEFF Masliah Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes en 1918.\nIl obtient le dipl\u00f4me commercial. En 1936, il rejoint son fr\u00e8re \u00e0 Costermansville. En 1942, il vient \u00e0 Usumbura o\u00f9 il s'occupe des plantations du Kivu et Ruanda-Urundi. Actuellement : si\u00e8ge \u00e0 Usumbura, Succursales \u00e0 Costermansville et tout le Ruanda-Urundi; Bureau \u00e0 New-York.",
       "keywords": [
         "Masliah Alhadeff",
         "Rhodes",
@@ -22224,7 +22224,7 @@
       "capture_vs_print": "Original capture circa 1927. The image is a modern digital scan of a historical print or document.",
       "reasoning_summary": "The explicit caption 'circa 1927' is strongly supported by the woman's cloche hat and the specific design of the automobile, both of which are hallmarks of the mid-to-late 1920s. The sailor suit on the child is also highly characteristic of this era.",
       "scene_description": "A group of four people posing with a vintage automobile on a dirt road. A man stands on the running board on the left, a woman sits in the driver's seat with a young boy standing on the running board beside her, and another man is visible behind the car on the right. The image includes a caption and a business advertisement for 'Mercantile Africaine'.",
-      "visible_text": "Elizabethville circa 1927, L to R: Rabbina Franco (Semah's brother), Mathilda Franco (née Galante, married to Rabbina), Aron Franco and Semah Franco\n\nSemah and his brother Aaron were the owners of Mercantile Africaine. The store was owned after by Aaro Franco, the American, who remained in Elizabethville until he died in 1992.\n\nMERCANTILE AFRICAINE\nS.C.R.L.\nELISABETHVILLE\nDistributeurs pour le Katanga des CHEMISES ET SOUS-VETEMENTS\nARROW",
+      "visible_text": "Elizabethville circa 1927, L to R: Rabbina Franco (Semah's brother), Mathilda Franco (n\u00e9e Galante, married to Rabbina), Aron Franco and Semah Franco\n\nSemah and his brother Aaron were the owners of Mercantile Africaine. The store was owned after by Aaro Franco, the American, who remained in Elizabethville until he died in 1992.\n\nMERCANTILE AFRICAINE\nS.C.R.L.\nELISABETHVILLE\nDistributeurs pour le Katanga des CHEMISES ET SOUS-VETEMENTS\nARROW",
       "keywords": [
         "automobile",
         "vintage car",
@@ -22824,7 +22824,7 @@
       "capture_vs_print": "The portrait is a mid-20th century capture. The overall image is a modern digital composite for museum display.",
       "reasoning_summary": "The hairstyle and dress silhouette are the strongest indicators, pointing to the late 1930s or early 1940s. The formal studio setting and the specific jewelry styles are consistent with this era. Given the Sephardic community's history in Rhodes, a date shortly before or during the early 1940s is most probable.",
       "scene_description": "A composite museum graphic featuring a large color photograph of an ornate silver 'Kucharera' (a traditional spoon and fork holder) on a green backdrop. To the right is an inset black and white studio portrait of a woman, Rica Cohen, shown from the chest up. The graphic includes descriptive text about the object's use in Sephardic culture.",
-      "visible_text": "Kucharera from Rhodes of the Cohen & Capeluto Family\nRica Cohen, née Capeluto\nThe silver Kucharera was used as a holder for the spoons and forks that served sweets (dulces) during celebrations and special gatherings.\nFrom: David Cohen of San Luis Obispo County, CA\nRhodes Jewish Historical Foundation\nwww.rhodesjewishmuseum.org",
+      "visible_text": "Kucharera from Rhodes of the Cohen & Capeluto Family\nRica Cohen, n\u00e9e Capeluto\nThe silver Kucharera was used as a holder for the spoons and forks that served sweets (dulces) during celebrations and special gatherings.\nFrom: David Cohen of San Luis Obispo County, CA\nRhodes Jewish Historical Foundation\nwww.rhodesjewishmuseum.org",
       "keywords": [
         "Kucharera",
         "silverware",
@@ -22990,7 +22990,7 @@
         "1940": 0.85,
         "1950": 0.15
       },
-      "location_estimate": "Belgian Congo (Kabinda, Léopoldville, or Albertville) based on text",
+      "location_estimate": "Belgian Congo (Kabinda, L\u00e9opoldville, or Albertville) based on text",
       "is_color": false,
       "evidence": {
         "print_format": [
@@ -23046,13 +23046,13 @@
       "capture_vs_print": "The image is a halftone reproduction from a printed book or directory. The original photograph was likely taken c. 1947 to accompany the biographical entry.",
       "reasoning_summary": "The text explicitly states the subject was born in 1916 and provides career details up to 1947. The subject appears to be in his early 30s, which perfectly matches the 1947 date. The halftone printing is typical of mid-century community directories.",
       "scene_description": "A black and white halftone headshot of a man with dark, wavy hair and a slight smile. The photo is placed to the right of a biographical text block in French detailing his birth in Rhodes and his career in the Belgian Congo.",
-      "visible_text": "AVZARADEL Moïse Italien\nCommerçant. Né en l'île de Rhodes, le 17 décembre 1916.\nEn 1936 il est engagé comme gérant par la firme Israël Frères à Kabinda. De 1946 à 1947 il est à Léopoldville pour la même firme. Depuis 1947 il est gérant de la firme M. et J. Alhadeff, à Albertville.",
+      "visible_text": "AVZARADEL Mo\u00efse Italien\nCommer\u00e7ant. N\u00e9 en l'\u00eele de Rhodes, le 17 d\u00e9cembre 1916.\nEn 1936 il est engag\u00e9 comme g\u00e9rant par la firme Isra\u00ebl Fr\u00e8res \u00e0 Kabinda. De 1946 \u00e0 1947 il est \u00e0 L\u00e9opoldville pour la m\u00eame firme. Depuis 1947 il est g\u00e9rant de la firme M. et J. Alhadeff, \u00e0 Albertville.",
       "keywords": [
-        "Moïse Avzaradel",
+        "Mo\u00efse Avzaradel",
         "Rhodes",
         "Belgian Congo",
         "Kabinda",
-        "Léopoldville",
+        "L\u00e9opoldville",
         "Albertville",
         "merchant",
         "Sephardic diaspora",
@@ -23163,7 +23163,7 @@
       "capture_vs_print": "The photo was likely captured in the late 1930s or early 1940s. This specific print is a halftone reproduction from a book or directory published circa 1945-1955.",
       "reasoning_summary": "The biographical text provides a hard floor: the subject was born in 1908 and moved to the Congo in 1928. He appears to be in his early to mid-30s in the photo, which aligns with the late 1930s or early 1940s. The suit style and the mention of his established business in Elisabethville suggest a date after he had achieved some success, likely around 1940.",
       "scene_description": "A black and white portrait of a man named Alexandre Cohen, appearing as an entry in a biographical directory. He is shown from the chest up, wearing a dark suit and tie, looking directly at the camera. To the left of the photo is a paragraph of French text detailing his life and career.",
-      "visible_text": "COHEN Alexandre Italien\nCommerçant. Né à Rhodes en 1908.\nIl suit les cours de l'Ecole des Frères jusqu'en 1924. De 1924 à 1928, il est forgeron dans sa ville natale, puis vient au Congo Belge comme employé pour la maison « Amato Frères et Capelouto ». Quelque temps après, il ouvre une maison de commerce qu'il dirige à Elisabethville.",
+      "visible_text": "COHEN Alexandre Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes en 1908.\nIl suit les cours de l'Ecole des Fr\u00e8res jusqu'en 1924. De 1924 \u00e0 1928, il est forgeron dans sa ville natale, puis vient au Congo Belge comme employ\u00e9 pour la maison \u00ab Amato Fr\u00e8res et Capelouto \u00bb. Quelque temps apr\u00e8s, il ouvre une maison de commerce qu'il dirige \u00e0 Elisabethville.",
       "keywords": [
         "Alexandre Cohen",
         "Rhodes",
@@ -23423,7 +23423,7 @@
         "1940": 0.25,
         "1950": 0.75
       },
-      "location_estimate": "Léopoldville (Kinshasa), Belgian Congo",
+      "location_estimate": "L\u00e9opoldville (Kinshasa), Belgian Congo",
       "is_color": false,
       "evidence": {
         "print_format": [
@@ -23484,16 +23484,16 @@
         ]
       },
       "cultural_lag_applied": false,
-      "cultural_lag_note": "The subject is a professional in a colonial urban center (Léopoldville), likely following contemporary European-influenced professional standards for a biographical publication.",
+      "cultural_lag_note": "The subject is a professional in a colonial urban center (L\u00e9opoldville), likely following contemporary European-influenced professional standards for a biographical publication.",
       "capture_vs_print": "The photo was likely taken shortly before the publication of the text. The text mentions 1944 as a past event and uses 'Actuellement' (Currently) for the present state.",
-      "reasoning_summary": "The accompanying text provides a biography of David Israel, born in Rhodes in 1912. It details his move to the Congo in 1936 and his employment in Léopoldville starting in 1944. The subject appears to be approximately 40 years old, which aligns with a date around 1952. The use of the name 'Léopoldville' and the description of the Belgian Congo context strongly suggests a date before 1960 independence.",
+      "reasoning_summary": "The accompanying text provides a biography of David Israel, born in Rhodes in 1912. It details his move to the Congo in 1936 and his employment in L\u00e9opoldville starting in 1944. The subject appears to be approximately 40 years old, which aligns with a date around 1952. The use of the name 'L\u00e9opoldville' and the description of the Belgian Congo context strongly suggests a date before 1960 independence.",
       "scene_description": "A black and white head-and-shoulders portrait of a middle-aged man, identified as David Israel, appearing alongside a French-language biographical entry. He is facing slightly to the right, wearing a light-colored dress shirt and a dark patterned tie. The background consists of a vertically draped curtain, typical of a professional studio setting.",
-      "visible_text": "ISRAEL David Italien\nMécanicien, aide-chimiste. Né à Rhodes, le 12 décembre 1912.\nEn 1928, il termine son école moyenne. Il est apprenti, puis ouvrier mécanicien en Italie. En 1936, il arrive au Congo où il exerce sa profession au service de la firme Helbaut au Kasai. Puis, en 1941, il ouvre à son compte un garage. En 1944, il est employé par la firme Israël, à Léopoldville comme mécanicien. Il profite du départ du chimiste de cette firme, et il le remplace pour la fabrication de couleurs, parfums, etc Actuellement, il collabore toujours à ces fabrications avec un autre chimiste.",
+      "visible_text": "ISRAEL David Italien\nM\u00e9canicien, aide-chimiste. N\u00e9 \u00e0 Rhodes, le 12 d\u00e9cembre 1912.\nEn 1928, il termine son \u00e9cole moyenne. Il est apprenti, puis ouvrier m\u00e9canicien en Italie. En 1936, il arrive au Congo o\u00f9 il exerce sa profession au service de la firme Helbaut au Kasai. Puis, en 1941, il ouvre \u00e0 son compte un garage. En 1944, il est employ\u00e9 par la firme Isra\u00ebl, \u00e0 L\u00e9opoldville comme m\u00e9canicien. Il profite du d\u00e9part du chimiste de cette firme, et il le remplace pour la fabrication de couleurs, parfums, etc Actuellement, il collabore toujours \u00e0 ces fabrications avec un autre chimiste.",
       "keywords": [
         "David Israel",
         "Rhodes",
         "Congo",
-        "Léopoldville",
+        "L\u00e9opoldville",
         "mechanic",
         "portrait",
         "man",
@@ -23600,7 +23600,7 @@
       "capture_vs_print": "Original capture likely late 1940s based on subject's apparent age (~30). The image shown is a halftone reproduction from a printed publication, likely from the 1950s.",
       "reasoning_summary": "The subject, Albert Avzaradel, was born in 1918. He appears to be approximately 30 years old in the photo, suggesting a date around 1948. The text mentions his arrival in Congo in 1939 and a subsequent four-year period in Tshimbumbulu, placing the narrative context into the mid-1940s or later.",
       "scene_description": "A black and white head-and-shoulders portrait of a man with a mustache, wearing a suit and tie. The portrait is positioned to the right of a biographical text block written in French, describing his life in Rhodes and the Belgian Congo.",
-      "visible_text": "AVZARADEL Albert Italien\nCommerçant. Né en l'île de Rhodes en mars 1918.\nIl y exerce plusieurs emplois avant son départ pour le Congo Belge. Débarqué à la Colonie le 4 avril 1939, il travaille tout d'abord pour le compte de son frère, à Demba, puis s'installe à Tshimbumbulu où il est le seul Européen durant quatre années. Un incendie ayant détruit complètement ses installations, il reprend service chez son frère, à Demba.",
+      "visible_text": "AVZARADEL Albert Italien\nCommer\u00e7ant. N\u00e9 en l'\u00eele de Rhodes en mars 1918.\nIl y exerce plusieurs emplois avant son d\u00e9part pour le Congo Belge. D\u00e9barqu\u00e9 \u00e0 la Colonie le 4 avril 1939, il travaille tout d'abord pour le compte de son fr\u00e8re, \u00e0 Demba, puis s'installe \u00e0 Tshimbumbulu o\u00f9 il est le seul Europ\u00e9en durant quatre ann\u00e9es. Un incendie ayant d\u00e9truit compl\u00e8tement ses installations, il reprend service chez son fr\u00e8re, \u00e0 Demba.",
       "keywords": [
         "man",
         "mustache",
@@ -24289,7 +24289,7 @@
             ]
           },
           {
-            "cue": "Signage 'Articles pour Indigènes' and 'Articles pour Européens' indicates a colonial African setting, likely Belgian Congo",
+            "cue": "Signage 'Articles pour Indig\u00e8nes' and 'Articles pour Europ\u00e9ens' indicates a colonial African setting, likely Belgian Congo",
             "strength": "strong",
             "suggested_range": [
               1908,
@@ -24327,7 +24327,7 @@
       "cultural_lag_applied": true,
       "cultural_lag_note": "Fashion in the Rhodesli diaspora in the Belgian Congo closely followed European trends but often retained styles for longer due to the remote colonial setting. The woman's dress is the most precise dating marker.",
       "capture_vs_print": "Original capture from the late 1930s or early 1940s. The digital labels (Leon Franco, numbers) are modern additions.",
-      "reasoning_summary": "The combination of the mid-1930s automobile and the woman's late-1930s puffed-sleeve floral dress provides a narrow window. The French colonial signage ('Articles pour Indigènes') and the specific Sephardic surnames confirm the location as the Belgian Congo, where many Rhodesli Jews emigrated. The scene likely dates to just before or during the early years of WWII.",
+      "reasoning_summary": "The combination of the mid-1930s automobile and the woman's late-1930s puffed-sleeve floral dress provides a narrow window. The French colonial signage ('Articles pour Indig\u00e8nes') and the specific Sephardic surnames confirm the location as the Belgian Congo, where many Rhodesli Jews emigrated. The scene likely dates to just before or during the early years of WWII.",
       "scene_description": "A group of six people posing in front of a dark 1930s sedan parked at a general store and gas station. The building in the background features white arched masonry with French signage identifying the owners as Capelouto and Tarica. A vintage gas pump is visible on the left side of the frame.",
       "visible_text": "ARTICLES POUR EUROPEENS; CAPELOUTO; ARTICLES POUR INDIGENES; TARICA; DETAIL; Leon Franco; 1; 2; 3; 4; 5",
       "keywords": [
@@ -24420,7 +24420,7 @@
       "capture_vs_print": "The text mentions the subject moved to Africa in 1947. The photo was likely captured between 1947 and 1950 for this publication.",
       "reasoning_summary": "The text provides a definitive biography ending in 1947. The subject, born in 1919, appears to be in his late 20s, which aligns perfectly with the 1947-1948 period. The publication title 'Le Congo Belge' places it before 1960.",
       "scene_description": "A head-and-shoulders portrait of Eliakim Cordoval, a Sephardic man from Rhodes, featured in a printed biographical directory. He is wearing a dark suit and tie, looking directly at the camera. The image is accompanied by a French text detailing his life, including his deportation to Auschwitz and his subsequent move to the Belgian Congo.",
-      "visible_text": "LE CONGO BELGE ET SES COLONIAUX\n\nCORDOVAL Eliakim Italien\nAgent commercial. Né à Rhodes, le 15 avril 1919.\nIl travaille à Rhodes pendant 10 ans comme agent commercial. En 1944 il est déporté par les Allemands au camp d’Auschwitz. Libéré par les Russes en 1945, il s’engage dans leur armée jusqu’en octobre de la même année. Rentré en Italie, il travaille au service de renseignements des déportés à Rome. En 1947, il part pour l’Afrique engagé par la firme « Simon Israël » comme agent commercial, à Luluabourg.",
+      "visible_text": "LE CONGO BELGE ET SES COLONIAUX\n\nCORDOVAL Eliakim Italien\nAgent commercial. N\u00e9 \u00e0 Rhodes, le 15 avril 1919.\nIl travaille \u00e0 Rhodes pendant 10 ans comme agent commercial. En 1944 il est d\u00e9port\u00e9 par les Allemands au camp d\u2019Auschwitz. Lib\u00e9r\u00e9 par les Russes en 1945, il s\u2019engage dans leur arm\u00e9e jusqu\u2019en octobre de la m\u00eame ann\u00e9e. Rentr\u00e9 en Italie, il travaille au service de renseignements des d\u00e9port\u00e9s \u00e0 Rome. En 1947, il part pour l\u2019Afrique engag\u00e9 par la firme \u00ab Simon Isra\u00ebl \u00bb comme agent commercial, \u00e0 Luluabourg.",
       "keywords": [
         "man",
         "portrait",
@@ -24535,9 +24535,9 @@
       "cultural_lag_applied": false,
       "cultural_lag_note": "The date is explicitly provided in the caption as June 1946. The fashion is contemporary to the immediate post-war period in Europe, reflecting the status of the subjects as refugees in Italy.",
       "capture_vs_print": "Original capture from June 1946. The image is a modern digital scan of a historical print.",
-      "reasoning_summary": "The photograph is explicitly dated by the accompanying text to June 1946. The visual evidence—specifically the women's hairstyles and skirt lengths—perfectly aligns with mid-1940s European fashion. The geographic marker of Castel Gandolfo confirms the location near Rome where Rhodesli survivors were housed post-liberation.",
+      "reasoning_summary": "The photograph is explicitly dated by the accompanying text to June 1946. The visual evidence\u2014specifically the women's hairstyles and skirt lengths\u2014perfectly aligns with mid-1940s European fashion. The geographic marker of Castel Gandolfo confirms the location near Rome where Rhodesli survivors were housed post-liberation.",
       "scene_description": "A group of fifteen young Sephardic Jewish adults, survivors from Rhodes, pose together on a wooden pier extending into a lake. Fourteen individuals stand in a line while one man kneels in the foreground. In the background, a steep hillside is topped by the architectural complex of Castel Gandolfo under a clear sky.",
-      "visible_text": "June 1946 of Rhodesli Holocaust survivors at Lago Albano (Castel Gandolfo in the background) which is near Rome. Where the refugees resettled: Moshe Galante (Buenos Aires), Stella Levi (New York), unknown, Clara Gabriel (Congo/Brussels), Sara Hanan Gilmore (Los Angeles), Stella Huniu (Congo/Israel), Matilda Almeleh (Congo/Israel), Laura or Clara Avzaradel (Congo), unknown, Clara Halfon Codron (Los Angeles), Matilda Hanan (Congo), unknown, Stella Hasson (Seattle), Laura Varon (Seattle) and kneeling in front is Joseph Cone (Congo/Cape Town). חברה שלום וחלוצי קדימה",
+      "visible_text": "June 1946 of Rhodesli Holocaust survivors at Lago Albano (Castel Gandolfo in the background) which is near Rome. Where the refugees resettled: Moshe Galante (Buenos Aires), Stella Levi (New York), unknown, Clara Gabriel (Congo/Brussels), Sara Hanan Gilmore (Los Angeles), Stella Huniu (Congo/Israel), Matilda Almeleh (Congo/Israel), Laura or Clara Avzaradel (Congo), unknown, Clara Halfon Codron (Los Angeles), Matilda Hanan (Congo), unknown, Stella Hasson (Seattle), Laura Varon (Seattle) and kneeling in front is Joseph Cone (Congo/Cape Town). \u05d7\u05d1\u05e8\u05d4 \u05e9\u05dc\u05d5\u05dd \u05d5\u05d7\u05dc\u05d5\u05e6\u05d9 \u05e7\u05d3\u05d9\u05de\u05d4",
       "keywords": [
         "Holocaust survivors",
         "Rhodesli",
@@ -25046,7 +25046,7 @@
       "cultural_lag_applied": true,
       "cultural_lag_note": "Conservative grooming and dress in Rhodes often lagged behind European centers; however, ID photos are generally more functional and less subject to fashion trends.",
       "capture_vs_print": "Likely a 1930s-1940s capture for identification purposes. The signature is contemporary with the photo.",
-      "reasoning_summary": "The high-contrast, front-facing composition and the presence of a signature suggest this is an identification photo (passport or transit document). The name 'Regine' reflects the French cultural influence in Rhodes via the Alliance Israélite Universelle. The hairstyle and dress are consistent with the 1930s-1940s era in the Dodecanese.",
+      "reasoning_summary": "The high-contrast, front-facing composition and the presence of a signature suggest this is an identification photo (passport or transit document). The name 'Regine' reflects the French cultural influence in Rhodes via the Alliance Isra\u00e9lite Universelle. The hairstyle and dress are consistent with the 1930s-1940s era in the Dodecanese.",
       "scene_description": "A head-and-shoulders portrait of a middle-aged woman with dark hair pulled back into a bun. She has a serious expression and is wearing a dark, high-necked garment. The name 'Regine Franco' is written in cursive script in the white space below the image.",
       "visible_text": "Regine Franco",
       "keywords": [
@@ -25738,7 +25738,7 @@
       "capture_vs_print": "Original capture 1938. The image shown is a modern digital reproduction with added text.",
       "reasoning_summary": "The photograph contains an explicit date (March 1, 1938) in the accompanying text, which is perfectly corroborated by the men's fashion (late 1930s suits) and the identified location of Rodini Park in Rhodes.",
       "scene_description": "A group of eight young men sit in a row on a curved stone wall overlooking a body of water, likely a pond or fountain. Their reflections are clearly visible in the still water below. The background is filled with dense Mediterranean trees, including cypress and palms, and a tall metal lattice structure stands to the right.",
-      "visible_text": "1938 at Zimbuli Park: Leon Levi, unknown, Victor Levi, Yedid Turiel, Shimon Halfon, Victor Hasson, unknown and ...Hanan. (Transliteration of the Judeo-Spanish notation on the back of the photo: Rodi, li 1 marzo 1938. Suvenir de tu karo ermano León Leví en juntos kon loz amigos (míos). Ke a los 9 días oy, van a partir para el Kongo (kon) un ermano de ... Leví. Ermanos, íntimos amigos. Kréigo (ke él) va perkurar i se va ir ande está el karo Lazár. İ ansí auguro otro tanto de mi. Addío! Tu karo ermano, León A'Leví)",
+      "visible_text": "1938 at Zimbuli Park: Leon Levi, unknown, Victor Levi, Yedid Turiel, Shimon Halfon, Victor Hasson, unknown and ...Hanan. (Transliteration of the Judeo-Spanish notation on the back of the photo: Rodi, li 1 marzo 1938. Suvenir de tu karo ermano Le\u00f3n Lev\u00ed en juntos kon loz amigos (m\u00edos). Ke a los 9 d\u00edas oy, van a partir para el Kongo (kon) un ermano de ... Lev\u00ed. Ermanos, \u00edntimos amigos. Kr\u00e9igo (ke \u00e9l) va perkurar i se va ir ande est\u00e1 el karo Laz\u00e1r. \u0130 ans\u00ed auguro otro tanto de mi. Add\u00edo! Tu karo ermano, Le\u00f3n A'Lev\u00ed)",
       "keywords": [
         "Rhodes",
         "Rodini Park",
@@ -27124,7 +27124,7 @@
       "capture_vs_print": "The image is a scan of a printed publication. The original photo was likely taken c. 1936-1940 for the purpose of this directory.",
       "reasoning_summary": "The text provides a biography ending in 1936, when the subject became a self-employed merchant. Born in 1913, he appears to be in his mid-20s in the photo, which strongly suggests a date shortly after 1936. The halftone texture indicates this is a reproduction from a book or directory published in the late 1930s.",
       "scene_description": "A small black and white portrait of a young man with short dark hair, wearing a suit and patterned tie. To the left of the portrait is a biographical text in French describing his life, education in Rhodes, and career in Elisabethville.",
-      "visible_text": "ANGEL Albert Italien Commerçant. Né à Rhodes, le 13 février 1913. Il termine l'école technique des Frères en 1930. Puis il vient a Elisabethville comme employé de son frère. En 1936, il y devient commerçant à son compte, s'occupant d'articles de traite et de la confection de vêtements.",
+      "visible_text": "ANGEL Albert Italien Commer\u00e7ant. N\u00e9 \u00e0 Rhodes, le 13 f\u00e9vrier 1913. Il termine l'\u00e9cole technique des Fr\u00e8res en 1930. Puis il vient a Elisabethville comme employ\u00e9 de son fr\u00e8re. En 1936, il y devient commer\u00e7ant \u00e0 son compte, s'occupant d'articles de traite et de la confection de v\u00eatements.",
       "keywords": [
         "Albert Angel",
         "Rhodes",
@@ -27838,7 +27838,7 @@
       "capture_vs_print": "Original color capture. The color degradation is typical of 1970s-era chemical prints.",
       "reasoning_summary": "The combination of sleeveless floral shift dresses and teased bouffant hairstyles strongly points to the late 1960s or very early 1970s. The color film quality and the casual but festive family dinner setting are consistent with this era.",
       "scene_description": "A large Sephardic family is gathered around a long dining table for a festive meal, possibly a holiday. Ten people are visible, with several women in the foreground wearing sleeveless floral dresses and men in short-sleeved shirts. The table is laden with plates of food and several bottles of wine, set against a background of home bookshelves.",
-      "visible_text": "LEÓN GALANTE/GALANTI, REGINA BENVENISTE, RICCA BENVENISTE, ROBERTO GALANTI, CLARA FEL, ABRAHAM FEL",
+      "visible_text": "LE\u00d3N GALANTE/GALANTI, REGINA BENVENISTE, RICCA BENVENISTE, ROBERTO GALANTI, CLARA FEL, ABRAHAM FEL",
       "keywords": [
         "family dinner",
         "Sephardic",
@@ -28018,7 +28018,7 @@
         "1920": 0.65,
         "1930": 0.1
       },
-      "location_estimate": "Rhodes, Greece (likely the courtyard of a Jewish school such as the Alliance Israélite Universelle)",
+      "location_estimate": "Rhodes, Greece (likely the courtyard of a Jewish school such as the Alliance Isra\u00e9lite Universelle)",
       "is_color": false,
       "evidence": {
         "print_format": [
@@ -28092,7 +28092,7 @@
         "uniform",
         "stone steps",
         "group portrait",
-        "Alliance Israélite Universelle",
+        "Alliance Isra\u00e9lite Universelle",
         "Dodecanese",
         "Jewish education"
       ],
@@ -28971,7 +28971,7 @@
       "capture_vs_print": "The capture date is likely circa 1947, coinciding with the subject's move to the USA mentioned in the text. The print shown is a later halftone reproduction in a biographical directory.",
       "reasoning_summary": "The subject, Nessim Cohen, was born in 1913. In the photo, he appears to be in his mid-30s, which aligns perfectly with the 1947 date mentioned in the text when he emigrated to the United States. The style of the suit and hair is consistent with the late 1940s.",
       "scene_description": "A black and white formal headshot of a man in his mid-30s, positioned to the right of a French biographical text. He is wearing a dark, textured suit jacket, a white shirt, and a dark tie, looking directly at the camera with a slight smile.",
-      "visible_text": "COHEN Nessim Italien Gérant-agent de société. Né à Rhodes, le 13 septembre 1913. Après ses études, il est de 1933 à 1937, agent commercial en Italie. Le 14 mai 1937, il débarque au Congo Belge, au service de la firme « Moussafir Bension », puis, fin 1937, de la maison Israël Frères. Il prospecte dans la brousse pendant 5 ans, pour le compte de cette firme. Puis, il revient à Léopoldville comme gérant de magasin. Le 23 novembre 1947, il quitte le Congo Belge pour les Etats-Unis d'Amérique comme associé dans une entreprise. Dans la suite, il revient au Congo et occupe le poste de gérant du magasin de détail de la maison Israël à Léopoldville.",
+      "visible_text": "COHEN Nessim Italien G\u00e9rant-agent de soci\u00e9t\u00e9. N\u00e9 \u00e0 Rhodes, le 13 septembre 1913. Apr\u00e8s ses \u00e9tudes, il est de 1933 \u00e0 1937, agent commercial en Italie. Le 14 mai 1937, il d\u00e9barque au Congo Belge, au service de la firme \u00ab Moussafir Bension \u00bb, puis, fin 1937, de la maison Isra\u00ebl Fr\u00e8res. Il prospecte dans la brousse pendant 5 ans, pour le compte de cette firme. Puis, il revient \u00e0 L\u00e9opoldville comme g\u00e9rant de magasin. Le 23 novembre 1947, il quitte le Congo Belge pour les Etats-Unis d'Am\u00e9rique comme associ\u00e9 dans une entreprise. Dans la suite, il revient au Congo et occupe le poste de g\u00e9rant du magasin de d\u00e9tail de la maison Isra\u00ebl \u00e0 L\u00e9opoldville.",
       "keywords": [
         "man",
         "portrait",
@@ -29072,7 +29072,7 @@
       "capture_vs_print": "The original capture is likely from the mid-to-late 1940s. The image shown is a halftone reproduction from a printed publication, likely a colonial directory or community history book.",
       "reasoning_summary": "The subject, Abner Bardavid, was born in 1908. In the photograph, he appears to be in his late 30s or early 40s, which aligns with a date in the mid-to-late 1940s. The text mentions his career progression in the Congo starting in 1929, and the photo likely dates from his established period in Sakania. The halftone print style is typical of mid-century biographical publications.",
       "scene_description": "A black and white head-and-shoulders portrait of a man in his late 30s, identified as Abner Bardavid. He is wearing a light-colored suit jacket, a white shirt, and a dark necktie. The image is a halftone reproduction accompanied by biographical text in French detailing his life in Rhodes and the Congo.",
-      "visible_text": "BARDAVID Abner Italien\nCommerçant. Né à Rhodes, le 18 juillet 1908.\nVenu au Congo en 1929, il s'installe successi-\nvement et à son compte à Kipushi, à Elisabeth-\nville et finalement à Sakania comme commer-\nçant.",
+      "visible_text": "BARDAVID Abner Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes, le 18 juillet 1908.\nVenu au Congo en 1929, il s'installe successi-\nvement et \u00e0 son compte \u00e0 Kipushi, \u00e0 Elisabeth-\nville et finalement \u00e0 Sakania comme commer-\n\u00e7ant.",
       "keywords": [
         "man",
         "portrait",
@@ -29191,7 +29191,7 @@
       "capture_vs_print": "Likely an original color print from the late 1960s or early 1970s.",
       "reasoning_summary": "The primary dating indicators are the women's hairstyles and the specific color palette of the film. The bouffant styles (Regina and Ketty) strongly point to the mid-to-late 1960s. The presence of a t-shirt on the far right suggests the later end of that decade or the very early 1970s.",
       "scene_description": "A group of eight family members are gathered closely together around a dining table covered with a white cloth. The group consists of four men and four women, with the men mostly in suits and the women in a mix of formal and casual attire. Several bottles of wine or soda and glassware are visible in the foreground, suggesting a celebratory meal.",
-      "visible_text": "REGINA BENVENISTE; ISAAC BENVENISTE; CADEN/CATHERINA/CATALINA \"KETTY\" BENVENISTE; RICCA BENVENISTE; SIMON/SHIMON BENVENISTE; JOSÉ/IOSEF \"PEPO\" BENVENISTE",
+      "visible_text": "REGINA BENVENISTE; ISAAC BENVENISTE; CADEN/CATHERINA/CATALINA \"KETTY\" BENVENISTE; RICCA BENVENISTE; SIMON/SHIMON BENVENISTE; JOS\u00c9/IOSEF \"PEPO\" BENVENISTE",
       "keywords": [
         "Benveniste family",
         "Sephardic",
@@ -29311,7 +29311,7 @@
       "capture_vs_print": "The image is a halftone reproduction in a printed book, likely published in the late 1930s or 1940s. The original photograph was likely taken in the mid-1930s based on the subject's apparent age (born 1891).",
       "reasoning_summary": "The biographical text provides a birth year of 1891 and a timeline of relocation to the Belgian Congo in 1929. The subject appears to be in his mid-40s, placing the photo in the mid-1930s. The fashion (V-neck sweater) and the halftone printing style of the document support this era.",
       "scene_description": "A biographical document page featuring a small black-and-white portrait of a man alongside a paragraph of French text. The man is shown from the chest up, looking directly at the camera, with a blurred natural background.",
-      "visible_text": "CADRANEL Isaac Italien\nCommerçant. Né à Milas (Turquie), le 25 sep-\ntembre 1891.\nEn 1912, il participe à la guerre des Balkans,\naux Dardanelles, où il est décoré de la médaille\nde guerre. Il participe aussi à la guerre gréco-\nturque en 1922. Démobilisé, il travaille à Rhodes\ncomme comptable à la maison Isaac Menache.\nEn 1929 il part pour le Congo Belge où il tra-\nvaille pour la firme « Amato-Capelluto-Tarica »\nà Tshimbulu. Après un congé, il repart avec sa\nfamille et travaille à Luputa pour la même firme.\nÀ ce jour il a repris à son compte la succursale\nAmato Frères à Demba.",
+      "visible_text": "CADRANEL Isaac Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Milas (Turquie), le 25 sep-\ntembre 1891.\nEn 1912, il participe \u00e0 la guerre des Balkans,\naux Dardanelles, o\u00f9 il est d\u00e9cor\u00e9 de la m\u00e9daille\nde guerre. Il participe aussi \u00e0 la guerre gr\u00e9co-\nturque en 1922. D\u00e9mobilis\u00e9, il travaille \u00e0 Rhodes\ncomme comptable \u00e0 la maison Isaac Menache.\nEn 1929 il part pour le Congo Belge o\u00f9 il tra-\nvaille pour la firme \u00ab Amato-Capelluto-Tarica \u00bb\n\u00e0 Tshimbulu. Apr\u00e8s un cong\u00e9, il repart avec sa\nfamille et travaille \u00e0 Luputa pour la m\u00eame firme.\n\u00c0 ce jour il a repris \u00e0 son compte la succursale\nAmato Fr\u00e8res \u00e0 Demba.",
       "keywords": [
         "biography",
         "Isaac Cadranel",
@@ -29337,6 +29337,2237 @@
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
       "created_at": "2026-02-14T16:51:11.344365+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_59_claude_benatar_collection_victor_bohor_sabatai_soriano_493684314_10171704024440346_5979171357513245894_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1947,
+      "confidence": "medium",
+      "probable_range": [
+        1942,
+        1952
+      ],
+      "decade_probabilities": {
+        "1930": 0.1,
+        "1940": 0.6,
+        "1950": 0.3
+      },
+      "location_estimate": "Likely a studio portrait from the US (NYC/Florida) or Rhodes, later used for a cemetery marker.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "oval ceramic/porcelain funerary plaque",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1970
+            ]
+          },
+          {
+            "cue": "sepia-toned monochrome reproduction",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "man in patterned suit jacket with wide notched lapels",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1952
+            ]
+          },
+          {
+            "cue": "slicked-back hair with high shine (pomade)",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1955
+            ]
+          },
+          {
+            "cue": "standard width necktie with Windsor-style knot",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1960
+            ]
+          }
+        ],
+        "environment": [],
+        "technology": [
+          {
+            "cue": "studio lighting with soft-focus retouching",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1955
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Conservative formal attire in Sephardic communities often mirrors styles from 5 years prior; however, the suit pattern and lapel width are quite specific to the mid-to-late 1940s.",
+      "capture_vs_print": "Original capture likely a studio portrait from the late 1940s. Current object is a ceramic funerary reproduction, likely created for a headstone after the subject's death.",
+      "reasoning_summary": "The fashion cues, specifically the wide lapels and patterned suit fabric, strongly point to the 1940s. The grooming and studio lighting style are consistent with this era. The ceramic format confirms its use as a memorial plaque, which often utilized portraits taken during the subject's middle age.",
+      "scene_description": "A head-and-shoulders formal studio portrait of a middle-aged man. He is clean-shaven with dark hair slicked back, wearing a light-colored patterned suit jacket, a white shirt, and a dark tie. The image is presented as an oval ceramic plaque embedded in a dark, polished stone surface.",
+      "visible_text": null,
+      "keywords": [
+        "man",
+        "portrait",
+        "suit",
+        "tie",
+        "slicked hair",
+        "ceramic plaque",
+        "funerary",
+        "memorial",
+        "sepia",
+        "middle-aged"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Patterned suit jacket (likely wool or tweed) with wide notched lapels; white dress shirt with a pointed collar; dark, medium-width necktie.",
+      "controlled_tags": [
+        "Studio",
+        "Cemetery"
+      ],
+      "subject_ages": [
+        50
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:16:03.194000+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_68_susanne_bass_collection_499759411_1189741629498856_3109157178903791725_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1950,
+      "best_year_estimate": 1949,
+      "confidence": "medium",
+      "probable_range": [
+        1945,
+        1955
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.45,
+        "1950": 0.45,
+        "1960": 0.05
+      },
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the casual domestic setting and the specific style of the man's necktie.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "B&W/Sepia toned print, low resolution digital scan with significant motion blur or focus issues",
+            "strength": "weak",
+            "suggested_range": [
+              1930,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "man wearing a wide, patterned 'Bold Look' style necktie",
+            "strength": "moderate",
+            "suggested_range": [
+              1945,
+              1953
+            ]
+          },
+          {
+            "cue": "man wearing dark suspenders/braces over a light-colored shirt",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1955
+            ]
+          },
+          {
+            "cue": "children wearing dark jumpers or pinafores over long-sleeved tops",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1955
+            ]
+          },
+          {
+            "cue": "girl with a short bobbed haircut and straight bangs",
+            "strength": "weak",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "indistinct indoor domestic background",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1970
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "The man's tie width is a strong indicator of post-WWII American fashion (late 1940s). In Sephardic diaspora communities, such styles were adopted quickly in the US but often retained for several years.",
+      "capture_vs_print": "Likely an original capture from the late 1940s or early 1950s. The digital scan quality obscures physical print details.",
+      "reasoning_summary": "The most diagnostic feature is the man's wide, patterned necktie, which aligns with the 'Bold Look' popular in the United States between 1948 and 1952. The children's clothing and the man's suspenders are consistent with a mid-century domestic scene.",
+      "scene_description": "A casual indoor group portrait of a man sitting and holding two young children on his lap. The man is in the center wearing a shirt, tie, and suspenders, while the children, a girl on the left and a younger child on the right, smile toward the camera in a domestic setting.",
+      "visible_text": null,
+      "keywords": [
+        "man",
+        "children",
+        "family",
+        "suspenders",
+        "wide tie",
+        "pinafore",
+        "jumper",
+        "indoor",
+        "domestic",
+        "Sephardic diaspora"
+      ],
+      "setting": "indoor_home",
+      "photo_type": "group_photo",
+      "people_count": 3,
+      "condition": "poor",
+      "clothing_notes": "Man in a light-colored shirt with a wide patterned tie and dark suspenders. The children are wearing dark jumpers or pinafores over lighter long-sleeved shirts, paired with dark socks.",
+      "controlled_tags": [
+        "Home_Interior",
+        "Casual",
+        "Group_Portrait"
+      ],
+      "subject_ages": [
+        6,
+        38,
+        4
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:17:29.666969+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_71_claude_benatar_collection_victor_bohor_sabatai_soriano_494502427_10171704023185346_5893663062454819691_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1940,
+      "confidence": "high",
+      "probable_range": [
+        1939,
+        1940
+      ],
+      "decade_probabilities": {
+        "1940": 1.0
+      },
+      "location_estimate": "Los Angeles, California",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Small B&W identification portrait affixed to a government document with staples",
+            "strength": "high",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man with mustache in standard 1940s suit and tie",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Official U.S. Department of Labor Immigration and Naturalization Service form",
+            "strength": "high",
+            "suggested_range": [
+              1940,
+              1940
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Typewritten text on a printed government form",
+            "strength": "high",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "Not applicable; the photo was taken in the US for an official government document dated 1940.",
+      "capture_vs_print": "The photograph was taken specifically for this 1940 legal filing.",
+      "reasoning_summary": "The document is explicitly dated October 16, 1940. The photograph is a required component of the Declaration of Intention and matches the age (56) of the applicant born in 1884.",
+      "scene_description": "A formal US government 'Declaration of Intention' for citizenship belonging to Yosef Peha. The document includes personal details, family history, and a small black and white ID photograph of the applicant in the lower-left corner.",
+      "visible_text": "UNITED STATES OF AMERICA / DECLARATION OF INTENTION / YOSEF PEHA, (also known as Joseph Peha) / 132 N. Hayworth Ave., Los Angeles / Rhodes, Egeo, Italy / Feb. 16, 1884 / 16th day of October, 1940 / Joseph Peha",
+      "keywords": [
+        "naturalization",
+        "immigration",
+        "Sephardic",
+        "Rhodes",
+        "Los Angeles",
+        "ID photo",
+        "mustache",
+        "suit",
+        "legal document",
+        "Yosef Peha"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "document",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "The subject wears a dark suit jacket, a white dress shirt with a pointed collar, and a dark tie. He has a neatly trimmed mustache and short, dark hair.",
+      "controlled_tags": [
+        "Document",
+        "Studio"
+      ],
+      "subject_ages": [
+        56
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:17:51.202119+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_84_claude_benatar_collection_51010671_10161394962905346_4861693603711287296_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1928,
+      "confidence": "high",
+      "probable_range": [
+        1925,
+        1932
+      ],
+      "decade_probabilities": {
+        "1910": 0.05,
+        "1920": 0.75,
+        "1930": 0.2
+      },
+      "location_estimate": "Likely New York City (Central Park or similar) or Rhodes; the casual park setting is common in early immigrant 'leisure' photos.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Sepia-toned monochrome print with matte finish",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1935
+            ]
+          },
+          {
+            "cue": "Soft focus background with sharp foreground, typical of early 20th-century handheld consumer cameras",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1935
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Women wearing cloche-style hats",
+            "strength": "strong",
+            "suggested_range": [
+              1923,
+              1931
+            ]
+          },
+          {
+            "cue": "Bobbed hairstyles visible on younger women",
+            "strength": "strong",
+            "suggested_range": [
+              1920,
+              1930
+            ]
+          },
+          {
+            "cue": "Dropped waistline and loose-fitting chemise-style dresses",
+            "strength": "strong",
+            "suggested_range": [
+              1922,
+              1929
+            ]
+          },
+          {
+            "cue": "Toddler in a knit cardigan/sweater set",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1935
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Casual outdoor seating on grass, likely a public park",
+            "strength": "weak",
+            "suggested_range": [
+              1910,
+              1950
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Candid outdoor photography, indicating a portable roll-film camera",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1940
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Fashion cues (cloche hats, bobs) are quintessential mid-1920s; adjusted slightly forward to late 1920s to account for Sephardic community adoption and immigrant context.",
+      "capture_vs_print": "Original capture. The physical aging and sepia tone are consistent with the era of the fashion.",
+      "reasoning_summary": "The fashion is the primary dating signal. The cloche hats and bobbed hair were at their peak in the mid-1920s. Given the cultural lag often seen in these communities, a date in the late 1920s is most probable. The casual, non-studio nature of the photo suggests a family outing.",
+      "scene_description": "A group of four women and two children are seated on the grass in an outdoor park setting. An older woman on the left holds a toddler, while a younger woman next to her holds an infant swaddled in a thick knit blanket. Two other women sit to the right, all dressed in 1920s-era daywear including cloche hats and bobbed hair.",
+      "visible_text": null,
+      "keywords": [
+        "family",
+        "women",
+        "children",
+        "infant",
+        "toddler",
+        "park",
+        "cloche hat",
+        "bobbed hair",
+        "outdoor",
+        "Sephardic",
+        "diaspora",
+        "knitwear",
+        "1920s fashion"
+      ],
+      "setting": "outdoor_urban",
+      "photo_type": "group_photo",
+      "people_count": 6,
+      "condition": "good",
+      "clothing_notes": "Two women wear cloche hats; younger women have bobbed hair. Dresses feature dropped waists and loose silhouettes. The infant is in a heavily textured knit bonnet and blanket. The toddler wears a knit sweater. There is a red mark/damage on the toddler's face on the print.",
+      "controlled_tags": [
+        "Outdoor",
+        "Casual",
+        "Group_Portrait"
+      ],
+      "subject_ages": [
+        62,
+        3,
+        28,
+        0,
+        22,
+        35
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:19:09.610678+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_87_abner_hasson_519693871_10172446261730346_4741244115442601264_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1932,
+      "confidence": "high",
+      "probable_range": [
+        1930,
+        1935
+      ],
+      "decade_probabilities": {
+        "1920": 0.1,
+        "1930": 0.9
+      },
+      "location_estimate": "Albertville, Belgian Congo (now Kalemie, DRC)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "halftone dot pattern visible, indicating reproduction in a printed publication",
+            "strength": "strong",
+            "suggested_range": [
+              1920,
+              1950
+            ]
+          },
+          {
+            "cue": "black and white portrait, likely from a directory or biographical book",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1945
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "man in dark business suit with notched lapels",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1940
+            ]
+          },
+          {
+            "cue": "necktie with diagonal stripes and small knot",
+            "strength": "moderate",
+            "suggested_range": [
+              1928,
+              1935
+            ]
+          },
+          {
+            "cue": "neatly groomed, short hair with side part",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1940
+            ]
+          }
+        ],
+        "environment": [],
+        "technology": [
+          {
+            "cue": "halftone screen reproduction",
+            "strength": "strong",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Subject is a Sephardic merchant from Smyrna living in the Belgian Congo; his attire reflects contemporary European business standards of the early 1930s without significant lag.",
+      "capture_vs_print": "Original capture likely c. 1932 for a business directory. This image is a halftone reproduction from that publication.",
+      "reasoning_summary": "The accompanying text provides a definitive biography ending in 1932. The subject, born in 1900, appears to be approximately 32 years old in the photo. The suit and tie style are perfectly consistent with the early 1930s.",
+      "scene_description": "A black and white halftone portrait of a man in his early 30s, identified as Abner Hasson. He is dressed in a formal suit and tie, looking directly at the camera with a neutral expression. The image is part of a printed biographical entry in French detailing his career as a merchant in the Belgian Congo.",
+      "visible_text": "HASSON Abner. Commer\u00e7ant. N\u00e9 \u00e0 Smyrne, le 10 juillet 1900. En 1927, il arrive au Congo par ses propres moyens et devient voyageur de commerce pour plusieurs maisons, \u00e0 Elisabethville. Apr\u00e8s 3 ans il exploite \u00e0 son compte, \u00e0 Elisabethville un magasin de commerce g\u00e9n\u00e9ral En 1932, il est \u00e0 Albertville dans le commerce et fait beaucoup d'importation en Belgique.",
+      "keywords": [
+        "man",
+        "portrait",
+        "suit",
+        "tie",
+        "merchant",
+        "Belgian Congo",
+        "Smyrna",
+        "biography",
+        "halftone",
+        "Sephardic",
+        "Elisabethville",
+        "Albertville"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Dark business suit, white collared shirt, and a necktie with diagonal stripes.",
+      "controlled_tags": [
+        "Document",
+        "Studio"
+      ],
+      "subject_ages": [
+        32
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:19:41.875622+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_92_ascher_t_capelouto_508014985_10172085972990346_6602167766352128966_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1947,
+      "confidence": "high",
+      "probable_range": [
+        1940,
+        1952
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.75,
+        "1950": 0.2
+      },
+      "location_estimate": "Port Francqui (now Ilebo), Belgian Congo (Democratic Republic of the Congo)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "halftone print reproduction in a book or directory",
+            "strength": "strong",
+            "suggested_range": [
+              1945,
+              1960
+            ]
+          },
+          {
+            "cue": "B&W rectangular portrait layout",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "short-sleeved light-colored shirt, likely tropical weight",
+            "strength": "moderate",
+            "suggested_range": [
+              1937,
+              1955
+            ]
+          },
+          {
+            "cue": "dark-rimmed spectacles with thick frames",
+            "strength": "moderate",
+            "suggested_range": [
+              1945,
+              1955
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "outdoor foliage, blurred background consistent with tropical setting",
+            "strength": "weak",
+            "suggested_range": [
+              1937,
+              1960
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Subject is part of the Rhodesli diaspora in the Belgian Congo; attire is consistent with mid-century tropical colonial dress rather than traditional Rhodes styles.",
+      "capture_vs_print": "The image is a halftone reproduction from a printed publication, likely a colonial directory. The original photograph was likely a personal snapshot or ID photo taken in the late 1940s.",
+      "reasoning_summary": "The subject's birth year (1916) and migration timeline (1937/1940) provided in the text, combined with his apparent age in the photo (early 30s), strongly point to a late 1940s capture date. The halftone printing indicates the photo was reproduced in a mid-century publication.",
+      "scene_description": "A black and white head-and-shoulders portrait of a man with dark hair and glasses, wearing a light-colored short-sleeved shirt. He is outdoors with trees visible in the background. The photo is positioned to the right of a French biographical text entry.",
+      "visible_text": "CAPELOUTO Ascher, T. Italiien\nCommer\u00e7ant, industriel. N\u00e9 \u00e0 Rhodes en 1916.\nEn 1937 il s'engage pour l'Afrique et est d\u00e9-\nsign\u00e9 pour Kabongo. Fin 1940 il part pour Port\nFrancqui o\u00f9 il s'installe \u00e0 son compte dans le\ncommerce. Il a deux huileries en territoire de\nBasongo et r\u00e9side \u00e0 Port Francqui.",
+      "keywords": [
+        "man",
+        "glasses",
+        "short-sleeved shirt",
+        "biography",
+        "Belgian Congo",
+        "Rhodes",
+        "Sephardic diaspora",
+        "merchant",
+        "industrialist",
+        "halftone"
+      ],
+      "setting": "outdoor_other",
+      "photo_type": "other",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Light-colored (likely white) short-sleeved shirt, possibly a polo or casual button-down; dark-rimmed spectacles.",
+      "controlled_tags": [
+        "Outdoor",
+        "Casual",
+        "Document"
+      ],
+      "subject_ages": [
+        31
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:21:19.978908+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_94_rahamin_raymond_sadis_485365490_10171438847430346_8512062402864014866_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1939,
+      "confidence": "high",
+      "probable_range": [
+        1939,
+        1939
+      ],
+      "decade_probabilities": {
+        "1930": 1.0
+      },
+      "location_estimate": "Portland, Oregon, USA",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white identification portrait attached to a formal government document",
+            "strength": "high",
+            "suggested_range": [
+              1930,
+              1945
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man with side-parted hair, wearing a notched-lapel suit jacket and a patterned necktie",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "environment": [],
+        "technology": [
+          {
+            "cue": "Official U.S. Department of Labor Form 2202-L-A with explicit date stamp of May 31, 1939",
+            "strength": "high",
+            "suggested_range": [
+              1939,
+              1939
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "No cultural lag applied as the date is explicitly printed on the legal document to which the photo is attached.",
+      "capture_vs_print": "The photograph was captured specifically for this 1939 legal document filing.",
+      "reasoning_summary": "The photograph is an integral part of a formal US 'Declaration of Intention' document which is explicitly dated May 31, 1939. The subject's appearance and the document's typography, stamps, and stated age (38) are all perfectly consistent with this date.",
+      "scene_description": "A formal United States 'Declaration of Intention' document for Rahamin Sadis, an immigrant from the Island of Rhodes. The document features a small black and white bust-length identification photograph of the applicant in the lower left corner, with his signature 'Raymond Sadis' written across the top of the photo. The form is filled with typewritten biographical details and official stamps from the District Court of Oregon.",
+      "visible_text": "UNITED STATES OF AMERICA DECLARATION OF INTENTION... RAHAMIN SADIS (known as Raymond Sadis)... occupation Merchant, aged 38 years... race Hebrew; nationality Italian... I was born in Island of Rhodes, Italy, on Sept. 24th, 1902... we were married on November 27, 1927... I emigrated to the United States of America from Naples, Italy... on the vessel SS Canopic... this 31st day of May, anno Domini, 1939... Raymond Sadis",
+      "keywords": [
+        "Declaration of Intention",
+        "Immigration",
+        "Naturalization",
+        "Rhodes",
+        "Sephardic",
+        "Portland",
+        "Oregon",
+        "man",
+        "suit",
+        "1939",
+        "Hebrew",
+        "Italian nationality",
+        "ID photo"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "document",
+      "people_count": 1,
+      "condition": "excellent",
+      "clothing_notes": "The subject wears a dark, notched-lapel suit jacket over a white collared dress shirt and a dark necktie with a small, repeating geometric pattern.",
+      "controlled_tags": [
+        "Document"
+      ],
+      "subject_ages": [
+        38
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:21:51.939922+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_98_eleonore_shemaria_486474068_10171556034980346_8907053379946085121_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1937,
+      "confidence": "high",
+      "probable_range": [
+        1936,
+        1937
+      ],
+      "decade_probabilities": {
+        "1930": 1.0
+      },
+      "location_estimate": "Bronx, New York",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Small B&W identification portrait attached to a legal document with an embossed court seal",
+            "strength": "high",
+            "suggested_range": [
+              1930,
+              1945
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Wavy hair styled in finger waves or a perm; dark garment with a large, floppy light-colored bow at the neck",
+            "strength": "moderate",
+            "suggested_range": [
+              1934,
+              1940
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Document text explicitly identifies the location as Bronx, New York",
+            "strength": "high",
+            "suggested_range": [
+              1937,
+              1937
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Typewritten Form 2202-L-A (U.S. Department of Labor Immigration and Naturalization Service)",
+            "strength": "high",
+            "suggested_range": [
+              1934,
+              1940
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "No lag applied as the photograph was taken in New York City for an official US government document dated 1937.",
+      "capture_vs_print": "The photograph was captured specifically for this 1937 naturalization document.",
+      "reasoning_summary": "The document is an official US Declaration of Intention explicitly dated October 21, 1937. The subject's biographical data (born 1911, aged 25) and the fashion of the portrait are perfectly consistent with this date.",
+      "scene_description": "A black and white identification photograph of a young woman, Leonora Shemaria, attached to her official United States Declaration of Intention. She is shown in a bust-length portrait with wavy hair and a large bow at her neck. The document contains detailed typewritten personal information and official signatures from the Bronx County Supreme Court.",
+      "visible_text": "UNITED STATES OF AMERICA, DECLARATION OF INTENTION, Leonora Shemaria, 1174 Sheridan Av, NY, Bronx, NY, Milliner, aged 25, Rhodes, Italy, Sept. 15, 1911, SS Vulcania, 21 day of Oct. anno Domini 1937",
+      "keywords": [
+        "naturalization",
+        "immigration",
+        "ID photo",
+        "Rhodes",
+        "Sephardic",
+        "Bronx",
+        "1930s",
+        "document",
+        "Leonora Shemaria",
+        "SS Vulcania",
+        "milliner"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "document",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Dark blouse or dress featuring a large, prominent light-colored bow at the collar; hair is styled in waves characteristic of the mid-1930s.",
+      "controlled_tags": [
+        "Document"
+      ],
+      "subject_ages": [
+        25
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:22:19.128058+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_107_debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1946,
+      "confidence": "high",
+      "probable_range": [
+        1943,
+        1948
+      ],
+      "decade_probabilities": {
+        "1930": 0.05,
+        "1940": 0.9,
+        "1950": 0.05
+      },
+      "location_estimate": "Likely Florida, USA (Miami or Tampa) based on rattan furniture and Venetian blinds common in 'Florida rooms'.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white rectangular print, borderless appearance in scan",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1955
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Women with victory roll and pompadour hairstyles",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1947
+            ]
+          },
+          {
+            "cue": "Women's dresses with pronounced padded shoulders and geometric/lace collars",
+            "strength": "strong",
+            "suggested_range": [
+              1940,
+              1948
+            ]
+          },
+          {
+            "cue": "Men in wide-lapel suits with broad shoulders and patterned neckties",
+            "strength": "moderate",
+            "suggested_range": [
+              1942,
+              1950
+            ]
+          },
+          {
+            "cue": "Children in formal attire: boys with ties and suspenders, girls in puffed-sleeve dresses with large hair bows",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1950
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Rattan/wicker furniture with floral upholstery",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1955
+            ]
+          },
+          {
+            "cue": "Venetian blinds in the background",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1955
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Fashion is highly contemporary for the mid-1940s; the interior decor (rattan, blinds) suggests a US diaspora setting (likely Florida) where cultural lag is minimal compared to Rhodes.",
+      "capture_vs_print": "Likely original capture from the mid-1940s.",
+      "reasoning_summary": "The hairstyles (victory rolls) and clothing silhouettes (padded shoulders) provide a very narrow window in the 1940s. The interior decor is consistent with a mid-century American home, specifically in a warmer climate like Florida, which was a major hub for the Rhodesli Sephardic community.",
+      "scene_description": "A large multi-generational family group portrait taken indoors. Seven adults stand in the back row, while four adults and a baby are seated in the middle row on rattan furniture. Four young children are seated on the floor in the foreground. The background features Venetian blinds and a simple interior wall.",
+      "visible_text": null,
+      "keywords": [
+        "family portrait",
+        "multi-generational",
+        "rattan furniture",
+        "Venetian blinds",
+        "victory rolls",
+        "padded shoulders",
+        "suspenders",
+        "puffed sleeves",
+        "hair bows",
+        "Sephardic diaspora",
+        "Florida room"
+      ],
+      "setting": "indoor_home",
+      "photo_type": "group_photo",
+      "people_count": 16,
+      "condition": "good",
+      "clothing_notes": "Men are in formal suits with wide lapels; one man wears a bowtie. Women feature 1940s hairstyles and dresses with structured shoulders. Children are dressed formally, with boys in short trousers, ties, and suspenders, and girls in light-colored puffed-sleeve dresses with bows in their hair.",
+      "controlled_tags": [
+        "Group_Portrait",
+        "Home_Interior",
+        "Casual",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        35,
+        25,
+        32,
+        28,
+        45,
+        26,
+        22,
+        65,
+        60,
+        1,
+        35,
+        30,
+        9,
+        7,
+        6,
+        10
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:22:45.645660+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_109_alfred_aron_charhon_514107722_10172197066705346_4898226954282493936_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1942,
+      "confidence": "high",
+      "probable_range": [
+        1938,
+        1948
+      ],
+      "decade_probabilities": {
+        "1930": 0.2,
+        "1940": 0.7,
+        "1950": 0.1
+      },
+      "location_estimate": "Elisabethville (Lubumbashi), Belgian Congo",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "halftone screen pattern visible in reproduction",
+            "strength": "strong",
+            "suggested_range": [
+              1930,
+              1960
+            ]
+          },
+          {
+            "cue": "printed biographical text accompanying image",
+            "strength": "strong",
+            "suggested_range": [
+              1938,
+              1955
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "notched lapel suit with standard width tie",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1950
+            ]
+          },
+          {
+            "cue": "short hair with high-volume pompadour style",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "text mentions Elisabethville (Belgian Congo) and 'notre Colonie'",
+            "strength": "strong",
+            "suggested_range": [
+              1908,
+              1960
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "offset or letterpress halftone reproduction",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1960
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "The subject's attire is standard European professional wear of the era, typical for Sephardic merchants in colonial administrative centers like Elisabethville.",
+      "capture_vs_print": "The capture date is likely late 1930s or early 1940s based on the subject's age (born 1907, appears ~35). The print is a later halftone reproduction in a commemorative book.",
+      "reasoning_summary": "The text provides a definitive biography: born 1907, left Rhodes in 1930, left Palestine in 1937, then moved to the Belgian Congo. The subject appears to be in his mid-30s, placing the photo shortly after his arrival in Elisabethville. The phrasing 'notre Colonie' suggests the book was published before Congolese independence in 1960.",
+      "scene_description": "A formal head-and-shoulders portrait of a man in a suit and tie, positioned to the right of a biographical text block. The man has dark hair and is looking slightly off-camera with a neutral expression.",
+      "visible_text": "CHARHON Alfred (Aron) Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes, le 15 octobre 1907.\nIl y termine en 1926, la troisi\u00e8me ann\u00e9e du\ncours sup\u00e9rieur, puis est successivement employ\u00e9\nau Gouvernement \u00e0 Rhodes, durant quatre an-\nn\u00e9es, employ\u00e9 chez un avocat, de 1930 \u00e0 1931,\net puis jusqu'en 1937, commer\u00e7ant en Palestine.\nDepuis lors, il a voyag\u00e9 dans toute notre Colo-\nnie, il s'est \u00e9tabli comme commer\u00e7ant \u00e0 Elisa-\nbethville.",
+      "keywords": [
+        "man",
+        "portrait",
+        "suit",
+        "tie",
+        "biography",
+        "Rhodes",
+        "Elisabethville",
+        "Belgian Congo",
+        "merchant",
+        "Sephardic diaspora"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "The subject wears a dark suit jacket with notched lapels, a white collared shirt, and a dark tie with a four-in-hand knot.",
+      "controlled_tags": [
+        "Document",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        35
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:23:02.878418+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_110_claude_benatar_collection_victor_bohor_sabatai_soriano_493853728_10171704024405346_2509583181697338751_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1941,
+      "confidence": "high",
+      "probable_range": [
+        1935,
+        1944
+      ],
+      "decade_probabilities": {
+        "1920": 0.05,
+        "1930": 0.25,
+        "1940": 0.7
+      },
+      "location_estimate": "Likely a Sephardic cemetery in a Spanish-speaking country (e.g., Argentina, Uruguay, or Mexico) or a Spanish-speaking Sephardic enclave in the US.",
+      "is_color": true,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "oval ceramic/porcelain inset portrait",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1960
+            ]
+          },
+          {
+            "cue": "hand-tinted colorization on base B&W image",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1950
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "man in light-colored suit with wide, notched lapels",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1945
+            ]
+          },
+          {
+            "cue": "dark necktie with Windsor-style knot",
+            "strength": "weak",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          },
+          {
+            "cue": "short, slicked-back hair with neat side-parting",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1945
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "black granite tombstone with Spanish and Hebrew inscriptions",
+            "strength": "strong",
+            "suggested_range": [
+              1944,
+              1944
+            ]
+          },
+          {
+            "cue": "Spanish acronym Q.E.P.D. (Que En Paz Descanse)",
+            "strength": "moderate",
+            "suggested_range": [
+              1900,
+              2000
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "porcelain photo memorial technology",
+            "strength": "moderate",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "The subject died in 1944. In Sephardic traditions, the portrait chosen for a monument is typically a formal studio photograph taken within the last 5-10 years of the subject's life.",
+      "capture_vs_print": "Original photograph likely captured c. 1938-1943. The ceramic print was produced posthumously, likely in 1944 or 1945, for the monument.",
+      "reasoning_summary": "The tombstone provides a definitive terminus ante quem of February 1944. The subject, born in 1890, appears to be in his late 40s or early 50s in the portrait, which aligns with the years immediately preceding his death. The wide lapels of the suit and the grooming style are characteristic of the late 1930s and early 1940s.",
+      "scene_description": "A formal memorial portrait of a middle-aged man inset into a black granite tombstone. The man is shown from the chest up, wearing a light-colored suit and dark tie. The tombstone features a Star of David at the top and inscriptions in both Spanish and Hebrew.",
+      "visible_text": "JOSE YOHAI\nQ.E.P.D.\n15-IV-1890 5-II-1944\n\u05e4\u05f4\u05e0 \u05d9\u05d5\u05e1\u05e3 \u05d9\u05d5\u05d7\u05d0\u05d9 \u05d1\u05df \u05e1\u05d5\u05dc\n\u05e0\u05dc\u05d1\u05f4\u05e2 \u05d9\u05f4\u05d0 \u05e9\u05d1\u05d8 \u05e9\u05e0\u05ea \u05d4\u05ea\u05e9\u05f4\u05d3",
+      "keywords": [
+        "tombstone",
+        "cemetery",
+        "Sephardic",
+        "Star of David",
+        "memorial portrait",
+        "ceramic photo",
+        "suit",
+        "Spanish inscription",
+        "Hebrew inscription",
+        "matzevah"
+      ],
+      "setting": "outdoor_other",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "The subject wears a light-colored (possibly tan or grey) single-breasted suit with wide notched lapels, a white collared shirt, and a dark necktie.",
+      "controlled_tags": [
+        "Cemetery",
+        "Document"
+      ],
+      "subject_ages": [
+        51
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:23:25.553755+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_111_claude_benatar_collection_victor_haim_israel_470239310_10170605628145346_5283256967494305297_n",
+      "source": "gemini",
+      "model": "gemini-3-flash-preview",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1922,
+      "confidence": "high",
+      "probable_range": [
+        1918,
+        1926
+      ],
+      "decade_probabilities": {
+        "1910": 0.3,
+        "1920": 0.65,
+        "1930": 0.05
+      },
+      "location_estimate": "Likely Rhodes or New York City (formal studio setting)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white studio portrait with soft-focus edges",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1930
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Woman wearing a very large, voluminous fur or feather stole",
+            "strength": "strong",
+            "suggested_range": [
+              1915,
+              1925
+            ]
+          },
+          {
+            "cue": "Children in sailor-style collars and oversized hair bows",
+            "strength": "strong",
+            "suggested_range": [
+              1910,
+              1925
+            ]
+          },
+          {
+            "cue": "Man with a groomed mustache and high-buttoned suit jacket",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1925
+            ]
+          },
+          {
+            "cue": "Girls wearing Mary Jane shoes with white socks",
+            "strength": "moderate",
+            "suggested_range": [
+              1915,
+              1935
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Neutral, mottled studio backdrop",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1940
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Studio lighting creating distinct highlights on the fur and eyes",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1930
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "The high-fashion fur stole and children's Western-style clothing suggest a family aspiring to modern European/American standards, likely in the early 1920s, even if in Rhodes.",
+      "capture_vs_print": "Original capture from the early 20th century.",
+      "reasoning_summary": "The combination of the woman's dramatic fur stole and the children's specific attire (sailor collars and large hair bows) is highly characteristic of the late 1910s and early 1920s. The man's grooming and suit style further support this window.",
+      "scene_description": "A formal studio portrait of a Sephardic family. A woman stands on the left wearing a dark dress and a prominent white fur stole; a man sits on the right in a dark suit with a young child on his lap. Two older girls stand in the foreground, dressed in light-colored dresses with large collars.",
+      "visible_text": null,
+      "keywords": [
+        "family portrait",
+        "studio",
+        "fur stole",
+        "sailor collar",
+        "hair bow",
+        "mustache",
+        "Mary Janes",
+        "Sephardic",
+        "children",
+        "early 20th century"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 5,
+      "condition": "good",
+      "clothing_notes": "Woman in a dark dress with a massive white fur or ostrich feather stole and long beaded necklace. Man in a dark three-piece suit and tie. Children in dresses with large white collars and hair bows; Mary Jane style shoes with white socks.",
+      "controlled_tags": [
+        "Studio",
+        "Group_Portrait",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        28,
+        32,
+        5,
+        7,
+        2
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:23:43.659537+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_15_isaac_jack_levy_490471033_10171580010150346_8652748163613864274_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1947,
+      "confidence": "high",
+      "probable_range": [
+        1946,
+        1947
+      ],
+      "decade_probabilities": {
+        "1940": 0.99,
+        "1930": 0.01
+      },
+      "location_estimate": "New York, NY (where the document was filed)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white photograph, rectangular shape, thin straight white border, matte surface, typical of an official identification photo.",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1955
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Young man with short, neat, side-parted hair, clean-shaven. Wearing a dark collared shirt (likely part of a suit or formal attire). Round, thin-framed eyeglasses.",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1950
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Plain, light-colored background, indicating a studio or official photo booth setting.",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "Not applicable as this is an official document photo, where fashion trends and cultural lag are less relevant than the document's explicit dating.",
+      "capture_vs_print": "The photograph is affixed to a 'Declaration of Intention' document dated May 2, 1947. The document explicitly states, 'I certify that the photograph affixed to the duplicate and triplicate hereof is a likeness of me and was signed by me.' This strongly indicates the photo was taken very close to the document's signing date.",
+      "reasoning_summary": "The most compelling evidence for dating is the document itself, which is dated May 2, 1947, and certifies the affixed photograph as a likeness of the declarant. The subject, Isaac Jack Levy, was born in December 1928, making him 18 years old at the time of the document's signing, which is consistent with his appearance in the photo. The style of the black and white, plain-background portrait is typical for official identification photos of the mid-1940s. Fashion and print format cues align with this period.",
+      "scene_description": "A black and white headshot of a young man with short, dark, side-parted hair and round, thin-framed eyeglasses. He is looking directly at the camera with a neutral expression. The background is plain and light-colored, typical of an identification photograph affixed to an official document.",
+      "visible_text": "Please print legibly\nIsaac Jack Levy\nI certify that the photograph affixed to the duplicate and triplicate hereof is a likeness of me and was signed by me.\nSubscribed and sworn to (affirmed) before me in the form of oath shown above in the office of the Clerk of said Court, at New York, NY. this 2 day of May anno Domini 1947",
+      "keywords": [
+        "man",
+        "young man",
+        "portrait",
+        "headshot",
+        "ID photo",
+        "official document",
+        "eyeglasses",
+        "immigration",
+        "Sephardic",
+        "Rhodesian"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "document",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Young man wearing a dark collared shirt, likely part of a suit or formal attire, with a simple, neat hairstyle and round-framed eyeglasses.",
+      "controlled_tags": [
+        "Studio",
+        "Document"
+      ],
+      "subject_ages": [
+        18
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:24:13.339088+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_41_isaac_jack_levy_490364820_10171580008910346_2077570241570978282_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1940,
+      "confidence": "medium",
+      "probable_range": [
+        1935,
+        1945
+      ],
+      "decade_probabilities": {
+        "1920": 0.05,
+        "1930": 0.4,
+        "1940": 0.45,
+        "1950": 0.1
+      },
+      "location_estimate": "Cannot be determined from the plain studio background.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white photograph, fine grain visible",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1960
+            ]
+          },
+          {
+            "cue": "Rectangular print shape, no visible border in the crop",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1970
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man's short, neatly combed, side-parted hairstyle",
+            "strength": "weak",
+            "suggested_range": [
+              1920,
+              1955
+            ]
+          },
+          {
+            "cue": "Round, thin-rimmed eyeglasses",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1945
+            ]
+          },
+          {
+            "cue": "Collar of a light-colored collared shirt",
+            "strength": "weak",
+            "suggested_range": [
+              1920,
+              1950
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Plain, light-colored background, likely a studio backdrop",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              2000
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Adjusted +5 years for eyeglasses style popularity due to Sephardic community context, extending its common use into the early 1940s.",
+      "capture_vs_print": "Likely 1930s-1940s capture. Print characteristics consistent with an original photograph from that era, not a modern reprint.",
+      "reasoning_summary": "The most significant dating cue is the style of the round, thin-rimmed eyeglasses, which were highly popular from the late 1920s through the early 1940s. The man's hairstyle and the black and white print format are consistent with this period. Applying a cultural lag for Sephardic communities, the style's prevalence would extend into the early to mid-1940s.",
+      "scene_description": "A headshot portrait of a young man with dark, neatly combed hair and round, thin-rimmed glasses. He is looking directly at the camera. The background is plain and light-colored, suggesting a studio setting.",
+      "visible_text": "Mose J. Liz",
+      "keywords": [
+        "headshot",
+        "portrait",
+        "man",
+        "young man",
+        "glasses",
+        "studio",
+        "inscription",
+        "black and white"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "The man is wearing a light-colored collared shirt, only the collar is visible.",
+      "controlled_tags": [
+        "Studio"
+      ],
+      "subject_ages": [
+        22
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:24:34.856408+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_44_claude_benatar_collection_victor_rebecca_benun_495644359_10171755169400346_7126191920610626702_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1947,
+      "confidence": "high",
+      "probable_range": [
+        1946,
+        1947
+      ],
+      "decade_probabilities": {
+        "1940": 0.99,
+        "1930": 0.01
+      },
+      "location_estimate": "Los Angeles, California (based on the document information; the photo itself has a plain background)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "black and white photograph, rectangular cut with straight edges, affixed to an official document",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "woman's short, dark hair styled in soft curls close to the head, typical of mid-1940s fashion",
+            "strength": "strong",
+            "suggested_range": [
+              1942,
+              1948
+            ]
+          },
+          {
+            "cue": "simple dark V-neck top or dress, small stud earrings, delicate necklace with a small pendant, and a decorative brooch on the left side",
+            "strength": "moderate",
+            "suggested_range": [
+              1940,
+              1950
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "plain, light-colored background, characteristic of a studio or official identification photograph",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              2000
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "The photograph is for an official U.S. naturalization document, implying it would reflect contemporary U.S. styles rather than a significant cultural lag from Sephardic communities abroad.",
+      "capture_vs_print": "The photograph is physically affixed to a 'Declaration of Intention' document dated February 18, 1947. This provides extremely strong evidence that the photo was taken very close to this date, likely in late 1946 or early 1947. The print characteristics are consistent with a 1940s capture.",
+      "reasoning_summary": "The most definitive evidence for dating this photograph is its direct attachment to an official U.S. naturalization document dated February 18, 1947. This strongly indicates the photo was taken around that time. The woman's hairstyle and simple attire are perfectly consistent with mid-1940s fashion in the United States. There are no conflicting cues.",
+      "scene_description": "A black and white headshot portrait of a middle-aged woman, Rebecca Yack, looking directly at the camera. She has short, dark, curled hair. She is wearing a dark, simple V-neck top or dress, adorned with small stud earrings, a delicate necklace, and a decorative brooch on her left side. The background is plain and light-colored, typical of an official identification photo.",
+      "visible_text": "Rebecca Yack, 18th day of February, anno Domini 47",
+      "keywords": [
+        "woman",
+        "portrait",
+        "headshot",
+        "naturalization document",
+        "1940s",
+        "Sephardic",
+        "immigrant",
+        "jewelry",
+        "short hair",
+        "Los Angeles",
+        "official photo"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "document",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Woman in a dark, simple V-neck top or dress. Wears small stud earrings, a delicate necklace with a small pendant, and a decorative brooch on her left side.",
+      "controlled_tags": [
+        "Document",
+        "Studio"
+      ],
+      "subject_ages": [
+        43
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:25:03.133962+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_47_morris_touriel_491896701_10171631280295346_4599119104798936934_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1932,
+      "confidence": "high",
+      "probable_range": [
+        1931,
+        1932
+      ],
+      "decade_probabilities": {
+        "1920": 0.05,
+        "1930": 0.95
+      },
+      "location_estimate": "Likely Seattle, Washington, where the 'Declaration of Intention' document was filed.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white, small rectangular portrait, matte finish, affixed to an official document.",
+            "strength": "strong",
+            "suggested_range": [
+              1925,
+              1935
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man in a conservative dark suit, white collared shirt, and patterned necktie. Hair neatly combed, clean-shaven.",
+            "strength": "moderate",
+            "suggested_range": [
+              1928,
+              1935
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Plain, light-colored background, indicative of a studio setting for a formal portrait.",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1950
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Standard headshot/ID photo style, consistent with early 20th-century official documentation requirements.",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1940
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "Not applicable as this is a standard US document photo, likely taken in the US, with contemporary formal attire for the purpose.",
+      "capture_vs_print": "The photograph is explicitly affixed to a 'Declaration of Intention' document dated February 15, 1932. The document states 'The photograph affixed... is a likeness of me.' This strongly indicates the photo was taken on or very shortly before this date. The print itself is a black and white, matte finish, typical for official documents of the era.",
+      "reasoning_summary": "The most compelling evidence is the explicit date on the 'Declaration of Intention' document to which the photograph is affixed, stating it was sworn on February 15, 1932. The man's apparent age (44, matching his birth year 1887) and attire are entirely consistent with this period. The photo is a standard black and white portrait for an official document, suggesting it was taken specifically for this purpose around the time the document was filed.",
+      "scene_description": "A black and white headshot portrait of a middle-aged man, Morris Tourial, smiling slightly. He is wearing a dark suit jacket, a white collared shirt, and a patterned necktie. The background is plain and light-colored, typical of a studio setting for an official document photo. The photograph is affixed to a 'Declaration of Intention' document.",
+      "visible_text": "TRIPLICATE\nUNITED STATES OF AMERICA\nDECLARATION OF INTENTION\n(Invalid for all purposes seven years after the date hereof)\nUnited States of America\nWestern District of Washington\nSS:\nIn the U.S. DISTRICT Court\nof W. Dist. of Wash. at Seattle\nNo. 35246\nI, Morris Tourial aged 44 years, do declare on oath that my personal description is:\nnow residing at 1509 1/2 E. Spruce St. Seattle, King County, Washington\noccupation Bootblack Sex Male color White complexion Dark color of eyes Brown\ncolor of hair Black height 5 feet 6 inches; weight 170 pounds; visible distinctive marks Small scar on forehead\nrace Hebrew nationality Italian\nI was born in Isle of Rhodes, Italy on Aug. 16, 1887 (Month) (Day) (Year)\nI am now married. The name of my wife or husband is Hanna\nwe were married on June 2, 1914 at Isle of Rhodes, Italy\nborn at Isle of Rhodes, Italy on Oct. 30, 1893; she or he was\nborn at New York, N.Y. on Sept. 22, 1919 for permanent residence therein, and now\nresides at Seattle, Wn. I have 4 children, and the name, date and place of birth,\nand place of residence of each of said children are as follows: Joseph, born Mar. 12, 1915 at Isle of\nRhodes, Italy; Rose, born July 27, 1921 at Seattle, Wn; Emily, born July 16,\n1924 at Seattle, Wn; Gabriel, born Nov. 9, 1929 at Seattle, Wn. All reside\nat Seattle, Wn.\nI have heretofore made a declaration of intention Number on between 1920 or 1921\nat Seattle, Washington in the U.S. Dist. Court\nmy last foreign residence was Isle of Rhodes, Italy\nI emigrated to the United States of America from Patras, Greece\nmy lawful entry for permanent residence in the United States was at New York, N.Y.\nunder the name of Moise Tourial, known as Morris Tourial on Dec. 29, 1914\non the vessel SS Carpathia\nI will, before being admitted to citizenship, renounce forever all allegiance and\nfidelity to any foreign prince, potentate, state, or sovereignty, and particularly,\nby name, to the prince, potentate, state, or sovereignty of which I may be at\nthe time of admission a citizen or subject; I am not an anarchist; I am not a\npolygamist nor a believer in the practice of polygamy; and it is my intention in\ngood faith to become a citizen of the United States and to reside\npermanently therein; and I certify that the photograph affixed to the duplicate\nand triplicate hereof is a likeness of me: So HELP ME GOD.\nMorris Tourial (Original signature of declarant with abbreviation, also alias, if used)\nSubscribed and sworn to before me in the office of the Clerk of said Court,\nat Seattle this 15 day of Feb anno Domini 1932. Certification No. 20-8886 from the Commis-\nsioner of Naturalization showing the lawful entry of the declarant for permanent\nresidence on the date stated above, has been received by me. The photograph\naffixed to the duplicate and triplicate hereof is a likeness of the declarant.\nED. M. LAKIN\nClerk of the U.S. DISTRICT Court.\nBy L.D. Mellard Deputy Clerk.\nForm 2202-L.A.\nU. S. DEPARTMENT OF LABOR\nNATURALIZATION SERVICE\n14-2628 U. S. GOVERNMENT PRINTING OFFICE: 1930",
+      "keywords": [
+        "man",
+        "portrait",
+        "studio",
+        "formal",
+        "suit",
+        "tie",
+        "naturalization document",
+        "immigration",
+        "Sephardic",
+        "Rhodes",
+        "Seattle",
+        "1930s"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Man wears a dark, single-breasted suit jacket, a white collared shirt, and a patterned necktie. His hair is neatly parted and combed.",
+      "controlled_tags": [
+        "Studio",
+        "Formal_Event",
+        "Document"
+      ],
+      "subject_ages": [
+        44
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:25:29.110133+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_53_jacob_pasha_israel_69204176_10162214672025346_1240553526233399296_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1920,
+      "best_year_estimate": 1929,
+      "confidence": "medium",
+      "probable_range": [
+        1925,
+        1935
+      ],
+      "decade_probabilities": {
+        "1910": 0.05,
+        "1920": 0.45,
+        "1930": 0.45,
+        "1940": 0.05
+      },
+      "location_estimate": "Likely Rhodes or a similar Mediterranean Sephardic community, based on the presence of the fez and general cultural context.",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white photograph, rectangular print with a straight white border (~2-3mm)",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1940
+            ]
+          },
+          {
+            "cue": "Matte or semi-matte paper surface, typical of early 20th century prints",
+            "strength": "moderate",
+            "suggested_range": [
+              1910,
+              1940
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Women's bobbed hairstyles (Amelie, Marietta), popular in the 1920s",
+            "strength": "strong",
+            "suggested_range": [
+              1920,
+              1929
+            ]
+          },
+          {
+            "cue": "Marietta's drop-waist dress style, characteristic of the 1920s",
+            "strength": "strong",
+            "suggested_range": [
+              1923,
+              1929
+            ]
+          },
+          {
+            "cue": "Men's suits (Yaakov, Bohor, Sadoc) with relatively narrow lapels and classic cuts, consistent with 1920s-early 1930s",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1935
+            ]
+          },
+          {
+            "cue": "Yaakov 'Pasha' Israel wears a fez, a traditional Ottoman-era hat common in Sephardic communities, not a strong dating cue but indicates cultural context",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1940
+            ]
+          },
+          {
+            "cue": "Conservative, long-sleeved dress on Mazaltov Notrica, typical for older women across several decades",
+            "strength": "weak",
+            "suggested_range": [
+              1910,
+              1940
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Plain, blurred background, suggesting a studio setting with a simple backdrop or shallow depth of field in an outdoor setting",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1950
+            ]
+          }
+        ],
+        "technology": [
+          {
+            "cue": "Simple wooden chairs used for posing, common across many decades",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1950
+            ]
+          }
+        ]
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Women's fashion (bobbed hair, drop-waist dress) is strongly indicative of the 1920s. Applying a moderate cultural lag of 5-7 years for Sephardic communities in Rhodes/diaspora, this pushes the estimate towards the later end of the 1920s or very early 1930s.",
+      "capture_vs_print": "The photograph appears to be an original print from the period it was taken. There are no clear indications of it being a later reprint or scan of a much older original.",
+      "reasoning_summary": "The strongest dating cues come from the women's fashion, particularly the bobbed hairstyles and Marietta's drop-waist dress, which are highly characteristic of the 1920s. Men's attire is consistent with this period. Applying a moderate cultural lag for Sephardic communities, the late 1920s to very early 1930s is the most probable capture date. The print format is also consistent with this era.",
+      "scene_description": "A formal group portrait of nine individuals, likely a family, posed in what appears to be a studio setting with a plain, blurred background. Two older adults are seated in the front, flanked by younger adults and children standing behind them. All subjects are dressed in formal attire.",
+      "visible_text": null,
+      "keywords": [
+        "family",
+        "group portrait",
+        "formal",
+        "studio",
+        "fez",
+        "bobbed hair",
+        "suit",
+        "dress",
+        "children",
+        "baby",
+        "Sephardic"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 9,
+      "condition": "good",
+      "clothing_notes": "Yaakov 'Pasha' Israel wears a dark suit, white shirt, tie, and a fez. Mazaltov Notrica wears a dark, conservative long-sleeved dress with a light-colored blouse or collar. Amelie wears a dark, short-sleeved dress with a scoop neck and a simple necklace. Marietta wears a light-colored drop-waist dress with a round neck and short sleeves. Bohor wears a pinstripe suit with a tie. Sadoc, Victor, and Moise wear dark jackets/suits with collared shirts. Isahar, the baby, is dressed in white clothing.",
+      "controlled_tags": [
+        "Studio",
+        "Formal_Event",
+        "Group_Portrait"
+      ],
+      "subject_ages": [
+        25,
+        12,
+        28,
+        1,
+        15,
+        8,
+        60,
+        55,
+        35
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:25:48.644961+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_58_asher_touriel_486996980_10171601914685346_7482199189315238584_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1940,
+      "confidence": "medium",
+      "probable_range": [
+        1935,
+        1950
+      ],
+      "decade_probabilities": {
+        "1920": 0.05,
+        "1930": 0.35,
+        "1940": 0.4,
+        "1950": 0.15,
+        "1960": 0.05
+      },
+      "location_estimate": "Unknown (studio portrait)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white photograph",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man's short, neatly combed back, slicked hairstyle",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1945
+            ]
+          },
+          {
+            "cue": "Conservative dark suit jacket and white shirt",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1950
+            ]
+          }
+        ],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Fashion cues adjusted to account for a potential 5-15 year lag in Sephardic communities, extending the probable range into the early 1950s.",
+      "capture_vs_print": "Original capture was a black and white photograph. The current image appears to be a high-contrast digital reproduction or scan of an older print, which does not affect the original capture date.",
+      "reasoning_summary": "Fashion and grooming cues, particularly the man's hairstyle and conservative suit, strongly suggest the 1930s to 1940s. The studio setting provides no environmental or technological dating cues. Applying the cultural lag for Sephardic communities, this style could have persisted into the early 1950s, making the 1940s the most probable decade.",
+      "scene_description": "A headshot of a middle-aged man, facing forward with a neutral expression. He is wearing a dark suit jacket and a white shirt. The background is plain and light, suggesting a studio setting. A handwritten signature is visible below the portrait.",
+      "visible_text": "Aser Crusiel",
+      "keywords": [
+        "formal portrait",
+        "man",
+        "headshot",
+        "studio",
+        "signature",
+        "suit",
+        "clean-shaven",
+        "slicked hair"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Man in a dark suit jacket with a white collared shirt. No tie is visible.",
+      "controlled_tags": [
+        "Studio",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        45
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:26:18.526666+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_66_semah_franco_520899987_10172415320650346_6397837077659007019_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1940,
+      "best_year_estimate": 1943,
+      "confidence": "medium",
+      "probable_range": [
+        1938,
+        1948
+      ],
+      "decade_probabilities": {
+        "1930": 0.4,
+        "1940": 0.5,
+        "1950": 0.1
+      },
+      "location_estimate": "Unknown (studio portrait, no environmental cues)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Sepia-toned black and white photograph, rectangular, plain light background, with handwritten inscription below the image area. The print quality is sharp and clear.",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1955
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man's formal suit jacket with moderate width lapels, white collared shirt, and dark tie. Hair is short, neatly combed, and parted on the side.",
+            "strength": "moderate",
+            "suggested_range": [
+              1935,
+              1948
+            ]
+          }
+        ],
+        "environment": [],
+        "technology": []
+      },
+      "cultural_lag_applied": true,
+      "cultural_lag_note": "Adjusted +3-5 years from mainstream fashion cues for formal male attire, accounting for conservative styles often seen in Sephardic communities and studio portraits.",
+      "capture_vs_print": "Likely original capture from the late 1930s to mid-1940s. Print characteristics are consistent with the original period, suggesting it is not a later reprint.",
+      "reasoning_summary": "The man's formal attire and grooming (suit, tie, neat haircut), combined with the sepia-toned, plain-background portrait style, are highly indicative of the late 1930s to mid-1940s. The handwritten inscription below the image is also consistent with personal or identification photographs from this era. There are no conflicting cues.",
+      "scene_description": "A close-up, head-and-shoulders portrait of a middle-aged man. He has short, dark, neatly combed hair and is looking directly at the camera with a neutral expression. He is wearing a dark suit jacket, a white collared shirt, and a dark tie. The background is plain and light-colored. Below the photographic image, there is a handwritten inscription.",
+      "visible_text": "Semah Froumy.",
+      "keywords": [
+        "man",
+        "portrait",
+        "headshot",
+        "formal",
+        "suit",
+        "tie",
+        "studio",
+        "identification photo",
+        "Sephardic",
+        "signature"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Man wears a dark suit jacket with moderate lapels, a white collared shirt, and a dark, standard-width tie.",
+      "controlled_tags": [
+        "Studio",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        50
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:26:39.806681+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_74_victor_haim_israel_470218882_10170605594885346_1330218943688170616_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1938,
+      "confidence": "medium",
+      "probable_range": [
+        1935,
+        1945
+      ],
+      "decade_probabilities": {
+        "1920": 0.1,
+        "1930": 0.45,
+        "1940": 0.4,
+        "1950": 0.05
+      },
+      "location_estimate": "Undetermined (studio setting)",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white, rectangular headshot with plain light background, likely a scan of an official identification photo.",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1955
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man with short, neatly parted and slicked-back hair, trim mustache, wearing a dark suit and tie.",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1950
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Plain, light-colored background, indicating a studio or controlled setting.",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              2000
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "The conservative nature of the formal headshot is consistent with styles prevalent across communities during this period, making specific cultural lag adjustments unnecessary for this type of photo.",
+      "capture_vs_print": "Likely a scan of an original photographic print from the estimated capture period.",
+      "reasoning_summary": "The photograph is a black and white, formal headshot against a plain background, characteristic of identification photos from the mid-20th century. The man's conservative haircut, mustache, suit, and tie were popular styles from the late 1920s through the 1940s. The lack of specific fashion details or environmental cues makes precise dating challenging, but the overall aesthetic points to the 1930s-1940s.",
+      "scene_description": "A formal, close-up headshot of a man with a neat mustache and short, slicked-back hair. He is wearing a dark suit jacket, white shirt, and tie, against a plain light background.",
+      "visible_text": "Haim (Luis) Israel",
+      "keywords": [
+        "formal portrait",
+        "headshot",
+        "man",
+        "mustache",
+        "suit",
+        "tie",
+        "identification photo",
+        "studio"
+      ],
+      "setting": "indoor_studio",
+      "photo_type": "formal_portrait",
+      "people_count": 1,
+      "condition": "good",
+      "clothing_notes": "Man wears a dark suit jacket, white collared shirt, and a dark tie with a small knot.",
+      "controlled_tags": [
+        "Studio",
+        "Formal_Event"
+      ],
+      "subject_ages": [
+        38
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:27:06.534408+00:00"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n",
+      "source": "gemini",
+      "model": "gemini-2.5-flash",
+      "estimated_decade": 1930,
+      "best_year_estimate": 1936,
+      "confidence": "high",
+      "probable_range": [
+        1935,
+        1937
+      ],
+      "decade_probabilities": {
+        "1930": 0.95,
+        "1940": 0.05
+      },
+      "location_estimate": "Rhodes, Greece (explicitly stated in visible text, consistent with Mediterranean outdoor setting).",
+      "is_color": false,
+      "evidence": {
+        "print_format": [
+          {
+            "cue": "Black and white photographic print",
+            "strength": "moderate",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          },
+          {
+            "cue": "Rectangular print with straight white border",
+            "strength": "moderate",
+            "suggested_range": [
+              1920,
+              1960
+            ]
+          }
+        ],
+        "fashion": [
+          {
+            "cue": "Man's suit with relatively narrow lapels and dark tie",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1945
+            ]
+          },
+          {
+            "cue": "Man's short, neat haircut, parted on the side",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1945
+            ]
+          },
+          {
+            "cue": "Women's hairstyles, pulled back into a neat bun or chignon",
+            "strength": "moderate",
+            "suggested_range": [
+              1925,
+              1945
+            ]
+          },
+          {
+            "cue": "Women's modest, dark, short-sleeved dresses with simple necklines; younger woman wears a brooch",
+            "strength": "moderate",
+            "suggested_range": [
+              1930,
+              1945
+            ]
+          }
+        ],
+        "environment": [
+          {
+            "cue": "Outdoor setting with blurred foliage in the background, suggesting a garden or courtyard",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          },
+          {
+            "cue": "Hint of a light-colored building structure (possibly shutters or window) behind the man",
+            "strength": "weak",
+            "suggested_range": [
+              1900,
+              1960
+            ]
+          }
+        ],
+        "technology": []
+      },
+      "cultural_lag_applied": false,
+      "cultural_lag_note": "Explicit date '1936' provided in visible text, which aligns well with fashion cues, so no lag adjustment needed.",
+      "capture_vs_print": "The photograph was captured in 1936 as indicated by the visible text. The print itself appears to be a modern reproduction or scan of an original black and white photograph, with the text added digitally or during a later printing.",
+      "reasoning_summary": "The most compelling evidence for dating is the explicit inscription 'Rhodes 1936' on the image. Independent analysis of fashion (men's suit, women's dresses and hairstyles) and print characteristics (B&W, simple border) are entirely consistent with a mid-1930s capture date. The outdoor setting with hints of Mediterranean vegetation also aligns with Rhodes.",
+      "scene_description": "A black and white outdoor family portrait featuring four individuals. An older woman on the left holds a baby. Behind the baby and to the right stands a man in a suit, and next to him, a younger woman in a dark dress. They are all looking towards the camera, with a blurred background of foliage and a light-colored building.",
+      "visible_text": "Rhodes 1936. Rica Amato with grandson Sol, and his parents Natanel & Rachel Amato Menashe. Photo from Louie Amato.",
+      "keywords": [
+        "family",
+        "portrait",
+        "group",
+        "baby",
+        "grandparent",
+        "parents",
+        "outdoor",
+        "Rhodes",
+        "suit",
+        "dress",
+        "black and white",
+        "1930s"
+      ],
+      "setting": "outdoor_other",
+      "photo_type": "group_photo",
+      "people_count": 4,
+      "condition": "good",
+      "clothing_notes": "Older woman in a dark, long-sleeved dress. Baby in a light-colored, simple long-sleeved top. Man in a dark suit with a white shirt and dark tie. Younger woman in a dark, short-sleeved dress with a brooch on the left lapel and pearl earrings.",
+      "controlled_tags": [
+        "Outdoor",
+        "Group_Portrait",
+        "Casual"
+      ],
+      "subject_ages": [
+        60,
+        0,
+        32,
+        29
+      ],
+      "prompt_version": "v2_rich_metadata",
+      "source_method": "api",
+      "created_at": "2026-02-15T05:27:31.493327+00:00"
     }
   ]
 }
