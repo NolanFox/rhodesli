@@ -6,13 +6,13 @@ Updated after each session.
 ## Open Items
 
 ### ML Pipeline Cleanup
-- [ ] Add `--fallback-model` flag to generate_date_labels.py for automatic 2.5-flash retry
+- [ ] Add `--fallback-model` flag to generate_date_labels.py for automatic 2.5-flash retry (labels will auto-set training_eligible=false)
 
 ### Data Quality
 - [ ] Verify all 157 original labels have source_method="api" backfill
 - [ ] Confirm AD-051 has full 2.5-vs-3.0 bias documentation
 - [ ] Spot-check 5 random labels from community batch for quality
-- [ ] Re-label 9 gemini-2.5-flash photos with gemini-3-flash (or remove from training) — these hurt model accuracy by ~12%
+- [x] Re-label 9 gemini-2.5-flash photos with gemini-3-flash (or remove from training) — these hurt model accuracy by ~12% → Fixed via training_eligible=false flag (AD-061, 2026-02-15)
 
 ### API Key Hygiene
 - [x] Rotate Gemini API key (rotated 2026-02-15)

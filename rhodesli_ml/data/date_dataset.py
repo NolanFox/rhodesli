@@ -182,14 +182,39 @@ class DateEstimationDataset(Dataset):
         }
 
 
-def load_labels_from_file(path: str | Path) -> list[dict]:
-    """Load date labels from JSON file."""
+def load_labels_from_file(
+    path: str | Path,
+    exclude_models: list[str] | None = None,
+    training_only: bool = True,
+) -> list[dict]:
+    """Load date labels from JSON file with optional filtering.
+
+    Args:
+        path: Path to date labels JSON file.
+        exclude_models: List of model name substrings to exclude (e.g. ["2.5-flash"]).
+        training_only: If True (default), exclude labels where training_eligible=False.
+            Labels without the field are assumed eligible (backward compatible).
+
+    Returns:
+        List of label dicts.
+    """
     path = Path(path)
     if not path.exists():
         return []
     with open(path) as f:
         data = json.load(f)
-    return data.get("labels", [])
+    labels = data.get("labels", [])
+
+    if training_only:
+        labels = [l for l in labels if l.get("training_eligible", True)]
+
+    if exclude_models:
+        labels = [
+            l for l in labels
+            if not any(ex in l.get("model", "") for ex in exclude_models)
+        ]
+
+    return labels
 
 
 def create_train_val_split(

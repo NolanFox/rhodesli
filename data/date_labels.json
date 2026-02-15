@@ -126,7 +126,8 @@
         28
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:55:16.271053+00:00"
+      "created_at": "2026-02-14T06:55:16.271053+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a09088b188d5f4f5",
@@ -235,7 +236,8 @@
         12
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:55:50.669080+00:00"
+      "created_at": "2026-02-14T06:55:50.669080+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f50118e7db8d6ac5",
@@ -352,7 +354,8 @@
         32
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:56:08.694930+00:00"
+      "created_at": "2026-02-14T06:56:08.694930+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "2b0e354d49e51d29",
@@ -478,7 +481,8 @@
         58
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:57:40.135471+00:00"
+      "created_at": "2026-02-14T06:57:40.135471+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "d4fd0727068369ec",
@@ -610,7 +614,8 @@
         13
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:58:34.706598+00:00"
+      "created_at": "2026-02-14T06:58:34.706598+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "6f512d921837bc0c",
@@ -723,7 +728,8 @@
         20
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:59:02.046164+00:00"
+      "created_at": "2026-02-14T06:59:02.046164+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "d2edd80e5cf9c308",
@@ -846,7 +852,8 @@
         26
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:59:26.205051+00:00"
+      "created_at": "2026-02-14T06:59:26.205051+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e7bf01dc576851b0",
@@ -956,7 +963,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T06:59:45.307044+00:00"
+      "created_at": "2026-02-14T06:59:45.307044+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "2360df5bb36d25d0",
@@ -1066,7 +1074,8 @@
         5
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:00:02.972577+00:00"
+      "created_at": "2026-02-14T07:00:02.972577+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ab9cc3ebce2d510c",
@@ -1176,7 +1185,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:00:33.182132+00:00"
+      "created_at": "2026-02-14T07:00:33.182132+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "b9f591a56e25b71a",
@@ -1299,7 +1309,8 @@
         55
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:01:14.049080+00:00"
+      "created_at": "2026-02-14T07:01:14.049080+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "6a62687aec225e39",
@@ -1429,7 +1440,8 @@
         55
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:01:43.014781+00:00"
+      "created_at": "2026-02-14T07:01:43.014781+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a718d5fc861cef12",
@@ -1540,7 +1552,8 @@
         24
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:02:14.145703+00:00"
+      "created_at": "2026-02-14T07:02:14.145703+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "9af0e8f2d3ca3479",
@@ -1653,7 +1666,8 @@
         26
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:02:43.956565+00:00"
+      "created_at": "2026-02-14T07:02:43.956565+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "499c2c0e37d27d22",
@@ -1771,7 +1785,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:03:05.342523+00:00"
+      "created_at": "2026-02-14T07:03:05.342523+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "4be78d8c8cb1611d",
@@ -1902,7 +1917,8 @@
         7
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:03:42.616238+00:00"
+      "created_at": "2026-02-14T07:03:42.616238+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "fb02c461c554c830",
@@ -2019,7 +2035,8 @@
         24
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:05:05.558798+00:00"
+      "created_at": "2026-02-14T07:05:05.558798+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "1135ba51e1bf5a1a",
@@ -2136,7 +2153,8 @@
         16
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:05:34.536047+00:00"
+      "created_at": "2026-02-14T07:05:34.536047+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e4744bb6247f1174",
@@ -2270,7 +2288,8 @@
         4
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:06:27.446871+00:00"
+      "created_at": "2026-02-14T07:06:27.446871+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "7911d4fdbf128d91",
@@ -2371,7 +2390,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:06:48.204777+00:00"
+      "created_at": "2026-02-14T07:06:48.204777+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ab10679b23dbdcf9",
@@ -2519,7 +2539,8 @@
         13
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:07:11.710388+00:00"
+      "created_at": "2026-02-14T07:07:11.710388+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "3a317b0f99b0d2e0",
@@ -2657,7 +2678,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:07:48.160498+00:00"
+      "created_at": "2026-02-14T07:07:48.160498+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "c99f4d6366aafd62",
@@ -2776,7 +2798,8 @@
         5
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:08:23.693531+00:00"
+      "created_at": "2026-02-14T07:08:23.693531+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "2e5836aeceae8c6d",
@@ -2905,7 +2928,8 @@
         12
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:11:01.804486+00:00"
+      "created_at": "2026-02-14T07:11:01.804486+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "31dfdd1c087047ba",
@@ -3025,7 +3049,8 @@
         28
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:11:36.422446+00:00"
+      "created_at": "2026-02-14T07:11:36.422446+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a8a1730722a4cdeb",
@@ -3117,7 +3142,8 @@
         0
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:12:00.367047+00:00"
+      "created_at": "2026-02-14T07:12:00.367047+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "60abad85a1fe454b",
@@ -3237,7 +3263,8 @@
         6
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:12:25.354153+00:00"
+      "created_at": "2026-02-14T07:12:25.354153+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "2c611f120c15aa4a",
@@ -3362,7 +3389,8 @@
         65
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:13:03.136793+00:00"
+      "created_at": "2026-02-14T07:13:03.136793+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f9391021bf1f8bac",
@@ -3468,7 +3496,8 @@
         8
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:14:25.973478+00:00"
+      "created_at": "2026-02-14T07:14:25.973478+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f5b8639dd443d0b8",
@@ -3582,7 +3611,8 @@
         3
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:14:56.180004+00:00"
+      "created_at": "2026-02-14T07:14:56.180004+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "4a9dee395e1150b2",
@@ -3695,7 +3725,8 @@
         21
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:15:13.692727+00:00"
+      "created_at": "2026-02-14T07:15:13.692727+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "3e53fd3c015350c8",
@@ -3822,7 +3853,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:16:01.449539+00:00"
+      "created_at": "2026-02-14T07:16:01.449539+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "64f868771ecbf5ee",
@@ -3969,7 +4001,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:16:26.881864+00:00"
+      "created_at": "2026-02-14T07:16:26.881864+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "54f65d27507cd5f7",
@@ -4079,7 +4112,8 @@
         9
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:16:58.139720+00:00"
+      "created_at": "2026-02-14T07:16:58.139720+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "9411826ba358db3c",
@@ -4181,7 +4215,8 @@
         13
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:18:33.880033+00:00"
+      "created_at": "2026-02-14T07:18:33.880033+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "c17cf4916422570d",
@@ -4282,7 +4317,8 @@
         0
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:18:54.250787+00:00"
+      "created_at": "2026-02-14T07:18:54.250787+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "7b5c587d31b33946",
@@ -4388,7 +4424,8 @@
         19
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:19:10.744575+00:00"
+      "created_at": "2026-02-14T07:19:10.744575+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "8f6a6a0108f019cf",
@@ -4543,7 +4580,8 @@
         60
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:20:01.318131+00:00"
+      "created_at": "2026-02-14T07:20:01.318131+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "c4c77600075334b8",
@@ -4675,7 +4713,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:20:36.135632+00:00"
+      "created_at": "2026-02-14T07:20:36.135632+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "41538ecb1c11bdd7",
@@ -4797,7 +4836,8 @@
         26
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:20:55.508154+00:00"
+      "created_at": "2026-02-14T07:20:55.508154+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "81bf7f85ec9814bc",
@@ -4915,7 +4955,8 @@
         10
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:21:24.498378+00:00"
+      "created_at": "2026-02-14T07:21:24.498378+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ff241a7e44f7d3c3",
@@ -5020,7 +5061,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:21:41.699267+00:00"
+      "created_at": "2026-02-14T07:21:41.699267+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f7d81507c3f769f7",
@@ -5140,7 +5182,8 @@
         6
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:22:09.731607+00:00"
+      "created_at": "2026-02-14T07:22:09.731607+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "7be13af860ce7d10",
@@ -5257,7 +5300,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:22:44.953164+00:00"
+      "created_at": "2026-02-14T07:22:44.953164+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "0b5246f5b77a9ccb",
@@ -5372,7 +5416,8 @@
         62
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:23:17.491485+00:00"
+      "created_at": "2026-02-14T07:23:17.491485+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "6f325f11251d8ee4",
@@ -5490,7 +5535,8 @@
         7
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:23:44.000518+00:00"
+      "created_at": "2026-02-14T07:23:44.000518+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "9777323400903885",
@@ -5608,7 +5654,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:24:04.080252+00:00"
+      "created_at": "2026-02-14T07:24:04.080252+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "1ee4ffdef6743ff4",
@@ -5712,7 +5759,8 @@
         10
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:25:33.370491+00:00"
+      "created_at": "2026-02-14T07:25:33.370491+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "fb6a846971b30f4b",
@@ -5860,7 +5908,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:26:10.011874+00:00"
+      "created_at": "2026-02-14T07:26:10.011874+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ca69d9decc37b0ec",
@@ -5979,7 +6028,8 @@
         36
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:26:29.999328+00:00"
+      "created_at": "2026-02-14T07:26:29.999328+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "08d86bf1acab9f9a",
@@ -6085,7 +6135,8 @@
         26
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:26:59.219744+00:00"
+      "created_at": "2026-02-14T07:26:59.219744+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "8756231987a82363",
@@ -6179,7 +6230,8 @@
         6
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:28:15.982002+00:00"
+      "created_at": "2026-02-14T07:28:15.982002+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e160f3a93d7bcecf",
@@ -6296,7 +6348,8 @@
         20
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:31:27.111321+00:00"
+      "created_at": "2026-02-14T07:31:27.111321+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "28f2bc39bebd4d03",
@@ -6408,7 +6461,8 @@
         12
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:32:20.501988+00:00"
+      "created_at": "2026-02-14T07:32:20.501988+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "9ea532a3b743c794",
@@ -6521,7 +6575,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:33:37.916406+00:00"
+      "created_at": "2026-02-14T07:33:37.916406+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ce622fde33ea3310",
@@ -6648,7 +6703,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:33:59.951909+00:00"
+      "created_at": "2026-02-14T07:33:59.951909+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "0532f22050f5effc",
@@ -6758,7 +6814,8 @@
         19
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:35:59.477391+00:00"
+      "created_at": "2026-02-14T07:35:59.477391+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ab0b7cce1a72f4e7",
@@ -6887,7 +6944,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:37:22.352487+00:00"
+      "created_at": "2026-02-14T07:37:22.352487+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ba91ea699c0e600f",
@@ -7036,7 +7094,8 @@
         23
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:38:22.256303+00:00"
+      "created_at": "2026-02-14T07:38:22.256303+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f5c2780f2bc75c66",
@@ -7149,7 +7208,8 @@
         7
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:38:46.620869+00:00"
+      "created_at": "2026-02-14T07:38:46.620869+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "6308a10b10e79218",
@@ -7266,7 +7326,8 @@
         5
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:40:11.891220+00:00"
+      "created_at": "2026-02-14T07:40:11.891220+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "3dcca43bad885e54",
@@ -7432,7 +7493,8 @@
         44
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:41:54.190266+00:00"
+      "created_at": "2026-02-14T07:41:54.190266+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "6e0a7af357997e0e",
@@ -7567,7 +7629,8 @@
         8
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:42:41.202405+00:00"
+      "created_at": "2026-02-14T07:42:41.202405+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "3c46f63468d6c1d9",
@@ -7697,7 +7760,8 @@
         76
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:43:19.270070+00:00"
+      "created_at": "2026-02-14T07:43:19.270070+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "cc6089cbeffca13c",
@@ -7807,7 +7871,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:43:44.301298+00:00"
+      "created_at": "2026-02-14T07:43:44.301298+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "bc68c9c7ef41bf2a",
@@ -7920,7 +7985,8 @@
         52
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:44:03.936741+00:00"
+      "created_at": "2026-02-14T07:44:03.936741+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "81579cea97208e5b",
@@ -8035,7 +8101,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:44:24.135219+00:00"
+      "created_at": "2026-02-14T07:44:24.135219+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "65f55ff7d895f263",
@@ -8147,7 +8214,8 @@
         15
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:44:52.796449+00:00"
+      "created_at": "2026-02-14T07:44:52.796449+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e26119047c9a622f",
@@ -8252,7 +8320,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:45:51.275417+00:00"
+      "created_at": "2026-02-14T07:45:51.275417+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "65f48be2cf5be1d3",
@@ -8352,7 +8421,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:47:19.031157+00:00"
+      "created_at": "2026-02-14T07:47:19.031157+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "662e24c4f38575ca",
@@ -8471,7 +8541,8 @@
         28
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:47:45.819948+00:00"
+      "created_at": "2026-02-14T07:47:45.819948+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "24f86a7e3d1c7763",
@@ -8604,7 +8675,8 @@
         14
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:48:08.882767+00:00"
+      "created_at": "2026-02-14T07:48:08.882767+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f06cfb58b8492b2f",
@@ -8730,7 +8802,8 @@
         19
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:48:27.310201+00:00"
+      "created_at": "2026-02-14T07:48:27.310201+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "84b368177b8706d0",
@@ -8838,7 +8911,8 @@
         11
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:51:00.497553+00:00"
+      "created_at": "2026-02-14T07:51:00.497553+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a26eeaebbcd256c0",
@@ -8961,7 +9035,8 @@
         26
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:51:25.388056+00:00"
+      "created_at": "2026-02-14T07:51:25.388056+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "60d2c5e29c9d644b",
@@ -9085,7 +9160,8 @@
         35
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:51:46.501597+00:00"
+      "created_at": "2026-02-14T07:51:46.501597+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "c5c970f18ef21428",
@@ -9204,7 +9280,8 @@
         82
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:52:28.955323+00:00"
+      "created_at": "2026-02-14T07:52:28.955323+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "122fc63b031d91ab",
@@ -9311,7 +9388,8 @@
         15
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:53:02.624576+00:00"
+      "created_at": "2026-02-14T07:53:02.624576+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "746dd11e5b4d86a1",
@@ -9450,7 +9528,8 @@
         6
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:53:46.396129+00:00"
+      "created_at": "2026-02-14T07:53:46.396129+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "100dc3f6749a979d",
@@ -9595,7 +9674,8 @@
         30
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:54:26.808800+00:00"
+      "created_at": "2026-02-14T07:54:26.808800+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e03cf80e5f5e4a60",
@@ -9704,7 +9784,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:55:08.186137+00:00"
+      "created_at": "2026-02-14T07:55:08.186137+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "3c1e58ecdc27acb3",
@@ -9815,7 +9896,8 @@
         0
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:55:36.474847+00:00"
+      "created_at": "2026-02-14T07:55:36.474847+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "d0c83b767f767210",
@@ -9952,7 +10034,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:56:08.149463+00:00"
+      "created_at": "2026-02-14T07:56:08.149463+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a5efdff51fd0c149",
@@ -10062,7 +10145,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:56:29.609390+00:00"
+      "created_at": "2026-02-14T07:56:29.609390+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "c6924c729a4325de",
@@ -10180,7 +10264,8 @@
         5
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:57:05.923571+00:00"
+      "created_at": "2026-02-14T07:57:05.923571+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ee455a0d82b7d121",
@@ -10294,7 +10379,8 @@
         23
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:57:34.484392+00:00"
+      "created_at": "2026-02-14T07:57:34.484392+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "77c988465f9c80db",
@@ -10410,7 +10496,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:58:06.490468+00:00"
+      "created_at": "2026-02-14T07:58:06.490468+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "c374d449d2c3999a",
@@ -10514,7 +10601,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:58:33.634612+00:00"
+      "created_at": "2026-02-14T07:58:33.634612+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a616aba825dda705",
@@ -10631,7 +10719,8 @@
         5
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T07:59:52.068897+00:00"
+      "created_at": "2026-02-14T07:59:52.068897+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "45c6aea178e61779",
@@ -10759,7 +10848,8 @@
         36
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:00:21.844639+00:00"
+      "created_at": "2026-02-14T08:00:21.844639+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "bb830f22e00d8dd3",
@@ -10882,7 +10972,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:00:46.136440+00:00"
+      "created_at": "2026-02-14T08:00:46.136440+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "1269abe515a4aa1a",
@@ -11012,7 +11103,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:01:10.538838+00:00"
+      "created_at": "2026-02-14T08:01:10.538838+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_0_603575867.895093",
@@ -11138,7 +11230,8 @@
         55
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:01:36.313520+00:00"
+      "created_at": "2026-02-14T08:01:36.313520+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_1_603569465.197279",
@@ -11274,7 +11367,8 @@
         45
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:02:06.296878+00:00"
+      "created_at": "2026-02-14T08:02:06.296878+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_2_603575561.310480",
@@ -11397,7 +11491,8 @@
         29
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:02:25.247284+00:00"
+      "created_at": "2026-02-14T08:02:25.247284+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_3_603576015.208878",
@@ -11534,7 +11629,8 @@
         28
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:03:01.291382+00:00"
+      "created_at": "2026-02-14T08:03:01.291382+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_4_603569408.731013",
@@ -11684,7 +11780,8 @@
         55
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:03:43.393085+00:00"
+      "created_at": "2026-02-14T08:03:43.393085+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_5_603576083.540241",
@@ -11814,7 +11911,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:04:16.684238+00:00"
+      "created_at": "2026-02-14T08:04:16.684238+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_6_603575393.720025",
@@ -11919,7 +12017,8 @@
         2
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:04:35.432350+00:00"
+      "created_at": "2026-02-14T08:04:35.432350+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_7_603575318.516167",
@@ -12069,7 +12168,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:05:21.092698+00:00"
+      "created_at": "2026-02-14T08:05:21.092698+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_8_603575434.282777",
@@ -12191,7 +12291,8 @@
         38
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:05:54.056670+00:00"
+      "created_at": "2026-02-14T08:05:54.056670+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_9_603575780.793224",
@@ -12319,7 +12420,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:06:37.681573+00:00"
+      "created_at": "2026-02-14T08:06:37.681573+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_11_603576167.481802",
@@ -12473,7 +12575,8 @@
         65
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:08:35.691441+00:00"
+      "created_at": "2026-02-14T08:08:35.691441+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido",
@@ -12592,7 +12695,8 @@
         50
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:09:10.868586+00:00"
+      "created_at": "2026-02-14T08:09:10.868586+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens",
@@ -12710,7 +12814,8 @@
         45
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:09:30.732120+00:00"
+      "created_at": "2026-02-14T08:09:30.732120+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_0_596770996.415863",
@@ -12811,7 +12916,8 @@
         3
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:09:51.899846+00:00"
+      "created_at": "2026-02-14T08:09:51.899846+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_1_596771174.533589",
@@ -12927,7 +13033,8 @@
         40
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:10:21.507506+00:00"
+      "created_at": "2026-02-14T08:10:21.507506+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_2_596771023.203463",
@@ -13044,7 +13151,8 @@
         0
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:10:39.554446+00:00"
+      "created_at": "2026-02-14T08:10:39.554446+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
@@ -13166,7 +13274,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:13:04.446806+00:00"
+      "created_at": "2026-02-14T08:13:04.446806+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
@@ -13278,7 +13387,8 @@
         35
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:13:44.028883+00:00"
+      "created_at": "2026-02-14T08:13:44.028883+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
@@ -13400,7 +13510,8 @@
         4
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:15:07.030753+00:00"
+      "created_at": "2026-02-14T08:15:07.030753+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_8_596771351.496458",
@@ -13519,7 +13630,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:15:42.102650+00:00"
+      "created_at": "2026-02-14T08:15:42.102650+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_12_Image_567",
@@ -13628,7 +13740,8 @@
         38
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:17:27.836546+00:00"
+      "created_at": "2026-02-14T08:17:27.836546+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_13_596771481.064027",
@@ -13749,7 +13862,8 @@
         75
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:17:47.791505+00:00"
+      "created_at": "2026-02-14T08:17:47.791505+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
@@ -13859,7 +13973,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:18:12.265310+00:00"
+      "created_at": "2026-02-14T08:18:12.265310+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo",
@@ -13977,7 +14092,8 @@
         24
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:20:32.860579+00:00"
+      "created_at": "2026-02-14T08:20:32.860579+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card",
@@ -14078,7 +14194,8 @@
         52
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:22:01.095208+00:00"
+      "created_at": "2026-02-14T08:22:01.095208+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
@@ -14196,7 +14313,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:22:58.362244+00:00"
+      "created_at": "2026-02-14T08:22:58.362244+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture",
@@ -14296,7 +14414,8 @@
         53
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:23:31.739011+00:00"
+      "created_at": "2026-02-14T08:23:31.739011+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card",
@@ -14398,7 +14517,8 @@
         60
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:24:20.617103+00:00"
+      "created_at": "2026-02-14T08:24:20.617103+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n",
@@ -14516,7 +14636,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:25:11.188975+00:00"
+      "created_at": "2026-02-14T08:25:11.188975+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
@@ -14645,7 +14766,8 @@
         24
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:25:29.826526+00:00"
+      "created_at": "2026-02-14T08:25:29.826526+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
@@ -14774,7 +14896,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:25:56.811105+00:00"
+      "created_at": "2026-02-14T08:25:56.811105+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n",
@@ -14882,7 +15005,8 @@
         35
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:27:34.249138+00:00"
+      "created_at": "2026-02-14T08:27:34.249138+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
@@ -15003,7 +15127,8 @@
         8
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:27:52.991909+00:00"
+      "created_at": "2026-02-14T08:27:52.991909+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_benatar-20260213_0_Sarina2",
@@ -15115,7 +15240,8 @@
         52
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:30:08.777584+00:00"
+      "created_at": "2026-02-14T08:30:08.777584+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "b9aa84ba4717fbc9",
@@ -15232,7 +15358,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:33:08.402652+00:00"
+      "created_at": "2026-02-14T08:33:08.402652+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "84f57c7ea2ab2931",
@@ -15367,7 +15494,8 @@
         5
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:33:38.908321+00:00"
+      "created_at": "2026-02-14T08:33:38.908321+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "a3e9117c543a8600",
@@ -15479,7 +15607,8 @@
         72
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:34:29.619042+00:00"
+      "created_at": "2026-02-14T08:34:29.619042+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "7d0344045ba73cba",
@@ -15599,7 +15728,8 @@
         32
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:35:42.196556+00:00"
+      "created_at": "2026-02-14T08:35:42.196556+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "dcba1494381b12cb",
@@ -15721,7 +15851,8 @@
         32
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:36:00.975326+00:00"
+      "created_at": "2026-02-14T08:36:00.975326+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "ea94c703087befcf",
@@ -15843,7 +15974,8 @@
         78
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:37:21.323832+00:00"
+      "created_at": "2026-02-14T08:37:21.323832+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "b77c7d6f977a6312",
@@ -15986,7 +16118,8 @@
         40
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:37:45.590983+00:00"
+      "created_at": "2026-02-14T08:37:45.590983+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "8e71cc351398f5dd",
@@ -16077,7 +16210,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:38:11.015213+00:00"
+      "created_at": "2026-02-14T08:38:11.015213+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "53790673ee3b4327",
@@ -16186,7 +16320,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:38:46.621800+00:00"
+      "created_at": "2026-02-14T08:38:46.621800+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "1709e18c986958ce",
@@ -16278,7 +16413,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:39:05.898443+00:00"
+      "created_at": "2026-02-14T08:39:05.898443+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "7ed4d1d6eccb4aee",
@@ -16371,7 +16507,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:39:37.526149+00:00"
+      "created_at": "2026-02-14T08:39:37.526149+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e9a9baa12f28d2f3",
@@ -16479,7 +16616,8 @@
         20
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:40:08.123893+00:00"
+      "created_at": "2026-02-14T08:40:08.123893+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "e3d7ca72d447c2f9",
@@ -16630,7 +16768,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:40:59.847171+00:00"
+      "created_at": "2026-02-14T08:40:59.847171+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "dc4f51100b0db521",
@@ -16735,7 +16874,8 @@
         50
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:41:18.450382+00:00"
+      "created_at": "2026-02-14T08:41:18.450382+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f78e3b929c57afae",
@@ -16872,7 +17012,8 @@
         18
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:41:51.057835+00:00"
+      "created_at": "2026-02-14T08:41:51.057835+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "f5a0ad7af7cd24f6",
@@ -17006,7 +17147,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:42:08.737838+00:00"
+      "created_at": "2026-02-14T08:42:08.737838+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_3_596770938.488977",
@@ -17136,7 +17278,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:45:42.795799+00:00"
+      "created_at": "2026-02-14T08:45:42.795799+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_4_596771234.564304",
@@ -17265,7 +17408,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:45:59.889188+00:00"
+      "created_at": "2026-02-14T08:45:59.889188+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc",
@@ -17383,7 +17527,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:46:42.535361+00:00"
+      "created_at": "2026-02-14T08:46:42.535361+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n",
@@ -17483,7 +17628,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:50:23.898072+00:00"
+      "created_at": "2026-02-14T08:50:23.898072+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "213d4dcc10a7745d",
@@ -17612,7 +17758,8 @@
         4
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:52:51.137965+00:00"
+      "created_at": "2026-02-14T08:52:51.137965+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "baec1b6c4e9c7af1",
@@ -17732,7 +17879,8 @@
         22
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:55:21.430967+00:00"
+      "created_at": "2026-02-14T08:55:21.430967+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_b5e8a89e_10_603575654.056133",
@@ -17875,7 +18023,8 @@
         42
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:55:46.207953+00:00"
+      "created_at": "2026-02-14T08:55:46.207953+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
@@ -18000,7 +18149,8 @@
         50
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:56:18.603824+00:00"
+      "created_at": "2026-02-14T08:56:18.603824+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention",
@@ -18110,7 +18260,8 @@
         35
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:56:48.854279+00:00"
+      "created_at": "2026-02-14T08:56:48.854279+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_",
@@ -18227,7 +18378,8 @@
         33
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:58:08.926516+00:00"
+      "created_at": "2026-02-14T08:58:08.926516+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n",
@@ -18320,7 +18472,8 @@
         35
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T08:58:42.512706+00:00"
+      "created_at": "2026-02-14T08:58:42.512706+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "fde6b60713d00574",
@@ -18467,7 +18620,8 @@
         26
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T09:03:05.683130+00:00"
+      "created_at": "2026-02-14T09:03:05.683130+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "dd309ce8e24188ea",
@@ -18585,7 +18739,8 @@
         1
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T09:03:46.128309+00:00"
+      "created_at": "2026-02-14T09:03:46.128309+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card",
@@ -18694,7 +18849,8 @@
         48
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T09:04:09.877158+00:00"
+      "created_at": "2026-02-14T09:04:09.877158+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
@@ -18814,7 +18970,8 @@
         25
       ],
       "prompt_version": "v2_rich_metadata",
-      "created_at": "2026-02-14T14:40:09.754605+00:00"
+      "created_at": "2026-02-14T14:40:09.754605+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_1_shaya_sadis_485912814_10171438847285346_8391034119885432541_n",
@@ -18908,7 +19065,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:01:29.615456+00:00"
+      "created_at": "2026-02-14T15:01:29.615456+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_2_rachel_soriano_children_giuseppe_lucia_496534630_24050403817877479_7606185349834125792_n",
@@ -19029,7 +19187,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:02:28.408450+00:00"
+      "created_at": "2026-02-14T15:02:28.408450+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_4_claude_benatar_collection_victor_haim_israel_470221346_10170605679340346_6478159606100860750_n",
@@ -19130,7 +19289,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:04:00.012953+00:00"
+      "created_at": "2026-02-14T15:04:00.012953+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_5_franz_capelluto_505761334_10172036095955346_4723800524101151919_n",
@@ -19240,7 +19400,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:04:25.224262+00:00"
+      "created_at": "2026-02-14T15:04:25.224262+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_6_eli_khoniu_282673358_53072697-826a-4b6b-85cb-bf2391a80a9d",
@@ -19349,7 +19510,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:05:17.656017+00:00"
+      "created_at": "2026-02-14T15:05:17.656017+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n",
@@ -19495,7 +19657,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:06:13.494773+00:00"
+      "created_at": "2026-02-14T15:06:13.494773+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n",
@@ -19597,7 +19760,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:07:51.762176+00:00"
+      "created_at": "2026-02-14T15:07:51.762176+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_9_josue_capeluto_513113308_10172171064820346_6554594099894590848_n",
@@ -19707,7 +19871,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:08:34.256960+00:00"
+      "created_at": "2026-02-14T15:08:34.256960+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_10_claude_benatar_collection_victor_haim_israel_470755436_10170730351010346_2281380443213894033_n",
@@ -19828,7 +19993,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:09:33.389306+00:00"
+      "created_at": "2026-02-14T15:09:33.389306+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_11_ezra_benatar_503903104_10171978773945346_3205903512026745916_n",
@@ -19940,7 +20106,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:10:16.797348+00:00"
+      "created_at": "2026-02-14T15:10:16.797348+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_14_eleonore_shemaria_489823683_10171556033925346_4592038961808734961_n",
@@ -20039,7 +20206,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:12:49.339524+00:00"
+      "created_at": "2026-02-14T15:12:49.339524+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_16_salvator_alhadeff_499725582_10171862580705346_3624353994965917233_n",
@@ -20150,7 +20318,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:14:35.279273+00:00"
+      "created_at": "2026-02-14T15:14:35.279273+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_17_claude_benatar_collection_victor_rebecca_benun_495378497_10171755182615346_7145354360116540323_n",
@@ -20283,7 +20452,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:15:09.250173+00:00"
+      "created_at": "2026-02-14T15:15:09.250173+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_19_joseph_cadranel_505214480_10172010548560346_5999857223121759234_n",
@@ -20395,7 +20565,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:16:46.146990+00:00"
+      "created_at": "2026-02-14T15:16:46.146990+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_20_simon_israel_522630495_10172484677500346_3828197167749831184_n",
@@ -20507,7 +20678,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:17:08.366466+00:00"
+      "created_at": "2026-02-14T15:17:08.366466+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_21_franco_deborah_collection_90759681_10159522051093136_435921227580702720_n",
@@ -20624,7 +20796,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:17:44.245304+00:00"
+      "created_at": "2026-02-14T15:17:44.245304+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_22_lucia_capelluto_habib_498275359_1233261768810379_4357209370323640927_n",
@@ -20715,7 +20888,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:18:28.855449+00:00"
+      "created_at": "2026-02-14T15:18:28.855449+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_23_claude_benatar_collection_victor_bohor_sabatai_soriano_493676514_10171704021850346_928399224614360184_n",
@@ -20814,7 +20988,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:19:10.491350+00:00"
+      "created_at": "2026-02-14T15:19:10.491350+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_24_haim_capelouto_510959828_10172145589925346_8862535038558329501_n",
@@ -20919,7 +21094,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:19:53.748138+00:00"
+      "created_at": "2026-02-14T15:19:53.748138+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_25_michelle_benatar_collection_574580512_25573504628922842_9065160801283305527_n",
@@ -21045,7 +21221,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:20:41.706674+00:00"
+      "created_at": "2026-02-14T15:20:41.706674+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_26_alexandre_avzaradel_500228843_10171909257505346_1135908763900995647_n",
@@ -21155,7 +21332,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:21:27.949713+00:00"
+      "created_at": "2026-02-14T15:21:27.949713+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_27_abramo_hasson_558859823_25238428042408837_2500312373836705702_n",
@@ -21271,7 +21449,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:22:11.352643+00:00"
+      "created_at": "2026-02-14T15:22:11.352643+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_28_israel_sciarcon_484779897_10171460023595346_2373419148825336249_n",
@@ -21361,7 +21540,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:23:08.702737+00:00"
+      "created_at": "2026-02-14T15:23:08.702737+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_29_isaac_cohen_518155169_10172358921150346_7060006423942663426_n",
@@ -21472,7 +21652,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:23:50.007658+00:00"
+      "created_at": "2026-02-14T15:23:50.007658+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_34_victor_haim_israel_470223768_10170605604700346_845325848549514268_n",
@@ -21563,7 +21744,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:28:12.086184+00:00"
+      "created_at": "2026-02-14T15:28:12.086184+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_35_stephanie_asheck_collection_487203508_10108913187223408_5855827733343318019_n",
@@ -21694,7 +21876,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:28:55.709188+00:00"
+      "created_at": "2026-02-14T15:28:55.709188+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_36_claude_benatar_collection_victor_bohor_sabatai_soriano_493494123_10171704022265346_3458576509112524280_n",
@@ -21794,7 +21977,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:29:24.928084+00:00"
+      "created_at": "2026-02-14T15:29:24.928084+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_38_masliah_alhadeff_498643123_10171847102790346_6237952123946428779_n",
@@ -21904,7 +22088,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:31:35.918658+00:00"
+      "created_at": "2026-02-14T15:31:35.918658+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_39_lucia_capelluto_habib_497858415_1233302348806321_3426812803112569023_n",
@@ -22029,7 +22214,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:32:15.501697+00:00"
+      "created_at": "2026-02-14T15:32:15.501697+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_40_claude_benatar_collection_558236101_10173095506980346_6815105064041797412_n",
@@ -22142,7 +22328,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:33:12.413518+00:00"
+      "created_at": "2026-02-14T15:33:12.413518+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_42_semah_franco_518792830_10172415321110346_7216093349261673005_n",
@@ -22256,7 +22443,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:35:43.267713+00:00"
+      "created_at": "2026-02-14T15:35:43.267713+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_43_jeuda_levy_582624756_10231713094074414_2695414189522190305_n",
@@ -22371,7 +22559,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:36:37.215369+00:00"
+      "created_at": "2026-02-14T15:36:37.215369+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_46_regine_avzaradel_collection_549212451_9859892167446415_1826390117555685221_n",
@@ -22495,7 +22684,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:39:16.564947+00:00"
+      "created_at": "2026-02-14T15:39:16.564947+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_48_sabrina_amato_collection_494308190_2222706794827769_1080678848045832372_n",
@@ -22630,7 +22820,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:40:46.777456+00:00"
+      "created_at": "2026-02-14T15:40:46.777456+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_49_nissim_norman_sharhon_486691034_10171511418110346_7315513093554577752_n",
@@ -22749,7 +22940,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:41:47.090798+00:00"
+      "created_at": "2026-02-14T15:41:47.090798+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_51_rica_cohen_503614239_714602537623851_1764326801082873220_n",
@@ -22853,7 +23045,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:43:29.425481+00:00"
+      "created_at": "2026-02-14T15:43:29.425481+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_52_uriel_galante_collection_601470917_801235776296564_3035101916288114389_n",
@@ -22973,7 +23166,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:44:30.046136+00:00"
+      "created_at": "2026-02-14T15:44:30.046136+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_54_moise_avzaradel_499921838_10171922564260346_2601530220636189573_n",
@@ -23072,7 +23266,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:46:50.480898+00:00"
+      "created_at": "2026-02-14T15:46:50.480898+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_55_alexandre_cohen_518460207_10172307461230346_1388858436354168493_n",
@@ -23190,7 +23385,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:47:25.297389+00:00"
+      "created_at": "2026-02-14T15:47:25.297389+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_56_regine_franco_520871885_10172415321220346_1210714843706744221_n",
@@ -23290,7 +23486,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:48:18.689327+00:00"
+      "created_at": "2026-02-14T15:48:18.689327+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_57_nissim_cohen_laura_varon_moise_israel)536883890_10172712595625346_4702058667200825870_n",
@@ -23406,7 +23603,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:48:51.830979+00:00"
+      "created_at": "2026-02-14T15:48:51.830979+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_60_david_israel_580557939_10173382345955346_3216565122124941196_n",
@@ -23517,7 +23715,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:51:33.813552+00:00"
+      "created_at": "2026-02-14T15:51:33.813552+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_61_albert_avzaradel_500229316_10171894354750346_6513195025686199669_n",
@@ -23627,7 +23826,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:52:18.869329+00:00"
+      "created_at": "2026-02-14T15:52:18.869329+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_62_david_franco_collection_497891606_2247317675665225_368797912673942421_n",
@@ -23770,7 +23970,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:53:08.228570+00:00"
+      "created_at": "2026-02-14T15:53:08.228570+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_63_leone_sidicaro_65243904_10161966778600346_8076688366654980096_n",
@@ -23869,7 +24070,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:53:41.447202+00:00"
+      "created_at": "2026-02-14T15:53:41.447202+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_64_jeanettte_swartz_collection_516169815_24127772290172458_9159603061597220280_n",
@@ -23969,7 +24171,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:54:14.443682+00:00"
+      "created_at": "2026-02-14T15:54:14.443682+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_67_susanne_bass_collection_520287908_1237925664680452_8643817637167842650_n",
@@ -24104,7 +24307,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:56:11.022063+00:00"
+      "created_at": "2026-02-14T15:56:11.022063+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_69_claude_benatar_collection_victor_haim_israel_470530454_10170605611025346_6025688954537884912_n",
@@ -24214,7 +24418,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:58:18.473795+00:00"
+      "created_at": "2026-02-14T15:58:18.473795+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_70_david_franco_collection_504896621_2270573480006311_8952402771580837356_n",
@@ -24363,7 +24568,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T15:58:56.392607+00:00"
+      "created_at": "2026-02-14T15:58:56.392607+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_72_eliakim_cordoval_524605757_10172507723295346_6590705878333530417_n",
@@ -24448,7 +24654,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:00:38.056986+00:00"
+      "created_at": "2026-02-14T16:00:38.056986+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_73_rhodes_jewish_historical_foundation_collection_481054755_642374571513315_2077232265072962474_n",
@@ -24580,7 +24787,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:01:30.372080+00:00"
+      "created_at": "2026-02-14T16:01:30.372080+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_75_claude_benatar_collection_aslan_louie_notrica_492110450_10171661307470346_6127261380310076660_n",
@@ -24682,7 +24890,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:03:21.964842+00:00"
+      "created_at": "2026-02-14T16:03:21.964842+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_76_claude_benatar_collection_victor_rebecca_benun_495403500_10171755169865346_6018277602901061278_n",
@@ -24775,7 +24984,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:04:14.288280+00:00"
+      "created_at": "2026-02-14T16:04:14.288280+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_77_rahamin_raymond_sadis_481253010_10171438847375346_2532370090301041713_n",
@@ -24866,7 +25076,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:04:52.483161+00:00"
+      "created_at": "2026-02-14T16:04:52.483161+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_78_Haham_Joseph_Hai_Franco_Rachel_Capouya_Franco_505934782_10228693438389424_8835735934188338669_n",
@@ -24980,7 +25191,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:05:40.452385+00:00"
+      "created_at": "2026-02-14T16:05:40.452385+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_80_regine_franco_518960976_10172415321095346_1272581698574848909_n",
@@ -25075,7 +25287,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:06:25.971729+00:00"
+      "created_at": "2026-02-14T16:06:25.971729+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_81_claude_benatar_collection_victor_rebecca_benun_495017934_10171755168560346_2499124449399417544_n",
@@ -25186,7 +25399,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:07:06.931986+00:00"
+      "created_at": "2026-02-14T16:07:06.931986+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_82_joseph_touriel_492030538_10171631280470346_1164156250994293487_n",
@@ -25294,7 +25508,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:07:55.169755+00:00"
+      "created_at": "2026-02-14T16:07:55.169755+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n",
@@ -25456,7 +25671,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:08:30.080994+00:00"
+      "created_at": "2026-02-14T16:08:30.080994+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_85_claude_benatar_collection_602325880_10173673626010346_5396769815198644467_n",
@@ -25565,7 +25781,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:10:01.828381+00:00"
+      "created_at": "2026-02-14T16:10:01.828381+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_86_jeanettte_swartz_collection_516044673_24127787240170963_8438365531155717054_n",
@@ -25673,7 +25890,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:10:45.061201+00:00"
+      "created_at": "2026-02-14T16:10:45.061201+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_88_levi_miryam_collection_582213031_10231713270518825_3648509779269552098_n",
@@ -25775,7 +25993,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:12:39.658846+00:00"
+      "created_at": "2026-02-14T16:12:39.658846+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_89_claude_benatar_collection_aslan_louie_notrica_493224712_10171661109615346_4370590583194203149_n",
@@ -25878,7 +26097,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:14:08.540594+00:00"
+      "created_at": "2026-02-14T16:14:08.540594+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_90_claude_benatar_collection_victor_rebecca_benun_494926899_10171755190465346_7463334439317281158_n",
@@ -25985,7 +26205,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:14:51.115964+00:00"
+      "created_at": "2026-02-14T16:14:51.115964+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_93_sabrina_amato_collection_494049981_2222706804827768_4365323857728211254_n",
@@ -26107,7 +26328,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:17:29.237848+00:00"
+      "created_at": "2026-02-14T16:17:29.237848+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_95_perla_levy_alhadeff_519360099_10166406932052715_2530675645732869189_n",
@@ -26234,7 +26456,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:19:20.049465+00:00"
+      "created_at": "2026-02-14T16:19:20.049465+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_96_lucia_capelluto_habib_497623454_1233264532143436_6867586292734209390_n",
@@ -26348,7 +26571,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:20:01.660181+00:00"
+      "created_at": "2026-02-14T16:20:01.660181+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_97_claude_benatar_collection_victor_haim_israel_470223951_10170605632245346_7357681670912902825_n",
@@ -26476,7 +26700,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:20:21.113744+00:00"
+      "created_at": "2026-02-14T16:20:21.113744+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_99_claude_benatar_collection_victor_rebecca_benun_495117150_10171755168940346_8068417958696098744_n",
@@ -26594,7 +26819,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:21:55.237582+00:00"
+      "created_at": "2026-02-14T16:21:55.237582+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_100_regine_avzaradel_collection_550882915_9859878947447737_338468120289304617_n",
@@ -26737,7 +26963,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:22:26.888851+00:00"
+      "created_at": "2026-02-14T16:22:26.888851+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_101_claude_benatar_collection_571277446_10173252883795346_8397002383747694084_n",
@@ -26856,7 +27083,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:22:53.811394+00:00"
+      "created_at": "2026-02-14T16:22:53.811394+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_102_uriel_galante_collection_605494321_801235802963228_782117642180107430_n",
@@ -26951,7 +27179,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:23:25.350195+00:00"
+      "created_at": "2026-02-14T16:23:25.350195+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_103_caden_sharhon_486780832_10171460023695346_788852106924365199_n",
@@ -27051,7 +27280,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:24:14.139176+00:00"
+      "created_at": "2026-02-14T16:24:14.139176+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_104_albert_angel_499725590_10171877447865346_8151957301761971413_n",
@@ -27151,7 +27381,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:24:45.968168+00:00"
+      "created_at": "2026-02-14T16:24:45.968168+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_105_claude_benatar_collection_558203138_10173095507180346_8300828577663964838_n",
@@ -27278,7 +27509,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:25:45.392840+00:00"
+      "created_at": "2026-02-14T16:25:45.392840+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_106_nissim_norman_sharhon_486209859_10171511418865346_7934755365074716806_n",
@@ -27378,7 +27610,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:26:35.347943+00:00"
+      "created_at": "2026-02-14T16:26:35.347943+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_108_varon_and_cohen_family_536272743_10172712625745346_629403507426403422_n",
@@ -27483,7 +27716,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:28:12.219129+00:00"
+      "created_at": "2026-02-14T16:28:12.219129+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_112_Michelle_Naftali_Menashe_611165363_10241027890419154_4676341286610368042_n",
@@ -27592,7 +27826,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:32:17.618609+00:00"
+      "created_at": "2026-02-14T16:32:17.618609+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_113_Eliechon_benatar_51122998_10161394623110346_5296034665579151360_n",
@@ -27732,7 +27967,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:33:25.198637+00:00"
+      "created_at": "2026-02-14T16:33:25.198637+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n",
@@ -27876,7 +28112,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:33:56.236251+00:00"
+      "created_at": "2026-02-14T16:33:56.236251+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_115_joseph_mizrahi_490207265_10171556169875346_1086624264720940908_n",
@@ -28000,7 +28237,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:34:32.848476+00:00"
+      "created_at": "2026-02-14T16:34:32.848476+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_0_lisa_galbraith_collection_520232999_10163302380404201_5510533636852598408_n",
@@ -28128,7 +28366,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:35:08.783860+00:00"
+      "created_at": "2026-02-14T16:35:08.783860+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_12_claude_benatar_collection_victor_bohor_sabatai_soriano_494266545_10171704019995346_7718030381364654083_n",
@@ -28236,7 +28475,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:36:41.804256+00:00"
+      "created_at": "2026-02-14T16:36:41.804256+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_18_semah_franco_518799461_10172415321225346_553390149995775072_n",
@@ -28328,7 +28568,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:39:33.681150+00:00"
+      "created_at": "2026-02-14T16:39:33.681150+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_30_estrea_sharhon_486447687_10171460023555346_6411241431060255791_n",
@@ -28427,7 +28668,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:40:01.096562+00:00"
+      "created_at": "2026-02-14T16:40:01.096562+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_31_jeanettte_swartz_collection_514422102_24127752060174481_4638287865555771213_n",
@@ -28565,7 +28807,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:40:37.528816+00:00"
+      "created_at": "2026-02-14T16:40:37.528816+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_32_shaya_sadis_486025159_10171438847095346_7650482810217649673_n",
@@ -28666,7 +28909,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:41:47.934192+00:00"
+      "created_at": "2026-02-14T16:41:47.934192+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_3_rhodes_jewish_historical_foundation_reina_cohen_solomon_varon_492228208_686565923760846_8126719111333170818_n",
@@ -28787,7 +29031,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:43:13.729755+00:00"
+      "created_at": "2026-02-14T16:43:13.729755+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_13_asher_touriel_489928848_10171601915310346_174675645702038176_n",
@@ -28897,7 +29142,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:43:57.729541+00:00"
+      "created_at": "2026-02-14T16:43:57.729541+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_33_nissim_cohen_514260385_10172484649105346_1012667927291313717_n",
@@ -28998,7 +29244,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:45:48.239624+00:00"
+      "created_at": "2026-02-14T16:45:48.239624+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_37_abner_bardavid_502531834_10171961392585346_6969844769030616197_n",
@@ -29100,7 +29347,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:46:29.415917+00:00"
+      "created_at": "2026-02-14T16:46:29.415917+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_45_uriel_galante_collection_605462785_801235796296562_8597033193125609967_n",
@@ -29228,7 +29476,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:49:14.810469+00:00"
+      "created_at": "2026-02-14T16:49:14.810469+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_50_Isaac_Cadranel_504301593_10171996110335346_3602126982357465160_n",
@@ -29336,7 +29585,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-14T16:51:11.344365+00:00"
+      "created_at": "2026-02-14T16:51:11.344365+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_59_claude_benatar_collection_victor_bohor_sabatai_soriano_493684314_10171704024440346_5979171357513245894_n",
@@ -29445,7 +29695,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:16:03.194000+00:00"
+      "created_at": "2026-02-15T05:16:03.194000+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_68_susanne_bass_collection_499759411_1189741629498856_3109157178903791725_n",
@@ -29558,7 +29809,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:17:29.666969+00:00"
+      "created_at": "2026-02-15T05:17:29.666969+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_71_claude_benatar_collection_victor_bohor_sabatai_soriano_494502427_10171704023185346_5893663062454819691_n",
@@ -29650,7 +29902,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:17:51.202119+00:00"
+      "created_at": "2026-02-15T05:17:51.202119+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_84_claude_benatar_collection_51010671_10161394962905346_4861693603711287296_n",
@@ -29785,7 +30038,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:19:09.610678+00:00"
+      "created_at": "2026-02-15T05:19:09.610678+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_87_abner_hasson_519693871_10172446261730346_4741244115442601264_n",
@@ -29895,7 +30149,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:19:41.875622+00:00"
+      "created_at": "2026-02-15T05:19:41.875622+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_92_ascher_t_capelouto_508014985_10172085972990346_6602167766352128966_n",
@@ -29997,7 +30252,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:21:19.978908+00:00"
+      "created_at": "2026-02-15T05:21:19.978908+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_94_rahamin_raymond_sadis_485365490_10171438847430346_8512062402864014866_n",
@@ -30082,7 +30338,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:21:51.939922+00:00"
+      "created_at": "2026-02-15T05:21:51.939922+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_98_eleonore_shemaria_486474068_10171556034980346_8907053379946085121_n",
@@ -30174,7 +30431,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:22:19.128058+00:00"
+      "created_at": "2026-02-15T05:22:19.128058+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_107_debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n",
@@ -30309,7 +30567,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:22:45.645660+00:00"
+      "created_at": "2026-02-15T05:22:45.645660+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_109_alfred_aron_charhon_514107722_10172197066705346_4898226954282493936_n",
@@ -30419,7 +30678,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:23:02.878418+00:00"
+      "created_at": "2026-02-15T05:23:02.878418+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_110_claude_benatar_collection_victor_bohor_sabatai_soriano_493853728_10171704024405346_2509583181697338751_n",
@@ -30545,7 +30805,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:23:25.553755+00:00"
+      "created_at": "2026-02-15T05:23:25.553755+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_111_claude_benatar_collection_victor_haim_israel_470239310_10170605628145346_5283256967494305297_n",
@@ -30668,7 +30929,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:23:43.659537+00:00"
+      "created_at": "2026-02-15T05:23:43.659537+00:00",
+      "training_eligible": true
     },
     {
       "photo_id": "inbox_community-batch-20260214_15_isaac_jack_levy_490471033_10171580010150346_8652748163613864274_n",
@@ -30752,7 +31014,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:24:13.339088+00:00"
+      "created_at": "2026-02-15T05:24:13.339088+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_41_isaac_jack_levy_490364820_10171580008910346_2077570241570978282_n",
@@ -30859,7 +31122,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:24:34.856408+00:00"
+      "created_at": "2026-02-15T05:24:34.856408+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_44_claude_benatar_collection_victor_rebecca_benun_495644359_10171755169400346_7126191920610626702_n",
@@ -30952,7 +31216,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:25:03.133962+00:00"
+      "created_at": "2026-02-15T05:25:03.133962+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_47_morris_touriel_491896701_10171631280295346_4599119104798936934_n",
@@ -31048,7 +31313,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:25:29.110133+00:00"
+      "created_at": "2026-02-15T05:25:29.110133+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_53_jacob_pasha_israel_69204176_10162214672025346_1240553526233399296_n",
@@ -31193,7 +31459,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:25:48.644961+00:00"
+      "created_at": "2026-02-15T05:25:48.644961+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_58_asher_touriel_486996980_10171601914685346_7482199189315238584_n",
@@ -31277,7 +31544,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:26:18.526666+00:00"
+      "created_at": "2026-02-15T05:26:18.526666+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_66_semah_franco_520899987_10172415320650346_6397837077659007019_n",
@@ -31353,7 +31621,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:26:39.806681+00:00"
+      "created_at": "2026-02-15T05:26:39.806681+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_74_victor_haim_israel_470218882_10170605594885346_1330218943688170616_n",
@@ -31437,7 +31706,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:27:06.534408+00:00"
+      "created_at": "2026-02-15T05:27:06.534408+00:00",
+      "training_eligible": false
     },
     {
       "photo_id": "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n",
@@ -31567,7 +31837,8 @@
       ],
       "prompt_version": "v2_rich_metadata",
       "source_method": "api",
-      "created_at": "2026-02-15T05:27:31.493327+00:00"
+      "created_at": "2026-02-15T05:27:31.493327+00:00",
+      "training_eligible": false
     }
   ]
 }

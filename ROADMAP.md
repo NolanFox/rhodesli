@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.32.0 · 1878 tests · 155 photos · 181 faces · 46 confirmed
+Current: v0.34.1 · 1878 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -153,6 +153,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
 ## Recently Completed
+- [x] 2026-02-15: v0.34.1 — ML Training Fix (Session 29): Hash-based train/val split (AD-060), diagnosed CORAL regression from gemini-2.5-flash labels (−12.5 pp accuracy). Added training_eligible field + --exclude-models flag (AD-061). 3 new ML tests (140 total).
 - [x] 2026-02-14: v0.34.0 — Discovery Layer (Session 27): Date badges on photo cards, AI Analysis metadata panel, decade/search/tag filtering, date correction flow with provenance tracking, admin review queue with priority scoring. Dual-keyed label cache for photo ID mismatch. 12 e2e + XX unit tests. Decision provenance AD-056–AD-059.
 - [x] 2026-02-14: v0.33.0 — ML Phase 2: Scale-Up Labeling + Tooling (Session 26): Processed 116 community photos (271 total). 250 Gemini 3 Flash date labels (+59% data). Temporal consistency auditor (AD-054). Search metadata export (AD-055). CORAL model retrained with MLflow. 53 new ML tests (137 total). Decision provenance AD-053–AD-055.
 - [x] 2026-02-13: v0.32.0 — Community Contributions v2: Suggestion Lifecycle (Session 25): Suggestion state visibility (inline "You suggested" confirmation), admin approval face thumbnails + skip + undo + audit log, triage bar active state, clickable "+N more", annotation dedup with confirmation counting, community "I Agree" buttons. 11 e2e acceptance tests (4 passing, 7 skipped). 22 new unit tests. 1878 tests.

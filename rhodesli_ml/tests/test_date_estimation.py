@@ -242,6 +242,73 @@ class TestDateDataset:
         labels = load_labels_from_file(tmp_path / "nonexistent.json")
         assert labels == []
 
+    def test_load_labels_training_eligible_filter(self, tmp_path):
+        """Labels with training_eligible=False are excluded by default."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {"photo_id": "p1", "estimated_decade": 1940, "model": "gemini-3-flash-preview", "training_eligible": True},
+                {"photo_id": "p2", "estimated_decade": 1950, "model": "gemini-2.5-flash", "training_eligible": False},
+                {"photo_id": "p3", "estimated_decade": 1930, "model": "gemini-3-flash-preview"},  # no field = eligible
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        # Default: training_only=True excludes ineligible
+        labels = load_labels_from_file(labels_file)
+        assert len(labels) == 2
+        assert {l["photo_id"] for l in labels} == {"p1", "p3"}
+
+        # training_only=False includes all
+        labels = load_labels_from_file(labels_file, training_only=False)
+        assert len(labels) == 3
+
+    def test_load_labels_exclude_models(self, tmp_path):
+        """Labels from excluded models are filtered out."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {"photo_id": "p1", "estimated_decade": 1940, "model": "gemini-3-flash-preview", "training_eligible": True},
+                {"photo_id": "p2", "estimated_decade": 1950, "model": "gemini-2.5-flash", "training_eligible": True},
+                {"photo_id": "p3", "estimated_decade": 1930, "model": "gemini-3-pro-preview", "training_eligible": True},
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        # Exclude 2.5-flash
+        labels = load_labels_from_file(labels_file, exclude_models=["2.5-flash"])
+        assert len(labels) == 2
+        assert {l["photo_id"] for l in labels} == {"p1", "p3"}
+
+        # Exclude multiple models
+        labels = load_labels_from_file(labels_file, exclude_models=["2.5-flash", "3-pro"])
+        assert len(labels) == 1
+        assert labels[0]["photo_id"] == "p1"
+
+    def test_load_labels_combined_filters(self, tmp_path):
+        """Both training_eligible and exclude_models filters work together."""
+        labels_file = tmp_path / "labels.json"
+        data = {
+            "schema_version": 2,
+            "labels": [
+                {"photo_id": "p1", "model": "gemini-3-flash-preview", "training_eligible": True},
+                {"photo_id": "p2", "model": "gemini-2.5-flash", "training_eligible": False},
+                {"photo_id": "p3", "model": "gemini-3-flash-preview", "training_eligible": False},
+                {"photo_id": "p4", "model": "gemini-3-pro-preview", "training_eligible": True},
+            ]
+        }
+        with open(labels_file, "w") as f:
+            json.dump(data, f)
+
+        # training_only=True + exclude 3-pro
+        labels = load_labels_from_file(labels_file, exclude_models=["3-pro"])
+        assert len(labels) == 1
+        assert labels[0]["photo_id"] == "p1"
+
 
 # ============================================================
 # Date Labels Module Tests

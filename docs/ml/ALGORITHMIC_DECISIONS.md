@@ -566,12 +566,22 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Result**: With stable split, 250 labels → acc=67.9%, MAE=0.358; 271 labels → acc=55.4%, MAE=0.607. Confirmed the 21 new labels genuinely hurt (not split noise). 9 gemini-2.5-flash labels are primary suspects.
 - **Affects**: `rhodesli_ml/data/date_dataset.py` (`create_train_val_split`).
 
+### AD-061: Model-Gated Training Eligibility (2.5-flash Labels Display-Only)
+
+- **Date**: 2026-02-15
+- **Context**: 9 photos that failed on `gemini-3-flash-preview` (504 timeouts) were labeled with `gemini-2.5-flash` fallback. Adding these 9 labels (plus 12 new 3-flash labels) degraded model accuracy from 67.9% → 55.4% (−12.5 pp) and MAE from 0.358 → 0.607 (+69%). Hash-based split (AD-060) confirmed this is real degradation, not split noise.
+- **Decision**: Labels have a `training_eligible` field. `gemini-2.5-flash` labels are `training_eligible: false` — displayed in the UI for date context but excluded from CORAL model training by default. `load_labels_from_file()` filters by `training_eligible=True` unless `training_only=False` is passed.
+- **Rejected**: (a) Re-labeling all 9 with gemini-3-flash — would fix training but doesn't prevent future fallback labels from contaminating training; (b) Removing 2.5-flash labels entirely — loses useful display data for 9 photos that have no other date estimate.
+- **Rationale**: Different Gemini models have systematic biases in decade estimation. Mixing model outputs creates label noise that degrades ordinal regression. The `training_eligible` gate allows 100% photo coverage in the UI while maintaining training data consistency.
+- **Implementation**: `training_eligible` field in `data/date_labels.json`; `--exclude-models` and `--include-all` flags in `train_date.py`; `training_only` param in `load_labels_from_file()`; `generate_date_labels.py` sets `training_eligible` based on model.
+- **Affects**: `rhodesli_ml/data/date_dataset.py`, `rhodesli_ml/training/train_date.py`, `rhodesli_ml/scripts/generate_date_labels.py`, `data/date_labels.json`.
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-061)
+1. Add a new entry with AD-XXX format (next: AD-062)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.34.1] — 2026-02-15
+
+### Fixed
+- **CORAL training regression diagnosed and fixed** — 9 gemini-2.5-flash fallback labels caused −12.5 pp accuracy drop (67.9% → 55.4%). Added `training_eligible` field to date labels; 2.5-flash labels are display-only, excluded from training by default (AD-061).
+- Hash-based train/val split for stable metrics across dataset changes (AD-060)
+
+### Added
+- `--exclude-models` flag for `train_date.py` to filter labels by model
+- `--include-all` flag for `train_date.py` to override training_eligible filter
+- `training_eligible` field in date labels schema — auto-set by `generate_date_labels.py` based on model
+
 ## [v0.34.0] — 2026-02-14
 
 ### Added

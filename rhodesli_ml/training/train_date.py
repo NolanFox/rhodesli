@@ -59,6 +59,14 @@ def main():
         "--photos-dir", default=None,
         help="Path to photos directory (overrides config)",
     )
+    parser.add_argument(
+        "--exclude-models", nargs="*", default=None,
+        help="Exclude labels from these model name substrings (e.g. gemini-2.5-flash)",
+    )
+    parser.add_argument(
+        "--include-all", action="store_true",
+        help="Include training_eligible=False labels (override default filter)",
+    )
     args = parser.parse_args()
 
     # Load config
@@ -75,12 +83,21 @@ def main():
     image_size = data_cfg.get("image_size", 224)
 
     # Load labels
+    training_only = not args.include_all
     print(f"Loading labels from {labels_path}...")
-    labels = load_labels_from_file(labels_path)
+    labels = load_labels_from_file(
+        labels_path,
+        exclude_models=args.exclude_models,
+        training_only=training_only,
+    )
     if not labels:
         print("ERROR: No labels found. Run generate_date_labels.py first.")
         sys.exit(1)
 
+    if args.exclude_models:
+        print(f"Excluded models: {args.exclude_models}")
+    if training_only:
+        print(f"Training-eligible only: yes")
     print(f"Loaded {len(labels)} labels")
 
     # Load photo_index for path resolution

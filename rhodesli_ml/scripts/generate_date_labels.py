@@ -515,6 +515,8 @@ def main():
             "subject_ages": result.get("subject_ages", []),
             "prompt_version": "v2_rich_metadata",
             "source_method": "api",
+            # 2.5-flash labels are display-only, not used for training (AD-061)
+            "training_eligible": "2.5-flash" not in args.model,
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
         all_labels.append(label)
