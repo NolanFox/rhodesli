@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.36.0] — 2026-02-15
+
+### Added
+- **Face Comparison Tool** — `/compare` route with face selector, similarity search, and upload support
+  - Select any identified person from the archive to find similar faces ranked by confidence
+  - Results grid with similarity percentage, confidence tiers (Very High/High/Moderate/Low), and photo links
+  - Name search filter for quick face selection
+  - Upload area for photo comparison (local dev only — requires InsightFace)
+  - Graceful degradation on production (archive comparison works, upload shows helpful message)
+  - `find_similar_faces()` in `core/neighbors.py` — face-level similarity search across all embeddings
+  - 20 unit tests (algorithm, route, API, navigation)
+- **Compare link** added to all navigation bars (landing, /photos, /people, /timeline, /photo, /person)
+- **Timeline collection filter** — dropdown to filter timeline by collection (`?collection=`)
+- **Timeline multi-person filter** — select multiple people (`?people=uuid1,uuid2`), merged chronological view with highlighted names
+- **Timeline sticky controls** — person/collection filters and share button stick below nav on scroll
+- **Timeline mobile nav** — navigation links visible on all screen sizes (not hidden on mobile)
+- PRD stubs for future features: birth date estimation (008), GEDCOM import (009), geocoding/map view (010), life events (011)
+- Decision provenance: AD-064 (context event era filtering), AD-065 (face comparison similarity engine)
+
+### Fixed
+- **Context events filtered to person's era** — when person filter active, only show events within ±30/+10 years of their photo dates (no more 1522 Ottoman Conquest on a 1920s timeline)
+- Timeline `collection` variable name collision with filter parameter fixed
+
 ## [v0.35.0] — 2026-02-15
 
 ### Added

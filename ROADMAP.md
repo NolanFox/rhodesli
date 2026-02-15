@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.35.0 · 2002 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.36.0 · 2016 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -85,6 +85,13 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] FE-101: Person filter + age overlay on timeline (2026-02-15)
 - [x] FE-102: Share button + year range filter on timeline (2026-02-15)
 - [x] DATA-010: Rhodes historical context events — 15 curated events (1522-1997), source-verified (2026-02-15)
+- [x] FE-103: Timeline collection filter — dropdown to filter by collection (2026-02-15)
+- [x] FE-104: Timeline multi-person filter — ?people= param, merged view, highlighted names (2026-02-15)
+- [x] FE-105: Timeline sticky controls — filters and share button stick on scroll (2026-02-15)
+- [x] FE-106: Timeline context events era filtering — person-specific event range (2026-02-15)
+- [x] FE-107: Timeline mobile nav — links visible on all screen sizes (2026-02-15)
+- [x] FE-110: Face Comparison Tool — /compare with face selector, similarity search, upload (2026-02-15)
+- [x] FE-111: Compare navigation — link added to all nav bars across the site (2026-02-15)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -156,7 +163,34 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] QA-004: End-to-end browser tests (Playwright) (2026-02-08)
 - [ ] GEN-001+: Multi-tenant architecture (if traction)
 
+## Planned Sessions
+
+### Session 32: Birth Date Estimation
+- Use photo dates + subject ages to infer birth years
+- Validate against known birth years (from identity metadata)
+- Display on person pages and timeline age overlays
+- PRD: docs/prds/008_birth_date_estimation.md
+
+### Session 33: GEDCOM Import
+- Parse GEDCOM files for dates, relationships, locations
+- Enrich identity data (birth/death/marriage years)
+- Support multi-user GEDCOM uploads
+- PRD: docs/prds/009_gedcom_import.md
+
+### Session 34: Geocoding + Map View
+- Batch geocode Gemini location estimates
+- Map view route with photo markers
+- Timeline + map sync view
+- PRD: docs/prds/010_geocoding_map_view.md
+
+### Session 35: Life Events & Context Graph
+- Event tagging: "Moise's wedding in Havana"
+- Events connect photos, people, places, dates
+- Richer timeline with life events interspersed
+- PRD: docs/prds/011_life_events_context_graph.md
+
 ## Recently Completed
+- [x] 2026-02-15: v0.36.0 — Timeline Polish + Face Comparison (Session 31): Context event era filtering, sticky controls, multi-person filter, collection filter, mobile nav for timeline. Face Comparison tool at /compare with archive face selector, similarity search, upload support, navigation integration. PRD stubs 008-011. 14 new tests (2016 total). Decision provenance AD-064–AD-065.
 - [x] 2026-02-15: v0.35.0 — Timeline Story Engine (Session 30): Vertical chronological timeline at /timeline with decade markers, 15 verified Rhodes historical events inline, person filter with age overlay, confidence interval bars, share button, year range filtering. Navigation links across all pages. 28 unit + 11 e2e tests. Decision provenance AD-062–AD-063.
 - [x] 2026-02-15: v0.34.1 — ML Training Fix (Session 29): Hash-based train/val split (AD-060), diagnosed CORAL regression from gemini-2.5-flash labels (−12.5 pp accuracy). Added training_eligible field + --exclude-models flag (AD-061). 3 new ML tests (140 total).
 - [x] 2026-02-14: v0.34.0 — Discovery Layer (Session 27): Date badges on photo cards, AI Analysis metadata panel, decade/search/tag filtering, date correction flow with provenance tracking, admin review queue with priority scoring. Dual-keyed label cache for photo ID mismatch. 12 e2e + XX unit tests. Decision provenance AD-056–AD-059.

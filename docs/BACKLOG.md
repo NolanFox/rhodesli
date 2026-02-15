@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 8.0 — February 15, 2026
-**Status**: 2002 tests passing, v0.35.0, 271 photos, 46 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 9.0 — February 15, 2026
+**Status**: 2016 tests passing, v0.36.0, 271 photos, 46 confirmed identities, 181 faces, 16 proposals ready
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -305,7 +305,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | AN-020 | Family tree integration | PLANNED | Visual tree display linking identities by relationships. |
 | AN-021 | GEDCOM import/export | PLANNED | Standard genealogy interchange format. |
 | AN-022 | Cross-reference with genealogy databases | OPEN | Link to Ancestry, FamilySearch, JewishGen records. |
-| AN-023 | Timeline view | OPEN | Show photos chronologically, with identity appearances marked. |
+| AN-023 | Timeline view | DONE | Show photos chronologically, with identity appearances marked. v0.35.0 (2026-02-15) |
+| FE-100 | Timeline Story Engine | DONE | Vertical chronological timeline at /timeline. v0.35.0 (2026-02-15) |
+| FE-103 | Timeline collection filter | DONE | Dropdown to filter timeline by collection. v0.36.0 (2026-02-15) |
+| FE-104 | Timeline multi-person filter | DONE | ?people= param, merged view, highlighted names. v0.36.0 (2026-02-15) |
+| FE-106 | Timeline era filtering | DONE | Context events filtered to person's photo date range. v0.36.0 (2026-02-15) |
+| FE-110 | Face Comparison Tool | DONE | /compare with face selector, similarity search, upload. v0.36.0 (2026-02-15) |
 
 ---
 

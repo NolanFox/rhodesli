@@ -592,12 +592,27 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Key facts verified**: 1,673 deported July 23 1944 (not July 24), ~151 survived, 24-day journey to Auschwitz (longest of any community), arrival August 16 1944.
 - **Affects**: `data/rhodes_context_events.json`.
 
+### AD-064: Context Event Era Filtering — Person-Scoped Timeline
+- **Date**: 2026-02-15
+- **Context**: When a person filter is active on the timeline, context events from centuries before their lifetime are irrelevant (e.g., 1522 Ottoman Conquest on Big Leon Capeluto's 1920s-1970s timeline).
+- **Decision**: When person filter active, compute the photo date range (earliest_year - 30, latest_year + 10) and only show context events within that window. When no person filter, show all events (full community history).
+- **Rejected**: (1) Always show all events — distracting when focused on one person. (2) Filter by identity birth_year only — not all identities have birth_year, and photo dates are more reliable. (3) Hard-coded era windows — doesn't adapt to the actual photo distribution.
+- **Rationale**: -30 years before earliest photo accounts for events that shaped the person's childhood/parents. +10 years after latest photo accounts for events shortly after their last photograph.
+- **Affects**: `app/main.py` (timeline route context event filtering).
+
+### AD-065: Face Comparison Similarity Engine — Face-Level vs Identity-Level
+- **Date**: 2026-02-15
+- **Context**: The existing `find_nearest_neighbors()` works at the identity level (comparing all faces of one identity against all faces of another). The comparison tool needs face-level matching — comparing a single face embedding against all faces in the archive.
+- **Decision**: New `find_similar_faces()` function in `core/neighbors.py` that operates on individual face embeddings, not identity aggregates. Uses the same Euclidean distance metric and confidence tiers (VERY HIGH <0.80, HIGH <1.00, MODERATE <1.20, LOW ≥1.20) as the existing pipeline. Returns face_id, distance, confidence, and identity info when registry is provided.
+- **Rejected**: (1) Reuse `find_nearest_neighbors()` with a fake identity wrapper — adds unnecessary complexity and breaks the identity-level co-occurrence check. (2) Cosine similarity instead of Euclidean — the entire pipeline uses Euclidean and thresholds are calibrated for it (AD-013). (3) Approximate nearest neighbors (FAISS/Annoy) — 775 embeddings is trivial for brute force (<10ms), ANN overhead not justified.
+- **Affects**: `core/neighbors.py`, `app/main.py` (/compare route, /api/compare endpoint).
+
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-064)
+1. Add a new entry with AD-XXX format (next: AD-066)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

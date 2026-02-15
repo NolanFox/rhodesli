@@ -1,6 +1,23 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-15 (Session 30 — Timeline Story Engine)
+Last updated: 2026-02-15 (Session 31 — Timeline Polish + Face Comparison)
+
+## Session 31 Completed
+- [x] Fix 1: Context events filtered to person's era (±30/+10 years)
+- [x] Fix 2: Sticky share button (controls bar sticks below nav)
+- [x] Fix 3: Multi-person filter (?people=uuid1,uuid2, highlighted names)
+- [x] Fix 4: Navigation back link (mobile nav visible, Compare link everywhere)
+- [x] Fix 5: Collection filter on timeline (?collection= param)
+- [x] Face Comparison PRD (007) — research FamilySearch, MyHeritage, Photo Sleuth
+- [x] Face Comparison Tool at /compare with face selector + similarity search
+- [x] find_similar_faces() in core/neighbors.py — face-level similarity
+- [x] Upload-based comparison with graceful degradation (local dev only)
+- [x] Compare nav link on all pages (landing, /photos, /people, /timeline, /photo, /person)
+- [x] PRD stubs: 008 (birth dates), 009 (GEDCOM), 010 (geocoding), 011 (life events)
+- [x] Planned sessions 32-35 added to ROADMAP.md
+- [x] AD-064 (era filtering), AD-065 (face comparison engine)
+- [x] 5 new timeline tests + 20 face comparison tests (2016 total)
+- [x] Documentation: CHANGELOG v0.36.0, ROADMAP, BACKLOG, todo.md
 
 ## Session 30 Completed
 - [x] PRD: docs/prds/timeline-story-engine.md
