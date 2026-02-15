@@ -9678,7 +9678,10 @@ def get(person: str = "", start: int = None, end: int = None,
     person_identity = None
     person_photo_ids = None
     if person:
-        person_identity = registry.get_identity(person)
+        try:
+            person_identity = registry.get_identity(person)
+        except KeyError:
+            person_identity = None
         if person_identity:
             face_ids = [f if isinstance(f, str) else f.get("face_id", "")
                         for f in person_identity.get("anchor_ids", []) + person_identity.get("candidate_ids", [])]
