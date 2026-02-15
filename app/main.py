@@ -8615,6 +8615,8 @@ def photo_view_content(
             _photo_metadata_display(photo),
             # Photo annotations display + form (AN-002–AN-006)
             _photo_annotations_section(photo_id, is_admin),
+            # AI Analysis metadata panel (date estimate, scene, tags, evidence)
+            _build_ai_analysis_section(photo_id, is_admin),
             cls="mt-4"
         ),
         nav_keyboard_script,

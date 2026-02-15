@@ -1052,3 +1052,64 @@ class TestConfirmDateEndpoint:
         assert response.status_code == 200
         assert "Label not found" in response.text
         main_module._date_labels_cache = None
+
+
+# ---------------------------------------------------------------------------
+# Photo Context modal includes AI Analysis
+# ---------------------------------------------------------------------------
+
+class TestPhotoContextModalAIAnalysis:
+    """Verify AI Analysis section appears in the Photo Context modal partial."""
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    def test_modal_includes_ai_analysis(self, mock_reg, mock_dim, mock_meta, sample_date_labels, sample_search_index):
+        """Photo context modal partial includes AI Analysis section when labels exist."""
+        import app.main as main_module
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [],
+            "source": "Test Collection",
+        }
+        mock_reg.return_value = MagicMock()
+        main_module._date_labels_cache = sample_date_labels
+        main_module._search_index_cache = sample_search_index
+
+        result = photo_view_content("abc123", is_partial=True)
+        html = to_xml(result)
+
+        assert "AI Analysis" in html
+        assert 'data-testid="ai-analysis"' in html
+        assert "circa 1935" in html
+
+        main_module._date_labels_cache = None
+        main_module._search_index_cache = None
+
+    @patch("app.main.get_photo_metadata")
+    @patch("app.main.get_photo_dimensions", return_value=(800, 600))
+    @patch("app.main.load_registry")
+    def test_modal_omits_ai_analysis_when_no_labels(self, mock_reg, mock_dim, mock_meta):
+        """Photo context modal omits AI Analysis when no labels exist for photo."""
+        import app.main as main_module
+        from app.main import photo_view_content, to_xml
+
+        mock_meta.return_value = {
+            "filename": "test.jpg",
+            "faces": [],
+            "source": "Test Collection",
+        }
+        mock_reg.return_value = MagicMock()
+        main_module._date_labels_cache = {}
+        main_module._search_index_cache = []
+
+        result = photo_view_content("unknown_photo", is_partial=True)
+        html = to_xml(result)
+
+        assert "AI Analysis" not in html
+        assert 'data-testid="ai-analysis"' not in html
+
+        main_module._date_labels_cache = None
+        main_module._search_index_cache = None
