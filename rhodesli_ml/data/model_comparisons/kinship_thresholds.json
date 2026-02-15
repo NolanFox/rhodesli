@@ -1,0 +1,73 @@
+{
+  "same_person": {
+    "n": 959,
+    "mean": 1.0148,
+    "std": 0.187,
+    "min": 0.2112,
+    "max": 1.4124,
+    "p5": 0.7098,
+    "p25": 0.8807,
+    "p50": 1.0051,
+    "p75": 1.163,
+    "p95": 1.3147
+  },
+  "same_family": {
+    "n": 385,
+    "mean": 1.3388,
+    "std": 0.0709,
+    "min": 1.0502,
+    "max": 1.5003,
+    "p5": 1.2055,
+    "p25": 1.3041,
+    "p50": 1.3514,
+    "p75": 1.3891,
+    "p95": 1.4314
+  },
+  "different_person": {
+    "n": 605,
+    "mean": 1.3662,
+    "std": 0.0572,
+    "min": 1.1914,
+    "max": 1.5531,
+    "p5": 1.2626,
+    "p25": 1.3308,
+    "p50": 1.3684,
+    "p75": 1.4041,
+    "p95": 1.4529
+  },
+  "recommended_thresholds": {
+    "strong_match": 1.163,
+    "possible_match": 1.3147,
+    "similar_features": 1.3647,
+    "separation_metrics": {
+      "cohens_d_sp_vs_dp": 2.5416,
+      "cohens_d_sf_vs_dp": 0.4255
+    },
+    "finding": "Family resemblance is NOT reliably separable from different-person distances in 512-dim embedding space. Same-family and different-person distributions overlap almost completely. The compare tool uses a same-person-derived threshold model instead of a kinship model."
+  },
+  "calibration_metadata": {
+    "n_same_person_pairs": 959,
+    "n_same_family_pairs": 385,
+    "n_different_pairs": 605,
+    "date_calibrated": "2026-02-15",
+    "n_confirmed_identities": 46,
+    "n_with_embeddings": 46,
+    "n_multi_face": 18,
+    "n_with_family_group": 45,
+    "family_groups_found": [
+      "Mazal",
+      "Moussafer",
+      "Pizante",
+      "Israel",
+      "Franco",
+      "Schapiro",
+      "Surmani",
+      "Hasson",
+      "Louza",
+      "Almaleh",
+      "Hazan",
+      "Capeluto",
+      "Sedikaro"
+    ]
+  }
+}
