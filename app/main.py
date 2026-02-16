@@ -436,6 +436,7 @@ def _get_best_proposal_for_identity(identity_id: str) -> dict | None:
 
 _date_labels_cache = None
 _search_index_cache = None
+_birth_year_cache = None
 
 
 def _load_date_labels() -> dict:
@@ -537,6 +538,66 @@ def _load_search_index() -> list:
         logging.warning(f"Failed to load search index: {e}")
 
     return _search_index_cache
+
+
+def _load_birth_year_estimates() -> dict:
+    """Load ML-inferred birth year estimates, keyed by identity_id.
+
+    Returns dict mapping identity_id -> {birth_year_estimate, birth_year_confidence, ...}.
+    Human-confirmed metadata.birth_year always takes priority over these estimates.
+    """
+    global _birth_year_cache
+    if _birth_year_cache is not None:
+        return _birth_year_cache
+
+    _birth_year_cache = {}
+    # Check both possible locations (ML output dir and data dir)
+    for candidate in [
+        Path("rhodesli_ml/data/birth_year_estimates.json"),
+        data_path / "birth_year_estimates.json",
+    ]:
+        if candidate.exists():
+            try:
+                with open(candidate) as f:
+                    data = json.load(f)
+                for est in data.get("estimates", []):
+                    iid = est.get("identity_id", "")
+                    if iid:
+                        _birth_year_cache[iid] = est
+            except Exception as e:
+                logging.warning(f"Failed to load birth year estimates: {e}")
+            break
+
+    return _birth_year_cache
+
+
+def _get_birth_year(identity_id: str, identity: dict = None) -> tuple:
+    """Get birth year for an identity, checking metadata first then ML estimates.
+
+    Returns:
+        (birth_year: int or None, source: str, confidence: str or None)
+        source is "confirmed" (metadata) or "ml_inferred"
+    """
+    # Priority 1: Human-confirmed metadata (check both top-level and nested)
+    if identity:
+        # Some contexts flatten metadata to top level, some nest it
+        for by in [
+            identity.get("birth_year"),
+            (identity.get("metadata") or {}).get("birth_year"),
+        ]:
+            if by:
+                try:
+                    return int(by), "confirmed", None
+                except (ValueError, TypeError):
+                    pass
+
+    # Priority 2: ML-inferred estimate
+    estimates = _load_birth_year_estimates()
+    est = estimates.get(identity_id)
+    if est:
+        return est["birth_year_estimate"], "ml_inferred", est.get("birth_year_confidence")
+
+    return None, None, None
 
 
 def _get_decade_counts() -> dict:
@@ -9010,8 +9071,23 @@ def public_person_page(
     else:
         badge = Span("Under Review", cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20")
 
+    # --- Birth year (metadata or ML estimate) ---
+    person_birth_year, by_source, by_confidence = _get_birth_year(person_id, identity)
+    birth_year_line = None
+    if person_birth_year:
+        if by_source == "confirmed":
+            birth_year_line = f"Born {person_birth_year}"
+        elif by_confidence == "high":
+            birth_year_line = f"Born ~{person_birth_year}"
+        elif by_confidence == "medium":
+            birth_year_line = f"Born ~{person_birth_year} (estimated)"
+        else:
+            birth_year_line = f"Born ~{person_birth_year}?"
+
     # --- Stats line ---
     stats_parts = []
+    if birth_year_line:
+        stats_parts.append(birth_year_line)
     if photo_count > 0:
         stats_parts.append(f"Appears in {photo_count} {'photo' if photo_count == 1 else 'photos'}")
     if collection_count > 0:
@@ -9830,17 +9906,13 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
             decades_order.append(dec)
         decades_map[dec].append(entry)
 
-    # Compute age if person has birth_year
+    # Compute age if person has birth_year (metadata or ML estimate)
     person_birth_year = None
+    birth_year_source = None
+    birth_year_confidence = None
     if person_identity:
-        # Check metadata for birth_year
-        meta = person_identity.get("metadata", {}) or {}
-        by = meta.get("birth_year")
-        if by:
-            try:
-                person_birth_year = int(by)
-            except (ValueError, TypeError):
-                pass
+        iid = person_identity.get("identity_id", "")
+        person_birth_year, birth_year_source, birth_year_confidence = _get_birth_year(iid, person_identity)
 
     # Build person filter options (checkboxes for multi-select)
     person_filter_items = []
@@ -9883,7 +9955,10 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
         story_title = f"{person_name}\u2019s Life in Photos"
         story_subtitle = ""
         if person_birth_year:
-            story_subtitle = f"Born {person_birth_year}"
+            if birth_year_source == "ml_inferred":
+                story_subtitle = f"Born ~{person_birth_year} (estimated)"
+            else:
+                story_subtitle = f"Born {person_birth_year}"
     elif collection:
         story_title = collection
         photo_count = len([e for e in timeline_entries if e["type"] == "photo"])
@@ -9985,9 +10060,19 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
                 if person_birth_year and entry.get("year"):
                     age = entry["year"] - person_birth_year
                     if 0 <= age <= 120:
+                        # Style by confidence: confirmed=solid, high=solid, medium=dashed, low=faded
+                        if birth_year_source == "confirmed" or birth_year_confidence == "high":
+                            age_cls = "bg-indigo-900/50 text-indigo-300 border border-indigo-700/30"
+                            age_text = f"Age ~{age}"
+                        elif birth_year_confidence == "medium":
+                            age_cls = "bg-indigo-900/30 text-indigo-300/80 border border-dashed border-indigo-700/30"
+                            age_text = f"Age ~{age}"
+                        else:
+                            age_cls = "bg-indigo-900/20 text-indigo-400/50 border border-dashed border-indigo-800/30"
+                            age_text = f"~{age}?"
                         age_badge = Span(
-                            f"Age ~{age}",
-                            cls="text-[10px] px-1.5 py-0.5 rounded bg-indigo-900/50 text-indigo-300 border border-indigo-700/30",
+                            age_text,
+                            cls=f"text-[10px] px-1.5 py-0.5 rounded {age_cls}",
                             data_testid="age-badge",
                         )
 
@@ -17084,12 +17169,15 @@ def _identity_metadata_display(identity: dict, is_admin: bool = False):
 
     # Build compact summary line: "~1890–1944 · Rhodes → Auschwitz"
     summary_parts = []
-    birth_year = identity.get("birth_year")
+    # Check metadata first, then ML estimates for birth year
+    birth_year, by_source, _by_conf = _get_birth_year(identity_id, identity)
     death_year = identity.get("death_year")
     if birth_year and death_year:
-        summary_parts.append(f"{birth_year}–{death_year}")
+        prefix = "~" if by_source == "ml_inferred" else ""
+        summary_parts.append(f"{prefix}{birth_year}–{death_year}")
     elif birth_year:
-        summary_parts.append(f"b. {birth_year}")
+        prefix = "~" if by_source == "ml_inferred" else ""
+        summary_parts.append(f"b. {prefix}{birth_year}")
     elif death_year:
         summary_parts.append(f"d. {death_year}")
 
@@ -18732,7 +18820,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -18744,6 +18832,7 @@ async def post(request):
     _date_labels_cache = None
     _search_index_cache = None
     _context_events_cache = None
+    _birth_year_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 
