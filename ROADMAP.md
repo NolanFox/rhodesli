@@ -182,12 +182,16 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] VISION.md — product direction document
 - [x] AD-070 — future architecture directions
 
-### Session 34: Birth Date Estimation ML Pipeline
-- Infer birth years from photo dates + estimated ages
-- Validate against known birth years (from identity metadata)
-- Feed into timeline age overlay
-- Display on person pages
-- PRD: docs/prds/008_birth_date_estimation.md
+### Session 34: Birth Date Estimation ML Pipeline (COMPLETED 2026-02-15)
+- [x] Data audit: Gemini subject_ages exist for 100% of 271 photos (no new data needed)
+- [x] Birth year estimation pipeline with robust outlier filtering (median + MAD)
+- [x] Face-to-age matching via bbox left-to-right x-coordinate sorting
+- [x] 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW)
+- [x] Timeline age overlay using ML-estimated birth years
+- [x] Person page birth year display with confidence styling
+- [x] Validation report + data improvement opportunities
+- [x] AD-071/072, PRD 008 updated with actual results
+- [x] 48 new tests (2069 app + 177 ML = 2246 total)
 
 ### Session 35: GEDCOM Import + Relationship Graph
 - Parse GEDCOM files (user's tree + other users' trees)
@@ -226,6 +230,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-15: v0.38.0 — Birth Date Estimation (Session 34): Birth year estimation pipeline with robust outlier filtering (median + MAD). Face-to-age matching via bbox x-coordinate sorting. 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW). Timeline age overlay with confidence styling. Person page birth year display. Validation report with data improvement opportunities. 48 new tests (2246 total). Decision provenance AD-071–AD-072.
 - [x] 2026-02-15: v0.37.1 — Production Polish + Ideation (Session 33): Compare in admin sidebar. R2 upload persistence (compare uploads survive Railway restarts). Production graceful degradation (save without InsightFace). Contribute-to-archive flow wired to admin queue. VISION.md product direction doc. Roadmap sessions 34-39. AD-070 future architecture. 12 new tests (2058 total).
 - [x] 2026-02-15: v0.37.0 — Compare Intelligence (Session 32): Kinship calibration from 46 confirmed identities (959 same-person, 385 same-family, 605 different-person pairs). Key finding: family resemblance (d=0.43) not reliably separable from different-person in embedding space. Tiered compare results (strong/possible/similar/weak) with CDF-based confidence percentages. Upload persistence + multi-face detection + face selection UI. 30 new tests (2046 total). Decision provenance AD-067–AD-069.
 - [x] 2026-02-15: v0.36.0 — Timeline Polish + Face Comparison (Session 31): Context event era filtering, sticky controls, multi-person filter, collection filter, mobile nav for timeline. Face Comparison tool at /compare with archive face selector, similarity search, upload support, navigation integration. PRD stubs 008-011. 14 new tests (2016 total). Decision provenance AD-064–AD-065.

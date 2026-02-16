@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 10.0 — February 15, 2026
-**Status**: 2046 tests passing, v0.37.0, 271 photos, 46 confirmed identities, 181 faces, 16 proposals ready
+**Version**: 11.0 — February 15, 2026
+**Status**: 2106 tests passing, v0.38.0, 271 photos, 46 confirmed identities, 181 faces, 32 birth year estimates
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---

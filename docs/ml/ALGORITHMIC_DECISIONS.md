@@ -647,7 +647,23 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-071)
+### AD-071: Birth Year Estimation — Weighted Aggregate with Robust Outlier Filtering
+- **Date**: 2026-02-15
+- **Context**: Inferring birth years for confirmed identities by cross-referencing photo dates (Gemini best_year_estimate) with per-face age estimates (Gemini subject_ages, left-to-right ordering). Faces matched to ages via bounding box x-coordinate sorting.
+- **Decision**: Median + MAD (Median Absolute Deviation) for outlier detection before weighted averaging. Single-person photos get 2x weight. Confidence tiers: HIGH (std<3, n>=3), MEDIUM (std<5 or n=2), LOW (otherwise).
+- **Rejected**: Simple weighted average without outlier filtering — bbox mismatches in group photos caused 5-15 year errors. Also rejected InsightFace age estimation — Gemini sees full photo context (clothing, setting) which is critical for historical photos.
+- **Results**: 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW). Big Leon Capeluto: 1907 (expected ~1903), medium confidence. Single-person photos give 1903/1905 — the noise comes from group photos.
+- **Key finding**: Face-to-age matching via bbox x-sorting works well when face count matches Gemini people_count (90% of photos). The 10% mismatch cases are skipped. Primary error source is Gemini age estimation variance (±5 years typical).
+- **Affects**: `rhodesli_ml/pipelines/birth_year_estimation.py`, `rhodesli_ml/scripts/run_birth_estimation.py`, `rhodesli_ml/data/birth_year_estimates.json`
+
+### AD-072: Birth Year UI Integration — ML Estimates as Fallback
+- **Date**: 2026-02-15
+- **Context**: How to display ML-inferred birth years alongside human-confirmed metadata.
+- **Decision**: `_get_birth_year(identity_id, identity)` checks metadata.birth_year first, then birth_year_estimates.json. ML estimates shown with "~" prefix and confidence-based styling. Timeline age badges: HIGH=solid, MEDIUM=dashed, LOW=faded. Person page shows "Born ~1907 (estimated)".
+- **Rejected**: Writing ML estimates directly to identity metadata — violates non-destructive principle. ML outputs stay in separate file, human overrides stay in metadata.
+- **Affects**: `app/main.py` (_get_birth_year, _load_birth_year_estimates, timeline route, person page, _identity_metadata_display)
+
+1. Add a new entry with AD-XXX format (next: AD-073)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

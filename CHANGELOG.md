@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.38.0] — 2026-02-15
+
+### Added
+- **Birth year estimation pipeline** — infers birth years for confirmed identities by cross-referencing photo dates with Gemini per-face age estimates
+  - Matches faces to ages via bounding box left-to-right x-coordinate sorting
+  - Robust outlier filtering: median + MAD to handle bbox mismatches in group photos
+  - Single-person photos weighted 2x (unambiguous matching)
+  - Results: 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW confidence)
+  - Script: `python -m rhodesli_ml.scripts.run_birth_estimation`
+  - Output: `rhodesli_ml/data/birth_year_estimates.json`
+- **Timeline age overlay from ML estimates** — person filter shows "Age ~32" on timeline photo cards using estimated birth years
+  - Priority: human-confirmed metadata > ML estimate
+  - Confidence-based styling: HIGH=solid, MEDIUM=dashed, LOW=faded
+- **Person page birth year** — shows "Born ~1907 (estimated)" in stats line for identities with ML estimates
+- **Identity metadata fallback** — `_identity_metadata_display()` shows ML birth years with ~ prefix when no confirmed birth year
+- **Validation report** — `python -m rhodesli_ml.analysis.validate_birth_years` with temporal consistency checks, data improvement opportunities, Big Leon validation anchor
+- Decision provenance: AD-071 (birth year estimation methodology), AD-072 (UI integration approach)
+- PRD 008 updated with data audit findings and actual results
+- 48 new tests (37 ML pipeline + 11 integration) — 2069 app + 177 ML = 2246 total
+
 ## [v0.37.1] — 2026-02-15
 
 ### Added

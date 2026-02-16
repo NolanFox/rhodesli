@@ -1,6 +1,21 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-15 (Session 33 — Production Polish + Ideation)
+Last updated: 2026-02-15 (Session 34 — Birth Date Estimation ML Pipeline)
+
+## Session 34 Completed
+- [x] Data audit: Gemini subject_ages exist for 100% of 271 photos
+- [x] PRD 008 updated with data audit findings and algorithm design
+- [x] Birth year estimation pipeline (rhodesli_ml/pipelines/birth_year_estimation.py)
+- [x] Robust outlier filtering via median + MAD
+- [x] Face-to-age matching via bbox left-to-right x-coordinate sorting
+- [x] 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW)
+- [x] Timeline age overlay using ML-estimated birth years
+- [x] Person page birth year display with confidence styling
+- [x] Identity metadata display with ML fallback (~ prefix)
+- [x] Validation report (rhodesli_ml/analysis/validate_birth_years.py)
+- [x] AD-071 (birth year estimation methodology), AD-072 (UI integration approach)
+- [x] 48 new tests (37 ML + 11 integration) — 2246 total
+- [x] Documentation: CHANGELOG v0.38.0, ROADMAP, BACKLOG, PRD 008
 
 ## Session 33 Completed
 - [x] Compare link in admin sidebar (Browse section, between Timeline and About)

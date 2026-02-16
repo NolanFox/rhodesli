@@ -2,7 +2,7 @@
 
 **Author:** Nolan Fox
 **Date:** 2026-02-15
-**Status:** In Progress
+**Status:** Complete
 **Session:** 34
 
 ---
@@ -126,6 +126,16 @@ Human-confirmed birth years always override ML estimates.
 6. Big Leon Capeluto has an estimate near 1903 (range 1900-1910)
 7. /timeline?person=leon_id shows age overlay using estimated birth year
 8. Known birth year validation: if any identity has metadata.birth_year, compare to ML estimate
+
+## Actual Results (Session 34)
+
+- **32 estimates** from 46 confirmed identities (14 skipped — no age data matched)
+- **3 HIGH** confidence: Selma Capeluto (1917), Victoria Cukran Capeluto (1927), Betty Capeluto (1951)
+- **6 MEDIUM** confidence: Big Leon (1907), Moise (1919), Victoria Capuano (1916), Rica Moussafer Pizante (1907), Leon (1972), Esther Diana (1903)
+- **23 LOW** confidence: single-evidence-point identities
+- **Big Leon validation**: 1907 estimated (expected ~1903). Single-person photos give 1903/1905 — group photo bbox noise pulls estimate up. Within 5 years.
+- **Key limitation**: Vida Capeluto (15 photos) gets 0 estimates — all her photos have face count mismatches between InsightFace and Gemini
+- **48 tests** (37 ML + 11 integration): all passing
 
 ## Deferred
 
