@@ -174,31 +174,59 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] Upload persistence + multi-face support (AD-069)
 - [x] 30 new tests (2046 total)
 
-### Session 33: Birth Date Estimation
-- Use photo dates + subject ages to infer birth years
+### Session 33: Production Polish + Upload Pipeline + Ideation (COMPLETED 2026-02-15)
+- [x] Compare link in admin sidebar navigation
+- [x] R2 upload persistence for compare uploads (survives Railway restarts)
+- [x] Production graceful degradation (save photo, async analysis)
+- [x] "Contribute to Archive" → admin moderation queue
+- [x] VISION.md — product direction document
+- [x] AD-070 — future architecture directions
+
+### Session 34: Birth Date Estimation ML Pipeline
+- Infer birth years from photo dates + estimated ages
 - Validate against known birth years (from identity metadata)
-- Display on person pages and timeline age overlays
+- Feed into timeline age overlay
+- Display on person pages
 - PRD: docs/prds/008_birth_date_estimation.md
 
-### Session 33: GEDCOM Import
-- Parse GEDCOM files for dates, relationships, locations
-- Enrich identity data (birth/death/marriage years)
-- Support multi-user GEDCOM uploads
+### Session 35: GEDCOM Import + Relationship Graph
+- Parse GEDCOM files (user's tree + other users' trees)
+- Populate birth/death/marriage dates on identities
+- Build family relationship graph
+- Enable "six degrees" connection finder
 - PRD: docs/prds/009_gedcom_import.md
 
-### Session 34: Geocoding + Map View
+### Session 36: GEDCOM Visualization + Data Enrichment
+- Rich data visualizations beyond basic trees
+- Cross-reference GEDCOM dates with photo date estimates
+- Auto-populate birth_year from GEDCOM into identity metadata
+
+### Session 37: Geocoding + Map View
 - Batch geocode Gemini location estimates
 - Map view route with photo markers
 - Timeline + map sync view
 - PRD: docs/prds/010_geocoding_map_view.md
 
-### Session 35: Life Events & Context Graph
+### Session 38: Social/Connection Graph
+- "Six degrees" tool: find how two people are connected
+- Edges: familial relationship (GEDCOM) + photo co-occurrence
+- Proximity scores based on combined graph
+- Migration pattern analysis (which families went where)
+
+### Session 39: Kinship Calibration v2
+- Revisit kinship thresholds after GEDCOM import
+- With actual family relationships encoded, compute true same-family distributions
+- More photos + more data = better calibration
+- Update AD-067 with improved results
+
+### Session 40: Life Events & Context Graph
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
 - Richer timeline with life events interspersed
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-15: v0.37.1 — Production Polish + Ideation (Session 33): Compare in admin sidebar. R2 upload persistence (compare uploads survive Railway restarts). Production graceful degradation (save without InsightFace). Contribute-to-archive flow wired to admin queue. VISION.md product direction doc. Roadmap sessions 34-39. AD-070 future architecture. 12 new tests (2058 total).
 - [x] 2026-02-15: v0.37.0 — Compare Intelligence (Session 32): Kinship calibration from 46 confirmed identities (959 same-person, 385 same-family, 605 different-person pairs). Key finding: family resemblance (d=0.43) not reliably separable from different-person in embedding space. Tiered compare results (strong/possible/similar/weak) with CDF-based confidence percentages. Upload persistence + multi-face detection + face selection UI. 30 new tests (2046 total). Decision provenance AD-067–AD-069.
 - [x] 2026-02-15: v0.36.0 — Timeline Polish + Face Comparison (Session 31): Context event era filtering, sticky controls, multi-person filter, collection filter, mobile nav for timeline. Face Comparison tool at /compare with archive face selector, similarity search, upload support, navigation integration. PRD stubs 008-011. 14 new tests (2016 total). Decision provenance AD-064–AD-065.
 - [x] 2026-02-15: v0.35.0 — Timeline Story Engine (Session 30): Vertical chronological timeline at /timeline with decade markers, 15 verified Rhodes historical events inline, person filter with age overlay, confidence interval bars, share button, year range filtering. Navigation links across all pages. 28 unit + 11 e2e tests. Decision provenance AD-062–AD-063.

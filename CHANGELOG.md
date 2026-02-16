@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.37.1] — 2026-02-15
+
+### Added
+- **Compare in admin sidebar** — Browse section now includes Compare link between Timeline and About
+- **R2 upload persistence** — compare uploads saved to Cloudflare R2 instead of ephemeral local filesystem
+  - Uploads survive Railway restarts/deploys
+  - Falls back to local storage when R2 write credentials unavailable
+  - Metadata includes `status` and `image_key` fields for pipeline tracking
+- **Production upload acceptance** — when InsightFace unavailable (Railway), uploads are accepted and saved to R2 with "awaiting analysis" status
+- **Contribute to Archive** — compare uploads can be submitted to admin moderation queue via HTMX button
+  - Creates entry in `pending_uploads.json` with source="compare_upload"
+  - Shows inline confirmation after submission
+- **VISION.md** — product direction document capturing the data flywheel, novel contributions, and multi-community vision
+- **Roadmap sessions 34-39** — birth date estimation, GEDCOM import, geocoding, social graph, kinship v2, life events
+- Decision provenance: AD-070 (future architecture directions), AD-069 updated (R2 storage)
+- 12 new tests (2058 total): sidebar navigation, R2 storage, contribute endpoint, graceful degradation
+
 ## [v0.37.0] — 2026-02-15
 
 ### Added

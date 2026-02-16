@@ -623,19 +623,31 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Rejected**: (1) "Family Resemblance" tier — Cohen's d = 0.43 means labeling results as "possible relative" would have >40% false positive rate. Scientifically dishonest. (2) Linear similarity percentage — doesn't reflect the actual probability distribution. (3) Flat result list — forces users to manually scan for strong matches.
 - **Affects**: `core/neighbors.py` (find_similar_faces), `app/main.py` (_compare_results_grid, _compare_result_card).
 
-### AD-069: Upload Persistence — Local Storage with Metadata
+### AD-069: Upload Persistence — R2 Storage with Local Fallback
+- **Date**: 2026-02-15 | **Updated**: 2026-02-15 (upgraded from local-only to R2-first)
+- **Context**: Compare uploads were ephemeral (temp files deleted after comparison). Users lose results on page navigation, and admins can't review uploaded photos. Local filesystem doesn't survive Railway restarts.
+- **Decision**: Persist uploads to R2 under `uploads/compare/{uuid}.{ext}` with metadata JSON. Falls back to local filesystem when R2 write credentials are unavailable. On production without InsightFace, accepts uploads to R2 and shows "saved, processing pending" message. Metadata includes status field (uploaded/awaiting_analysis/pending/approved/rejected/processed). "Contribute to Archive" creates entry in admin moderation queue (pending_uploads.json).
+- **Rejected**: (1) Local-only storage — doesn't survive Railway restarts. (2) Session-based persistence — cookies expire. (3) Client-side storage — can't persist embeddings in browser. (4) Supabase storage — adds another service dependency when R2 already handles photos.
+- **Affects**: `core/storage.py` (R2 write helpers), `app/main.py` (_save_compare_upload, /api/compare/upload, /api/compare/upload/select, /api/compare/contribute).
+
+### AD-070: Future Architecture Directions
 - **Date**: 2026-02-15
-- **Context**: Compare uploads were ephemeral (temp files deleted after comparison). Users lose results on page navigation, and admins can't review uploaded photos.
-- **Decision**: Persist uploads to `uploads/compare/{uuid}.{ext}` with metadata JSON alongside. Store face embeddings via pickle for multi-face selection. Multi-face uploads show a face selector UI. "Contribute to Archive" CTA for authenticated users.
-- **Rejected**: (1) R2 upload — adds latency and cost for a local-only feature (InsightFace not on production). (2) Session-based persistence — cookies expire, doesn't survive page reload. (3) Client-side storage — can't persist embeddings in the browser.
-- **Affects**: `app/main.py` (/api/compare/upload, /api/compare/upload/select, _save_compare_upload, _build_face_selector_for_upload).
+- **Context**: Capturing architectural directions for upcoming features to inform future sessions. These are planned approaches, not yet implemented.
+- **Decisions**:
+  1. **Social graph from photo co-occurrence** — Edges already exist in data (face_to_photo mapping). Co-occurrence = two identities appearing in the same photo. Weight by frequency. This is a novel signal that no genealogy tool combines with family relationships.
+  2. **"Six degrees" connection finder** — Combine GEDCOM familial edges with photo co-occurrence edges into a unified graph. BFS/Dijkstra finds shortest path between any two people. Edge types: parent/child, sibling, spouse (GEDCOM) + appears_together (photos).
+  3. **Geographic migration analysis** — Geocode Gemini location estimates, then trace community dispersal patterns (Rhodes → Montgomery, Atlanta, Asheville, Seattle, Havana, Buenos Aires, Congo, Rhodesia). Map view with migration arrows.
+  4. **Kinship recalibration after GEDCOM** — Current AD-067 used surname heuristics for "same family." With actual GEDCOM relationships, can compute true parent-child, sibling, cousin distributions. Expect much stronger signal than surname-based grouping.
+  5. **Database migration deferred** — JSON + R2 is sufficient for current scale (~500 photos, ~800 identities). Postgres migration (Phase F) only needed when: (a) concurrent writes become an issue, (b) >10,000 faces, or (c) complex queries exceed JSON traversal performance.
+  6. **R2 as upload staging layer** — Compare uploads now persist to R2 instead of local filesystem. This pattern extends to all user uploads (photos, GEDCOMs, corrections) without requiring a database.
+- **Affects**: Future sessions 34-40 and corresponding PRDs.
 
 ---
 
 ## Adding New Decisions
 
 When making any algorithmic choice in the ML pipeline:
-1. Add a new entry with AD-XXX format (next: AD-070)
+1. Add a new entry with AD-XXX format (next: AD-071)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

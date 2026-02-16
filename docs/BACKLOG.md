@@ -460,6 +460,20 @@ Based on research of latest Claude Code patterns (Feb 2026):
 | AI-004 | Handwriting recognition | For photos with text on the back (common in old archives). |
 | AI-005 | Story generation | Given a set of photos of the same person across decades, generate a biographical narrative draft. |
 
+### 10.3 Social & Geographic Intelligence
+
+| ID | Item | Notes |
+|----|------|-------|
+| SOC-001 | Photo co-occurrence graph | Build edges from face_to_photo mapping — two identities in same photo = edge. Weight by frequency. |
+| SOC-002 | "Six degrees" connection finder | BFS/Dijkstra on combined GEDCOM + co-occurrence graph. Find shortest path between any two people. |
+| SOC-003 | Proximity scoring | Composite score from family relationship distance + photo co-occurrence frequency. |
+| GEO-001 | Geographic migration analysis | Geocode Gemini location estimates. Trace community dispersal patterns (Rhodes → various cities). |
+| GEO-002 | Map view with photo markers | Interactive map with clustered photo markers, linked to timeline. |
+| GEO-003 | Community-specific context events | Montgomery, Atlanta, Asheville, Havana, Buenos Aires, Congo Rhodesli communities. |
+| KIN-001 | Kinship recalibration post-GEDCOM | With actual family relationships, compute true parent/child/sibling distributions. Update AD-067. |
+| UX-001 | Timeline navigation scrubber | Google Photos-style year scrubber on timeline page. |
+| UX-002 | Life events tagging | Tag photos with events: "Moise's wedding in Havana." Events connect photos, people, places, dates. |
+
 ---
 
 ## 11. PRIORITIZED EXECUTION PLAN

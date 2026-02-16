@@ -1,6 +1,17 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-15 (Session 32 — Compare Intelligence)
+Last updated: 2026-02-15 (Session 33 — Production Polish + Ideation)
+
+## Session 33 Completed
+- [x] Compare link in admin sidebar (Browse section, between Timeline and About)
+- [x] R2 upload persistence for compare uploads (survives Railway restarts)
+- [x] Production graceful degradation (save photo to R2 without InsightFace)
+- [x] "Contribute to Archive" → admin moderation queue (pending_uploads.json)
+- [x] VISION.md — product direction document
+- [x] Roadmap sessions 34-39 (birth dates, GEDCOM, geocoding, social graph, kinship v2, life events)
+- [x] AD-070 (future architecture directions), AD-069 updated
+- [x] 12 new tests (2058 total)
+- [x] Documentation: CHANGELOG v0.37.1, ROADMAP, BACKLOG, VISION.md
 
 ## Session 32 Completed
 - [x] Kinship calibration: 959 same-person, 385 same-family, 605 different-person pairs
@@ -241,11 +252,23 @@ Last updated: 2026-02-15 (Session 32 — Compare Intelligence)
 - [ ] OPS-001: Custom SMTP for branded "Rhodesli" email sender
 - [ ] FE-041: "Help Identify" mode for non-admin users
 - [ ] FE-040–FE-043: Skipped faces workflow for non-admin users
+- [ ] scripts/pull_compare_uploads.py — pull R2 compare uploads for local ML ingestion
+- [ ] Gemini enrichment on uploaded photos (async, after face detection)
+- [ ] Set R2 write credentials on Railway (R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME)
 
 ## Medium-Term (Next Month)
 - [ ] FE-070–FE-073: Client-side analytics and admin dashboard
 - [ ] BE-031–BE-033: Upload moderation queue with rate limiting
 - [ ] ROLE-006: Email notifications for contributors
+- [ ] Social graph: photo co-occurrence edges (data already exists in face_to_photo)
+- [ ] "Six degrees" connection finder (genealogy + photo co-occurrence graph)
+- [ ] Proximity scoring between individuals
+- [ ] Geographic migration analysis (community dispersal patterns)
+- [ ] Kinship recalibration after GEDCOM import (AD-067 update)
+- [ ] Data visualizations for relationship/geographic data
+- [ ] Life events tagging system
+- [ ] Richer community-specific context events (Montgomery, Atlanta, Asheville, Havana)
+- [ ] Timeline navigation scrubber (Google Photos style)
 - [ ] Postgres migration (identities + photo_index -> Supabase)
 
 ## Long-Term (Quarter+)
