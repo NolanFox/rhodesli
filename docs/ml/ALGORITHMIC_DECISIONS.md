@@ -663,7 +663,40 @@ When making any algorithmic choice in the ML pipeline:
 - **Rejected**: Writing ML estimates directly to identity metadata — violates non-destructive principle. ML outputs stay in separate file, human overrides stay in metadata.
 - **Affects**: `app/main.py` (_get_birth_year, _load_birth_year_estimates, timeline route, person page, _identity_metadata_display)
 
-1. Add a new entry with AD-XXX format (next: AD-073)
+### AD-073: GEDCOM Parsing — Custom Date Parser over Library Defaults
+- **Date**: 2026-02-15
+- **Context**: GEDCOM 5.5.1 date strings use non-standard formats (ABT, BEF, AFT, BET...AND, FROM...TO, INT, partial dates). Need reliable year extraction for identity matching.
+- **Decision**: Custom `parse_gedcom_date()` handles all GEDCOM date modifiers with confidence levels (HIGH for exact, MEDIUM for ABT/approximate, LOW for range/interpreted). Month names are 3-letter uppercase per GEDCOM spec. Uses python-gedcom v1.1.0 for tree traversal but custom parsing for dates.
+- **Rejected**: python-gedcom's built-in date parsing — only extracts year as integer, loses modifier information (ABT vs exact) and confidence signaling. Also rejected dateutil — doesn't understand GEDCOM-specific modifiers.
+- **Affects**: `rhodesli_ml/importers/gedcom_parser.py` (ParsedDate, parse_gedcom_date, GedcomIndividual, GedcomFamily)
+- **Tests**: 40 tests in `rhodesli_ml/tests/test_gedcom_parser.py`
+
+### AD-074: Identity Matching — Layered Name + Date Strategy
+- **Date**: 2026-02-15
+- **Context**: Matching GEDCOM individuals (e.g., "Victoria Cukran") to archive identities (e.g., "Victoria Cukran Capeluto") across Sephardic naming conventions (maiden names, transliteration variants, generation qualifiers).
+- **Decision**: Three-layer matching: (1) Exact surname match via surname_variants.json expansion + maiden name matching across all name words, (2) Fuzzy name matching (Levenshtein ≤ 2) + date proximity bonus, (3) Future: relationship inference. Maiden name matching: check if GEDCOM given+surname both appear in archive identity's canonical name parts. Contains-match bonus (+0.02) breaks ties between substring and exact matches.
+- **Rejected**: Simple string matching — fails on "Mosafir" vs "Capeluto" (same person, maiden vs married). Also rejected auto-merge — all matches are proposals requiring admin confirmation. Centroid-based name similarity — doesn't handle Sephardic naming conventions (multiple surnames, transliteration groups).
+- **Key finding**: Maiden name matching is the critical innovation — 4 of 14 test individuals (Hanula Mosafir, Victoria Cukran, Boulissa Pizanti, Felicita Russo) only match via maiden name in the archive's multi-part names.
+- **Affects**: `rhodesli_ml/importers/identity_matcher.py`, `data/surname_variants.json`
+- **Tests**: 21 tests in `rhodesli_ml/tests/test_identity_matcher.py`
+
+### AD-075: Graph Schemas — Dual Graph Architecture
+- **Date**: 2026-02-15
+- **Context**: Need to represent both genealogical relationships (from GEDCOM) and photographic co-occurrence (from existing photo data) as separate but complementary graphs.
+- **Decision**: Two separate graph files: `data/relationship_graph.json` (GEDCOM-derived family relationships with types: parent-child, spouse) and `data/co_occurrence_graph.json` (photo-derived co-appearance edges with shared photo lists). Relationship graph only creates edges where BOTH endpoints are matched to confirmed archive identities. Co-occurrence graph built independently from photo_index.json + identities.json, no GEDCOM required.
+- **Rejected**: Single unified graph — relationship types are fundamentally different (genealogical vs photographic). Separate files enable independent updates and different query patterns. Also rejected NetworkX serialization — JSON is human-readable, auditable, and consistent with existing data model.
+- **Affects**: `rhodesli_ml/graph/relationship_graph.py`, `rhodesli_ml/graph/co_occurrence_graph.py`, `data/relationship_graph.json`, `data/co_occurrence_graph.json`
+- **Tests**: 20 tests in `rhodesli_ml/tests/test_graphs.py`
+
+### AD-076: GEDCOM Enrichment — Source Priority for Identity Metadata
+- **Date**: 2026-02-15
+- **Context**: When a GEDCOM match is confirmed, which fields should be written to identity metadata? How does GEDCOM data interact with existing ML estimates?
+- **Decision**: GEDCOM enrichment writes birth_year, death_year, birth_place, death_place, gender, birth_date_full, death_date_full to identity metadata via `set_metadata()`. GEDCOM birth_year becomes the "confirmed" birth year in metadata, taking priority over ML estimates (which remain in separate birth_year_estimates.json). `_get_birth_year()` already checks metadata first, so GEDCOM data automatically takes precedence. Gender "U" (unknown) is skipped.
+- **Rejected**: Writing GEDCOM data to a separate file (like ML estimates) — GEDCOM data is human-verified genealogical data, not ML inference. It belongs in identity metadata alongside other confirmed facts. Also rejected auto-enrichment on match proposal — enrichment only happens on admin confirmation, maintaining the proposal workflow.
+- **Affects**: `rhodesli_ml/importers/enrichment.py`, `core/registry.py` (metadata allowlist), `app/main.py` (confirm route)
+- **Tests**: 12 tests in `rhodesli_ml/tests/test_enrichment.py`
+
+1. Add a new entry with AD-XXX format (next: AD-077)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

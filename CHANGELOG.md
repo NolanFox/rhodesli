@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.39.0] — 2026-02-15
+
+### Added
+- **GEDCOM import pipeline** — parse GEDCOM 5.5.1 files and match individuals to archive identities
+  - Custom date parser handles ABT, BEF, AFT, BET...AND, partial dates, interpreted dates
+  - Layered identity matching: exact name → surname variants → maiden name → fuzzy + date proximity
+  - 14/14 test individuals matched correctly against archive (maiden name matching is key)
+  - Library: python-gedcom v1.1.0
+- **Identity matcher with maiden name support** — GEDCOM "Victoria Cukran" matches archive "Victoria Cukran Capeluto" via surname variant expansion across all name words
+- **Photo co-occurrence graph** — built from existing photo data, no GEDCOM required
+  - 21 edges from 20 photos with 2+ identified people
+  - Top: Victoria Cukran Capeluto ↔ Moise Capeluto (10 shared photos)
+  - Foundation for "six degrees" connection finder (Session 38)
+- **Relationship graph builder** — creates parent-child and spouse relationships from GEDCOM data cross-referenced with confirmed identity matches
+- **GEDCOM admin UI** at /admin/gedcom — upload .ged files, review match proposals, confirm/reject/skip with HTMX inline updates
+- **Data enrichment** — confirming a GEDCOM match writes birth_year, death_year, places, gender to identity metadata
+- **Person page family section** — shows Parents, Children, Spouse, Siblings from relationship graph with cross-links
+- **New metadata keys** — birth_date_full, death_date_full, gender added to identity metadata allowlist
+- **CLI import tool** — `python scripts/import_gedcom.py path/to/file.ged [--execute]`
+- GEDCOM link in admin sidebar navigation
+- Decision provenance: AD-073 (GEDCOM parsing), AD-074 (identity matching), AD-075 (graph schemas), AD-076 (source priority)
+- 107 new tests (95 ML + 12 app) — 2081 app + 272 ML = 2353 total
+
 ## [v0.38.0] — 2026-02-15
 
 ### Added

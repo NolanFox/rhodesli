@@ -193,12 +193,15 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] AD-071/072, PRD 008 updated with actual results
 - [x] 48 new tests (2069 app + 177 ML = 2246 total)
 
-### Session 35: GEDCOM Import + Relationship Graph
-- Parse GEDCOM files (user's tree + other users' trees)
-- Populate birth/death/marriage dates on identities
-- Build family relationship graph
-- Enable "six degrees" connection finder
-- PRD: docs/prds/009_gedcom_import.md
+### Session 35: GEDCOM Import + Relationship Graph (COMPLETED 2026-02-15)
+- [x] GEDCOM parser with custom date handling (ABT, BEF, AFT, BET...AND)
+- [x] Identity matcher — layered name + maiden name + surname variant matching (14/14 test)
+- [x] Photo co-occurrence graph — 21 edges from 20 photos (free data, no GEDCOM needed)
+- [x] Relationship graph builder (parent-child, spouse from GEDCOM + confirmed matches)
+- [x] Admin UI at /admin/gedcom — upload, review, confirm/reject matches
+- [x] Data enrichment + person page family section with cross-links
+- [x] CLI: `python scripts/import_gedcom.py` with --execute/--dry-run
+- [x] 107 new tests (2365 total)
 
 ### Session 36: GEDCOM Visualization + Data Enrichment
 - Rich data visualizations beyond basic trees
@@ -230,6 +233,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-15: v0.39.0 — GEDCOM Import (Session 35): GEDCOM 5.5.1 parser with messy date handling (ABT/BEF/AFT/BET...AND). Layered identity matcher (exact → surname variants → maiden name → fuzzy + date proximity). 14/14 test individuals matched. Photo co-occurrence graph (21 edges from 20 photos). Family relationship graph from GEDCOM cross-referenced with confirmed matches. Admin GEDCOM UI at /admin/gedcom. Person page family section. CLI import tool. 107 new tests (2081 app + 272 ML = 2353 total). Decision provenance AD-073–AD-076.
 - [x] 2026-02-15: v0.38.0 — Birth Date Estimation (Session 34): Birth year estimation pipeline with robust outlier filtering (median + MAD). Face-to-age matching via bbox x-coordinate sorting. 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW). Timeline age overlay with confidence styling. Person page birth year display. Validation report with data improvement opportunities. 48 new tests (2246 total). Decision provenance AD-071–AD-072.
 - [x] 2026-02-15: v0.37.1 — Production Polish + Ideation (Session 33): Compare in admin sidebar. R2 upload persistence (compare uploads survive Railway restarts). Production graceful degradation (save without InsightFace). Contribute-to-archive flow wired to admin queue. VISION.md product direction doc. Roadmap sessions 34-39. AD-070 future architecture. 12 new tests (2058 total).
 - [x] 2026-02-15: v0.37.0 — Compare Intelligence (Session 32): Kinship calibration from 46 confirmed identities (959 same-person, 385 same-family, 605 different-person pairs). Key finding: family resemblance (d=0.43) not reliably separable from different-person in embedding space. Tiered compare results (strong/possible/similar/weak) with CDF-based confidence percentages. Upload persistence + multi-face detection + face selection UI. 30 new tests (2046 total). Decision provenance AD-067–AD-069.

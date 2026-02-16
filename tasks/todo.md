@@ -1,6 +1,24 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-15 (Session 34 — Birth Date Estimation ML Pipeline)
+Last updated: 2026-02-15 (Session 35 — GEDCOM Import)
+
+## Session 35 Completed
+- [x] Research: GEDCOM format, python-gedcom library, identity schema
+- [x] PRD: docs/prds/009_gedcom_import.md (expanded from stub)
+- [x] Test fixture: tests/fixtures/test_capeluto.ged (14 individuals, 6 families)
+- [x] GEDCOM parser: rhodesli_ml/importers/gedcom_parser.py (40 tests)
+- [x] Identity matcher: rhodesli_ml/importers/identity_matcher.py (21 tests)
+- [x] Enrichment: rhodesli_ml/importers/enrichment.py (12 tests)
+- [x] Match persistence: rhodesli_ml/importers/gedcom_matches.py
+- [x] Relationship graph: rhodesli_ml/graph/relationship_graph.py (20 tests)
+- [x] Co-occurrence graph: rhodesli_ml/graph/co_occurrence_graph.py
+- [x] Admin GEDCOM UI: /admin/gedcom routes (12 tests)
+- [x] Person page family section from relationship graph
+- [x] CLI tool: scripts/import_gedcom.py
+- [x] Metadata keys: birth_date_full, death_date_full, gender in registry allowlist
+- [x] AD-073 through AD-076 documented
+- [x] CHANGELOG v0.39.0, ROADMAP, BACKLOG updated
+- [x] 107 new tests (2081 app + 272 ML = 2353 total)
 
 ## Session 34 Completed
 - [x] Data audit: Gemini subject_ages exist for 100% of 271 photos
@@ -260,6 +278,7 @@ Last updated: 2026-02-15 (Session 34 — Birth Date Estimation ML Pipeline)
 - [x] ML-050: Date UX integration — display estimated decade + confidence on photo viewer (2026-02-14, Session 27)
 - [x] ML-051: Silver-label all photos via Gemini (250/271 labeled, 4 persistent timeouts)
 - [x] ML-052: Train date estimation model on real labels (250 labels, MLflow tracked)
+- [x] GEDCOM import pipeline (Session 35) — parser, matcher, graphs, admin UI, enrichment
 - [ ] ML-053: Integrate date labeling into upload orchestrator (process_uploads.py)
 - [ ] ML-054: Multi-pass Gemini — re-label low-confidence photos with Flash model
 - [ ] ML-060: Train similarity calibration model on 959 pairs + 510 rejections
@@ -275,8 +294,9 @@ Last updated: 2026-02-15 (Session 34 — Birth Date Estimation ML Pipeline)
 - [ ] FE-070–FE-073: Client-side analytics and admin dashboard
 - [ ] BE-031–BE-033: Upload moderation queue with rate limiting
 - [ ] ROLE-006: Email notifications for contributors
-- [ ] Social graph: photo co-occurrence edges (data already exists in face_to_photo)
-- [ ] "Six degrees" connection finder (genealogy + photo co-occurrence graph)
+- [ ] "Six degrees" connection finder UI (graph data ready from Session 35)
+- [ ] GEDCOM visualization — rich family tree view beyond basic lists
+- [ ] Cross-reference GEDCOM dates with ML photo date estimates
 - [ ] Proximity scoring between individuals
 - [ ] Geographic migration analysis (community dispersal patterns)
 - [ ] Kinship recalibration after GEDCOM import (AD-067 update)
@@ -287,7 +307,7 @@ Last updated: 2026-02-15 (Session 34 — Birth Date Estimation ML Pipeline)
 - [ ] Postgres migration (identities + photo_index -> Supabase)
 
 ## Long-Term (Quarter+)
-- [ ] Family tree integration (GEDCOM, relationships)
+- [x] Family tree integration — GEDCOM import (Session 35), relationships stored, next: visualization
 - [ ] Auto-processing pipeline (ML on Railway, no local step)
 - [ ] Age-invariant face recognition research
 - [ ] Multi-tenant architecture (other communities)
