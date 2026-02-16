@@ -2224,6 +2224,12 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
                 ),
                 A(
+                    Span("🔍", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Compare", cls="sidebar-label ml-2"),
+                    href="/compare",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
+                A(
                     Span("📖", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("About", cls="sidebar-label ml-2"),
                     href="/about",
@@ -10628,36 +10634,47 @@ def get(face_id: str = "", limit: int = 20, sess=None):
     return _compare_results_grid(results, crop_files)
 
 
-def _save_compare_upload(content: bytes, filename: str, faces: list, results: list) -> str:
-    """Persist a compare upload to uploads/compare/ with metadata.
+def _save_compare_upload(content: bytes, filename: str, faces: list, results: list, status: str = "uploaded") -> str:
+    """Persist a compare upload to R2 (preferred) or local filesystem.
 
     Returns the upload UUID.
     """
     import uuid as _uuid
+    import mimetypes
     from pathlib import Path as _Path
+    from core.storage import can_write_r2, upload_bytes_to_r2
 
     upload_id = str(_uuid.uuid4())[:12]
-    upload_dir = _Path("uploads/compare")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-
     suffix = _Path(filename).suffix or ".jpg"
-    image_path = upload_dir / f"{upload_id}{suffix}"
-    image_path.write_bytes(content)
+    image_key = f"uploads/compare/{upload_id}{suffix}"
 
     # Save metadata
     meta = {
         "upload_id": upload_id,
         "uploaded_at": datetime.now().isoformat(),
         "original_filename": filename,
-        "faces_detected": len(faces),
+        "image_key": image_key,
+        "faces_detected": len(faces) if faces else 0,
+        "status": status,
         "top_match": {
             "identity_name": results[0].get("identity_name", "Unknown") if results else None,
             "confidence_pct": results[0].get("confidence_pct", 0) if results else 0,
             "tier": results[0].get("tier", "WEAK") if results else None,
         },
     }
-    meta_path = upload_dir / f"{upload_id}_meta.json"
-    meta_path.write_text(json.dumps(meta, indent=2))
+    meta_key = f"uploads/compare/{upload_id}_meta.json"
+
+    if can_write_r2():
+        # Save to R2 for persistence across deploys
+        content_type = mimetypes.guess_type(filename)[0] or "image/jpeg"
+        upload_bytes_to_r2(image_key, content, content_type=content_type)
+        upload_bytes_to_r2(meta_key, json.dumps(meta, indent=2).encode(), content_type="application/json")
+    else:
+        # Fall back to local filesystem (will not survive Railway restarts)
+        upload_dir = _Path("uploads/compare")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        (_Path("uploads/compare") / f"{upload_id}{suffix}").write_bytes(content)
+        (_Path("uploads/compare") / f"{upload_id}_meta.json").write_text(json.dumps(meta, indent=2))
 
     return upload_id
 
@@ -10704,16 +10721,6 @@ async def post(photo: UploadFile = None, sess=None):
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
 
-    try:
-        from core.ingest_inbox import extract_faces
-    except ImportError:
-        return Div(
-            P("Face detection requires InsightFace, which is only available in the local development environment.",
-              cls="text-amber-500 text-center py-4"),
-            P("Browse the archive above to compare existing faces.", cls="text-slate-500 text-center text-sm mt-2"),
-            id="compare-results",
-        )
-
     from pathlib import Path as _Path
     import tempfile
 
@@ -10722,7 +10729,41 @@ async def post(photo: UploadFile = None, sess=None):
     original_filename = photo.filename or "upload.jpg"
     suffix = _Path(original_filename).suffix or ".jpg"
 
-    # Save to temp for face detection
+    # Check if face detection is available (InsightFace — local dev only)
+    has_insightface = False
+    try:
+        from core.ingest_inbox import extract_faces
+        has_insightface = True
+    except ImportError:
+        pass
+
+    if not has_insightface:
+        # Production mode: save to R2 without face detection
+        from core.storage import can_write_r2
+        if can_write_r2():
+            upload_id = _save_compare_upload(content, original_filename, faces=[], results=[], status="awaiting_analysis")
+            return Div(
+                Div(
+                    Span("✓", cls="text-2xl text-green-400"),
+                    cls="flex justify-center mb-3"
+                ),
+                P("Photo saved!", cls="text-lg font-semibold text-white text-center"),
+                P("Face analysis will be processed shortly. Check back soon for comparison results.",
+                  cls="text-sm text-slate-400 text-center mt-2"),
+                P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
+                cls="py-8 px-4",
+                id="compare-results",
+                data_testid="upload-saved-pending",
+            )
+        else:
+            return Div(
+                P("Photo comparison uploads are not yet available in production.",
+                  cls="text-amber-500 text-center py-4"),
+                P("Browse the archive above to compare existing faces.", cls="text-slate-500 text-center text-sm mt-2"),
+                id="compare-results",
+            )
+
+    # Local dev: full face detection + comparison
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(content)
         tmp_path = _Path(tmp.name)
@@ -10751,12 +10792,18 @@ async def post(photo: UploadFile = None, sess=None):
         # Persist the upload
         upload_id = _save_compare_upload(content, original_filename, faces, results)
 
-        # Save face embeddings for face selection
-        upload_dir = _Path("uploads/compare")
+        # Save face embeddings for face selection (R2 or local)
         import pickle
-        embeddings_path = upload_dir / f"{upload_id}_faces.pkl"
+        from core.storage import can_write_r2, upload_bytes_to_r2
         face_save_data = [{"mu": f["mu"].tolist(), "bbox": f.get("bbox", [0,0,0,0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()} for f in faces]
-        embeddings_path.write_bytes(pickle.dumps(face_save_data))
+        faces_pkl = pickle.dumps(face_save_data)
+
+        if can_write_r2():
+            upload_bytes_to_r2(f"uploads/compare/{upload_id}_faces.pkl", faces_pkl)
+        else:
+            upload_dir = _Path("uploads/compare")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            (upload_dir / f"{upload_id}_faces.pkl").write_bytes(faces_pkl)
 
         # Build response
         parts = []
@@ -10774,9 +10821,15 @@ async def post(photo: UploadFile = None, sess=None):
             parts.append(
                 Div(
                     P("Want to add this photo to the archive?", cls="text-sm text-slate-400 mb-2"),
-                    A("Add to Archive", href=f"/upload?from_compare={upload_id}",
-                      cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+                    Button(
+                        "Contribute to Archive",
+                        hx_post=f"/api/compare/contribute?upload_id={upload_id}",
+                        hx_target="#contribute-cta-container",
+                        hx_swap="innerHTML",
+                        cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors",
+                    ),
                     cls="text-center mt-6 p-4 bg-slate-800/30 rounded-lg border border-dashed border-slate-700",
+                    id="contribute-cta-container",
                     data_testid="contribute-cta",
                 )
             )
@@ -10806,12 +10859,22 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None):
     """Select a specific face from a multi-face upload for comparison."""
     from pathlib import Path as _Path
     import pickle
+    from core.storage import can_write_r2, download_bytes_from_r2
 
-    embeddings_path = _Path("uploads/compare") / f"{upload_id}_faces.pkl"
-    if not embeddings_path.exists():
+    # Try R2 first, then local filesystem
+    faces_data = None
+    if can_write_r2():
+        faces_data = download_bytes_from_r2(f"uploads/compare/{upload_id}_faces.pkl")
+
+    if faces_data is None:
+        embeddings_path = _Path("uploads/compare") / f"{upload_id}_faces.pkl"
+        if embeddings_path.exists():
+            faces_data = embeddings_path.read_bytes()
+
+    if faces_data is None:
         return Div(P("Upload not found. Please re-upload the photo.", cls="text-amber-500 text-center py-4"))
 
-    face_save_data = pickle.loads(embeddings_path.read_bytes())
+    face_save_data = pickle.loads(faces_data)
     if face_idx < 0 or face_idx >= len(face_save_data):
         return Div(P("Invalid face selection.", cls="text-amber-500 text-center py-4"))
 
@@ -10856,6 +10919,69 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None):
 
     parts.append(_compare_results_grid(results, crop_files))
     return Div(*parts, id="compare-results")
+
+
+@rt("/api/compare/contribute")
+def post(upload_id: str = "", sess=None):
+    """Submit a compare upload to the admin moderation queue.
+
+    Creates an entry in pending_uploads.json so the admin can approve/reject
+    the photo for inclusion in the archive.
+    """
+    denied = _check_login(sess)
+    if denied:
+        return denied
+    user = get_current_user(sess or {})
+
+    if not upload_id:
+        return Div(P("Missing upload ID.", cls="text-amber-500 text-sm"), id="contribute-cta-container")
+
+    # Read the upload metadata
+    from pathlib import Path as _Path
+    from core.storage import can_write_r2, download_bytes_from_r2
+
+    meta = None
+    if can_write_r2():
+        meta_bytes = download_bytes_from_r2(f"uploads/compare/{upload_id}_meta.json")
+        if meta_bytes:
+            meta = json.loads(meta_bytes)
+
+    if meta is None:
+        meta_path = _Path("uploads/compare") / f"{upload_id}_meta.json"
+        if meta_path.exists():
+            meta = json.loads(meta_path.read_text())
+
+    if meta is None:
+        return Div(P("Upload not found.", cls="text-amber-500 text-sm"), id="contribute-cta-container")
+
+    # Create pending upload entry
+    pending = _load_pending_uploads()
+    job_id = f"compare_{upload_id}"
+    if job_id not in pending["uploads"]:
+        pending["uploads"][job_id] = {
+            "job_id": job_id,
+            "status": "pending",
+            "submitted_at": datetime.now().isoformat(),
+            "submitted_by": user.email if user else "anonymous",
+            "source": "compare_upload",
+            "collection": "",
+            "file_count": 1,
+            "files": [meta.get("original_filename", f"{upload_id}.jpg")],
+            "compare_upload_id": upload_id,
+            "image_key": meta.get("image_key", f"uploads/compare/{upload_id}.jpg"),
+            "faces_detected": meta.get("faces_detected", 0),
+            "top_match": meta.get("top_match"),
+        }
+        _save_pending_uploads(pending)
+
+    return Div(
+        Span("✓", cls="text-green-400 mr-2"),
+        Span("Submitted for review!", cls="text-sm text-green-300"),
+        P("An admin will review your photo for inclusion in the archive.", cls="text-xs text-slate-500 mt-1"),
+        cls="text-center py-3",
+        id="contribute-cta-container",
+        data_testid="contribute-submitted",
+    )
 
 
 def public_photo_page(

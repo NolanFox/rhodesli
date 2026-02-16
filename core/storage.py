@@ -13,13 +13,23 @@ Environment variables:
 - R2_PUBLIC_URL: Base URL for R2 bucket (e.g., "https://pub-xxx.r2.dev")
 """
 
+import json
+import logging
 import os
 from pathlib import Path
 from urllib.parse import quote
 
+logger = logging.getLogger(__name__)
+
 # Storage configuration
 STORAGE_MODE = os.getenv("STORAGE_MODE", "local")  # "local" or "r2"
 R2_PUBLIC_URL = os.getenv("R2_PUBLIC_URL", "").rstrip("/")
+
+# R2 write credentials (optional — only needed for upload persistence)
+R2_ACCOUNT_ID = os.getenv("R2_ACCOUNT_ID", "")
+R2_ACCESS_KEY_ID = os.getenv("R2_ACCESS_KEY_ID", "")
+R2_SECRET_ACCESS_KEY = os.getenv("R2_SECRET_ACCESS_KEY", "")
+R2_BUCKET_NAME = os.getenv("R2_BUCKET_NAME", "")
 
 
 def is_r2_mode() -> bool:
@@ -94,3 +104,68 @@ def get_crop_url_by_filename(crop_filename: str) -> str:
         return f"/static/crops/{quote(crop_filename)}"
 
 
+# =============================================================================
+# R2 Write Operations (for upload persistence)
+# =============================================================================
+
+_r2_client = None
+
+
+def can_write_r2() -> bool:
+    """Check if R2 write credentials are configured."""
+    return bool(R2_ACCOUNT_ID and R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY and R2_BUCKET_NAME)
+
+
+def _get_r2_client():
+    """Get or create a boto3 S3 client for R2 writes."""
+    global _r2_client
+    if _r2_client is not None:
+        return _r2_client
+
+    import boto3
+    endpoint_url = f"https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+    _r2_client = boto3.client(
+        "s3",
+        endpoint_url=endpoint_url,
+        aws_access_key_id=R2_ACCESS_KEY_ID,
+        aws_secret_access_key=R2_SECRET_ACCESS_KEY,
+    )
+    return _r2_client
+
+
+def upload_bytes_to_r2(key: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+    """Upload bytes to R2 and return the public URL.
+
+    Args:
+        key: R2 object key (e.g., "uploads/compare/abc123.jpg")
+        data: File content as bytes
+        content_type: MIME type
+
+    Returns:
+        Public URL for the uploaded object
+    """
+    client = _get_r2_client()
+    client.put_object(
+        Bucket=R2_BUCKET_NAME,
+        Key=key,
+        Body=data,
+        ContentType=content_type,
+    )
+    return f"{R2_PUBLIC_URL}/{key}"
+
+
+def download_bytes_from_r2(key: str) -> bytes | None:
+    """Download bytes from R2. Returns None if not found."""
+    try:
+        client = _get_r2_client()
+        response = client.get_object(Bucket=R2_BUCKET_NAME, Key=key)
+        return response["Body"].read()
+    except Exception:
+        return None
+
+
+def get_upload_url(upload_key: str) -> str:
+    """Get the public URL for an upload key."""
+    if is_r2_mode() and R2_PUBLIC_URL:
+        return f"{R2_PUBLIC_URL}/{quote(upload_key)}"
+    return f"/uploads/{quote(upload_key)}"
