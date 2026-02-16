@@ -2307,6 +2307,12 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 nav_item("/admin/pending", "📋", "Uploads", counts.get("pending_uploads", 0), "pending_uploads", "amber"),
                 nav_item("/admin/approvals", "✅", "Approvals", counts.get("pending_annotations", 0), "approvals", "emerald"),
                 nav_item("/admin/proposals", "🔗", "Proposals", counts.get("proposals", 0), "proposals", "indigo"),
+                A(
+                    Span("🌳", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("GEDCOM", cls="sidebar-label ml-2"),
+                    href="/admin/gedcom",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
                 cls="mb-3"
             ) if (user and user.is_admin) else None,
             cls="flex-1 px-2 py-2 space-y-0 overflow-y-auto"
@@ -8959,6 +8965,55 @@ def public_person_page(
             cls="mt-10 pt-8 border-t border-slate-800",
         )
 
+    # --- Family relationships (from GEDCOM import) ---
+    family_section = None
+    try:
+        rel_graph = _load_relationship_graph()
+        if rel_graph.get("relationships"):
+            from rhodesli_ml.graph.relationship_graph import get_relationships_for_person
+            rels = get_relationships_for_person(rel_graph, person_id)
+
+            family_items = []
+            rel_labels = {
+                "parents": "Parents",
+                "children": "Children",
+                "spouses": "Spouse",
+                "siblings": "Siblings",
+            }
+            for rel_type, label in rel_labels.items():
+                rel_ids = rels.get(rel_type, [])
+                if not rel_ids:
+                    continue
+                names = []
+                for rid in rel_ids:
+                    try:
+                        r_ident = registry.get_identity(rid)
+                        r_name = ensure_utf8_display(r_ident.get("name", "Unknown"))
+                        names.append(A(r_name, href=f"/person/{rid}",
+                                       cls="text-indigo-400 hover:text-indigo-300 underline"))
+                    except KeyError:
+                        continue
+                if names:
+                    separator = []
+                    for i, n in enumerate(names):
+                        if i > 0:
+                            separator.append(Span(", ", cls="text-slate-500"))
+                        separator.append(n)
+                    family_items.append(Div(
+                        Span(f"{label}: ", cls="text-slate-400 text-sm font-medium w-20 inline-block"),
+                        *separator,
+                        cls="text-sm py-1"
+                    ))
+
+            if family_items:
+                family_section = Div(
+                    H3("Family", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+                    *family_items,
+                    cls="mt-10 pt-8 border-t border-slate-800",
+                )
+    except Exception:
+        pass  # Graceful degradation if graph not available
+
     # --- Approved annotations (bio, story, etc.) ---
     annotations_section = None
     try:
@@ -9181,6 +9236,9 @@ def public_person_page(
                         cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
                     ),
                     gallery_content,
+
+                    # Family relationships (from GEDCOM)
+                    family_section if family_section else None,
 
                     # Appears with section
                     appears_with_section if appears_with_section else None,
@@ -18276,6 +18334,394 @@ def get(sess=None):
     )
 
 
+# --- GEDCOM Import (Session 35) ---
+
+
+_gedcom_matches_cache = None
+
+
+def _load_gedcom_matches():
+    """Load GEDCOM match proposals from data/gedcom_matches.json."""
+    global _gedcom_matches_cache
+    if _gedcom_matches_cache is not None:
+        return _gedcom_matches_cache
+
+    matches_path = data_path / "gedcom_matches.json"
+    if not matches_path.exists():
+        _gedcom_matches_cache = {"schema_version": 1, "matches": [], "source_file": ""}
+        return _gedcom_matches_cache
+
+    try:
+        _gedcom_matches_cache = json.loads(matches_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, ValueError):
+        _gedcom_matches_cache = {"schema_version": 1, "matches": [], "source_file": ""}
+
+    return _gedcom_matches_cache
+
+
+def _load_relationship_graph():
+    """Load relationship graph from data/relationships.json."""
+    rel_path = data_path / "relationships.json"
+    if not rel_path.exists():
+        return {"schema_version": 1, "relationships": [], "gedcom_imports": []}
+    try:
+        return json.loads(rel_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, ValueError):
+        return {"schema_version": 1, "relationships": [], "gedcom_imports": []}
+
+
+@rt("/admin/gedcom")
+def get(sess=None):
+    """GEDCOM import admin page — upload + match review combined."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    matches_data = _load_gedcom_matches()
+    matches = matches_data.get("matches", [])
+    source_file = matches_data.get("source_file", "")
+
+    pending = [m for m in matches if m.get("status") == "pending"]
+    confirmed = [m for m in matches if m.get("status") == "confirmed"]
+    rejected = [m for m in matches if m.get("status") == "rejected"]
+
+    # Relationship graph stats
+    rel_graph = _load_relationship_graph()
+    rel_count = len(rel_graph.get("relationships", []))
+    import_count = len(rel_graph.get("gedcom_imports", []))
+
+    # Co-occurrence graph stats
+    cooccur_path = data_path / "co_occurrence_graph.json"
+    cooccur_count = 0
+    if cooccur_path.exists():
+        try:
+            cooccur = json.loads(cooccur_path.read_text(encoding="utf-8"))
+            cooccur_count = len(cooccur.get("edges", []))
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Stats section
+    stats_cards = Div(
+        Div(
+            P(str(len(matches)), cls="text-3xl font-bold text-white"),
+            P("Total Matches", cls="text-sm text-slate-400"),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700 text-center"
+        ),
+        Div(
+            P(str(len(pending)), cls="text-3xl font-bold text-amber-400"),
+            P("Pending Review", cls="text-sm text-slate-400"),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700 text-center"
+        ),
+        Div(
+            P(str(len(confirmed)), cls="text-3xl font-bold text-emerald-400"),
+            P("Confirmed", cls="text-sm text-slate-400"),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700 text-center"
+        ),
+        Div(
+            P(str(rel_count), cls="text-3xl font-bold text-indigo-400"),
+            P("Relationships", cls="text-sm text-slate-400"),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700 text-center"
+        ),
+        Div(
+            P(str(cooccur_count), cls="text-3xl font-bold text-purple-400"),
+            P("Co-occurrences", cls="text-sm text-slate-400"),
+            cls="bg-slate-800 rounded-lg p-4 border border-slate-700 text-center"
+        ),
+        cls="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"
+    )
+
+    # Upload section
+    upload_section = Div(
+        H2("Upload GEDCOM File", cls="text-lg font-semibold text-white mb-3"),
+        P("Upload a .ged file exported from Ancestry, MyHeritage, FamilySearch, or other genealogy software.",
+          cls="text-sm text-slate-400 mb-4"),
+        Form(
+            Input(type="file", name="gedcom_file", accept=".ged,.gedcom",
+                  cls="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-400"),
+            Button("Upload & Parse", type="submit",
+                   cls="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium"),
+            hx_post="/admin/gedcom/upload",
+            hx_target="#gedcom-results",
+            hx_encoding="multipart/form-data",
+            hx_indicator="#upload-spinner",
+            cls="space-y-2"
+        ),
+        Span("Parsing...", id="upload-spinner", cls="htmx-indicator text-sm text-slate-400 ml-2"),
+        Div(id="gedcom-results", cls="mt-4"),
+        cls="bg-slate-800 rounded-lg p-5 border border-slate-700 mb-6"
+    )
+
+    # Pending matches section
+    match_rows = []
+    for m in sorted(pending, key=lambda x: x.get("match_score", 0), reverse=True):
+        score_pct = int(m.get("match_score", 0) * 100)
+        score_color = "text-emerald-400" if score_pct >= 90 else "text-amber-400" if score_pct >= 80 else "text-slate-400"
+
+        ged_birth = f"b. {m.get('gedcom_birth_year', '?')}" if m.get('gedcom_birth_year') else ""
+        ged_death = f"d. {m.get('gedcom_death_year', '?')}" if m.get('gedcom_death_year') else ""
+        ged_place = m.get("gedcom_birth_place", "")
+
+        match_rows.append(Div(
+            # Left: GEDCOM person
+            Div(
+                P(m.get("gedcom_name", "?"), cls="text-white font-medium"),
+                P(f"{ged_birth} {ged_death}".strip(), cls="text-sm text-slate-400") if ged_birth or ged_death else None,
+                P(ged_place, cls="text-xs text-slate-500") if ged_place else None,
+                cls="flex-1"
+            ),
+            # Arrow
+            Span("→", cls="text-slate-500 text-xl px-3 self-center"),
+            # Right: Archive identity
+            Div(
+                P(m.get("identity_name", "?"), cls="text-white font-medium"),
+                P(m.get("match_reason", ""), cls="text-xs text-slate-500 mt-1"),
+                cls="flex-1"
+            ),
+            # Score + actions
+            Div(
+                Span(f"{score_pct}%", cls=f"text-lg font-bold {score_color} mr-4"),
+                Button("Confirm", cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg mr-1",
+                       hx_post=f"/admin/gedcom/confirm/{m.get('gedcom_xref', '')}",
+                       hx_target="closest div.gedcom-match-row", hx_swap="outerHTML"),
+                Button("Reject", cls="px-3 py-1 bg-red-600/50 hover:bg-red-600 text-white text-sm rounded-lg mr-1",
+                       hx_post=f"/admin/gedcom/reject/{m.get('gedcom_xref', '')}",
+                       hx_target="closest div.gedcom-match-row", hx_swap="outerHTML"),
+                Button("Skip", cls="px-3 py-1 bg-slate-600 hover:bg-slate-500 text-white text-sm rounded-lg",
+                       hx_post=f"/admin/gedcom/skip/{m.get('gedcom_xref', '')}",
+                       hx_target="closest div.gedcom-match-row", hx_swap="outerHTML"),
+                cls="flex items-center flex-shrink-0"
+            ),
+            cls="gedcom-match-row flex items-start gap-2 bg-slate-800 rounded-lg p-4 border border-slate-700"
+        ))
+
+    matches_section = Div(
+        Div(
+            H2("Pending Matches", cls="text-lg font-semibold text-white"),
+            Span(f"{len(pending)} pending", cls="text-sm text-amber-400 ml-2"),
+            cls="flex items-center gap-2 mb-4"
+        ),
+        Div(*match_rows, cls="space-y-3") if match_rows else P("No pending matches. Upload a GEDCOM file to start.", cls="text-slate-400 text-center py-8"),
+        cls="mb-6",
+        id="gedcom-matches-list"
+    )
+
+    # Confirmed matches summary
+    confirmed_section = None
+    if confirmed:
+        confirmed_rows = []
+        for m in confirmed:
+            confirmed_rows.append(Div(
+                Span(m.get("gedcom_name", "?"), cls="text-emerald-400 font-medium"),
+                Span("→", cls="text-slate-500 mx-2"),
+                Span(m.get("identity_name", "?"), cls="text-white"),
+                cls="text-sm py-1"
+            ))
+        confirmed_section = Div(
+            H2(f"Confirmed ({len(confirmed)})", cls="text-lg font-semibold text-emerald-400 mb-3"),
+            *confirmed_rows,
+            cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6"
+        )
+
+    return Title("GEDCOM Import — Rhodesli"), Div(
+        Div(
+            H1("GEDCOM Import", cls="text-2xl font-bold text-white"),
+            P(f"Source: {source_file}" if source_file else "No GEDCOM file imported yet",
+              cls="text-sm text-slate-400"),
+            cls="mb-6"
+        ),
+        stats_cards,
+        upload_section,
+        matches_section,
+        confirmed_section,
+        cls="max-w-4xl mx-auto p-6"
+    )
+
+
+@rt("/admin/gedcom/upload")
+async def post(gedcom_file: UploadFile = None, sess=None):
+    """Handle GEDCOM file upload — parse and generate match proposals."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    if not gedcom_file or not gedcom_file.filename:
+        return Div(P("No file selected.", cls="text-red-400"), cls="mt-4")
+
+    # Save uploaded file temporarily
+    import tempfile
+    content = await gedcom_file.read()
+    with tempfile.NamedTemporaryFile(suffix=".ged", delete=False, mode="wb") as tmp:
+        tmp.write(content)
+        tmp_path = tmp.name
+
+    try:
+        from rhodesli_ml.importers.gedcom_parser import parse_gedcom
+        from rhodesli_ml.importers.identity_matcher import match_gedcom_to_identities
+        from rhodesli_ml.importers.gedcom_matches import save_gedcom_matches
+
+        # Parse GEDCOM
+        parsed = parse_gedcom(tmp_path)
+
+        # Load identities for matching
+        registry = load_registry()
+        identities = {iid: registry.get_identity(iid) for iid in registry.list_identities()}
+
+        # Load ML birth year estimates
+        estimates = _load_birth_year_estimates()
+
+        # Match
+        result = match_gedcom_to_identities(
+            parsed, identities,
+            surname_variants_path=str(data_path / "surname_variants.json"),
+            birth_year_estimates=estimates,
+        )
+
+        # Save match proposals
+        save_gedcom_matches(
+            result.proposals,
+            filepath=str(data_path / "gedcom_matches.json"),
+            source_file=gedcom_file.filename,
+        )
+
+        # Invalidate cache
+        global _gedcom_matches_cache
+        _gedcom_matches_cache = None
+
+        return Div(
+            P(f"Parsed {parsed.individual_count} individuals, {parsed.family_count} families",
+              cls="text-emerald-400 font-medium"),
+            P(f"Found {result.match_count} potential matches with archive identities",
+              cls="text-white mt-1"),
+            P(f"{len(result.unmatched_gedcom)} GEDCOM individuals unmatched",
+              cls="text-sm text-slate-400 mt-1") if result.unmatched_gedcom else None,
+            A("Refresh to review matches", href="/admin/gedcom",
+              cls="inline-block mt-3 text-indigo-400 hover:text-indigo-300 underline text-sm"),
+            cls="bg-emerald-900/20 border border-emerald-700/50 rounded-lg p-4 mt-4"
+        )
+    except Exception as e:
+        logging.exception("GEDCOM parse error")
+        return Div(P(f"Error parsing GEDCOM: {e}", cls="text-red-400"), cls="mt-4")
+    finally:
+        import os as _os
+        try:
+            _os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+@rt("/admin/gedcom/confirm/{xref}")
+def post(xref: str, sess=None):
+    """Confirm a GEDCOM-to-identity match and apply enrichment."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    from rhodesli_ml.importers.gedcom_matches import update_match_status
+
+    # Update status
+    matches_data = update_match_status(
+        filepath=str(data_path / "gedcom_matches.json"),
+        gedcom_xref=xref,
+        status="confirmed",
+    )
+
+    # Find the confirmed match
+    match = None
+    for m in matches_data.get("matches", []):
+        if m.get("gedcom_xref") == xref:
+            match = m
+            break
+
+    if not match:
+        return Div(P("Match not found.", cls="text-red-400"))
+
+    # Apply enrichment to identity
+    registry = load_registry()
+    identity_id = match.get("identity_id", "")
+    updates = {}
+
+    if match.get("gedcom_birth_year"):
+        updates["birth_year"] = match["gedcom_birth_year"]
+    if match.get("gedcom_death_year"):
+        updates["death_year"] = match["gedcom_death_year"]
+    if match.get("gedcom_birth_place"):
+        updates["birth_place"] = match["gedcom_birth_place"]
+
+    if updates:
+        registry.set_metadata(identity_id, updates, user_source="gedcom")
+        save_registry(registry)
+
+    # Invalidate caches
+    global _gedcom_matches_cache, _birth_year_cache
+    _gedcom_matches_cache = None
+    _birth_year_cache = None
+
+    return Div(
+        Span(match.get("gedcom_name", "?"), cls="text-emerald-400 font-medium"),
+        Span("→", cls="text-slate-500 mx-2"),
+        Span(match.get("identity_name", "?"), cls="text-white font-medium"),
+        Span("Confirmed", cls="ml-3 px-2 py-0.5 bg-emerald-600/30 text-emerald-400 text-xs rounded"),
+        cls="flex items-center py-3 px-4 bg-emerald-900/10 rounded-lg border border-emerald-700/30"
+    )
+
+
+@rt("/admin/gedcom/reject/{xref}")
+def post(xref: str, sess=None):
+    """Reject a GEDCOM-to-identity match."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    from rhodesli_ml.importers.gedcom_matches import update_match_status
+
+    matches_data = update_match_status(
+        filepath=str(data_path / "gedcom_matches.json"),
+        gedcom_xref=xref,
+        status="rejected",
+    )
+
+    match = None
+    for m in matches_data.get("matches", []):
+        if m.get("gedcom_xref") == xref:
+            match = m
+            break
+
+    global _gedcom_matches_cache
+    _gedcom_matches_cache = None
+
+    return Div(
+        Span(match.get("gedcom_name", "?") if match else "?", cls="text-red-400/50 line-through"),
+        Span("→", cls="text-slate-600 mx-2"),
+        Span(match.get("identity_name", "?") if match else "?", cls="text-slate-500 line-through"),
+        Span("Rejected", cls="ml-3 px-2 py-0.5 bg-red-600/20 text-red-400 text-xs rounded"),
+        cls="flex items-center py-3 px-4 bg-red-900/5 rounded-lg border border-red-700/20 opacity-60"
+    )
+
+
+@rt("/admin/gedcom/skip/{xref}")
+def post(xref: str, sess=None):
+    """Skip a GEDCOM match for later review."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    from rhodesli_ml.importers.gedcom_matches import update_match_status
+
+    update_match_status(
+        filepath=str(data_path / "gedcom_matches.json"),
+        gedcom_xref=xref,
+        status="skipped",
+    )
+
+    global _gedcom_matches_cache
+    _gedcom_matches_cache = None
+
+    return Div(
+        Span("Skipped — will reappear on refresh", cls="text-slate-500 text-sm italic"),
+        cls="py-3 px-4"
+    )
+
+
 # --- Admin Review Queue (Feature 5: Active Learning Priority Queue) ---
 
 
@@ -18820,7 +19266,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _gedcom_matches_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -18833,6 +19279,7 @@ async def post(request):
     _search_index_cache = None
     _context_events_cache = None
     _birth_year_cache = None
+    _gedcom_matches_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 

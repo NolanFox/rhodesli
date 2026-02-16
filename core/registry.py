@@ -1048,6 +1048,7 @@ class IdentityRegistry:
         identity = self._identities[identity_id]
         valid_keys = {
             "birth_year", "death_year", "birth_place", "death_place",
+            "birth_date_full", "death_date_full", "gender",
             "maiden_name", "generation_qualifier",
             "alternate_names", "relationship_notes", "bio", "name_source",
             "first_name", "last_name",
