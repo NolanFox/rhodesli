@@ -183,6 +183,42 @@ class TestPublicPhotoViewerContent:
             assert "section=to_review" not in html or "section=skipped" in html
 
 
+class TestFaceClickBehavior:
+    """Regression: face clicks navigate to person/identify pages, not circular scroll."""
+
+    def test_overlay_links_to_person_or_identify(self, client, real_photo_id):
+        """Face overlays link to /person/{id} or /identify/{id}, not scroll to card."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import re
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Overlays should be <a> tags with person or identify hrefs
+        overlay_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="[^"]*face-overlay-box', html)
+        # At least some faces should have links
+        assert len(overlay_links) > 0, "Face overlays should link to /person/ or /identify/"
+
+    def test_no_circular_scroll_behavior(self, client, real_photo_id):
+        """No scroll-to-element behavior between overlays and cards."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Should NOT have hyperscript scroll-to references
+        assert "go to #person-" not in html, "Overlay should not scroll to person card"
+        assert "go to #overlay-" not in html, "Card should not scroll to overlay"
+
+    def test_person_cards_link_to_person_or_identify(self, client, real_photo_id):
+        """Person cards below photo link to /person/{id} or /identify/{id}."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import re
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        card_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="no-underline', html)
+        assert len(card_links) > 0, "Person cards should link to /person/ or /identify/"
+
+
 class TestFaceOverlayAlignment:
     """Regression: face overlays must be positioned relative to the image, not padded container."""
 

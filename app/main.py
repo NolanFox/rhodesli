@@ -13399,18 +13399,28 @@ def public_photo_page(
                     cls=f"absolute {name_pos_cls} left-1/2 -translate-x-1/2 bg-black/80 text-amber-300/70 text-[11px] px-2 py-0.5 rounded whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
                 )
 
-            # Click scrolls to person card
-            scroll_target = f"person-{fi['identity_id']}" if fi["identity_id"] else ""
-            scroll_script = f"on click go to #{scroll_target} smoothly" if scroll_target else ""
+            # Click navigates to person page (identified) or identify page (unidentified)
+            if fi["is_identified"] and fi["identity_id"]:
+                click_href = f"/person/{fi['identity_id']}"
+            elif fi["identity_id"]:
+                click_href = f"/identify/{fi['identity_id']}"
+            else:
+                click_href = None
 
-            overlay = Div(
+            overlay_inner = A(
+                name_el,
+                href=click_href,
+                cls=overlay_cls,
+                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%; display: block;",
+                title=fi["display_name"],
+                id=f"overlay-{fi['identity_id']}" if fi["identity_id"] else None,
+            ) if click_href else Div(
                 name_el,
                 cls=overlay_cls,
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
                 title=fi["display_name"],
-                id=f"overlay-{fi['identity_id']}" if fi["identity_id"] else None,
-                **{"_": scroll_script} if scroll_script else {},
             )
+            overlay = overlay_inner
             face_overlays.append(overlay)
 
     # --- Build person cards strip ---
@@ -13444,32 +13454,40 @@ def public_photo_page(
                 cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 transition-colors",
             )
 
-        # Click handler: scroll to face overlay and pulse highlight
-        overlay_id = f"overlay-{fi['identity_id']}" if fi["identity_id"] else ""
-        click_script = f"""on click
-            set el to #{overlay_id}
-            if el
-                go to el smoothly
-                add .ring-2 .ring-yellow-400 to el
-                wait 1.5s
-                remove .ring-2 .ring-yellow-400 from el
-            end""" if overlay_id else ""
+        # Card links to person page (identified) or identify page (unidentified)
+        if fi["is_identified"] and fi["identity_id"]:
+            card_href = f"/person/{fi['identity_id']}"
+            card_title = f"View {fi['display_name']}'s page"
+        elif fi["identity_id"]:
+            card_href = f"/identify/{fi['identity_id']}"
+            card_title = "Help identify this person"
+        else:
+            card_href = None
+            card_title = None
 
-        person_cards.append(
+        card_inner = Div(
+            crop_el,
             Div(
-                crop_el,
-                Div(
-                    P(name_el, cls="text-sm font-medium text-white mt-2 text-center") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center"),
-                    badge,
-                    see_all_link,
-                    cls="flex flex-col items-center"
-                ),
-                id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
-                cls=f"flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 cursor-pointer hover:bg-slate-700/50 transition-colors",
-                **{"_": click_script} if click_script else {},
-                title="Click to highlight in photo" if overlay_id else None,
-            )
+                P(name_el, cls="text-sm font-medium text-white mt-2 text-center") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center"),
+                badge,
+                see_all_link,
+                cls="flex flex-col items-center"
+            ),
+            id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
+            cls=f"flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 hover:bg-slate-700/50 transition-colors",
         )
+
+        if card_href:
+            person_cards.append(
+                A(
+                    card_inner,
+                    href=card_href,
+                    cls="no-underline cursor-pointer",
+                    title=card_title,
+                )
+            )
+        else:
+            person_cards.append(card_inner)
 
     # --- Photo metadata line (with clickable collection link) ---
     meta_elements = []
