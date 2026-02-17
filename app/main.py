@@ -19913,6 +19913,51 @@ def _load_relationship_graph():
         return {"schema_version": 1, "relationships": [], "gedcom_imports": []}
 
 
+def _save_relationship_graph(graph: dict):
+    """Save relationship graph to data/relationships.json."""
+    rel_path = data_path / "relationships.json"
+    rel_path.write_text(json.dumps(graph, indent=2), encoding="utf-8")
+
+
+@rt("/api/relationship/add")
+def post(person_a: str, person_b: str, type: str, confidence: str = "confirmed", label: str = "", sess=None):
+    """Add a relationship between two people (admin only)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    from rhodesli_ml.graph.relationship_graph import add_relationship as _add_rel
+    graph = _load_relationship_graph()
+    graph = _add_rel(graph, person_a, person_b, type, "manual", confidence, label=label or None)
+    _save_relationship_graph(graph)
+    return Response("OK", status_code=200)
+
+
+@rt("/api/relationship/update")
+def post(person_a: str, person_b: str, type: str, confidence: str, sess=None):
+    """Update relationship confidence (admin only)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    from rhodesli_ml.graph.relationship_graph import update_relationship_confidence as _update_conf
+    graph = _load_relationship_graph()
+    graph = _update_conf(graph, person_a, person_b, type, confidence)
+    _save_relationship_graph(graph)
+    return Response("OK", status_code=200)
+
+
+@rt("/api/relationship/remove")
+def post(person_a: str, person_b: str, type: str, sess=None):
+    """Remove a relationship (admin only, non-destructive)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    from rhodesli_ml.graph.relationship_graph import remove_relationship as _remove_rel
+    graph = _load_relationship_graph()
+    graph = _remove_rel(graph, person_a, person_b, type)
+    _save_relationship_graph(graph)
+    return Response("OK", status_code=200)
+
+
 @rt("/admin/gedcom")
 def get(sess=None):
     """GEDCOM import admin page — upload + match review combined."""

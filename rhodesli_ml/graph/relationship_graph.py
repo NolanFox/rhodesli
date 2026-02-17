@@ -299,36 +299,138 @@ def build_family_tree(
     return trees
 
 
-def get_relationships_for_person(graph: dict, identity_id: str) -> dict:
+def add_relationship(
+    graph: dict,
+    person_a: str,
+    person_b: str,
+    rel_type: str,
+    source: str = "manual",
+    confidence: str = "confirmed",
+    label: Optional[str] = None,
+) -> dict:
+    """Add a relationship to the graph, deduplicating.
+
+    AD-083: Supports FAN types (fan_friend, fan_associate, fan_neighbor)
+    plus standard types (parent_child, spouse).
+    """
+    # Check for existing (non-removed) relationship of same type between same people
+    for rel in graph.get("relationships", []):
+        if rel.get("removed"):
+            continue
+        if rel["type"] == rel_type and rel["person_a"] == person_a and rel["person_b"] == person_b:
+            return graph  # Already exists
+
+    entry = {
+        "person_a": person_a,
+        "person_b": person_b,
+        "type": rel_type,
+        "source": source,
+        "confidence": confidence,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if label:
+        entry["label"] = label
+
+    graph.setdefault("relationships", []).append(entry)
+    return graph
+
+
+def update_relationship_confidence(
+    graph: dict,
+    person_a: str,
+    person_b: str,
+    rel_type: str,
+    confidence: str,
+) -> dict:
+    """Update the confidence level of an existing relationship."""
+    for rel in graph.get("relationships", []):
+        if (rel["type"] == rel_type and
+                rel["person_a"] == person_a and rel["person_b"] == person_b):
+            rel["confidence"] = confidence
+            break
+    return graph
+
+
+def remove_relationship(
+    graph: dict,
+    person_a: str,
+    person_b: str,
+    rel_type: str,
+) -> dict:
+    """Mark a relationship as removed (non-destructive)."""
+    for rel in graph.get("relationships", []):
+        if (rel["type"] == rel_type and
+                rel["person_a"] == person_a and rel["person_b"] == person_b):
+            rel["removed"] = True
+            break
+    return graph
+
+
+def get_relationships_for_person(
+    graph: dict,
+    identity_id: str,
+    include_theory: bool = True,
+) -> dict:
     """Get all relationships for a specific person.
+
+    Args:
+        graph: Relationship graph dict
+        identity_id: Person to look up
+        include_theory: If False, exclude relationships with confidence="theory"
 
     Returns: {
         "parents": [identity_id, ...],
         "children": [identity_id, ...],
         "spouses": [identity_id, ...],
-        "siblings": [identity_id, ...],  # computed from shared parents
+        "siblings": [identity_id, ...],
+        "fan": [{"id": identity_id, "type": fan_type, "label": ...}, ...],
     }
     """
     parents = []
     children = []
     spouses = []
+    fan = []
 
     for rel in graph.get("relationships", []):
-        if rel["type"] == "parent_child":
+        if rel.get("removed"):
+            continue
+        if not include_theory and rel.get("confidence") == "theory":
+            continue
+
+        rel_type = rel["type"]
+
+        if rel_type == "parent_child":
             if rel["person_a"] == identity_id:
                 children.append(rel["person_b"])
             elif rel["person_b"] == identity_id:
                 parents.append(rel["person_a"])
-        elif rel["type"] == "spouse":
+        elif rel_type == "spouse":
             if rel["person_a"] == identity_id:
                 spouses.append(rel["person_b"])
             elif rel["person_b"] == identity_id:
                 spouses.append(rel["person_a"])
+        elif rel_type.startswith("fan_"):
+            other = None
+            if rel["person_a"] == identity_id:
+                other = rel["person_b"]
+            elif rel["person_b"] == identity_id:
+                other = rel["person_a"]
+            if other:
+                fan.append({
+                    "id": other,
+                    "type": rel_type,
+                    "label": rel.get("label"),
+                    "confidence": rel.get("confidence", "confirmed"),
+                })
 
-    # Compute siblings: other children of the same parents
+    # Compute siblings: other children of the same parents (respecting filters)
     siblings = set()
     for parent_id in parents:
         for rel in graph.get("relationships", []):
+            if rel.get("removed"):
+                continue
+            if not include_theory and rel.get("confidence") == "theory":
+                continue
             if rel["type"] == "parent_child" and rel["person_a"] == parent_id:
                 if rel["person_b"] != identity_id:
                     siblings.add(rel["person_b"])
@@ -338,4 +440,5 @@ def get_relationships_for_person(graph: dict, identity_id: str) -> dict:
         "children": children,
         "spouses": spouses,
         "siblings": list(siblings),
+        "fan": fan,
     }
