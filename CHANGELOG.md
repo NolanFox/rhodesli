@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.43.0] — 2026-02-17
+
+### Fixed
+- **`/map` 500 error (again)** — `PhotoRegistry.get_photo()` method doesn't exist; replaced 5 call sites with `photo_reg._photos.get()`
+- **Face overlay misalignment** — overlays positioned relative to padded container instead of image; added `position: relative` to inner image wrapper div
+- **Circular face click behavior** — overlay click scrolled to thumbnail, thumbnail clicked scrolled to overlay; both now navigate to `/person/{id}` or `/identify/{id}`
+- **Search → wrong Focus mode** — search results linked to `/?section=X#identity-Y` which dumped into Focus mode at position 0; now links directly to `/person/{id}` or `/identify/{id}`
+
+### Added
+- **Photo carousel** — prev/next navigation within same collection on `/photo/{id}` pages
+  - SVG chevron arrows with bg-black/60 styling
+  - "Photo X of Y" position indicator
+  - Keyboard ArrowLeft/ArrowRight navigation
+  - Collection name as clickable link
+  - 4 tests
+- **Face overlay alignment regression tests** — 2 tests verifying `position: relative` wrapper and no padding on overlay container
+- **Face click behavior tests** — 3 tests verifying navigation to person/identify pages, no circular scroll
+- **PRD-015: Gemini face alignment** — research doc for coordinate bridging approach (PROPOSED, no implementation)
+- **AD-090** — algorithmic decision for Gemini-InsightFace coordinate bridging
+
+### Changed
+- Search results navigate to `/person/{id}` or `/identify/{id}` instead of Focus mode hash links
+- Test count: 2194 → 2202 (8 new tests, 3 updated)
+
 ## [v0.42.0] — 2026-02-17
 
 ### Fixed

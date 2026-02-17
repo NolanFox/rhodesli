@@ -1,33 +1,27 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-17 (Session 40 — Production Cleanup + Sharing)
+Last updated: 2026-02-17 (Session 41 — Production Fixes + Photo UX + Research)
 
-## Session 40 Completed
-- [x] Fix /map 500 error — missing _build_caches() call
-- [x] Fix /connect 500 error — _safe_get_identity() for 6 call sites
-- [x] Fix collection data — 114 photos reassigned via scripts/fix_collection_metadata.py
-- [x] Shareable identification pages — /identify/{id} and /identify/{a}/match/{b} (15 tests)
-- [x] Person page comments — submit/display/moderation (9 tests)
-- [x] Person page action bar — Timeline, Map, Family Tree, Connections
-- [x] Clickable collection link on photo page
-- [x] Help Identify CTA for unidentified persons
-- [x] Data integrity checker — scripts/verify_data_integrity.py (18 checks)
-- [x] Critical route smoke tests — tests/test_critical_routes.py (10 routes)
-- [x] Fix test_map.py cache poisoning
-- [x] Feedback tracker: docs/feedback/session_40_feedback.md (32 items)
-- [x] CHANGELOG v0.42.0, ROADMAP, BACKLOG updated
-- [x] 35 new tests (2194 total)
+## Session 41 Completed
+- [x] Fix /map 500 error — PhotoRegistry.get_photo() doesn't exist, replaced 5 call sites
+- [x] Fix face overlay alignment — position:relative on inner image wrapper
+- [x] Fix face click behavior — navigate to /person or /identify, not circular scroll
+- [x] Photo carousel — prev/next within collection, keyboard arrows, position indicator
+- [x] Fix search → Focus mode — search links to /person/{id} or /identify/{id}
+- [x] PRD-015: Gemini face alignment research + AD-090 (PROPOSED, no implementation)
+- [x] 8 new tests (2202 total)
+- [x] CHANGELOG v0.43.0, ROADMAP, BACKLOG updated
 
 ## Remaining from Session 40 Feedback (Future Work)
-- [ ] FB-40-18: Face click behavior — overlay → tag/person, thumbnail → person/identify
-- [ ] FB-40-20: Photo carousel / gallery mode with left/right arrows
-- [ ] FB-40-21: Admin-only elements hidden from public (back image upload, orientation tools)
+- [x] FB-40-18: Face click behavior — DONE (Session 41)
+- [x] FB-40-20: Photo carousel / gallery mode — DONE (Session 41)
+- [x] FB-40-21: Admin-only elements hidden from public — already protected (verified Session 41)
 - [ ] FB-40-22: Photo upload attribution display
 - [ ] FB-40-23: "Add Photos" button on collection detail pages
 - [ ] FB-40-24: Bulk collection/source editing in admin Photos view
 - [ ] FB-40-25: Individual photo collection/source editable by admin
 - [ ] FB-40-26: Upload flow collection assignment clarity
-- [ ] FB-40-27: Fix search → Focus mode wrong person navigation
+- [x] FB-40-27: Fix search → Focus mode wrong person — DONE (Session 41)
 - [ ] FB-40-09: Geographic autocomplete with location_dictionary.json
 - [ ] FB-40-11: GEDCOM page — label test data, manual linking, show on person pages
 - [ ] FB-40-13: Compare UX — two clear modes immediately visible
