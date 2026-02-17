@@ -26,6 +26,12 @@ COPY app/ app/
 COPY core/ core/
 COPY scripts/ scripts/
 
+# Copy rhodesli_ml subpackages needed at runtime (graph + importers only)
+# Full ML package has 3GB+ of .venv/checkpoints — only copy pure-Python modules
+COPY rhodesli_ml/__init__.py rhodesli_ml/__init__.py
+COPY rhodesli_ml/graph/ rhodesli_ml/graph/
+COPY rhodesli_ml/importers/ rhodesli_ml/importers/
+
 # Bundle JSON data for first-run volume initialization
 # This is copied TO the volume on first deploy, then the volume persists
 # NOTE: Photos are NOT bundled - they're served from Cloudflare R2

@@ -492,3 +492,45 @@ class TestCorrectionsLogDeploySafety:
         source = script_path.read_text()
         assert "corrections_log.json" not in source or "NOT pushed" in source, \
             "push_to_production.py must NOT include corrections_log.json in DATA_FILES"
+
+
+class TestDockerfileModuleCoverage:
+    """Verify that all rhodesli_ml modules imported by the web app are in the Dockerfile.
+
+    /connect and /tree were broken in production for 4 sessions because
+    rhodesli_ml/ was not copied into the Docker image. This test prevents regression.
+    """
+
+    def test_dockerfile_copies_rhodesli_ml_graph(self):
+        """Dockerfile must COPY rhodesli_ml/graph/ — needed by /connect and /tree."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "rhodesli_ml/graph/" in dockerfile, \
+            "Dockerfile must COPY rhodesli_ml/graph/ — /connect and /tree import from it"
+
+    def test_dockerfile_copies_rhodesli_ml_importers(self):
+        """Dockerfile must COPY rhodesli_ml/importers/ — needed by /admin/gedcom."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "rhodesli_ml/importers/" in dockerfile, \
+            "Dockerfile must COPY rhodesli_ml/importers/ — /admin/gedcom imports from it"
+
+    def test_dockerfile_copies_rhodesli_ml_init(self):
+        """Dockerfile must COPY rhodesli_ml/__init__.py — package must be importable."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "rhodesli_ml/__init__.py" in dockerfile, \
+            "Dockerfile must COPY rhodesli_ml/__init__.py — package init required for imports"
+
+    def test_rhodesli_ml_graph_modules_importable(self):
+        """All graph modules imported by the web app must be importable."""
+        from rhodesli_ml.graph.social_graph import build_social_graph, find_all_paths, export_for_d3
+        from rhodesli_ml.graph.relationship_graph import build_family_tree, get_relationships_for_person
+        # If these imports succeed, the modules are available
+
+    def test_rhodesli_ml_importer_modules_importable(self):
+        """All importer modules imported by the web app must be importable."""
+        from rhodesli_ml.importers.gedcom_parser import parse_gedcom
+        from rhodesli_ml.importers.identity_matcher import match_gedcom_to_identities
+        from rhodesli_ml.importers.gedcom_matches import update_match_status
+        # If these imports succeed, the modules are available
