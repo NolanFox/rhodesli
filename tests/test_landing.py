@@ -197,22 +197,42 @@ class TestLandingPagePhotos:
 
 
 class TestLandingPageNavigation:
-    """Landing page nav should link to key sections of the app."""
+    """Landing page nav should link to all public pages."""
 
     def test_has_photos_link(self, client):
-        """Nav has a link to the photos section."""
+        """Nav has a link to the photos page."""
         response = client.get("/")
-        assert "?section=photos" in response.text
+        assert 'href="/photos"' in response.text
 
     def test_has_people_link(self, client):
-        """Nav has a link to the confirmed identities section."""
+        """Nav has a link to the people page."""
         response = client.get("/")
-        assert "?section=confirmed" in response.text
+        assert 'href="/people"' in response.text
 
-    def test_has_review_link(self, client):
-        """Nav has a link to the review section."""
+    def test_has_collections_link(self, client):
+        """Nav has a link to the collections page."""
         response = client.get("/")
-        assert "?section=to_review" in response.text
+        assert 'href="/collections"' in response.text
+
+    def test_has_map_link(self, client):
+        """Nav has a link to the map page."""
+        response = client.get("/")
+        assert 'href="/map"' in response.text
+
+    def test_has_timeline_link(self, client):
+        """Nav has a link to the timeline page."""
+        response = client.get("/")
+        assert 'href="/timeline"' in response.text
+
+    def test_has_tree_link(self, client):
+        """Nav has a link to the tree page."""
+        response = client.get("/")
+        assert 'href="/tree"' in response.text
+
+    def test_has_compare_link(self, client):
+        """Nav has a link to the compare page."""
+        response = client.get("/")
+        assert 'href="/compare"' in response.text
 
 
 class TestLandingPageAnonymous:

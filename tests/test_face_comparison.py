@@ -154,6 +154,12 @@ class TestCompareRoute:
         assert "/timeline" in resp.text
         assert "Compare" in resp.text
 
+    def test_compare_shows_two_modes(self):
+        """Compare page shows two numbered modes: Search Archive and Upload."""
+        resp = self.client.get("/compare")
+        assert "Search the Archive" in resp.text
+        assert "Upload a Photo" in resp.text
+
     def test_compare_with_invalid_face_id(self):
         """Compare with non-existent face_id returns 200 with no results."""
         resp = self.client.get("/compare?face_id=nonexistent")

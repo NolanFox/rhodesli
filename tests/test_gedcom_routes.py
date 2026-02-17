@@ -82,6 +82,31 @@ class TestGedcomAdminPage:
             assert "Confirm" in resp.text
             assert "Reject" in resp.text
 
+    def test_shows_test_data_warning(self, admin_client, tmp_path):
+        """GEDCOM page shows warning when source file is test data."""
+        matches_data = {
+            "schema_version": 1,
+            "source_file": "test_capeluto.ged",
+            "matches": [],
+        }
+        with patch("app.main._load_gedcom_matches", return_value=matches_data):
+            resp = admin_client.get("/admin/gedcom")
+            assert resp.status_code == 200
+            assert "test-data-warning" in resp.text
+            assert "test data" in resp.text.lower()
+
+    def test_no_warning_for_real_file(self, admin_client, tmp_path):
+        """GEDCOM page does NOT show warning for real GEDCOM files."""
+        matches_data = {
+            "schema_version": 1,
+            "source_file": "capeluto_family.ged",
+            "matches": [],
+        }
+        with patch("app.main._load_gedcom_matches", return_value=matches_data):
+            resp = admin_client.get("/admin/gedcom")
+            assert resp.status_code == 200
+            assert "test-data-warning" not in resp.text
+
 
 class TestGedcomConfirm:
     """TEST 5: Confirmed match enriches identity."""
