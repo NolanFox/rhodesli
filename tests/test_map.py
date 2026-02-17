@@ -118,6 +118,7 @@ def _patch_map():
         patch("app.main.get_crop_files", return_value={}),
         patch("core.storage.get_photo_url", side_effect=lambda p: f"/photos/{p}"),
         patch("app.main._load_date_labels", return_value={}),
+        patch("app.main._photo_locations_cache", None),
         patch.object(pathlib.Path, "exists", mock_exists),
         patch.object(pathlib.Path, "read_text", mock_read_text),
     ]
