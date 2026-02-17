@@ -6365,13 +6365,16 @@ def landing_page(stats, featured_photos):
         )
 
     # Navigation bar
+    _nav_cls = "text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"
     nav_items = [
-        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
-        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
-        A("Help Identify", href="/?section=skipped", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
-        A("About", href="/about", cls="text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"),
+        A("Photos", href="/photos", cls=_nav_cls),
+        A("People", href="/people", cls=_nav_cls),
+        A("Collections", href="/collections", cls=_nav_cls),
+        A("Map", href="/map", cls=_nav_cls),
+        A("Timeline", href="/timeline", cls=_nav_cls),
+        A("Tree", href="/tree", cls=_nav_cls),
+        A("Compare", href="/compare", cls=_nav_cls),
+        A("About", href="/about", cls=_nav_cls),
     ]
     if auth_enabled:
         nav_items.append(
