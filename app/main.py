@@ -20130,6 +20130,68 @@ def get(sess=None):
             cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6"
         )
 
+    # Import history section
+    import_history_section = None
+    imports = rel_graph.get("gedcom_imports", [])
+    if imports:
+        import_rows = []
+        for imp in imports:
+            import_rows.append(Div(
+                Span(imp.get("filename", "?"), cls="text-white font-medium text-sm"),
+                Span(f" — {imp.get('individuals_count', 0)} individuals, {imp.get('families_count', 0)} families",
+                     cls="text-slate-400 text-sm"),
+                Span(f" — {imp.get('matches_confirmed', 0)} matched, {imp.get('relationships_added', 0)} relationships",
+                     cls="text-emerald-400 text-sm"),
+                P(imp.get("imported_at", "")[:10] if imp.get("imported_at") else "",
+                  cls="text-xs text-slate-500"),
+                cls="py-2 border-b border-slate-700/50 last:border-0",
+            ))
+        import_history_section = Div(
+            H2("Import History", cls="text-lg font-semibold text-white mb-3"),
+            *import_rows,
+            cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6",
+            data_testid="import-history",
+        )
+
+    # Enrichment status for confirmed matches
+    enrichment_section = None
+    if confirmed:
+        registry = load_registry()
+        enrichment_rows = []
+        for m in confirmed:
+            identity_id = m.get("identity_id", "")
+            badges = []
+            try:
+                ident = registry.get_identity(identity_id)
+                if ident:
+                    meta = ident.get("metadata", {})
+                    if meta.get("birth_date_full"):
+                        badges.append(Span("birth", cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400"))
+                    if meta.get("death_date_full"):
+                        badges.append(Span("death", cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400"))
+                    if meta.get("gender"):
+                        badges.append(Span("gender", cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400"))
+                    if meta.get("birth_place"):
+                        badges.append(Span("place", cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400"))
+                    if not badges:
+                        badges.append(Span("no metadata", cls="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500"))
+            except (KeyError, TypeError):
+                badges.append(Span("error", cls="text-[10px] px-1.5 py-0.5 rounded bg-red-900/40 text-red-400"))
+
+            enrichment_rows.append(Div(
+                Span(m.get("identity_name", "?"), cls="text-white text-sm mr-2"),
+                *badges,
+                cls="flex items-center gap-1.5 py-1",
+                data_testid="enrichment-status",
+            ))
+
+        enrichment_section = Div(
+            H2("Enrichment Status", cls="text-lg font-semibold text-white mb-3"),
+            P("Metadata fields applied from GEDCOM data:", cls="text-xs text-slate-500 mb-2"),
+            *enrichment_rows,
+            cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6",
+        )
+
     return Title("GEDCOM Import — Rhodesli"), Div(
         Div(
             H1("GEDCOM Import", cls="text-2xl font-bold text-white"),
@@ -20138,9 +20200,11 @@ def get(sess=None):
             cls="mb-6"
         ),
         stats_cards,
+        import_history_section,
         upload_section,
         matches_section,
         confirmed_section,
+        enrichment_section,
         cls="max-w-4xl mx-auto p-6"
     )
 
