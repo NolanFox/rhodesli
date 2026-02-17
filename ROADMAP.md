@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.37.0 · 2046 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.41.0 · 2159 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -213,11 +213,18 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] Consistent navigation across all 11 public pages via _public_nav_links()
 - [x] 86 new tests (2120 total)
 
-### Session 39: Kinship Calibration v2
-- Revisit kinship thresholds after GEDCOM import
-- With actual family relationships encoded, compute true same-family distributions
-- More photos + more data = better calibration
-- Update AD-067 with improved results
+### Session 39: Family Tree + Relationship Editing (COMPLETED 2026-02-17)
+- [x] Family tree data structure: build_family_tree(), find_root_couples() with cycle prevention
+- [x] /tree route with D3 hierarchical tree (Reingold-Tilford layout)
+- [x] Couple-based nodes with face crop avatars, person filter, theory toggle
+- [x] FAN relationship model — fan_friend, fan_associate, fan_neighbor types
+- [x] Relationship editing API — add/update/remove (admin only, non-destructive)
+- [x] Confidence levels (confirmed/theory) with filtering
+- [x] Person page tree links, connection photo counts, cross-linking
+- [x] GEDCOM admin improvements — import history + enrichment status
+- [x] Tree in navigation (public nav + admin sidebar)
+- [x] AD-077–AD-080, CHANGELOG v0.41.0
+- [x] 39 new tests (2159 total)
 
 ### Session 40: Life Events & Context Graph
 - Event tagging: "Moise's wedding in Havana"
@@ -226,6 +233,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-17: v0.41.0 — Family Tree + Relationship Editing (Session 39): Hierarchical D3.js family tree at /tree with Reingold-Tilford layout, couple-based nodes, face crop avatars, person filter, theory toggle. FAN relationship model (friends/associates/neighbors) with confidence levels. Relationship editing API (admin only, non-destructive). Person page tree links, connection photo counts, GEDCOM admin improvements (import history + enrichment status). Tree in navigation. 39 new tests (2159 total). Decision provenance AD-077–AD-080.
 - [x] 2026-02-16: v0.40.0 — Social Graph + Collections + Map (Sessions 36-38): Six Degrees connection finder at /connect with D3.js force-directed visualization, BFS pathfinding, proximity scoring. Shareable collection pages at /collections and /collection/{slug}. Curated location dictionary (22 places), geocoding pipeline (267/271 = 98.5%), interactive Leaflet.js map at /map with marker clustering and photo popups. Consistent navigation across all public pages via centralized _public_nav_links() helper. 86 new tests (2120 total). PRDs 010, 012, 013. Decision provenance AD-077–AD-081.
 - [x] 2026-02-15: v0.39.0 — GEDCOM Import (Session 35): GEDCOM 5.5.1 parser with messy date handling (ABT/BEF/AFT/BET...AND). Layered identity matcher (exact → surname variants → maiden name → fuzzy + date proximity). 14/14 test individuals matched. Photo co-occurrence graph (21 edges from 20 photos). Family relationship graph from GEDCOM cross-referenced with confirmed matches. Admin GEDCOM UI at /admin/gedcom. Person page family section. CLI import tool. 107 new tests (2081 app + 272 ML = 2353 total). Decision provenance AD-073–AD-076.
 - [x] 2026-02-15: v0.38.0 — Birth Date Estimation (Session 34): Birth year estimation pipeline with robust outlier filtering (median + MAD). Face-to-age matching via bbox x-coordinate sorting. 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW). Timeline age overlay with confidence styling. Person page birth year display. Validation report with data improvement opportunities. 48 new tests (2246 total). Decision provenance AD-071–AD-072.

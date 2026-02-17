@@ -696,7 +696,37 @@ When making any algorithmic choice in the ML pipeline:
 - **Affects**: `rhodesli_ml/importers/enrichment.py`, `core/registry.py` (metadata allowlist), `app/main.py` (confirm route)
 - **Tests**: 12 tests in `rhodesli_ml/tests/test_enrichment.py`
 
-1. Add a new entry with AD-XXX format (next: AD-077)
+### AD-077: D3 Tree Layout — Hierarchical Reingold-Tilford
+- **Date**: 2026-02-17
+- **Context**: The /connect page uses a force-directed D3 layout which doesn't convey generational hierarchy. We need a family tree that visually shows parent→child depth.
+- **Decision**: Use `d3.tree()` (Reingold-Tilford hierarchical layout) with `nodeSize([280, 140])`. D3 v7 already loaded on /connect, includes `d3-hierarchy` module. Vertical layout with elbow connectors for parent-child links and dashed horizontal lines for spouse links.
+- **Rejected**: Force-directed layout (d3.forceSimulation) — doesn't convey generations, nodes jumble across depth levels. Also rejected dagre.js — adds another dependency when d3.tree() is already available.
+- **Affects**: `app/main.py` (/tree route), inline D3 script
+
+### AD-078: Couple-Based Hierarchy — Family Units as Nodes
+- **Date**: 2026-02-17
+- **Context**: In a family tree, married couples should appear together with their children below. Standard d3.tree() treats each person as a separate node.
+- **Decision**: Each "family unit" (married couple + children) is a logical node in the d3 hierarchy. Visually rendered as two side-by-side rounded rects with a horizontal dashed pink spouse connector. Children hang below the midpoint. Single parents (no spouse in data) render as a single card.
+- **Rejected**: One-person-per-node with separate spouse edges — makes layout messy, unclear which children belong to which couple.
+- **Affects**: `rhodesli_ml/graph/relationship_graph.py` (`build_family_tree()`, `find_root_couples()`), `app/main.py` (D3 render script)
+- **Tests**: 10 tests in `tests/test_family_tree.py`
+
+### AD-079: FAN Relationship Model — Friends, Associates, Neighbors
+- **Date**: 2026-02-17
+- **Context**: Beyond biological family (parent-child, spouse), genealogical research uses the FAN principle (Friends, Associates, Neighbors) to establish indirect connections.
+- **Decision**: Extend `relationships.json` schema with `confidence` field ("confirmed"/"theory") and new `type` values ("fan_friend", "fan_associate", "fan_neighbor"). Backward compatible — missing `confidence` defaults to "confirmed". `get_relationships_for_person()` returns FAN types in a separate `fan` key. `include_theory` parameter filters speculative connections.
+- **Rejected**: Separate fan_relationships.json — adds complexity. One schema handles all relationship types with type-based filtering.
+- **Affects**: `rhodesli_ml/graph/relationship_graph.py` (add/update/remove functions, get_relationships_for_person), `app/main.py` (API endpoints, tree page theory toggle)
+- **Tests**: 15 tests in `tests/test_relationship_editing.py`
+
+### AD-080: Inline JSON for Tree Data — Same Pattern as /connect
+- **Date**: 2026-02-17
+- **Context**: How to deliver tree data to the D3 visualization? Options: inline JSON in page, separate API endpoint, WebSocket.
+- **Decision**: Embed tree data as inline JSON in the page HTML (same pattern as /connect's `d3_json`). Data is small (~15-50 people × ~100 bytes = <5KB). Avoids extra API round-trip and loading states.
+- **Rejected**: Separate `/api/tree` endpoint — adds loading state complexity, CORS considerations, and extra request for small data. WebSocket — massive overkill for static genealogical data.
+- **Affects**: `app/main.py` (/tree route — `tree_json = json.dumps(tree_data)` embedded in Script tag)
+
+1. Add a new entry with AD-XXX format (next: AD-081)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

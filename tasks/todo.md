@@ -1,6 +1,20 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-15 (Session 35 — GEDCOM Import)
+Last updated: 2026-02-17 (Session 39 — Family Tree + Relationship Editing)
+
+## Session 39 Completed
+- [x] Family tree data structure: build_family_tree(), find_root_couples() (10 tests)
+- [x] /tree route with D3 hierarchical tree layout (12 tests)
+- [x] Couple-based nodes with face crop avatars, person filter, theory toggle
+- [x] FAN relationship model: fan_friend, fan_associate, fan_neighbor
+- [x] Relationship editing API: add/update/remove (admin only, non-destructive)
+- [x] Confidence levels (confirmed/theory) with filtering (15 tests)
+- [x] Person page tree links + connection photo counts + cross-linking (2 tests)
+- [x] GEDCOM admin improvements: import history + enrichment status
+- [x] Tree in navigation (public nav + admin sidebar)
+- [x] Nav consistency tests updated (3 fixes)
+- [x] AD-077–AD-080, CHANGELOG v0.41.0, ROADMAP, BACKLOG
+- [x] 39 new tests (2159 total)
 
 ## Session 35 Completed
 - [x] Research: GEDCOM format, python-gedcom library, identity schema

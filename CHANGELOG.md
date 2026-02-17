@@ -2,6 +2,44 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.41.0] — 2026-02-17
+
+### Added
+- **Family Tree visualization** at /tree — hierarchical D3.js tree layout
+  - Couple-based nodes: spouse pairs shown side-by-side with pink dashed connector
+  - Face crop avatars in each card (letter-initial fallback)
+  - Person filter dropdown to focus on specific person's subtree
+  - Theory toggle to show/hide speculative connections
+  - Zoom/pan with d3.zoom(), auto-zoom to focused person
+  - Click node → navigate to /person/{id}
+  - Share button, OG meta tags, empty state
+  - 12 route tests, 10 data structure tests
+- **FAN relationship model** — friends, associates, neighbors as first-class relationship types
+  - New types: fan_friend, fan_associate, fan_neighbor
+  - Confidence levels: confirmed/theory with filtering
+  - Non-destructive removal (marks as removed, doesn't delete)
+  - 15 tests for schema + API
+- **Relationship editing API** (admin only)
+  - POST /api/relationship/add — add relationships with dedup
+  - POST /api/relationship/update — change confidence level
+  - POST /api/relationship/remove — non-destructive removal
+- **Person page tree links** — "View in Family Tree →" in Family and Connections sections
+- **Connection photo counts** — shared photo count shown in connection badges
+- **GEDCOM admin improvements** — import history section + enrichment status badges
+- **Tree in navigation** — added to public nav bar and admin sidebar (between Timeline and Connect)
+
+### Changed
+- `get_relationships_for_person()` now returns `fan` key for FAN-type relationships
+- `get_relationships_for_person()` accepts `include_theory` param and filters removed relationships
+- Navigation link count: 7 → 8 (added Tree)
+- Connect page shows "View in Family Tree →" link when family path found
+
+### Decision Provenance
+- AD-077: D3 Tree Layout — Hierarchical Reingold-Tilford
+- AD-078: Couple-Based Hierarchy — Family Units as Nodes
+- AD-079: FAN Relationship Model — Friends, Associates, Neighbors
+- AD-080: Inline JSON for Tree Data — Same Pattern as /connect
+
 ## [v0.40.0] — 2026-02-16
 
 ### Added
