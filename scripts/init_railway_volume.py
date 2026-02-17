@@ -52,7 +52,7 @@ REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
 # These are NOT required for the app to start, but enhance functionality.
 # annotations.json is NOT in this list — it is production-origin data written by
 # users via the web UI. Syncing from bundle would overwrite user submissions.
-OPTIONAL_SYNC_FILES = ["proposals.json", "surname_variants.json", "date_labels.json", "photo_search_index.json", "rhodes_context_events.json", "relationships.json", "gedcom_matches.json", "co_occurrence_graph.json"]
+OPTIONAL_SYNC_FILES = ["proposals.json", "surname_variants.json", "date_labels.json", "photo_search_index.json", "rhodes_context_events.json", "relationships.json", "gedcom_matches.json", "co_occurrence_graph.json", "location_dictionary.json", "photo_locations.json"]
 
 
 def volume_is_valid(data_dir: Path) -> bool:

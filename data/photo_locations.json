@@ -1,0 +1,5358 @@
+{
+  "version": 1,
+  "description": "Geocoded photo locations from Gemini location estimates + curated dictionary",
+  "photos": {
+    "a3d2695fe0804844": {
+      "photo_id": "a3d2695fe0804844",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida), banquet hall or hotel interior.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "a09088b188d5f4f5": {
+      "photo_id": "a09088b188d5f4f5",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece or New York City (immigrant studio)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "f50118e7db8d6ac5": {
+      "photo_id": "f50118e7db8d6ac5",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely USA (Miami or Tampa, Florida) based on the casual attire and modern domestic interior.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "2b0e354d49e51d29": {
+      "photo_id": "2b0e354d49e51d29",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely New York City or Florida (indoor home interior)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        }
+      ]
+    },
+    "d4fd0727068369ec": {
+      "photo_id": "d4fd0727068369ec",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Likely a US theme park or resort, possibly Disneyland (California) or a similar Florida attraction.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "6f512d921837bc0c": {
+      "photo_id": "6f512d921837bc0c",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or NYC (palm backdrop is common in Mediterranean studios but also used in immigrant studios in the US).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "d2edd80e5cf9c308": {
+      "photo_id": "d2edd80e5cf9c308",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, USA (based on brickwork, sidewalk style, and English signage)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "e7bf01dc576851b0": {
+      "photo_id": "e7bf01dc576851b0",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely United States (New York or Florida) based on the modern studio technique and fashion availability.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "2360df5bb36d25d0": {
+      "photo_id": "2360df5bb36d25d0",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the 'New World' style of the boy's clothing and studio setup.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ab9cc3ebce2d510c": {
+      "photo_id": "ab9cc3ebce2d510c",
+      "lat": 40.715,
+      "lng": -73.9843,
+      "location_name": "Lower East Side, Manhattan",
+      "location_key": "lower_east_side",
+      "region": "United States",
+      "location_estimate": "Lower East Side, Manhattan, New York City (Rivington Street)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "lower_east_side",
+          "name": "Lower East Side, Manhattan"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "b9f591a56e25b71a": {
+      "photo_id": "b9f591a56e25b71a",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, likely Miami or Tampa (palm trees, casual attire, Sephardic community context).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "6a62687aec225e39": {
+      "photo_id": "6a62687aec225e39",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida (Miami or Tampa) based on palm trees and Sephardic community context.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "a718d5fc861cef12": {
+      "photo_id": "a718d5fc861cef12",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (Miami or NYC) or Rhodes, Greece, based on tiled flooring common in both regions.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "9af0e8f2d3ca3479": {
+      "photo_id": "9af0e8f2d3ca3479",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely an urban studio in Rhodes or a US diaspora community (NYC/Miami).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "499c2c0e37d27d22": {
+      "photo_id": "499c2c0e37d27d22",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa), home interior.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "4be78d8c8cb1611d": {
+      "photo_id": "4be78d8c8cb1611d",
+      "lat": 40.6782,
+      "lng": -73.9442,
+      "location_name": "Brooklyn, New York",
+      "location_key": "brooklyn",
+      "region": "United States",
+      "location_estimate": "Brooklyn, New York (confirmed by 'BKLYN' on sign and 'NE AVE' likely referring to Greene Ave)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "brooklyn",
+          "name": "Brooklyn, New York"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "fb02c461c554c830": {
+      "photo_id": "fb02c461c554c830",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely New York City or Miami based on studio style)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "1135ba51e1bf5a1a": {
+      "photo_id": "1135ba51e1bf5a1a",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "location_name": "Buenos Aires, Argentina",
+      "location_key": "buenos_aires",
+      "region": "South America",
+      "location_estimate": "Buenos Aires, Argentina (per inscription)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "buenos_aires",
+          "name": "Buenos Aires, Argentina"
+        }
+      ]
+    },
+    "e4744bb6247f1174": {
+      "photo_id": "e4744bb6247f1174",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece, based on the studio aesthetic and community context.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "7911d4fdbf128d91": {
+      "photo_id": "7911d4fdbf128d91",
+      "lat": 40.715,
+      "lng": -73.9843,
+      "location_name": "Lower East Side, Manhattan",
+      "location_key": "lower_east_side",
+      "region": "United States",
+      "location_estimate": "New York City (Lower East Side/Brooklyn based on studio stamp)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "lower_east_side",
+          "name": "Lower East Side, Manhattan"
+        },
+        {
+          "key": "brooklyn",
+          "name": "Brooklyn, New York"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ab10679b23dbdcf9": {
+      "photo_id": "ab10679b23dbdcf9",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (confirmed by studio stamp)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "3a317b0f99b0d2e0": {
+      "photo_id": "3a317b0f99b0d2e0",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC or Florida) based on the casual outdoor snapshot style and print finishing common in US labs of the era.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "c99f4d6366aafd62": {
+      "photo_id": "c99f4d6366aafd62",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely New York, Miami, or Tampa) based on architectural style and lawn.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "2e5836aeceae8c6d": {
+      "photo_id": "2e5836aeceae8c6d",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Likely a theme park or resort, possibly Disneyland (Plaza Inn area) or a similar Florida attraction.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "31dfdd1c087047ba": {
+      "photo_id": "31dfdd1c087047ba",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, USA (Tampa or Miami area based on 'Baby Butler' manufacturer location)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "a8a1730722a4cdeb": {
+      "photo_id": "a8a1730722a4cdeb",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely US diaspora (NYC, Miami, or Tampa) based on professional studio quality.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "60abad85a1fe454b": {
+      "photo_id": "60abad85a1fe454b",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC or Florida) based on the specific high-key studio style common in American commercial photography.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "2c611f120c15aa4a": {
+      "photo_id": "2c611f120c15aa4a",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Miami or Tampa, Florida (based on subtropical vegetation and mid-century architecture)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "f9391021bf1f8bac": {
+      "photo_id": "f9391021bf1f8bac",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (New York, Miami, or Tampa) based on school portrait conventions.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "f5b8639dd443d0b8": {
+      "photo_id": "f5b8639dd443d0b8",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece, based on floor tiles and interior decor.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "4a9dee395e1150b2": {
+      "photo_id": "4a9dee395e1150b2",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes (professional studio setting common to both)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "3e53fd3c015350c8": {
+      "photo_id": "3e53fd3c015350c8",
+      "lat": 40.715,
+      "lng": -73.9843,
+      "location_name": "Lower East Side, Manhattan",
+      "location_key": "lower_east_side",
+      "region": "United States",
+      "location_estimate": "351 Grand Street, Lower East Side, Manhattan, New York City",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "lower_east_side",
+          "name": "Lower East Side, Manhattan"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "64f868771ecbf5ee": {
+      "photo_id": "64f868771ecbf5ee",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes; the studio style is highly standardized for the era.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "54f65d27507cd5f7": {
+      "photo_id": "54f65d27507cd5f7",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely USA (NYC, Miami, or Tampa) based on mainstream American fashion and portrait style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "9411826ba358db3c": {
+      "photo_id": "9411826ba358db3c",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States, likely a synagogue interior in NYC, Miami, or Tampa.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "c17cf4916422570d": {
+      "photo_id": "c17cf4916422570d",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on print style and clothing.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "7b5c587d31b33946": {
+      "photo_id": "7b5c587d31b33946",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely USA (New York City or Florida) based on the modern American studio style.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "8f6a6a0108f019cf": {
+      "photo_id": "8f6a6a0108f019cf",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely New York City or Florida (Miami/Tampa) based on typical US Sephardic diaspora banquet hall aesthetics.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "c4c77600075334b8": {
+      "photo_id": "c4c77600075334b8",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, USA (specifically Ferrara Studio, 2110 Third Ave)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "41538ecb1c11bdd7": {
+      "photo_id": "41538ecb1c11bdd7",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes; the high-fashion 'flapper' influence suggests an urban center or a family with close ties to international fashion.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "81bf7f85ec9814bc": {
+      "photo_id": "81bf7f85ec9814bc",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely New York, Miami, or Tampa based on suburban backyard infrastructure)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ff241a7e44f7d3c3": {
+      "photo_id": "ff241a7e44f7d3c3",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, USA (indicated by jalousie windows and prompt context of Miami/Tampa communities)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "f7d81507c3f769f7": {
+      "photo_id": "f7d81507c3f769f7",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York City or Florida diaspora communities)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "7be13af860ce7d10": {
+      "photo_id": "7be13af860ce7d10",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in Rhodes or an early Sephardic immigrant community in New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "0b5246f5b77a9ccb": {
+      "photo_id": "0b5246f5b77a9ccb",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely New York City or Florida (Miami/Tampa) based on community history and professional studio style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "6f325f11251d8ee4": {
+      "photo_id": "6f325f11251d8ee4",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (New York, Miami, or Tampa) based on fashion and studio style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "9777323400903885": {
+      "photo_id": "9777323400903885",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa based on community context)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "1ee4ffdef6743ff4": {
+      "photo_id": "1ee4ffdef6743ff4",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, likely Miami or Tampa (based on subtropical vegetation and Sephardic diaspora history)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "fb6a846971b30f4b": {
+      "photo_id": "fb6a846971b30f4b",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City (based on architectural style and edge notation)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ca69d9decc37b0ec": {
+      "photo_id": "ca69d9decc37b0ec",
+      "lat": 35.5951,
+      "lng": -82.5515,
+      "location_name": "Asheville, North Carolina",
+      "location_key": "asheville",
+      "region": "United States",
+      "location_estimate": "Asheville, North Carolina, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "asheville",
+          "name": "Asheville, North Carolina"
+        }
+      ]
+    },
+    "08d86bf1acab9f9a": {
+      "photo_id": "08d86bf1acab9f9a",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes (urban studio)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "8756231987a82363": {
+      "photo_id": "8756231987a82363",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa), school or professional studio setting.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "e160f3a93d7bcecf": {
+      "photo_id": "e160f3a93d7bcecf",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or an early immigrant studio in New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "28f2bc39bebd4d03": {
+      "photo_id": "28f2bc39bebd4d03",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa based on community context and suburban setting)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "9ea532a3b743c794": {
+      "photo_id": "9ea532a3b743c794",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa based on clapboard architecture)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ce622fde33ea3310": {
+      "photo_id": "ce622fde33ea3310",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in a diaspora community like New York City or Rhodes.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "0532f22050f5effc": {
+      "photo_id": "0532f22050f5effc",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in either Rhodes or a major diaspora hub like New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ab0b7cce1a72f4e7": {
+      "photo_id": "ab0b7cce1a72f4e7",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely USA (New York City, Miami, or Tampa) based on the modernity of the suit and hairstyle.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "ba91ea699c0e600f": {
+      "photo_id": "ba91ea699c0e600f",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely a synagogue in the United States (New York City or Miami) given the architectural style and formal tuxedo.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "f5c2780f2bc75c66": {
+      "photo_id": "f5c2780f2bc75c66",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the casual but modern shirt style and the specific type of decorative glass matting popular in US households.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "6308a10b10e79218": {
+      "photo_id": "6308a10b10e79218",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the specific style of the embossed studio mount.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "3dcca43bad885e54": {
+      "photo_id": "3dcca43bad885e54",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York City or Florida based on banquet hall decor style)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "6e0a7af357997e0e": {
+      "photo_id": "6e0a7af357997e0e",
+      "lat": 27.9506,
+      "lng": -82.4572,
+      "location_name": "Tampa, Florida",
+      "location_key": "tampa",
+      "region": "United States",
+      "location_estimate": "Tampa, Florida",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "3c46f63468d6c1d9": {
+      "photo_id": "3c46f63468d6c1d9",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida diaspora communities), indoor domestic setting.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "cc6089cbeffca13c": {
+      "photo_id": "cc6089cbeffca13c",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Hollywood, Florida, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "bc68c9c7ef41bf2a": {
+      "photo_id": "bc68c9c7ef41bf2a",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (Miami or NYC area) based on the style of the terrace and the modern American formal wear.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "81579cea97208e5b": {
+      "photo_id": "81579cea97208e5b",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely Miami or NYC based on interior decor and community history)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "65f55ff7d895f263": {
+      "photo_id": "65f55ff7d895f263",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a garden in Rhodes or a diaspora community in the US (e.g., New York or Florida).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "e26119047c9a622f": {
+      "photo_id": "e26119047c9a622f",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes (Studio portrait)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "65f48be2cf5be1d3": {
+      "photo_id": "65f48be2cf5be1d3",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida diaspora communities)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "662e24c4f38575ca": {
+      "photo_id": "662e24c4f38575ca",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa based on interior style and consumer products)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "24f86a7e3d1c7763": {
+      "photo_id": "24f86a7e3d1c7763",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or a major diaspora center like New York City (standardized studio equipment).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "f06cfb58b8492b2f": {
+      "photo_id": "f06cfb58b8492b2f",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in Rhodes or New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "84b368177b8706d0": {
+      "photo_id": "84b368177b8706d0",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa based on community context and casual attire).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "a26eeaebbcd256c0": {
+      "photo_id": "a26eeaebbcd256c0",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes; the high-quality formal attire and specific film stock suggest an urban professional studio.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "60d2c5e29c9d644b": {
+      "photo_id": "60d2c5e29c9d644b",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely USA (NYC, Miami, or Tampa) based on interior decor and food styling.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "c5c970f18ef21428": {
+      "photo_id": "c5c970f18ef21428",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (Miami or New York City) based on domestic furniture and interior style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "122fc63b031d91ab": {
+      "photo_id": "122fc63b031d91ab",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely a beach in the New York City area (e.g., Coney Island or Rockaway) or Florida, common for the Sephardic diaspora.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        }
+      ]
+    },
+    "746dd11e5b4d86a1": {
+      "photo_id": "746dd11e5b4d86a1",
+      "lat": 40.6782,
+      "lng": -73.9442,
+      "location_name": "Brooklyn, New York",
+      "location_key": "brooklyn",
+      "region": "United States",
+      "location_estimate": "Likely New York City (Bronx or Brooklyn), USA, based on brick apartment architecture with sun porches.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "brooklyn",
+          "name": "Brooklyn, New York"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "100dc3f6749a979d": {
+      "photo_id": "100dc3f6749a979d",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States, likely New York City or Miami (based on interior styling and parquet flooring common in urban apartments).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "e03cf80e5f5e4a60": {
+      "photo_id": "e03cf80e5f5e4a60",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa), based on the studio mounting style prevalent in immigrant communities during this period.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "3c1e58ecdc27acb3": {
+      "photo_id": "3c1e58ecdc27acb3",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States, likely New York City or similar urban center (brick bungalow architecture)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "d0c83b767f767210": {
+      "photo_id": "d0c83b767f767210",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (Studio portrait style and traditional Sephardic dress elements)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "a5efdff51fd0c149": {
+      "photo_id": "a5efdff51fd0c149",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Middle Village, Queens, New York City",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "c6924c729a4325de": {
+      "photo_id": "c6924c729a4325de",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States, likely Florida (Miami or Tampa) based on suburban architecture and community context.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "ee455a0d82b7d121": {
+      "photo_id": "ee455a0d82b7d121",
+      "lat": 40.715,
+      "lng": -73.9843,
+      "location_name": "Lower East Side, Manhattan",
+      "location_key": "lower_east_side",
+      "region": "United States",
+      "location_estimate": "Lower East Side, Manhattan, New York City (Gus Studio, 156 Rivington St.)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "lower_east_side",
+          "name": "Lower East Side, Manhattan"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "77c988465f9c80db": {
+      "photo_id": "77c988465f9c80db",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, USA",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "c374d449d2c3999a": {
+      "photo_id": "c374d449d2c3999a",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida, USA (Miami or Tampa), based on the vehicle type and casual summer attire consistent with the Sephardic diaspora communities mentioned.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "a616aba825dda705": {
+      "photo_id": "a616aba825dda705",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "45c6aea178e61779": {
+      "photo_id": "45c6aea178e61779",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely a restaurant or social club in New York City or Florida (Miami/Tampa).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "bb830f22e00d8dd3": {
+      "photo_id": "bb830f22e00d8dd3",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely New York or a similar US diaspora community given the casual snapshot nature and Western 1920s fashion adoption.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "1269abe515a4aa1a": {
+      "photo_id": "1269abe515a4aa1a",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or a modernized urban studio in Rhodes.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_0_603575867.895093": {
+      "photo_id": "inbox_b5e8a89e_0_603575867.895093",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami or Tampa, Florida (based on light-colored formal wear and Sephardic diaspora patterns)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_1_603569465.197279": {
+      "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida (Miami or Tampa) given the vegetation, patio style, and contemporary US fashion.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_2_603575561.310480": {
+      "photo_id": "inbox_b5e8a89e_2_603575561.310480",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami, Florida or Rhodes, Greece, given the tropical vegetation and white dinner jacket.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_3_603576015.208878": {
+      "photo_id": "inbox_b5e8a89e_3_603576015.208878",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida (Miami or Tampa), indicated by the palm fronds and the specific style of tropical formal attire common in those Sephardic communities.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_4_603569408.731013": {
+      "photo_id": "inbox_b5e8a89e_4_603569408.731013",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami or Tampa, Florida (based on casual summer attire and domestic interior style common in US Sephardic diaspora communities).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_5_603576083.540241": {
+      "photo_id": "inbox_b5e8a89e_5_603576083.540241",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida (Miami or Tampa) based on the outdoor setting, vegetation, and typical Sephardic diaspora social patterns in the US.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_6_603575393.720025": {
+      "photo_id": "inbox_b5e8a89e_6_603575393.720025",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami, Florida or Rhodes, Greece (waterfront promenade with palm trees)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "italy",
+          "name": "Italy"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_7_603575318.516167": {
+      "photo_id": "inbox_b5e8a89e_7_603575318.516167",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on 1950s Americana fashion and interior style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_8_603575434.282777": {
+      "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely USA (Miami, Florida or New York City) based on the casual tropical attire and interior furniture style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_9_603575780.793224": {
+      "photo_id": "inbox_b5e8a89e_9_603575780.793224",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami or Tampa, Florida (based on architectural stucco, trellis, and warm-weather formal attire like white dinner jackets).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_11_603576167.481802": {
+      "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida (Miami or Tampa) based on the tropical formal attire (white dinner jackets, boater hat) and the informal patio-style construction (corrugated roof).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido": {
+      "photo_id": "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido",
+      "lat": 35.5951,
+      "lng": -82.5515,
+      "location_name": "Asheville, North Carolina",
+      "location_key": "asheville",
+      "region": "United States",
+      "location_estimate": "Asheville, North Carolina",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "asheville",
+          "name": "Asheville, North Carolina"
+        }
+      ]
+    },
+    "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens": {
+      "photo_id": "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens",
+      "lat": 35.5951,
+      "lng": -82.5515,
+      "location_name": "Asheville, North Carolina",
+      "location_key": "asheville",
+      "region": "United States",
+      "location_estimate": "Asheville, North Carolina, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "asheville",
+          "name": "Asheville, North Carolina"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_0_596770996.415863": {
+      "photo_id": "inbox_staged-20260210-182610_0_596770996.415863",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, USA",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_1_596771174.533589": {
+      "photo_id": "inbox_staged-20260210-182610_1_596771174.533589",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely a restaurant or nightclub in New York City or Florida (Miami/Tampa), given the interior style and service staff.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_2_596771023.203463": {
+      "photo_id": "inbox_staged-20260210-182610_2_596771023.203463",
+      "lat": 27.9506,
+      "lng": -82.4572,
+      "location_name": "Tampa, Florida",
+      "location_key": "tampa",
+      "region": "United States",
+      "location_estimate": "Tampa or St. Petersburg, Florida (Jim Settle was a known photographer in this region)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_5_757557421.130308": {
+      "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely New York City or Miami, Florida, given the Art Deco architecture and English signage.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_6_596771293.674187": {
+      "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely USA (New York City or Florida) based on the mid-century modern interior decor and tropical indoor plants.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_7_596771420.719238": {
+      "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely Miami, Tampa, or New York City) based on interior architecture and casual American-style domestic setting.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_8_596771351.496458": {
+      "photo_id": "inbox_staged-20260210-182610_8_596771351.496458",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York City or Florida based on Sephardic diaspora context and retail signage)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_12_Image_567": {
+      "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Ottoman Empire / Dodecanese",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_13_596771481.064027": {
+      "photo_id": "inbox_staged-20260210-182610_13_596771481.064027",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely USA (New York or Florida diaspora communities) based on the formal event style and interior decor.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166": {
+      "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a cemetery in Rhodes or a Sephardic diaspora community in the US (e.g., New York or Florida).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo": {
+      "photo_id": "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a consulate or official office (Rhodes, Athens, or a US port of entry) given the seal and staples.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card": {
+      "photo_id": "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "location_name": "Buenos Aires, Argentina",
+      "location_key": "buenos_aires",
+      "region": "South America",
+      "location_estimate": "Buenos Aires, Argentina (Consulate location)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "buenos_aires",
+          "name": "Buenos Aires, Argentina"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_5_Abraham_Rousso_family": {
+      "photo_id": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece or a Sephardic immigrant community in New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture": {
+      "photo_id": "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, New York (Southern District Court)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card": {
+      "photo_id": "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "location_name": "Buenos Aires, Argentina",
+      "location_key": "buenos_aires",
+      "region": "South America",
+      "location_estimate": "Buenos Aires, Argentina",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "buenos_aires",
+          "name": "Buenos Aires, Argentina"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n": {
+      "photo_id": "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (based on surname and typical community document style)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir": {
+      "photo_id": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes (Studio setting makes geographic distinction difficult, but fashion is highly Westernized).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya": {
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "lat": 32.3792,
+      "lng": -86.3077,
+      "location_name": "Montgomery, Alabama",
+      "location_key": "montgomery",
+      "region": "United States",
+      "location_estimate": "Montgomery, Alabama, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "montgomery",
+          "name": "Montgomery, Alabama"
+        }
+      ]
+    },
+    "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n": {
+      "photo_id": "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely USA (NYC or Florida) or Rhodes; the Latin script signature suggests a Westernized or diaspora context.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n": {
+      "photo_id": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
+      "lat": 33.749,
+      "lng": -84.388,
+      "location_name": "Atlanta, Georgia",
+      "location_key": "atlanta",
+      "region": "United States",
+      "location_estimate": "Atlanta, Georgia, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "atlanta",
+          "name": "Atlanta, Georgia"
+        }
+      ]
+    },
+    "inbox_benatar-20260213_0_Sarina2": {
+      "photo_id": "inbox_benatar-20260213_0_Sarina2",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or NYC (Studio setting with Western-influenced formal attire)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "b9aa84ba4717fbc9": {
+      "photo_id": "b9aa84ba4717fbc9",
+      "lat": 39.8283,
+      "lng": -98.5795,
+      "location_name": "United States",
+      "location_key": "united_states",
+      "region": "United States",
+      "location_estimate": "United States (US Army uniform and patriotic USA mount)",
+      "confidence": "low",
+      "all_matches": [
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "84f57c7ea2ab2931": {
+      "photo_id": "84f57c7ea2ab2931",
+      "lat": 40.715,
+      "lng": -73.9843,
+      "location_name": "Lower East Side, Manhattan",
+      "location_key": "lower_east_side",
+      "region": "United States",
+      "location_estimate": "152 Rivington St, New York City, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "lower_east_side",
+          "name": "Lower East Side, Manhattan"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "a3e9117c543a8600": {
+      "photo_id": "a3e9117c543a8600",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, USA (likely Miami or Tampa)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "7d0344045ba73cba": {
+      "photo_id": "7d0344045ba73cba",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida based on residential architecture)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "dcba1494381b12cb": {
+      "photo_id": "dcba1494381b12cb",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece or Florida, USA based on vegetation (banana leaves and eucalyptus).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "ea94c703087befcf": {
+      "photo_id": "ea94c703087befcf",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "USA (likely Miami or New York City based on interior decor and fashion)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "b77c7d6f977a6312": {
+      "photo_id": "b77c7d6f977a6312",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (Miami or New York City), based on commercial products and interior banquet hall decor.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "8e71cc351398f5dd": {
+      "photo_id": "8e71cc351398f5dd",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (New York, Miami, or Tampa) based on English inscription and 1970s American studio style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "53790673ee3b4327": {
+      "photo_id": "53790673ee3b4327",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Professional photography studio, potentially in Rhodes or an early immigrant enclave in New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "1709e18c986958ce": {
+      "photo_id": "1709e18c986958ce",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece, or an early immigrant community in the US (based on the surname Alhadeff).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "7ed4d1d6eccb4aee": {
+      "photo_id": "7ed4d1d6eccb4aee",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on brick apartment architecture and English date stamp.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "e9a9baa12f28d2f3": {
+      "photo_id": "e9a9baa12f28d2f3",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or a diaspora community like New York; the studio style is generic for the period but common in these communities.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "e3d7ca72d447c2f9": {
+      "photo_id": "e3d7ca72d447c2f9",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami or Tampa, Florida (white dinner jacket, tropical foliage, stucco architecture), though Rhodes is a possibility for a summer wedding.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "dc4f51100b0db521": {
+      "photo_id": "dc4f51100b0db521",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, USA (likely Miami or Tampa based on palm tree and community context)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "f78e3b929c57afae": {
+      "photo_id": "f78e3b929c57afae",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York City or Florida based on interior decor and parquet flooring)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "f5a0ad7af7cd24f6": {
+      "photo_id": "f5a0ad7af7cd24f6",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in Rhodes or New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_3_596770938.488977": {
+      "photo_id": "inbox_staged-20260210-182610_3_596770938.488977",
+      "lat": 23.1136,
+      "lng": -82.3666,
+      "location_name": "Havana, Cuba",
+      "location_key": "havana",
+      "region": "Caribbean",
+      "location_estimate": "Rancho Boyeros Airport, Havana, Cuba",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "havana",
+          "name": "Havana, Cuba"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_4_596771234.564304": {
+      "photo_id": "inbox_staged-20260210-182610_4_596771234.564304",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida based on interior style and plant life)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc": {
+      "photo_id": "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece (given the ID photo style common during the Italian/German occupation periods) or a diaspora community in the US.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "italy",
+          "name": "Italy"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n": {
+      "photo_id": "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n",
+      "lat": 33.749,
+      "lng": -84.388,
+      "location_name": "Atlanta, Georgia",
+      "location_key": "atlanta",
+      "region": "United States",
+      "location_estimate": "Atlanta, Georgia, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "atlanta",
+          "name": "Atlanta, Georgia"
+        }
+      ]
+    },
+    "213d4dcc10a7745d": {
+      "photo_id": "213d4dcc10a7745d",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Florida, USA (likely Tampa or Miami based on screened porch and brick foundation)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "baec1b6c4e9c7af1": {
+      "photo_id": "baec1b6c4e9c7af1",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes. The sharp tailoring and grooming suggest an urban setting.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_b5e8a89e_10_603575654.056133": {
+      "photo_id": "inbox_b5e8a89e_10_603575654.056133",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Miami or Tampa, Florida (based on tropical vegetation and thatched roof architecture common in Florida 'Tiki' culture venues)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_staged-20260210-182610_11_596771054.717436": {
+      "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "United States (likely NYC, Miami, or Tampa) based on English language proof stamp and mid-century American banquet style.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention": {
+      "photo_id": "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention",
+      "lat": 33.749,
+      "lng": -84.388,
+      "location_name": "Atlanta, Georgia",
+      "location_key": "atlanta",
+      "region": "United States",
+      "location_estimate": "Atlanta, Georgia, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "atlanta",
+          "name": "Atlanta, Georgia"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_": {
+      "photo_id": "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_",
+      "lat": 32.3792,
+      "lng": -86.3077,
+      "location_name": "Montgomery, Alabama",
+      "location_key": "montgomery",
+      "region": "United States",
+      "location_estimate": "Montgomery, Alabama, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "montgomery",
+          "name": "Montgomery, Alabama"
+        }
+      ]
+    },
+    "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n": {
+      "photo_id": "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n",
+      "lat": 33.749,
+      "lng": -84.388,
+      "location_name": "Atlanta, Georgia",
+      "location_key": "atlanta",
+      "region": "United States",
+      "location_estimate": "Atlanta, Georgia, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "atlanta",
+          "name": "Atlanta, Georgia"
+        }
+      ]
+    },
+    "fde6b60713d00574": {
+      "photo_id": "fde6b60713d00574",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely New York City or Florida (Miami/Tampa) diaspora community based on the banquet style and Americanized fashion.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "dd309ce8e24188ea": {
+      "photo_id": "dd309ce8e24188ea",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, USA (confirmed by studio mark)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card": {
+      "photo_id": "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "location_name": "Buenos Aires, Argentina",
+      "location_key": "buenos_aires",
+      "region": "South America",
+      "location_estimate": "Buenos Aires, Argentina (Consulate location)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "buenos_aires",
+          "name": "Buenos Aires, Argentina"
+        }
+      ]
+    },
+    "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n": {
+      "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "location_name": "Buenos Aires, Argentina",
+      "location_key": "buenos_aires",
+      "region": "South America",
+      "location_estimate": "Buenos Aires, Argentina (Explicitly written on photo)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "buenos_aires",
+          "name": "Buenos Aires, Argentina"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_1_shaya_sadis_485912814_10171438847285346_8391034119885432541_n": {
+      "photo_id": "inbox_community-batch-20260214_1_shaya_sadis_485912814_10171438847285346_8391034119885432541_n",
+      "lat": 45.5152,
+      "lng": -122.6784,
+      "location_name": "Portland, Oregon",
+      "location_key": "portland",
+      "region": "United States",
+      "location_estimate": "Portland, Oregon, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "portland",
+          "name": "Portland, Oregon"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_2_rachel_soriano_children_giuseppe_lucia_496534630_24050403817877479_7606185349834125792_n": {
+      "photo_id": "inbox_community-batch-20260214_2_rachel_soriano_children_giuseppe_lucia_496534630_24050403817877479_7606185349834125792_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Dodecanese (under Italian rule)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "italy",
+          "name": "Italy"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_4_claude_benatar_collection_victor_haim_israel_470221346_10170605679340346_6478159606100860750_n": {
+      "photo_id": "inbox_community-batch-20260214_4_claude_benatar_collection_victor_haim_israel_470221346_10170605679340346_6478159606100860750_n",
+      "lat": 39.8283,
+      "lng": -98.5795,
+      "location_name": "United States",
+      "location_key": "united_states",
+      "region": "United States",
+      "location_estimate": "United States (based on US Army uniform)",
+      "confidence": "low",
+      "all_matches": [
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_5_franz_capelluto_505761334_10172036095955346_4723800524101151919_n": {
+      "photo_id": "inbox_community-batch-20260214_5_franz_capelluto_505761334_10172036095955346_4723800524101151919_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Cape Town, South Africa (location of consular signing) or Leopoldville, Belgian Congo (previous residence).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_6_eli_khoniu_282673358_53072697-826a-4b6b-85cb-bf2391a80a9d": {
+      "photo_id": "inbox_community-batch-20260214_6_eli_khoniu_282673358_53072697-826a-4b6b-85cb-bf2391a80a9d",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or New York City (studio style is consistent with both Sephardic hubs in this era).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n": {
+      "photo_id": "inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n",
+      "lat": 40.715,
+      "lng": -73.9843,
+      "location_name": "Lower East Side, Manhattan",
+      "location_key": "lower_east_side",
+      "region": "United States",
+      "location_estimate": "Central Plaza, New York City (Lower East Side)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "lower_east_side",
+          "name": "Lower East Side, Manhattan"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n": {
+      "photo_id": "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Belgian Congo (likely Mweka or Jadotville based on text)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_9_josue_capeluto_513113308_10172171064820346_6554594099894590848_n": {
+      "photo_id": "inbox_community-batch-20260214_9_josue_capeluto_513113308_10172171064820346_6554594099894590848_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Belgian Congo (likely Jadotville or Lubudi based on text)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_10_claude_benatar_collection_victor_haim_israel_470755436_10170730351010346_2281380443213894033_n": {
+      "photo_id": "inbox_community-batch-20260214_10_claude_benatar_collection_victor_haim_israel_470755436_10170730351010346_2281380443213894033_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (based on specific traditional headwear and community context)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_11_ezra_benatar_503903104_10171978773945346_3205903512026745916_n": {
+      "photo_id": "inbox_community-batch-20260214_11_ezra_benatar_503903104_10171978773945346_3205903512026745916_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Belgian Congo (now Democratic Republic of the Congo), specifically documenting the Rhodesli Sephardic community.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_14_eleonore_shemaria_489823683_10171556033925346_4592038961808734961_n": {
+      "photo_id": "inbox_community-batch-20260214_14_eleonore_shemaria_489823683_10171556033925346_4592038961808734961_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City or Rhodes; the surname Shemaria is prominent in the Rhodesli community.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_16_salvator_alhadeff_499725582_10171862580705346_3624353994965917233_n": {
+      "photo_id": "inbox_community-batch-20260214_16_salvator_alhadeff_499725582_10171862580705346_3624353994965917233_n",
+      "lat": -3.3614,
+      "lng": 29.3599,
+      "location_name": "Bujumbura, Burundi",
+      "location_key": "bujumbura",
+      "region": "Africa",
+      "location_estimate": "Likely Usumbura (Bujumbura) or Costermansville (Bukavu), based on biographical text.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "bujumbura",
+          "name": "Bujumbura, Burundi"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_17_claude_benatar_collection_victor_rebecca_benun_495378497_10171755182615346_7145354360116540323_n": {
+      "photo_id": "inbox_community-batch-20260214_17_claude_benatar_collection_victor_rebecca_benun_495378497_10171755182615346_7145354360116540323_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (Ottoman Empire period)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_19_joseph_cadranel_505214480_10172010548560346_5999857223121759234_n": {
+      "photo_id": "inbox_community-batch-20260214_19_joseph_cadranel_505214480_10172010548560346_5999857223121759234_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Elisabethville (Lubumbashi), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_20_simon_israel_522630495_10172484677500346_3828197167749831184_n": {
+      "photo_id": "inbox_community-batch-20260214_20_simon_israel_522630495_10172484677500346_3828197167749831184_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely Elisabethville (Lubumbashi), Belgian Congo, based on biographical text.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_21_franco_deborah_collection_90759681_10159522051093136_435921227580702720_n": {
+      "photo_id": "inbox_community-batch-20260214_21_franco_deborah_collection_90759681_10159522051093136_435921227580702720_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece (based on the pith helmet common in Mediterranean colonial contexts) or possibly Florida.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_22_lucia_capelluto_habib_498275359_1233261768810379_4357209370323640927_n": {
+      "photo_id": "inbox_community-batch-20260214_22_lucia_capelluto_habib_498275359_1233261768810379_4357209370323640927_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_23_claude_benatar_collection_victor_bohor_sabatai_soriano_493676514_10171704021850346_928399224614360184_n": {
+      "photo_id": "inbox_community-batch-20260214_23_claude_benatar_collection_victor_bohor_sabatai_soriano_493676514_10171704021850346_928399224614360184_n",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Los Angeles, California",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_24_haim_capelouto_510959828_10172145589925346_8862535038558329501_n": {
+      "photo_id": "inbox_community-batch-20260214_24_haim_capelouto_510959828_10172145589925346_8862535038558329501_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Belgian Congo (based on text context), likely a studio in Elisabethville (Lubumbashi) or L\u00e9opoldville (Kinshasa).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_25_michelle_benatar_collection_574580512_25573504628922842_9065160801283305527_n": {
+      "photo_id": "inbox_community-batch-20260214_25_michelle_benatar_collection_574580512_25573504628922842_9065160801283305527_n",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Likely New York City or Rhodes. The high quality of the studio work and the specific 'Hollywood' influence on the bridesmaid's dress suggest an urban center.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_26_alexandre_avzaradel_500228843_10171909257505346_1135908763900995647_n": {
+      "photo_id": "inbox_community-batch-20260214_26_alexandre_avzaradel_500228843_10171909257505346_1135908763900995647_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Luluabourg (Kananga), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_27_abramo_hasson_558859823_25238428042408837_2500312373836705702_n": {
+      "photo_id": "inbox_community-batch-20260214_27_abramo_hasson_558859823_25238428042408837_2500312373836705702_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely a studio portrait, possibly in Rhodes or an early immigrant community in the US (NYC/Miami).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_28_israel_sciarcon_484779897_10171460023595346_2373419148825336249_n": {
+      "photo_id": "inbox_community-batch-20260214_28_israel_sciarcon_484779897_10171460023595346_2373419148825336249_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Rhodes or a diaspora community such as New York City or Miami.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_29_isaac_cohen_518155169_10172358921150346_7060006423942663426_n": {
+      "photo_id": "inbox_community-batch-20260214_29_isaac_cohen_518155169_10172358921150346_7060006423942663426_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely Stanleyville or Elisabethville, Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_34_victor_haim_israel_470223768_10170605604700346_845325848549514268_n": {
+      "photo_id": "inbox_community-batch-20260214_34_victor_haim_israel_470223768_10170605604700346_845325848549514268_n",
+      "lat": 47.6062,
+      "lng": -122.3321,
+      "location_name": "Seattle, Washington",
+      "location_key": "seattle",
+      "region": "United States",
+      "location_estimate": "Seattle, Washington (as stated on the document)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "seattle",
+          "name": "Seattle, Washington"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_35_stephanie_asheck_collection_487203508_10108913187223408_5855827733343318019_n": {
+      "photo_id": "inbox_community-batch-20260214_35_stephanie_asheck_collection_487203508_10108913187223408_5855827733343318019_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or New York City (garden/park setting)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_36_claude_benatar_collection_victor_bohor_sabatai_soriano_493494123_10171704022265346_3458576509112524280_n": {
+      "photo_id": "inbox_community-batch-20260214_36_claude_benatar_collection_victor_bohor_sabatai_soriano_493494123_10171704022265346_3458576509112524280_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Unknown, but style is consistent with NYC or Florida immigrant identification photos.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_38_masliah_alhadeff_498643123_10171847102790346_6237952123946428779_n": {
+      "photo_id": "inbox_community-batch-20260214_38_masliah_alhadeff_498643123_10171847102790346_6237952123946428779_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely Usumbura (Bujumbura) or Costermansville (Bukavu), Belgian Congo/Ruanda-Urundi.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        },
+        {
+          "key": "bujumbura",
+          "name": "Bujumbura, Burundi"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_39_lucia_capelluto_habib_497858415_1233302348806321_3426812803112569023_n": {
+      "photo_id": "inbox_community-batch-20260214_39_lucia_capelluto_habib_497858415_1233302348806321_3426812803112569023_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (Miami or NYC) based on typical diaspora portraiture styles of this era.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_40_claude_benatar_collection_558236101_10173095506980346_6815105064041797412_n": {
+      "photo_id": "inbox_community-batch-20260214_40_claude_benatar_collection_558236101_10173095506980346_6815105064041797412_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely USA (New York City, Miami, or Tampa) based on interior decor and fashion.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_42_semah_franco_518792830_10172415321110346_7216093349261673005_n": {
+      "photo_id": "inbox_community-batch-20260214_42_semah_franco_518792830_10172415321110346_7216093349261673005_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Elizabethville (Lubumbashi), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_43_jeuda_levy_582624756_10231713094074414_2695414189522190305_n": {
+      "photo_id": "inbox_community-batch-20260214_43_jeuda_levy_582624756_10231713094074414_2695414189522190305_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece (based on studio style and community context)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_46_regine_avzaradel_collection_549212451_9859892167446415_1826390117555685221_n": {
+      "photo_id": "inbox_community-batch-20260214_46_regine_avzaradel_collection_549212451_9859892167446415_1826390117555685221_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida (Miami or Tampa) or Rhodes, Greece.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_48_sabrina_amato_collection_494308190_2222706794827769_1080678848045832372_n": {
+      "photo_id": "inbox_community-batch-20260214_48_sabrina_amato_collection_494308190_2222706794827769_1080678848045832372_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece (based on vegetation and lighting typical of the Dodecanese).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_49_nissim_norman_sharhon_486691034_10171511418110346_7315513093554577752_n": {
+      "photo_id": "inbox_community-batch-20260214_49_nissim_norman_sharhon_486691034_10171511418110346_7315513093554577752_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida based on name anglicization and suit style)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_51_rica_cohen_503614239_714602537623851_1764326801082873220_n": {
+      "photo_id": "inbox_community-batch-20260214_51_rica_cohen_503614239_714602537623851_1764326801082873220_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece or a diaspora community in the US (NYC/Florida).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_52_uriel_galante_collection_601470917_801235776296564_3035101916288114389_n": {
+      "photo_id": "inbox_community-batch-20260214_52_uriel_galante_collection_601470917_801235776296564_3035101916288114389_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Dodecanese (based on Italian stamp and stone architecture)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "italy",
+          "name": "Italy"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_54_moise_avzaradel_499921838_10171922564260346_2601530220636189573_n": {
+      "photo_id": "inbox_community-batch-20260214_54_moise_avzaradel_499921838_10171922564260346_2601530220636189573_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Belgian Congo (Kabinda, L\u00e9opoldville, or Albertville) based on text",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_55_alexandre_cohen_518460207_10172307461230346_1388858436354168493_n": {
+      "photo_id": "inbox_community-batch-20260214_55_alexandre_cohen_518460207_10172307461230346_1388858436354168493_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Elisabethville (Lubumbashi), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_56_regine_franco_520871885_10172415321220346_1210714843706744221_n": {
+      "photo_id": "inbox_community-batch-20260214_56_regine_franco_520871885_10172415321220346_1210714843706744221_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York, NY",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_57_nissim_cohen_laura_varon_moise_israel)536883890_10172712595625346_4702058667200825870_n": {
+      "photo_id": "inbox_community-batch-20260214_57_nissim_cohen_laura_varon_moise_israel)536883890_10172712595625346_4702058667200825870_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) due to the specific American cut of the men's formalwear.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_60_david_israel_580557939_10173382345955346_3216565122124941196_n": {
+      "photo_id": "inbox_community-batch-20260214_60_david_israel_580557939_10173382345955346_3216565122124941196_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "L\u00e9opoldville (Kinshasa), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_61_albert_avzaradel_500229316_10171894354750346_6513195025686199669_n": {
+      "photo_id": "inbox_community-batch-20260214_61_albert_avzaradel_500229316_10171894354750346_6513195025686199669_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Belgian Congo (based on biographical text)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_62_david_franco_collection_497891606_2247317675665225_368797912673942421_n": {
+      "photo_id": "inbox_community-batch-20260214_62_david_franco_collection_497891606_2247317675665225_368797912673942421_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely an outdoor park or rural setting. The deciduous foliage suggests a temperate climate like Rhodes or the Northeastern United States (NYC).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_63_leone_sidicaro_65243904_10161966778600346_8076688366654980096_n": {
+      "photo_id": "inbox_community-batch-20260214_63_leone_sidicaro_65243904_10161966778600346_8076688366654980096_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in the United States (NYC or Florida) or Rhodes.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_64_jeanettte_swartz_collection_516169815_24127772290172458_9159603061597220280_n": {
+      "photo_id": "inbox_community-batch-20260214_64_jeanettte_swartz_collection_516169815_24127772290172458_9159603061597220280_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (Juderia district)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_67_susanne_bass_collection_520287908_1237925664680452_8643817637167842650_n": {
+      "photo_id": "inbox_community-batch-20260214_67_susanne_bass_collection_520287908_1237925664680452_8643817637167842650_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on interior architecture and rapid adoption of 1960s hairstyles.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_69_claude_benatar_collection_victor_haim_israel_470530454_10170605611025346_6025688954537884912_n": {
+      "photo_id": "inbox_community-batch-20260214_69_claude_benatar_collection_victor_haim_israel_470530454_10170605611025346_6025688954537884912_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a professional studio in Rhodes or New York City.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_70_david_franco_collection_504896621_2270573480006311_8952402771580837356_n": {
+      "photo_id": "inbox_community-batch-20260214_70_david_franco_collection_504896621_2270573480006311_8952402771580837356_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Elisabethville (Lubumbashi), Belgian Congo (based on French signage and Sephardic surnames Capelouto/Tarica)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_72_eliakim_cordoval_524605757_10172507723295346_6590705878333530417_n": {
+      "photo_id": "inbox_community-batch-20260214_72_eliakim_cordoval_524605757_10172507723295346_6590705878333530417_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely taken in Rome, Italy or Luluabourg, Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        },
+        {
+          "key": "italy",
+          "name": "Italy"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_73_rhodes_jewish_historical_foundation_collection_481054755_642374571513315_2077232265072962474_n": {
+      "photo_id": "inbox_community-batch-20260214_73_rhodes_jewish_historical_foundation_collection_481054755_642374571513315_2077232265072962474_n",
+      "lat": 41.8719,
+      "lng": 12.5674,
+      "location_name": "Italy",
+      "location_key": "italy",
+      "region": "Mediterranean",
+      "location_estimate": "Lago Albano, Castel Gandolfo, Italy",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "italy",
+          "name": "Italy"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_75_claude_benatar_collection_aslan_louie_notrica_492110450_10171661307470346_6127261380310076660_n": {
+      "photo_id": "inbox_community-batch-20260214_75_claude_benatar_collection_aslan_louie_notrica_492110450_10171661307470346_6127261380310076660_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "United States (likely New York or Florida)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_76_claude_benatar_collection_victor_rebecca_benun_495403500_10171755169865346_6018277602901061278_n": {
+      "photo_id": "inbox_community-batch-20260214_76_claude_benatar_collection_victor_rebecca_benun_495403500_10171755169865346_6018277602901061278_n",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Los Angeles, California",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_77_rahamin_raymond_sadis_481253010_10171438847375346_2532370090301041713_n": {
+      "photo_id": "inbox_community-batch-20260214_77_rahamin_raymond_sadis_481253010_10171438847375346_2532370090301041713_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or a diaspora community in the USA (New York or Florida).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_78_Haham_Joseph_Hai_Franco_Rachel_Capouya_Franco_505934782_10228693438389424_8835735934188338669_n": {
+      "photo_id": "inbox_community-batch-20260214_78_Haham_Joseph_Hai_Franco_Rachel_Capouya_Franco_505934782_10228693438389424_8835735934188338669_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (based on architectural ironwork and stone masonry typical of the Juderia).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_80_regine_franco_518960976_10172415321095346_1272581698574848909_n": {
+      "photo_id": "inbox_community-batch-20260214_80_regine_franco_518960976_10172415321095346_1272581698574848909_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_81_claude_benatar_collection_victor_rebecca_benun_495017934_10171755168560346_2499124449399417544_n": {
+      "photo_id": "inbox_community-batch-20260214_81_claude_benatar_collection_victor_rebecca_benun_495017934_10171755168560346_2499124449399417544_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) or post-war Rhodes.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_82_joseph_touriel_492030538_10171631280470346_1164156250994293487_n": {
+      "photo_id": "inbox_community-batch-20260214_82_joseph_touriel_492030538_10171631280470346_1164156250994293487_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n": {
+      "photo_id": "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Kahal Shalom Synagogue courtyard, Rhodes, Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_85_claude_benatar_collection_602325880_10173673626010346_5396769815198644467_n": {
+      "photo_id": "inbox_community-batch-20260214_85_claude_benatar_collection_602325880_10173673626010346_5396769815198644467_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (based on pith helmets and community context)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_86_jeanettte_swartz_collection_516044673_24127787240170963_8438365531155717054_n": {
+      "photo_id": "inbox_community-batch-20260214_86_jeanettte_swartz_collection_516044673_24127787240170963_8438365531155717054_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece (based on stone masonry style and vegetation)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_88_levi_miryam_collection_582213031_10231713270518825_3648509779269552098_n": {
+      "photo_id": "inbox_community-batch-20260214_88_levi_miryam_collection_582213031_10231713270518825_3648509779269552098_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rodini Park (Zimbuli), Rhodes, Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_89_claude_benatar_collection_aslan_louie_notrica_493224712_10171661109615346_4370590583194203149_n": {
+      "photo_id": "inbox_community-batch-20260214_89_claude_benatar_collection_aslan_louie_notrica_493224712_10171661109615346_4370590583194203149_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely United States (New York or Florida), based on the name 'Nelson' and the style of ID photography common in US naturalization documents.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_90_claude_benatar_collection_victor_rebecca_benun_494926899_10171755190465346_7463334439317281158_n": {
+      "photo_id": "inbox_community-batch-20260214_90_claude_benatar_collection_victor_rebecca_benun_494926899_10171755190465346_7463334439317281158_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (indicated by vegetation and archival caption)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_93_sabrina_amato_collection_494049981_2222706804827768_4365323857728211254_n": {
+      "photo_id": "inbox_community-batch-20260214_93_sabrina_amato_collection_494049981_2222706804827768_4365323857728211254_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the domestic wallpaper and flash photography style common in immigrant homes.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_95_perla_levy_alhadeff_519360099_10166406932052715_2530675645732869189_n": {
+      "photo_id": "inbox_community-batch-20260214_95_perla_levy_alhadeff_519360099_10166406932052715_2530675645732869189_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Rhodes, Greece or a diaspora community in the US (NYC/Miami/Tampa).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_96_lucia_capelluto_habib_497623454_1233264532143436_6867586292734209390_n": {
+      "photo_id": "inbox_community-batch-20260214_96_lucia_capelluto_habib_497623454_1233264532143436_6867586292734209390_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (based on ironwork style and stone masonry common in the Juderia)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_97_claude_benatar_collection_victor_haim_israel_470223951_10170605632245346_7357681670912902825_n": {
+      "photo_id": "inbox_community-batch-20260214_97_claude_benatar_collection_victor_haim_israel_470223951_10170605632245346_7357681670912902825_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (Ottoman era backdrop and traditional Sephardic attire elements)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_99_claude_benatar_collection_victor_rebecca_benun_495117150_10171755168940346_8068417958696098744_n": {
+      "photo_id": "inbox_community-batch-20260214_99_claude_benatar_collection_victor_rebecca_benun_495117150_10171755168940346_8068417958696098744_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC or Florida) based on the contemporary 'swing era' style of the tie and suit.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_100_regine_avzaradel_collection_550882915_9859878947447737_338468120289304617_n": {
+      "photo_id": "inbox_community-batch-20260214_100_regine_avzaradel_collection_550882915_9859878947447737_338468120289304617_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Miami or Tampa, Florida (based on tropical vegetation, porch style, and Sephardic diaspora patterns).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_101_claude_benatar_collection_571277446_10173252883795346_8397002383747694084_n": {
+      "photo_id": "inbox_community-batch-20260214_101_claude_benatar_collection_571277446_10173252883795346_8397002383747694084_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or a diaspora community (NYC/Florida); the attire is consistent with Westernized Sephardic youth of the era.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_102_uriel_galante_collection_605494321_801235802963228_782117642180107430_n": {
+      "photo_id": "inbox_community-batch-20260214_102_uriel_galante_collection_605494321_801235802963228_782117642180107430_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely a diaspora community (NYC, Miami, or Tampa) given the casual, domestic nature of the snapshot.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_103_caden_sharhon_486780832_10171460023695346_788852106924365199_n": {
+      "photo_id": "inbox_community-batch-20260214_103_caden_sharhon_486780832_10171460023695346_788852106924365199_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a studio portrait from Rhodes or a diaspora community in NYC.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_104_albert_angel_499725590_10171877447865346_8151957301761971413_n": {
+      "photo_id": "inbox_community-batch-20260214_104_albert_angel_499725590_10171877447865346_8151957301761971413_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Elisabethville (Lubumbashi), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_105_claude_benatar_collection_558203138_10173095507180346_8300828577663964838_n": {
+      "photo_id": "inbox_community-batch-20260214_105_claude_benatar_collection_558203138_10173095507180346_8300828577663964838_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely a home interior in the United States (New York or Florida diaspora communities).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_106_nissim_norman_sharhon_486209859_10171511418865346_7934755365074716806_n": {
+      "photo_id": "inbox_community-batch-20260214_106_nissim_norman_sharhon_486209859_10171511418865346_7934755365074716806_n",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Los Angeles, California",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_108_varon_and_cohen_family_536272743_10172712625745346_629403507426403422_n": {
+      "photo_id": "inbox_community-batch-20260214_108_varon_and_cohen_family_536272743_10172712625745346_629403507426403422_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes (Rodi), Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_112_Michelle_Naftali_Menashe_611165363_10241027890419154_4676341286610368042_n": {
+      "photo_id": "inbox_community-batch-20260214_112_Michelle_Naftali_Menashe_611165363_10241027890419154_4676341286610368042_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (Miami or New York City) based on the photographic style and film quality.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_113_Eliechon_benatar_51122998_10161394623110346_5296034665579151360_n": {
+      "photo_id": "inbox_community-batch-20260214_113_Eliechon_benatar_51122998_10161394623110346_5296034665579151360_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (Ottoman Empire period)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n": {
+      "photo_id": "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC or Florida) based on the informal domestic interior and modern 1960s fashion.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_115_joseph_mizrahi_490207265_10171556169875346_1086624264720940908_n": {
+      "photo_id": "inbox_community-batch-20260214_115_joseph_mizrahi_490207265_10171556169875346_1086624264720940908_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_0_lisa_galbraith_collection_520232999_10163302380404201_5510533636852598408_n": {
+      "photo_id": "inbox_community-batch-20260214_0_lisa_galbraith_collection_520232999_10163302380404201_5510533636852598408_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (likely the courtyard of a Jewish school such as the Alliance Isra\u00e9lite Universelle)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_12_claude_benatar_collection_victor_bohor_sabatai_soriano_494266545_10171704019995346_7718030381364654083_n": {
+      "photo_id": "inbox_community-batch-20260214_12_claude_benatar_collection_victor_bohor_sabatai_soriano_494266545_10171704019995346_7718030381364654083_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes, Greece (based on surname and naming convention)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_18_semah_franco_518799461_10172415321225346_553390149995775072_n": {
+      "photo_id": "inbox_community-batch-20260214_18_semah_franco_518799461_10172415321225346_553390149995775072_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York, NY",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_30_estrea_sharhon_486447687_10171460023555346_6411241431060255791_n": {
+      "photo_id": "inbox_community-batch-20260214_30_estrea_sharhon_486447687_10171460023555346_6411241431060255791_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Unknown; consistent with both Rhodes and US diaspora studio portraits.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_31_jeanettte_swartz_collection_514422102_24127752060174481_4638287865555771213_n": {
+      "photo_id": "inbox_community-batch-20260214_31_jeanettte_swartz_collection_514422102_24127752060174481_4638287865555771213_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (indicated by the specific Mediterranean stone pines and Sephardic community context)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_32_shaya_sadis_486025159_10171438847095346_7650482810217649673_n": {
+      "photo_id": "inbox_community-batch-20260214_32_shaya_sadis_486025159_10171438847095346_7650482810217649673_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Unknown, but surnames Hazan and Sadis are strongly associated with the Rhodes Sephardic community.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_3_rhodes_jewish_historical_foundation_reina_cohen_solomon_varon_492228208_686565923760846_8126719111333170818_n": {
+      "photo_id": "inbox_community-batch-20260214_3_rhodes_jewish_historical_foundation_reina_cohen_solomon_varon_492228208_686565923760846_8126719111333170818_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes (Rodi), Greece (Italian Dodecanese)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "italy",
+          "name": "Italy"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_13_asher_touriel_489928848_10171601915310346_174675645702038176_n": {
+      "photo_id": "inbox_community-batch-20260214_13_asher_touriel_489928848_10171601915310346_174675645702038176_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York City, New York, USA",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_33_nissim_cohen_514260385_10172484649105346_1012667927291313717_n": {
+      "photo_id": "inbox_community-batch-20260214_33_nissim_cohen_514260385_10172484649105346_1012667927291313717_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely Leopoldville (Kinshasa), Belgian Congo or New York, USA.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_37_abner_bardavid_502531834_10171961392585346_6969844769030616197_n": {
+      "photo_id": "inbox_community-batch-20260214_37_abner_bardavid_502531834_10171961392585346_6969844769030616197_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely Elisabethville or Sakania, Belgian Congo (based on biographical text).",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_45_uriel_galante_collection_605462785_801235796296562_8597033193125609967_n": {
+      "photo_id": "inbox_community-batch-20260214_45_uriel_galante_collection_605462785_801235796296562_8597033193125609967_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the casual t-shirt and modern eyewear.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_50_Isaac_Cadranel_504301593_10171996110335346_3602126982357465160_n": {
+      "photo_id": "inbox_community-batch-20260214_50_Isaac_Cadranel_504301593_10171996110335346_3602126982357465160_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Likely Belgian Congo (Tshimbulu, Luputa, or Demba) or Rhodes, Greece.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        },
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_59_claude_benatar_collection_victor_bohor_sabatai_soriano_493684314_10171704024440346_5979171357513245894_n": {
+      "photo_id": "inbox_community-batch-20260214_59_claude_benatar_collection_victor_bohor_sabatai_soriano_493684314_10171704024440346_5979171357513245894_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely a studio portrait from the US (NYC/Florida) or Rhodes, later used for a cemetery marker.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        },
+        {
+          "key": "florida",
+          "name": "Florida"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_68_susanne_bass_collection_499759411_1189741629498856_3109157178903791725_n": {
+      "photo_id": "inbox_community-batch-20260214_68_susanne_bass_collection_499759411_1189741629498856_3109157178903791725_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely United States (NYC, Miami, or Tampa) based on the casual domestic setting and the specific style of the man's necktie.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_71_claude_benatar_collection_victor_bohor_sabatai_soriano_494502427_10171704023185346_5893663062454819691_n": {
+      "photo_id": "inbox_community-batch-20260214_71_claude_benatar_collection_victor_bohor_sabatai_soriano_494502427_10171704023185346_5893663062454819691_n",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Los Angeles, California",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_84_claude_benatar_collection_51010671_10161394962905346_4861693603711287296_n": {
+      "photo_id": "inbox_community-batch-20260214_84_claude_benatar_collection_51010671_10161394962905346_4861693603711287296_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely New York City (Central Park or similar) or Rhodes; the casual park setting is common in early immigrant 'leisure' photos.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_87_abner_hasson_519693871_10172446261730346_4741244115442601264_n": {
+      "photo_id": "inbox_community-batch-20260214_87_abner_hasson_519693871_10172446261730346_4741244115442601264_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Albertville, Belgian Congo (now Kalemie, DRC)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_92_ascher_t_capelouto_508014985_10172085972990346_6602167766352128966_n": {
+      "photo_id": "inbox_community-batch-20260214_92_ascher_t_capelouto_508014985_10172085972990346_6602167766352128966_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Port Francqui (now Ilebo), Belgian Congo (Democratic Republic of the Congo)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_94_rahamin_raymond_sadis_485365490_10171438847430346_8512062402864014866_n": {
+      "photo_id": "inbox_community-batch-20260214_94_rahamin_raymond_sadis_485365490_10171438847430346_8512062402864014866_n",
+      "lat": 45.5152,
+      "lng": -122.6784,
+      "location_name": "Portland, Oregon",
+      "location_key": "portland",
+      "region": "United States",
+      "location_estimate": "Portland, Oregon, USA",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "portland",
+          "name": "Portland, Oregon"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_98_eleonore_shemaria_486474068_10171556034980346_8907053379946085121_n": {
+      "photo_id": "inbox_community-batch-20260214_98_eleonore_shemaria_486474068_10171556034980346_8907053379946085121_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "Bronx, New York",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_107_debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n": {
+      "photo_id": "inbox_community-batch-20260214_107_debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "location_name": "Miami, Florida",
+      "location_key": "miami",
+      "region": "United States",
+      "location_estimate": "Likely Florida, USA (Miami or Tampa) based on rattan furniture and Venetian blinds common in 'Florida rooms'.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "miami",
+          "name": "Miami, Florida"
+        },
+        {
+          "key": "tampa",
+          "name": "Tampa, Florida"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_109_alfred_aron_charhon_514107722_10172197066705346_4898226954282493936_n": {
+      "photo_id": "inbox_community-batch-20260214_109_alfred_aron_charhon_514107722_10172197066705346_4898226954282493936_n",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "location_name": "Elisabethville (Lubumbashi), Congo",
+      "location_key": "elisabethville",
+      "region": "Africa",
+      "location_estimate": "Elisabethville (Lubumbashi), Belgian Congo",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "elisabethville",
+          "name": "Elisabethville (Lubumbashi), Congo"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_110_claude_benatar_collection_victor_bohor_sabatai_soriano_493853728_10171704024405346_2509583181697338751_n": {
+      "photo_id": "inbox_community-batch-20260214_110_claude_benatar_collection_victor_bohor_sabatai_soriano_493853728_10171704024405346_2509583181697338751_n",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "location_name": "Buenos Aires, Argentina",
+      "location_key": "buenos_aires",
+      "region": "South America",
+      "location_estimate": "Likely a Sephardic cemetery in a Spanish-speaking country (e.g., Argentina, Uruguay, or Mexico) or a Spanish-speaking Sephardic enclave in the US.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "buenos_aires",
+          "name": "Buenos Aires, Argentina"
+        },
+        {
+          "key": "united_states",
+          "name": "United States"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_111_claude_benatar_collection_victor_haim_israel_470239310_10170605628145346_5283256967494305297_n": {
+      "photo_id": "inbox_community-batch-20260214_111_claude_benatar_collection_victor_haim_israel_470239310_10170605628145346_5283256967494305297_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or New York City (formal studio setting)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        },
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_15_isaac_jack_levy_490471033_10171580010150346_8652748163613864274_n": {
+      "photo_id": "inbox_community-batch-20260214_15_isaac_jack_levy_490471033_10171580010150346_8652748163613864274_n",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "location_name": "New York City",
+      "location_key": "nyc",
+      "region": "United States",
+      "location_estimate": "New York, NY (where the document was filed)",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "nyc",
+          "name": "New York City"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_44_claude_benatar_collection_victor_rebecca_benun_495644359_10171755169400346_7126191920610626702_n": {
+      "photo_id": "inbox_community-batch-20260214_44_claude_benatar_collection_victor_rebecca_benun_495644359_10171755169400346_7126191920610626702_n",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "location_name": "Los Angeles, California",
+      "location_key": "los_angeles",
+      "region": "United States",
+      "location_estimate": "Los Angeles, California (based on the document information; the photo itself has a plain background)",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "los_angeles",
+          "name": "Los Angeles, California"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_47_morris_touriel_491896701_10171631280295346_4599119104798936934_n": {
+      "photo_id": "inbox_community-batch-20260214_47_morris_touriel_491896701_10171631280295346_4599119104798936934_n",
+      "lat": 47.6062,
+      "lng": -122.3321,
+      "location_name": "Seattle, Washington",
+      "location_key": "seattle",
+      "region": "United States",
+      "location_estimate": "Likely Seattle, Washington, where the 'Declaration of Intention' document was filed.",
+      "confidence": "high",
+      "all_matches": [
+        {
+          "key": "seattle",
+          "name": "Seattle, Washington"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_53_jacob_pasha_israel_69204176_10162214672025346_1240553526233399296_n": {
+      "photo_id": "inbox_community-batch-20260214_53_jacob_pasha_israel_69204176_10162214672025346_1240553526233399296_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Likely Rhodes or a similar Mediterranean Sephardic community, based on the presence of the fez and general cultural context.",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    },
+    "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n": {
+      "photo_id": "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "location_name": "Rhodes, Greece",
+      "location_key": "rhodes",
+      "region": "Mediterranean",
+      "location_estimate": "Rhodes, Greece (explicitly stated in visible text, consistent with Mediterranean outdoor setting).",
+      "confidence": "medium",
+      "all_matches": [
+        {
+          "key": "rhodes",
+          "name": "Rhodes, Greece"
+        }
+      ]
+    }
+  }
+}

@@ -10166,6 +10166,330 @@ def get(slug: str, sess=None):
     )
 
 
+_photo_locations_cache = None
+
+
+def _load_photo_locations() -> dict:
+    """Load geocoded photo locations (photo_id -> location info).
+
+    Returns dict keyed by photo_id with lat, lng, location_name, etc.
+    """
+    global _photo_locations_cache
+    if _photo_locations_cache is not None:
+        return _photo_locations_cache
+
+    _photo_locations_cache = {}
+    locations_path = Path(DATA_DIR) / "photo_locations.json"
+    if locations_path.exists():
+        try:
+            data = json.loads(locations_path.read_text())
+            _photo_locations_cache = data.get("photos", {})
+        except Exception:
+            pass
+    return _photo_locations_cache
+
+
+@rt("/map")
+def get(collection: str = "", person: str = "", decade: str = "", sess=None):
+    """Interactive map view of photo locations across the Rhodes Jewish diaspora."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    locations = _load_photo_locations()
+    registry = load_registry()
+    photo_reg = load_photo_registry()
+    date_labels = _load_date_labels()
+
+    # Build markers with photo data
+    markers = []
+    location_groups = {}  # group photos by location key for clustering
+
+    for photo_id, loc in locations.items():
+        # Apply filters
+        if collection:
+            photo_data = (_photo_cache or {}).get(photo_id, {})
+            if not photo_data:
+                # Try photo registry
+                photo_data = photo_reg.get_photo(photo_id) or {}
+            photo_collection = photo_data.get("collection", "")
+            if collection.lower() not in photo_collection.lower():
+                continue
+
+        if person:
+            photo_data = (_photo_cache or {}).get(photo_id, {})
+            if not photo_data:
+                photo_data = photo_reg.get_photo(photo_id) or {}
+            face_ids = photo_data.get("face_ids", [])
+            person_found = False
+            for fid in face_ids:
+                ident = get_identity_for_face(registry, fid)
+                if ident and ident.get("identity_id") == person:
+                    person_found = True
+                    break
+            if not person_found:
+                continue
+
+        if decade:
+            label = date_labels.get(photo_id, {})
+            photo_decade = label.get("estimated_decade", 0)
+            try:
+                if photo_decade != int(decade):
+                    continue
+            except (ValueError, TypeError):
+                continue
+
+        loc_key = loc.get("location_key", "unknown")
+        if loc_key not in location_groups:
+            location_groups[loc_key] = {
+                "lat": loc["lat"],
+                "lng": loc["lng"],
+                "name": loc["location_name"],
+                "region": loc.get("region", ""),
+                "photos": [],
+            }
+
+        # Get photo metadata
+        photo_data = (_photo_cache or {}).get(photo_id, {})
+        if not photo_data:
+            photo_data = photo_reg.get_photo(photo_id) or {}
+        photo_path = photo_data.get("path", photo_data.get("filename", ""))
+        photo_url_val = storage.get_photo_url(photo_path) if photo_path else ""
+
+        # Get date info
+        label = date_labels.get(photo_id, {})
+        est_decade = label.get("estimated_decade", 0)
+
+        location_groups[loc_key]["photos"].append({
+            "photo_id": photo_id,
+            "url": photo_url_val,
+            "decade": est_decade,
+            "collection": photo_data.get("collection", ""),
+        })
+
+    # Convert to marker list for JSON
+    for loc_key, group in location_groups.items():
+        markers.append({
+            "lat": group["lat"],
+            "lng": group["lng"],
+            "name": group["name"],
+            "region": group["region"],
+            "count": len(group["photos"]),
+            "photos": group["photos"][:8],  # Limit preview photos
+            "total": len(group["photos"]),
+        })
+
+    markers_json = json.dumps(markers)
+
+    # Build filter options
+    all_collections = set()
+    all_decades = set()
+    for pid, loc in locations.items():
+        pd = (_photo_cache or {}).get(pid, {})
+        if not pd:
+            pd = photo_reg.get_photo(pid) or {}
+        c = pd.get("collection", "")
+        if c:
+            all_collections.add(c)
+        lbl = date_labels.get(pid, {})
+        d = lbl.get("estimated_decade", 0)
+        if d:
+            all_decades.add(d)
+
+    # People options
+    all_people = []
+    for ident in registry.list_identities(state=IdentityState.CONFIRMED):
+        if not ident.get("name", "").startswith("Unidentified"):
+            all_people.append({"id": ident.get("identity_id", ""), "name": ensure_utf8_display(ident.get("name", ""))})
+    all_people.sort(key=lambda x: x["name"].lower())
+
+    collection_options = [Option("All collections", value="")] + [
+        Option(c, value=c, selected=(c == collection)) for c in sorted(all_collections)
+    ]
+    decade_options = [Option("All decades", value="")] + [
+        Option(f"{d}s", value=str(d), selected=(str(d) == decade)) for d in sorted(all_decades)
+    ]
+    person_options = [Option("All people", value="")] + [
+        Option(p["name"], value=p["id"], selected=(p["id"] == person)) for p in all_people
+    ]
+
+    nav_links = [
+        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Collections", href="/collections", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Map", href="/map", cls="text-white text-sm font-medium"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Connect", href="/connect", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    # Share URL with current filters
+    share_params = []
+    if collection:
+        share_params.append(f"collection={quote(collection)}")
+    if person:
+        share_params.append(f"person={person}")
+    if decade:
+        share_params.append(f"decade={decade}")
+    share_url = "/map" + ("?" + "&".join(share_params) if share_params else "")
+
+    # Summary text
+    total_photos = sum(m["total"] for m in markers)
+    total_locations = len(markers)
+    summary = f"{total_photos} photo{'s' if total_photos != 1 else ''} across {total_locations} location{'s' if total_locations != 1 else ''}"
+
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+        #map-container { height: calc(100vh - 180px); min-height: 400px; border-radius: 12px; overflow: hidden; }
+        .leaflet-popup-content { max-width: 280px; }
+        .leaflet-popup-content-wrapper { background: #1e293b; color: #e2e8f0; border-radius: 8px; }
+        .leaflet-popup-tip { background: #1e293b; }
+        .leaflet-popup-close-button { color: #94a3b8 !important; }
+        .photo-preview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; margin-top: 8px; }
+        .photo-preview-grid img { width: 100%; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; }
+    """)
+
+    leaflet_css = Link(rel="stylesheet", href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css")
+    leaflet_js = Script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js")
+    marker_cluster_css = Link(rel="stylesheet", href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css")
+    marker_cluster_default_css = Link(rel="stylesheet", href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css")
+    marker_cluster_js = Script(src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js")
+
+    map_script = Script(f"""
+    document.addEventListener('DOMContentLoaded', function() {{
+        var markers = {markers_json};
+
+        var map = L.map('map-container').setView([35.0, -20.0], 3);
+
+        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }}).addTo(map);
+
+        var cluster = L.markerClusterGroup({{
+            maxClusterRadius: 50,
+            iconCreateFunction: function(cluster) {{
+                var count = 0;
+                cluster.getAllChildMarkers().forEach(function(m) {{ count += m.options.photoCount || 1; }});
+                var size = count > 50 ? 'large' : count > 20 ? 'medium' : 'small';
+                return L.divIcon({{
+                    html: '<div style="background:#6366f1;color:white;border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:13px;border:2px solid #818cf8;">' + count + '</div>',
+                    className: 'custom-cluster-icon',
+                    iconSize: [40, 40]
+                }});
+            }}
+        }});
+
+        markers.forEach(function(m) {{
+            var photosHtml = '';
+            if (m.photos && m.photos.length > 0) {{
+                photosHtml = '<div class="photo-preview-grid">';
+                m.photos.forEach(function(p) {{
+                    photosHtml += '<img src="' + p.url + '" alt="" onclick="window.location.href=\\'/photo/' + p.photo_id + '\\'" onerror="this.style.display=\\'none\\'">';
+                }});
+                photosHtml += '</div>';
+            }}
+            var moreText = m.total > 8 ? '<div style="text-align:center;margin-top:6px;"><a href="/photos?q=' + encodeURIComponent(m.name) + '" style="color:#818cf8;font-size:12px;">See all ' + m.total + ' photos &rarr;</a></div>' : '';
+
+            var popupContent = '<div>' +
+                '<strong style="font-size:14px;">' + m.name + '</strong>' +
+                '<div style="color:#94a3b8;font-size:12px;margin-top:2px;">' + m.region + ' &middot; ' + m.count + ' photo' + (m.count !== 1 ? 's' : '') + '</div>' +
+                photosHtml + moreText +
+                '</div>';
+
+            var icon = L.divIcon({{
+                html: '<div style="background:#6366f1;color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px;border:2px solid #818cf8;box-shadow:0 2px 8px rgba(0,0,0,0.3);">' + m.count + '</div>',
+                className: 'custom-marker-icon',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16],
+                popupAnchor: [0, -16]
+            }});
+
+            var marker = L.marker([m.lat, m.lng], {{ icon: icon, photoCount: m.count }});
+            marker.bindPopup(popupContent, {{ maxWidth: 300 }});
+            cluster.addLayer(marker);
+        }});
+
+        map.addLayer(cluster);
+
+        /* Fit bounds if markers exist */
+        if (markers.length > 0) {{
+            var bounds = L.latLngBounds(markers.map(function(m) {{ return [m.lat, m.lng]; }}));
+            map.fitBounds(bounds, {{ padding: [50, 50], maxZoom: 6 }});
+        }}
+    }});
+    """)
+
+    return (
+        Title("Map — Rhodesli"),
+        Meta(property="og:title", content="Map — Rhodesli Heritage Archive"),
+        Meta(property="og:description", content=f"Explore {total_photos} photos across {total_locations} locations in the Rhodes Jewish diaspora."),
+        Meta(property="og:url", content=f"{SITE_URL}{share_url}"),
+        leaflet_css,
+        marker_cluster_css,
+        marker_cluster_default_css,
+        page_style,
+        Div(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+                ),
+                cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
+            ),
+            Div(
+                # Header
+                Div(
+                    H1("Map", cls="text-2xl md:text-3xl font-bold text-white mb-1"),
+                    P(summary, cls="text-slate-400 text-sm mb-4"),
+                    cls="mb-2",
+                ),
+                # Filters
+                Div(
+                    Form(
+                        Select(*collection_options, name="collection", cls="bg-slate-800 text-slate-300 text-xs rounded-lg px-2 py-1.5 border border-slate-700",
+                               onchange="this.form.submit()"),
+                        Select(*person_options, name="person", cls="bg-slate-800 text-slate-300 text-xs rounded-lg px-2 py-1.5 border border-slate-700",
+                               onchange="this.form.submit()"),
+                        Select(*decade_options, name="decade", cls="bg-slate-800 text-slate-300 text-xs rounded-lg px-2 py-1.5 border border-slate-700",
+                               onchange="this.form.submit()"),
+                        Button(
+                            NotStr(_SHARE_ICON_SVG),
+                            " Share",
+                            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded-lg transition-colors inline-flex items-center gap-1",
+                            type="button",
+                            data_action="share-photo",
+                            data_share_url=share_url,
+                        ),
+                        method="get",
+                        action="/map",
+                        cls="flex flex-wrap items-center gap-2",
+                    ),
+                    cls="mb-4",
+                ),
+                # Map container
+                Div(id="map-container", data_testid="map-container"),
+                # Legend
+                Div(
+                    Span("Locations sized by photo count", cls="text-xs text-slate-500"),
+                    Span(" · ", cls="text-slate-700 mx-2"),
+                    Span("Click markers to see photos", cls="text-xs text-slate-500"),
+                    Span(" · ", cls="text-slate-700 mx-2"),
+                    A("View Timeline →", href="/timeline", cls="text-xs text-indigo-400 hover:text-indigo-300"),
+                    cls="mt-3 text-center",
+                ),
+                cls="max-w-6xl mx-auto px-6 pt-24 pb-8",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+        leaflet_js,
+        marker_cluster_js,
+        map_script,
+    )
+
+
 @rt("/timeline")
 def get(person: str = "", people: str = "", start: int = None, end: int = None,
         context: str = "on", collection: str = "", sess=None):
@@ -20062,7 +20386,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _gedcom_matches_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _gedcom_matches_cache, _photo_locations_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -20076,6 +20400,7 @@ async def post(request):
     _context_events_cache = None
     _birth_year_cache = None
     _gedcom_matches_cache = None
+    _photo_locations_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 

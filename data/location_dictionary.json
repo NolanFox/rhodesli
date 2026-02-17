@@ -1,0 +1,182 @@
+{
+  "version": 1,
+  "description": "Curated location dictionary for Rhodes Jewish diaspora geography. Maps place names to coordinates for the map view.",
+  "locations": {
+    "rhodes": {
+      "name": "Rhodes, Greece",
+      "lat": 36.4413,
+      "lng": 28.2261,
+      "aliases": ["rhodes", "rodos", "rodi", "rhodos", "rhodes island", "old town rhodes", "rhodes old town", "juderia", "la juderia"],
+      "region": "Mediterranean",
+      "notes": "Historic Jewish Quarter (La Juderia) in Rhodes Old Town"
+    },
+    "nyc": {
+      "name": "New York City",
+      "lat": 40.7128,
+      "lng": -74.0060,
+      "aliases": ["new york", "nyc", "new york city", "manhattan", "ny"],
+      "region": "United States",
+      "notes": "Major Sephardic community center, especially Lower East Side"
+    },
+    "lower_east_side": {
+      "name": "Lower East Side, Manhattan",
+      "lat": 40.7150,
+      "lng": -73.9843,
+      "aliases": ["lower east side", "les", "rivington", "rivington street", "orchard street"],
+      "region": "United States",
+      "notes": "Heart of NYC Sephardic immigrant community"
+    },
+    "brooklyn": {
+      "name": "Brooklyn, New York",
+      "lat": 40.6782,
+      "lng": -73.9442,
+      "aliases": ["brooklyn", "bklyn", "flatbush"],
+      "region": "United States",
+      "notes": "Brooklyn Sephardic communities"
+    },
+    "miami": {
+      "name": "Miami, Florida",
+      "lat": 25.7617,
+      "lng": -80.1918,
+      "aliases": ["miami", "miami beach", "south florida", "miami-dade"],
+      "region": "United States",
+      "notes": "Large Rhodes Jewish community relocated here"
+    },
+    "tampa": {
+      "name": "Tampa, Florida",
+      "lat": 27.9506,
+      "lng": -82.4572,
+      "aliases": ["tampa", "tampa bay", "ybor city"],
+      "region": "United States",
+      "notes": "Significant Sephardic community in Tampa/Ybor City"
+    },
+    "florida": {
+      "name": "Florida",
+      "lat": 27.6648,
+      "lng": -81.5158,
+      "aliases": ["florida"],
+      "region": "United States",
+      "notes": "General Florida location (disambiguate to Miami or Tampa when possible)"
+    },
+    "buenos_aires": {
+      "name": "Buenos Aires, Argentina",
+      "lat": -34.6037,
+      "lng": -58.3816,
+      "aliases": ["buenos aires", "argentina", "ba"],
+      "region": "South America",
+      "notes": "Significant Sephardic diaspora community"
+    },
+    "havana": {
+      "name": "Havana, Cuba",
+      "lat": 23.1136,
+      "lng": -82.3666,
+      "aliases": ["havana", "cuba", "habana", "la habana"],
+      "region": "Caribbean",
+      "notes": "Transit point and community for Rhodes Jews"
+    },
+    "atlanta": {
+      "name": "Atlanta, Georgia",
+      "lat": 33.7490,
+      "lng": -84.3880,
+      "aliases": ["atlanta", "georgia"],
+      "region": "United States",
+      "notes": "Southern US Sephardic community"
+    },
+    "los_angeles": {
+      "name": "Los Angeles, California",
+      "lat": 34.0522,
+      "lng": -118.2437,
+      "aliases": ["los angeles", "la", "california", "disneyland", "hollywood"],
+      "region": "United States",
+      "notes": "West Coast Sephardic community"
+    },
+    "seattle": {
+      "name": "Seattle, Washington",
+      "lat": 47.6062,
+      "lng": -122.3321,
+      "aliases": ["seattle", "washington state"],
+      "region": "United States",
+      "notes": "Sephardic community in Pacific Northwest"
+    },
+    "portland": {
+      "name": "Portland, Oregon",
+      "lat": 45.5152,
+      "lng": -122.6784,
+      "aliases": ["portland", "oregon"],
+      "region": "United States",
+      "notes": "Pacific Northwest community"
+    },
+    "montgomery": {
+      "name": "Montgomery, Alabama",
+      "lat": 32.3792,
+      "lng": -86.3077,
+      "aliases": ["montgomery", "alabama"],
+      "region": "United States",
+      "notes": "Southern US community"
+    },
+    "asheville": {
+      "name": "Asheville, North Carolina",
+      "lat": 35.5951,
+      "lng": -82.5515,
+      "aliases": ["asheville", "north carolina"],
+      "region": "United States",
+      "notes": "Appalachian community"
+    },
+    "elisabethville": {
+      "name": "Elisabethville (Lubumbashi), Congo",
+      "lat": -11.6876,
+      "lng": 27.5026,
+      "aliases": ["elisabethville", "lubumbashi", "congo", "belgian congo", "katanga"],
+      "region": "Africa",
+      "notes": "Rhodes Jewish community in Belgian Congo mining region"
+    },
+    "bujumbura": {
+      "name": "Bujumbura, Burundi",
+      "lat": -3.3614,
+      "lng": 29.3599,
+      "aliases": ["bujumbura", "usumbura", "bukavu", "costermansville"],
+      "region": "Africa",
+      "notes": "Central African community, formerly Usumbura"
+    },
+    "istanbul": {
+      "name": "Istanbul, Turkey",
+      "lat": 41.0082,
+      "lng": 28.9784,
+      "aliases": ["istanbul", "constantinople", "turkey"],
+      "region": "Mediterranean",
+      "notes": "Ottoman capital, transit point for Rhodes Jews"
+    },
+    "jerusalem": {
+      "name": "Jerusalem, Israel",
+      "lat": 31.7683,
+      "lng": 35.2137,
+      "aliases": ["jerusalem", "israel", "palestine", "eretz israel", "holy land"],
+      "region": "Middle East",
+      "notes": "Immigration destination, especially post-1948"
+    },
+    "italy": {
+      "name": "Italy",
+      "lat": 41.8719,
+      "lng": 12.5674,
+      "aliases": ["italy", "rome", "roma", "italia"],
+      "region": "Mediterranean",
+      "notes": "Transit and community"
+    },
+    "auschwitz": {
+      "name": "Auschwitz, Poland",
+      "lat": 50.0343,
+      "lng": 19.1783,
+      "aliases": ["auschwitz", "birkenau", "auschwitz-birkenau", "oswiecim"],
+      "region": "Europe",
+      "notes": "1,673 Rhodes Jews deported July 1944. Most perished."
+    },
+    "united_states": {
+      "name": "United States",
+      "lat": 39.8283,
+      "lng": -98.5795,
+      "aliases": ["united states", "usa", "us", "america"],
+      "region": "United States",
+      "notes": "General US location (disambiguate to specific city when possible)"
+    }
+  }
+}
