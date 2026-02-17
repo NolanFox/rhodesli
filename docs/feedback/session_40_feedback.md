@@ -8,105 +8,101 @@
 
 ## CRITICAL
 
-### FB-40-01: /map returns Internal Server Error
-- **Page:** /map
-- **Expected:** Interactive map with 267 geocoded photos
-- **Actual:** 500 Internal Server Error
-- **Root Cause:** Missing `_build_caches()` call — `_photo_cache` is `None`, all photo lookups fail
-- **Status:** FIXING
+### FB-40-01: /map returns Internal Server Error — FIXED
+- **Root Cause:** Missing `_build_caches()` call
+- **Fix:** Added `_build_caches()` to /map route handler
 
-### FB-40-02: /connect returns Internal Server Error
-- **Page:** /connect
-- **Expected:** Six Degrees connection finder
-- **Actual:** 500 Internal Server Error
-- **Root Cause:** `registry.get_identity()` raises `KeyError` on invalid/missing IDs, but code uses `or {}` pattern expecting `None` return
-- **Status:** FIXING
+### FB-40-02: /connect returns Internal Server Error — FIXED
+- **Root Cause:** `registry.get_identity()` raises KeyError, code expected None
+- **Fix:** Added `_safe_get_identity()` helper, replaced all 6 call sites
 
-### FB-40-03: Collection/Source metadata confusion
-- **Page:** /collections, photo detail pages
-- **Expected:** Collection tied to "Jews of Rhodes: Family Memories & Heritage" Facebook group
-- **Actual:** 116 photos show under "Community Submissions" collection
-- **Root Cause:** Photos ingested in Session 26 batch with `collection: "Community Submissions"`. 4 Facebook photos have correct metadata but files stranded in `raw_photos/pending/batch_facebook/`
-- **Status:** INVESTIGATING
+### FB-40-03: Collection/Source metadata — FIXED
+- **Root Cause:** Session 26 batch ingest used generic "Community Submissions"
+- **Fix:** 114 photos reassigned to "Jews of Rhodes: Family Memories & Heritage" / "Facebook"
 
 ---
 
-## HIGH
+## HIGH — Photo Page UX
+
+### FB-40-18: Face click behavior broken
+- Clicking face overlay scrolls to thumbnail; clicking thumbnail scrolls back up (circular)
+- **Correct:** Overlay click → tag dialog (unidentified) or /person/{id} (identified). Thumbnail click → /person/{id} or /identify/{id}
+
+### FB-40-19: Collection/source metadata not prominent on photo page
+- Need: "From: Vida Capeluto NYC Collection → [View Collection]" — one-click discovery path
+
+### FB-40-20: Photo carousel / gallery mode needed
+- Left/right arrows to browse adjacent photos in collection. Keyboard + swipe. "Photo 3 of 108" indicator
+
+### FB-40-21: Admin-only elements visible to non-admin on photo page
+- Back image upload, orientation tools should be hidden from public view
+
+### FB-40-22: Photo upload attribution not displayed
+- Show "Uploaded by [name] on [date]" on photo detail page
+
+---
+
+## HIGH — Collection Management
+
+### FB-40-23: "Add Photos" button on collection detail pages
+- Next to Share button, auto-assigns to collection
+
+### FB-40-24: Bulk collection/source editing in admin Photos view
+- "Move to Collection...", "Set Source...", "Create New Collection..."
+
+### FB-40-25: Individual photo collection/source editable by admin
+- On photo detail page
+
+### FB-40-26: Upload flow collection assignment unclear
+- Dropdown of existing collections + "Create New Collection", required field
+
+---
+
+## HIGH — Identification UX
 
 ### FB-40-04: Sharing needs to be more prominent and intuitive
-- **Context:** Sharing is how Rhodesli grows — every shareable view needs one-click share with clean standalone URL
-- **Specific issues:**
-  - Help Identify share goes to source photo, not standalone identification page
-  - No per-person "Can you identify this person?" shareable page
-  - No specific match confirmation shareable page
-- **Solution:** Create /identify/{id} and /identify/{a}/match/{b} pages
+- Sharing is how Rhodesli grows — every view needs one-click share
+- Create /identify/{id} and /identify/{a}/match/{b} pages
 
-### FB-40-05: Person page "Return to Inbox" visible to public
-- **Page:** /person/{id}
-- **Expected:** Public-facing page without admin actions
-- **Actual:** "Return to Inbox" button visible on shareable public page
-- **Solution:** Only show admin actions when user is admin
+### FB-40-27: Searching unknown identity goes to wrong person in Focus mode
+- Should navigate to that person's page, not first person in Focus queue
 
-### FB-40-06: Person page missing cross-feature links
-- **Page:** /person/{id}
-- **Expected:** Prominent links to Timeline, Map, Tree, Connections
-- **Actual:** Links missing or buried
-- **Solution:** Add horizontal action bar under person name
-
-### FB-40-07: /admin/approvals unstyled
-- **Page:** /admin/approvals
-- **Expected:** Consistent admin styling with sidebar
-- **Actual:** Looks completely unstyled, missing admin sidebar
-- **Solution:** Wrap in admin layout
+### FB-40-28: Help Identify workflow too many clicks for context
+- /identify pages solve this by showing photo context inline
 
 ---
 
-## MEDIUM
+## HIGH — Prevention
 
-### FB-40-08: Person page field order arbitrary
-- **Expected:** Identity → Life Events → Relationships → Notes
-- **Actual:** Fields in inconsistent order
-- **Solution:** Reorganize field display order
+### FB-40-29: Create scripts/verify_data_integrity.py
+- Check all JSON files parse, collection counts, relationship counts
 
-### FB-40-09: No geographic autocomplete for place fields
-- **Context:** birthplace/death place fields should suggest known Rhodesli places
-- **Solution:** Use existing location_dictionary.json with historical aliases
+### FB-40-30: Create tests/e2e/test_critical_routes.py
+- GET every public route returns 200 — would have caught /map and /connect 500s
 
-### FB-40-10: No comments section on person pages
-- **Context:** Person pages should be mini social posts that encourage engagement
-- **Solution:** Add comment form (no login required) with admin moderation
+### FB-40-31: Session Completion Checklist in CLAUDE.md
+- All tests pass, smoke tests pass, data integrity check, all routes return 200
 
-### FB-40-11: GEDCOM page confusing — test data not labeled
-- **Page:** /admin/gedcom
-- **Expected:** Clear labeling of test vs real data
-- **Actual:** Shows 14 confirmed matches from test_capeluto.ged without context
-
-### FB-40-12: Tree link missing from public nav
-- **Page:** Multiple public pages
-- **Expected:** Photos | Collections | People | Tree | Map | Timeline | Connect | Compare
-- **Actual:** Tree sometimes missing
-
-### FB-40-13: Compare UX unclear — no clear mode separation
-- **Page:** /compare
-- **Expected:** Two clear modes: "Upload to find matches" and "Compare two photos"
-- **Actual:** Single confusing interface
-
-### FB-40-14: Edit Details too buried on person page
-- **Context:** Edit fields hidden behind link at bottom
-- **Solution:** Inline edit icons (admin), "Suggest correction" link (public)
+### FB-40-32: Create docs/postmortems/session_40_production_bugs.md
 
 ---
 
-## LOW
+## MEDIUM — Person Page
 
-### FB-40-15: Upload/approval logging incomplete
-- **Context:** No log of approval actions or upload history
-- **Solution:** Add audit log to admin views
+### FB-40-05: "Return to Inbox" visible on public /person/{id} — admin-only
+### FB-40-06: Missing cross-feature action links (Timeline, Map, Tree, Connections)
+### FB-40-14: Edit Details too buried — inline edit icons (admin), "Suggest correction" (public)
+### FB-40-08: Field order: Identity → Life Events → Relationships → Notes
+### FB-40-09: Geographic autocomplete with location_dictionary.json + historical variants
+### FB-40-10: Comments section — no login required, admin moderation, rate limited by IP
 
-### FB-40-16: Photo upload attribution not displayed
-- **Context:** Each photo should show who uploaded it
-- **Solution:** Store uploader info in photo metadata, display on detail page
+---
 
-### FB-40-17: Sidebar consistency enforcement needed
-- **Context:** Admin pages should have sidebar, public pages top nav only
-- **Solution:** Audit all routes and enforce consistent layout
+## MEDIUM — Consistency
+
+### FB-40-17: Sidebar rule enforcement — admin pages get sidebar, public get top nav
+### FB-40-07: /admin/approvals unstyled — needs sidebar + consistent styling
+### FB-40-12: Tree link missing from public nav on some pages
+### FB-40-11: GEDCOM page — label test data, manual linking, show data on person pages
+### FB-40-13: Compare UX — two clear modes immediately visible
+### FB-40-15: Upload/approval logging — who/what/when for all actions

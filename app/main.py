@@ -9311,7 +9311,20 @@ def public_person_page(
                     # Action buttons
                     Div(
                         share_btn,
-                        cls="flex justify-center gap-3 mb-8",
+                        cls="flex justify-center gap-3 mb-4",
+                    ),
+                    # Cross-feature action bar
+                    Div(
+                        A("Timeline", href=f"/timeline?person={person_id}",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
+                        A("Map", href=f"/map?person={person_id}",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
+                        A("Family Tree", href=f"/tree?person={person_id}",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
+                        A("Connections", href=f"/connect?person_a={person_id}",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
+                        cls="flex flex-wrap justify-center gap-2 mb-8",
+                        data_testid="person-action-bar",
                     ),
                     cls="max-w-3xl mx-auto pt-12 pb-8 px-6",
                 ),
@@ -9455,6 +9468,486 @@ def get(person_id: str, view: str = "faces", sess=None):
     user = get_current_user(sess or {}) if is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
     return public_person_page(person_id, view=view, user=user, is_admin=user_is_admin)
+
+
+# --- Shareable Identification Pages ---
+# These are the crowdsourcing mechanism — URLs shared in Facebook groups,
+# family chats, and emails to help identify unknown people in photos.
+# No login required. Responses saved for admin review.
+
+
+def _share_script():
+    """Reusable share script for standalone public pages."""
+    return Script("""
+        function _sharePhotoUrl(url) {
+            _copyAndToast(url);
+            var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile && navigator.share) {
+                navigator.share({ title: 'Rhodesli', url: url }).catch(function() {});
+            }
+        }
+        function _copyAndToast(url) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(function() {
+                    _showShareToast('Link copied!');
+                }).catch(function() { _showShareToast('Could not copy link'); });
+            } else {
+                var input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                _showShareToast('Link copied!');
+            }
+        }
+        function _showShareToast(message) {
+            var existing = document.getElementById('share-toast');
+            if (existing) existing.remove();
+            var toast = document.createElement('div');
+            toast.id = 'share-toast';
+            toast.textContent = message;
+            toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.style.opacity = '0'; }, 2000);
+            setTimeout(function() { toast.remove(); }, 2500);
+        }
+        document.addEventListener('click', function(e) {
+            var shareBtn = e.target.closest('[data-action="share-photo"]');
+            if (shareBtn) {
+                var url = shareBtn.getAttribute('data-share-url') || window.location.href;
+                _sharePhotoUrl(url);
+            }
+        });
+    """)
+
+
+_identification_responses_cache = None
+
+def _load_identification_responses() -> dict:
+    """Load identification responses from data file."""
+    global _identification_responses_cache
+    if _identification_responses_cache is not None:
+        return _identification_responses_cache
+    resp_path = data_path / "identification_responses.json"
+    default = {"schema_version": 1, "responses": []}
+    if resp_path.exists():
+        try:
+            with open(resp_path, encoding="utf-8") as f:
+                _identification_responses_cache = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            _identification_responses_cache = default
+    else:
+        _identification_responses_cache = default
+    return _identification_responses_cache
+
+
+def _save_identification_responses(data: dict):
+    """Save identification responses atomically."""
+    global _identification_responses_cache
+    resp_path = data_path / "identification_responses.json"
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(data_path), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_path, str(resp_path))
+        _identification_responses_cache = data
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+@rt("/identify/{person_id}")
+def get(person_id: str, sess=None):
+    """
+    Shareable 'Can you identify this person?' page.
+
+    No authentication required. Shows the face, source photos, best matches,
+    and a simple response form. This is the URL you share in Facebook groups
+    and family chats to crowdsource identification.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    registry = load_registry()
+    identity = _safe_get_identity(registry, person_id)
+    if not identity or identity.get("merged_into"):
+        return Title("Person Not Found"), Main(
+            Div(H2("Person not found", cls="text-xl text-white"), cls="text-center py-20"),
+            cls="min-h-screen bg-slate-900",
+        )
+
+    display_name = ensure_utf8_display(identity.get("name", "Unknown"))
+    state = identity.get("state", "INBOX")
+    is_identified = state == "CONFIRMED" and not display_name.startswith("Unidentified")
+
+    # If already identified, redirect to person page
+    if is_identified:
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(f"/person/{person_id}", status_code=303)
+
+    # Get face crops and photos
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    face_id_strings = [f if isinstance(f, str) else f.get("face_id", "") for f in all_face_ids]
+    photo_reg = load_photo_registry()
+    photo_ids = photo_reg.get_photos_for_faces(face_id_strings)
+    crop_files = get_crop_files()
+    best_face_id = get_best_face_id(all_face_ids)
+    avatar_url = resolve_face_image_url(best_face_id, crop_files) if best_face_id and crop_files else None
+
+    # Build face image
+    face_section = Div(
+        Img(src=avatar_url, alt="Unidentified person",
+            cls="w-48 h-48 sm:w-64 sm:h-64 rounded-2xl object-cover border-4 border-amber-500/30 shadow-lg shadow-amber-500/10 mx-auto") if avatar_url else
+        Div(Span("?", cls="text-6xl text-slate-500"), cls="w-48 h-48 rounded-2xl bg-slate-800 border-4 border-slate-700 flex items-center justify-center mx-auto"),
+        cls="mb-8",
+    )
+
+    # Source photos
+    _build_caches()
+    photo_cards = []
+    for pid in photo_ids[:4]:
+        pm = (_photo_cache or {}).get(pid, {})
+        if not pm:
+            pm = photo_reg.get_photo(pid) or {}
+        photo_path = pm.get("path", "")
+        if photo_path:
+            photo_url = storage.get_photo_url(photo_path)
+            collection = pm.get("collection", "")
+            photo_cards.append(
+                A(
+                    Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
+                    P(collection, cls="text-xs text-slate-500 mt-1 truncate") if collection else None,
+                    href=f"/photo/{pid}",
+                    cls="block hover:opacity-80 transition-opacity",
+                )
+            )
+
+    photos_section = Div(
+        H3("Appears in these photos", cls="text-sm font-semibold text-slate-400 mb-3"),
+        Div(*photo_cards, cls="grid grid-cols-2 sm:grid-cols-4 gap-3"),
+        cls="mb-10",
+    ) if photo_cards else None
+
+    # Best matches (nearest neighbors)
+    match_cards = []
+    try:
+        from core.neighbors import find_nearest_neighbors
+        if face_id_strings:
+            neighbors = find_nearest_neighbors(face_id_strings[0], k=3)
+            for n_face_id, dist in neighbors:
+                n_ident = get_identity_for_face(registry, n_face_id)
+                if n_ident and n_ident.get("identity_id") != person_id:
+                    n_name = ensure_utf8_display(n_ident.get("name", "Unknown"))
+                    n_crop = resolve_face_image_url(n_face_id, crop_files) if crop_files else None
+                    n_id = n_ident.get("identity_id", "")
+                    match_cards.append(
+                        A(
+                            Img(src=n_crop, alt=n_name, cls="w-20 h-20 rounded-xl object-cover") if n_crop else
+                            Div(Span("?", cls="text-xl text-slate-500"), cls="w-20 h-20 rounded-xl bg-slate-800 flex items-center justify-center"),
+                            P(n_name if not n_name.startswith("Unidentified") else "Unknown", cls="text-xs text-slate-300 mt-1 text-center truncate w-20"),
+                            href=f"/identify/{person_id}/match/{n_id}",
+                            cls="flex flex-col items-center hover:opacity-80 transition-opacity",
+                        )
+                    )
+    except Exception:
+        pass
+
+    matches_section = Div(
+        H3("Possible matches", cls="text-sm font-semibold text-slate-400 mb-3"),
+        Div(*match_cards, cls="flex gap-4 justify-center"),
+        cls="mb-10",
+    ) if match_cards else None
+
+    # Response form
+    form_section = Div(
+        H3("Do you recognize this person?", cls="text-lg font-serif font-semibold text-white mb-4"),
+        Form(
+            Input(type="hidden", name="person_id", value=person_id),
+            Div(
+                Label("Their name", fr="resp_name", cls="text-sm text-slate-400 block mb-1"),
+                Input(type="text", name="name", id="resp_name", placeholder="e.g., Sarah Capeluto",
+                      cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+                cls="mb-4",
+            ),
+            Div(
+                Label("How do you know?", fr="resp_relationship", cls="text-sm text-slate-400 block mb-1"),
+                Input(type="text", name="relationship", id="resp_relationship", placeholder="e.g., She's my grandmother",
+                      cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+                cls="mb-4",
+            ),
+            Div(
+                Label("Your email (optional, for follow-up)", fr="resp_email", cls="text-sm text-slate-400 block mb-1"),
+                Input(type="email", name="email", id="resp_email", placeholder="you@example.com",
+                      cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+                cls="mb-6",
+            ),
+            Button("Yes, I know this person!", type="submit",
+                   cls="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors"),
+            hx_post=f"/api/identify/{person_id}/respond",
+            hx_target="#identify-response-area",
+            hx_swap="innerHTML",
+        ),
+        id="identify-response-area",
+        cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 max-w-md mx-auto",
+    )
+
+    # Share button
+    share_url = f"{SITE_URL}/identify/{person_id}"
+    share_btn = Button(
+        "Share to help identify",
+        cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
+        data_action="share-photo",
+        data_share_url=share_url,
+        data_share_title="Can you identify this person?",
+        data_share_text=f"Help us identify this person in the Rhodesli Heritage Archive",
+    )
+
+    # OG tags
+    og_image = avatar_url or ""
+    if og_image and not og_image.startswith("http"):
+        og_image = f"{SITE_URL}{og_image}"
+    og_meta = (
+        Meta(property="og:title", content="Can you identify this person? — Rhodesli"),
+        Meta(property="og:description", content="Help us identify this person from the Rhodes Jewish Heritage Archive. Share with family members who might recognize them."),
+        Meta(property="og:image", content=og_image),
+        Meta(property="og:url", content=share_url),
+        Meta(property="og:type", content="website"),
+        Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary_large_image"),
+        Meta(name="twitter:title", content="Can you identify this person?"),
+        Meta(name="twitter:description", content="Help us identify this person from the Rhodes Jewish Heritage Archive."),
+        Meta(name="twitter:image", content=og_image),
+    )
+
+    nav_links = _public_nav_links(user=user)
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    return (
+        Title("Can you identify this person? — Rhodesli"),
+        *og_meta,
+        page_style,
+        Main(
+            # Navigation
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-lg font-serif font-bold text-white"), href="/"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            # Content
+            Section(
+                Div(
+                    H1("Can you identify this person?", cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2"),
+                    P("This person appears in photos from the Rhodes Jewish Heritage Archive. If you recognize them, please let us know.",
+                      cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto"),
+                    face_section,
+                    photos_section,
+                    matches_section,
+                    form_section,
+                    Div(share_btn, cls="flex justify-center mt-8 mb-4"),
+                    cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
+                ),
+            ),
+            cls="min-h-screen bg-slate-900 text-white",
+        ),
+        _share_script(),
+    )
+
+
+@rt("/api/identify/{person_id}/respond")
+def post(person_id: str, name: str = "", relationship: str = "", email: str = "", sess=None):
+    """Save an identification response. No login required."""
+    if not name.strip():
+        return Div(
+            P("Please enter a name for this person.", cls="text-amber-400 text-sm"),
+            cls="py-2",
+        )
+
+    import hashlib
+    responses = _load_identification_responses()
+    responses["responses"].append({
+        "person_id": person_id,
+        "suggested_name": name.strip(),
+        "relationship": relationship.strip(),
+        "email": email.strip(),
+        "timestamp": datetime.now().isoformat(),
+        "status": "pending",
+    })
+    _save_identification_responses(responses)
+
+    return Div(
+        Div(
+            P("Thank you!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+            P(f"Your identification of this person as \"{name.strip()}\" has been submitted. An admin will review it shortly.", cls="text-slate-300 text-sm"),
+            cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
+        ),
+    )
+
+
+@rt("/identify/{person_a}/match/{person_b}")
+def get(person_a: str, person_b: str, sess=None):
+    """
+    Shareable match confirmation page — 'Are these the same person?'
+
+    Shows two faces side by side for comparison. No login required.
+    This is shared when you want someone to confirm a specific match.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    registry = load_registry()
+    ident_a = _safe_get_identity(registry, person_a)
+    ident_b = _safe_get_identity(registry, person_b)
+
+    if not ident_a or not ident_b:
+        return Title("People Not Found"), Main(
+            Div(H2("One or both people not found", cls="text-xl text-white"), cls="text-center py-20"),
+            cls="min-h-screen bg-slate-900",
+        )
+
+    crop_files = get_crop_files()
+    name_a = ensure_utf8_display(ident_a.get("name", "Unknown"))
+    name_b = ensure_utf8_display(ident_b.get("name", "Unknown"))
+
+    # Get face crops
+    faces_a = ident_a.get("anchor_ids", []) + ident_a.get("candidate_ids", [])
+    faces_b = ident_b.get("anchor_ids", []) + ident_b.get("candidate_ids", [])
+    best_a = get_best_face_id(faces_a)
+    best_b = get_best_face_id(faces_b)
+    crop_a = resolve_face_image_url(best_a, crop_files) if best_a and crop_files else None
+    crop_b = resolve_face_image_url(best_b, crop_files) if best_b and crop_files else None
+
+    def _face_card(crop_url, name, ident_id):
+        return Div(
+            Img(src=crop_url, alt=name, cls="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl object-cover border-2 border-slate-700 mx-auto") if crop_url else
+            Div(Span("?", cls="text-4xl text-slate-500"), cls="w-36 h-36 rounded-2xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center mx-auto"),
+            P(name if not name.startswith("Unidentified") else "Unknown",
+              cls="text-sm text-slate-300 mt-2 text-center font-medium"),
+            cls="flex flex-col items-center",
+        )
+
+    # Response buttons
+    response_area = Div(
+        H3("Are these the same person?", cls="text-lg font-serif font-semibold text-white text-center mb-6"),
+        Div(
+            Button("Yes, Same Person",
+                   hx_post=f"/api/identify/{person_a}/match/{person_b}/respond",
+                   hx_vals='{"answer": "yes"}',
+                   hx_target="#match-response-area",
+                   hx_swap="innerHTML",
+                   cls="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors"),
+            Button("No, Different People",
+                   hx_post=f"/api/identify/{person_a}/match/{person_b}/respond",
+                   hx_vals='{"answer": "no"}',
+                   hx_target="#match-response-area",
+                   hx_swap="innerHTML",
+                   cls="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-lg transition-colors"),
+            Button("Not Sure",
+                   hx_post=f"/api/identify/{person_a}/match/{person_b}/respond",
+                   hx_vals='{"answer": "unsure"}',
+                   hx_target="#match-response-area",
+                   hx_swap="innerHTML",
+                   cls="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"),
+            cls="flex flex-wrap justify-center gap-3",
+        ),
+        id="match-response-area",
+        cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50",
+    )
+
+    # Share button
+    share_url = f"{SITE_URL}/identify/{person_a}/match/{person_b}"
+    share_btn = Button(
+        "Share for confirmation",
+        cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
+        data_action="share-photo",
+        data_share_url=share_url,
+        data_share_title="Are these the same person?",
+        data_share_text="Help us confirm if these two faces from the Rhodesli Heritage Archive are the same person.",
+    )
+
+    # OG tags
+    og_image = crop_a or ""
+    if og_image and not og_image.startswith("http"):
+        og_image = f"{SITE_URL}{og_image}"
+    og_meta = (
+        Meta(property="og:title", content="Are these the same person? — Rhodesli"),
+        Meta(property="og:description", content="Help us confirm if these two faces are the same person in the Rhodes Jewish Heritage Archive."),
+        Meta(property="og:image", content=og_image),
+        Meta(property="og:url", content=share_url),
+        Meta(property="og:type", content="website"),
+        Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary_large_image"),
+    )
+
+    nav_links = _public_nav_links(user=user)
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    return (
+        Title("Are these the same person? — Rhodesli"),
+        *og_meta,
+        page_style,
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-lg font-serif font-bold text-white"), href="/"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            Section(
+                Div(
+                    H1("Are these the same person?", cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-8"),
+                    # Side-by-side faces
+                    Div(
+                        _face_card(crop_a, name_a, person_a),
+                        Div(
+                            Span("vs", cls="text-slate-600 text-lg font-medium"),
+                            cls="flex items-center justify-center px-4",
+                        ),
+                        _face_card(crop_b, name_b, person_b),
+                        cls="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mb-10",
+                    ),
+                    response_area,
+                    Div(share_btn, cls="flex justify-center mt-6 mb-4"),
+                    cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
+                ),
+            ),
+            cls="min-h-screen bg-slate-900 text-white",
+        ),
+        _share_script(),
+    )
+
+
+@rt("/api/identify/{person_a}/match/{person_b}/respond")
+def post(person_a: str, person_b: str, answer: str = "", sess=None):
+    """Save a match confirmation response. No login required."""
+    if answer not in ("yes", "no", "unsure"):
+        return Div(P("Invalid response.", cls="text-amber-400 text-sm"))
+
+    responses = _load_identification_responses()
+    responses["responses"].append({
+        "type": "match_confirmation",
+        "person_a": person_a,
+        "person_b": person_b,
+        "answer": answer,
+        "timestamp": datetime.now().isoformat(),
+        "status": "pending",
+    })
+    _save_identification_responses(responses)
+
+    messages = {
+        "yes": "Thank you! You confirmed these are the same person. An admin will review.",
+        "no": "Thank you! You indicated these are different people. An admin will review.",
+        "unsure": "Thank you for looking! We'll ask others for confirmation.",
+    }
+    return Div(
+        P(messages[answer], cls="text-emerald-400 text-sm text-center py-4"),
+    )
 
 
 @rt("/photos")
