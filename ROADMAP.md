@@ -203,22 +203,15 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] CLI: `python scripts/import_gedcom.py` with --execute/--dry-run
 - [x] 107 new tests (2365 total)
 
-### Session 36: GEDCOM Visualization + Data Enrichment
-- Rich data visualizations beyond basic trees
-- Cross-reference GEDCOM dates with photo date estimates
-- Auto-populate birth_year from GEDCOM into identity metadata
-
-### Session 37: Geocoding + Map View
-- Batch geocode Gemini location estimates
-- Map view route with photo markers
-- Timeline + map sync view
-- PRD: docs/prds/010_geocoding_map_view.md
-
-### Session 38: Social/Connection Graph
-- "Six degrees" tool: find how two people are connected
-- Edges: familial relationship (GEDCOM) + photo co-occurrence
-- Proximity scores based on combined graph
-- Migration pattern analysis (which families went where)
+### Sessions 36-38: Social Graph + Collections + Map (COMPLETED 2026-02-16)
+- [x] Social graph + Six Degrees connection finder at /connect (BFS, D3.js, proximity scoring)
+- [x] Auto-confirmed 14 GEDCOM matches, built 20 relationships into data/relationships.json
+- [x] Shareable collection pages at /collections and /collection/{slug}
+- [x] Curated location dictionary with 22 Rhodes diaspora places
+- [x] Geocoding pipeline: 267/271 photos matched (98.5%)
+- [x] Interactive map view at /map with Leaflet.js, marker clustering, photo popups
+- [x] Consistent navigation across all 11 public pages via _public_nav_links()
+- [x] 86 new tests (2120 total)
 
 ### Session 39: Kinship Calibration v2
 - Revisit kinship thresholds after GEDCOM import
@@ -233,6 +226,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-16: v0.40.0 — Social Graph + Collections + Map (Sessions 36-38): Six Degrees connection finder at /connect with D3.js force-directed visualization, BFS pathfinding, proximity scoring. Shareable collection pages at /collections and /collection/{slug}. Curated location dictionary (22 places), geocoding pipeline (267/271 = 98.5%), interactive Leaflet.js map at /map with marker clustering and photo popups. Consistent navigation across all public pages via centralized _public_nav_links() helper. 86 new tests (2120 total). PRDs 010, 012, 013. Decision provenance AD-077–AD-081.
 - [x] 2026-02-15: v0.39.0 — GEDCOM Import (Session 35): GEDCOM 5.5.1 parser with messy date handling (ABT/BEF/AFT/BET...AND). Layered identity matcher (exact → surname variants → maiden name → fuzzy + date proximity). 14/14 test individuals matched. Photo co-occurrence graph (21 edges from 20 photos). Family relationship graph from GEDCOM cross-referenced with confirmed matches. Admin GEDCOM UI at /admin/gedcom. Person page family section. CLI import tool. 107 new tests (2081 app + 272 ML = 2353 total). Decision provenance AD-073–AD-076.
 - [x] 2026-02-15: v0.38.0 — Birth Date Estimation (Session 34): Birth year estimation pipeline with robust outlier filtering (median + MAD). Face-to-age matching via bbox x-coordinate sorting. 32 estimates from 46 confirmed identities (3 HIGH, 6 MEDIUM, 23 LOW). Timeline age overlay with confidence styling. Person page birth year display. Validation report with data improvement opportunities. 48 new tests (2246 total). Decision provenance AD-071–AD-072.
 - [x] 2026-02-15: v0.37.1 — Production Polish + Ideation (Session 33): Compare in admin sidebar. R2 upload persistence (compare uploads survive Railway restarts). Production graceful degradation (save without InsightFace). Contribute-to-archive flow wired to admin queue. VISION.md product direction doc. Roadmap sessions 34-39. AD-070 future architecture. 12 new tests (2058 total).

@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.40.0] — 2026-02-16
+
+### Added
+- **Social graph + Six Degrees connection finder** at /connect — find how any two people are connected
+  - Unified graph from GEDCOM relationships (20 edges) + photo co-occurrence (21 edges)
+  - BFS pathfinding with path visualization (family=amber, photo=blue edge styling)
+  - D3.js force-directed network visualization
+  - Proximity scoring: `(1 / path_length) * avg_edge_weight`
+  - Person page "Connections" section with top 5 closest connections
+  - Auto-confirmed 14 GEDCOM matches, built 20 family relationships
+  - 42 tests (34 ML + 8 app)
+- **Shareable collection pages** at /collections and /collection/{slug}
+  - Collection directory with preview thumbnails, face counts, OG tags
+  - Collection detail with photo grid, people section, share button, timeline cross-link
+  - Help-identify banner for unidentified faces, breadcrumb navigation
+  - 15 tests
+- **Geocoding pipeline + interactive map view** at /map
+  - Curated location dictionary with 22 Rhodes diaspora places (lat/lng, aliases, regions)
+  - Geocoding script matches Gemini `location_estimate` to dictionary — 267/271 photos (98.5%)
+  - Leaflet.js map with CartoDB dark tiles, marker clustering (MarkerCluster)
+  - Photo preview popups on marker click (up to 8 photos)
+  - Filters: collection, person, decade
+  - Share button with filter state preservation
+  - 18 tests (10 route + 8 geocoding)
+- **Consistent navigation across all public pages**
+  - Centralized `_public_nav_links()` helper replaces 11 inline nav arrays
+  - All pages show: Photos, Collections, People, Map, Timeline, Connect, Compare
+  - Sidebar updated with Collections, Map, and Connect links
+  - 11 nav consistency tests
+- Decision provenance: AD-077 (social graph), AD-078 (collections), AD-079 (geocoding), AD-080 (map view), AD-081 (nav unification)
+- PRDs: 010 (Geocoding & Map), 012 (Social Graph), 013 (Collections)
+- 86 new tests — 2120 app tests total
+
 ## [v0.39.0] — 2026-02-15
 
 ### Added

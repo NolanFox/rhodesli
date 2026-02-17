@@ -1,7 +1,7 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 11.0 — February 15, 2026
-**Status**: 2106 tests passing, v0.38.0, 271 photos, 46 confirmed identities, 181 faces, 32 birth year estimates
+**Version**: 12.0 — February 16, 2026
+**Status**: 2120 tests passing, v0.40.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -464,11 +464,11 @@ Based on research of latest Claude Code patterns (Feb 2026):
 
 | ID | Item | Notes |
 |----|------|-------|
-| SOC-001 | Photo co-occurrence graph | Build edges from face_to_photo mapping — two identities in same photo = edge. Weight by frequency. |
-| SOC-002 | "Six degrees" connection finder | BFS/Dijkstra on combined GEDCOM + co-occurrence graph. Find shortest path between any two people. |
-| SOC-003 | Proximity scoring | Composite score from family relationship distance + photo co-occurrence frequency. |
-| GEO-001 | Geographic migration analysis | Geocode Gemini location estimates. Trace community dispersal patterns (Rhodes → various cities). |
-| GEO-002 | Map view with photo markers | Interactive map with clustered photo markers, linked to timeline. |
+| SOC-001 | Photo co-occurrence graph | DONE | v0.39.0 — 21 edges from 20 photos with 2+ identified people (2026-02-15) |
+| SOC-002 | "Six degrees" connection finder | DONE | v0.40.0 — BFS pathfinding on unified graph, D3.js visualization at /connect (2026-02-16) |
+| SOC-003 | Proximity scoring | DONE | v0.40.0 — (1/path_length)*avg_edge_weight, person page connections section (2026-02-16) |
+| GEO-001 | Geographic migration analysis | DONE | v0.40.0 — Curated dictionary + fuzzy matching, 267/271 photos geocoded (2026-02-16) |
+| GEO-002 | Map view with photo markers | DONE | v0.40.0 — Leaflet.js + MarkerCluster at /map, filters, popups (2026-02-16) |
 | GEO-003 | Community-specific context events | Montgomery, Atlanta, Asheville, Havana, Buenos Aires, Congo Rhodesli communities. |
 | KIN-001 | Kinship recalibration post-GEDCOM | With actual family relationships, compute true parent/child/sibling distributions. Update AD-067. |
 | UX-001 | Timeline navigation scrubber | Google Photos-style year scrubber on timeline page. |
