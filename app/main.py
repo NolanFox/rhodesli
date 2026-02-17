@@ -14424,6 +14424,12 @@ def get(q: str = ""):
             state_label = "Help Identify" if state == "SKIPPED" else state.title()
             state_indicator = Span(state_label, cls=f"text-[10px] px-1.5 py-0.5 rounded {badge_cls}")
 
+        # Navigate to the right page based on state
+        if state == "CONFIRMED" and not name.startswith("Unidentified"):
+            result_href = f"/person/{r['identity_id']}"
+        else:
+            result_href = f"/identify/{r['identity_id']}"
+
         items.append(
             A(
                 thumb,
@@ -14436,7 +14442,7 @@ def get(q: str = ""):
                     Span(f"{r['face_count']} {'face' if r['face_count'] == 1 else 'faces'}", cls="text-xs text-slate-500"),
                     cls="flex flex-col min-w-0"
                 ),
-                href=f"/?section={section}#identity-{r['identity_id']}",
+                href=result_href,
                 cls="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 transition-colors cursor-pointer"
             )
         )

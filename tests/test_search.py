@@ -311,35 +311,31 @@ class TestSearchResultNavigation:
         from app.main import app
         return TestClient(app)
 
-    def test_search_result_links_use_hash_fragment(self, client):
-        """Clicking a search result should navigate via hash fragment to the identity card.
+    def test_search_result_links_to_person_or_identify(self, client):
+        """Search results link to /person/ (identified) or /identify/ (unidentified).
 
-        Regression test: previously used ?current= param which was ignored by render_confirmed_section.
+        Regression: previously linked to /?section=...#identity- which dumped into
+        Focus mode at position 0 instead of the searched person.
         """
         response = client.get("/api/search?q=capeluto")
         if "No matches" in response.text:
             pytest.skip("No confirmed 'capeluto' identities in test data")
-        # Links must use #identity-{id} for browser auto-scroll, not ?current=
-        assert "#identity-" in response.text, "Search result links must use hash fragment for navigation"
-        assert "current=" not in response.text, "Search results should not use ignored ?current= param"
+        import re
+        links = re.findall(r'href="([^"]+)"', response.text)
+        nav_links = [l for l in links if l.startswith("/person/") or l.startswith("/identify/")]
+        assert len(nav_links) > 0, "Search results must link to /person/ or /identify/"
+        # Should NOT link to Focus mode
+        assert "section=" not in response.text, "Search results should not link to /?section= (Focus mode)"
 
-    def test_search_result_links_to_correct_section(self, client):
-        """Search results should link to the correct section based on identity state."""
-        response = client.get("/api/search?q=capeluto")
-        if "No matches" in response.text:
-            pytest.skip("No 'capeluto' identities in test data")
-        # Results should have section= in their links
-        assert "section=" in response.text
-
-    def test_search_result_identity_id_matches_card_id(self, client):
-        """The hash fragment identity ID in search results must match an actual identity card."""
+    def test_search_result_identity_id_in_url(self, client):
+        """Search result URLs contain the identity UUID."""
         import re
         response = client.get("/api/search?q=capeluto")
         if "No matches" in response.text:
             pytest.skip("No 'capeluto' identities in test data")
-        # Extract identity IDs from hash fragments
-        hash_ids = re.findall(r'#identity-([a-f0-9-]+)', response.text)
-        assert len(hash_ids) > 0, "Should find at least one identity hash link"
+        # Extract identity IDs from URLs
+        url_ids = re.findall(r'href="/(?:person|identify)/([a-f0-9-]+)"', response.text)
+        assert len(url_ids) > 0, "Should find at least one identity UUID in search result URLs"
 
     def test_page_includes_hash_highlight_script(self, client):
         """Main page includes JS to highlight the hash-targeted identity card."""
@@ -626,14 +622,14 @@ class TestAllStatesSearch:
         if "No matches" not in response.text and "Unidentified" in response.text:
             assert "Help Identify" in response.text or "New Matches" in response.text or "Proposed" in response.text or "Inbox" in response.text
 
-    def test_api_search_routes_to_correct_section(self):
-        """Search results link to the state-appropriate section."""
+    def test_api_search_routes_to_correct_page(self):
+        """Search results link to /identify/ for unidentified, /person/ for confirmed."""
         from app.main import app
         client = TestClient(app)
         response = client.get("/api/search?q=Unidentified")
         if "No matches" not in response.text:
-            # Should have section= links that match identity states
-            assert "section=" in response.text
+            # Unidentified results should link to /identify/ pages
+            assert "/identify/" in response.text
 
 
 class TestSurnameVariantSearch:
