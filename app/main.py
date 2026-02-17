@@ -9834,6 +9834,338 @@ def get(sort_by: str = "name", sess=None):
     )
 
 
+# ---- Collection Pages ----
+
+
+def _collection_slug(name: str) -> str:
+    """Convert collection name to URL slug."""
+    return re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')
+
+
+def _collection_from_slug(slug: str, collections: dict) -> str:
+    """Find collection name from slug."""
+    for name in collections:
+        if _collection_slug(name) == slug:
+            return name
+    return ""
+
+
+def _get_collections_data():
+    """Build collection metadata from photo_index."""
+    photo_reg = load_photo_registry()
+    registry = load_registry()
+    photos = photo_reg.list_photos() if hasattr(photo_reg, 'list_photos') else []
+
+    # Fall back to raw photo_index if list_photos not available
+    if not photos:
+        pi_path = data_path / "photo_index.json"
+        if pi_path.exists():
+            pi = json.loads(pi_path.read_text(encoding="utf-8"))
+            photos = list(pi.get("photos", {}).values())
+            for p in photos:
+                if "photo_id" not in p:
+                    # Try to generate from path
+                    path = p.get("path", "")
+                    if path:
+                        p["photo_id"] = hashlib.sha256(Path(path).name.encode()).hexdigest()[:16]
+
+    collections = {}
+    for photo in photos:
+        col_name = photo.get("collection", "") or photo.get("source", "")
+        if not col_name:
+            continue
+        if col_name not in collections:
+            collections[col_name] = {
+                "name": col_name,
+                "slug": _collection_slug(col_name),
+                "photos": [],
+                "identified_count": 0,
+                "unidentified_count": 0,
+            }
+        collections[col_name]["photos"].append(photo)
+
+    # Count identified vs unidentified faces per collection
+    for col_name, col_data in collections.items():
+        identified = set()
+        unidentified = 0
+        for photo in col_data["photos"]:
+            for fid in photo.get("face_ids", []):
+                ident = get_identity_for_face(registry, fid)
+                if ident and ident.get("state") == "CONFIRMED" and not ident.get("name", "").startswith("Unidentified"):
+                    identified.add(ident.get("identity_id"))
+                elif ident:
+                    unidentified += 1
+        col_data["identified_count"] = len(identified)
+        col_data["unidentified_count"] = unidentified
+
+    return collections
+
+
+@rt("/collections")
+def get(sess=None):
+    """Collection directory — list all collections with preview thumbnails."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    collections = _get_collections_data()
+
+    # Build collection cards
+    cards = []
+    for col_name in sorted(collections.keys(), key=lambda n: -len(collections[n]["photos"])):
+        col = collections[col_name]
+        photo_count = len(col["photos"])
+        slug = col["slug"]
+
+        # Preview thumbnails (first 4 photos)
+        previews = []
+        for photo in col["photos"][:4]:
+            photo_path = photo.get("path", "")
+            if photo_path:
+                url = storage.get_photo_url(photo_path)
+                previews.append(
+                    Img(src=url, alt="", cls="w-full h-24 object-cover rounded",
+                        loading="lazy", onerror="this.style.display='none'")
+                )
+
+        preview_grid = Div(*previews, cls="grid grid-cols-2 gap-1 mb-3") if previews else ""
+
+        # Face counts
+        face_line = f"{col['identified_count']} identified"
+        if col['unidentified_count'] > 0:
+            face_line += f", {col['unidentified_count']} unknown"
+
+        cards.append(
+            A(
+                preview_grid,
+                H3(col_name, cls="text-white font-semibold text-sm mb-1 line-clamp-2"),
+                P(f"{photo_count} photo{'s' if photo_count != 1 else ''}", cls="text-xs text-slate-400"),
+                P(face_line, cls="text-xs text-slate-500 mt-0.5"),
+                href=f"/collection/{slug}",
+                cls="block bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                data_testid="collection-card",
+            )
+        )
+
+    nav_links = [
+        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Collections", href="/collections", cls="text-white text-sm font-medium"),
+        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Connect", href="/connect", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    return (
+        Title("Collections — Rhodesli"),
+        Meta(property="og:title", content="Collections — Rhodesli Heritage Archive"),
+        Meta(property="og:description", content="Browse photo collections from the Rhodes-Capeluto family archive."),
+        page_style,
+        Div(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+                ),
+                cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
+            ),
+            Div(
+                H1("Collections", cls="text-2xl md:text-3xl font-bold text-white mb-2"),
+                P(f"{len(collections)} collection{'s' if len(collections) != 1 else ''} in the archive", cls="text-slate-400 mb-8"),
+                Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"),
+                cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/collection/{slug}")
+def get(slug: str, sess=None):
+    """Collection detail page — shareable view of all photos in a collection."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    collections = _get_collections_data()
+    col_name = _collection_from_slug(slug, collections)
+
+    if not col_name or col_name not in collections:
+        page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+        return (
+            Title("Collection Not Found — Rhodesli"),
+            page_style,
+            Div(
+                Div(
+                    H1("Collection Not Found", cls="text-2xl font-bold text-white mb-4"),
+                    P("This collection doesn't exist.", cls="text-slate-400"),
+                    A("Browse all collections →", href="/collections", cls="text-indigo-400 hover:text-indigo-300 mt-4 inline-block"),
+                    cls="max-w-4xl mx-auto px-6 pt-24",
+                ),
+                cls="min-h-screen bg-slate-900",
+            ),
+        )
+
+    col = collections[col_name]
+    photos = col["photos"]
+    registry = load_registry()
+
+    # Build photo grid
+    photo_cards = []
+    for photo in photos:
+        photo_path = photo.get("path", "")
+        photo_id = photo.get("photo_id", "")
+        if not photo_path:
+            continue
+        url = storage.get_photo_url(photo_path)
+
+        # Count faces
+        face_ids = photo.get("face_ids", [])
+        identified = 0
+        unknown = 0
+        for fid in face_ids:
+            ident = get_identity_for_face(registry, fid)
+            if ident and ident.get("state") == "CONFIRMED" and not ident.get("name", "").startswith("Unidentified"):
+                identified += 1
+            elif ident:
+                unknown += 1
+
+        face_badge = ""
+        if identified + unknown > 0:
+            badge_text = f"{identified} named"
+            if unknown > 0:
+                badge_text += f", {unknown} unknown"
+            face_badge = Div(
+                badge_text,
+                cls="absolute bottom-1 left-1 text-[10px] px-1.5 py-0.5 rounded bg-black/70 text-slate-300",
+            )
+
+        photo_cards.append(
+            A(
+                Div(
+                    Img(src=url, alt="", cls="w-full h-40 md:h-48 object-cover",
+                        loading="lazy", onerror="this.style.display='none'"),
+                    face_badge if face_badge else None,
+                    cls="relative rounded-lg overflow-hidden",
+                ),
+                href=f"/photo/{photo_id}" if photo_id else "#",
+                cls="block hover:opacity-90 transition-opacity",
+                data_testid="collection-photo",
+            )
+        )
+
+    # People in this collection
+    people_in_collection = set()
+    for photo in photos:
+        for fid in photo.get("face_ids", []):
+            ident = get_identity_for_face(registry, fid)
+            if ident and ident.get("state") == "CONFIRMED" and not ident.get("name", "").startswith("Unidentified"):
+                people_in_collection.add(ident.get("identity_id"))
+
+    people_section = ""
+    if people_in_collection:
+        people_items = []
+        for pid in sorted(people_in_collection, key=lambda x: (registry.get_identity(x) or {}).get("name", "").lower()):
+            p_ident = registry.get_identity(pid) or {}
+            p_name = ensure_utf8_display(p_ident.get("name", "Unknown"))
+            people_items.append(
+                A(p_name, href=f"/person/{pid}",
+                  cls="inline-block px-2.5 py-1 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors")
+            )
+        people_section = Div(
+            H3(f"People in this Collection ({len(people_in_collection)})", cls="text-sm font-semibold text-slate-300 mb-3"),
+            Div(*people_items, cls="flex flex-wrap gap-2"),
+            cls="mt-8",
+        )
+
+    nav_links = [
+        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Collections", href="/collections", cls="text-white text-sm font-medium"),
+        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Connect", href="/connect", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    share_url = f"/collection/{slug}"
+
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    return (
+        Title(f"{col_name} — Rhodesli"),
+        Meta(property="og:title", content=f"{col_name} — Rhodesli Heritage Archive"),
+        Meta(property="og:description", content=f"Browse {len(photos)} photos from the {col_name}."),
+        Meta(property="og:url", content=f"{SITE_URL}{share_url}"),
+        page_style,
+        Div(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+                ),
+                cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
+            ),
+            Div(
+                # Breadcrumb
+                Div(
+                    A("Collections", href="/collections", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                    Span(" / ", cls="text-slate-600 mx-2"),
+                    Span(col_name, cls="text-slate-300 text-sm"),
+                    cls="mb-6",
+                ),
+
+                # Header
+                Div(
+                    H1(col_name, cls="text-2xl md:text-3xl font-bold text-white mb-2"),
+                    Div(
+                        Span(f"{len(photos)} photo{'s' if len(photos) != 1 else ''}", cls="text-slate-400"),
+                        Span(" · ", cls="text-slate-600 mx-2"),
+                        Span(f"{col['identified_count']} people identified", cls="text-emerald-400"),
+                        cls="text-sm mb-4",
+                    ),
+                    # Action buttons
+                    Div(
+                        Button(
+                            NotStr(_SHARE_ICON_SVG),
+                            " Share Collection",
+                            cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                            type="button",
+                            data_action="share-photo",
+                            data_share_url=share_url,
+                        ),
+                        A("View on Timeline →", href=f"/timeline?collection={quote(col_name)}",
+                          cls="text-sm text-indigo-400 hover:text-indigo-300 ml-4"),
+                        cls="flex items-center mb-6",
+                    ),
+                    cls="mb-6",
+                ),
+
+                # Help identify banner
+                Div(
+                    P(f"{col['unidentified_count']} face{'s' if col['unidentified_count'] != 1 else ''} waiting to be identified in this collection.",
+                      cls="text-sm text-slate-300"),
+                    A("Help Identify →", href="/compare", cls="text-sm text-indigo-400 hover:text-indigo-300 font-medium ml-4"),
+                    cls="bg-blue-900/20 border border-blue-800/30 rounded-lg px-4 py-3 flex items-center justify-between mb-6",
+                    data_testid="help-identify-banner",
+                ) if col['unidentified_count'] > 0 else "",
+
+                # Photo grid
+                Div(*photo_cards, cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"),
+
+                # People section
+                people_section,
+
+                cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
 @rt("/timeline")
 def get(person: str = "", people: str = "", start: int = None, end: int = None,
         context: str = "on", collection: str = "", sess=None):
@@ -18341,7 +18673,7 @@ def get(sess=None):
                             photo = _photo_cache.get(photo_id, {}) if _photo_cache else {}
                             if photo.get("path"):
                                 photo_thumb = Img(
-                                    src=get_photo_url(photo["path"]),
+                                    src=storage.get_photo_url(photo["path"]),
                                     alt="Photo context",
                                     cls="w-12 h-12 object-cover rounded border border-slate-700 opacity-80"
                                 )
