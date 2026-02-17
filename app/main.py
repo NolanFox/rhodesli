@@ -9619,7 +9619,7 @@ def get(person_id: str, sess=None):
     for pid in photo_ids[:4]:
         pm = (_photo_cache or {}).get(pid, {})
         if not pm:
-            pm = photo_reg.get_photo(pid) or {}
+            pm = photo_reg._photos.get(pid, {})
         photo_path = pm.get("path", "")
         if photo_path:
             photo_url = storage.get_photo_url(photo_path)
@@ -10791,7 +10791,7 @@ def get(collection: str = "", person: str = "", decade: str = "", sess=None):
             photo_data = (_photo_cache or {}).get(photo_id, {})
             if not photo_data:
                 # Try photo registry
-                photo_data = photo_reg.get_photo(photo_id) or {}
+                photo_data = photo_reg._photos.get(photo_id, {})
             photo_collection = photo_data.get("collection", "")
             if collection.lower() not in photo_collection.lower():
                 continue
@@ -10799,7 +10799,7 @@ def get(collection: str = "", person: str = "", decade: str = "", sess=None):
         if person:
             photo_data = (_photo_cache or {}).get(photo_id, {})
             if not photo_data:
-                photo_data = photo_reg.get_photo(photo_id) or {}
+                photo_data = photo_reg._photos.get(photo_id, {})
             face_ids = photo_data.get("face_ids", [])
             person_found = False
             for fid in face_ids:
@@ -10832,7 +10832,7 @@ def get(collection: str = "", person: str = "", decade: str = "", sess=None):
         # Get photo metadata
         photo_data = (_photo_cache or {}).get(photo_id, {})
         if not photo_data:
-            photo_data = photo_reg.get_photo(photo_id) or {}
+            photo_data = photo_reg._photos.get(photo_id, {})
         photo_path = photo_data.get("path", photo_data.get("filename", ""))
         photo_url_val = storage.get_photo_url(photo_path) if photo_path else ""
 
@@ -10867,7 +10867,7 @@ def get(collection: str = "", person: str = "", decade: str = "", sess=None):
     for pid, loc in locations.items():
         pd = (_photo_cache or {}).get(pid, {})
         if not pd:
-            pd = photo_reg.get_photo(pid) or {}
+            pd = photo_reg._photos.get(pid, {})
         c = pd.get("collection", "")
         if c:
             all_collections.add(c)

@@ -85,7 +85,7 @@ def _patch_map():
 
     mock_photo_reg = MagicMock()
     mock_photo_reg.list_photos = MagicMock(return_value=[])
-    mock_photo_reg.get_photo = MagicMock(return_value=None)
+    mock_photo_reg._photos = _MOCK_PHOTO_INDEX["photos"]
     mock_photo_reg.get_photo_for_face = MagicMock(return_value=None)
 
     import pathlib
