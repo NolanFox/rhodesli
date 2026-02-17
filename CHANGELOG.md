@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.42.0] — 2026-02-17
+
+### Fixed
+- **`/map` 500 error** — added missing `_build_caches()` call; `_photo_cache` was None
+- **`/connect` 500 error** — `registry.get_identity()` raises KeyError, not returns None; created `_safe_get_identity()` helper for 6 call sites
+- **Collection metadata corruption** — 114 community photos reassigned from "Community Submissions" to "Jews of Rhodes: Family Memories & Heritage" / "Facebook" (2 Benatar photos correctly kept)
+- **test_map.py cache poisoning** — reset `_photo_locations_cache` between tests
+
+### Added
+- **Shareable identification pages** — crowdsourcing face identification without login
+  - `GET /identify/{id}` — "Can you identify this person?" page with face crop, source photos, OG tags, share button
+  - `POST /api/identify/{id}/respond` — saves name/relationship/email for admin review
+  - `GET /identify/{a}/match/{b}` — side-by-side "Are these the same person?" page
+  - `POST /api/identify/{a}/match/{b}/respond` — saves Yes/No/Not Sure confirmation
+  - Confirmed identities auto-redirect to `/person/{id}`
+  - 15 tests
+- **Person page comments** — no-login-required community discussion
+  - Comments section with visible/hidden status + admin moderation
+  - `POST /api/person/{id}/comment` — submit comment (no auth required)
+  - `POST /api/person/{id}/comment/{cid}/hide` — admin-only moderation
+  - "No comments yet" empty state + comment form
+  - 9 tests
+- **Person page action bar** — Timeline, Map, Family Tree, Connections pill buttons
+- **Clickable collection link** on photo page → `/collection/{slug}`
+- **"Help Identify" CTA** on person page for unidentified persons → `/identify/{id}`
+- **Data integrity checker** — `scripts/verify_data_integrity.py` with 18 checks
+- **Critical route smoke tests** — `tests/test_critical_routes.py` with 10 route tests
+- **Feedback tracker** — `docs/feedback/session_40_feedback.md` with 32 categorized items
+- **Collection migration script** — `scripts/fix_collection_metadata.py` with --dry-run/--execute
+
+### Changed
+- `/connect` gracefully handles invalid person IDs (no 500)
+- Test count: 2159 → 2194
+
 ## [v0.41.0] — 2026-02-17
 
 ### Added
