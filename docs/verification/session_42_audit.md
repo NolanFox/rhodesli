@@ -3,7 +3,7 @@
 Date: 2026-02-17
 Environment: Local (auth disabled, STORAGE_MODE=local)
 
-## Route Health Check
+## Pre-Fix Route Health Check
 
 | Route | Expected | Actual | Status |
 |-------|----------|--------|--------|
@@ -34,45 +34,98 @@ TypeError: 'set' object is not subscriptable
 
 `photo_reg.get_photos_for_faces()` returns `set[str]`, but code slices it with `[:4]`.
 
-## Feature Verification
+## Pre-Fix Feature Verification
 
 | Feature | Expected | Actual | Status |
 |---------|----------|--------|--------|
-| /connect renders D3 graph | Graph visible | D3 scripts + SVG container present | PASS |
-| /map renders Leaflet map with markers | Map + markers | Leaflet scripts + container present | PASS |
+| /connect renders D3 graph | Graph visible | D3 scripts + SVG present | PASS |
+| /map renders Leaflet map with markers | Map + markers | Leaflet scripts present | PASS |
 | /tree renders D3 family tree | Tree visible | D3 hierarchy scripts present | PASS |
 | /timeline renders timeline | Timeline | 309 timeline elements found | PASS |
-| Click identified face overlay → /person/{id} | Navigates | Links present (href="/person/{id}") | PASS |
-| Click unidentified face overlay → /identify/{id} | Navigates | Not tested (would need unidentified faces on photos) | N/A |
-| Photo carousel prev/next arrows work | Navigate photos | "Photo 1 of 108" + next link present | PASS |
-| Collection link on photo page → collection | Clickable | href="/collection/vida-capeluto-nyc-collection" | PASS |
-| Person page action bar (Timeline/Map/Tree) | Present | All 4 links (Timeline/Map/Tree/Connect) present | PASS |
-| Person page comments section | Present + submittable | Comments section with form present | PASS |
+| Click identified face overlay → /person/{id} | Navigates | Links present | PASS |
+| Photo carousel prev/next arrows | Navigate | "Photo 1 of 108" + next link | PASS |
+| Collection link on photo page | Clickable | Correct href present | PASS |
+| Person page action bar | Present | Timeline/Map/Tree/Connect all present | PASS |
+| Person page comments section | Present | Form present | PASS |
 | "Return to Inbox" hidden on /person/{id} | Hidden | Not found in HTML | PASS |
-| Admin sidebar on admin pages | Present | 8 sidebar references found | PASS |
-| Admin sidebar NOT on public pages | Absent | 0 sidebar references on /photos | PASS |
-| "Tree" in nav on ALL public pages | Present everywhere | Present on /photos, /people, /timeline, /map, /connect, /compare. **Missing on /** | **PARTIAL** |
-| Admin elements hidden on public /photo/{id} | Hidden | **"Admin: Add a back image" + "Front orientation" visible** | **FAIL** |
-| /identify/{id} share copies identify URL | Correct URL | Can't test — page 500s | **BLOCKED** |
-| Photo uploader attribution | "Uploaded by X" | Not implemented | **MISSING** |
-| "Add Photos" button on collection pages | Present | Not implemented | **MISSING** |
-| GEDCOM test data labeled as test | Warning shown | File name shown but no explicit warning | **PARTIAL** |
-| Compare shows two clear modes | Clear UX | Single mode "Select a Person" + "Or Upload" subsection | **PARTIAL** |
-| /collections shows all with counts | All collections | 8 collections: 118, 108, 14, 13, 12, 3, 2, 1 photos | PASS |
+| Admin sidebar on admin pages | Present | Present | PASS |
+| Admin sidebar NOT on public pages | Absent | Absent | PASS |
+| "Tree" in nav on ALL public pages | Present | Missing on / landing page | **PARTIAL** |
+| Admin elements on /photo/{id} | Hidden for anon | Visible (auth disabled=admin) | **FALSE POSITIVE** |
+| /identify/{id} share button | Correct URL | Blocked by 500 | **BLOCKED** |
+| Upload attribution | Present | Not implemented (no data field) | **MISSING** |
+| "Add Photos" on collection pages | Present | Not implemented | **MISSING** |
+| GEDCOM test data labeled | Warning shown | No warning | **PARTIAL** |
+| Compare two-mode UX | Clear modes | Single-flow UI | **PARTIAL** |
+| /collections counts | All collections | 8 collections with correct counts | PASS |
 
-## Issues to Fix (Priority Order)
+## Issues Found
 
-### P0: Route 500 Errors
-1. **`/identify/{id}` 500** — set not subscriptable on line 9619
+1. **P0: /identify/{id} 500** — set not subscriptable
+2. **P2: Landing page nav incomplete** — missing Map, Tree, Collections, Connect
+3. **P3: GEDCOM test data not labeled** — no warning banner
+4. **P3: Compare single-flow UX** — modes not clearly separated
+5. **P3: No "Add Photos" on collection pages** — missing admin button
+6. **DEFERRED: Upload attribution** — no `uploaded_by` field in data model
 
-### P1: Security/Privacy
-2. **Admin tools visible to anonymous on /photo/{id}** — "Admin: Add a back image" + "Front orientation" exposed
+Note: Admin elements on /photo/{id} were a **false positive** — they are correctly
+wrapped in `if is_admin else None` checks. When auth is disabled (local dev),
+`is_admin=True` by design. In production with auth enabled, anonymous users see
+`is_admin=False`.
 
-### P2: Navigation
-3. **Landing page (/) missing full nav** — only /about, /compare, /timeline shown (no /photos, /people, /map, /connect, /tree)
+---
 
-### P3: Missing Features (from Session 40 feedback)
-4. Upload attribution on photo page (FB-40-22)
-5. "Add Photos" button on collection pages (FB-40-23)
-6. GEDCOM test data warning (FB-40-11)
-7. Compare page two-mode UX (FB-40-13)
+## Post-Fix Verification
+
+### All Routes Return 200
+
+| Route | Status |
+|-------|--------|
+| GET / | 200 |
+| GET /photos | 200 |
+| GET /collections | 200 |
+| GET /collection/vida-capeluto-nyc-collection | 200 |
+| GET /collection/jews-of-rhodes-family-memories-heritage | 200 |
+| GET /people | 200 |
+| GET /person/{confirmed_id} | 200 |
+| GET /photo/{id} | 200 |
+| GET /map | 200 |
+| GET /connect | 200 |
+| GET /tree | 200 |
+| GET /timeline | 200 |
+| GET /compare | 200 |
+| GET /identify/{unresolved_id} | **200** |
+| GET /admin/gedcom | 200 |
+| GET /admin/approvals | 200 |
+
+### Fixes Applied
+
+| Issue | Fix | Verified |
+|-------|-----|----------|
+| /identify 500 | `list()` wrap on `get_photos_for_faces()` result | 200 for both INBOX and SKIPPED identities |
+| Landing page nav | Added all 8 public page links | All links present in HTML |
+| GEDCOM test warning | Warning banner for files with "test" in name | `test-data-warning` div present |
+| Compare two modes | Numbered sections "1. Search" + "2. Upload" | Both labels in HTML |
+| Add Photos on collections | Admin-only button linking to /upload | Code added (visible in prod w/ admin auth) |
+| Mock return type | `test_critical_routes.py` mock returns `set()` not `[]` | Tests pass |
+
+### Test Results
+
+| Suite | Result |
+|-------|--------|
+| App tests | 2209 passed, 3 skipped |
+| ML tests | 306 passed |
+| E2E tests | 48 passed, 7 skipped |
+| Data integrity | 18/18 checks passed |
+| **Total** | **2563 passed** |
+
+### Share Button Verification
+
+/identify/{id} share button confirmed working:
+```html
+<button data-action="share-photo"
+  data-share-url="https://rhodesli.nolanandrewfox.com/identify/{id}"
+  ...>Share to help identify</button>
+```
+
+The share URL correctly uses `/identify/` path, not `/photo/`.
