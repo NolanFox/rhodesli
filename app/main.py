@@ -9361,6 +9361,9 @@ def public_person_page(
                     # Approved community annotations
                     annotations_section if annotations_section else None,
 
+                    # Comments section
+                    _person_comments_section(person_id, is_admin),
+
                     cls="max-w-5xl mx-auto px-6 py-10",
                 ),
             ),
@@ -9370,8 +9373,13 @@ def public_person_page(
                 Div(
                     H3(f"Do you have more photos of {display_name}?", cls="text-lg font-serif text-white mb-2"),
                     P("Upload your family photos to help us build a more complete picture.", cls="text-slate-400 text-sm mb-4"),
-                    A("Upload Photos", href="/?section=upload",
-                      cls="inline-block px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"),
+                    Div(
+                        A("Upload Photos", href="/?section=upload",
+                          cls="inline-block px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"),
+                        A("Help Identify", href=f"/identify/{person_id}",
+                          cls="inline-block px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors") if not is_confirmed else None,
+                        cls="flex flex-wrap justify-center gap-3",
+                    ),
                     cls="text-center",
                 ),
                 cls="py-12 border-t border-slate-800",
@@ -9948,6 +9956,66 @@ def post(person_a: str, person_b: str, answer: str = "", sess=None):
     return Div(
         P(messages[answer], cls="text-emerald-400 text-sm text-center py-4"),
     )
+
+
+# --- Person Comments API ---
+
+@rt("/api/person/{person_id}/comment")
+def post(person_id: str, author: str = "", text: str = "", sess=None):
+    """Submit a comment on a person page. No login required."""
+    if not text.strip():
+        return Div(P("Please enter a comment.", cls="text-amber-400 text-sm py-2"))
+
+    import uuid
+    comments_data = _load_person_comments()
+    if person_id not in comments_data.get("comments", {}):
+        comments_data.setdefault("comments", {})[person_id] = []
+
+    comment = {
+        "id": str(uuid.uuid4())[:8],
+        "author": author.strip() or "Anonymous",
+        "text": text.strip(),
+        "timestamp": datetime.now().isoformat(),
+        "status": "visible",
+    }
+    comments_data["comments"][person_id].append(comment)
+    _save_person_comments(comments_data)
+
+    # Re-render comments list
+    visible = [c for c in comments_data["comments"][person_id] if c.get("status") == "visible"]
+    items = []
+    for c in visible:
+        date_str = c.get("timestamp", "")[:10]
+        items.append(
+            Div(
+                Div(
+                    Span(c["author"], cls="text-sm font-medium text-slate-300"),
+                    Span(f" · {date_str}", cls="text-xs text-slate-600") if date_str else None,
+                    cls="flex items-center mb-1",
+                ),
+                P(c["text"], cls="text-sm text-slate-400 leading-relaxed"),
+                cls="py-3 border-b border-slate-800/50 last:border-0",
+                id=f"comment-{c['id']}",
+            )
+        )
+    return Div(*items)
+
+
+@rt("/api/person/{person_id}/comment/{comment_id}/hide")
+def post(person_id: str, comment_id: str, sess=None):
+    """Hide a comment (admin only)."""
+    err = _check_admin(sess)
+    if err:
+        return err
+
+    comments_data = _load_person_comments()
+    person_comments = comments_data.get("comments", {}).get(person_id, [])
+    for c in person_comments:
+        if c.get("id") == comment_id:
+            c["status"] = "hidden"
+            break
+    _save_person_comments(comments_data)
+    return Div(P("Comment hidden.", cls="text-xs text-slate-500 italic py-2"))
 
 
 @rt("/photos")
@@ -19283,6 +19351,115 @@ def _photo_annotations_section(photo_id: str, is_admin: bool = False):
         pending_badge,
         id=f"photo-annotations-{photo_id}",
         cls="mt-3 border-t border-slate-700 pt-2" if ann_items else "mt-2",
+    )
+
+
+# --- Person Comments ---
+
+_person_comments_cache = None
+
+
+def _load_person_comments() -> dict:
+    """Load person comments from data file."""
+    global _person_comments_cache
+    if _person_comments_cache is not None:
+        return _person_comments_cache
+    path = data_path / "person_comments.json"
+    default = {"schema_version": 1, "comments": {}}
+    if path.exists():
+        try:
+            with open(path, encoding="utf-8") as f:
+                _person_comments_cache = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            _person_comments_cache = default
+    else:
+        _person_comments_cache = default
+    return _person_comments_cache
+
+
+def _save_person_comments(data: dict):
+    """Save person comments atomically."""
+    global _person_comments_cache
+    path = data_path / "person_comments.json"
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(data_path), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        os.replace(tmp_path, str(path))
+        _person_comments_cache = data
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+def _person_comments_section(person_id: str, is_admin: bool = False):
+    """Build the comments section for person pages."""
+    comments_data = _load_person_comments()
+    person_comments = comments_data.get("comments", {}).get(person_id, [])
+    visible_comments = [c for c in person_comments if c.get("status", "visible") == "visible"]
+
+    comment_items = []
+    for c in visible_comments:
+        author = c.get("author", "Anonymous")
+        text = c.get("text", "")
+        ts = c.get("timestamp", "")
+        date_str = ts[:10] if ts else ""
+
+        hide_btn = None
+        if is_admin:
+            hide_btn = Button(
+                "Hide",
+                hx_post=f"/api/person/{person_id}/comment/{c.get('id', '')}/hide",
+                hx_target=f"#comment-{c.get('id', '')}",
+                hx_swap="outerHTML",
+                cls="text-xs text-rose-400 hover:text-rose-300 ml-2",
+            )
+
+        comment_items.append(
+            Div(
+                Div(
+                    Span(author, cls="text-sm font-medium text-slate-300"),
+                    Span(f" · {date_str}", cls="text-xs text-slate-600") if date_str else None,
+                    hide_btn,
+                    cls="flex items-center mb-1",
+                ),
+                P(text, cls="text-sm text-slate-400 leading-relaxed"),
+                cls="py-3 border-b border-slate-800/50 last:border-0",
+                id=f"comment-{c.get('id', '')}",
+            )
+        )
+
+    # Comment form (no login required)
+    form = Form(
+        Input(type="hidden", name="person_id", value=person_id),
+        Div(
+            Input(type="text", name="author", placeholder="Your name (optional)",
+                  cls="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+            cls="mb-3",
+        ),
+        Div(
+            Textarea(name="text", placeholder="Share a memory, correction, or anything you know about this person...",
+                     rows=3,
+                     cls="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none"),
+            cls="mb-3",
+        ),
+        Button("Post Comment", type="submit",
+               cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"),
+        hx_post=f"/api/person/{person_id}/comment",
+        hx_target="#person-comments-list",
+        hx_swap="innerHTML",
+    )
+
+    return Div(
+        H3(f"Comments ({len(visible_comments)})", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+        Div(*comment_items, id="person-comments-list") if comment_items else
+        Div(P("No comments yet. Be the first to share a memory!", cls="text-sm text-slate-500 italic"), id="person-comments-list"),
+        Div(form, cls="mt-6"),
+        cls="mt-10 pt-8 border-t border-slate-800",
+        data_testid="comments-section",
     )
 
 
