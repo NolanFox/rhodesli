@@ -387,3 +387,10 @@
 - **Mistake**: `annotations.json` was in both `OPTIONAL_SYNC_FILES` (init_railway_volume.py) and `DATA_FILES` (push_to_production.py). Users submit annotations on the live site, but the deploy pipeline would overwrite the production copy with the local empty one. The user's annotation appeared to vanish.
 - **Rule**: Data files written by users on production (annotations.json) must NOT be in OPTIONAL_SYNC_FILES or push DATA_FILES. They need their own pull mechanism (sync API endpoint) to flow production→local. The deploy must never touch them.
 - **Prevention**: Before adding a data file to any sync list, ask: "Who writes this file?" If production users → do NOT sync from bundle. If local ML pipeline → sync from bundle. Added deploy safety tests that assert annotations.json is NOT in sync lists. Added `/api/sync/annotations` pull endpoint.
+
+## Session 2026-02-17: /connect Production 500 Fix
+
+### Lesson 70: Dockerfile must COPY every package the web app imports at runtime
+- **Mistake**: `rhodesli_ml/` was never added to the Dockerfile when its graph/importer modules were first imported by app/main.py (sessions 35-38). The Dockerfile only had `COPY app/`, `COPY core/`, `COPY scripts/`. Routes /connect, /tree, and /admin/gedcom all 500'd in production with `ModuleNotFoundError` — but worked locally because `rhodesli_ml/` existed on disk.
+- **Rule**: When adding a NEW `from X import ...` to `app/main.py` where X is a package not already in the Dockerfile, you MUST update the Dockerfile in the SAME commit. "Works locally" is not "works in production."
+- **Prevention**: Added 5 deploy safety tests (`TestDockerfileModuleCoverage`) that verify the Dockerfile has COPY directives for every rhodesli_ml subpackage the web app imports. Selectively copy only pure-Python runtime modules (graph/ + importers/ = 200KB), not the full ML package (3.2GB with .venv + checkpoints).
