@@ -1100,6 +1100,14 @@ def _section_for_state(state: str) -> str:
         return "to_review"
 
 
+def _safe_get_identity(registry, identity_id: str) -> dict:
+    """Get identity by ID, returning empty dict instead of raising KeyError."""
+    try:
+        return registry.get_identity(identity_id)
+    except (KeyError, TypeError):
+        return {}
+
+
 def _compute_sidebar_counts(registry) -> dict:
     """Compute sidebar navigation counts from a loaded registry.
 
@@ -10087,8 +10095,8 @@ def get(slug: str, sess=None):
     people_section = ""
     if people_in_collection:
         people_items = []
-        for pid in sorted(people_in_collection, key=lambda x: (registry.get_identity(x) or {}).get("name", "").lower()):
-            p_ident = registry.get_identity(pid) or {}
+        for pid in sorted(people_in_collection, key=lambda x: _safe_get_identity(registry, x).get("name", "").lower()):
+            p_ident = _safe_get_identity(registry, pid)
             p_name = ensure_utf8_display(p_ident.get("name", "Unknown"))
             people_items.append(
                 A(p_name, href=f"/person/{pid}",
@@ -10206,6 +10214,7 @@ def get(collection: str = "", person: str = "", decade: str = "", sess=None):
     """Interactive map view of photo locations across the Rhodes Jewish diaspora."""
     user = get_current_user(sess or {}) if is_auth_enabled() else None
 
+    _build_caches()
     locations = _load_photo_locations()
     registry = load_registry()
     photo_reg = load_photo_registry()
@@ -11857,8 +11866,8 @@ def _connection_path_html(path_steps, registry):
         from_id = step["from"]
         to_id = step["to"]
         edge = step["edge"]
-        from_ident = registry.get_identity(from_id) or {}
-        to_ident = registry.get_identity(to_id) or {}
+        from_ident = _safe_get_identity(registry, from_id)
+        to_ident = _safe_get_identity(registry, to_id)
         from_name = ensure_utf8_display(from_ident.get("name", "Unknown"))
         to_name = ensure_utf8_display(to_ident.get("name", "Unknown"))
 
@@ -12396,8 +12405,8 @@ def get(person_a: str = "", person_b: str = "", sess=None):
         social = _load_social_graph()
         paths = find_all_paths(social, person_a, person_b)
 
-        name_a = ensure_utf8_display((registry.get_identity(person_a) or {}).get("name", "Unknown"))
-        name_b = ensure_utf8_display((registry.get_identity(person_b) or {}).get("name", "Unknown"))
+        name_a = ensure_utf8_display(_safe_get_identity(registry, person_a).get("name", "Unknown"))
+        name_b = ensure_utf8_display(_safe_get_identity(registry, person_b).get("name", "Unknown"))
 
         # Compute degrees of separation
         any_path = paths.get("any")

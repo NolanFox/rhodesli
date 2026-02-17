@@ -245,3 +245,33 @@ class TestConnectPage:
         assert "Big Leon Capeluto" in resp.text
         assert "Moise Capeluto" in resp.text
         assert "Victoria Capuano" in resp.text
+
+    def test_connect_with_invalid_person_ids(self, client):
+        """Passing invalid person IDs should not 500 — graceful degradation."""
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+
+        import pathlib
+        orig_exists = pathlib.Path.exists
+        orig_read_text = pathlib.Path.read_text
+
+        def mock_exists(self):
+            if "co_occurrence" in str(self):
+                return True
+            return orig_exists(self)
+
+        def mock_read_text(self, **kwargs):
+            if "co_occurrence" in str(self):
+                return json.dumps(_MOCK_COOCCUR)
+            return orig_read_text(self, **kwargs)
+
+        with patch.object(pathlib.Path, 'exists', mock_exists):
+            with patch.object(pathlib.Path, 'read_text', mock_read_text):
+                resp = client.get("/connect?person_a=nonexistent-id&person_b=also-invalid")
+
+        for p in patches:
+            p.stop()
+
+        assert resp.status_code == 200
+        assert "Unknown" in resp.text
