@@ -99,7 +99,7 @@ def _build_mock_photo_reg():
     mock_photo_reg.list_photos = MagicMock(return_value=[])
     mock_photo_reg._photos = {}
     mock_photo_reg.get_photo_for_face = MagicMock(return_value=None)
-    mock_photo_reg.get_photos_for_faces = MagicMock(return_value=[])
+    mock_photo_reg.get_photos_for_faces = MagicMock(return_value=set())
     return mock_photo_reg
 
 
