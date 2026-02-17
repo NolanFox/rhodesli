@@ -11888,6 +11888,464 @@ def _connection_path_html(path_steps, registry):
     return Div(*steps, cls="flex flex-col items-center mt-6", data_testid="connection-path")
 
 
+@rt("/tree")
+def get(person: str = "", show_theory: str = "true", sess=None):
+    """Family Tree — hierarchical visualization of family relationships."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    registry = load_registry()
+    rel_graph = _load_relationship_graph()
+
+    # Filter out theory relationships if requested
+    if show_theory == "false":
+        filtered_rels = [
+            r for r in rel_graph.get("relationships", [])
+            if r.get("confidence", "confirmed") != "theory"
+        ]
+        rel_graph = {**rel_graph, "relationships": filtered_rels}
+
+    # Build person selector options (confirmed identities with real names)
+    confirmed = [
+        i for i in registry.list_identities(state=IdentityState.CONFIRMED)
+        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
+    ]
+    confirmed.sort(key=lambda x: (x.get("name") or "").lower())
+
+    person_options = [Option("Everyone", value="")]
+    for ident in confirmed:
+        name = ensure_utf8_display(ident.get("name", ""))
+        iid = ident.get("identity_id", "")
+        person_options.append(Option(name, value=iid, selected=(iid == person)))
+
+    # Build tree data
+    from rhodesli_ml.graph.relationship_graph import build_family_tree
+    identities_dict = {}
+    for ident in registry.list_identities(state=IdentityState.CONFIRMED):
+        if not ident.get("merged_into"):
+            identities_dict[ident["identity_id"]] = ident
+
+    tree_data = build_family_tree(
+        rel_graph, identities_dict,
+        root_person=person if person else None,
+    )
+
+    # Enrich tree nodes with avatar URLs
+    crop_files = get_crop_files()
+
+    def _enrich_with_avatars(nodes):
+        for node in nodes:
+            if node.get("type") == "couple":
+                for member in node.get("members", []):
+                    member["avatar_url"] = _get_person_avatar(member["id"], registry, crop_files)
+                _enrich_with_avatars(node.get("children", []))
+            else:
+                node["avatar_url"] = _get_person_avatar(node.get("id", ""), registry, crop_files)
+                _enrich_with_avatars(node.get("children", []))
+
+    def _get_person_avatar(person_id, reg, crops):
+        try:
+            ident = reg.get_identity(person_id)
+            if not ident:
+                return None
+            anchor_ids = ident.get("anchor_ids", [])
+            if anchor_ids:
+                url = resolve_face_image_url(anchor_ids[0], crops)
+                if url:
+                    return url
+        except (KeyError, IndexError):
+            pass
+        return None
+
+    _enrich_with_avatars(tree_data)
+
+    tree_json = json.dumps(tree_data)
+
+    # Person name for title/OG
+    person_name = ""
+    if person:
+        try:
+            p_ident = registry.get_identity(person)
+            if p_ident:
+                person_name = ensure_utf8_display(p_ident.get("name", ""))
+        except KeyError:
+            pass
+
+    title_text = f"{person_name}'s Family Tree" if person_name else "Family Tree"
+    share_url = f"/tree?person={person}" if person else "/tree"
+
+    nav_links = _public_nav_links(active="tree", user=user)
+
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+        #tree-container { width: 100%; min-height: 600px; border-radius: 0.75rem; overflow: hidden; }
+        @media (min-width: 768px) { #tree-container { min-height: 700px; } }
+        .tree-node rect { cursor: pointer; transition: filter 0.2s ease; }
+        .tree-node rect:hover { filter: brightness(1.2); }
+        .tree-node text { pointer-events: none; }
+        .tree-link { fill: none; stroke: #d97706; stroke-width: 2; stroke-opacity: 0.6; }
+        .spouse-link { stroke: #ec4899; stroke-dasharray: 5,3; stroke-opacity: 0.6; }
+        .highlight-glow { filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)); }
+    """)
+
+    empty_state = ""
+    if not tree_data:
+        empty_state = Div(
+            Div(
+                Span("No family relationships found yet.", cls="text-slate-400 text-lg"),
+                P("Import a GEDCOM file to build the family tree.", cls="text-slate-500 mt-2"),
+                cls="text-center py-16",
+            ),
+            id="tree-container",
+        )
+
+    return (
+        Title(f"{title_text} — Rhodesli"),
+        Meta(property="og:title", content=f"{title_text} — Rhodesli"),
+        Meta(property="og:description", content="Explore the Rhodes-Capeluto family tree — generations of a Sephardic Jewish family from Rhodes."),
+        Meta(property="og:url", content=f"{SITE_URL}{share_url}"),
+        page_style,
+        Div(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+                ),
+                cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
+            ),
+            Div(
+                # Header
+                Div(
+                    H1(title_text, cls="text-2xl md:text-3xl font-bold text-white mb-2"),
+                    P("Explore family relationships across generations.", cls="text-slate-400 mb-6"),
+                    cls="mb-6",
+                ),
+
+                # Controls row
+                Div(
+                    Form(
+                        Div(
+                            Label("Focus on", cls="text-xs text-slate-400 mb-1 block"),
+                            Select(*person_options, name="person",
+                                   cls="px-3 py-2 bg-slate-800 text-white rounded-lg border border-slate-700 focus:border-indigo-500 outline-none text-sm",
+                                   onchange="this.form.submit()"),
+                        ),
+                        Div(
+                            Label(
+                                Input(type="checkbox", name="show_theory", value="true",
+                                      checked=(show_theory != "false"),
+                                      cls="mr-2 rounded",
+                                      onchange="this.form.submit()"),
+                                "Show speculative",
+                                cls="text-sm text-slate-400 flex items-center",
+                            ),
+                            cls="flex items-end pb-2",
+                        ),
+                        # Hidden field to handle unchecked checkbox
+                        Input(type="hidden", name="show_theory", value="false") if show_theory == "false" else "",
+                        method="get",
+                        action="/tree",
+                        cls="flex flex-wrap gap-4 items-end",
+                    ),
+                    # Share button
+                    Button(
+                        NotStr(_SHARE_ICON_SVG),
+                        " Share",
+                        cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                        type="button",
+                        data_action="share-photo",
+                        data_share_url=share_url,
+                    ),
+                    cls="flex flex-wrap items-end justify-between gap-4 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 mb-6",
+                ),
+
+                # Tree visualization
+                empty_state if not tree_data else Div(
+                    Div(
+                        Div(
+                            Div(Div(cls="w-2.5 h-2.5 rounded-full", style="background:#d97706"), Span("Parent-Child", cls="text-xs text-slate-500"), cls="flex items-center gap-1.5"),
+                            Div(Div(cls="w-2.5 h-2.5 rounded-full", style="background:#ec4899"), Span("Spouse", cls="text-xs text-slate-500"), cls="flex items-center gap-1.5"),
+                            cls="flex gap-4",
+                        ),
+                        cls="flex justify-end mb-2",
+                    ),
+                    Div(id="tree-container", cls="bg-slate-800/50 rounded-xl border border-slate-700/50"),
+                ),
+
+                cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
+            ),
+            # D3.js
+            Script(src="https://d3js.org/d3.v7.min.js"),
+            Script(f"""
+(function() {{
+    var treeData = {tree_json};
+    var container = document.getElementById('tree-container');
+    if (!container || !treeData.length) return;
+
+    var focusPerson = '{person}';
+    var nodeW = 140, nodeH = 70, coupleGap = 10;
+
+    // Flatten the tree into a d3-hierarchy-compatible format
+    // Each couple becomes a single node in the hierarchy with children
+    function flatten(nodes) {{
+        if (!nodes || !nodes.length) return null;
+        // If multiple roots, create a virtual root
+        if (nodes.length === 1) return convertNode(nodes[0]);
+        return {{
+            id: '_root',
+            type: 'virtual',
+            children: nodes.map(convertNode)
+        }};
+    }}
+
+    function convertNode(n) {{
+        var result = {{
+            id: n.id || (n.members ? n.members.map(function(m){{ return m.id; }}).join('+') : 'unknown'),
+            type: n.type,
+            members: n.members || null,
+            name: n.name || '',
+            avatar_url: n.avatar_url || null,
+            birth_year: n.birth_year || null,
+            death_year: n.death_year || null,
+        }};
+        if (n.children && n.children.length) {{
+            result.children = n.children.map(convertNode);
+        }}
+        return result;
+    }}
+
+    var root = d3.hierarchy(flatten(treeData));
+
+    var treeLayout = d3.tree().nodeSize([nodeW * 2 + coupleGap + 40, 140]);
+    treeLayout(root);
+
+    // Compute bounds
+    var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    root.each(function(d) {{
+        if (d.x < x0) x0 = d.x;
+        if (d.x > x1) x1 = d.x;
+        if (d.y < y0) y0 = d.y;
+        if (d.y > y1) y1 = d.y;
+    }});
+
+    var treeW = x1 - x0 + nodeW * 4;
+    var treeH = y1 - y0 + nodeH * 4;
+    var svgW = container.clientWidth || 900;
+    var svgH = Math.max(600, treeH + 100);
+    container.style.height = svgH + 'px';
+
+    var svg = d3.select('#tree-container')
+        .append('svg')
+        .attr('width', svgW)
+        .attr('height', svgH);
+
+    var g = svg.append('g');
+
+    // Zoom
+    svg.call(d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(event) {{
+        g.attr('transform', event.transform);
+    }}));
+
+    // Center the tree
+    var initialX = svgW / 2 - (x0 + x1) / 2;
+    var initialY = 60 - y0;
+    g.attr('transform', 'translate(' + initialX + ',' + initialY + ')');
+
+    // Draw links (parent-child)
+    g.selectAll('.tree-link')
+        .data(root.links().filter(function(d) {{ return d.source.data.type !== 'virtual'; }}))
+        .join('path')
+        .attr('class', 'tree-link')
+        .attr('d', function(d) {{
+            var sy = d.source.y + nodeH;
+            var ty = d.target.y;
+            var mx = d.target.x;
+            return 'M' + d.source.x + ',' + sy +
+                   ' V' + ((sy + ty) / 2) +
+                   ' H' + mx +
+                   ' V' + ty;
+        }});
+
+    // Draw nodes
+    var nodes = g.selectAll('.tree-node')
+        .data(root.descendants().filter(function(d) {{ return d.data.type !== 'virtual'; }}))
+        .join('g')
+        .attr('class', 'tree-node')
+        .attr('transform', function(d) {{ return 'translate(' + d.x + ',' + d.y + ')'; }});
+
+    // For couple nodes, draw two side-by-side cards
+    nodes.each(function(d) {{
+        var el = d3.select(this);
+        if (d.data.type === 'couple' && d.data.members) {{
+            var m = d.data.members;
+            var halfW = nodeW / 2 + coupleGap / 2;
+
+            // Spouse connector (dashed pink line)
+            el.append('line')
+                .attr('x1', -coupleGap / 2)
+                .attr('y1', nodeH / 2)
+                .attr('x2', coupleGap / 2)
+                .attr('y2', nodeH / 2)
+                .attr('class', 'spouse-link')
+                .attr('stroke', '#ec4899')
+                .attr('stroke-width', 2);
+
+            for (var i = 0; i < m.length; i++) {{
+                var offsetX = i === 0 ? -halfW : coupleGap / 2;
+                var person = m[i];
+                var isHighlighted = person.id === focusPerson;
+                var cardG = el.append('g')
+                    .attr('transform', 'translate(' + offsetX + ',0)')
+                    .style('cursor', 'pointer')
+                    .on('click', (function(pid) {{ return function() {{ window.location.href = '/person/' + pid; }}; }})(person.id));
+
+                cardG.append('rect')
+                    .attr('width', nodeW)
+                    .attr('height', nodeH)
+                    .attr('rx', 8)
+                    .attr('fill', '#1e293b')
+                    .attr('stroke', isHighlighted ? '#818cf8' : '#334155')
+                    .attr('stroke-width', isHighlighted ? 2.5 : 1)
+                    .attr('class', isHighlighted ? 'highlight-glow' : '');
+
+                // Avatar circle
+                if (person.avatar_url) {{
+                    var clipId = 'clip-' + person.id.replace(/[^a-zA-Z0-9]/g, '');
+                    el.append('defs').append('clipPath').attr('id', clipId)
+                        .append('circle').attr('cx', offsetX + 25).attr('cy', 25).attr('r', 16);
+                    cardG.append('image')
+                        .attr('href', person.avatar_url)
+                        .attr('x', 9)
+                        .attr('y', 9)
+                        .attr('width', 32)
+                        .attr('height', 32)
+                        .attr('clip-path', 'url(#' + clipId + ')');
+                }} else {{
+                    // Letter initial
+                    cardG.append('circle')
+                        .attr('cx', 25).attr('cy', 25).attr('r', 16)
+                        .attr('fill', '#374151');
+                    cardG.append('text')
+                        .attr('x', 25).attr('y', 30)
+                        .attr('text-anchor', 'middle')
+                        .attr('fill', '#9ca3af')
+                        .attr('font-size', '14px')
+                        .text((person.name || '?')[0]);
+                }}
+
+                // Name
+                var displayName = person.name || 'Unknown';
+                if (displayName.length > 14) displayName = displayName.substring(0, 13) + '\u2026';
+                cardG.append('text')
+                    .attr('x', 48).attr('y', 22)
+                    .attr('fill', '#e2e8f0')
+                    .attr('font-size', '12px')
+                    .attr('font-weight', '600')
+                    .text(displayName);
+
+                // Dates
+                var dates = '';
+                if (person.birth_year) dates += person.birth_year;
+                if (person.birth_year && person.death_year) dates += '\u2013' + person.death_year;
+                if (dates) {{
+                    cardG.append('text')
+                        .attr('x', 48).attr('y', 38)
+                        .attr('fill', '#64748b')
+                        .attr('font-size', '10px')
+                        .text(dates);
+                }}
+            }}
+        }} else {{
+            // Single person node
+            var person = d.data;
+            var isHighlighted = person.id === focusPerson;
+            var cardG = el.append('g')
+                .style('cursor', 'pointer')
+                .on('click', function() {{ window.location.href = '/person/' + person.id; }});
+
+            cardG.append('rect')
+                .attr('x', -nodeW / 2)
+                .attr('width', nodeW)
+                .attr('height', nodeH)
+                .attr('rx', 8)
+                .attr('fill', '#1e293b')
+                .attr('stroke', isHighlighted ? '#818cf8' : '#334155')
+                .attr('stroke-width', isHighlighted ? 2.5 : 1)
+                .attr('class', isHighlighted ? 'highlight-glow' : '');
+
+            // Avatar
+            if (person.avatar_url) {{
+                var clipId = 'clip-' + (person.id || 'x').replace(/[^a-zA-Z0-9]/g, '');
+                el.append('defs').append('clipPath').attr('id', clipId)
+                    .append('circle').attr('cx', -nodeW / 2 + 25).attr('cy', 25).attr('r', 16);
+                cardG.append('image')
+                    .attr('href', person.avatar_url)
+                    .attr('x', -nodeW / 2 + 9)
+                    .attr('y', 9)
+                    .attr('width', 32)
+                    .attr('height', 32)
+                    .attr('clip-path', 'url(#' + clipId + ')');
+            }} else {{
+                cardG.append('circle')
+                    .attr('cx', -nodeW / 2 + 25).attr('cy', 25).attr('r', 16)
+                    .attr('fill', '#374151');
+                cardG.append('text')
+                    .attr('x', -nodeW / 2 + 25).attr('y', 30)
+                    .attr('text-anchor', 'middle')
+                    .attr('fill', '#9ca3af')
+                    .attr('font-size', '14px')
+                    .text((person.name || '?')[0]);
+            }}
+
+            var displayName = person.name || 'Unknown';
+            if (displayName.length > 14) displayName = displayName.substring(0, 13) + '\u2026';
+            cardG.append('text')
+                .attr('x', -nodeW / 2 + 48).attr('y', 22)
+                .attr('fill', '#e2e8f0')
+                .attr('font-size', '12px')
+                .attr('font-weight', '600')
+                .text(displayName);
+
+            var dates = '';
+            if (person.birth_year) dates += person.birth_year;
+            if (person.birth_year && person.death_year) dates += '\u2013' + person.death_year;
+            if (dates) {{
+                cardG.append('text')
+                    .attr('x', -nodeW / 2 + 48).attr('y', 38)
+                    .attr('fill', '#64748b')
+                    .attr('font-size', '10px')
+                    .text(dates);
+            }}
+        }}
+    }});
+
+    // Auto-zoom to focus person if specified
+    if (focusPerson) {{
+        root.each(function(d) {{
+            var nodeIds = [];
+            if (d.data.members) {{
+                nodeIds = d.data.members.map(function(m) {{ return m.id; }});
+            }} else if (d.data.id) {{
+                nodeIds = [d.data.id];
+            }}
+            if (nodeIds.indexOf(focusPerson) >= 0) {{
+                var tx = svgW / 2 - d.x;
+                var ty = svgH / 3 - d.y;
+                svg.transition().duration(750).call(
+                    d3.zoom().transform,
+                    d3.zoomIdentity.translate(tx, ty).scale(1.2)
+                );
+            }}
+        }});
+    }}
+}})();
+"""),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
 @rt("/connect")
 def get(person_a: str = "", person_b: str = "", sess=None):
     """Six Degrees Connection Finder — find how two people are connected."""
