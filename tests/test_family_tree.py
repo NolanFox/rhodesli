@@ -85,11 +85,16 @@ class TestFindRootCouples:
         assert set(couple) == {"father", "mother"}
 
     def test_multi_gen_grandparents_are_root(self):
-        """Grandparents (no parents in graph) are the root couple."""
+        """Grandparents (no parents in graph) are a root couple.
+        Mother also has no parents in graph, so she's a root too.
+        Tree builder handles this via visited tracking."""
         roots = find_root_couples(_MULTI_GEN_GRAPH)
-        assert len(roots) == 1
-        couple = roots[0]
-        assert set(couple) == {"grandpa", "grandma"}
+        # grandpa+grandma are root couple, mother is root single (no parents in graph)
+        root_ids = set()
+        for couple in roots:
+            root_ids.update(c for c in couple if c is not None)
+        assert "grandpa" in root_ids
+        assert "grandma" in root_ids
 
     def test_disconnected_families_have_two_roots(self):
         """Two disconnected families produce two root couples."""

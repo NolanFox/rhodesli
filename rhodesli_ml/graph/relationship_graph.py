@@ -150,6 +150,155 @@ def load_relationship_graph(path: Optional[str] = None) -> dict:
         return json.load(f)
 
 
+def find_root_couples(graph: dict) -> list:
+    """Find root couples — parents with no parents of their own in the graph.
+
+    Returns: List of tuples [(person_a, person_b), ...] where each tuple is
+    a couple that has children but neither member appears as a child.
+    Single parents (no spouse) are returned as (person_id, None).
+    """
+    relationships = graph.get("relationships", [])
+    if not relationships:
+        return []
+
+    # Build sets of all parents and all children
+    all_parents = set()
+    all_children = set()
+    spouse_map = {}  # person -> spouse
+
+    for rel in relationships:
+        if rel.get("removed"):
+            continue
+        if rel["type"] == "parent_child":
+            all_parents.add(rel["person_a"])
+            all_children.add(rel["person_b"])
+        elif rel["type"] == "spouse":
+            spouse_map[rel["person_a"]] = rel["person_b"]
+            spouse_map[rel["person_b"]] = rel["person_a"]
+
+    # Root parents: parents who are NOT children of anyone
+    root_parents = all_parents - all_children
+
+    # Group root parents into couples
+    seen = set()
+    couples = []
+    for person in sorted(root_parents):  # Sort for deterministic ordering
+        if person in seen:
+            continue
+        seen.add(person)
+        spouse = spouse_map.get(person)
+        if spouse and spouse in root_parents:
+            seen.add(spouse)
+            couples.append((person, spouse))
+        else:
+            couples.append((person, None))
+
+    return couples
+
+
+def build_family_tree(
+    graph: dict,
+    identities: dict,
+    root_person: Optional[str] = None,
+) -> list:
+    """Build a hierarchical family tree from a relationship graph.
+
+    AD-081: Uses hierarchical tree structure with couple-based nodes.
+    AD-082: Each family unit (married couple + children) is a logical node.
+
+    Args:
+        graph: Relationship graph dict (from relationships.json)
+        identities: Dict of identity_id -> identity record
+        root_person: If set, center the tree on this person's family
+
+    Returns: List of tree root nodes. Each node is either:
+        - {"type": "couple", "members": [{id, name, ...}, ...], "children": [...]}
+        - {"type": "single", "id": str, "name": str, ..., "children": [...]}
+    """
+    relationships = graph.get("relationships", [])
+    if not relationships:
+        return []
+
+    # Build adjacency maps
+    parent_to_children = {}  # parent_id -> [child_id, ...]
+    child_to_parents = {}    # child_id -> [parent_id, ...]
+    spouse_map = {}          # person -> spouse
+
+    for rel in relationships:
+        if rel.get("removed"):
+            continue
+        if rel["type"] == "parent_child":
+            parent_to_children.setdefault(rel["person_a"], []).append(rel["person_b"])
+            child_to_parents.setdefault(rel["person_b"], []).append(rel["person_a"])
+        elif rel["type"] == "spouse":
+            spouse_map[rel["person_a"]] = rel["person_b"]
+            spouse_map[rel["person_b"]] = rel["person_a"]
+
+    visited = set()
+
+    def _enrich_person(person_id: str) -> dict:
+        """Build person metadata from identity record."""
+        ident = identities.get(person_id, {})
+        return {
+            "id": person_id,
+            "name": ident.get("name", "Unknown"),
+            "birth_year": ident.get("metadata", {}).get("birth_year")
+                          or ident.get("metadata", {}).get("birth_year_estimate"),
+            "death_year": ident.get("metadata", {}).get("death_year"),
+            "gender": ident.get("metadata", {}).get("gender"),
+        }
+
+    def _build_subtree(person_id: str, spouse_id: Optional[str] = None) -> dict:
+        """Recursively build a subtree starting from a person (and their spouse)."""
+        visited.add(person_id)
+        if spouse_id:
+            visited.add(spouse_id)
+
+        # Collect children of this person (and spouse if present)
+        children_ids = set(parent_to_children.get(person_id, []))
+        if spouse_id:
+            children_ids |= set(parent_to_children.get(spouse_id, []))
+
+        # Build child subtrees
+        child_nodes = []
+        for child_id in sorted(children_ids):
+            if child_id in visited:
+                continue
+            child_spouse = spouse_map.get(child_id)
+            if child_spouse and child_spouse in visited:
+                child_spouse = None
+            child_nodes.append(_build_subtree(child_id, child_spouse))
+
+        if spouse_id:
+            return {
+                "type": "couple",
+                "members": [_enrich_person(person_id), _enrich_person(spouse_id)],
+                "children": child_nodes,
+            }
+        else:
+            node = _enrich_person(person_id)
+            node["type"] = "single"
+            node["children"] = child_nodes
+            return node
+
+    # If root_person specified, build subtree from that person
+    if root_person:
+        spouse = spouse_map.get(root_person)
+        tree = [_build_subtree(root_person, spouse)]
+        return tree
+
+    # Otherwise, find all root couples and build from each
+    root_couples = find_root_couples(graph)
+    trees = []
+    for couple in root_couples:
+        person_a, person_b = couple
+        if person_a in visited:
+            continue
+        trees.append(_build_subtree(person_a, person_b))
+
+    return trees
+
+
 def get_relationships_for_person(graph: dict, identity_id: str) -> dict:
     """Get all relationships for a specific person.
 
