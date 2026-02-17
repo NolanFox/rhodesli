@@ -9048,6 +9048,11 @@ def public_person_page(
                     ))
 
             if family_items:
+                family_items.append(
+                    A("View in Family Tree →", href=f"/tree?person={person_id}",
+                      cls="text-xs text-indigo-400 hover:text-indigo-300 mt-3 inline-block",
+                      data_testid="family-tree-link"),
+                )
                 family_section = Div(
                     H3("Family", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
                     *family_items,
@@ -9081,7 +9086,9 @@ def public_person_page(
                 elif edge_type == "sibling_of":
                     badge = Span("Sibling", cls="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 ml-2")
                 elif edge_type == "photographed_with":
-                    badge = Span("Photos", cls="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-400 ml-2")
+                    photo_ct = conn.get("photo_count", 0)
+                    photo_label = f"{photo_ct} shared photo{'s' if photo_ct != 1 else ''}" if photo_ct else "Photos"
+                    badge = Span(photo_label, cls="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-400 ml-2")
                 else:
                     steps = conn.get("path_length", 0)
                     badge = Span(f"{steps} step{'s' if steps != 1 else ''}", cls="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 ml-2")
@@ -9091,9 +9098,11 @@ def public_person_page(
                     cls="flex items-center py-1",
                 ))
             if conn_items:
-                conn_items.append(
-                    A("Find connections →", href=f"/connect?person_a={person_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block"),
-                )
+                conn_items.append(Div(
+                    A("Find connections →", href=f"/connect?person_a={person_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 mr-4"),
+                    A("View in Tree →", href=f"/tree?person={person_id}", cls="text-xs text-indigo-400 hover:text-indigo-300"),
+                    cls="mt-2 flex gap-4",
+                ))
                 connections_section = Div(
                     H3("Connections", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
                     *conn_items,
@@ -12430,6 +12439,17 @@ def get(person_a: str = "", person_b: str = "", sess=None):
                     P(f"{len(paths['photo'])} step{'s' if len(paths['photo']) != 1 else ''} through photos", cls="text-xs text-slate-500 mb-2"),
                     _connection_path_html(paths["photo"], registry),
                     cls="bg-slate-800/30 rounded-lg p-4 border border-blue-900/30",
+                )
+            )
+
+        # Add "View in Family Tree" link if family path exists
+        if paths.get("family") is not None:
+            path_sections.append(
+                Div(
+                    A("View in Family Tree →", href=f"/tree?person={person_a}",
+                      cls="text-sm text-indigo-400 hover:text-indigo-300",
+                      data_testid="tree-link"),
+                    cls="text-center mt-2",
                 )
             )
 

@@ -415,3 +415,49 @@ class TestPersonPageAnnotations:
 
         # Should show only once despite two annotations with same value
         assert response.text.count("Same text twice") == 1
+
+
+class TestPersonPageTreeLink:
+    """Person page shows link to family tree when relationships exist."""
+
+    def test_person_with_family_shows_tree_link(self, client):
+        """Person with family relationships shows 'View in Family Tree' link."""
+        # Get two real confirmed identities to make the relationship graph work
+        registry = load_registry()
+        confirmed = [
+            i for i in registry.list_identities(state=None)
+            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
+        ]
+        if len(confirmed) < 2:
+            pytest.skip("Need at least 2 confirmed identities")
+        identity_id = confirmed[0]["identity_id"]
+        other_id = confirmed[1]["identity_id"]
+
+        mock_graph = {
+            "schema_version": 1,
+            "relationships": [
+                {"person_a": identity_id, "person_b": other_id, "type": "parent_child", "source": "gedcom"},
+            ],
+            "gedcom_imports": [],
+        }
+        with patch("app.main._load_relationship_graph", return_value=mock_graph), \
+             patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get(f"/person/{identity_id}")
+
+        assert response.status_code == 200
+        assert f"/tree?person={identity_id}" in response.text
+
+    def test_person_without_family_no_tree_link(self, client, confirmed_identity):
+        """Person without family relationships does NOT show family tree link."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        identity_id = confirmed_identity["identity_id"]
+
+        # Empty relationship graph
+        mock_graph = {"schema_version": 1, "relationships": [], "gedcom_imports": []}
+        with patch("app.main._load_relationship_graph", return_value=mock_graph), \
+             patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get(f"/person/{identity_id}")
+
+        assert response.status_code == 200
+        assert "family-tree-link" not in response.text
