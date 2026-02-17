@@ -2168,6 +2168,7 @@ def _public_nav_links(active: str = "", user=None) -> list:
         A("People", href="/people", cls=_active if active == "people" else _inactive),
         A("Map", href="/map", cls=_active if active == "map" else _inactive),
         A("Timeline", href="/timeline", cls=_active if active == "timeline" else _inactive),
+        A("Tree", href="/tree", cls=_active if active == "tree" else _inactive),
         A("Connect", href="/connect", cls=_active if active == "connect" else _inactive),
         A("Compare", href="/compare", cls=_active if active == "compare" else _inactive),
     ]
@@ -2317,6 +2318,12 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     Span("\U0001f4c5", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Timeline", cls="sidebar-label ml-2"),
                     href="/timeline",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
+                A(
+                    Span("\U0001f333", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Tree", cls="sidebar-label ml-2"),
+                    href="/tree",
                     cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
                 ),
                 A(
