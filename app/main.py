@@ -2153,6 +2153,29 @@ def mobile_header() -> Div:
     )
 
 
+def _public_nav_links(active: str = "", user=None) -> list:
+    """Build standard navigation links for public pages.
+
+    Args:
+        active: Which link is currently active (e.g., "photos", "map", "timeline")
+        user: Current user (for Sign In link)
+    """
+    _inactive = "text-slate-300 hover:text-white text-sm font-medium transition-colors"
+    _active = "text-white text-sm font-medium"
+    links = [
+        A("Photos", href="/photos", cls=_active if active == "photos" else _inactive),
+        A("Collections", href="/collections", cls=_active if active == "collections" else _inactive),
+        A("People", href="/people", cls=_active if active == "people" else _inactive),
+        A("Map", href="/map", cls=_active if active == "map" else _inactive),
+        A("Timeline", href="/timeline", cls=_active if active == "timeline" else _inactive),
+        A("Connect", href="/connect", cls=_active if active == "connect" else _inactive),
+        A("Compare", href="/compare", cls=_active if active == "compare" else _inactive),
+    ]
+    if is_auth_enabled() and not user:
+        links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    return links
+
+
 def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
     """
     Collapsible sidebar navigation for the Command Center.
@@ -2279,9 +2302,27 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 ),
                 nav_item("/?section=photos", "📷", "Photos", counts.get("photos", 0), "photos", "slate"),
                 A(
+                    Span("📂", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Collections", cls="sidebar-label ml-2"),
+                    href="/collections",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
+                A(
+                    Span("🗺️", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Map", cls="sidebar-label ml-2"),
+                    href="/map",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
+                A(
                     Span("\U0001f4c5", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Timeline", cls="sidebar-label ml-2"),
                     href="/timeline",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
+                A(
+                    Span("🔗", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Connect", cls="sidebar-label ml-2"),
+                    href="/connect",
                     cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
                 ),
                 A(
@@ -6050,13 +6091,7 @@ def landing_page(user=None) -> tuple:
     connect_icon = '<svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>'
     arrow_svg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>'
     style = Style("html, body { height: 100%; margin: 0; } body { background-color: #0f172a; } .hero-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 120px; gap: 0.5rem; } @media (min-width: 768px) { .hero-grid { grid-auto-rows: 140px; } } @media (min-width: 1024px) { .hero-grid { grid-auto-rows: 160px; } } .hero-overlay { background: linear-gradient(to bottom, rgba(15,23,42,0.3) 0%, rgba(15,23,42,0.6) 50%, rgba(15,23,42,0.95) 100%); } .stat-card { transition: transform 0.2s ease; } .stat-card:hover { transform: translateY(-2px); } @keyframes landing-fade-in { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } } .landing-animate { animation: landing-fade-in 0.6s ease-out both; } .landing-animate-delay-1 { animation-delay: 0.1s; } .landing-animate-delay-2 { animation-delay: 0.2s; }")
-    nav_links = [
-        A("Photos", href="/?section=photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/?section=confirmed", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Review", href="/?section=to_review", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4"))
+    nav_links = _public_nav_links(active="", user=user)
     if user:
         nav_links.append(Span(user.email.split("@")[0], cls="text-xs text-slate-500 ml-4"))
     # Pick a hero image URL for OG (first available featured photo)
@@ -9126,14 +9161,7 @@ def public_person_page(
     )
 
     # --- Navigation ---
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="people", user=user)
 
     # --- View toggle ---
     faces_active = view != "photos"
@@ -9584,14 +9612,7 @@ def get(filter_collection: str = "", sort_by: str = "newest",
               data_testid="tag-pill")
         )
 
-    nav_links = [
-        A("Photos", href="/photos", cls="text-white text-sm font-medium"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="photos", user=user)
 
     # Active filter summary
     active_filters = []
@@ -9756,14 +9777,7 @@ def get(sort_by: str = "name", sess=None):
         Option("Newest", value="newest", selected=(sort_by == "newest")),
     ]
 
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-white text-sm font-medium"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="people", user=user)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -9945,16 +9959,7 @@ def get(sess=None):
             )
         )
 
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Collections", href="/collections", cls="text-white text-sm font-medium"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Connect", href="/connect", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="collections", user=user)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -10079,16 +10084,7 @@ def get(slug: str, sess=None):
             cls="mt-8",
         )
 
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Collections", href="/collections", cls="text-white text-sm font-medium"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Connect", href="/connect", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="collections", user=user)
 
     share_url = f"/collection/{slug}"
 
@@ -10311,16 +10307,7 @@ def get(collection: str = "", person: str = "", decade: str = "", sess=None):
         Option(p["name"], value=p["id"], selected=(p["id"] == person)) for p in all_people
     ]
 
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Collections", href="/collections", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Map", href="/map", cls="text-white text-sm font-medium"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Connect", href="/connect", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="map", user=user)
 
     # Share URL with current filters
     share_params = []
@@ -10940,14 +10927,7 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
         decade_sections.append(Div(marker, *cards))
 
     # Navigation links (matches /photos and /people pattern)
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-white text-sm font-medium"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="timeline", user=user)
 
     page_style = Style("""
         html, body { margin: 0; }
@@ -11144,14 +11124,7 @@ def get(face_id: str = "", sess=None):
                 face_options.append({"face_id": fid, "name": name, "crop_url": crop_url})
 
     # Navigation
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-white text-sm font-medium"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="compare", user=user)
 
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -12020,15 +11993,7 @@ def get(person_a: str = "", person_b: str = "", sess=None):
     d3_json = json.dumps(d3_data)
 
     # Navigation
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Connect", href="/connect", cls="text-white text-sm font-medium"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="connect", user=user)
 
     share_url = f"/connect?person_a={person_a}&person_b={person_b}" if person_a and person_b else "/connect"
 
@@ -12506,14 +12471,7 @@ def public_photo_page(
         )
 
     # Navigation
-    nav_links = [
-        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
-    ]
-    if is_auth_enabled() and not user:
-        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+    nav_links = _public_nav_links(active="", user=user)
 
     page_style = Style("""
         html, body { margin: 0; }
