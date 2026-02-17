@@ -10723,7 +10723,9 @@ def get(slug: str, sess=None):
                         ),
                         A("View on Timeline →", href=f"/timeline?collection={quote(col_name)}",
                           cls="text-sm text-indigo-400 hover:text-indigo-300 ml-4"),
-                        cls="flex items-center mb-6",
+                        A("+ Add Photos", href="/upload",
+                          cls="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1 ml-3") if (user and user.is_admin if is_auth_enabled() else False) else None,
+                        cls="flex items-center flex-wrap gap-2 mb-6",
                     ),
                     cls="mb-6",
                 ),
@@ -11763,7 +11765,12 @@ def get(face_id: str = "", sess=None):
 
     # Upload section (graceful degradation)
     upload_section = Div(
-        H3("Or Upload a Photo", cls="text-sm text-slate-400 mb-3"),
+        Div(
+            Span("2", cls="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold mr-2"),
+            Span("Upload a Photo", cls="text-lg font-serif text-white"),
+            cls="flex items-center mb-1",
+        ),
+        P("Upload a photo to find matching faces in the archive.", cls="text-xs text-slate-500 mb-3"),
         Form(
             Div(
                 Input(type="file", name="photo", accept="image/*",
@@ -11805,7 +11812,7 @@ def get(face_id: str = "", sess=None):
             Section(
                 Div(
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P("Select a person from the archive to find similar faces, or upload a photo to search.",
+                    P("Find matching faces in two ways: search within the archive, or upload your own photo.",
                       cls="text-slate-400 text-sm"),
                     cls="max-w-4xl mx-auto px-6 pt-10 pb-6",
                 ),
@@ -11817,7 +11824,12 @@ def get(face_id: str = "", sess=None):
             # Face selector
             Section(
                 Div(
-                    H2("Select a Person", cls="text-lg font-serif text-white mb-4"),
+                    Div(
+                        Span("1", cls="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold mr-2"),
+                        Span("Search the Archive", cls="text-lg font-serif text-white"),
+                        cls="flex items-center mb-1",
+                    ),
+                    P("Select a person to find who else they look like.", cls="text-xs text-slate-500 mb-4"),
                     face_search,
                     face_grid,
                     cls="max-w-4xl mx-auto px-6 pb-6",
@@ -20960,6 +20972,16 @@ def get(sess=None):
             cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6",
         )
 
+    # Test data warning
+    test_data_warning = None
+    if source_file and "test" in source_file.lower():
+        test_data_warning = Div(
+            P("This is test data — upload your real GEDCOM file to replace it.",
+              cls="text-sm text-amber-200"),
+            cls="bg-amber-900/30 border border-amber-700/50 rounded-lg px-4 py-3 mb-6",
+            data_testid="test-data-warning",
+        )
+
     return Title("GEDCOM Import — Rhodesli"), Div(
         Div(
             H1("GEDCOM Import", cls="text-2xl font-bold text-white"),
@@ -20967,6 +20989,7 @@ def get(sess=None):
               cls="text-sm text-slate-400"),
             cls="mb-6"
         ),
+        test_data_warning,
         stats_cards,
         import_history_section,
         upload_section,
