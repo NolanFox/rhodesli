@@ -13685,7 +13685,7 @@ def public_photo_page(
                                     Span("Unidentified", cls="text-slate-300"),
                                     cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm",
                                 ) if face_overlays else None,
-                                cls="photo-flip-front" if has_back else "",
+                                cls="photo-flip-front relative" if has_back else "relative",
                             ),
                             # Back side (only rendered if back image exists)
                             Div(

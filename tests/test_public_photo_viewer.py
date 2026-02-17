@@ -183,6 +183,43 @@ class TestPublicPhotoViewerContent:
             assert "section=to_review" not in html or "section=skipped" in html
 
 
+class TestFaceOverlayAlignment:
+    """Regression: face overlays must be positioned relative to the image, not padded container."""
+
+    def test_overlay_container_is_relative(self, client, real_photo_id):
+        """The div wrapping image + overlays must have position:relative so
+        percentage-based overlay positioning is relative to the image bounds,
+        not the outer padded container (padding-top: 1.5rem caused misalignment)."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        import re
+        # The front-side div wrapping the image and face overlays must be relative
+        # It should NOT depend on photo-hero-container (which has padding)
+        # Find the div that contains both photo-hero img and face-overlay-box
+        # The structure is: <div class="relative">...<img class="photo-hero...">...face-overlay-box...</div>
+        pattern = r'<div\s+class="[^"]*relative[^"]*"[^>]*>\s*<img[^>]*photo-hero'
+        assert re.search(pattern, html), "Front-side div wrapping image + overlays must have 'relative' class"
+
+    def test_no_padding_on_overlay_container(self, client, real_photo_id):
+        """The immediate overlay container must not have padding that would offset overlays."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # photo-hero-container has padding — overlays must NOT be direct children of it
+        # They should be inside an inner relative div
+        import re
+        # Check that face-overlay-box elements appear inside a <div class="...relative...">
+        # that is NOT the photo-hero-container
+        overlay_pattern = re.search(r'<div class="([^"]*relative[^"]*)"[^>]*>\s*<img[^>]*photo-hero', html)
+        assert overlay_pattern, "Overlays must be inside a relative div wrapping the image"
+        container_classes = overlay_pattern.group(1)
+        assert "photo-hero-container" not in container_classes, \
+            "Overlay container must not be photo-hero-container (it has padding that misaligns overlays)"
+
+
 class TestPublicPhotoViewerPartialUnchanged:
     """The /photo/{id}/partial route should still work for HTMX modal injection."""
 
