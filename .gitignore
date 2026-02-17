@@ -73,6 +73,9 @@ data/*
 !data/date_labels.json
 !data/photo_search_index.json
 !data/rhodes_context_events.json
+!data/relationships.json
+!data/gedcom_matches.json
+!data/co_occurrence_graph.json
 
 # ML experiment tracking
 rhodesli_ml/mlruns/

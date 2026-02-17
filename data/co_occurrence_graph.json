@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "edges": [
+    {
+      "person_a": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "person_b": "925904af-af2c-49af-a721-e4b74a312182",
+      "shared_photos": [
+        "inbox_b5e8a89e_11_603576167.481802",
+        "inbox_b5e8a89e_3_603576015.208878",
+        "inbox_b5e8a89e_0_603575867.895093",
+        "inbox_b5e8a89e_9_603575780.793224",
+        "inbox_b5e8a89e_10_603575654.056133",
+        "inbox_b5e8a89e_2_603575561.310480",
+        "inbox_b5e8a89e_8_603575434.282777",
+        "inbox_b5e8a89e_7_603575318.516167",
+        "inbox_b5e8a89e_4_603569408.731013",
+        "inbox_b5e8a89e_1_603569465.197279"
+      ],
+      "count": 10
+    },
+    {
+      "person_a": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "shared_photos": [
+        "inbox_b5e8a89e_11_603576167.481802",
+        "inbox_b5e8a89e_3_603576015.208878",
+        "inbox_b5e8a89e_0_603575867.895093",
+        "inbox_b5e8a89e_9_603575780.793224",
+        "inbox_b5e8a89e_10_603575654.056133"
+      ],
+      "count": 5
+    },
+    {
+      "person_a": "925904af-af2c-49af-a721-e4b74a312182",
+      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "shared_photos": [
+        "inbox_b5e8a89e_11_603576167.481802",
+        "inbox_b5e8a89e_3_603576015.208878",
+        "inbox_b5e8a89e_0_603575867.895093",
+        "inbox_b5e8a89e_9_603575780.793224",
+        "inbox_b5e8a89e_10_603575654.056133"
+      ],
+      "count": 5
+    },
+    {
+      "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "shared_photos": [
+        "inbox_b5e8a89e_11_603576167.481802",
+        "inbox_b5e8a89e_9_603575780.793224",
+        "inbox_b5e8a89e_10_603575654.056133",
+        "inbox_staged-20260210-182610_7_596771420.719238",
+        "inbox_staged-20260210-182610_11_596771054.717436"
+      ],
+      "count": 5
+    },
+    {
+      "person_a": "925904af-af2c-49af-a721-e4b74a312182",
+      "person_b": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "shared_photos": [
+        "inbox_b5e8a89e_8_603575434.282777",
+        "inbox_b5e8a89e_7_603575318.516167",
+        "inbox_b5e8a89e_4_603569408.731013",
+        "inbox_b5e8a89e_1_603569465.197279",
+        "inbox_b5e8a89e_6_603575393.720025"
+      ],
+      "count": 5
+    },
+    {
+      "person_a": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "person_b": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "shared_photos": [
+        "inbox_b5e8a89e_8_603575434.282777",
+        "inbox_b5e8a89e_7_603575318.516167",
+        "inbox_b5e8a89e_4_603569408.731013",
+        "inbox_b5e8a89e_1_603569465.197279"
+      ],
+      "count": 4
+    },
+    {
+      "person_a": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "person_b": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_11_596771054.717436",
+        "inbox_staged-20260210-182610_1_596771174.533589",
+        "inbox_staged-20260210-182610_4_596771234.564304",
+        "inbox_staged-20260210-182610_8_596771351.496458"
+      ],
+      "count": 4
+    },
+    {
+      "person_a": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "shared_photos": [
+        "inbox_b5e8a89e_11_603576167.481802",
+        "inbox_b5e8a89e_9_603575780.793224",
+        "inbox_b5e8a89e_10_603575654.056133"
+      ],
+      "count": 3
+    },
+    {
+      "person_a": "925904af-af2c-49af-a721-e4b74a312182",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "shared_photos": [
+        "inbox_b5e8a89e_11_603576167.481802",
+        "inbox_b5e8a89e_9_603575780.793224",
+        "inbox_b5e8a89e_10_603575654.056133"
+      ],
+      "count": 3
+    },
+    {
+      "person_a": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
+      "person_b": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "shared_photos": [
+        "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "person_b": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_7_596771420.719238"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_7_596771420.719238"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_7_596771420.719238"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_7_596771420.719238"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_7_596771420.719238"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "person_b": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_12_Image_567"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "person_b": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_11_596771054.717436"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "shared_photos": [
+        "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "person_b": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "shared_photos": [
+        "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "person_b": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "shared_photos": [
+        "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n"
+      ],
+      "count": 1
+    },
+    {
+      "person_a": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "shared_photos": [
+        "inbox_staged-20260210-182610_5_757557421.130308"
+      ],
+      "count": 1
+    }
+  ],
+  "generated_at": "2026-02-16T03:38:21.053680+00:00",
+  "stats": {
+    "total_edges": 21,
+    "total_photos_with_pairs": 20,
+    "max_co_occurrences": 10
+  }
+}

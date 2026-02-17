@@ -9014,6 +9014,53 @@ def public_person_page(
     except Exception:
         pass  # Graceful degradation if graph not available
 
+    # --- Closest connections (from social graph) ---
+    connections_section = None
+    try:
+        from rhodesli_ml.graph.social_graph import build_social_graph, get_closest_connections
+        social = build_social_graph(
+            _load_relationship_graph(),
+            json.loads((data_path / "co_occurrence_graph.json").read_text(encoding="utf-8")) if (data_path / "co_occurrence_graph.json").exists() else {"edges": []},
+        )
+        closest = get_closest_connections(social, person_id, n=5)
+        if closest:
+            conn_items = []
+            for conn in closest:
+                try:
+                    c_ident = registry.get_identity(conn["person_id"])
+                    c_name = ensure_utf8_display(c_ident.get("name", "Unknown"))
+                except (KeyError, TypeError):
+                    continue
+                edge_type = conn.get("edge_type", "indirect")
+                if edge_type == "spouse_of":
+                    badge = Span("Spouse", cls="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 ml-2")
+                elif edge_type in ("parent_child", "child_of"):
+                    badge = Span("Family", cls="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 ml-2")
+                elif edge_type == "sibling_of":
+                    badge = Span("Sibling", cls="text-[10px] px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 ml-2")
+                elif edge_type == "photographed_with":
+                    badge = Span("Photos", cls="text-[10px] px-1.5 py-0.5 rounded bg-blue-900/40 text-blue-400 ml-2")
+                else:
+                    steps = conn.get("path_length", 0)
+                    badge = Span(f"{steps} step{'s' if steps != 1 else ''}", cls="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 ml-2")
+                conn_items.append(Div(
+                    A(c_name, href=f"/person/{conn['person_id']}", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                    badge,
+                    cls="flex items-center py-1",
+                ))
+            if conn_items:
+                conn_items.append(
+                    A("Find connections →", href=f"/connect?person_a={person_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block"),
+                )
+                connections_section = Div(
+                    H3("Connections", cls="text-lg font-serif font-semibold text-slate-300 mb-4"),
+                    *conn_items,
+                    cls="mt-10 pt-8 border-t border-slate-800",
+                    data_testid="connections-section",
+                )
+    except Exception:
+        pass  # Graceful degradation
+
     # --- Approved annotations (bio, story, etc.) ---
     annotations_section = None
     try:
@@ -9239,6 +9286,9 @@ def public_person_page(
 
                     # Family relationships (from GEDCOM)
                     family_section if family_section else None,
+
+                    # Closest connections (social graph)
+                    connections_section if connections_section else None,
 
                     # Appears with section
                     appears_with_section if appears_with_section else None,
@@ -11124,6 +11174,420 @@ def post(upload_id: str = "", sess=None):
         cls="text-center py-3",
         id="contribute-cta-container",
         data_testid="contribute-submitted",
+    )
+
+
+# ---- Connection Finder (Six Degrees) ----
+
+
+def _load_social_graph():
+    """Load and cache the unified social graph."""
+    from rhodesli_ml.graph.social_graph import build_social_graph
+    rel_graph = _load_relationship_graph()
+    cooccur_path = data_path / "co_occurrence_graph.json"
+    cooccur = {"edges": []}
+    if cooccur_path.exists():
+        try:
+            cooccur = json.loads(cooccur_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, ValueError):
+            pass
+    return build_social_graph(rel_graph, cooccur)
+
+
+def _connection_path_html(path_steps, registry):
+    """Render a connection path as styled HTML steps."""
+    if path_steps is None:
+        return Div(
+            P("No known connection found.", cls="text-slate-400 text-center py-8"),
+            cls="mt-4",
+        )
+    if len(path_steps) == 0:
+        return Div(
+            P("Same person!", cls="text-emerald-400 text-center py-4"),
+            cls="mt-4",
+        )
+
+    steps = []
+    for i, step in enumerate(path_steps):
+        from_id = step["from"]
+        to_id = step["to"]
+        edge = step["edge"]
+        from_ident = registry.get_identity(from_id) or {}
+        to_ident = registry.get_identity(to_id) or {}
+        from_name = ensure_utf8_display(from_ident.get("name", "Unknown"))
+        to_name = ensure_utf8_display(to_ident.get("name", "Unknown"))
+
+        # Edge styling by category
+        if edge.get("category") == "family":
+            edge_color = "text-amber-400 bg-amber-900/30 border-amber-700/50"
+            edge_icon = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>'
+        else:
+            edge_color = "text-blue-400 bg-blue-900/30 border-blue-700/50"
+            edge_icon = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
+
+        label = edge.get("label", edge.get("type", "connected"))
+
+        if i == 0:
+            steps.append(
+                Div(
+                    A(from_name, href=f"/person/{from_id}", cls="text-white font-semibold hover:text-indigo-300 transition-colors"),
+                    cls="px-4 py-2 bg-slate-800 rounded-lg border border-slate-700",
+                )
+            )
+
+        # Arrow + relationship label
+        steps.append(
+            Div(
+                Div(
+                    NotStr(edge_icon),
+                    Span(label, cls="text-xs"),
+                    cls=f"inline-flex items-center px-3 py-1 rounded-full border text-xs {edge_color}",
+                ),
+                Div("", cls="w-px h-3 bg-slate-700 mx-auto"),
+                cls="flex flex-col items-center my-1",
+            )
+        )
+
+        # Target person
+        steps.append(
+            Div(
+                A(to_name, href=f"/person/{to_id}", cls="text-white font-semibold hover:text-indigo-300 transition-colors"),
+                cls="px-4 py-2 bg-slate-800 rounded-lg border border-slate-700",
+            )
+        )
+
+    return Div(*steps, cls="flex flex-col items-center mt-6", data_testid="connection-path")
+
+
+@rt("/connect")
+def get(person_a: str = "", person_b: str = "", sess=None):
+    """Six Degrees Connection Finder — find how two people are connected."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    registry = load_registry()
+
+    # Build person selector options (confirmed identities with real names)
+    confirmed = [
+        i for i in registry.list_identities(state=IdentityState.CONFIRMED)
+        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
+    ]
+    confirmed.sort(key=lambda x: (x.get("name") or "").lower())
+
+    # Person selector options
+    person_options = [Option("Select a person...", value="", disabled=True, selected=not person_a)]
+    for ident in confirmed:
+        name = ensure_utf8_display(ident.get("name", ""))
+        iid = ident.get("identity_id", "")
+        person_options.append(Option(name, value=iid, selected=(iid == person_a)))
+
+    person_b_options = [Option("Select a person...", value="", disabled=True, selected=not person_b)]
+    for ident in confirmed:
+        name = ensure_utf8_display(ident.get("name", ""))
+        iid = ident.get("identity_id", "")
+        person_b_options.append(Option(name, value=iid, selected=(iid == person_b)))
+
+    # Build connection results if both people selected
+    results_html = ""
+    if person_a and person_b:
+        from rhodesli_ml.graph.social_graph import find_all_paths, export_for_d3
+        social = _load_social_graph()
+        paths = find_all_paths(social, person_a, person_b)
+
+        name_a = ensure_utf8_display((registry.get_identity(person_a) or {}).get("name", "Unknown"))
+        name_b = ensure_utf8_display((registry.get_identity(person_b) or {}).get("name", "Unknown"))
+
+        # Compute degrees of separation
+        any_path = paths.get("any")
+        if any_path is not None:
+            degrees = len(any_path)
+            degrees_text = f"{degrees} degree{'s' if degrees != 1 else ''} of separation"
+        else:
+            degrees_text = "No known connection"
+
+        path_sections = []
+
+        # Main path (any edges)
+        path_sections.append(
+            Div(
+                H3(f"{name_a} & {name_b}", cls="text-lg font-bold text-white mb-1"),
+                P(degrees_text, cls="text-sm text-indigo-400 mb-4"),
+                _connection_path_html(paths["any"], registry),
+                cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50",
+                data_testid="connection-result",
+            )
+        )
+
+        # Family-only path
+        if paths.get("family") is not None and paths["family"] != paths["any"]:
+            path_sections.append(
+                Div(
+                    H4("Family path", cls="text-sm font-semibold text-amber-400 mb-2"),
+                    P(f"{len(paths['family'])} step{'s' if len(paths['family']) != 1 else ''} through family", cls="text-xs text-slate-500 mb-2"),
+                    _connection_path_html(paths["family"], registry),
+                    cls="bg-slate-800/30 rounded-lg p-4 border border-amber-900/30",
+                )
+            )
+
+        # Photo-only path
+        if paths.get("photo") is not None and paths["photo"] != paths["any"]:
+            path_sections.append(
+                Div(
+                    H4("Photo path", cls="text-sm font-semibold text-blue-400 mb-2"),
+                    P(f"{len(paths['photo'])} step{'s' if len(paths['photo']) != 1 else ''} through photos", cls="text-xs text-slate-500 mb-2"),
+                    _connection_path_html(paths["photo"], registry),
+                    cls="bg-slate-800/30 rounded-lg p-4 border border-blue-900/30",
+                )
+            )
+
+        results_html = Div(*path_sections, cls="space-y-6 mt-8", id="connection-results")
+
+    # Build D3 graph data for visualization
+    from rhodesli_ml.graph.social_graph import export_for_d3
+    social = _load_social_graph()
+
+    # Count photos per person
+    _build_caches()
+    photo_reg = load_photo_registry()
+    photo_counts = {}
+    for ident in confirmed:
+        iid = ident.get("identity_id", "")
+        faces = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+        photos = set()
+        for fid in faces:
+            pid = photo_reg.get_photo_for_face(fid)
+            if pid:
+                photos.add(pid)
+        photo_counts[iid] = len(photos)
+
+    identities_dict = {i["identity_id"]: i for i in confirmed}
+    d3_data = export_for_d3(social, identities_dict, photo_counts)
+    d3_json = json.dumps(d3_data)
+
+    # Navigation
+    nav_links = [
+        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+        A("Connect", href="/connect", cls="text-white text-sm font-medium"),
+        A("Compare", href="/compare", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+    ]
+    if is_auth_enabled() and not user:
+        nav_links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+
+    share_url = f"/connect?person_a={person_a}&person_b={person_b}" if person_a and person_b else "/connect"
+
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+        #graph-container { width: 100%; height: 500px; border-radius: 0.75rem; overflow: hidden; }
+        @media (min-width: 768px) { #graph-container { height: 600px; } }
+        .node-label { font-size: 11px; fill: #e2e8f0; pointer-events: none; text-anchor: middle; }
+        .link-family { stroke: #d97706; stroke-opacity: 0.6; }
+        .link-photo { stroke: #3b82f6; stroke-opacity: 0.4; }
+        .node-circle { cursor: pointer; transition: r 0.2s ease; }
+        .node-circle:hover { filter: brightness(1.3); }
+        .graph-legend { display: flex; gap: 1rem; align-items: center; }
+        .legend-item { display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; color: #94a3b8; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    """)
+
+    return (
+        Title("Connect People — Rhodesli"),
+        Meta(property="og:title", content="Connect People — Rhodesli"),
+        Meta(property="og:description", content="Find how two people in the Rhodes-Capeluto family are connected through family and photos."),
+        Meta(property="og:url", content=f"{SITE_URL}{share_url}"),
+        page_style,
+        Div(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+                ),
+                cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
+            ),
+            Div(
+                # Header
+                Div(
+                    H1("Connect People", cls="text-2xl md:text-3xl font-bold text-white mb-2"),
+                    P("Discover how two people are connected through family ties and shared photographs.", cls="text-slate-400 mb-6"),
+                    cls="mb-6",
+                ),
+
+                # Person selectors
+                Form(
+                    Div(
+                        Div(
+                            Label("Person A", cls="text-xs text-slate-400 mb-1 block"),
+                            Select(*person_options, name="person_a", cls="w-full px-3 py-2 bg-slate-800 text-white rounded-lg border border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"),
+                            cls="flex-1",
+                        ),
+                        Div(
+                            Span("&harr;", cls="text-2xl text-slate-600"),
+                            cls="flex items-end pb-2",
+                        ),
+                        Div(
+                            Label("Person B", cls="text-xs text-slate-400 mb-1 block"),
+                            Select(*person_b_options, name="person_b", cls="w-full px-3 py-2 bg-slate-800 text-white rounded-lg border border-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"),
+                            cls="flex-1",
+                        ),
+                        Button(
+                            "Find Connection",
+                            cls="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors self-end",
+                            type="submit",
+                        ),
+                        cls="flex flex-col sm:flex-row gap-4 items-end",
+                    ),
+                    method="get",
+                    action="/connect",
+                    cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50",
+                    data_testid="connection-form",
+                ),
+
+                # Share button
+                Div(
+                    Button(
+                        NotStr(_SHARE_ICON_SVG),
+                        " Share",
+                        cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center gap-1",
+                        type="button",
+                        data_action="share-photo",
+                        data_share_url=share_url,
+                    ),
+                    cls="flex justify-end mt-4",
+                ) if person_a and person_b else "",
+
+                # Connection results
+                results_html if results_html else "",
+
+                # Graph visualization
+                Div(
+                    Div(
+                        H3("Community Network", cls="text-lg font-semibold text-white"),
+                        Div(
+                            Div(Div(cls="legend-dot", style="background:#d97706"), Span("Family"), cls="legend-item"),
+                            Div(Div(cls="legend-dot", style="background:#3b82f6"), Span("Photo"), cls="legend-item"),
+                            cls="graph-legend",
+                        ),
+                        cls="flex items-center justify-between mb-4",
+                    ),
+                    Div(id="graph-container", cls="bg-slate-800/50 rounded-xl border border-slate-700/50"),
+                    cls="mt-8",
+                    data_testid="network-graph",
+                ),
+
+                cls="max-w-4xl mx-auto px-6 pt-24 pb-16",
+            ),
+            # D3.js script
+            Script(src="https://d3js.org/d3.v7.min.js"),
+            Script(f"""
+(function() {{
+    var data = {d3_json};
+    var container = document.getElementById('graph-container');
+    if (!container || !data.nodes.length) return;
+    var width = container.clientWidth;
+    var height = container.clientHeight || 500;
+
+    var svg = d3.select('#graph-container')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('viewBox', [0, 0, width, height]);
+
+    // Zoom behavior
+    var g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(event) {{
+        g.attr('transform', event.transform);
+    }}));
+
+    // Force simulation
+    var simulation = d3.forceSimulation(data.nodes)
+        .force('link', d3.forceLink(data.links).id(function(d) {{ return d.id; }}).distance(function(d) {{
+            return d.category === 'family' ? 80 : 120;
+        }}))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(30));
+
+    // Links
+    var link = g.append('g')
+        .selectAll('line')
+        .data(data.links)
+        .join('line')
+        .attr('class', function(d) {{ return 'link-' + d.category; }})
+        .attr('stroke-width', function(d) {{
+            if (d.type === 'photographed_with') return Math.min(d.photo_count || 1, 5);
+            return 2;
+        }});
+
+    // Nodes
+    var node = g.append('g')
+        .selectAll('g')
+        .data(data.nodes)
+        .join('g')
+        .call(d3.drag()
+            .on('start', function(event, d) {{
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x; d.fy = d.y;
+            }})
+            .on('drag', function(event, d) {{
+                d.fx = event.x; d.fy = event.y;
+            }})
+            .on('end', function(event, d) {{
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null; d.fy = null;
+            }})
+        );
+
+    node.append('circle')
+        .attr('r', function(d) {{ return Math.max(8, Math.min(20, 5 + (d.photo_count || 0))); }})
+        .attr('fill', function(d) {{
+            // Highlight selected people
+            if (d.id === '{person_a}') return '#818cf8';
+            if (d.id === '{person_b}') return '#818cf8';
+            return '#64748b';
+        }})
+        .attr('stroke', function(d) {{
+            if (d.id === '{person_a}' || d.id === '{person_b}') return '#c7d2fe';
+            return '#475569';
+        }})
+        .attr('stroke-width', function(d) {{
+            if (d.id === '{person_a}' || d.id === '{person_b}') return 3;
+            return 1.5;
+        }})
+        .attr('class', 'node-circle')
+        .on('click', function(event, d) {{
+            // Navigate to person on click
+            window.location.href = '/person/' + d.id;
+        }});
+
+    node.append('text')
+        .text(function(d) {{ return d.name; }})
+        .attr('dy', function(d) {{ return Math.max(8, Math.min(20, 5 + (d.photo_count || 0))) + 14; }})
+        .attr('class', 'node-label');
+
+    /* Highlight path if both selected */
+    var pathNodes = new Set();
+    var pathLinks = new Set();
+    var selectedA = '{person_a}';
+    var selectedB = '{person_b}';
+
+    simulation.on('tick', function() {{
+        link
+            .attr('x1', function(d) {{ return d.source.x; }})
+            .attr('y1', function(d) {{ return d.source.y; }})
+            .attr('x2', function(d) {{ return d.target.x; }})
+            .attr('y2', function(d) {{ return d.target.y; }});
+        node.attr('transform', function(d) {{ return 'translate(' + d.x + ',' + d.y + ')'; }});
+    }});
+
+    // Tooltip
+    node.append('title')
+        .text(function(d) {{ return d.name + ' (' + (d.photo_count || 0) + ' photos)'; }});
+}})();
+"""),
+            cls="min-h-screen bg-slate-900",
+        ),
     )
 
 
