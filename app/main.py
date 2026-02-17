@@ -13471,13 +13471,20 @@ def public_photo_page(
             )
         )
 
-    # --- Photo metadata line ---
-    meta_parts = []
+    # --- Photo metadata line (with clickable collection link) ---
+    meta_elements = []
     if photo.get("collection"):
-        meta_parts.append(photo["collection"])
-    if photo.get("source"):
-        meta_parts.append(photo["source"])
-    meta_line = " · ".join(meta_parts) if meta_parts else None
+        collection_name = photo["collection"]
+        collection_slug = _collection_slug(collection_name)
+        meta_elements.append(
+            A(collection_name, href=f"/collection/{collection_slug}",
+              cls="text-indigo-400 hover:text-indigo-300 transition-colors")
+        )
+    if photo.get("source") and photo.get("source") != photo.get("collection"):
+        if meta_elements:
+            meta_elements.append(Span(" · ", cls="text-slate-600"))
+        meta_elements.append(Span(photo["source"]))
+    meta_line = Span(*meta_elements) if meta_elements else None
 
     # --- Open Graph meta tag data ---
     total_faces = len(face_info_list)
