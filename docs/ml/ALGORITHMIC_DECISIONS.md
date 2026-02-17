@@ -726,7 +726,20 @@ When making any algorithmic choice in the ML pipeline:
 - **Rejected**: Separate `/api/tree` endpoint — adds loading state complexity, CORS considerations, and extra request for small data. WebSocket — massive overkill for static genealogical data.
 - **Affects**: `app/main.py` (/tree route — `tree_json = json.dumps(tree_data)` embedded in Script tag)
 
-1. Add a new entry with AD-XXX format (next: AD-081)
+### AD-090: Gemini-InsightFace Face Alignment via Coordinate Bridging
+- **Date**: 2026-02-17
+- **Context**: Current face-to-description alignment in `match_faces_to_ages()` uses left-to-right x-coordinate sorting. This FAILS for ~40% of group photos where Gemini describes N people but InsightFace detects M faces (M != N). The mismatch occurs because InsightFace detects background faces (newspaper clippings, posters, reflections, tiny occluded faces) that Gemini does not describe. When counts differ, the pipeline returns `"count_mismatch"` and discards all age data for that photo. This caused Vida Capeluto (15 photos, most prominent identity) to get zero birth year estimates.
+- **Decision**: Approach B — feed InsightFace bounding box coordinates TO Gemini as labeled regions in the prompt text. Each detected face gets a letter label (Face A, B, C...) with pixel coordinates. Gemini describes each labeled face, marking non-subject faces (background, artifacts) as `is_subject: false`. The face labels map directly to InsightFace face_ids, providing guaranteed 1:1 mapping with no post-hoc matching needed.
+- **Rejected**: Approach A — Gemini provides its own bounding boxes (`box_2d` in `[y_min, x_min, y_max, x_max]` format, normalized 0-1000). This requires IoU or center-point distance matching to pair Gemini boxes with InsightFace detections, introduces threshold tuning (what IoU counts as a match?), suffers from coordinate misalignment (Gemini may box the full head while InsightFace crops the tight face region), and adds a matching layer that can fail silently. The coordinate bridging approach (B) is strictly simpler and eliminates the matching problem entirely.
+- **Novelty**: First known application of VLM spatial coordinate bridging for heritage photo analysis. Existing approaches (GLIP, Grounding DINO, Set-of-Mark) either have the VLM produce coordinates or overlay visual markers on images. Feeding detector coordinates as text tokens to the VLM and asking it to describe each region is a novel inversion that avoids both IoU matching and image modification.
+- **EXIF caveat**: InsightFace bounding boxes are computed on the raw pixel grid. If the image has EXIF orientation metadata (rotation/flip), coordinates must be normalized to the visual orientation before inclusion in the Gemini prompt. `core/exif.py` already extracts orientation data.
+- **Data model**: Extends `date_labels.json` with `face_descriptions` dict (keyed by face_id), `face_alignment_method` string, and updated `prompt_version`. Backward compatible — old labels without `face_descriptions` fall back to x-sort matching.
+- **Cost**: ~$0.50-$1.00 to re-process all 271 photos (Gemini Flash pricing). Coordinate text adds ~100-200 tokens per photo.
+- **Status**: PROPOSED (not yet implemented)
+- **PRD**: `docs/prds/015_gemini_face_alignment.md`
+- **Affected files**: `rhodesli_ml/scripts/generate_date_labels.py` (coordinate bridging prompt variant), `rhodesli_ml/pipelines/birth_year_estimation.py` (use `face_descriptions` before x-sort fallback), `rhodesli_ml/data/date_labels.py` (schema validation), `rhodesli_ml/scripts/clean_labels.py` (validate face_descriptions), `rhodesli_ml/scripts/audit_temporal_consistency.py` (direct face-to-age mapping), `rhodesli_ml/data/date_labels.json` (schema extension)
+
+1. Add a new entry with AD-XXX format (next: AD-091)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
