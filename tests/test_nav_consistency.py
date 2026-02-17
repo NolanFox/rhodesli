@@ -47,20 +47,20 @@ class TestPublicNavLinks:
     def test_no_sign_in_when_auth_disabled(self):
         with patch("app.main.is_auth_enabled", return_value=False):
             links = _public_nav_links(active="photos", user=None)
-            # Should have exactly 7 links (no Sign In)
-            assert len(links) == 7
+            # Should have exactly 8 links (no Sign In)
+            assert len(links) == 8
 
     def test_no_sign_in_when_user_logged_in(self):
         mock_user = MagicMock()
         mock_user.email = "test@test.com"
         with patch("app.main.is_auth_enabled", return_value=True):
             links = _public_nav_links(active="photos", user=mock_user)
-            assert len(links) == 7
+            assert len(links) == 8
 
     def test_link_order(self):
         links = _public_nav_links(active="")
         hrefs = [link.attrs.get("href", "") for link in links]
-        expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/connect", "/compare"]
+        expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]
         assert hrefs == expected_order
 
 
@@ -126,11 +126,11 @@ class TestNavOnPublicPages:
         return resp
 
     @pytest.mark.parametrize("path,expected_links", [
-        ("/photos", ["/collections", "/people", "/map", "/timeline", "/connect", "/compare"]),
-        ("/people", ["/photos", "/collections", "/map", "/timeline", "/connect", "/compare"]),
-        ("/collections", ["/photos", "/people", "/map", "/timeline", "/connect", "/compare"]),
-        ("/map", ["/photos", "/collections", "/people", "/timeline", "/connect", "/compare"]),
-        ("/connect", ["/photos", "/collections", "/people", "/map", "/timeline", "/compare"]),
+        ("/photos", ["/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
+        ("/people", ["/photos", "/collections", "/map", "/timeline", "/tree", "/connect", "/compare"]),
+        ("/collections", ["/photos", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
+        ("/map", ["/photos", "/collections", "/people", "/timeline", "/tree", "/connect", "/compare"]),
+        ("/connect", ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/compare"]),
     ])
     def test_nav_links_present(self, client, path, expected_links):
         resp = self._get_page(client, path)
