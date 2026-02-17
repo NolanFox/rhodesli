@@ -13316,6 +13316,27 @@ def public_photo_page(
     registry = load_registry()
     from urllib.parse import quote as _url_quote
 
+    # --- Photo carousel: prev/next within same collection ---
+    collection_name = photo.get("collection", "")
+    prev_photo_id = None
+    next_photo_id = None
+    nav_position = 0
+    nav_total = 0
+    if collection_name and _photo_cache:
+        collection_photos = sorted(
+            [pid for pid, pdata in _photo_cache.items()
+             if pdata.get("collection", "") == collection_name],
+            key=lambda pid: _photo_cache[pid].get("filename", "")
+        )
+        nav_total = len(collection_photos)
+        if photo_id in collection_photos:
+            idx = collection_photos.index(photo_id)
+            nav_position = idx + 1
+            if idx > 0:
+                prev_photo_id = collection_photos[idx - 1]
+            if idx < len(collection_photos) - 1:
+                next_photo_id = collection_photos[idx + 1]
+
     # Check for back image (front/back flip feature)
     back_image = photo.get("back_image", "")
     back_transcription = photo.get("back_transcription", "")
@@ -13660,6 +13681,19 @@ def public_photo_page(
         }
     """)
 
+    # Keyboard navigation script for carousel
+    keyboard_nav_script = None
+    if prev_photo_id or next_photo_id:
+        prev_url = f"/photo/{prev_photo_id}" if prev_photo_id else ""
+        next_url = f"/photo/{next_photo_id}" if next_photo_id else ""
+        keyboard_nav_script = Script(f"""
+            document.addEventListener('keydown', function(e) {{
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === 'ArrowLeft' && '{prev_url}') window.location.href = '{prev_url}';
+                if (e.key === 'ArrowRight' && '{next_url}') window.location.href = '{next_url}';
+            }});
+        """)
+
     return (
         Title(f"{page_title} — Rhodesli Heritage Archive"),
         *og_meta_tags,
@@ -13725,6 +13759,26 @@ def public_photo_page(
                         ),
                         cls="photo-flip-container photo-hero-container relative mx-auto" if has_back else "photo-hero-container relative mx-auto",
                     ),
+                    # Photo carousel navigation
+                    Div(
+                        A(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'),
+                            href=f"/photo/{prev_photo_id}",
+                            cls="p-2 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-colors",
+                            title="Previous photo",
+                        ) if prev_photo_id else Span(cls="w-9"),
+                        Span(
+                            f"Photo {nav_position} of {nav_total}",
+                            cls="text-xs text-slate-400",
+                        ) if nav_total > 1 else None,
+                        A(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>'),
+                            href=f"/photo/{next_photo_id}",
+                            cls="p-2 bg-black/60 hover:bg-black/80 text-white rounded-full backdrop-blur-sm transition-colors",
+                            title="Next photo",
+                        ) if next_photo_id else Span(cls="w-9"),
+                        cls="flex items-center justify-center gap-4 mt-3",
+                    ) if nav_total > 1 else None,
                     # Action bar: Share, Download, Flip (if back image)
                     Div(
                         Button(
@@ -13955,6 +14009,7 @@ def public_photo_page(
             """),
             cls="min-h-screen bg-slate-900"
         ),
+        keyboard_nav_script,
     )
 
 

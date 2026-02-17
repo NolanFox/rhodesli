@@ -183,6 +183,52 @@ class TestPublicPhotoViewerContent:
             assert "section=to_review" not in html or "section=skipped" in html
 
 
+class TestPhotoCarousel:
+    """Photo carousel navigation — prev/next within collection."""
+
+    def test_nav_arrows_present(self, client, real_photo_id):
+        """Photo page shows carousel navigation when in a collection."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import re
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Should have at least one nav arrow (prev or next)
+        has_prev = 'title="Previous photo"' in html
+        has_next = 'title="Next photo"' in html
+        assert has_prev or has_next, "Photo in collection should have at least one nav arrow"
+
+    def test_position_indicator(self, client, real_photo_id):
+        """Photo page shows 'Photo X of Y' position indicator."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import re
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        # Should have position indicator like "Photo 1 of 108"
+        position = re.findall(r'Photo \d+ of \d+', html)
+        assert len(position) > 0, "Should show photo position in collection"
+
+    def test_keyboard_navigation_script(self, client, real_photo_id):
+        """Keyboard arrow keys navigate between photos."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        assert "ArrowLeft" in html or "ArrowRight" in html, \
+            "Should include keyboard navigation for arrow keys"
+
+    def test_collection_link_visible(self, client, real_photo_id):
+        """Collection name is a clickable link."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        import re
+        response = client.get(f"/photo/{real_photo_id}")
+        html = response.text
+        collection_links = re.findall(r'href="/collection/[^"]+"', html)
+        assert len(collection_links) > 0, "Collection name should link to collection page"
+
+
 class TestFaceClickBehavior:
     """Regression: face clicks navigate to person/identify pages, not circular scroll."""
 
