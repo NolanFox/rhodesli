@@ -1,30 +1,31 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-17 (Session 41 — Production Fixes + Photo UX + Research)
+Last updated: 2026-02-17 (Session 42 — Systematic Verification + Fix Everything)
 
-## Session 41 Completed
-- [x] Fix /map 500 error — PhotoRegistry.get_photo() doesn't exist, replaced 5 call sites
-- [x] Fix face overlay alignment — position:relative on inner image wrapper
-- [x] Fix face click behavior — navigate to /person or /identify, not circular scroll
-- [x] Photo carousel — prev/next within collection, keyboard arrows, position indicator
-- [x] Fix search → Focus mode — search links to /person/{id} or /identify/{id}
-- [x] PRD-015: Gemini face alignment research + AD-090 (PROPOSED, no implementation)
-- [x] 8 new tests (2202 total)
-- [x] CHANGELOG v0.43.0, ROADMAP, BACKLOG updated
+## Session 42 Completed
+- [x] Systematic verification audit of all 16 routes + 20 features
+- [x] Fix /identify/{id} 500 — set not subscriptable, wrapped in list()
+- [x] Fix landing page nav — all 8 public pages linked
+- [x] GEDCOM test data warning banner
+- [x] Compare page two-mode UX (numbered sections)
+- [x] "Add Photos" button on collection pages (admin-only)
+- [x] Critical route test mock fixed (set vs list return type)
+- [x] 7 new tests (2209 total), all 2563 tests passing
+- [x] CHANGELOG v0.44.0, ROADMAP, BACKLOG, audit doc, postmortem
 
 ## Remaining from Session 40 Feedback (Future Work)
 - [x] FB-40-18: Face click behavior — DONE (Session 41)
 - [x] FB-40-20: Photo carousel / gallery mode — DONE (Session 41)
-- [x] FB-40-21: Admin-only elements hidden from public — already protected (verified Session 41)
-- [ ] FB-40-22: Photo upload attribution display
-- [ ] FB-40-23: "Add Photos" button on collection detail pages
+- [x] FB-40-21: Admin-only elements hidden from public — verified correct (Session 42)
+- [ ] FB-40-22: Photo upload attribution display (needs data model: `uploaded_by` field)
+- [x] FB-40-23: "Add Photos" button on collection detail pages — DONE (Session 42)
 - [ ] FB-40-24: Bulk collection/source editing in admin Photos view
 - [ ] FB-40-25: Individual photo collection/source editable by admin
 - [ ] FB-40-26: Upload flow collection assignment clarity
 - [x] FB-40-27: Fix search → Focus mode wrong person — DONE (Session 41)
 - [ ] FB-40-09: Geographic autocomplete with location_dictionary.json
-- [ ] FB-40-11: GEDCOM page — label test data, manual linking, show on person pages
-- [ ] FB-40-13: Compare UX — two clear modes immediately visible
+- [x] FB-40-11: GEDCOM page — test data warning added (Session 42)
+- [x] FB-40-13: Compare UX — two clear modes (Session 42)
 
 ## Session 39 Completed
 - [x] Family tree data structure: build_family_tree(), find_root_couples() (10 tests)

@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.44.0] — 2026-02-17
+
+### Fixed
+- **`/identify/{id}` 500 error** — `get_photos_for_faces()` returns `set[str]`, but code tried to slice with `[:4]`; wrapped in `list()`
+- **Landing page navigation** — was missing Map, Tree, Collections, Connect links; now shows all 8 public pages
+- **Critical route test mock** — `get_photos_for_faces` mock returned `[]` instead of `set()`, masking the real type mismatch
+
+### Added
+- **GEDCOM test data warning** — admin GEDCOM page shows warning banner when source file contains "test"
+- **Compare two-mode UX** — numbered sections "1. Search the Archive" and "2. Upload a Photo" with descriptions
+- **"Add Photos" button** — admin-only button on collection detail pages
+- **Session 42 verification audit** — systematic check of all 16 routes + 20 features
+- **Postmortem: /identify 500** — root cause analysis at `docs/postmortems/identify_500.md`
+- 7 new tests (GEDCOM warning, compare modes, landing nav)
+
+### Changed
+- Landing page nav uses proper routes (`/photos` instead of `/?section=photos`)
+- Test count: 2202 → 2209 (7 new tests)
+
 ## [v0.43.0] — 2026-02-17
 
 ### Fixed

@@ -247,13 +247,23 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] PRD-015: Gemini face alignment research + AD-090 (PROPOSED, no implementation)
 - [x] 8 new tests (2202 total)
 
-### Session 42: Life Events & Context Graph
+### Session 42: Systematic Verification + Fix Everything (COMPLETED 2026-02-17)
+- [x] Systematic verification audit of all 16 routes + 20 features
+- [x] Fix /identify/{id} 500 — set not subscriptable, wrapped in list()
+- [x] Fix landing page nav — all 8 public pages linked
+- [x] GEDCOM test data warning banner
+- [x] Compare page two-mode UX (numbered sections)
+- [x] "Add Photos" button on collection pages (admin-only)
+- [x] 7 new tests (2209 total)
+
+### Session 43: Life Events & Context Graph
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
 - Richer timeline with life events interspersed
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-17: v0.44.0 — Systematic Verification + Fix Everything (Session 42): Comprehensive audit of all 16 routes and 20 features. Fixed /identify/{id} 500 (set not subscriptable), landing page nav (all 8 public pages), GEDCOM test data warning, Compare two-mode UX, collection "Add Photos" button. Critical route test mock fixed (set vs list). 7 new tests (2209 total). Verification audit at docs/verification/session_42_audit.md.
 - [x] 2026-02-17: v0.43.0 — Production Fixes + Photo UX + Research (Session 41): Fixed /map 500 (PhotoRegistry.get_photo() doesn't exist), face overlay alignment (position:relative on image wrapper), face click behavior (navigate to person/identify pages), search→Focus mode (direct links). Photo carousel with prev/next navigation, keyboard arrows, position indicator. Gemini face alignment research (PRD-015, AD-090). 8 new tests (2202 total).
 - [x] 2026-02-17: v0.42.0 — Production Cleanup + Sharing (Session 40): Fixed /map and /connect 500 errors, reassigned 114 community photos to correct collection. Shareable identification pages (/identify/{id} and /identify/{a}/match/{b}) for crowdsourcing without login. Person page comments system with admin moderation. Person page action bar, clickable collection links, Help Identify CTA. Data integrity checker (18 checks) and critical route smoke tests (10 routes). 35 new tests (2194 total).
 - [x] 2026-02-17: v0.41.0 — Family Tree + Relationship Editing (Session 39): Hierarchical D3.js family tree at /tree with Reingold-Tilford layout, couple-based nodes, face crop avatars, person filter, theory toggle. FAN relationship model (friends/associates/neighbors) with confidence levels. Relationship editing API (admin only, non-destructive). Person page tree links, connection photo counts, GEDCOM admin improvements (import history + enrichment status). Tree in navigation. 39 new tests (2159 total). Decision provenance AD-077–AD-080.

@@ -34,18 +34,21 @@
 ### FB-40-20: Photo carousel / gallery mode needed
 - Left/right arrows to browse adjacent photos in collection. Keyboard + swipe. "Photo 3 of 108" indicator
 
-### FB-40-21: Admin-only elements visible to non-admin on photo page
-- Back image upload, orientation tools should be hidden from public view
+### FB-40-21: Admin-only elements visible to non-admin on photo page — VERIFIED CORRECT
+- Back image upload, orientation tools correctly guarded by `if is_admin else None`
+- Local dev shows admin elements because auth disabled = is_admin=True by design
+- Production (auth enabled) correctly hides admin elements for anonymous users
 
-### FB-40-22: Photo upload attribution not displayed
+### FB-40-22: Photo upload attribution not displayed — DEFERRED
 - Show "Uploaded by [name] on [date]" on photo detail page
+- Requires adding `uploaded_by` field to photo_index.json data model
 
 ---
 
 ## HIGH — Collection Management
 
-### FB-40-23: "Add Photos" button on collection detail pages
-- Next to Share button, auto-assigns to collection
+### FB-40-23: "Add Photos" button on collection detail pages — DONE (Session 42)
+- Admin-only button next to Share button, links to /upload
 
 ### FB-40-24: Bulk collection/source editing in admin Photos view
 - "Move to Collection...", "Set Source...", "Create New Collection..."
@@ -103,6 +106,8 @@
 ### FB-40-17: Sidebar rule enforcement — admin pages get sidebar, public get top nav
 ### FB-40-07: /admin/approvals unstyled — needs sidebar + consistent styling
 ### FB-40-12: Tree link missing from public nav on some pages
-### FB-40-11: GEDCOM page — label test data, manual linking, show data on person pages
-### FB-40-13: Compare UX — two clear modes immediately visible
+### FB-40-11: GEDCOM page — label test data — DONE (Session 42)
+- Warning banner shown when source file contains "test" in name
+### FB-40-13: Compare UX — two clear modes — DONE (Session 42)
+- Numbered sections: "1. Search the Archive" and "2. Upload a Photo"
 ### FB-40-15: Upload/approval logging — who/what/when for all actions
