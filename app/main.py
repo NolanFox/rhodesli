@@ -10430,7 +10430,8 @@ def get(person_a: str, person_b: str, sess=None):
     date_a, _, _ = _get_date_badge(photo_id_a) if photo_id_a else (None, None, None)
     date_b, _, _ = _get_date_badge(photo_id_b) if photo_id_b else (None, None, None)
 
-    def _face_card(crop_url, display_name, collection, date_text, pid, state):
+    def _face_card(crop_url, display_name, collection, date_text, pid, state, all_faces=None, crop_files_ref=None):
+        """Build a face card with optional carousel for multi-face identities."""
         meta_items = []
         if collection:
             meta_items.append(P(collection, cls="text-xs text-slate-400 text-center"))
@@ -10438,18 +10439,63 @@ def get(person_a: str, person_b: str, sess=None):
             meta_items.append(P(date_text, cls="text-xs text-slate-500 text-center"))
         # Link to person page (CONFIRMED) or identify page (all others)
         person_href = f"/person/{pid}" if state == "CONFIRMED" else f"/identify/{pid}"
+        profile_label = f"View {display_name}'s Profile" if state == "CONFIRMED" else f"Help Identify {display_name}"
+
+        # Build face data for carousel (if multiple faces)
+        face_data_list = []
+        if all_faces and crop_files_ref and len(all_faces) > 1:
+            for fid_entry in all_faces:
+                fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id", "")
+                furl = resolve_face_image_url(fid, crop_files_ref)
+                if furl:
+                    fpid = get_photo_id_for_face(fid)
+                    face_data_list.append({"crop_url": furl, "photo_id": fpid or ""})
+
+        has_carousel = len(face_data_list) > 1
+
         face_img = (
-            Img(src=crop_url, alt=display_name,
+            Img(src=crop_url, alt=display_name, id=f"face-img-{pid}",
                 cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl object-cover border-2 border-slate-700 mx-auto shadow-lg"
                     " transition-transform duration-200 hover:scale-105 hover:shadow-[0_0_12px_rgba(255,191,0,0.5)]") if crop_url else
             Div(Span("?", cls="text-5xl text-slate-500"),
                 cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center mx-auto")
         )
+
+        # Carousel navigation arrows
+        carousel_el = None
+        if has_carousel:
+            import json as json_mod
+            carousel_el = Div(
+                Button(
+                    NotStr("&#8249;"),
+                    cls="w-8 h-8 bg-slate-700/80 hover:bg-slate-600 text-white rounded-full flex items-center justify-center text-lg transition-colors",
+                    data_action="face-carousel-prev",
+                    data_target=pid,
+                    type="button",
+                ),
+                Span(f"1 of {len(face_data_list)}", id=f"face-counter-{pid}",
+                     cls="text-xs text-slate-400"),
+                Button(
+                    NotStr("&#8250;"),
+                    cls="w-8 h-8 bg-slate-700/80 hover:bg-slate-600 text-white rounded-full flex items-center justify-center text-lg transition-colors",
+                    data_action="face-carousel-next",
+                    data_target=pid,
+                    type="button",
+                ),
+                cls="flex items-center justify-center gap-3 mt-2",
+                data_faces=json_mod.dumps(face_data_list),
+                data_idx="0",
+                id=f"face-carousel-{pid}",
+            )
+
         return Div(
             A(face_img, href=person_href, title=f"View {display_name}"),
+            carousel_el,
             A(display_name, href=person_href,
               cls="text-sm text-slate-200 mt-3 text-center font-semibold block hover:text-indigo-400 transition-colors"),
             *meta_items,
+            A(profile_label + " →", href=person_href,
+              cls="text-xs text-indigo-400 hover:text-indigo-300 text-center mt-2 block transition-colors"),
             cls="flex flex-col items-center",
         )
 
@@ -10642,14 +10688,16 @@ def get(person_a: str, person_b: str, sess=None):
                 Div(
                     H1("Are these the same person?",
                         cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-8"),
-                    # Side-by-side faces
+                    # Side-by-side faces with carousel if multi-face
                     Div(
-                        _face_card(crop_a, display_a, collection_a, date_a, person_a, ident_a.get("state", "INBOX")),
+                        _face_card(crop_a, display_a, collection_a, date_a, person_a, ident_a.get("state", "INBOX"),
+                                   all_faces=faces_a, crop_files_ref=crop_files),
                         Div(
                             Span("vs", cls="text-slate-500 text-2xl font-bold"),
                             cls="flex items-center justify-center px-4 sm:px-8",
                         ),
-                        _face_card(crop_b, display_b, collection_b, date_b, person_b, ident_b.get("state", "INBOX")),
+                        _face_card(crop_b, display_b, collection_b, date_b, person_b, ident_b.get("state", "INBOX"),
+                                   all_faces=faces_b, crop_files_ref=crop_files),
                         cls="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-10",
                     ),
                     # Voting area
@@ -10674,7 +10722,40 @@ def get(person_a: str, person_b: str, sess=None):
         ),
         _share_script(),
         _match_lightbox_script(),
+        _face_carousel_script(),
     )
+
+
+def _face_carousel_script():
+    """JS for face carousel navigation on match pages and person pages."""
+    return Script("""
+    (function() {
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('[data-action="face-carousel-prev"], [data-action="face-carousel-next"]');
+            if (!btn) return;
+            e.preventDefault();
+            var targetId = btn.dataset.target;
+            var carousel = document.getElementById('face-carousel-' + targetId);
+            if (!carousel) return;
+            var faces;
+            try { faces = JSON.parse(carousel.dataset.faces); } catch(err) { return; }
+            if (!faces || faces.length < 2) return;
+            var idx = parseInt(carousel.dataset.idx || '0', 10);
+            if (btn.dataset.action === 'face-carousel-next') {
+                idx = (idx + 1) % faces.length;
+            } else {
+                idx = (idx - 1 + faces.length) % faces.length;
+            }
+            carousel.dataset.idx = idx;
+            // Update face image
+            var img = document.getElementById('face-img-' + targetId);
+            if (img) img.src = faces[idx].crop_url;
+            // Update counter
+            var counter = document.getElementById('face-counter-' + targetId);
+            if (counter) counter.textContent = (idx + 1) + ' of ' + faces.length;
+        });
+    })();
+    """)
 
 
 # Rate limit storage for match responses (IP -> list of timestamps)
