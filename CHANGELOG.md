@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.49.1] — 2026-02-18
+
+### Added
+- **Age on face overlays** — photo viewer shows "Name, ~age" on confirmed faces when both birth year and photo date are known (Session 47 Phase 2F completion)
+- **Harness rules** — prompt-decomposition.md, phase-execution.md, verification-gate.md, harness-decisions.md in `.claude/rules/`
+- **HARNESS_DECISIONS.md** — HD-001 through HD-007 documenting workflow/harness engineering decisions with full provenance
+- **Session log infrastructure** — `docs/session_logs/`, `docs/session_context/`, `docs/prompts/` directories; session 47B retrospective log
+- 4 new tests for age overlay rendering (2365 + 4 = 2369 total)
+- Lessons 72-76 added to tasks/lessons.md (harness & process)
+- HARNESS-001/002/003 backlog items for future harness evaluation
+
+### Changed
+- **CLAUDE.md compressed** — 113 → 77 lines; added session management rule references and HARNESS_DECISIONS.md to key docs
+
 ## [v0.49.0] — 2026-02-18
 
 ### Added

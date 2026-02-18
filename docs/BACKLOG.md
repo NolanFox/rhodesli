@@ -91,6 +91,11 @@ Contributor roles done. Remaining: Help Identify mode, upload moderation, notifi
 ### Phase F: Scale & Generalize — FUTURE
 PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
 
+### Harness Engineering — BACKLOG
+- [ ] HARNESS-001: Evaluate Ralph Wiggum for overnight runs after 3+ sessions with verification gate (see HD-001)
+- [ ] HARNESS-002: Consider native Tasks system for sessions with independent phases (see HD-001)
+- [ ] HARNESS-003: Build session log analyzer script for docs/session_logs/*.md patterns (see HD-005)
+
 ---
 
 ## Sub-Files

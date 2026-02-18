@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-71 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+76 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -107,3 +107,13 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 33 | Not every decision needs a formal AD entry |
 | 41 | Confidence gap > absolute distance for human decision-making |
 | 61 | SKIPPED faces must participate in clustering, not just proposals |
+
+## Harness & Process — `tasks/lessons/harness-lessons.md`
+
+| # | Summary |
+|---|---------|
+| 72 | Context degradation is real (~20-30% drop) — save prompts to disk, re-read at verification |
+| 73 | "Data exists in wrong directory" pattern occurred 3 times — verification gate catches this |
+| 74 | Self-reported completion unreliable — external verification (FRC) is mandatory |
+| 75 | Harness decisions need provenance tracking (HD-NNN) just like algorithmic decisions |
+| 76 | Audits can have blind spots — always audit against ACTUAL PROMPT TEXT, not assumed scope |
