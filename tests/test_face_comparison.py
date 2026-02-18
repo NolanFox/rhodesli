@@ -154,11 +154,20 @@ class TestCompareRoute:
         assert "/timeline" in resp.text
         assert "Compare" in resp.text
 
-    def test_compare_shows_two_modes(self):
-        """Compare page shows two numbered modes: Search Archive and Upload."""
+    def test_compare_shows_upload_and_archive_modes(self):
+        """Compare page shows upload (primary) and archive search (collapsible)."""
         resp = self.client.get("/compare")
-        assert "Search the Archive" in resp.text
         assert "Upload a Photo" in resp.text
+        assert "upload-area" in resp.text
+        assert "search by person" in resp.text.lower()
+        assert "archive-panel" in resp.text
+
+    def test_compare_upload_above_archive(self):
+        """Upload section appears before archive section in DOM order."""
+        resp = self.client.get("/compare")
+        upload_pos = resp.text.find("upload-section")
+        archive_pos = resp.text.find("archive-panel")
+        assert upload_pos < archive_pos, "Upload section must appear before archive"
 
     def test_compare_with_invalid_face_id(self):
         """Compare with non-existent face_id returns 200 with no results."""

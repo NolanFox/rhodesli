@@ -12004,22 +12004,35 @@ def get(face_id: str = "", sess=None):
             cls="text-center mb-6",
         )
 
-    # Upload section (graceful degradation)
+    # Upload section — above the fold, primary action (PRD-016)
     upload_section = Div(
         Div(
-            Span("2", cls="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold mr-2"),
-            Span("Upload a Photo", cls="text-lg font-serif text-white"),
-            cls="flex items-center mb-1",
+            H2("Upload a Photo", cls="text-xl font-serif text-white mb-1"),
+            P("Upload a photo to find matching faces in our archive of "
+              f"{len(face_options)} identified people.",
+              cls="text-sm text-slate-400 mb-4"),
+            cls="text-center",
         ),
-        P("Upload a photo to find matching faces in the archive.", cls="text-xs text-slate-500 mb-3"),
         Form(
             Div(
-                Input(type="file", name="photo", accept="image/*",
-                      cls="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600/20 file:text-indigo-300 hover:file:bg-indigo-600/30"),
-                cls="mb-3",
+                # Drag-and-drop zone
+                Div(
+                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-500 mb-3 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    P("Drop a photo here or click to browse", cls="text-slate-400 text-sm mb-1"),
+                    P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
+                    Input(type="file", name="photo", accept="image/*",
+                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                          data_testid="upload-input"),
+                    cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-8 transition-colors cursor-pointer",
+                ),
+                cls="mb-4",
             ),
-            Button("Compare Faces", type="submit",
-                   cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"),
+            Button(
+                NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>'),
+                "Search Archive",
+                type="submit",
+                cls="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 transition-colors inline-flex items-center",
+            ),
             action="/api/compare/upload",
             method="post",
             enctype="multipart/form-data",
@@ -12029,16 +12042,46 @@ def get(face_id: str = "", sess=None):
             hx_indicator="#upload-spinner",
             data_testid="upload-form",
         ),
-        Div(id="upload-spinner", cls="htmx-indicator text-center py-2",
-            children=[Span("Analyzing...", cls="text-slate-400 text-sm")]),
-        cls="border border-dashed border-slate-700 rounded-lg p-6 text-center mt-8",
+        Div(id="upload-spinner", cls="htmx-indicator text-center py-4",
+            children=[Span("Analyzing faces...", cls="text-slate-400 text-sm animate-pulse")]),
+        P("Photos are saved to help grow the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
+        cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
+    )
+
+    # Archive search section — collapsed below upload
+    archive_section = Div(
+        # Expander header
+        Div(
+            Button(
+                Span("Or search by person in the archive", cls="text-slate-300 text-sm font-medium"),
+                NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500 ml-2 transition-transform" id="archive-expand-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'),
+                type="button",
+                cls="flex items-center justify-center w-full py-3 hover:text-white transition-colors",
+                onclick="var panel=document.getElementById('archive-panel');var icon=document.getElementById('archive-expand-icon');if(panel.classList.contains('hidden')){panel.classList.remove('hidden');icon.style.transform='rotate(180deg)'}else{panel.classList.add('hidden');icon.style.transform=''}",
+            ),
+            cls="border-t border-slate-800 mt-6",
+        ),
+        # Collapsible panel (hidden by default, open if face_id provided)
+        Div(
+            face_search,
+            selected_section if selected_section else None,
+            face_grid,
+            cls="" if face_id else "hidden",
+            id="archive-panel",
+            data_testid="archive-panel",
+        ),
+    )
+
+    compare_og = og_tags(
+        "Compare Faces \u2014 Rhodesli Heritage Archive",
+        "Find similar faces in the Rhodes Jewish heritage photo archive",
+        canonical_url="/compare",
     )
 
     return (
         Title("Compare Faces \u2014 Rhodesli Heritage Archive"),
-        Meta(property="og:title", content="Compare Faces \u2014 Rhodesli Heritage Archive"),
-        Meta(property="og:description", content="Find similar faces in the Rhodes Jewish heritage photo archive"),
+        *compare_og,
         page_style,
         Main(
             Nav(
@@ -12053,43 +12096,30 @@ def get(face_id: str = "", sess=None):
             Section(
                 Div(
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P("Find matching faces in two ways: search within the archive, or upload your own photo.",
+                    P("Upload a photo to search our archive, or compare people already in the collection.",
                       cls="text-slate-400 text-sm"),
                     cls="max-w-4xl mx-auto px-6 pt-10 pb-6",
                 ),
             ),
-            # Selected face
+            # Upload — above the fold, primary action
             Section(
-                Div(selected_section, cls="max-w-4xl mx-auto px-6") if selected_section else None,
+                Div(upload_section, cls="max-w-4xl mx-auto px-6 pb-4"),
+                data_testid="upload-section",
             ),
-            # Face selector
+            # Archive search — collapsed below
             Section(
-                Div(
-                    Div(
-                        Span("1", cls="inline-flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white text-xs font-bold mr-2"),
-                        Span("Search the Archive", cls="text-lg font-serif text-white"),
-                        cls="flex items-center mb-1",
-                    ),
-                    P("Select a person to find who else they look like.", cls="text-xs text-slate-500 mb-4"),
-                    face_search,
-                    face_grid,
-                    cls="max-w-4xl mx-auto px-6 pb-6",
-                ),
+                Div(archive_section, cls="max-w-4xl mx-auto px-6 pb-6"),
             ),
             # Results
             Section(
                 Div(
                     results_html if results_html else Div(
-                        P("Select a person above to see similar faces in the archive.",
+                        P("Upload a photo or select a person to find similar faces.",
                           cls="text-slate-500 text-center py-8"),
                         id="compare-results",
                     ),
                     cls="max-w-4xl mx-auto px-6 pb-8",
                 ),
-            ),
-            # Upload
-            Section(
-                Div(upload_section, cls="max-w-4xl mx-auto px-6 pb-16"),
             ),
             # Footer
             Div(
