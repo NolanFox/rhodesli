@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.42.0 · 2194 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.46.0 · 2249 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -95,6 +95,11 @@ Goal: Landing page, search, mobile — ready for family members.
 - [x] ML-065: Kinship calibration — empirical thresholds from 959 same-person, 385 same-family, 605 different-person pairs (2026-02-15)
 - [x] FE-112: Tiered compare results — Identity Matches / Possible / Similar / Other with CDF confidence (2026-02-15)
 - [x] FE-113: Compare upload persistence — saved to uploads/compare/ with metadata + multi-face selection (2026-02-15)
+- [x] FE-114: Unified sharing design system — og_tags() + generalized share_button() (2026-02-17)
+- [x] FE-115: Compare page upload-first redesign (2026-02-17)
+- [x] FE-116: Calibrated match confidence labels (AD-091) (2026-02-17)
+- [x] FE-117: Shareable comparison result pages with response form (2026-02-17)
+- [x] FE-118: Site-wide OG tags + share buttons (/photos, /people, /collections) (2026-02-17)
 
 ## Phase C: Annotation Engine
 Goal: Make the archive meaningful beyond face matching.
@@ -256,6 +261,18 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] "Add Photos" button on collection pages (admin-only)
 - [x] 7 new tests (2209 total)
 
+### Session 44: Compare Faces Redesign + Sharing Design System (COMPLETED 2026-02-17)
+- [x] Research docs: compare_faces_competitive.md, sharing_design_system.md
+- [x] PRD-016 (compare faces redesign) and PRD-017 (sharing design system)
+- [x] Unified sharing components — og_tags() helper + generalized share_button()
+- [x] Compare page upload-first redesign — upload above fold, archive search collapsible
+- [x] Calibrated confidence labels — Very likely 85%+, Strong 70-84%, Possible 50-69%, Unlikely <50%
+- [x] Shareable comparison result pages at /compare/result/{id} with OG tags + response form
+- [x] Site-wide OG tags + share buttons on /photos, /people, /collections
+- [x] Deduplicated share JS across /person and /photo pages
+- [x] AD-091, PRD-016, PRD-017
+- [x] 21 new tests (2249 total)
+
 ### Session 43: Life Events & Context Graph
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
@@ -263,6 +280,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-17: v0.46.0 — Compare Faces Redesign + Sharing Design System (Session 44): Unified sharing components (og_tags() + generalized share_button()). Compare page upload-first redesign. Calibrated confidence labels (Very likely/Strong/Possible/Unlikely). Shareable comparison result pages at /compare/result/{id} with OG tags and response form. Site-wide OG tags and share buttons on /photos, /people, /collections. Deduplicated share JS. Research docs + PRD-016 + PRD-017. AD-091. 21 new tests (2249 total).
 - [x] 2026-02-17: v0.44.0 — Systematic Verification + Fix Everything (Session 42): Comprehensive audit of all 16 routes and 20 features. Fixed /identify/{id} 500 (set not subscriptable), landing page nav (all 8 public pages), GEDCOM test data warning, Compare two-mode UX, collection "Add Photos" button. Critical route test mock fixed (set vs list). 7 new tests (2209 total). Verification audit at docs/verification/session_42_audit.md.
 - [x] 2026-02-17: v0.43.0 — Production Fixes + Photo UX + Research (Session 41): Fixed /map 500 (PhotoRegistry.get_photo() doesn't exist), face overlay alignment (position:relative on image wrapper), face click behavior (navigate to person/identify pages), search→Focus mode (direct links). Photo carousel with prev/next navigation, keyboard arrows, position indicator. Gemini face alignment research (PRD-015, AD-090). 8 new tests (2202 total).
 - [x] 2026-02-17: v0.42.0 — Production Cleanup + Sharing (Session 40): Fixed /map and /connect 500 errors, reassigned 114 community photos to correct collection. Shareable identification pages (/identify/{id} and /identify/{a}/match/{b}) for crowdsourcing without login. Person page comments system with admin moderation. Person page action bar, clickable collection links, Help Identify CTA. Data integrity checker (18 checks) and critical route smoke tests (10 routes). 35 new tests (2194 total).

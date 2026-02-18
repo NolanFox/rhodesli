@@ -739,7 +739,14 @@ When making any algorithmic choice in the ML pipeline:
 - **PRD**: `docs/prds/015_gemini_face_alignment.md`
 - **Affected files**: `rhodesli_ml/scripts/generate_date_labels.py` (coordinate bridging prompt variant), `rhodesli_ml/pipelines/birth_year_estimation.py` (use `face_descriptions` before x-sort fallback), `rhodesli_ml/data/date_labels.py` (schema validation), `rhodesli_ml/scripts/clean_labels.py` (validate face_descriptions), `rhodesli_ml/scripts/audit_temporal_consistency.py` (direct face-to-age mapping), `rhodesli_ml/data/date_labels.json` (schema extension)
 
-1. Add a new entry with AD-XXX format (next: AD-091)
+### AD-091: Calibrated Match Confidence Labels
+- **Date**: 2026-02-17
+- **Context**: Compare results displayed tier labels ("Very likely the same person") based on distance tiers (STRONG MATCH <1.05), but a result at 57% confidence could appear under "Very likely" because the tier threshold and the human-readable label were conflated. Users reported this as misleading.
+- **Decision**: Decouple tier (section grouping) from confidence label (per-card text). Section headers use neutral names ("Strong Matches", "Possible Matches"). Per-card labels use calibrated percentage thresholds: ≥85% → "Very likely same person", 70-84% → "Strong match", 50-69% → "Possible match", <50% → "Unlikely match". Percentages are computed from CDF-based confidence (AD-067 kinship calibration).
+- **Rejected**: Using tier names as labels (conflates grouping with confidence), using raw distance values (meaningless to non-technical users), binary same/different threshold (loses nuance).
+- **Affected files**: `app/main.py` (`_compare_result_card()`, `_compare_results_grid()`), `tests/test_face_comparison.py` (TestCalibratedLabels)
+
+1. Add a new entry with AD-XXX format (next: AD-092)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

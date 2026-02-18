@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.46.0] — 2026-02-17
+
+### Added
+- **Unified sharing design system** — `og_tags()` helper + generalized `share_button()` with url=, prominent style, title/text params (FE-114)
+- **Compare page upload-first redesign** — upload section above the fold, archive search collapsible below (FE-115)
+- **Calibrated match confidence labels** — Very likely 85%+, Strong 70-84%, Possible 50-69%, Unlikely <50% (FE-116, AD-091)
+- **Shareable comparison result pages** — `/compare/result/{id}` with OG tags, match list, response form (FE-117)
+- **Site-wide OG tags + share buttons** — applied `og_tags()` to /photos, /people, /collections; share buttons on /photos and /people (FE-118)
+- **Research docs** — compare_faces_competitive.md, sharing_design_system.md
+- **PRD-016** (compare faces redesign) and **PRD-017** (sharing design system)
+- **AD-091** — calibrated confidence labels for compare results
+- 21 new tests (2209 → 2249)
+
+### Fixed
+- **uuid import bug** — missing import causing 4 test failures
+- **Share JS duplication** — deduplicated share JavaScript across /person and /photo pages
+
 ## [v0.44.0] — 2026-02-17
 
 ### Fixed

@@ -1,14 +1,14 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 16.0 — February 17, 2026
-**Status**: 2209 tests passing, v0.44.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 17.0 — February 17, 2026
+**Status**: 2249 tests passing, v0.46.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
 
 ## Current State Summary
 
-Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). Auth is complete with Google OAuth, invite codes, and a locked-down permission model (public=view, admin=everything else). 41 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, and 2202 tests.
+Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). Auth is complete with Google OAuth, invite codes, and a locked-down permission model (public=view, admin=everything else). 44 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, and 2249 tests.
 
 ---
 
@@ -139,6 +139,11 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 | FE-090 | Person links from photo viewer | DONE | Photo viewer cards link to /person/{id}, "See all photos". 4 tests (2026-02-13) |
 | FE-091 | Public Page link on identity cards | DONE | Confirmed cards have "Public Page" link to /person/{id}. 3 tests (2026-02-13) |
 | FE-092 | Triage bar active state | DONE | Active filter pill gets ring-2 highlight + brighter bg. "+N more" elements are clickable links. 4 tests (2026-02-13) |
+| FE-114 | Unified sharing design system | DONE | og_tags() helper + generalized share_button() with url=, prominent style, title/text. Deduplicated share JS. (2026-02-17) |
+| FE-115 | Compare page upload-first redesign | DONE | Upload section above the fold, archive search collapsible below. (2026-02-17) |
+| FE-116 | Calibrated match confidence labels | DONE | Very likely 85%+, Strong 70-84%, Possible 50-69%, Unlikely <50%. AD-091. (2026-02-17) |
+| FE-117 | Shareable comparison result pages | DONE | /compare/result/{id} with OG tags, match list, response form. (2026-02-17) |
+| FE-118 | Site-wide OG tags + share buttons | DONE | og_tags() on /photos, /people, /collections. Share buttons on /photos and /people. (2026-02-17) |
 
 ### 2.9 User Analytics & Logging (MEDIUM Priority)
 

@@ -1,6 +1,21 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-17 (Session 42 — Systematic Verification + Fix Everything)
+Last updated: 2026-02-17 (Session 44 — Compare Faces Redesign + Sharing Design System)
+
+## Session 44 Completed
+- [x] Research docs: compare_faces_competitive.md, sharing_design_system.md
+- [x] PRD-016 (compare faces redesign), PRD-017 (sharing design system)
+- [x] Unified sharing components: og_tags() helper + generalized share_button()
+- [x] Share JS deduplication (replaced inline copies with _share_script())
+- [x] Compare page upload-first redesign (upload above fold, archive collapsible)
+- [x] Calibrated confidence labels (AD-091): 85%+ Very likely, 70-84% Strong, 50-69% Possible, <50% Unlikely
+- [x] Share Results + Try Another Photo CTAs on compare results
+- [x] Shareable comparison result pages at /compare/result/{id}
+- [x] Site-wide og_tags() on /photos, /people, /collections
+- [x] Share buttons on /photos and /people pages
+- [x] Fixed uuid import bug (4 test failures)
+- [x] 21 new tests (2249 total)
+- [x] AD-091, CHANGELOG v0.46.0, ROADMAP, BACKLOG
 
 ## Session 42 Completed
 - [x] Systematic verification audit of all 16 routes + 20 features
