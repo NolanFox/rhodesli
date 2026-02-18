@@ -13910,7 +13910,7 @@ def get(person_a: str = "", person_b: str = "", sess=None):
                             cls="flex-1",
                         ),
                         Div(
-                            Span("&harr;", cls="text-2xl text-slate-600"),
+                            NotStr('<span class="text-2xl text-slate-600">&#x2194;</span>'),
                             cls="flex items-end pb-2",
                         ),
                         Div(
