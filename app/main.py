@@ -10239,6 +10239,33 @@ def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files
     import json as _json_fc
     chips_json = _json_fc.dumps(face_chips_data) if face_chips_data else "[]"
 
+    # Build face bbox data for lightbox overlays
+    face_bboxes = []
+    if width and height:
+        for face in photo_data.get("faces", []):
+            fid = face.get("face_id", "")
+            bbox = face.get("bbox")
+            if bbox and len(bbox) == 4:
+                x1, y1, x2, y2 = [float(v) for v in bbox]
+                ident = get_identity_for_face(registry, fid) if registry else None
+                fname = ensure_utf8_display((ident or {}).get("name", "")) if ident else ""
+                fstate = (ident or {}).get("state", "INBOX") if ident else "INBOX"
+                fident_id = (ident or {}).get("identity_id", "") if ident else ""
+                is_highlight = fid == face_id
+                # Clean name for display — don't show "Unidentified Person 42"
+                display_fname = fname if fname and not fname.startswith("Unidentified") else ""
+                face_bboxes.append({
+                    "left": round((x1 / width) * 100, 1),
+                    "top": round((y1 / height) * 100, 1),
+                    "width": round(((x2 - x1) / width) * 100, 1),
+                    "height": round(((y2 - y1) / height) * 100, 1),
+                    "name": display_fname,
+                    "state": fstate,
+                    "identity_id": fident_id,
+                    "highlight": is_highlight,
+                })
+    bboxes_json = _json_fc.dumps(face_bboxes)
+
     return Div(
         P(label, cls="text-xs text-slate-500 uppercase tracking-wider mb-2 font-medium"),
         Div(
@@ -10251,6 +10278,9 @@ def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files
             data_photo_label=label,
             data_photo_id=photo_id,
             data_face_chips=chips_json,
+            data_face_bboxes=bboxes_json,
+            data_collection=collection,
+            data_date=date_text or "",
             style="cursor:pointer",
         ) if photo_url else None,
         Div(*meta_parts, cls="flex gap-3 mt-1") if meta_parts else None,
@@ -10287,19 +10317,76 @@ def _match_face_chips_inline(chips_data):
 
 
 def _match_lightbox_script():
-    """JS for the match page lightbox with scroll-zoom and pinch-zoom."""
+    """JS for the match page lightbox with face overlays, metadata, zoom."""
     return Script("""
     (function() {
         var scale = 1;
         var lightbox = document.getElementById('match-lightbox');
         var lbImg = document.getElementById('match-lightbox-img');
         var lbFaces = document.getElementById('match-lightbox-faces');
+        var lbOverlays = document.getElementById('match-lightbox-overlays');
+        var lbMeta = document.getElementById('match-lightbox-meta');
         if (!lightbox) return;
 
-        function openLightbox(src, chipsJson) {
+        function openLightbox(src, chipsJson, bboxesJson, photoId, collection, dateText) {
             scale = 1;
             lbImg.src = src;
             lbImg.style.transform = 'scale(1)';
+
+            // Build face bbox overlays on the lightbox image
+            lbOverlays.innerHTML = '';
+            try {
+                var bboxes = JSON.parse(bboxesJson || '[]');
+                bboxes.forEach(function(b) {
+                    var div = document.createElement('div');
+                    div.style.position = 'absolute';
+                    div.style.left = b.left + '%';
+                    div.style.top = b.top + '%';
+                    div.style.width = b.width + '%';
+                    div.style.height = b.height + '%';
+                    div.style.pointerEvents = 'auto';
+                    div.style.cursor = 'pointer';
+                    var borderColor = b.highlight ? 'rgba(245,158,11,0.8)' : (b.state === 'CONFIRMED' ? 'rgba(16,185,129,0.6)' : 'rgba(148,163,184,0.4)');
+                    div.style.border = '2px solid ' + borderColor;
+                    div.style.borderRadius = '2px';
+                    if (b.highlight) div.style.boxShadow = '0 0 8px rgba(245,158,11,0.4)';
+                    if (b.name && !b.name.startsWith('Unidentified')) {
+                        div.title = b.name;
+                        var label = document.createElement('span');
+                        label.textContent = b.name;
+                        label.style.cssText = 'position:absolute;bottom:-18px;left:0;font-size:10px;color:#e2e8f0;white-space:nowrap;text-shadow:0 1px 3px rgba(0,0,0,0.8);';
+                        div.appendChild(label);
+                    }
+                    if (b.identity_id) {
+                        div.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            var href = b.state === 'CONFIRMED' ? '/person/' + b.identity_id : '/identify/' + b.identity_id;
+                            window.location.href = href;
+                        });
+                    }
+                    lbOverlays.appendChild(div);
+                });
+            } catch(e) {}
+
+            // Build metadata bar
+            lbMeta.innerHTML = '';
+            var metaParts = [];
+            if (collection) metaParts.push(collection);
+            if (dateText) metaParts.push(dateText);
+            if (metaParts.length > 0) {
+                var metaP = document.createElement('p');
+                metaP.textContent = metaParts.join(' · ');
+                metaP.className = 'text-sm text-slate-300';
+                lbMeta.appendChild(metaP);
+            }
+            if (photoId) {
+                var link = document.createElement('a');
+                link.href = '/photo/' + photoId;
+                link.textContent = 'View Photo Page →';
+                link.className = 'text-xs text-indigo-400 hover:text-indigo-300 inline-block mt-1 transition-colors';
+                lbMeta.appendChild(link);
+            }
+
             // Build face chips in lightbox
             lbFaces.innerHTML = '';
             try {
@@ -10347,6 +10434,8 @@ def _match_lightbox_script():
             lightbox.classList.add('hidden');
             document.body.style.overflow = '';
             lbImg.src = '';
+            lbOverlays.innerHTML = '';
+            lbMeta.innerHTML = '';
         }
 
         // Event delegation for open/close
@@ -10355,7 +10444,14 @@ def _match_lightbox_script():
             var trigger = e.target.closest('[data-action="open-lightbox"]');
             if (trigger) {
                 e.preventDefault();
-                openLightbox(trigger.dataset.photoUrl, trigger.dataset.faceChips);
+                openLightbox(
+                    trigger.dataset.photoUrl,
+                    trigger.dataset.faceChips,
+                    trigger.dataset.faceBboxes || '[]',
+                    trigger.dataset.photoId || '',
+                    trigger.dataset.collection || '',
+                    trigger.dataset.date || ''
+                );
                 return;
             }
             // Close via X button
@@ -10689,13 +10785,22 @@ def get(person_a: str, person_b: str, sess=None):
     lightbox = Div(
         Button(NotStr("&times;"), cls="absolute top-4 right-4 text-white text-3xl bg-transparent border-none cursor-pointer z-[1001] hover:text-slate-300 transition-colors leading-none", data_action="close-lightbox"),
         Div(
-            Img(id="match-lightbox-img", src="", alt="Full size photo",
-                cls="max-w-[90vw] max-h-[75vh] object-contain rounded-lg shadow-2xl"),
-            Div(id="match-lightbox-faces", cls="mt-4"),
-            cls="flex flex-col items-center",
+            # Photo container with face overlays
+            Div(
+                Img(id="match-lightbox-img", src="", alt="Full size photo",
+                    cls="max-w-[90vw] max-h-[65vh] object-contain rounded-lg shadow-2xl"),
+                Div(id="match-lightbox-overlays", cls="absolute inset-0"),
+                cls="relative inline-block",
+                id="match-lightbox-photo-wrap",
+            ),
+            # Metadata bar
+            Div(id="match-lightbox-meta", cls="mt-3 text-center"),
+            # Face chips
+            Div(id="match-lightbox-faces", cls="mt-3"),
+            cls="flex flex-col items-center max-w-[90vw]",
         ),
         id="match-lightbox",
-        cls="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center hidden",
+        cls="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center hidden overflow-y-auto py-8",
         data_action="close-lightbox-bg",
     )
 
