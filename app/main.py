@@ -1270,16 +1270,19 @@ def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "") 
     categories = [
         ("ready", "Ready to Confirm", counts["ready_to_confirm"],
          "bg-emerald-900/40 border-emerald-600/40 text-emerald-300 hover:bg-emerald-900/60",
-         "ring-2 ring-emerald-400 bg-emerald-800/60 font-bold"),
+         "ring-2 ring-emerald-400 bg-emerald-800/60 font-bold",
+         "ML found a strong match — review and confirm"),
         ("rediscovered", "Rediscovered", counts["rediscovered"],
          "bg-amber-900/40 border-amber-600/40 text-amber-300 hover:bg-amber-900/60",
-         "ring-2 ring-amber-400 bg-amber-800/60 font-bold"),
+         "ring-2 ring-amber-400 bg-amber-800/60 font-bold",
+         "Previously skipped faces with new match evidence"),
         ("unmatched", "Unmatched", counts["unmatched"],
          "bg-slate-700/40 border-slate-600/40 text-slate-300 hover:bg-slate-700/60",
-         "ring-2 ring-slate-400 bg-slate-600/60 font-bold"),
+         "ring-2 ring-slate-400 bg-slate-600/60 font-bold",
+         "Faces not yet linked to a known person — help identify them"),
     ]
 
-    for filter_val, label, count, color_cls, active_cls in categories:
+    for filter_val, label, count, color_cls, active_cls, tooltip in categories:
         if count == 0:
             continue
         is_active = (filter_val == active_filter)
@@ -1292,6 +1295,7 @@ def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "") 
                 Span(label, cls="text-xs" + ("" if is_active else " opacity-80")),
                 href=f"/?section=to_review&view={view_mode}&filter={filter_val}",
                 cls=pill_cls,
+                title=tooltip,
             )
         )
 

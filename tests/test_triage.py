@@ -192,6 +192,38 @@ class TestTriageBar:
         assert bar is None
 
 
+class TestTriageBarTooltips:
+    """Tests for triage bar tooltip/title descriptions."""
+
+    @patch("app.main._get_identities_with_proposals")
+    @patch("app.main._get_best_proposal_for_identity")
+    def test_unmatched_pill_has_tooltip(self, mock_best, mock_ids):
+        """Unmatched pill should have a title attribute explaining what 'unmatched' means."""
+        from app.main import _build_triage_bar
+
+        mock_ids.return_value = set()  # No proposals → all unmatched
+        to_review = [make_identity("id1")]
+        bar = _build_triage_bar(to_review, "focus")
+
+        html = str(bar)
+        assert "not yet linked" in html
+        assert 'title="' in html
+
+    @patch("app.main._get_identities_with_proposals")
+    @patch("app.main._get_best_proposal_for_identity")
+    def test_ready_pill_has_tooltip(self, mock_best, mock_ids):
+        """Ready to Confirm pill should have an explanatory title."""
+        from app.main import _build_triage_bar
+
+        mock_ids.return_value = {"id1"}
+        mock_best.return_value = {"distance": 0.7, "confidence": "VERY HIGH"}
+        to_review = [make_identity("id1")]
+        bar = _build_triage_bar(to_review, "focus")
+
+        html = str(bar)
+        assert "strong match" in html
+
+
 class TestTriageBarActiveState:
     """Tests for triage bar active filter visual distinction."""
 
