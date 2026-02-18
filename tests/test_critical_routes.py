@@ -200,3 +200,29 @@ class TestCriticalRoutes:
         """GET /identify/{id} returns 200 for an unidentified person."""
         resp = _run_with_patches(client, "GET", "/identify/test-unidentified-1")
         assert resp.status_code == 200
+
+    def test_person_page(self, client):
+        """GET /person/{id} returns 200 for a confirmed identity."""
+        resp = _run_with_patches(client, "GET", "/person/test-confirmed-1")
+        assert resp.status_code == 200
+
+    def test_person_page_404(self, client):
+        """GET /person/{bogus} returns 200 (gentle 404)."""
+        resp = _run_with_patches(client, "GET", "/person/nonexistent-bogus-id")
+        assert resp.status_code == 200
+        assert "Person not found" in resp.text
+
+    def test_activity_page(self, client):
+        """GET /activity returns 200."""
+        resp = _run_with_patches(client, "GET", "/activity")
+        assert resp.status_code == 200
+
+    def test_admin_approvals(self, client):
+        """GET /admin/approvals returns 200 (auth disabled)."""
+        resp = _run_with_patches(client, "GET", "/admin/approvals")
+        assert resp.status_code == 200
+
+    def test_admin_audit(self, client):
+        """GET /admin/audit returns 200 (auth disabled)."""
+        resp = _run_with_patches(client, "GET", "/admin/audit")
+        assert resp.status_code == 200
