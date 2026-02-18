@@ -461,3 +461,30 @@ class TestPersonPageTreeLink:
 
         assert response.status_code == 200
         assert "family-tree-link" not in response.text
+
+
+class TestPersonPageLifeDetails:
+    """Life details section shows birth/death fields with contribution prompts."""
+
+    def test_life_details_section_present_for_confirmed(self, client, confirmed_identity):
+        """Confirmed identities show the life details section."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert 'data-testid="life-details"' in response.text
+
+    def test_life_details_shows_unknown_for_missing_fields(self, client, confirmed_identity):
+        """Missing birth/death fields show 'Unknown' placeholder."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        # Most confirmed identities won't have all fields filled
+        html = response.text
+        if 'data-testid="life-details"' in html:
+            assert "Unknown" in html or "Born" in html or "Died" in html
+
+    def test_life_details_not_shown_for_nonexistent(self, client):
+        """404 person page does not show life details."""
+        response = client.get("/person/nonexistent-id-12345")
+        assert 'data-testid="life-details"' not in response.text

@@ -726,6 +726,87 @@ When making any algorithmic choice in the ML pipeline:
 - **Rejected**: Separate `/api/tree` endpoint — adds loading state complexity, CORS considerations, and extra request for small data. WebSocket — massive overkill for static genealogical data.
 - **Affects**: `app/main.py` (/tree route — `tree_json = json.dumps(tree_data)` embedded in Script tag)
 
+### AD-081: Shareable Identification Pages — Crowdsource-First Architecture
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: The archive has ~135 unidentified faces. Family members who could identify them are non-technical users on Facebook groups and WhatsApp. Requiring login or account creation to contribute identifications creates too much friction.
+- **Decision**: Create public pages at `/identify/{id}` (single face) and `/identify/{a}/match/{b}` (side-by-side comparison) that require no authentication. Visitors submit a name/relationship via a simple form. Responses are stored in `data/identification_responses.json` for admin review. Identified persons redirect to `/person/{id}`. OG tags enable rich social sharing previews.
+- **Alternatives Considered**: Require login for submissions — eliminates spam but creates prohibitive friction for elderly family members. Google Forms — easy but disconnected from the archive data, no auto-linking to identities. Email-based workflow — no structured data, manual admin processing.
+- **Rationale**: The primary goal is maximizing identification coverage. A 70-year-old aunt sharing a photo in a family WhatsApp group should be one tap away from contributing. Admin moderation handles quality control post-hoc rather than pre-submission.
+- **Affects**: `app/main.py` (`/identify/{id}`, `/identify/{a}/match/{b}`, `/api/identify/respond`), `data/identification_responses.json`, `tests/test_identify.py` (15 tests)
+
+### AD-082: Unauthenticated Person Page Comments with Admin Moderation
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: Person pages (`/person/{id}`) display identity information but offer no way for visitors to share memories, corrections, or context. Family members have stories that don't fit structured fields (birth year, maiden name).
+- **Decision**: Add a comments section to `/person/{id}` that accepts submissions without login. Comments have an optional author name field. Stored in `data/person_comments.json`. Admin can hide inappropriate comments via `POST /api/person/{id}/comment/{id}/hide` (soft delete, not hard delete — consistent with "never delete data" invariant). Comments display in reverse chronological order.
+- **Alternatives Considered**: Require login — same friction problem as AD-081. Disqus or third-party comment system — adds external dependency, data leaves the archive. Structured annotation system only — already exists (AN-001+) but requires login and field-specific submissions. Comments serve a different, freeform purpose.
+- **Rationale**: Freeform comments capture stories and context that structured fields cannot. "Aunt Rosa always wore that brooch — it was from her mother in Rhodes" is valuable provenance that has no structured field. Admin moderation (hide, not delete) provides quality control without losing data.
+- **Affects**: `app/main.py` (`_person_comments_section()`, `POST /api/person/{id}/comment`, `POST /api/person/{id}/comment/{id}/hide`), `data/person_comments.json`, `tests/test_person_comments.py` (9 tests)
+
+### AD-083: Automated Data Integrity Checker — 18-Check Validation Suite
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: After Session 40 discovered 114 photos with wrong collection metadata and a corrupted `_photo_cache`, it became clear that data consistency checks were only happening ad hoc. JSON files can silently drift (missing keys, orphan references, schema violations) without any automated detection.
+- **Decision**: Create `scripts/verify_data_integrity.py` with 18 checks: JSON parse validity for all data files, expected collections exist, photo count stability, `identities.json` has required `history` key, `relationships.json` schema validation, face-to-photo referential integrity, identity state enum validity, and more. Exit code 0/1 for CI integration. Run after test changes (`CLAUDE.md` Rule #14) and before deployments.
+- **Alternatives Considered**: Database constraints (Postgres) — correct long-term solution (Phase F) but premature for JSON-based storage. Per-file JSON Schema validation — covers structure but not cross-file referential integrity. Manual spot-checks — how we got 114 misassigned photos.
+- **Rationale**: The system uses 8+ JSON files with cross-references (face IDs span identities.json, photo_index.json, and embeddings.npy). Without automated integrity checks, corruption is discovered by users seeing wrong data on production. 18 checks run in <1 second and catch the classes of corruption seen in Sessions 25-40.
+- **Affects**: `scripts/verify_data_integrity.py`, `tests/test_critical_routes.py` (10 route smoke tests), referenced by `CLAUDE.md` Rule #14
+
+### AD-084: Person Page Action Bar — Cross-Feature Navigation Hub
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: The `/person/{id}` page showed identity information and photos but had no way to navigate to related features (timeline filtered to this person, map showing their photos, family tree centered on them, social connections). Users had to manually navigate to each feature and re-select the person.
+- **Decision**: Add a horizontal pill-button bar below the share button on `/person/{id}` with deep links: Timeline (`/timeline?people={id}`), Map (`/map?person={id}`), Family Tree (`/tree?person={id}`), and Connections (`/connect?from={id}`). Each link pre-filters the target page to the current person. For unidentified persons, show a "Help Identify" CTA linking to `/identify/{id}`.
+- **Alternatives Considered**: Sidebar navigation — takes horizontal space on a page that's already content-dense. Dropdown menu — hides discoverability. Tab-based layout with all features on one page — massive page weight, duplicates code from 4 separate routes.
+- **Rationale**: The person page is the natural hub for identity-centric exploration. Deep links with pre-populated query params leverage existing feature pages without duplicating code. The action bar makes the archive feel interconnected rather than siloed.
+- **Affects**: `app/main.py` (`_person_page()` action bar section, `/identify/{id}` Help Identify CTA)
+
+### AD-085: Collection Data Provenance — Batch Correction over Individual Edits
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: 114 community photos from Session 26 batch ingestion were all assigned to "Community Submissions" regardless of actual source. The real source was "Jews of Rhodes: Family Memories & Heritage" from a Facebook group. Correcting one-by-one through the UI would require 114 individual edits.
+- **Decision**: Write a migration script (`scripts/fix_collection_metadata.py`) with `--dry-run`/`--execute` safety flags that batch-reassigns photos based on source patterns. The script reports what would change before executing. Only 2 photos (Claude Benatar's actual community uploads) correctly remain as "Community Submissions." This follows the established data safety pattern: never edit JSON directly, always use scripts with dry-run.
+- **Alternatives Considered**: Manual UI edits — 114 clicks, error-prone, no audit trail. Direct JSON editing — violates data safety rules. Retroactive fix in ingest_inbox.py — doesn't fix already-ingested data, only prevents future occurrences.
+- **Rationale**: Batch ingestion errors require batch correction tools. The dry-run pattern provides a preview and audit trail. The root cause (ingest_inbox.py defaulting to "Community Submissions") should also be fixed to prevent recurrence, but the immediate need is correcting existing data.
+- **Affects**: `scripts/fix_collection_metadata.py`, `data/photo_index.json` (114 photos updated)
+
+### AD-086: Photo Carousel — Collection-Scoped Sequential Navigation
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: The public photo viewer (`/photo/{id}`) showed a single photo with no way to browse adjacent photos. Users clicking through from a collection page had to go back to the grid and click the next photo. This breaks the browsing flow, especially for family members reviewing a batch of related photos.
+- **Decision**: Add prev/next arrow buttons and a "Photo X of Y in [Collection]" position indicator to `/photo/{id}`. Navigation is scoped to the current photo's collection, with photos sorted by filename for consistent ordering. Keyboard left/right arrow keys also navigate. The collection name is a clickable link back to the collection page.
+- **Alternatives Considered**: Global photo ordering (all photos, not collection-scoped) — loses the contextual grouping that makes browsing meaningful. Infinite scroll — changes the page architecture from single-photo to feed. Lightbox overlay from collection grid — already exists for admin view but doesn't work for public shareable URLs.
+- **Rationale**: Heritage photo collections are inherently sequential (same album, same event, same era). Navigating within a collection preserves this context. Filename sorting provides a stable, deterministic order that matches the original album sequence in most cases.
+- **Affects**: `app/main.py` (`/photo/{id}` route — carousel nav section), `tests/test_public_photo_viewer.py`
+
+### AD-087: Face Overlay Click Targets — Navigate to Person or Identify Pages
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: On the photo viewer page, clicking a face overlay scrolled down to the person card below the photo, and clicking the person card scrolled back up to the overlay. This circular scroll behavior provided no useful action — it just bounced the user between two representations of the same information.
+- **Decision**: Replace circular scroll with outbound navigation. Clicking a face overlay or person card for an identified person navigates to `/person/{id}`. For an unidentified person, it navigates to `/identify/{id}`. This makes every click productive — it either shows the person's full profile or invites identification help.
+- **Alternatives Considered**: Keep scroll behavior and add a separate "View Profile" button — adds UI clutter, two ways to do the same thing. Open person page in modal — adds complexity, modals within the photo viewer are already used for other purposes. Do nothing (remove click handlers) — wastes the most obvious interaction point on the page.
+- **Rationale**: The photo viewer's face overlays are the primary discovery surface. Every click should advance the user's journey: either learning more about a known person or contributing to identification of an unknown one. Circular scroll is a dead end.
+- **Affects**: `app/main.py` (`_build_photo_view_content()` overlay click handlers, person card click handlers), `tests/test_public_photo_viewer.py`
+
+### AD-088: Face Overlay Alignment — Position Relative on Inner Image Wrapper
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: Face bounding box overlays on the photo viewer were misaligned — they appeared offset from the actual faces in the photo. The overlays use `position: absolute` with percentage-based coordinates derived from the original image dimensions. For absolute positioning to work correctly, the overlays must be positioned relative to the image element, not the outer container.
+- **Decision**: Add `position: relative` to the inner image wrapper `div` that contains both the `<img>` element and the overlay `div`s. This establishes the correct containing block for absolute positioning, ensuring overlays align with the image regardless of container padding, margins, or responsive scaling.
+- **Alternatives Considered**: Use pixel-based coordinates recalculated on resize — complex JS, race conditions with image load. Use CSS `object-fit` with matching overlay transforms — brittle, breaks when image aspect ratio changes. Use `<canvas>` overlay — heavyweight, loses CSS styling for overlay labels and hover effects.
+- **Rationale**: The fix is a single CSS property addition. Percentage-based absolute positioning within a `position: relative` parent is the standard web pattern for image overlays. All modern browsers handle responsive scaling of percentage-positioned children correctly.
+- **Affects**: `app/main.py` (`_build_photo_view_content()` image wrapper div)
+
+### AD-089: Search Result Routing — State-Based Destination
+- **Date**: 2026-02-17
+- **Status**: ACCEPTED
+- **Context**: Search results linked to Focus Mode (`/focus?identity={id}`) regardless of identity state. For confirmed identities with public person pages, this sent users into an admin-oriented triage workflow instead of the informational person page. For unidentified faces, Focus Mode was also wrong — the identification page is more appropriate for crowdsourcing.
+- **Decision**: Route search results based on identity state. CONFIRMED identities link to `/person/{id}` (public profile page). INBOX and SKIPPED identities link to `/identify/{id}` (crowdsource identification page). PROPOSED identities link to `/identify/{id}` as well, since they are not yet confirmed. This uses the existing `_section_for_state()` pattern (Lesson 46) applied to search result link generation.
+- **Alternatives Considered**: Always link to Focus Mode — forces all users through admin workflow. Always link to `/person/{id}` — unidentified persons have sparse pages with no useful content. Link to `/identify/{id}` for all — confirmed persons don't need identification help, their profile page is more useful.
+- **Rationale**: Search is the primary discovery mechanism for non-admin users. Every search result click should lead to the most useful page for that identity's current state. Confirmed persons have rich profile pages; unidentified persons benefit from the crowdsource identification flow.
+- **Affects**: `app/main.py` (search result link generation, `_search_results()`), consistent with `_section_for_state()` helper
+
 ### AD-090: Gemini-InsightFace Face Alignment via Coordinate Bridging
 - **Date**: 2026-02-17
 - **Context**: Current face-to-description alignment in `match_faces_to_ages()` uses left-to-right x-coordinate sorting. This FAILS for ~40% of group photos where Gemini describes N people but InsightFace detects M faces (M != N). The mismatch occurs because InsightFace detects background faces (newspaper clippings, posters, reflections, tiny occluded faces) that Gemini does not describe. When counts differ, the pipeline returns `"count_mismatch"` and discards all age data for that photo. This caused Vida Capeluto (15 photos, most prominent identity) to get zero birth year estimates.

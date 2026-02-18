@@ -9376,6 +9376,61 @@ def public_person_page(
         stats_parts.append(f"{collection_count} {'collection' if collection_count == 1 else 'collections'}")
     stats_line = " · ".join(stats_parts) if stats_parts else None
 
+    # --- Life details section (show even when empty, with contribution prompts) ---
+    life_detail_items = []
+    death_year = identity.get("death_year")
+    birth_place = identity.get("birth_place")
+    death_place = identity.get("death_place")
+    maiden_name = identity.get("maiden_name")
+
+    def _life_detail_row(label, value, prompt_text):
+        if value:
+            return Div(
+                Span(f"{label}: ", cls="text-slate-500 text-sm w-20 inline-block"),
+                Span(str(value), cls="text-slate-300 text-sm"),
+                cls="py-0.5",
+            )
+        else:
+            return Div(
+                Span(f"{label}: ", cls="text-slate-500 text-sm w-20 inline-block"),
+                Span("Unknown", cls="text-slate-600 text-sm italic"),
+                A(f" — {prompt_text}", href=f"/identify/{person_id}" if not is_confirmed else "#",
+                  cls="text-indigo-400/60 hover:text-indigo-300 text-xs ml-1",
+                  data_action="share-photo" if is_confirmed else None,
+                  data_share_url=f"{SITE_URL}/person/{person_id}" if is_confirmed else None,
+                  data_share_title=f"Help us learn more about {display_name}" if is_confirmed else None,
+                ) if not is_admin else None,
+                cls="py-0.5",
+            )
+
+    # Only show life details section if person is identified or under active review
+    if is_confirmed or identity.get("state") in ("PROPOSED", "INBOX"):
+        if not person_birth_year:
+            life_detail_items.append(_life_detail_row("Born", None, "Do you know?"))
+        if not death_year:
+            life_detail_items.append(_life_detail_row("Died", None, "Do you know?"))
+        if birth_place or not is_confirmed:
+            life_detail_items.append(_life_detail_row("From", birth_place, "Can you help?"))
+        elif not birth_place:
+            life_detail_items.append(_life_detail_row("From", None, "Can you help?"))
+        if death_place:
+            life_detail_items.append(_life_detail_row("Resting", death_place, ""))
+        if maiden_name:
+            life_detail_items.append(Div(
+                Span("Maiden: ", cls="text-slate-500 text-sm w-20 inline-block"),
+                Span(maiden_name, cls="text-slate-300 text-sm"),
+                cls="py-0.5",
+            ))
+
+    # Only show section if there are empty fields to prompt about (or filled fields to display)
+    life_details_section = None
+    if life_detail_items:
+        life_details_section = Div(
+            *life_detail_items,
+            cls="text-center mb-4",
+            data_testid="life-details",
+        )
+
     # --- Page style ---
     page_style = Style("""
         html, body { margin: 0; }
@@ -9435,7 +9490,9 @@ def public_person_page(
                         cls="text-center mb-3",
                     ),
                     # Stats line
-                    P(stats_line, cls="text-slate-400 text-sm text-center mb-6") if stats_line else None,
+                    P(stats_line, cls="text-slate-400 text-sm text-center mb-4") if stats_line else None,
+                    # Life details (birth/death/place with prompts for unknowns)
+                    life_details_section,
                     # Action buttons
                     Div(
                         share_btn,
@@ -19772,11 +19829,10 @@ def get(sess=None):
         )
 
     return Title("ML Dashboard — Rhodesli"), Div(
+        _admin_nav_bar("ml-dashboard"),
         Div(
             H1("ML Evaluation Dashboard", cls="text-2xl font-bold text-white"),
-            A("Back to Dashboard", href="/?section=to_review",
-              cls="text-sm text-indigo-400 hover:text-indigo-300"),
-            cls="flex items-center justify-between mb-6"
+            cls="mb-6"
         ),
         stat_cards,
         gs_section,
@@ -20727,6 +20783,37 @@ def get(sess=None):
     )
 
 
+def _admin_nav_bar(active: str = "") -> Div:
+    """Consistent navigation bar for admin sub-pages.
+
+    Shows links to all admin areas + back to dashboard.
+    `active` should be one of: approvals, proposals, gedcom, uploads, audit, ml-dashboard
+    """
+    links = [
+        ("Uploads", "/admin/pending", "uploads"),
+        ("Approvals", "/admin/approvals", "approvals"),
+        ("Proposals", "/admin/proposals", "proposals"),
+        ("GEDCOM", "/admin/gedcom", "gedcom"),
+        ("Audit Log", "/admin/audit", "audit"),
+        ("ML Dashboard", "/admin/ml-dashboard", "ml-dashboard"),
+    ]
+    nav_items = []
+    for label, href, key in links:
+        is_active = key == active
+        cls = ("px-3 py-1.5 text-sm rounded-lg transition-colors " +
+               ("bg-indigo-600 text-white" if is_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"))
+        nav_items.append(A(label, href=href, cls=cls))
+    nav_items.append(
+        A("Dashboard", href="/?section=to_review",
+          cls="px-3 py-1.5 text-sm text-indigo-400 hover:text-indigo-300 ml-auto"),
+    )
+    return Div(
+        *nav_items,
+        cls="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-slate-700/50",
+        data_testid="admin-nav-bar",
+    )
+
+
 @rt("/admin/approvals")
 def get(sess=None):
     """Admin page for reviewing pending annotations."""
@@ -20917,15 +21004,10 @@ def get(sess=None):
         )]
 
     return Title("Annotation Approvals — Rhodesli"), Div(
+        _admin_nav_bar("approvals"),
         Div(
             H1("Pending Approvals", cls="text-2xl font-bold text-white"),
-            Div(
-                A("Audit Log", href="/admin/audit",
-                  cls="text-sm text-slate-400 hover:text-slate-300 mr-4"),
-                A("Back to Dashboard", href="/?section=to_review",
-                  cls="text-sm text-indigo-400 hover:text-indigo-300"),
-            ),
-            cls="flex items-center justify-between mb-6"
+            cls="mb-6"
         ),
         Div(f"{len(pending)} pending annotations", cls="text-sm text-slate-400 mb-4"),
         Div(*rows, cls="space-y-3"),
@@ -21300,11 +21382,10 @@ def get(sess=None):
         rows = [P("No audit entries yet.", cls="text-slate-400 text-center py-12")]
 
     return Title("Audit Log — Rhodesli"), Div(
+        _admin_nav_bar("audit"),
         Div(
             H1("Audit Log", cls="text-2xl font-bold text-white"),
-            A("Back to Approvals", href="/admin/approvals",
-              cls="text-sm text-indigo-400 hover:text-indigo-300"),
-            cls="flex items-center justify-between mb-6"
+            cls="mb-6"
         ),
         P(f"{len(entries)} audit entries", cls="text-sm text-slate-400 mb-4"),
         Div(*rows, cls="space-y-0"),
@@ -21618,6 +21699,7 @@ def get(sess=None):
         )
 
     return Title("GEDCOM Import — Rhodesli"), Div(
+        _admin_nav_bar("gedcom"),
         Div(
             H1("GEDCOM Import", cls="text-2xl font-bold text-white"),
             P(f"Source: {source_file}" if source_file else "No GEDCOM file imported yet",

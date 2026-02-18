@@ -49,3 +49,36 @@ class TestAdminDashboardBanner:
         response = client.get("/?section=to_review")
         assert response.status_code == 200
         assert "admin-dashboard-banner" not in response.text
+
+
+class TestAdminNavBar:
+    """Admin sub-pages should all have consistent navigation bar."""
+
+    def test_approvals_has_nav_bar(self, client, auth_disabled):
+        """Approvals page has the admin nav bar."""
+        response = client.get("/admin/approvals")
+        assert response.status_code == 200
+        assert 'data-testid="admin-nav-bar"' in response.text
+
+    def test_audit_has_nav_bar(self, client, auth_disabled):
+        """Audit log page has the admin nav bar."""
+        response = client.get("/admin/audit")
+        assert response.status_code == 200
+        assert 'data-testid="admin-nav-bar"' in response.text
+
+    def test_gedcom_has_nav_bar(self, client, auth_disabled):
+        """GEDCOM admin page has the admin nav bar."""
+        response = client.get("/admin/gedcom")
+        assert response.status_code == 200
+        assert 'data-testid="admin-nav-bar"' in response.text
+
+    def test_ml_dashboard_has_nav_bar(self, client, auth_disabled):
+        """ML dashboard has the admin nav bar."""
+        response = client.get("/admin/ml-dashboard")
+        assert response.status_code == 200
+        assert 'data-testid="admin-nav-bar"' in response.text
+
+    def test_nav_bar_has_dashboard_link(self, client, auth_disabled):
+        """Nav bar includes a link back to the main dashboard."""
+        response = client.get("/admin/approvals")
+        assert "Dashboard" in response.text
