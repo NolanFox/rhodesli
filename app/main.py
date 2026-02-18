@@ -12881,13 +12881,26 @@ def get(face_id: str = "", sess=None):
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
+            # Tab navigation
+            Section(
+                Div(
+                    Div(
+                        A("Compare Faces", href="/compare",
+                          cls="px-4 py-2 text-sm font-medium text-white border-b-2 border-indigo-400 transition-colors"),
+                        A("Estimate Year", href="/estimate",
+                          cls="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white border-b-2 border-transparent hover:border-indigo-400 transition-colors"),
+                        cls="flex items-center justify-center gap-6 border-b border-slate-700/50 pb-0",
+                    ),
+                    cls="max-w-4xl mx-auto px-6 pt-8",
+                ),
+            ),
             # Header
             Section(
                 Div(
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
                     P("Upload a photo to search our archive, or compare people already in the collection.",
                       cls="text-slate-400 text-sm"),
-                    cls="max-w-4xl mx-auto px-6 pt-10 pb-6",
+                    cls="max-w-4xl mx-auto px-6 pt-6 pb-6",
                 ),
             ),
             # Upload — above the fold, primary action
@@ -13823,6 +13836,235 @@ def _connection_path_html(path_steps, registry):
         )
 
     return Div(*steps, cls="flex flex-col items-center mt-6", data_testid="connection-path")
+
+
+# =============================================================================
+# ROUTES - YEAR ESTIMATION TOOL
+# =============================================================================
+
+
+@rt("/estimate")
+def get(photo: str = "", sess=None):
+    """
+    Year Estimation Tool — estimate when a photo was taken.
+
+    Uses apparent ages + known birth years + scene analysis.
+    Public page, no auth required.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+
+    _build_caches()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    # Build photo selector from archive
+    photo_options = []
+    photo_reg = load_photo_registry()
+    labels = _load_date_labels()
+
+    # Get all photos, sorted by those with most identified faces first
+    all_photo_ids = list(_photo_cache.keys()) if _photo_cache else []
+
+    # Estimation results
+    estimate_result = None
+    selected_photo = None
+    if photo and photo in (_photo_cache or {}):
+        from core.year_estimation import estimate_photo_year
+        selected_photo = _photo_cache[photo]
+        estimate_result = estimate_photo_year(
+            photo_id=photo,
+            date_labels=labels,
+            photo_cache=_photo_cache,
+            identity_registry=registry,
+            birth_year_fn=_get_birth_year,
+            face_to_identity_fn=get_identity_for_face,
+        )
+
+    # Build the page
+    nav_links = _public_nav_links(active="compare", user=user)
+
+    # Photo grid selector
+    photo_grid_items = []
+    for pid in all_photo_ids[:60]:
+        pm = _photo_cache.get(pid, {})
+        if not pm:
+            continue
+        photo_path = pm.get("path") or pm.get("filename", "")
+        if not photo_path:
+            continue
+        purl = storage.get_photo_url(photo_path)
+        face_count = len(pm.get("face_ids", []))
+        is_selected = pid == photo
+
+        photo_grid_items.append(
+            A(
+                Img(src=purl, alt="Archive photo",
+                    cls=f"w-full h-20 object-cover rounded-lg {'ring-2 ring-amber-400' if is_selected else 'hover:ring-2 hover:ring-indigo-400'} transition-all"),
+                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500 block text-center mt-0.5"),
+                href=f"/estimate?photo={pid}",
+                cls="block",
+            )
+        )
+
+    # Result display
+    result_section = None
+    if estimate_result and selected_photo:
+        photo_path = selected_photo.get("path") or selected_photo.get("filename", "")
+        photo_url_val = storage.get_photo_url(photo_path)
+
+        # Per-face evidence cards
+        face_cards = []
+        for ev in estimate_result.get("face_evidence", []):
+            if not ev.get("apparent_age"):
+                continue
+            person_name = ev.get("person_name") or "Unknown person"
+            birth_text = f"born ~{ev['birth_year']}" if ev.get("birth_year") else "birth year unknown"
+            year_text = f"c. {ev['estimated_year']}" if ev.get("estimated_year") else "—"
+            source_badge = ""
+            if ev.get("birth_year_source") == "confirmed":
+                source_badge = Span("verified", cls="text-[10px] bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded-full ml-2")
+            elif ev.get("birth_year_source") == "ml_inferred":
+                source_badge = Span("estimated", cls="text-[10px] bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded-full ml-2")
+
+            face_cards.append(
+                Div(
+                    Div(
+                        Span(person_name, cls="text-sm font-semibold text-white"),
+                        source_badge,
+                        cls="flex items-center",
+                    ),
+                    P(f"Appears ~{ev['apparent_age']} years old ({birth_text})", cls="text-xs text-slate-400 mt-0.5"),
+                    P(year_text, cls="text-lg font-bold text-amber-400 mt-1") if ev.get("estimated_year") else None,
+                    cls="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50",
+                )
+            )
+
+        # Scene evidence
+        scene_card = None
+        scene = estimate_result.get("scene_evidence")
+        if scene and scene.get("clues"):
+            scene_card = Div(
+                Div(
+                    Span("Scene Analysis", cls="text-sm font-semibold text-white"),
+                    cls="flex items-center",
+                ),
+                P(", ".join(scene["clues"][:4]), cls="text-xs text-slate-400 mt-0.5"),
+                P(f"Suggests: {scene['scene_estimate']}", cls="text-sm text-slate-300 mt-1") if scene.get("scene_estimate") else None,
+                cls="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50",
+            )
+
+        # Confidence styling
+        conf = estimate_result.get("confidence", "low")
+        conf_color = {"high": "text-emerald-400", "medium": "text-amber-400", "low": "text-slate-400"}.get(conf, "text-slate-400")
+        conf_label = {"high": "High confidence", "medium": "Moderate confidence", "low": "Low confidence"}.get(conf, "")
+        margin = estimate_result.get("margin", 10)
+        method_label = "Based on facial age analysis" if estimate_result.get("method") == "facial_age_aggregation" else "Based on scene analysis"
+
+        result_section = Div(
+            # Photo with estimate badge
+            Div(
+                Img(src=photo_url_val, alt="Selected photo",
+                    cls="w-full max-w-lg mx-auto rounded-xl shadow-lg"),
+                cls="mb-6",
+            ),
+            # Main estimate
+            Div(
+                H2(f"Estimated: c. {estimate_result['year']}", cls="text-3xl font-serif font-bold text-white text-center"),
+                P(f"+/- {margin} years", cls="text-lg text-slate-400 text-center"),
+                Div(
+                    Span(conf_label, cls=f"text-sm font-medium {conf_color}"),
+                    Span(" · ", cls="text-slate-600"),
+                    Span(method_label, cls="text-xs text-slate-500"),
+                    cls="flex items-center justify-center gap-1 mt-2",
+                ),
+                cls="text-center mb-8",
+            ),
+            # How we estimated this
+            H3("How we estimated this", cls="text-lg font-serif font-semibold text-white mb-4"),
+            Div(*face_cards, scene_card, cls="flex flex-col gap-3 mb-6") if face_cards or scene_card else
+            P("No detailed evidence available for this photo.", cls="text-sm text-slate-500 italic"),
+            # CTAs
+            Div(
+                share_button(url=f"/estimate?photo={photo}", style="button", label="Share Estimate",
+                             title=f"This photo was taken c. {estimate_result['year']}",
+                             text="Year estimation from the Rhodesli Heritage Archive"),
+                A("View Photo Page", href=f"/photo/{photo}", cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors"),
+                A("Try Another", href="/estimate", cls="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors border border-slate-700"),
+                cls="flex flex-wrap justify-center gap-3 mt-6",
+            ),
+            cls="bg-slate-800/30 rounded-xl p-6 border border-slate-700/30 mt-8",
+        )
+    elif photo and not estimate_result:
+        # Photo selected but no estimate possible
+        photo_path = (selected_photo or {}).get("path") or (selected_photo or {}).get("filename", "")
+        photo_url_val = storage.get_photo_url(photo_path) if photo_path else ""
+        result_section = Div(
+            Img(src=photo_url_val, alt="Selected photo",
+                cls="w-full max-w-lg mx-auto rounded-xl shadow-lg mb-4") if photo_url_val else None,
+            P("Not enough data to estimate the year for this photo.", cls="text-slate-400 text-center"),
+            P("Photos with identified people and known birth years produce the best estimates.",
+              cls="text-xs text-slate-500 text-center mt-2"),
+            A("Try another photo", href="/estimate",
+              cls="text-indigo-400 hover:text-indigo-300 text-sm text-center block mt-4"),
+            cls="bg-slate-800/30 rounded-xl p-6 border border-slate-700/30 mt-8 text-center",
+        )
+
+    # Tab links: Compare Faces | Estimate Year
+    tab_links = Div(
+        A("Compare Faces", href="/compare",
+          cls="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white border-b-2 border-transparent hover:border-indigo-400 transition-colors"),
+        A("Estimate Year", href="/estimate",
+          cls="px-4 py-2 text-sm font-medium text-white border-b-2 border-indigo-400 transition-colors"),
+        cls="flex items-center justify-center gap-6 mb-8 border-b border-slate-700/50 pb-0",
+    )
+
+    og = og_tags(
+        title="When Was This Photo Taken? — Rhodesli",
+        description="Our AI estimates the year a photo was taken using facial age analysis and historical clues.",
+        canonical_url=f"{SITE_URL}/estimate",
+    )
+
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    return (
+        Title("When Was This Photo Taken? — Rhodesli"),
+        *og,
+        page_style,
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-lg font-serif font-bold text-white"), href="/"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            Section(
+                Div(
+                    tab_links,
+                    H1("When Was This Photo Taken?",
+                        cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2"),
+                    P("Select a photo from the archive. Our AI estimates the year using facial age analysis and historical clues.",
+                      cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto"),
+                    # Results (if photo selected)
+                    result_section,
+                    # Photo selector
+                    Div(
+                        H3("Select a Photo" if not photo else "Try Another Photo",
+                           cls="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3"),
+                        Div(*photo_grid_items, cls="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2"),
+                        cls="mt-8",
+                    ) if photo_grid_items else None,
+                    P("The more people you identify, the better the estimate.",
+                      cls="text-xs text-slate-500 text-center mt-6"),
+                    cls="max-w-4xl mx-auto pt-8 pb-16 px-6",
+                ),
+            ),
+            cls="min-h-screen bg-slate-900 text-white",
+        ),
+        _share_script(),
+    )
 
 
 @rt("/tree")
