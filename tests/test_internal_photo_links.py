@@ -12,7 +12,7 @@ Tests cover:
 import pytest
 from starlette.testclient import TestClient
 
-from app.main import app, load_embeddings_for_photos, share_button
+from app.main import app, load_embeddings_for_photos, share_button, og_tags
 
 
 def get_real_photo_id():
@@ -66,6 +66,90 @@ class TestShareButtonComponent:
         btn = share_button("test_photo_id", style="icon")
         html = to_xml(btn)
         assert 'data-share-url="/photo/test_photo_id"' in html
+
+    def test_url_param_takes_precedence(self):
+        """url= keyword overrides photo_id for any URL."""
+        from fasthtml.common import to_xml
+        btn = share_button(url="/person/abc123", style="button", label="Share Person")
+        html = to_xml(btn)
+        assert 'data-share-url="/person/abc123"' in html
+        assert "Share Person" in html
+
+    def test_prominent_style_renders(self):
+        """Prominent style creates a large CTA button."""
+        from fasthtml.common import to_xml
+        btn = share_button(url="/compare/result/xyz", style="prominent", label="Share This Match")
+        html = to_xml(btn)
+        assert "Share This Match" in html
+        assert 'data-action="share-photo"' in html
+        assert "shadow-lg" in html
+
+    def test_share_title_and_text_data_attributes(self):
+        """title and text params add data attributes for native share."""
+        from fasthtml.common import to_xml
+        btn = share_button(url="/person/abc", style="button", title="Check this out", text="A face from Rhodes")
+        html = to_xml(btn)
+        assert 'data-share-title="Check this out"' in html
+        assert 'data-share-text="A face from Rhodes"' in html
+
+
+class TestOgTagsHelper:
+    """The og_tags() helper generates correct Open Graph meta tags."""
+
+    def test_basic_og_tags(self):
+        """og_tags returns title, description, and site_name."""
+        from fasthtml.common import to_xml
+        tags = og_tags("Test Title", "Test Description")
+        html = " ".join(to_xml(t) for t in tags)
+        assert 'og:title' in html
+        assert 'Test Title' in html
+        assert 'og:description' in html
+        assert 'Test Description' in html
+        assert 'og:site_name' in html
+
+    def test_og_image_absolute_url(self):
+        """Relative image URLs are converted to absolute."""
+        from fasthtml.common import to_xml
+        tags = og_tags("T", image_url="/static/crops/test.jpg")
+        html = " ".join(to_xml(t) for t in tags)
+        assert 'og:image' in html
+        assert "https://" in html
+        assert "/static/crops/test.jpg" in html
+
+    def test_og_image_already_absolute(self):
+        """Absolute image URLs are passed through unchanged."""
+        from fasthtml.common import to_xml
+        tags = og_tags("T", image_url="https://example.com/img.jpg")
+        html = " ".join(to_xml(t) for t in tags)
+        assert "https://example.com/img.jpg" in html
+
+    def test_og_canonical_url(self):
+        """Canonical URL appears in og:url."""
+        from fasthtml.common import to_xml
+        tags = og_tags("T", canonical_url="/person/abc123")
+        html = " ".join(to_xml(t) for t in tags)
+        assert 'og:url' in html
+        assert "/person/abc123" in html
+
+    def test_twitter_card_with_image(self):
+        """summary_large_image card when image is provided."""
+        from fasthtml.common import to_xml
+        tags = og_tags("T", image_url="/img.jpg")
+        html = " ".join(to_xml(t) for t in tags)
+        assert 'summary_large_image' in html
+
+    def test_twitter_card_without_image(self):
+        """summary card when no image provided."""
+        from fasthtml.common import to_xml
+        tags = og_tags("T")
+        html = " ".join(to_xml(t) for t in tags)
+        assert 'content="summary"' in html
+
+    def test_returns_tuple(self):
+        """og_tags returns a tuple for spreading into page head."""
+        tags = og_tags("T", "D", "/img.jpg", "/url")
+        assert isinstance(tags, tuple)
+        assert len(tags) >= 9  # At least 9 meta tags with image
 
 
 class TestPhotoModalShareButton:

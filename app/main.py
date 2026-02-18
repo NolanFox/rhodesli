@@ -4866,14 +4866,51 @@ def era_badge(era: str) -> Span:
 _SHARE_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'
 
 
-def share_button(photo_id: str, style: str = "icon", label: str = "Share"):
+def og_tags(title: str, description: str = "", image_url: str = "", canonical_url: str = "", og_type: str = "website") -> tuple:
     """
-    Reusable share button that copies the public photo URL.
+    Unified OG meta tags for social sharing previews.
+    All URLs are converted to absolute (prepends SITE_URL if relative).
+    Returns a tuple of Meta elements to spread into Title() or page head.
+    """
+    # Ensure absolute URLs
+    if image_url and not image_url.startswith("http"):
+        image_url = f"{SITE_URL}{image_url}"
+    if canonical_url and not canonical_url.startswith("http"):
+        canonical_url = f"{SITE_URL}{canonical_url}"
+    tags = [
+        Meta(property="og:title", content=title),
+        Meta(property="og:description", content=description),
+        Meta(property="og:url", content=canonical_url),
+        Meta(property="og:type", content=og_type),
+        Meta(property="og:site_name", content="Rhodesli \u2014 Heritage Photo Archive"),
+        Meta(name="twitter:card", content="summary_large_image" if image_url else "summary"),
+        Meta(name="twitter:title", content=title),
+        Meta(name="twitter:description", content=description),
+        Meta(name="description", content=description),
+    ]
+    if image_url:
+        tags.insert(2, Meta(property="og:image", content=image_url))
+        tags.append(Meta(name="twitter:image", content=image_url))
+    return tuple(tags)
+
+
+def share_button(photo_id: str = None, *, url: str = None, style: str = "icon", label: str = "Share", title: str = "", text: str = ""):
+    """
+    Reusable share button. Works with photo_id (legacy) or any url.
     Uses data-action="share-photo" for global event delegation.
 
-    style: "icon" (compact icon-only), "button" (icon + text), "link" (text link style)
+    photo_id: Legacy param — generates /photo/{photo_id} URL
+    url: Direct URL to share (takes precedence over photo_id)
+    style: "icon" (compact), "button" (icon + text), "link" (text link), "prominent" (large CTA)
+    title: Share title for native share sheet (optional)
+    text: Share description for native share sheet (optional)
     """
-    url = f"/photo/{photo_id}"
+    share_url = url or (f"/photo/{photo_id}" if photo_id else "")
+    extra_attrs = {}
+    if title:
+        extra_attrs["data_share_title"] = title
+    if text:
+        extra_attrs["data_share_text"] = text
     if style == "button":
         return Button(
             NotStr(f'<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'),
@@ -4881,7 +4918,8 @@ def share_button(photo_id: str, style: str = "icon", label: str = "Share"):
             cls="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors inline-flex items-center",
             type="button",
             data_action="share-photo",
-            data_share_url=url,
+            data_share_url=share_url,
+            **extra_attrs,
         )
     elif style == "link":
         return Button(
@@ -4890,7 +4928,18 @@ def share_button(photo_id: str, style: str = "icon", label: str = "Share"):
             cls="text-xs text-indigo-400 hover:text-indigo-300 underline inline-flex items-center gap-1",
             type="button",
             data_action="share-photo",
-            data_share_url=url,
+            data_share_url=share_url,
+            **extra_attrs,
+        )
+    elif style == "prominent":
+        return Button(
+            NotStr(f'<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>'),
+            label,
+            cls="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-base font-medium rounded-xl transition-colors inline-flex items-center shadow-lg hover:shadow-xl",
+            type="button",
+            data_action="share-photo",
+            data_share_url=share_url,
+            **extra_attrs,
         )
     else:  # "icon" — compact, for grid overlays and card corners
         return Button(
@@ -4898,8 +4947,9 @@ def share_button(photo_id: str, style: str = "icon", label: str = "Share"):
             cls="p-1.5 bg-black/60 hover:bg-indigo-600 text-white rounded transition-colors",
             type="button",
             data_action="share-photo",
-            data_share_url=url,
-            title="Share this photo",
+            data_share_url=share_url,
+            title=label,
+            **extra_attrs,
         )
 
 
@@ -7809,13 +7859,16 @@ def get(section: str = None, view: str = "focus", current: str = None,
         """),
         # Global share utility functions (used by share buttons on all pages)
         Script("""
-            function _sharePhotoUrl(url) {
+            function _sharePhotoUrl(url, shareTitle, shareText) {
                 // Always copy to clipboard first (desktop-friendly).
                 // On mobile, also offer native share sheet after copying.
                 _copyAndToast(url);
                 var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 if (isMobile && navigator.share) {
-                    navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function() {});
+                    var shareData = { url: url };
+                    if (shareTitle) shareData.title = shareTitle;
+                    if (shareText) shareData.text = shareText;
+                    navigator.share(shareData).catch(function() {});
                 }
             }
             function _copyAndToast(url) {
@@ -7856,13 +7909,15 @@ def get(section: str = None, view: str = "focus", current: str = None,
                 if (!btn) return;
                 var action = btn.getAttribute('data-action');
 
-                // Share photo (used across all surfaces)
+                // Share photo/page (used across all surfaces)
                 if (action === 'share-photo') {
                     var url = btn.getAttribute('data-share-url') || '';
                     if (url && !url.startsWith('http')) {
                         url = window.location.origin + url;
                     }
-                    _sharePhotoUrl(url || window.location.href);
+                    var shareTitle = btn.getAttribute('data-share-title') || '';
+                    var shareText = btn.getAttribute('data-share-text') || '';
+                    _sharePhotoUrl(url || window.location.href, shareTitle, shareText);
                     return;
                 }
 
@@ -9404,48 +9459,10 @@ def public_person_page(
                 cls="py-8 border-t border-slate-800",
             ),
 
-            # Share JS (standalone page needs its own)
+            # Share JS (standalone page uses reusable _share_script)
+            _share_script(),
             Script("""
-                function _sharePhotoUrl(url) {
-                    _copyAndToast(url);
-                    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    if (isMobile && navigator.share) {
-                        navigator.share({ title: 'Rhodesli', url: url }).catch(function() {});
-                    }
-                }
-                function _copyAndToast(url) {
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(url).then(function() {
-                            _showShareToast('Link copied!');
-                        }).catch(function() { _showShareToast('Could not copy link'); });
-                    } else {
-                        var input = document.createElement('input');
-                        input.value = url;
-                        document.body.appendChild(input);
-                        input.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(input);
-                        _showShareToast('Link copied!');
-                    }
-                }
-                function _showShareToast(message) {
-                    var existing = document.getElementById('share-toast');
-                    if (existing) existing.remove();
-                    var toast = document.createElement('div');
-                    toast.id = 'share-toast';
-                    toast.textContent = message;
-                    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-                    document.body.appendChild(toast);
-                    setTimeout(function() { toast.style.opacity = '0'; }, 2000);
-                    setTimeout(function() { toast.remove(); }, 2500);
-                }
                 document.addEventListener('click', function(e) {
-                    var shareBtn = e.target.closest('[data-action="share-photo"]');
-                    if (shareBtn) {
-                        var url = shareBtn.getAttribute('data-share-url') || window.location.href;
-                        _sharePhotoUrl(url);
-                        return;
-                    }
                     var toggleBtn = e.target.closest('[data-action="toggle-date-correction"]');
                     if (toggleBtn) {
                         var photoId = toggleBtn.getAttribute('data-photo-id') || toggleBtn.closest('[data-photo-id]')?.getAttribute('data-photo-id');
@@ -9490,11 +9507,14 @@ def get(person_id: str, view: str = "faces", sess=None):
 def _share_script():
     """Reusable share script for standalone public pages."""
     return Script("""
-        function _sharePhotoUrl(url) {
+        function _sharePhotoUrl(url, shareTitle, shareText) {
             _copyAndToast(url);
             var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
             if (isMobile && navigator.share) {
-                navigator.share({ title: 'Rhodesli', url: url }).catch(function() {});
+                var shareData = { url: url };
+                if (shareTitle) shareData.title = shareTitle;
+                if (shareText) shareData.text = shareText;
+                navigator.share(shareData).catch(function() {});
             }
         }
         function _copyAndToast(url) {
@@ -9527,7 +9547,9 @@ def _share_script():
             var shareBtn = e.target.closest('[data-action="share-photo"]');
             if (shareBtn) {
                 var url = shareBtn.getAttribute('data-share-url') || window.location.href;
-                _sharePhotoUrl(url);
+                var shareTitle = shareBtn.getAttribute('data-share-title') || '';
+                var shareText = shareBtn.getAttribute('data-share-text') || '';
+                _sharePhotoUrl(url, shareTitle, shareText);
             }
         });
     """)
@@ -14186,48 +14208,10 @@ def public_photo_page(
                 ),
                 cls="py-8 border-t border-slate-800"
             ),
-            # Action button event handlers (standalone page — needs its own share/flip JS)
+            # Action button event handlers (standalone page — uses reusable _share_script + flip JS)
+            _share_script(),
             Script("""
-                function _sharePhotoUrl(url) {
-                    _copyAndToast(url);
-                    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                    if (isMobile && navigator.share) {
-                        navigator.share({ title: 'Rhodesli Photo', url: url }).catch(function() {});
-                    }
-                }
-                function _copyAndToast(url) {
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(url).then(function() {
-                            _showShareToast('Link copied!');
-                        }).catch(function() { _showShareToast('Could not copy link'); });
-                    } else {
-                        var input = document.createElement('input');
-                        input.value = url;
-                        document.body.appendChild(input);
-                        input.select();
-                        document.execCommand('copy');
-                        document.body.removeChild(input);
-                        _showShareToast('Link copied!');
-                    }
-                }
-                function _showShareToast(message) {
-                    var existing = document.getElementById('share-toast');
-                    if (existing) existing.remove();
-                    var toast = document.createElement('div');
-                    toast.id = 'share-toast';
-                    toast.textContent = message;
-                    toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#334155;color:#e2e8f0;padding:10px 20px;border-radius:8px;font-size:14px;z-index:9999;transition:opacity 0.3s;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
-                    document.body.appendChild(toast);
-                    setTimeout(function() { toast.style.opacity = '0'; }, 2000);
-                    setTimeout(function() { toast.remove(); }, 2500);
-                }
                 document.addEventListener('click', function(e) {
-                    var shareBtn = e.target.closest('[data-action="share-photo"]');
-                    if (shareBtn) {
-                        var url = shareBtn.getAttribute('data-share-url') || window.location.href;
-                        _sharePhotoUrl(url);
-                        return;
-                    }
                     var flipBtn = e.target.closest('[data-action="flip-photo"]');
                     if (flipBtn) {
                         var inner = document.getElementById('photo-flip-inner');
