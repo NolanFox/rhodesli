@@ -3503,11 +3503,11 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
         main_crop_url = resolve_face_image_url(main_face_id, crop_files)
         main_photo_id = get_photo_id_for_face(main_face_id)
 
-    # Get photo context (collection, other identified people)
-    photo_context_el = _build_skipped_photo_context(main_face_id, main_photo_id, identity_id)
-
-    # Get top ML suggestions for side-by-side display + strip
+    # Get top ML suggestions for side-by-side display + strip (compute first so we know best match)
     suggestion_el, other_matches_strip, best_match_id = _build_skipped_suggestion_with_strip(identity_id, crop_files)
+
+    # Get photo context (collection, other identified people) — includes best match photo
+    photo_context_el = _build_skipped_photo_context(main_face_id, main_photo_id, identity_id, best_match_id=best_match_id)
 
     # Action buttons
     if is_admin:
@@ -3642,8 +3642,12 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     )
 
 
-def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str):
-    """Build photo context panel showing collection info and co-identified faces."""
+def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, best_match_id: str = None):
+    """Build photo context panel showing collection info and co-identified faces.
+
+    Shows both the "Who is this?" source photo and the Best Match source photo
+    side by side when a best match exists.
+    """
     if not photo_id:
         return None
 
@@ -3681,38 +3685,93 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str):
 
     other_people = list(set(other_people))[:5]  # Deduplicate, limit
 
-    context_items = []
+    # Build "Who is this?" photo card
+    who_context_items = []
     if collection:
-        context_items.append(Span(f"Collection: {collection}", cls="text-xs text-slate-400"))
+        who_context_items.append(Span(collection, cls="text-xs text-slate-400 truncate"))
     if other_people:
-        context_items.append(Span(f"Also in photo: {', '.join(other_people)}", cls="text-xs text-slate-300"))
+        who_context_items.append(Span(f"Also: {', '.join(other_people)}", cls="text-xs text-slate-300 truncate"))
 
-    if not context_items and not photo_url:
-        return None
+    who_card = Div(
+        Div("Who is this?", cls="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1"),
+        Button(
+            Img(
+                src=photo_url,
+                cls="w-full h-20 object-cover rounded border border-slate-600 hover:border-indigo-400 transition-colors",
+                alt="Source photo",
+            ),
+            cls="p-0 bg-transparent cursor-pointer w-full",
+            hx_get=f"/photo/{photo_id}/partial?face={face_id}&identity_id={identity_id}",
+            hx_target="#photo-modal-content",
+            **{"_": "on click remove .hidden from #photo-modal"},
+            type="button",
+            title="View full photo",
+        ),
+        Div(*who_context_items, cls="flex flex-col gap-0.5 mt-1") if who_context_items else None,
+        A("View Photo Page", href=f"/photo/{photo_id}", cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 inline-block"),
+        cls="flex-1 min-w-0",
+    )
+
+    # Build Best Match photo card (if we have a best match)
+    match_card = None
+    if best_match_id:
+        try:
+            match_identity = registry.get_identity(best_match_id)
+            match_faces = match_identity.get("anchor_ids", []) + match_identity.get("candidate_ids", [])
+            match_face_id = get_best_face_id(match_faces)
+            if match_face_id:
+                match_photo_id = get_photo_id_for_face(match_face_id)
+                if match_photo_id:
+                    match_photo = _photo_cache.get(match_photo_id)
+                    if match_photo:
+                        match_collection = match_photo.get("collection") or match_photo.get("source") or ""
+                        match_photo_url = storage.get_photo_url(match_photo.get("path") or match_photo.get("filename") or "")
+                        match_name = ensure_utf8_display(match_identity.get("name") or "Unknown")
+
+                        match_context_items = []
+                        if match_collection:
+                            match_context_items.append(Span(match_collection, cls="text-xs text-slate-400 truncate"))
+                        match_context_items.append(Span(match_name, cls="text-xs text-slate-300 truncate"))
+
+                        match_card = Div(
+                            Div("Best Match", cls="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1"),
+                            Button(
+                                Img(
+                                    src=match_photo_url,
+                                    cls="w-full h-20 object-cover rounded border border-slate-600 hover:border-indigo-400 transition-colors",
+                                    alt=f"Source photo for {match_name}",
+                                ),
+                                cls="p-0 bg-transparent cursor-pointer w-full",
+                                hx_get=f"/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={best_match_id}",
+                                hx_target="#photo-modal-content",
+                                **{"_": "on click remove .hidden from #photo-modal"},
+                                type="button",
+                                title=f"View photo of {match_name}",
+                            ),
+                            Div(*match_context_items, cls="flex flex-col gap-0.5 mt-1") if match_context_items else None,
+                            A("View Photo Page", href=f"/photo/{match_photo_id}", cls="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1 inline-block"),
+                            cls="flex-1 min-w-0",
+                        )
+        except (KeyError, Exception):
+            pass
+
+    # Share button shares the source photo page, not the match comparison
+    share_el = share_button(url=f"/photo/{photo_id}", style="link", label="Share",
+                            title="Check out this photo", text="From the Rhodesli archive")
 
     return Div(
         Div(
             Span("Photo Context", cls="text-xs font-medium text-slate-400 uppercase tracking-wide"),
-            share_button(photo_id, style="link", label="Share"),
+            share_el,
             cls="flex items-center justify-between mb-2",
         ),
         Div(
-            # Small photo thumbnail
-            Button(
-                Img(
-                    src=photo_url,
-                    cls="w-20 h-14 object-cover rounded border border-slate-600 hover:border-indigo-400 transition-colors",
-                    alt="Source photo",
-                ),
-                cls="p-0 bg-transparent cursor-pointer flex-shrink-0",
-                hx_get=f"/photo/{photo_id}/partial?face={face_id}&identity_id={identity_id}",
-                hx_target="#photo-modal-content",
-                **{"_": "on click remove .hidden from #photo-modal"},
-                type="button",
-                title="View full photo",
-            ),
-            Div(*context_items, cls="flex flex-col gap-1") if context_items else None,
-            cls="flex items-center gap-3"
+            who_card,
+            match_card,
+            cls="flex gap-3"
+        ) if match_card else Div(
+            who_card,
+            cls="flex gap-3"
         ),
         cls="mt-4 bg-slate-700/30 rounded-lg p-3 border border-slate-700/50"
     )
@@ -3875,6 +3934,37 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
     confidence_label = _CONFIDENCE_LABEL.get(confidence, "Match")
     suggestion_crop_url = _resolve_match_crop(target_id, crop_files)
 
+    # Resolve best match's photo ID for View Photo / share links
+    match_photo_id = None
+    match_face_id = None
+    target_identity = None
+    try:
+        registry = load_registry()
+        target_identity = registry.get_identity(target_id)
+        target_faces = target_identity.get("anchor_ids", []) + target_identity.get("candidate_ids", [])
+        match_face_id = get_best_face_id(target_faces)
+        if match_face_id:
+            match_photo_id = get_photo_id_for_face(match_face_id)
+    except (KeyError, Exception):
+        pass
+
+    # Build links for best match (mirror "Who is this?" links)
+    match_links = []
+    if match_photo_id:
+        match_links.append(
+            A("View Photo", href="#", cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block",
+              hx_get=f"/photo/{match_photo_id}/partial?face={match_face_id}&identity_id={target_id}",
+              hx_target="#photo-modal-content",
+              **{"_": "on click remove .hidden from #photo-modal"},
+            )
+        )
+    # Profile link
+    target_state = target_identity.get("state", "") if target_identity else ""
+    if target_state == "CONFIRMED":
+        match_links.append(A("View Profile", href=f"/person/{target_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block"))
+    else:
+        match_links.append(A("Help Identify", href=f"/identify/{target_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 inline-block"))
+
     suggestion_el = Div(
         Div("Best Match", cls="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide"),
         Div(
@@ -3892,6 +3982,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
                 cls="text-sm mt-1"
             ),
         ),
+        Div(*match_links, cls="flex items-center gap-3 mt-1") if match_links else None,
         cls="flex-1 flex flex-col items-center sm:items-start"
     )
 
