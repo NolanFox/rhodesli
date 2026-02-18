@@ -8864,6 +8864,25 @@ def photo_view_content(
             display_name = ensure_utf8_display(raw_name)
             identity_id = identity["identity_id"] if identity else None
 
+            # Calculate age at time of photo if both birth year and photo year exist
+            age_at_photo = None
+            if identity_id and identity and identity.get("state") == "CONFIRMED":
+                birth_year, by_source, _ = _get_birth_year(identity_id, identity, include_unreviewed=False)
+                if birth_year:
+                    # Get photo year from date labels or photo metadata
+                    date_labels = _load_date_labels()
+                    date_label = date_labels.get(photo_id, {})
+                    photo_year = date_label.get("best_year_estimate")
+                    if not photo_year:
+                        date_taken = photo.get("date_taken", "")
+                        if date_taken and len(str(date_taken)) >= 4:
+                            try:
+                                photo_year = int(str(date_taken)[:4])
+                            except (ValueError, TypeError):
+                                pass
+                    if photo_year:
+                        age_at_photo = int(photo_year) - birth_year
+
             # Determine section based on identity state for navigation
             if identity:
                 state = identity.get("state", "INBOX")
@@ -9012,8 +9031,12 @@ def photo_view_content(
             # Name label: always visible for confirmed, hover for others
             if state == "CONFIRMED":
                 # Always-visible name label below the face box
+                # Include age at time of photo if both birth year and photo year are known
+                label_text = display_name
+                if age_at_photo is not None and age_at_photo >= 0:
+                    label_text = f"{display_name}, ~{age_at_photo}"
                 name_label = Span(
-                    display_name,
+                    label_text,
                     cls="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-black/70 text-white text-[11px] px-1.5 py-0.5 rounded whitespace-nowrap pointer-events-none max-w-[150%] truncate"
                 )
                 hover_tooltip = None
