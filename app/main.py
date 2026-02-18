@@ -3428,7 +3428,7 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
     photo_context_el = _build_skipped_photo_context(main_face_id, main_photo_id, identity_id)
 
     # Get top ML suggestions for side-by-side display + strip
-    suggestion_el, other_matches_strip = _build_skipped_suggestion_with_strip(identity_id, crop_files)
+    suggestion_el, other_matches_strip, best_match_id = _build_skipped_suggestion_with_strip(identity_id, crop_files)
 
     # Action buttons
     if is_admin:
@@ -3529,7 +3529,9 @@ def skipped_card_expanded(identity: dict, crop_files: set, is_admin: bool = True
                       hx_target="#photo-modal-content",
                       **{"_": "on click remove .hidden from #photo-modal"},
                     ),
-                    share_button(main_photo_id, style="link", label="Share"),
+                    share_button(main_photo_id, style="link", label="Share Photo"),
+                    share_button(url=f"/identify/{identity_id}/match/{best_match_id}", style="link", label="Share This Match",
+                                 title="Are these the same person?", text=f"Help identify: {name}") if best_match_id else None,
                     cls="flex items-center gap-3 mt-1",
                 ) if main_photo_id else None,
                 # Additional faces
@@ -3762,7 +3764,7 @@ _CONFIDENCE_LABEL = {"VERY HIGH": "Strong match", "HIGH": "Good match", "MODERAT
 def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
     """Build 'Best Match' panel + horizontal strip of other matches.
 
-    Returns (suggestion_el, other_matches_strip_el).
+    Returns (suggestion_el, other_matches_strip_el, best_match_id).
     """
     # Fetch up to 5 neighbors
     top_matches = _compute_top_neighbors(identity_id, limit=5)
@@ -3782,7 +3784,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
             P("Try 'I Know Them' to name this person", cls="text-xs text-slate-500 mt-1"),
             cls="flex-1 flex flex-col items-center sm:items-start"
         )
-        return no_match_el, None
+        return no_match_el, None, None
 
     # Best match (primary comparison)
     best = top_matches[0]
@@ -3844,7 +3846,7 @@ def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
             cls="mt-5 pt-4 border-t border-slate-700/50"
         )
 
-    return suggestion_el, other_matches_strip
+    return suggestion_el, other_matches_strip, target_id
 
 
 def _build_skipped_focus_actions(identity_id: str, state: str) -> Div:
@@ -5241,6 +5243,8 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
                 cls="flex-1 min-w-0 ml-3"),
             Div(compare_btn, merge_btn, Button("Not Same", cls="px-2 py-1 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
                                   hx_post=f"/api/identity/{target_identity_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML"),
+                share_button(url=f"/identify/{target_identity_id}/match/{neighbor_id}", style="icon",
+                             title="Are these the same person?", text=f"Help identify: {name}"),
                 cls="flex items-center gap-1 sm:gap-2 flex-shrink-0 sm:ml-2 mt-2 sm:mt-0"),
             cls="flex flex-wrap sm:flex-nowrap items-center gap-2"),
         id=f"neighbor-{neighbor_id}", cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg overflow-hidden"

@@ -463,12 +463,49 @@ class TestOtherMatchesStrip:
         assert resp.status_code == 200
 
     def test_suggestion_with_strip_returns_tuple(self):
-        """_build_skipped_suggestion_with_strip returns (el, strip_or_none)."""
+        """_build_skipped_suggestion_with_strip returns (el, strip_or_none, best_match_id)."""
         from app.main import _build_skipped_suggestion_with_strip
-        # Should return a tuple of two elements
+        # Should return a tuple of three elements: (suggestion_el, strip_or_none, best_match_id)
         result = _build_skipped_suggestion_with_strip("nonexistent-id", set())
         assert isinstance(result, tuple)
-        assert len(result) == 2
+        assert len(result) == 3
+        assert result[2] is None  # no best match for nonexistent identity
+
+
+class TestShareMatchButton:
+    """Test that Share Match buttons appear in neighbor cards and focus mode."""
+
+    def test_neighbor_card_has_share_match_button(self):
+        """Each neighbor card includes a share button linking to /identify/{a}/match/{b}."""
+        from app.main import neighbor_card
+        from fasthtml.common import to_xml
+
+        neighbor = {
+            "identity_id": "neighbor-abc",
+            "name": "Test Person",
+            "distance": 0.8,
+            "percentile": 0.5,
+            "confidence_gap": 10.0,
+            "can_merge": True,
+            "face_count": 1,
+            "co_occurrence": 0,
+            "anchor_face_ids": [],
+            "candidate_face_ids": [],
+            "state": "PROPOSED",
+        }
+        card = neighbor_card(neighbor, "target-xyz", set())
+        html = to_xml(card)
+        assert "/identify/target-xyz/match/neighbor-abc" in html
+        assert 'data-action="share-photo"' in html
+
+    def test_focus_mode_has_share_this_match_link(self, client):
+        """Focus mode card includes 'Share This Match' link when a best match exists."""
+        resp = client.get("/?section=skipped&view=focus")
+        html = resp.text
+        # If there are skipped identities with suggestions, there should be a share match link
+        if "Share This Match" in html:
+            assert "/identify/" in html
+            assert "/match/" in html
 
 
 class TestKeyboardUndoSupport:
