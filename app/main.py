@@ -11936,7 +11936,21 @@ def get(face_id: str = "", sess=None):
                 face_data[face_id]["mu"], face_data, registry=registry,
                 limit=20, exclude_face_ids={face_id},
             )
-            results_html = _compare_results_grid(results, crop_files)
+            # Save shareable result
+            rid = _generate_result_id()
+            _save_comparison_result({
+                "result_id": rid,
+                "created_at": datetime.now().isoformat(),
+                "query_type": "archive",
+                "query_face_id": face_id,
+                "query_name": selected_identity_name or "Unknown",
+                "matches": [{"face_id": r["face_id"], "identity_id": r.get("identity_id", ""),
+                             "identity_name": r.get("identity_name", ""), "distance": r["distance"],
+                             "confidence_pct": r.get("confidence_pct", 0), "tier": r.get("tier", "WEAK")}
+                            for r in results[:10]],
+                "responses": [],
+            })
+            results_html = _compare_results_grid(results, crop_files, result_id=rid)
 
     # Build face selector — confirmed identities with face crops
     confirmed = [
@@ -12237,8 +12251,9 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
     )
 
 
-def _compare_results_grid(results: list, crop_files: set) -> object:
-    """Build the tiered results grid for face comparison (AD-067/AD-068)."""
+def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -> object:
+    """Build the tiered results grid for face comparison (AD-067/AD-068).
+    If result_id is provided, includes a shareable permalink."""
     if not results:
         return Div(
             P("No similar faces found.", cls="text-slate-500 text-center py-8"),
@@ -12314,8 +12329,9 @@ def _compare_results_grid(results: list, crop_files: set) -> object:
         )
 
     # Action CTAs below results
+    share_url = f"/compare/result/{result_id}" if result_id else "/compare"
     cta_section = Div(
-        share_button(url="/compare", style="button", label="Share Results",
+        share_button(url=share_url, style="button", label="Share Results",
                      title="Face Comparison Results", text="Check out these face comparison results from the Rhodes archive"),
         A("Try Another Photo",
           href="/compare",
@@ -12350,7 +12366,23 @@ def get(face_id: str = "", limit: int = 20, sess=None):
         face_data[face_id]["mu"], face_data, registry=registry,
         limit=limit, exclude_face_ids={face_id},
     )
-    return _compare_results_grid(results, crop_files)
+    # Save shareable result
+    ident = get_identity_for_face(registry, face_id)
+    query_name = ensure_utf8_display(ident.get("name", "Unknown")) if ident else "Unknown"
+    rid = _generate_result_id()
+    _save_comparison_result({
+        "result_id": rid,
+        "created_at": datetime.now().isoformat(),
+        "query_type": "archive",
+        "query_face_id": face_id,
+        "query_name": query_name,
+        "matches": [{"face_id": r["face_id"], "identity_id": r.get("identity_id", ""),
+                     "identity_name": r.get("identity_name", ""), "distance": r["distance"],
+                     "confidence_pct": r.get("confidence_pct", 0), "tier": r.get("tier", "WEAK")}
+                    for r in results[:10]],
+        "responses": [],
+    })
+    return _compare_results_grid(results, crop_files, result_id=rid)
 
 
 def _save_compare_upload(content: bytes, filename: str, faces: list, results: list, status: str = "uploaded") -> str:
@@ -12700,6 +12732,234 @@ def post(upload_id: str = "", sess=None):
         cls="text-center py-3",
         id="contribute-cta-container",
         data_testid="contribute-submitted",
+    )
+
+
+# ---- Shareable Comparison Results ----
+
+
+_comparison_results_cache = None
+
+
+def _load_comparison_results() -> dict:
+    """Load comparison results from data file."""
+    global _comparison_results_cache
+    if _comparison_results_cache is not None:
+        return _comparison_results_cache
+    path = data_path / "comparison_results.json"
+    default = {"schema_version": 1, "results": {}}
+    if path.exists():
+        try:
+            with open(path, encoding="utf-8") as f:
+                _comparison_results_cache = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            _comparison_results_cache = default
+    else:
+        _comparison_results_cache = default
+    return _comparison_results_cache
+
+
+def _save_comparison_result(result_data: dict) -> str:
+    """Save a comparison result and return its ID."""
+    global _comparison_results_cache
+    data = _load_comparison_results()
+    result_id = result_data["result_id"]
+    data["results"][result_id] = result_data
+    path = data_path / "comparison_results.json"
+    import portalocker
+    with portalocker.Lock(str(path) + ".lock", timeout=5):
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    _comparison_results_cache = data
+    return result_id
+
+
+def _generate_result_id() -> str:
+    """Generate a 12-character result ID."""
+    return uuid.uuid4().hex[:12]
+
+
+@rt("/compare/result/{result_id}")
+def get(result_id: str, sess=None):
+    """
+    Shareable comparison result page — permalink for a specific comparison.
+    No authentication required. Shows matches + response form.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    data = _load_comparison_results()
+    result = data.get("results", {}).get(result_id)
+    if not result:
+        return Title("Not Found"), Main(
+            Div(
+                H1("Comparison Not Found", cls="text-2xl font-serif text-white mb-4"),
+                P("This comparison result doesn't exist or has been removed.", cls="text-slate-400"),
+                A("Try Compare Faces", href="/compare", cls="text-indigo-400 hover:text-indigo-300 mt-4 inline-block"),
+                cls="max-w-4xl mx-auto px-6 py-20 text-center",
+            ),
+            cls="min-h-screen bg-slate-900",
+        )
+
+    _build_caches()
+    crop_files = get_crop_files()
+    matches = result.get("matches", [])
+    query_type = result.get("query_type", "archive")
+    query_face_id = result.get("query_face_id", "")
+    responses = result.get("responses", [])
+
+    # Query face info
+    query_face_url = None
+    query_name = "Uploaded Photo"
+    if query_face_id:
+        query_face_url = resolve_face_image_url(query_face_id, crop_files)
+    if result.get("query_name"):
+        query_name = result["query_name"]
+
+    # Top match info for OG tags
+    top_match = matches[0] if matches else {}
+    top_confidence = top_match.get("confidence_pct", 0)
+    top_name = top_match.get("identity_name", "Unknown")
+
+    og_title = f"{top_confidence}% Similar — {query_name} vs {top_name}" if matches else "Face Comparison — Rhodesli"
+    og_desc = f"Compare faces in the Rhodes Jewish heritage photo archive. {len(matches)} match{'es' if len(matches) != 1 else ''} found."
+    og_image = query_face_url or ""
+    result_og = og_tags(og_title, og_desc, og_image, f"/compare/result/{result_id}")
+
+    nav_links = _public_nav_links(active="compare", user=user)
+    share_url = f"{SITE_URL}/compare/result/{result_id}"
+
+    # Build match cards
+    result_cards = []
+    for i, match in enumerate(matches[:10]):
+        fid = match.get("face_id", "")
+        match_url = resolve_face_image_url(fid, crop_files)
+        pct = match.get("confidence_pct", 0)
+        name = match.get("identity_name", f"Face #{i+1}")
+        identity_id = match.get("identity_id", "")
+
+        if pct >= 85:
+            label = "Very likely same person"
+            color = "text-emerald-400"
+        elif pct >= 70:
+            label = "Strong match"
+            color = "text-amber-400"
+        elif pct >= 50:
+            label = "Possible match"
+            color = "text-blue-400"
+        else:
+            label = "Unlikely match"
+            color = "text-slate-400"
+
+        person_link = A(name, href=f"/person/{identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm") if identity_id else Span(name, cls="text-sm text-white")
+
+        result_cards.append(Div(
+            Img(src=match_url, cls="w-16 h-16 rounded-full object-cover") if match_url else Div(cls="w-16 h-16 rounded-full bg-slate-700"),
+            Div(
+                person_link,
+                P(f"{pct}% — {label}", cls=f"text-xs {color}"),
+                cls="flex-1",
+            ),
+            cls="flex items-center gap-4 p-3 bg-slate-800/70 rounded-lg",
+        ))
+
+    # Response form (no login required)
+    response_count = len(responses)
+    response_form = Div(
+        H3("Do you recognize anyone?", cls="text-base font-serif text-white mb-3"),
+        P(f"{response_count} response{'s' if response_count != 1 else ''} so far" if response_count else "Be the first to respond!", cls="text-xs text-slate-500 mb-3"),
+        Form(
+            Div(
+                Textarea(
+                    name="note", placeholder="I think this is... / I recognize the person on the left...",
+                    cls="w-full bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2 resize-none",
+                    rows="3",
+                ),
+                cls="mb-3",
+            ),
+            Input(type="hidden", name="result_id", value=result_id),
+            Button("Submit Response", type="submit",
+                   cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"),
+            hx_post=f"/api/compare/result/{result_id}/respond",
+            hx_target="#result-response-section",
+            hx_swap="innerHTML",
+            data_testid="result-response-form",
+        ),
+        id="result-response-section",
+        cls="mt-8 pt-6 border-t border-slate-800",
+        data_testid="response-section",
+    )
+
+    return (
+        Title(og_title),
+        *result_og,
+        Style("html, body { margin: 0; } body { background-color: #0f172a; }"),
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            Section(
+                Div(
+                    H1("Face Comparison Result", cls="text-2xl font-serif font-bold text-white mb-2"),
+                    P(og_desc, cls="text-slate-400 text-sm mb-6"),
+
+                    # Match list
+                    Div(*result_cards, cls="space-y-3") if result_cards else P("No matches found.", cls="text-slate-500"),
+
+                    # Share
+                    Div(
+                        share_button(url=f"/compare/result/{result_id}", style="prominent",
+                                     label="Share with someone who might know",
+                                     title=og_title, text=og_desc),
+                        cls="mt-6 text-center",
+                    ),
+
+                    # Response form
+                    response_form,
+
+                    # Back link
+                    Div(
+                        A("Try Another Comparison", href="/compare",
+                          cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                        cls="mt-6 text-center",
+                    ),
+                    cls="max-w-2xl mx-auto px-6 py-10",
+                ),
+            ),
+            _share_script(),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/api/compare/result/{result_id}/respond")
+def post(result_id: str, note: str = "", sess=None):
+    """Save a response to a comparison result. No login required."""
+    data = _load_comparison_results()
+    result = data.get("results", {}).get(result_id)
+    if not result:
+        return P("Result not found.", cls="text-amber-500 text-sm")
+
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    response = {
+        "note": note.strip(),
+        "submitted_at": datetime.now().isoformat(),
+        "submitted_by": user.email if user else "anonymous",
+    }
+    if "responses" not in result:
+        result["responses"] = []
+    result["responses"].append(response)
+    _save_comparison_result(result)
+
+    return Div(
+        P("Thank you for your response!", cls="text-emerald-400 text-sm mb-2"),
+        P(f"{len(result['responses'])} response{'s' if len(result['responses']) != 1 else ''} total.",
+          cls="text-xs text-slate-500"),
+        id="result-response-section",
     )
 
 
@@ -21987,7 +22247,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _gedcom_matches_cache, _photo_locations_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _gedcom_matches_cache, _photo_locations_cache, _comparison_results_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -22002,6 +22262,7 @@ async def post(request):
     _birth_year_cache = None
     _gedcom_matches_cache = None
     _photo_locations_cache = None
+    _comparison_results_cache = None
 
     return {"status": "ok", "results": results, "timestamp": ts}
 

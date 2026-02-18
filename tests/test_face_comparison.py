@@ -270,6 +270,90 @@ class TestCalibratedLabels:
         assert "Possible match" in html
 
 
+class TestShareableResults:
+    """Tests for /compare/result/{result_id} shareable pages."""
+
+    @pytest.fixture(autouse=True)
+    def setup_client(self):
+        from starlette.testclient import TestClient
+        from app.main import app
+        self.client = TestClient(app)
+
+    def test_nonexistent_result_returns_200_with_not_found(self):
+        """Non-existent result_id shows 'Not Found' message."""
+        resp = self.client.get("/compare/result/nonexistent")
+        assert resp.status_code == 200
+        assert "Not Found" in resp.text
+
+    @patch("app.main._load_comparison_results")
+    def test_existing_result_renders(self, mock_load):
+        """Existing result renders with OG tags and match info."""
+        mock_load.return_value = {
+            "results": {
+                "test123": {
+                    "result_id": "test123",
+                    "created_at": "2026-02-17T00:00:00",
+                    "query_type": "archive",
+                    "query_face_id": "inbox_test",
+                    "query_name": "Big Leon",
+                    "matches": [
+                        {"face_id": "inbox_match1", "identity_id": "id_1",
+                         "identity_name": "Leon Capeluto", "distance": 0.7,
+                         "confidence_pct": 85, "tier": "STRONG MATCH"},
+                    ],
+                    "responses": [],
+                }
+            }
+        }
+        resp = self.client.get("/compare/result/test123")
+        assert resp.status_code == 200
+        assert "og:title" in resp.text
+        assert "Leon Capeluto" in resp.text
+        assert "response-section" in resp.text
+
+    @patch("app.main._load_comparison_results")
+    def test_result_has_share_button(self, mock_load):
+        """Result page has a share button."""
+        mock_load.return_value = {
+            "results": {
+                "abc": {
+                    "result_id": "abc",
+                    "created_at": "2026-02-17T00:00:00",
+                    "query_type": "archive",
+                    "query_face_id": "",
+                    "query_name": "Test",
+                    "matches": [],
+                    "responses": [],
+                }
+            }
+        }
+        resp = self.client.get("/compare/result/abc")
+        assert resp.status_code == 200
+        assert "share-photo" in resp.text
+        assert "/compare/result/abc" in resp.text
+
+    @patch("app.main._load_comparison_results")
+    def test_result_has_response_form(self, mock_load):
+        """Result page has a response form (no login required)."""
+        mock_load.return_value = {
+            "results": {
+                "def456": {
+                    "result_id": "def456",
+                    "created_at": "2026-02-17T00:00:00",
+                    "query_type": "upload",
+                    "query_face_id": "",
+                    "query_name": "Upload",
+                    "matches": [],
+                    "responses": [],
+                }
+            }
+        }
+        resp = self.client.get("/compare/result/def456")
+        assert resp.status_code == 200
+        assert "result-response-form" in resp.text
+        assert "Do you recognize" in resp.text
+
+
 # ---- API Compare Endpoint ----
 
 
