@@ -456,7 +456,7 @@ class TestMatchConfirmation:
             p.stop()
 
     def test_explore_archive_link(self, client):
-        """Match page has a link to explore the archive."""
+        """Match page has Explore the Archive section with multiple links."""
         patches = _patch_data()
         for p in patches:
             p.start()
@@ -464,7 +464,74 @@ class TestMatchConfirmation:
         for p in patches:
             p.stop()
         assert "Explore the Archive" in resp.text
-        assert 'href="/photos"' in resp.text
+        assert "/people" in resp.text
+        assert "/timeline" in resp.text
+        # Collection link should use slug
+        assert "/collection/test-collection" in resp.text
+
+    def test_face_crops_are_clickable_links(self, client):
+        """Face crops must be wrapped in <a> tags linking to person/identify pages."""
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+        resp = client.get("/identify/unknown-1/match/unknown-2")
+        for p in patches:
+            p.stop()
+        # Both unidentified → links to /identify/
+        assert 'href="/identify/unknown-1"' in resp.text
+        assert 'href="/identify/unknown-2"' in resp.text
+
+    def test_confirmed_face_links_to_person_page(self, client):
+        """Confirmed identity face crop links to /person/ not /identify/."""
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+        resp = client.get("/identify/confirmed-1/match/unknown-1")
+        for p in patches:
+            p.stop()
+        assert 'href="/person/confirmed-1"' in resp.text
+
+    def test_has_lightbox(self, client):
+        """Match page includes lightbox modal for zooming source photos."""
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+        resp = client.get("/identify/unknown-1/match/unknown-2")
+        for p in patches:
+            p.stop()
+        assert "match-lightbox" in resp.text
+        assert "match-lightbox-img" in resp.text
+        assert "open-lightbox" in resp.text
+
+    def test_source_photos_are_clickable(self, client):
+        """Source photo cards have data-action=open-lightbox for click handling."""
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+        resp = client.get("/identify/unknown-1/match/unknown-2")
+        for p in patches:
+            p.stop()
+        assert 'data-action="open-lightbox"' in resp.text
+        assert "cursor-pointer" in resp.text
+
+    def test_also_in_this_photo_chips(self, client):
+        """When source photo has multiple faces, show 'Also in this photo' chips."""
+        # Mock photo with multiple faces and identity lookup
+        multi_face_photo = {
+            "filename": "test.jpg", "collection": "Test Collection",
+            "width": 800, "height": 600, "faces": [
+                {"face_id": "face-u1", "bbox": [100, 100, 200, 200]},
+                {"face_id": "face-c1", "bbox": [300, 100, 400, 200]},
+            ],
+        }
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+        with patch("app.main.get_photo_metadata", return_value=multi_face_photo):
+            resp = client.get("/identify/unknown-1/match/unknown-2")
+        for p in patches:
+            p.stop()
+        assert "Also in this photo" in resp.text
 
     def test_displays_person_labels_not_unidentified(self, client):
         """Match page shows 'Person A/B' instead of 'Unidentified Person 42'."""

@@ -10056,8 +10056,12 @@ def _match_community_summary(person_a: str, person_b: str):
     )
 
 
-def _match_source_photo_card(face_id, photo_id, label):
-    """Build a source photo thumbnail with face highlight for the match page."""
+def _match_source_photo_card(face_id, photo_id, label, registry=None, crop_files=None):
+    """Build a source photo thumbnail with face highlight for the match page.
+
+    When registry and crop_files are provided, also builds face chips for
+    other faces in the same photo (shown below the lightbox image).
+    """
     if not photo_id:
         return None
     photo_data = get_photo_metadata(photo_id)
@@ -10097,17 +10101,196 @@ def _match_source_photo_card(face_id, photo_id, label):
     if date_text:
         meta_parts.append(Span(date_text, cls="text-slate-400 text-xs"))
 
+    # Build face chips for other faces in this photo
+    face_chips_data = []
+    if registry and crop_files:
+        for face in photo_data.get("faces", []):
+            fid = face.get("face_id", "")
+            if not fid or fid == face_id:
+                continue
+            ident = get_identity_for_face(registry, fid)
+            if ident:
+                iid = ident.get("identity_id", "")
+                iname = ensure_utf8_display(ident.get("name", "Unknown"))
+                istate = ident.get("state", "INBOX")
+                chip_url = resolve_face_image_url(fid, crop_files)
+                face_chips_data.append((iid, iname, istate, chip_url))
+
+    # Encode face chips as data attribute for lightbox JS
+    import json as _json_fc
+    chips_json = _json_fc.dumps(face_chips_data) if face_chips_data else "[]"
+
     return Div(
         P(label, cls="text-xs text-slate-500 uppercase tracking-wider mb-2 font-medium"),
         Div(
             Img(src=photo_url, alt=f"Source photo for {label}",
-                cls="w-full h-auto rounded-lg"),
+                cls="w-full h-auto rounded-lg cursor-pointer transition-opacity hover:opacity-90"),
             bbox_overlay,
             cls="relative inline-block w-full",
+            data_action="open-lightbox",
+            data_photo_url=photo_url,
+            data_photo_label=label,
+            data_photo_id=photo_id,
+            data_face_chips=chips_json,
+            style="cursor:pointer",
         ) if photo_url else None,
         Div(*meta_parts, cls="flex gap-3 mt-1") if meta_parts else None,
+        # Inline face chips preview below the thumbnail
+        _match_face_chips_inline(face_chips_data) if face_chips_data else None,
         cls="mb-6",
     )
+
+
+def _match_face_chips_inline(chips_data):
+    """Render small face chip thumbnails below a source photo card."""
+    if not chips_data:
+        return None
+    chip_els = []
+    for iid, iname, istate, chip_url in chips_data[:8]:  # Cap at 8
+        href = f"/person/{iid}" if istate == "CONFIRMED" else f"/identify/{iid}"
+        short_name = iname if not iname.startswith("Unidentified") else "Unknown"
+        chip_els.append(
+            A(
+                Img(src=chip_url, alt=short_name,
+                    cls="w-8 h-8 rounded-full object-cover border border-slate-600") if chip_url else
+                Div("?", cls="w-8 h-8 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-xs text-slate-400"),
+                Span(short_name, cls="text-[10px] text-slate-400 block text-center truncate w-12 mt-0.5"),
+                href=href,
+                title=f"View {iname}" if not iname.startswith("Unidentified") else "Help identify this person",
+                cls="flex flex-col items-center hover:opacity-80 transition-opacity",
+            )
+        )
+    return Div(
+        P("Also in this photo:", cls="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5"),
+        Div(*chip_els, cls="flex flex-wrap gap-2"),
+        cls="mt-3 pt-2 border-t border-slate-700/30",
+    )
+
+
+def _match_lightbox_script():
+    """JS for the match page lightbox with scroll-zoom and pinch-zoom."""
+    return Script("""
+    (function() {
+        var scale = 1;
+        var lightbox = document.getElementById('match-lightbox');
+        var lbImg = document.getElementById('match-lightbox-img');
+        var lbFaces = document.getElementById('match-lightbox-faces');
+        if (!lightbox) return;
+
+        function openLightbox(src, chipsJson) {
+            scale = 1;
+            lbImg.src = src;
+            lbImg.style.transform = 'scale(1)';
+            // Build face chips in lightbox
+            lbFaces.innerHTML = '';
+            try {
+                var chips = JSON.parse(chipsJson || '[]');
+                if (chips.length > 0) {
+                    var heading = document.createElement('p');
+                    heading.textContent = 'Also in this photo:';
+                    heading.className = 'text-xs text-slate-400 uppercase tracking-wider mb-2 text-center';
+                    lbFaces.appendChild(heading);
+                    var row = document.createElement('div');
+                    row.className = 'flex flex-wrap justify-center gap-3';
+                    chips.forEach(function(c) {
+                        var iid = c[0], iname = c[1], istate = c[2], chipUrl = c[3];
+                        var href = istate === 'CONFIRMED' ? '/person/' + iid : '/identify/' + iid;
+                        var shortName = iname.startsWith('Unidentified') ? 'Unknown' : iname;
+                        var a = document.createElement('a');
+                        a.href = href;
+                        a.title = iname.startsWith('Unidentified') ? 'Help identify' : 'View ' + iname;
+                        a.className = 'flex flex-col items-center hover:opacity-80 transition-opacity';
+                        if (chipUrl) {
+                            var img = document.createElement('img');
+                            img.src = chipUrl;
+                            img.alt = shortName;
+                            img.className = 'w-10 h-10 rounded-full object-cover border border-slate-500';
+                            a.appendChild(img);
+                        } else {
+                            var placeholder = document.createElement('div');
+                            placeholder.textContent = '?';
+                            placeholder.className = 'w-10 h-10 rounded-full bg-slate-700 border border-slate-500 flex items-center justify-center text-xs text-slate-400';
+                            a.appendChild(placeholder);
+                        }
+                        var nameSpan = document.createElement('span');
+                        nameSpan.textContent = shortName;
+                        nameSpan.className = 'text-xs text-slate-300 mt-1 text-center max-w-[60px] truncate';
+                        a.appendChild(nameSpan);
+                        row.appendChild(a);
+                    });
+                    lbFaces.appendChild(row);
+                }
+            } catch(e) {}
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox() {
+            lightbox.classList.add('hidden');
+            document.body.style.overflow = '';
+            lbImg.src = '';
+        }
+
+        // Event delegation for open/close
+        document.addEventListener('click', function(e) {
+            // Open lightbox
+            var trigger = e.target.closest('[data-action="open-lightbox"]');
+            if (trigger) {
+                e.preventDefault();
+                openLightbox(trigger.dataset.photoUrl, trigger.dataset.faceChips);
+                return;
+            }
+            // Close via X button
+            if (e.target.closest('[data-action="close-lightbox"]')) {
+                closeLightbox();
+                return;
+            }
+            // Close via background click
+            if (e.target.closest('[data-action="close-lightbox-bg"]') && e.target === lightbox) {
+                closeLightbox();
+                return;
+            }
+        });
+
+        // Escape key closes lightbox
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+                closeLightbox();
+            }
+        });
+
+        // Scroll-zoom on desktop
+        lbImg.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            scale = Math.max(0.5, Math.min(5, scale + (e.deltaY > 0 ? -0.15 : 0.15)));
+            lbImg.style.transform = 'scale(' + scale + ')';
+        }, {passive: false});
+
+        // Pinch-to-zoom on mobile
+        var lastDist = 0;
+        lbImg.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) {
+                var dx = e.touches[0].clientX - e.touches[1].clientX;
+                var dy = e.touches[0].clientY - e.touches[1].clientY;
+                lastDist = Math.sqrt(dx * dx + dy * dy);
+            }
+        }, {passive: true});
+        lbImg.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                var dx = e.touches[0].clientX - e.touches[1].clientX;
+                var dy = e.touches[0].clientY - e.touches[1].clientY;
+                var dist = Math.sqrt(dx * dx + dy * dy);
+                if (lastDist > 0) {
+                    var delta = (dist - lastDist) * 0.005;
+                    scale = Math.max(0.5, Math.min(5, scale + delta));
+                    lbImg.style.transform = 'scale(' + scale + ')';
+                }
+                lastDist = dist;
+            }
+        }, {passive: false});
+        lbImg.addEventListener('touchend', function() { lastDist = 0; });
+    })();
+    """)
 
 
 @rt("/identify/{person_a}/match/{person_b}")
@@ -10156,18 +10339,25 @@ def get(person_a: str, person_b: str, sess=None):
     date_a, _, _ = _get_date_badge(photo_id_a) if photo_id_a else (None, None, None)
     date_b, _, _ = _get_date_badge(photo_id_b) if photo_id_b else (None, None, None)
 
-    def _face_card(crop_url, display_name, collection, date_text):
+    def _face_card(crop_url, display_name, collection, date_text, pid, state):
         meta_items = []
         if collection:
             meta_items.append(P(collection, cls="text-xs text-slate-400 text-center"))
         if date_text:
             meta_items.append(P(date_text, cls="text-xs text-slate-500 text-center"))
-        return Div(
+        # Link to person page (CONFIRMED) or identify page (all others)
+        person_href = f"/person/{pid}" if state == "CONFIRMED" else f"/identify/{pid}"
+        face_img = (
             Img(src=crop_url, alt=display_name,
-                cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl object-cover border-2 border-slate-700 mx-auto shadow-lg") if crop_url else
+                cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl object-cover border-2 border-slate-700 mx-auto shadow-lg"
+                    " transition-transform duration-200 hover:scale-105 hover:shadow-[0_0_12px_rgba(255,191,0,0.5)]") if crop_url else
             Div(Span("?", cls="text-5xl text-slate-500"),
-                cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center mx-auto"),
-            P(display_name, cls="text-sm text-slate-200 mt-3 text-center font-semibold"),
+                cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center mx-auto")
+        )
+        return Div(
+            A(face_img, href=person_href, title=f"View {display_name}"),
+            A(display_name, href=person_href,
+              cls="text-sm text-slate-200 mt-3 text-center font-semibold block hover:text-indigo-400 transition-colors"),
             *meta_items,
             cls="flex flex-col items-center",
         )
@@ -10249,8 +10439,8 @@ def get(person_a: str, person_b: str, sess=None):
 
     # Source photo cards
     source_photos = []
-    src_photo_a = _match_source_photo_card(best_a, photo_id_a, f"Photo of {display_a}")
-    src_photo_b = _match_source_photo_card(best_b, photo_id_b, f"Photo of {display_b}")
+    src_photo_a = _match_source_photo_card(best_a, photo_id_a, f"Photo of {display_a}", registry=registry, crop_files=crop_files)
+    src_photo_b = _match_source_photo_card(best_b, photo_id_b, f"Photo of {display_b}", registry=registry, crop_files=crop_files)
     if src_photo_a or src_photo_b:
         source_photos_content = []
         if src_photo_a:
@@ -10300,6 +10490,50 @@ def get(person_a: str, person_b: str, sess=None):
             cls="bg-amber-900/20 border border-amber-800/30 rounded-lg px-3 py-2 mt-4",
         )
 
+    # Build "Explore the Archive" section with contextual links
+    explore_links = []
+    # Link to the collection if we have one
+    primary_collection = collection_a or collection_b
+    if primary_collection:
+        col_slug = _collection_slug(primary_collection)
+        explore_links.append(
+            A(f"See all photos in {primary_collection}",
+              href=f"/collection/{col_slug}",
+              cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+        )
+    explore_links.extend([
+        A("Browse identified people",
+          href="/people",
+          cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+        A("Help identify more faces",
+          href="/",
+          cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+        A("View the timeline",
+          href="/timeline",
+          cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+    ])
+    explore_section = Div(
+        H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4"),
+        P("There are hundreds more photos and faces waiting to be identified.",
+          cls="text-sm text-slate-400 text-center mb-5"),
+        Div(*explore_links, cls="flex flex-wrap justify-center gap-3"),
+        cls="mt-10 pt-6 border-t border-slate-700/30",
+    )
+
+    # Lightbox modal (hidden by default)
+    lightbox = Div(
+        Button(NotStr("&times;"), cls="absolute top-4 right-4 text-white text-3xl bg-transparent border-none cursor-pointer z-[1001] hover:text-slate-300 transition-colors leading-none", data_action="close-lightbox"),
+        Div(
+            Img(id="match-lightbox-img", src="", alt="Full size photo",
+                cls="max-w-[90vw] max-h-[75vh] object-contain rounded-lg shadow-2xl"),
+            Div(id="match-lightbox-faces", cls="mt-4"),
+            cls="flex flex-col items-center",
+        ),
+        id="match-lightbox",
+        cls="fixed inset-0 bg-black/90 z-[1000] flex items-center justify-center hidden",
+        data_action="close-lightbox-bg",
+    )
+
     return (
         Title("Are these the same person? — Rhodesli"),
         *og_meta,
@@ -10319,12 +10553,12 @@ def get(person_a: str, person_b: str, sess=None):
                         cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-8"),
                     # Side-by-side faces
                     Div(
-                        _face_card(crop_a, display_a, collection_a, date_a),
+                        _face_card(crop_a, display_a, collection_a, date_a, person_a, ident_a.get("state", "INBOX")),
                         Div(
                             Span("vs", cls="text-slate-500 text-2xl font-bold"),
                             cls="flex items-center justify-center px-4 sm:px-8",
                         ),
-                        _face_card(crop_b, display_b, collection_b, date_b),
+                        _face_card(crop_b, display_b, collection_b, date_b, person_b, ident_b.get("state", "INBOX")),
                         cls="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-10",
                     ),
                     # Voting area
@@ -10332,22 +10566,23 @@ def get(person_a: str, person_b: str, sess=None):
                     admin_summary,
                     # Source photos
                     *source_photos,
-                    # Share + explore
+                    # Explore the archive
+                    explore_section,
+                    # Share
                     Div(
                         share_btn,
-                        A("Explore the Archive",
-                          href="/photos",
-                          cls="px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 font-medium transition-colors"),
-                        cls="flex items-center justify-center gap-4 mt-8 mb-4",
+                        cls="flex items-center justify-center mt-8 mb-4",
                     ),
                     P("Help us identify people in the Rhodesli archive — your family knowledge matters.",
                       cls="text-xs text-slate-500 text-center mb-4"),
                     cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
                 ),
             ),
+            lightbox,
             cls="min-h-screen bg-slate-900 text-white",
         ),
         _share_script(),
+        _match_lightbox_script(),
     )
 
 
