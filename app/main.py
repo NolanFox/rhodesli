@@ -19,7 +19,7 @@ import random
 import re
 import sys
 import zipfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote
 
@@ -9800,15 +9800,102 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
     )
 
 
+def _get_match_response_counts(person_a: str, person_b: str) -> dict:
+    """Count community responses for a match pair (checks both orderings)."""
+    responses = _load_identification_responses()
+    counts = {"yes": 0, "no": 0, "unsure": 0, "total": 0}
+    for r in responses.get("responses", []):
+        if r.get("type") != "match_confirmation":
+            continue
+        pa, pb = r.get("person_a"), r.get("person_b")
+        if (pa == person_a and pb == person_b) or (pa == person_b and pb == person_a):
+            ans = r.get("answer", "")
+            if ans in counts:
+                counts[ans] += 1
+            counts["total"] += 1
+    return counts
+
+
+def _match_community_summary(person_a: str, person_b: str):
+    """Render community response summary for match mode (admin view)."""
+    counts = _get_match_response_counts(person_a, person_b)
+    if counts["total"] == 0:
+        return None
+    return Div(
+        Span("Community: ", cls="text-xs text-slate-500"),
+        Span(f'{counts["yes"]} Yes', cls="text-xs text-emerald-400 font-medium"),
+        Span(" · ", cls="text-xs text-slate-600"),
+        Span(f'{counts["no"]} No', cls="text-xs text-rose-400 font-medium"),
+        Span(" · ", cls="text-xs text-slate-600"),
+        Span(f'{counts["unsure"]} Unsure', cls="text-xs text-slate-400 font-medium"),
+        cls="text-center mt-3 py-2 px-3 bg-amber-900/20 border border-amber-800/30 rounded-lg",
+    )
+
+
+def _match_source_photo_card(face_id, photo_id, label):
+    """Build a source photo thumbnail with face highlight for the match page."""
+    if not photo_id:
+        return None
+    photo_data = get_photo_metadata(photo_id)
+    if not photo_data:
+        return None
+
+    filename = photo_data.get("filename", "")
+    photo_url = storage.get_photo_url(filename)
+    width = photo_data.get("width", 0)
+    height = photo_data.get("height", 0)
+
+    # Find face bbox for highlight overlay
+    bbox_overlay = None
+    if width and height:
+        for face in photo_data.get("faces", []):
+            if face.get("face_id") == face_id:
+                bbox = face.get("bbox")
+                if bbox and len(bbox) == 4:
+                    x1, y1, x2, y2 = [float(v) for v in bbox]
+                    left_pct = (x1 / width) * 100
+                    top_pct = (y1 / height) * 100
+                    w_pct = ((x2 - x1) / width) * 100
+                    h_pct = ((y2 - y1) / height) * 100
+                    bbox_overlay = Div(
+                        cls="absolute border-2 border-amber-400 rounded-sm",
+                        style=f"left:{left_pct:.1f}%;top:{top_pct:.1f}%;width:{w_pct:.1f}%;height:{h_pct:.1f}%",
+                    )
+                break
+
+    # Get collection and date
+    collection = photo_data.get("collection", "")
+    date_text, _, _ = _get_date_badge(photo_id)
+
+    meta_parts = []
+    if collection:
+        meta_parts.append(Span(collection, cls="text-slate-400 text-xs"))
+    if date_text:
+        meta_parts.append(Span(date_text, cls="text-slate-400 text-xs"))
+
+    return Div(
+        P(label, cls="text-xs text-slate-500 uppercase tracking-wider mb-2 font-medium"),
+        Div(
+            Img(src=photo_url, alt=f"Source photo for {label}",
+                cls="w-full h-auto rounded-lg"),
+            bbox_overlay,
+            cls="relative inline-block w-full",
+        ) if photo_url else None,
+        Div(*meta_parts, cls="flex gap-3 mt-1") if meta_parts else None,
+        cls="mb-6",
+    )
+
+
 @rt("/identify/{person_a}/match/{person_b}")
 def get(person_a: str, person_b: str, sess=None):
     """
     Shareable match confirmation page — 'Are these the same person?'
 
-    Shows two faces side by side for comparison. No login required.
-    This is shared when you want someone to confirm a specific match.
+    Shows two faces side by side with source photos for comparison.
+    No login required. This is the core crowdsourcing mechanism.
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
 
     registry = load_registry()
     ident_a = _safe_get_identity(registry, person_a)
@@ -9820,9 +9907,12 @@ def get(person_a: str, person_b: str, sess=None):
             cls="min-h-screen bg-slate-900",
         )
 
+    _build_caches()
     crop_files = get_crop_files()
     name_a = ensure_utf8_display(ident_a.get("name", "Unknown"))
     name_b = ensure_utf8_display(ident_b.get("name", "Unknown"))
+    display_a = name_a if not name_a.startswith("Unidentified") else "Person A"
+    display_b = name_b if not name_b.startswith("Unidentified") else "Person B"
 
     # Get face crops
     faces_a = ident_a.get("anchor_ids", []) + ident_a.get("candidate_ids", [])
@@ -9832,47 +9922,127 @@ def get(person_a: str, person_b: str, sess=None):
     crop_a = resolve_face_image_url(best_a, crop_files) if best_a and crop_files else None
     crop_b = resolve_face_image_url(best_b, crop_files) if best_b and crop_files else None
 
-    def _face_card(crop_url, name, ident_id):
+    # Source photo info
+    photo_id_a = get_photo_id_for_face(best_a) if best_a else None
+    photo_id_b = get_photo_id_for_face(best_b) if best_b else None
+    photo_data_a = get_photo_metadata(photo_id_a) if photo_id_a else None
+    photo_data_b = get_photo_metadata(photo_id_b) if photo_id_b else None
+    collection_a = (photo_data_a or {}).get("collection", "")
+    collection_b = (photo_data_b or {}).get("collection", "")
+    date_a, _, _ = _get_date_badge(photo_id_a) if photo_id_a else (None, None, None)
+    date_b, _, _ = _get_date_badge(photo_id_b) if photo_id_b else (None, None, None)
+
+    def _face_card(crop_url, display_name, collection, date_text):
+        meta_items = []
+        if collection:
+            meta_items.append(P(collection, cls="text-xs text-slate-400 text-center"))
+        if date_text:
+            meta_items.append(P(date_text, cls="text-xs text-slate-500 text-center"))
         return Div(
-            Img(src=crop_url, alt=name, cls="w-36 h-36 sm:w-48 sm:h-48 rounded-2xl object-cover border-2 border-slate-700 mx-auto") if crop_url else
-            Div(Span("?", cls="text-4xl text-slate-500"), cls="w-36 h-36 rounded-2xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center mx-auto"),
-            P(name if not name.startswith("Unidentified") else "Unknown",
-              cls="text-sm text-slate-300 mt-2 text-center font-medium"),
+            Img(src=crop_url, alt=display_name,
+                cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl object-cover border-2 border-slate-700 mx-auto shadow-lg") if crop_url else
+            Div(Span("?", cls="text-5xl text-slate-500"),
+                cls="w-40 h-40 sm:w-52 sm:h-52 rounded-2xl bg-slate-800 border-2 border-slate-700 flex items-center justify-center mx-auto"),
+            P(display_name, cls="text-sm text-slate-200 mt-3 text-center font-semibold"),
+            *meta_items,
             cls="flex flex-col items-center",
         )
 
-    # Response buttons
+    # Community response counts
+    resp_counts = _get_match_response_counts(person_a, person_b)
+    response_summary = None
+    if resp_counts["total"] > 0:
+        parts = []
+        if resp_counts["yes"]:
+            parts.append(Span(f'{resp_counts["yes"]} Yes', cls="text-emerald-400 font-medium"))
+        if resp_counts["no"]:
+            parts.append(Span(f'{resp_counts["no"]} No', cls="text-rose-400 font-medium"))
+        if resp_counts["unsure"]:
+            parts.append(Span(f'{resp_counts["unsure"]} Not Sure', cls="text-slate-400 font-medium"))
+        response_summary = Div(
+            P(f'{resp_counts["total"]} {"person has" if resp_counts["total"] == 1 else "people have"} weighed in',
+              cls="text-sm text-slate-400 text-center mb-1"),
+            Div(*[Span(p, Span(" · ", cls="text-slate-600")) if i < len(parts) - 1 else p
+                  for i, p in enumerate(parts)],
+                cls="flex items-center justify-center gap-1 text-sm"),
+            cls="mt-4 pt-3 border-t border-slate-700/50",
+        )
+
+    # Response form with name/note fields
+    respond_url = f"/api/identify/{person_a}/match/{person_b}/respond"
     response_area = Div(
-        H3("Are these the same person?", cls="text-lg font-serif font-semibold text-white text-center mb-6"),
+        H3("What do you think?", cls="text-lg font-serif font-semibold text-white text-center mb-2"),
+        P("Your knowledge helps preserve family history.",
+          cls="text-sm text-slate-400 text-center mb-6"),
+        # Vote buttons
         Div(
             Button("Yes, Same Person",
-                   hx_post=f"/api/identify/{person_a}/match/{person_b}/respond",
+                   hx_post=respond_url,
+                   hx_include="#match-form-fields",
                    hx_vals='{"answer": "yes"}',
                    hx_target="#match-response-area",
                    hx_swap="innerHTML",
-                   cls="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors"),
+                   cls="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors min-h-[44px]"),
             Button("No, Different People",
-                   hx_post=f"/api/identify/{person_a}/match/{person_b}/respond",
+                   hx_post=respond_url,
+                   hx_include="#match-form-fields",
                    hx_vals='{"answer": "no"}',
                    hx_target="#match-response-area",
                    hx_swap="innerHTML",
-                   cls="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-lg transition-colors"),
+                   cls="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-lg transition-colors min-h-[44px]"),
             Button("Not Sure",
-                   hx_post=f"/api/identify/{person_a}/match/{person_b}/respond",
+                   hx_post=respond_url,
+                   hx_include="#match-form-fields",
                    hx_vals='{"answer": "unsure"}',
                    hx_target="#match-response-area",
                    hx_swap="innerHTML",
-                   cls="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors"),
-            cls="flex flex-wrap justify-center gap-3",
+                   cls="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors min-h-[44px]"),
+            cls="flex flex-wrap justify-center gap-3 mb-6",
         ),
+        # Optional name/note fields
+        Div(
+            Div(
+                Label("Your name (optional)", fr="responder_name", cls="text-xs text-slate-500 block mb-1"),
+                Input(type="text", name="responder_name", id="responder_name",
+                      placeholder="e.g. Cousin Sarah",
+                      cls="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+                cls="flex-1",
+            ),
+            Div(
+                Label("How do you know? (optional)", fr="responder_note", cls="text-xs text-slate-500 block mb-1"),
+                Input(type="text", name="responder_note", id="responder_note",
+                      placeholder="e.g. That's my uncle Marco",
+                      cls="w-full bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+                cls="flex-1",
+            ),
+            id="match-form-fields",
+            cls="flex flex-col sm:flex-row gap-3",
+        ),
+        response_summary,
         id="match-response-area",
         cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50",
     )
 
+    # Source photo cards
+    source_photos = []
+    src_photo_a = _match_source_photo_card(best_a, photo_id_a, f"Photo of {display_a}")
+    src_photo_b = _match_source_photo_card(best_b, photo_id_b, f"Photo of {display_b}")
+    if src_photo_a or src_photo_b:
+        source_photos_content = []
+        if src_photo_a:
+            source_photos_content.append(Div(src_photo_a, cls="flex-1 min-w-0"))
+        if src_photo_b:
+            source_photos_content.append(Div(src_photo_b, cls="flex-1 min-w-0"))
+        source_photos = [Div(
+            H3("Source Photos", cls="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4"),
+            Div(*source_photos_content, cls="grid grid-cols-1 sm:grid-cols-2 gap-6"),
+            cls="mt-10 pt-6 border-t border-slate-700/30",
+        )]
+
     # Share button
     share_url = f"{SITE_URL}/identify/{person_a}/match/{person_b}"
     share_btn = Button(
-        "Share for confirmation",
+        "Share This Match",
         cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors",
         data_action="share-photo",
         data_share_url=share_url,
@@ -9897,6 +10067,15 @@ def get(person_a: str, person_b: str, sess=None):
     nav_links = _public_nav_links(user=user)
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
+    # Admin summary of community responses
+    admin_summary = None
+    if is_admin and resp_counts["total"] > 0:
+        admin_summary = Div(
+            P(f'Community: {resp_counts["yes"]} Yes, {resp_counts["no"]} No, {resp_counts["unsure"]} Unsure',
+              cls="text-xs text-amber-400 text-center"),
+            cls="bg-amber-900/20 border border-amber-800/30 rounded-lg px-3 py-2 mt-4",
+        )
+
     return (
         Title("Are these the same person? — Rhodesli"),
         *og_meta,
@@ -9912,19 +10091,33 @@ def get(person_a: str, person_b: str, sess=None):
             ),
             Section(
                 Div(
-                    H1("Are these the same person?", cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-8"),
+                    H1("Are these the same person?",
+                        cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-8"),
                     # Side-by-side faces
                     Div(
-                        _face_card(crop_a, name_a, person_a),
+                        _face_card(crop_a, display_a, collection_a, date_a),
                         Div(
-                            Span("vs", cls="text-slate-600 text-lg font-medium"),
-                            cls="flex items-center justify-center px-4",
+                            Span("vs", cls="text-slate-500 text-2xl font-bold"),
+                            cls="flex items-center justify-center px-4 sm:px-8",
                         ),
-                        _face_card(crop_b, name_b, person_b),
-                        cls="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 mb-10",
+                        _face_card(crop_b, display_b, collection_b, date_b),
+                        cls="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-10",
                     ),
+                    # Voting area
                     response_area,
-                    Div(share_btn, cls="flex justify-center mt-6 mb-4"),
+                    admin_summary,
+                    # Source photos
+                    *source_photos,
+                    # Share + explore
+                    Div(
+                        share_btn,
+                        A("Explore the Archive",
+                          href="/photos",
+                          cls="px-4 py-2 text-sm text-indigo-400 hover:text-indigo-300 font-medium transition-colors"),
+                        cls="flex items-center justify-center gap-4 mt-8 mb-4",
+                    ),
+                    P("Help us identify people in the Rhodesli archive — your family knowledge matters.",
+                      cls="text-xs text-slate-500 text-center mb-4"),
                     cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
                 ),
             ),
@@ -9934,11 +10127,30 @@ def get(person_a: str, person_b: str, sess=None):
     )
 
 
+# Rate limit storage for match responses (IP -> list of timestamps)
+_match_rate_limit: dict = {}
+
+
 @rt("/api/identify/{person_a}/match/{person_b}/respond")
-def post(person_a: str, person_b: str, answer: str = "", sess=None):
-    """Save a match confirmation response. No login required."""
+def post(person_a: str, person_b: str, answer: str = "",
+         responder_name: str = "", responder_note: str = "", sess=None, request=None):
+    """Save a match confirmation response. No login required. Rate limited."""
     if answer not in ("yes", "no", "unsure"):
         return Div(P("Invalid response.", cls="text-amber-400 text-sm"))
+
+    # Rate limiting: max 10 responses per IP per hour
+    import hashlib as _rl_hashlib
+    client_ip = ""
+    if request:
+        client_ip = getattr(request.client, "host", "") if request.client else ""
+    ip_hash = _rl_hashlib.sha256(client_ip.encode()).hexdigest()[:12] if client_ip else "unknown"
+    now = datetime.now()
+    cutoff = now - timedelta(hours=1)
+    _match_rate_limit[ip_hash] = [t for t in _match_rate_limit.get(ip_hash, []) if t > cutoff]
+    if len(_match_rate_limit.get(ip_hash, [])) >= 10:
+        return Div(P("You've submitted many responses recently. Please try again later.",
+                      cls="text-amber-400 text-sm text-center py-4"))
+    _match_rate_limit.setdefault(ip_hash, []).append(now)
 
     responses = _load_identification_responses()
     responses["responses"].append({
@@ -9946,7 +10158,10 @@ def post(person_a: str, person_b: str, answer: str = "", sess=None):
         "person_a": person_a,
         "person_b": person_b,
         "answer": answer,
-        "timestamp": datetime.now().isoformat(),
+        "responder_name": responder_name.strip()[:100] if responder_name else "",
+        "responder_note": responder_note.strip()[:500] if responder_note else "",
+        "timestamp": now.isoformat(),
+        "ip_hash": ip_hash,
         "status": "pending",
     })
     _save_identification_responses(responses)
@@ -9956,8 +10171,12 @@ def post(person_a: str, person_b: str, answer: str = "", sess=None):
         "no": "Thank you! You indicated these are different people. An admin will review.",
         "unsure": "Thank you for looking! We'll ask others for confirmation.",
     }
+    # Show updated response count
+    counts = _get_match_response_counts(person_a, person_b)
+    count_text = f'{counts["total"]} {"person has" if counts["total"] == 1 else "people have"} weighed in so far.'
     return Div(
-        P(messages[answer], cls="text-emerald-400 text-sm text-center py-4"),
+        P(messages[answer], cls="text-emerald-400 text-sm text-center py-2"),
+        P(count_text, cls="text-slate-400 text-xs text-center mt-1"),
     )
 
 
@@ -22052,6 +22271,15 @@ def get(filter: str = "", sess=None):
                 type="button",
                 id="match-btn-skip",
             ),
+            Button(
+                "Share This Match",
+                cls="px-3 py-2 text-xs text-indigo-400 hover:text-indigo-300 border border-indigo-600/50 rounded-lg transition-colors min-h-[44px]",
+                data_action="share-photo",
+                data_share_url=f"{SITE_URL}/identify/{identity_id_a}/match/{identity_id_b}",
+                data_share_title="Are these the same person?",
+                data_share_text="Help us confirm if these two faces from the Rhodesli Heritage Archive are the same person.",
+                type="button",
+            ),
             Span(
                 "Keyboard: Y N S",
                 cls="text-xs text-slate-600 hidden sm:inline",
@@ -22059,6 +22287,8 @@ def get(filter: str = "", sess=None):
             ),
             cls="flex flex-wrap items-center justify-center gap-4 mt-8 pt-4 border-t border-slate-700"
         ),
+        # Community response summary (if any)
+        _match_community_summary(identity_id_a, identity_id_b),
         cls="match-pair"
     )
 
