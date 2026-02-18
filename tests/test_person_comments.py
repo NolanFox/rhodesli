@@ -179,6 +179,39 @@ class TestCommentSubmission:
         assert resp.status_code == 200
 
 
+class TestCommentRateLimiting:
+
+    def test_rate_limit_after_five_comments(self, client):
+        """Rate limiting kicks in after 5 comments per IP per hour."""
+        import app.main as main_mod
+        # Clear rate limit state
+        main_mod._comment_rate_limit.clear()
+
+        patches = _patch_data()
+        for p in patches:
+            p.start()
+
+        # Submit 5 comments (should all succeed)
+        for i in range(5):
+            resp = client.post(
+                "/api/person/person-1/comment",
+                data={"author": "Tester", "text": f"Comment {i}"},
+            )
+            assert resp.status_code == 200
+            assert "Please wait" not in resp.text
+
+        # 6th comment should be rate limited
+        resp = client.post(
+            "/api/person/person-1/comment",
+            data={"author": "Tester", "text": "One more!"},
+        )
+        assert "Please wait" in resp.text
+
+        for p in patches:
+            p.stop()
+        main_mod._comment_rate_limit.clear()
+
+
 class TestCommentModeration:
 
     def test_admin_can_hide_comment(self, client):

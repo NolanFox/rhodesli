@@ -650,6 +650,71 @@ def _load_context_events() -> list:
     return _context_events_cache
 
 
+_place_options_cache = None
+
+def _get_place_options() -> list:
+    """Load place names from location_dictionary.json for autocomplete.
+
+    Returns list of (value, label) tuples. Includes historical name aliases.
+    Cached after first load.
+    """
+    global _place_options_cache
+    if _place_options_cache is not None:
+        return _place_options_cache
+
+    loc_path = data_path / "location_dictionary.json"
+    options = []
+    # Historical name mappings (alias → modern name)
+    historical_aliases = {
+        "Salonika": "Thessaloniki, Greece",
+        "Salonica": "Thessaloniki, Greece",
+        "Smyrna": "İzmir, Turkey",
+        "Constantinople": "Istanbul, Turkey",
+        "La Judería": "Rhodes, Greece",
+        "Rodos": "Rhodes, Greece",
+        "Rodas": "Rhodes, Greece",
+        "Salisbury": "Harare, Zimbabwe",
+        "Usumbura": "Bujumbura, Burundi",
+        "Elisabethville": "Lubumbashi, Congo",
+    }
+    try:
+        if loc_path.exists():
+            with open(loc_path) as f:
+                data = json.load(f)
+            for loc in data.get("locations", {}).values():
+                name = loc.get("name", "")
+                if name:
+                    options.append((name, name))
+    except Exception:
+        pass
+
+    # Add historical aliases as separate options pointing to modern names
+    for alias, modern in historical_aliases.items():
+        options.append((modern, f"{modern} ({alias})"))
+
+    # Deduplicate by value
+    seen = set()
+    deduped = []
+    for val, label in options:
+        if val not in seen:
+            seen.add(val)
+            deduped.append((val, label))
+        elif label != val:  # Add alias labels even if value exists
+            deduped.append((val, label))
+
+    _place_options_cache = sorted(deduped, key=lambda x: x[0])
+    return _place_options_cache
+
+
+def _place_datalist() -> tuple:
+    """Return a Datalist element with place options for autocomplete."""
+    options = _get_place_options()
+    return Datalist(
+        *[Option(value=val, label=label) for val, label in options],
+        id="places-list",
+    )
+
+
 def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list:
     """Search photos using in-memory index. Returns matching documents with match reason."""
     docs = _load_search_index()
@@ -10209,11 +10274,28 @@ def post(person_a: str, person_b: str, answer: str = "",
 
 # --- Person Comments API ---
 
+# Rate limit storage for person comments (IP -> list of timestamps)
+_comment_rate_limit: dict = {}
+
 @rt("/api/person/{person_id}/comment")
-def post(person_id: str, author: str = "", text: str = "", sess=None):
-    """Submit a comment on a person page. No login required."""
+def post(person_id: str, author: str = "", text: str = "", sess=None, request=None):
+    """Submit a comment on a person page. No login required. Rate limited."""
     if not text.strip():
         return Div(P("Please enter a comment.", cls="text-amber-400 text-sm py-2"))
+
+    # Rate limiting: max 5 comments per IP per hour
+    import hashlib as _rl_hashlib
+    client_ip = ""
+    if request:
+        client_ip = getattr(request.client, "host", "") if request.client else ""
+    ip_hash = _rl_hashlib.sha256(client_ip.encode()).hexdigest()[:12] if client_ip else "unknown"
+    now = datetime.now()
+    cutoff = now - timedelta(hours=1)
+    _comment_rate_limit[ip_hash] = [t for t in _comment_rate_limit.get(ip_hash, []) if t > cutoff]
+    if len(_comment_rate_limit.get(ip_hash, [])) >= 5:
+        return Div(P("Please wait before submitting another comment.",
+                      cls="text-amber-400 text-sm text-center py-4"))
+    _comment_rate_limit.setdefault(ip_hash, []).append(now)
 
     import uuid
     comments_data = _load_person_comments()
@@ -14122,6 +14204,13 @@ def public_photo_page(
         meta_elements.append(Span(photo["source"]))
     meta_line = Span(*meta_elements) if meta_elements else None
 
+    # --- Uploader attribution ---
+    # TODO: When uploaded_by field is added to photo_index.json, show "Uploaded by [Name] on [Date]"
+    # For now, fall back to source field as provenance indicator
+    uploader_line = None
+    if photo.get("source"):
+        uploader_line = Span(f"Source: {photo['source']}", cls="text-xs text-slate-500")
+
     # --- Open Graph meta tag data ---
     total_faces = len(face_info_list)
     identified_count = len(identified_names)
@@ -14462,6 +14551,7 @@ def public_photo_page(
                     # Photo metadata
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
+                        P(uploader_line, cls="mt-1") if uploader_line and not meta_line else None,
                         P(
                             f"{total_faces} {'person' if total_faces == 1 else 'people'} detected · "
                             f"{identified_count} identified",
@@ -16764,13 +16854,13 @@ def get(identity_id: str, sess=None):
                 Div(
                     Label("Birthplace", cls="text-xs text-slate-400"),
                     Input(type="text", name="birth_place", value=identity.get("birth_place", ""),
-                          placeholder="e.g. Rhodes, Greece", cls=_input_cls),
+                          placeholder="e.g. Rhodes, Greece", cls=_input_cls, list="places-list"),
                     cls="flex-1"
                 ),
                 Div(
                     Label("Death Place", cls="text-xs text-slate-400"),
                     Input(type="text", name="death_place", value=identity.get("death_place", ""),
-                          placeholder="e.g. Auschwitz", cls=_input_cls),
+                          placeholder="e.g. Auschwitz", cls=_input_cls, list="places-list"),
                     cls="flex-1"
                 ),
                 cls="flex gap-2 flex-wrap"
@@ -16804,6 +16894,7 @@ def get(identity_id: str, sess=None):
             hx_swap="innerHTML",
             cls="space-y-2",
         ),
+        _place_datalist(),
         id=f"metadata-{identity_id}",
     )
 

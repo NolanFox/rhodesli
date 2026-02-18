@@ -452,6 +452,48 @@ class TestNameDisplayQualifier:
         assert "Leon Capeluto " not in html or "Leon Capeluto Sr" not in html
 
 
+class TestPlaceAutocomplete:
+    """Tests for geographic place autocomplete on metadata form."""
+
+    def test_place_options_load(self):
+        """Place options loaded from location_dictionary.json."""
+        from app.main import _get_place_options
+        options = _get_place_options()
+        # Should have location_dictionary places
+        values = [v for v, _ in options]
+        assert "Rhodes, Greece" in values
+        assert "Miami, Florida" in values
+
+    def test_place_options_include_historical_aliases(self):
+        """Historical name aliases are included in place options."""
+        from app.main import _get_place_options
+        options = _get_place_options()
+        labels = [label for _, label in options]
+        # Historical aliases should appear as labels
+        assert any("Salonika" in label for label in labels)
+        assert any("Constantinople" in label for label in labels)
+
+    def test_metadata_form_has_datalist(self, client):
+        """Metadata form includes places datalist for autocomplete."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Test Person",
+            "state": "CONFIRMED",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert response.status_code == 200
+            assert "places-list" in response.text
+            assert "datalist" in response.text.lower() or "Datalist" in response.text
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+
 class TestMetadataFormNewFields:
     """Tests for generation_qualifier and death_place in the metadata form."""
 

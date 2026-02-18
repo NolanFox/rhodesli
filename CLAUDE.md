@@ -75,6 +75,22 @@ After updating docs, run: `python scripts/verify_docs_sync.py`
 
 @tasks/lessons.md for past mistakes and prevention rules
 
+## Session Completion Checklist
+Before ending any session, verify:
+1. `pytest tests/ -x -q --ignore=tests/e2e/` — all pass
+2. `python scripts/verify_data_integrity.py` — no corruption
+3. `python scripts/verify_docs_sync.py` — docs in sync
+4. `git status` — no untracked data/ changes
+5. Dockerfile covers any new rhodesli_ml imports
+6. requirements.txt includes any new pip dependencies
+7. CHANGELOG.md updated for user-visible changes
+
+## Batch Ingest Rules
+- Every ingest MUST require explicit collection and source — no default bucket
+- Back up data/ before any script that writes to it
+- Verify collection counts before and after any data operation
+- Ingest scripts must log collection assignment for each photo
+
 ## Compaction Instructions
 When compacting, always preserve:
 - The current task and its completion status
