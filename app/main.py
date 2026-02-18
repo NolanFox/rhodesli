@@ -18716,6 +18716,10 @@ def post(job_id: str, sess=None):
     user = get_current_user(sess or {})
     upload["reviewed_by"] = user.email if user else "unknown"
     _save_pending_uploads(pending)
+    log_user_action("APPROVE_UPLOAD", job_id=job_id,
+                    uploader=upload.get("uploaded_by", "unknown"),
+                    file_count=len(upload.get("files", [])),
+                    admin=user.email if user else "unknown")
 
     # If PROCESSING_ENABLED, move files from staging to uploads and spawn processing
     if PROCESSING_ENABLED:
@@ -18796,6 +18800,9 @@ def post(job_id: str, sess=None):
     user = get_current_user(sess or {})
     upload["reviewed_by"] = user.email if user else "unknown"
     _save_pending_uploads(pending)
+    log_user_action("REJECT_UPLOAD", job_id=job_id,
+                    uploader=upload.get("uploaded_by", "unknown"),
+                    admin=user.email if user else "unknown")
 
     # Optionally clean up staging files
     import shutil
@@ -21154,6 +21161,11 @@ def post(ann_id: str, sess=None):
     ann["status"] = "approved"
     ann["reviewed_by"] = user.email if user else "admin"
     ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
+    log_user_action("APPROVE_ANNOTATION", annotation_id=ann_id,
+                    type=ann.get("type", "unknown"),
+                    target_id=ann.get("target_id", ""),
+                    submitted_by=ann.get("submitted_by", ""),
+                    admin=user.email if user else "admin")
 
     # Apply the annotation to the target
     if ann["type"] == "name_suggestion" and ann["target_type"] == "identity":
@@ -21353,6 +21365,10 @@ def post(ann_id: str, sess=None):
     ann["reviewed_by"] = user.email if user else "admin"
     ann["reviewed_at"] = datetime.now(timezone.utc).isoformat()
     _save_annotations(annotations)
+    log_user_action("REJECT_ANNOTATION", annotation_id=ann_id,
+                    type=ann.get("type", "unknown"),
+                    target_id=ann.get("target_id", ""),
+                    admin=user.email if user else "admin")
 
     _log_audit("rejected", ann_id, user.email if user else "admin", ann["value"])
 
