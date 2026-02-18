@@ -1,6 +1,23 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-18 (Session 46 — Match Page Polish + Year Estimation Tool V1)
+Last updated: 2026-02-18 (Session 47 — ML Gatekeeper + Feature Reality Contract)
+
+## Session 47 Completed
+- [x] ROADMAP.md split (394→90 lines) + sub-files in docs/roadmap/
+- [x] BACKLOG.md split (558→102 lines) + sub-files in docs/backlog/
+- [x] Session 47 planning context ingested to docs/session_context/
+- [x] Phase 1: Diagnostic audit — /estimate 404 on prod, version "v0.6.0" bug, birth years ungated
+- [x] ML Gatekeeper Pattern — include_unreviewed param on _get_birth_year(), review decisions JSON
+- [x] Admin suggestion card on person pages (Accept/Edit/Reject)
+- [x] Bulk review page at /admin/review/birth-years with sortable table
+- [x] Accept All High Confidence batch action
+- [x] Ground truth feedback loop — confirmed data → data/ground_truth_birth_years.json
+- [x] Dynamic version display from CHANGELOG.md (fixed hardcoded "v0.6.0")
+- [x] Feature Reality Contract rule (.claude/rules/feature-reality-contract.md)
+- [x] Session Context Integration rule (.claude/rules/session-context-integration.md)
+- [x] AD-097 through AD-100 documented
+- [x] 23 new tests (2365 total)
+- [x] CHANGELOG v0.49.0, ROADMAP, BACKLOG updated
 
 ## Session 46 Completed
 - [x] PRD-018 year estimation tool, research doc, feedback log

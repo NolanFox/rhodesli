@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.49.0] — 2026-02-18
+
+### Added
+- **ML Gatekeeper Pattern** — ML birth year estimates are now staged proposals requiring admin review before public display (AD-097). `_get_birth_year(include_unreviewed=False)` gates public views; admin sees suggestion cards with Accept/Edit/Reject buttons
+- **Bulk Review Page** — `/admin/review/birth-years` with sortable table, inline editing, "Accept All High Confidence" batch action, and "Birth Years" admin nav link
+- **Ground Truth Feedback Loop** — accepted/corrected birth years written to `data/ground_truth_birth_years.json` with face appearances for future ML retraining (AD-099)
+- **Dynamic Version Display** — sidebar version reads from CHANGELOG.md instead of hardcoded "v0.6.0"
+- **Feature Reality Contract** — `.claude/rules/feature-reality-contract.md` enforces data→load→route→render→test chain (AD-098)
+- **Session Context Integration** — `.claude/rules/session-context-integration.md` for ingesting planning context files
+- **AD-097 through AD-100** — Gatekeeper Pattern, Feature Reality Contract, Feedback Loop, User Input Taxonomy
+- **ROADMAP.md split** — 394→90 lines; sub-files in `docs/roadmap/` (SESSION_HISTORY, FEATURE_STATUS, ML_ROADMAP)
+- **BACKLOG.md split** — 558→102 lines; sub-files in `docs/backlog/` (COMPLETED_SESSIONS, FEATURE_MATRIX_*)
+- 23 new tests (2342 → 2365 total)
+
+### Fixed
+- **Phantom feature: unreviewed ML data on public pages** — birth year estimates no longer shown to public without admin approval
+- **Version display bug** — sidebar showed "v0.6.0" instead of actual version (v0.49.0)
+
 ## [v0.48.0] — 2026-02-18
 
 ### Added
