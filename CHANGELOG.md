@@ -2,15 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v0.46.1] — 2026-02-18
+## [v0.47.0] — 2026-02-18
+
+### Added
+- **Photo inline editing** — admin-only inline forms for collection, source, source URL on photo viewer pages, with autocomplete datalist (Block 3)
+- **Person metadata editing** — admin-only form for birth/death year, birth/death place, maiden name on person pages (Block 4)
+- **Person page life details** — birth/death/place display with "Unknown — Do you know?" contribution prompts for non-admin users (Block 9)
+- **Admin nav bar consistency** — `_admin_nav_bar()` component on all admin sub-pages (approvals, audit, GEDCOM, ML dashboard) with active state highlighting (Block 2)
+- **Structured action logging** — `log_user_action()` calls for upload approve/reject and annotation approve/reject (Block 7)
+- **Geographic autocomplete** — location datalist on place input fields from curated Rhodes diaspora locations (Block 1)
+- **Uploader attribution** — shows contributor name on admin upload review cards (Block 1)
+- **Comment rate limiting** — IP-based 10 comments/hour limit on person page comments (Block 5)
+- **AD-081 through AD-089** — 9 algorithmic decisions documented for sessions 40-41 (Block 6)
+- **Postmortems** — /map+/connect 500 errors, collection data corruption, GEDCOM missing dependency (Block 8)
+- **Integration smoke tests** — 6 new tests for /person, /person/404, /activity, /admin/approvals, /admin/audit (Block 10)
+- **Lessons restructuring** — split 401-line monolith into 6 topic files + 109-line index (Block 11)
+- 32 new tests (2249 → 2281)
 
 ### Fixed
 - **Compare upload crash** — `has_insightface` check imported the function reference (always succeeds) instead of probing actual deferred dependencies (cv2, insightface). Graceful degradation path was never reached on production.
 - **Missing opencv-python-headless** — added `opencv-python-headless<4.11` to requirements.txt (pinned for numpy 1.x compatibility)
-
-### Added
-- **Dependency gate tests** — `tests/test_dependency_gate.py` scans all app/core imports and verifies each resolves. Critical imports (cv2, PIL, fasthtml, numpy) get explicit regression tests. Prevents recurring "works locally, broken in production" bugs.
-- 7 new tests (2249 → 2256)
+- **HTML entity rendering** — `&harr;` on /connect page rendered as literal text instead of arrow; fixed with NotStr + numeric entity
+- **Activity feed sort crash** — None timestamps caused TypeError in sort; fixed with `or ""` fallback
+- **Dependency gate tests** — `tests/test_dependency_gate.py` scans all app/core imports and verifies each resolves
 
 ## [v0.46.0] — 2026-02-17
 

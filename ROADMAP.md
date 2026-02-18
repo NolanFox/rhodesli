@@ -273,6 +273,22 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] AD-091, PRD-016, PRD-017
 - [x] 21 new tests (2249 total)
 
+### Session 45: Overnight Polish — Feature Audit Completion (COMPLETED 2026-02-18)
+- [x] Geographic autocomplete + uploader attribution + CLAUDE.md rules (Block 1)
+- [x] Admin nav bar consistency across all admin sub-pages (Block 2)
+- [x] Photo collection/source inline editing — admin-only with HTMX (Block 3)
+- [x] Person name/birth/death correction — admin metadata editing UI (Block 4)
+- [x] Comments rate limiting — IP-based 10/hour (Block 5)
+- [x] AD-081 through AD-089 documentation gap filled (Block 6)
+- [x] Structured upload/approval logging — 4 action types (Block 7)
+- [x] Missing postmortems — 3 incident reports (Block 8)
+- [x] Person page life details with contribution prompts (Block 9)
+- [x] Integration smoke tests — 6 new route tests (Block 10)
+- [x] Lessons.md restructured — 401 lines → 6 topic files + 109-line index (Block 11)
+- [x] HTML entity fix — NotStr for harr arrow (Block 12)
+- [x] Activity feed sort crash fix (Block 14 verification)
+- [x] 32 new tests (2281 total)
+
 ### Session 43: Life Events & Context Graph
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
@@ -280,6 +296,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-18: v0.47.0 — Overnight Polish: Feature Audit Completion (Session 45): Completed all 12 remaining items from 36-item feature audit. Photo + person inline editing (admin-only). Life details with contribution prompts. Admin nav bar consistency. Structured action logging. Geographic autocomplete. Comment rate limiting. AD-081–089. 3 postmortems. Lessons.md restructured (401→109 lines). HTML entity fix. Activity feed sort crash fix. 32 new tests (2281 total).
 - [x] 2026-02-17: v0.46.0 — Compare Faces Redesign + Sharing Design System (Session 44): Unified sharing components (og_tags() + generalized share_button()). Compare page upload-first redesign. Calibrated confidence labels (Very likely/Strong/Possible/Unlikely). Shareable comparison result pages at /compare/result/{id} with OG tags and response form. Site-wide OG tags and share buttons on /photos, /people, /collections. Deduplicated share JS. Research docs + PRD-016 + PRD-017. AD-091. 21 new tests (2249 total).
 - [x] 2026-02-17: v0.44.0 — Systematic Verification + Fix Everything (Session 42): Comprehensive audit of all 16 routes and 20 features. Fixed /identify/{id} 500 (set not subscriptable), landing page nav (all 8 public pages), GEDCOM test data warning, Compare two-mode UX, collection "Add Photos" button. Critical route test mock fixed (set vs list). 7 new tests (2209 total). Verification audit at docs/verification/session_42_audit.md.
 - [x] 2026-02-17: v0.43.0 — Production Fixes + Photo UX + Research (Session 41): Fixed /map 500 (PhotoRegistry.get_photo() doesn't exist), face overlay alignment (position:relative on image wrapper), face click behavior (navigate to person/identify pages), search→Focus mode (direct links). Photo carousel with prev/next navigation, keyboard arrows, position indicator. Gemini face alignment research (PRD-015, AD-090). 8 new tests (2202 total).
