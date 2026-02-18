@@ -21342,7 +21342,7 @@ def _load_activity_feed(limit: int = 50) -> list:
         pass
 
     # Sort by timestamp, newest first
-    activities.sort(key=lambda a: a.get("timestamp", ""), reverse=True)
+    activities.sort(key=lambda a: a.get("timestamp") or "", reverse=True)
     return activities[:limit]
 
 
