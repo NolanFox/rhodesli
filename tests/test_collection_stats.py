@@ -310,3 +310,30 @@ class TestCollectionStatsEdgeCases:
         assert "1 photo" in html
         # "1 photos" should NOT appear
         assert "1 photos" not in html
+
+    def test_collection_name_not_truncated_in_stats_cards(self):
+        """Collection stat cards should NOT use CSS truncate on the name."""
+        from app.main import render_photos_section, to_xml
+        import app.main as main_module
+
+        registry = _make_registry_mock()
+        long_name = "Vida Capeluto NYC Collection"
+        cache = _make_photo_cache([
+            ("p1", "img1.jpg", long_name, ["f1"]),
+            ("p2", "img2.jpg", "Betty Capeluto Miami Collection", ["f2"]),
+        ])
+
+        with patch.object(main_module, "_photo_cache", cache), \
+             patch.object(main_module, "_build_caches"), \
+             patch("app.main.get_identity_for_face", return_value=None):
+            html = to_xml(render_photos_section({}, registry, set()))
+
+        # The full collection name should appear in the HTML
+        assert long_name in html
+        # The collection name element should NOT use truncate class
+        # (it uses leading-snug for wrapping instead)
+        import re
+        # Find the <p> tag containing the collection name and check its class
+        name_pattern = re.findall(r'<p[^>]*class="[^"]*"[^>]*>' + re.escape(long_name), html)
+        for match in name_pattern:
+            assert "truncate" not in match, f"Collection name still has truncate class: {match}"

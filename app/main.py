@@ -4715,7 +4715,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
             stat_cards.append(
                 Div(
                     Div(
-                        P(coll_name, cls="text-sm font-medium text-white truncate"),
+                        P(coll_name, cls="text-sm font-medium text-white leading-snug"),
                         cls="mb-2"
                     ),
                     Div(
