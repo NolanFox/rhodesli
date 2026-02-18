@@ -128,10 +128,13 @@ Recurring bugs (lightbox arrows 3x, multi-merge 3x, collection stats 3x). Root c
 | SOC-003 | Proximity scoring | DONE | (1/path_length)*avg_edge_weight (2026-02-16) |
 | GEO-001 | Geographic migration analysis | DONE | 267/271 photos geocoded (2026-02-16) |
 | GEO-002 | Map view with photo markers | DONE | Leaflet.js at /map (2026-02-16) |
-| GEO-003 | Community-specific context events | Montgomery, Atlanta, Asheville, Havana, Buenos Aires, Congo |
-| KIN-001 | Kinship recalibration post-GEDCOM | Compute true parent/child/sibling distributions |
+| GEO-003 | Community-specific context events | Montgomery, Atlanta, Asheville, Havana, Buenos Aires, Congo. See docs/session_context/session_47_planning_context.md |
+| KIN-001 | Kinship recalibration post-GEDCOM | Compute true parent/child/sibling distributions. See docs/session_context/session_47_planning_context.md (Relationship-Aware Matching) |
 | UX-001 | Timeline navigation scrubber | Google Photos-style year scrubber |
-| UX-002 | Life events tagging | Tag photos with events connecting people, places, dates |
+| UX-002 | Life events tagging | Tag photos with events connecting people, places, dates. See docs/session_context/session_47_planning_context.md (Temporal Context Cards) |
+| UX-003 | Identity unlock metric | "Confirming X resolves N faces" — show impact of confirmations. See docs/session_context/session_47_planning_context.md |
+| UX-004 | Cluster-level curation | Review clusters not individual faces. See docs/session_context/session_47_planning_context.md |
+| UX-005 | Landing page refresh | Showcase latest features (timeline, tree, compare). See docs/session_context/session_47_planning_context.md |
 
 ---
 

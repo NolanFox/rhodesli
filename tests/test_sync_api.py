@@ -494,6 +494,46 @@ class TestCorrectionsLogDeploySafety:
             "push_to_production.py must NOT include corrections_log.json in DATA_FILES"
 
 
+class TestMLReviewDecisionsDeploySafety:
+    """Verify ml_review_decisions.json is not in deploy/push paths.
+
+    ml_review_decisions.json is production-origin data — written by admin
+    accept/reject actions on ML birth year estimates. Must NEVER be overwritten.
+    """
+
+    def test_ml_review_decisions_not_in_optional_sync_files(self):
+        """ml_review_decisions.json must NOT be in OPTIONAL_SYNC_FILES."""
+        from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+        assert "ml_review_decisions.json" not in OPTIONAL_SYNC_FILES, \
+            "ml_review_decisions.json must NOT be in OPTIONAL_SYNC_FILES — it is production-origin data"
+
+    def test_ml_review_decisions_not_in_required_data_files(self):
+        """ml_review_decisions.json must NOT be in REQUIRED_DATA_FILES."""
+        from scripts.init_railway_volume import REQUIRED_DATA_FILES
+        assert "ml_review_decisions.json" not in REQUIRED_DATA_FILES, \
+            "ml_review_decisions.json must NOT be in REQUIRED_DATA_FILES — it is production-origin data"
+
+
+class TestGroundTruthDeploySafety:
+    """Verify ground_truth_birth_years.json is not in deploy/push paths.
+
+    ground_truth_birth_years.json is production-origin data — written by admin
+    when accepting ML birth year estimates. Must NEVER be overwritten.
+    """
+
+    def test_ground_truth_not_in_optional_sync_files(self):
+        """ground_truth_birth_years.json must NOT be in OPTIONAL_SYNC_FILES."""
+        from scripts.init_railway_volume import OPTIONAL_SYNC_FILES
+        assert "ground_truth_birth_years.json" not in OPTIONAL_SYNC_FILES, \
+            "ground_truth_birth_years.json must NOT be in OPTIONAL_SYNC_FILES — it is production-origin data"
+
+    def test_ground_truth_not_in_required_data_files(self):
+        """ground_truth_birth_years.json must NOT be in REQUIRED_DATA_FILES."""
+        from scripts.init_railway_volume import REQUIRED_DATA_FILES
+        assert "ground_truth_birth_years.json" not in REQUIRED_DATA_FILES, \
+            "ground_truth_birth_years.json must NOT be in REQUIRED_DATA_FILES — it is production-origin data"
+
+
 class TestDockerfileModuleCoverage:
     """Verify that all rhodesli_ml modules imported by the web app are in the Dockerfile.
 

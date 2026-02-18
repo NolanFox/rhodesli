@@ -1,0 +1,1248 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-02-16T02:39:47.767840+00:00",
+  "stats": {
+    "total_confirmed": 46,
+    "with_estimates": 32,
+    "high_confidence": 3,
+    "medium_confidence": 6,
+    "low_confidence": 23,
+    "skipped_no_photos": 0,
+    "skipped_no_age_data": 14
+  },
+  "estimates": [
+    {
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "name": "Big Leon Capeluto",
+      "birth_year_estimate": 1907,
+      "birth_year_confidence": "medium",
+      "birth_year_range": [
+        1901,
+        1914
+      ],
+      "birth_year_std": 4.34,
+      "n_appearances": 25,
+      "n_with_age_data": 12,
+      "evidence": [
+        {
+          "photo_id": "0532f22050f5effc",
+          "photo_year": 1924,
+          "date_confidence": "high",
+          "estimated_age": 19,
+          "implied_birth": 1905,
+          "matching_method": "single_person",
+          "weight": 2.0
+        },
+        {
+          "photo_id": "ca69d9decc37b0ec",
+          "photo_year": 1939,
+          "date_confidence": "high",
+          "estimated_age": 36,
+          "implied_birth": 1903,
+          "matching_method": "single_person",
+          "weight": 2.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+          "photo_year": 1949,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1914,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_8_596771351.496458",
+          "photo_year": 1950,
+          "date_confidence": "high",
+          "estimated_age": 48,
+          "implied_birth": 1902,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_9_603575780.793224",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 42,
+          "implied_birth": 1909,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_3_603576015.208878",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 28,
+          "implied_birth": 1923,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_0_603575867.895093",
+          "photo_year": 1952,
+          "date_confidence": "high",
+          "estimated_age": 40,
+          "implied_birth": 1912,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_4_596771234.564304",
+          "photo_year": 1953,
+          "date_confidence": "high",
+          "estimated_age": 42,
+          "implied_birth": 1911,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_1_596771174.533589",
+          "photo_year": 1954,
+          "date_confidence": "high",
+          "estimated_age": 42,
+          "implied_birth": 1912,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+          "photo_year": 1956,
+          "date_confidence": "high",
+          "estimated_age": 55,
+          "implied_birth": 1901,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+          "photo_year": 1960,
+          "date_confidence": "high",
+          "estimated_age": 48,
+          "implied_birth": 1912,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_13_596771481.064027",
+          "photo_year": 1974,
+          "date_confidence": "high",
+          "estimated_age": 68,
+          "implied_birth": 1906,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [
+        "outlier_removed: photo inbox_b5e8a89e_3_603576015.208878 implies 1923 (deviation 13 from median 1910, threshold 12)"
+      ],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "name": "Moise Capeluto",
+      "birth_year_estimate": 1919,
+      "birth_year_confidence": "medium",
+      "birth_year_range": [
+        1911,
+        1924
+      ],
+      "birth_year_std": 4.15,
+      "n_appearances": 18,
+      "n_with_age_data": 10,
+      "evidence": [
+        {
+          "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+          "photo_year": 1949,
+          "date_confidence": "high",
+          "estimated_age": 28,
+          "implied_birth": 1921,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_3_603576015.208878",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1916,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_9_603575780.793224",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 28,
+          "implied_birth": 1923,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_2_603575561.310480",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 29,
+          "implied_birth": 1922,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+          "photo_year": 1952,
+          "date_confidence": "high",
+          "estimated_age": 38,
+          "implied_birth": 1914,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_0_603575867.895093",
+          "photo_year": 1952,
+          "date_confidence": "high",
+          "estimated_age": 28,
+          "implied_birth": 1924,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_4_603569408.731013",
+          "photo_year": 1954,
+          "date_confidence": "high",
+          "estimated_age": 55,
+          "implied_birth": 1899,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_7_603575318.516167",
+          "photo_year": 1956,
+          "date_confidence": "high",
+          "estimated_age": 5,
+          "implied_birth": 1951,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_6_603575393.720025",
+          "photo_year": 1956,
+          "date_confidence": "medium",
+          "estimated_age": 45,
+          "implied_birth": 1911,
+          "matching_method": "bbox_matched",
+          "weight": 0.5
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+          "photo_year": 1961,
+          "date_confidence": "high",
+          "estimated_age": 45,
+          "implied_birth": 1916,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [
+        "outlier_removed: photo inbox_b5e8a89e_7_603575318.516167 implies 1951 (deviation 32 from median 1918, threshold 14)",
+        "outlier_removed: photo inbox_b5e8a89e_4_603569408.731013 implies 1899 (deviation 20 from median 1918, threshold 14)"
+      ],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "name": "Victoria Cukran Capeluto",
+      "birth_year_estimate": 1927,
+      "birth_year_confidence": "high",
+      "birth_year_range": [
+        1921,
+        1929
+      ],
+      "birth_year_std": 2.69,
+      "n_appearances": 17,
+      "n_with_age_data": 9,
+      "evidence": [
+        {
+          "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+          "photo_year": 1949,
+          "date_confidence": "high",
+          "estimated_age": 22,
+          "implied_birth": 1927,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_3_603576015.208878",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 22,
+          "implied_birth": 1929,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_9_603575780.793224",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 24,
+          "implied_birth": 1927,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_2_603575561.310480",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 24,
+          "implied_birth": 1927,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+          "photo_year": 1952,
+          "date_confidence": "high",
+          "estimated_age": 32,
+          "implied_birth": 1920,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_0_603575867.895093",
+          "photo_year": 1952,
+          "date_confidence": "high",
+          "estimated_age": 23,
+          "implied_birth": 1929,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_4_603569408.731013",
+          "photo_year": 1954,
+          "date_confidence": "high",
+          "estimated_age": 5,
+          "implied_birth": 1949,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_7_603575318.516167",
+          "photo_year": 1956,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1921,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+          "photo_year": 1961,
+          "date_confidence": "high",
+          "estimated_age": 42,
+          "implied_birth": 1919,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [
+        "outlier_removed: photo inbox_b5e8a89e_8_603575434.282777 implies 1920 (deviation 7 from median 1927, threshold 6)",
+        "outlier_removed: photo inbox_b5e8a89e_1_603569465.197279 implies 1919 (deviation 8 from median 1927, threshold 6)",
+        "outlier_removed: photo inbox_b5e8a89e_4_603569408.731013 implies 1949 (deviation 22 from median 1927, threshold 6)"
+      ],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "name": "Victoria Capuano Capeluto",
+      "birth_year_estimate": 1916,
+      "birth_year_confidence": "medium",
+      "birth_year_range": [
+        1911,
+        1922
+      ],
+      "birth_year_std": 3.96,
+      "n_appearances": 15,
+      "n_with_age_data": 5,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
+          "photo_year": 1944,
+          "date_confidence": "high",
+          "estimated_age": 22,
+          "implied_birth": 1922,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+          "photo_year": 1949,
+          "date_confidence": "high",
+          "estimated_age": 32,
+          "implied_birth": 1917,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_9_603575780.793224",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 50,
+          "implied_birth": 1901,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+          "photo_year": 1956,
+          "date_confidence": "high",
+          "estimated_age": 45,
+          "implied_birth": 1911,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+          "photo_year": 1960,
+          "date_confidence": "high",
+          "estimated_age": 45,
+          "implied_birth": 1915,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [
+        "outlier_removed: photo inbox_b5e8a89e_9_603575780.793224 implies 1901 (deviation 14 from median 1915, threshold 12)"
+      ],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "name": "Betty Capeluto",
+      "birth_year_estimate": 1951,
+      "birth_year_confidence": "high",
+      "birth_year_range": [
+        1950,
+        1954
+      ],
+      "birth_year_std": 1.6,
+      "n_appearances": 12,
+      "n_with_age_data": 5,
+      "evidence": [
+        {
+          "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+          "photo_year": 1952,
+          "date_confidence": "high",
+          "estimated_age": 2,
+          "implied_birth": 1950,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_4_603569408.731013",
+          "photo_year": 1954,
+          "date_confidence": "high",
+          "estimated_age": 32,
+          "implied_birth": 1922,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_7_603575318.516167",
+          "photo_year": 1956,
+          "date_confidence": "high",
+          "estimated_age": 42,
+          "implied_birth": 1914,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_6_603575393.720025",
+          "photo_year": 1956,
+          "date_confidence": "medium",
+          "estimated_age": 2,
+          "implied_birth": 1954,
+          "matching_method": "bbox_matched",
+          "weight": 0.5
+        },
+        {
+          "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+          "photo_year": 1961,
+          "date_confidence": "high",
+          "estimated_age": 11,
+          "implied_birth": 1950,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [
+        "outlier_removed: photo inbox_b5e8a89e_7_603575318.516167 implies 1914 (deviation 36 from median 1950, threshold 12)",
+        "outlier_removed: photo inbox_b5e8a89e_4_603569408.731013 implies 1922 (deviation 28 from median 1950, threshold 12)"
+      ],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "name": "Selma Capeluto",
+      "birth_year_estimate": 1917,
+      "birth_year_confidence": "high",
+      "birth_year_range": [
+        1915,
+        1921
+      ],
+      "birth_year_std": 2.0,
+      "n_appearances": 9,
+      "n_with_age_data": 5,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_8_596771351.496458",
+          "photo_year": 1950,
+          "date_confidence": "high",
+          "estimated_age": 32,
+          "implied_birth": 1918,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
+          "photo_year": 1951,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1916,
+          "matching_method": "single_person",
+          "weight": 2.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_4_596771234.564304",
+          "photo_year": 1953,
+          "date_confidence": "high",
+          "estimated_age": 38,
+          "implied_birth": 1915,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_1_596771174.533589",
+          "photo_year": 1954,
+          "date_confidence": "high",
+          "estimated_age": 38,
+          "implied_birth": 1916,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        },
+        {
+          "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+          "photo_year": 1956,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1921,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
+      "name": "Rica Moussafer Pizante",
+      "birth_year_estimate": 1907,
+      "birth_year_confidence": "medium",
+      "birth_year_range": [
+        1904,
+        1908
+      ],
+      "birth_year_std": 1.89,
+      "n_appearances": 2,
+      "n_with_age_data": 2,
+      "evidence": [
+        {
+          "photo_id": "f06cfb58b8492b2f",
+          "photo_year": 1927,
+          "date_confidence": "high",
+          "estimated_age": 19,
+          "implied_birth": 1908,
+          "matching_method": "single_person",
+          "weight": 2.0
+        },
+        {
+          "photo_id": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+          "photo_year": 1928,
+          "date_confidence": "high",
+          "estimated_age": 24,
+          "implied_birth": 1904,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "name": "Leon Capeluto",
+      "birth_year_estimate": 1972,
+      "birth_year_confidence": "medium",
+      "birth_year_range": [
+        1971,
+        1974
+      ],
+      "birth_year_std": 1.5,
+      "n_appearances": 4,
+      "n_with_age_data": 2,
+      "evidence": [
+        {
+          "photo_id": "8e71cc351398f5dd",
+          "photo_year": 1975,
+          "date_confidence": "high",
+          "estimated_age": 1,
+          "implied_birth": 1974,
+          "matching_method": "single_person",
+          "weight": 2.0
+        },
+        {
+          "photo_id": "c6924c729a4325de",
+          "photo_year": 1976,
+          "date_confidence": "high",
+          "estimated_age": 5,
+          "implied_birth": 1971,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
+      "name": "Esther Diana Taranto Capouano",
+      "birth_year_estimate": 1903,
+      "birth_year_confidence": "medium",
+      "birth_year_range": [
+        1903,
+        1903
+      ],
+      "birth_year_std": 0.0,
+      "n_appearances": 2,
+      "n_with_age_data": 2,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention",
+          "photo_year": 1938,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1903,
+          "matching_method": "single_person",
+          "weight": 2.0
+        },
+        {
+          "photo_id": "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n",
+          "photo_year": 1938,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1903,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "name": "Louis Pizante",
+      "birth_year_estimate": 1900,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1900,
+        1900
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+          "photo_year": 1928,
+          "date_confidence": "high",
+          "estimated_age": 28,
+          "implied_birth": 1900,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "553cb710-eb89-4fce-8169-8eb25dde285a",
+      "name": "Morris Mazal",
+      "birth_year_estimate": 1921,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1921,
+        1921
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 2,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "b9aa84ba4717fbc9",
+          "photo_year": 1943,
+          "date_confidence": "high",
+          "estimated_age": 22,
+          "implied_birth": 1921,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "name": "Rachel Capouya Capuano",
+      "birth_year_estimate": 1900,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1900,
+        1900
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n",
+          "photo_year": 1935,
+          "date_confidence": "medium",
+          "estimated_age": 35,
+          "implied_birth": 1900,
+          "matching_method": "single_person",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "name": "Mary Maria Capelouto Hasson",
+      "birth_year_estimate": 1916,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1916,
+        1916
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n",
+          "photo_year": 1941,
+          "date_confidence": "high",
+          "estimated_age": 25,
+          "implied_birth": 1916,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
+      "name": "Mose Capelluto",
+      "birth_year_estimate": 1911,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1911,
+        1911
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card",
+          "photo_year": 1963,
+          "date_confidence": "high",
+          "estimated_age": 52,
+          "implied_birth": 1911,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "name": "Laura Franco Capelluto",
+      "birth_year_estimate": 1921,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1921,
+        1921
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 5,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo",
+          "photo_year": 1945,
+          "date_confidence": "high",
+          "estimated_age": 24,
+          "implied_birth": 1921,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "name": "David Raymond Capouano",
+      "birth_year_estimate": 1908,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1908,
+        1908
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_",
+          "photo_year": 1941,
+          "date_confidence": "high",
+          "estimated_age": 33,
+          "implied_birth": 1908,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "name": "Selma Capouya Capouano",
+      "birth_year_estimate": 1921,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1921,
+        1921
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+          "photo_year": 1941,
+          "date_confidence": "high",
+          "estimated_age": 20,
+          "implied_birth": 1921,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "name": "Debbie Fox Schapiro",
+      "birth_year_estimate": 1956,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1956,
+        1956
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+          "photo_year": 1960,
+          "date_confidence": "high",
+          "estimated_age": 4,
+          "implied_birth": 1956,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "name": "Betty Capeluto Fox",
+      "birth_year_estimate": 1940,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1940,
+        1940
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 3,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+          "photo_year": 1960,
+          "date_confidence": "high",
+          "estimated_age": 20,
+          "implied_birth": 1940,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "35963375-7f31-482f-89da-908cf115aa61",
+      "name": "Abraham Moussafer",
+      "birth_year_estimate": 1894,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1894,
+        1894
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "3e53fd3c015350c8",
+          "photo_year": 1916,
+          "date_confidence": "high",
+          "estimated_age": 22,
+          "implied_birth": 1894,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
+      "name": "Zeb Capuano",
+      "birth_year_estimate": 1898,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1898,
+        1898
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 2,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido",
+          "photo_year": 1948,
+          "date_confidence": "high",
+          "estimated_age": 50,
+          "implied_birth": 1898,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "name": "Hanula Mosafir Capuano",
+      "birth_year_estimate": 1873,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1873,
+        1873
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+          "photo_year": 1908,
+          "date_confidence": "high",
+          "estimated_age": 35,
+          "implied_birth": 1873,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "35f38086-bc81-412e-9470-93a3d04b40d5",
+      "name": "Rosa Sedikaro",
+      "birth_year_estimate": 1906,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1906,
+        1906
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 2,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "f5a0ad7af7cd24f6",
+          "photo_year": 1928,
+          "date_confidence": "high",
+          "estimated_age": 22,
+          "implied_birth": 1906,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "name": "Victor Capelluto",
+      "birth_year_estimate": 1919,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1919,
+        1919
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 8,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
+          "photo_year": 1944,
+          "date_confidence": "high",
+          "estimated_age": 25,
+          "implied_birth": 1919,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "name": "Abraham Capuano",
+      "birth_year_estimate": 1870,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1870,
+        1870
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+          "photo_year": 1908,
+          "date_confidence": "high",
+          "estimated_age": 38,
+          "implied_birth": 1870,
+          "matching_method": "bbox_matched",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "name": "Rahamin Capeluto",
+      "birth_year_estimate": 1885,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1885,
+        1885
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture",
+          "photo_year": 1938,
+          "date_confidence": "high",
+          "estimated_age": 53,
+          "implied_birth": 1885,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
+      "name": "Marcos Capelluto",
+      "birth_year_estimate": 1903,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1903,
+        1903
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card",
+          "photo_year": 1963,
+          "date_confidence": "high",
+          "estimated_age": 60,
+          "implied_birth": 1903,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "name": "Felicita Russo Capelluto",
+      "birth_year_estimate": 1915,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1915,
+        1915
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card",
+          "photo_year": 1963,
+          "date_confidence": "high",
+          "estimated_age": 48,
+          "implied_birth": 1915,
+          "matching_method": "single_person",
+          "weight": 2.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
+      "name": "Abraham Almaleh",
+      "birth_year_estimate": 1895,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1895,
+        1895
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n",
+          "photo_year": 1943,
+          "date_confidence": "medium",
+          "estimated_age": 48,
+          "implied_birth": 1895,
+          "matching_method": "single_person",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "name": "Isaac Capelouto",
+      "birth_year_estimate": 1902,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1902,
+        1902
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+          "photo_year": 1944,
+          "date_confidence": "medium",
+          "estimated_age": 42,
+          "implied_birth": 1902,
+          "matching_method": "single_person",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "58565113-b749-4f0f-a75b-994b725a1248",
+      "name": "Esther Brenda Israel",
+      "birth_year_estimate": 1948,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1948,
+        1948
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "a8a1730722a4cdeb",
+          "photo_year": 1948,
+          "date_confidence": "medium",
+          "estimated_age": 0,
+          "implied_birth": 1948,
+          "matching_method": "single_person",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    },
+    {
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "name": "Mathilda Capouano Capelouto",
+      "birth_year_estimate": 1899,
+      "birth_year_confidence": "low",
+      "birth_year_range": [
+        1899,
+        1899
+      ],
+      "birth_year_std": Infinity,
+      "n_appearances": 1,
+      "n_with_age_data": 1,
+      "evidence": [
+        {
+          "photo_id": "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc",
+          "photo_year": 1941,
+          "date_confidence": "medium",
+          "estimated_age": 42,
+          "implied_birth": 1899,
+          "matching_method": "single_person",
+          "weight": 1.0
+        }
+      ],
+      "flags": [],
+      "source": "ml_inferred"
+    }
+  ]
+}

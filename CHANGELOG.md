@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - **Phantom feature: unreviewed ML data on public pages** — birth year estimates no longer shown to public without admin approval
 - **Version display bug** — sidebar showed "v0.6.0" instead of actual version (v0.49.0)
+- **Birth year estimates not deployed** — `birth_year_estimates.json` copied to `data/`, whitelisted in `.gitignore`, added to `OPTIONAL_SYNC_FILES` (session 47B gap fill)
+- **BACKLOG breadcrumbs** — deferred session 47 ideas now reference `docs/session_context/session_47_planning_context.md`
+- **Deploy safety tests** — added guards for `ml_review_decisions.json` and `ground_truth_birth_years.json` (production-origin data must not be overwritten by deploy)
 
 ## [v0.48.0] — 2026-02-18
 

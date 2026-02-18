@@ -78,6 +78,7 @@ data/*
 !data/co_occurrence_graph.json
 !data/location_dictionary.json
 !data/photo_locations.json
+!data/birth_year_estimates.json
 
 # ML experiment tracking
 rhodesli_ml/mlruns/

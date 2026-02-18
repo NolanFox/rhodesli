@@ -109,7 +109,7 @@ For navigation see [docs/BACKLOG.md](../BACKLOG.md). For bugs/frontend see FEATU
 | ML-042 | Regression gate for date model | DONE | Adjacent accuracy >=0.70, MAE <=1.5 (2026-02-13) |
 | ML-043 | MLflow experiment tracking | DONE | Local file-based at rhodesli_ml/mlruns/ (2026-02-13) |
 | ML-044 | Scale-up Gemini labeling | DONE | 250 photos, 81.2% high confidence (2026-02-14) |
-| ML-045 | Temporal consistency auditor | DONE | Birth/death/age cross-checks (2026-02-14) |
+| ML-045 | Temporal consistency auditor | DONE | Birth/death/age cross-checks (2026-02-14). See docs/session_context/session_47_planning_context.md |
 | ML-046 | Search metadata export | DONE | 250 docs in photo_search_index.json (2026-02-14) |
 | ML-047 | CORAL model retrain | DONE | +59% training data, MLflow tracked (2026-02-14) |
 | ML-050 | Date UX integration | DONE | Estimated decade + confidence on photo viewer (2026-02-14) |
