@@ -18,6 +18,7 @@ import os
 import random
 import re
 import sys
+import uuid
 import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10459,9 +10460,9 @@ def get(filter_collection: str = "", sort_by: str = "newest",
 
     return (
         Title("Photos — Rhodesli Heritage Archive"),
-        Meta(property="og:title", content="Photos — Rhodesli Heritage Archive"),
-        Meta(property="og:description", content=f"{len(photos)} historical photographs from the Jewish community of Rhodes."),
-        Meta(name="description", content=f"Browse {len(photos)} historical photographs from the Jewish community of Rhodes."),
+        *og_tags("Photos — Rhodesli Heritage Archive",
+                 f"{len(photos)} historical photographs from the Jewish community of Rhodes.",
+                 canonical_url="/photos"),
         page_style,
         Main(
             Nav(
@@ -10474,7 +10475,12 @@ def get(filter_collection: str = "", sort_by: str = "newest",
             ),
             Section(
                 Div(
-                    H1("Photos", cls="text-3xl font-serif font-bold text-white mb-2"),
+                    Div(
+                        H1("Photos", cls="text-3xl font-serif font-bold text-white mb-2"),
+                        share_button(url="/photos", style="link", label="Share",
+                                     title="Photos — Rhodesli", text="Browse historical photos from the Jewish community of Rhodes"),
+                        cls="flex items-center justify-between",
+                    ),
                     P(subtitle, cls="text-slate-400 text-sm"),
                     cls="max-w-6xl mx-auto px-6 pt-10 pb-4",
                 ),
@@ -10612,9 +10618,9 @@ def get(sort_by: str = "name", sess=None):
 
     return (
         Title("People — Rhodesli Heritage Archive"),
-        Meta(property="og:title", content="People — Rhodesli Heritage Archive"),
-        Meta(property="og:description", content=f"{len(confirmed)} identified people in the Rhodes heritage archive."),
-        Meta(name="description", content=f"Browse {len(confirmed)} identified people in the Rhodes heritage archive."),
+        *og_tags("People — Rhodesli Heritage Archive",
+                 f"{len(confirmed)} identified people in the Rhodes heritage archive.",
+                 canonical_url="/people"),
         page_style,
         Main(
             Nav(
@@ -10627,7 +10633,12 @@ def get(sort_by: str = "name", sess=None):
             ),
             Section(
                 Div(
-                    H1("People", cls="text-3xl font-serif font-bold text-white mb-2"),
+                    Div(
+                        H1("People", cls="text-3xl font-serif font-bold text-white mb-2"),
+                        share_button(url="/people", style="link", label="Share",
+                                     title="People — Rhodesli", text="Browse identified people in the Rhodes heritage archive"),
+                        cls="flex items-center justify-between",
+                    ),
                     P(f"{len(confirmed)} identified {'person' if len(confirmed) == 1 else 'people'} in the archive", cls="text-slate-400 text-sm"),
                     cls="max-w-6xl mx-auto px-6 pt-10 pb-6",
                 ),
@@ -10794,8 +10805,9 @@ def get(sess=None):
 
     return (
         Title("Collections — Rhodesli"),
-        Meta(property="og:title", content="Collections — Rhodesli Heritage Archive"),
-        Meta(property="og:description", content="Browse photo collections from the Rhodes-Capeluto family archive."),
+        *og_tags("Collections — Rhodesli Heritage Archive",
+                 "Browse photo collections from the Rhodes-Capeluto family archive.",
+                 canonical_url="/collections"),
         page_style,
         Div(
             Nav(
@@ -10807,7 +10819,12 @@ def get(sess=None):
                 cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
             ),
             Div(
-                H1("Collections", cls="text-2xl md:text-3xl font-bold text-white mb-2"),
+                Div(
+                    H1("Collections", cls="text-2xl md:text-3xl font-bold text-white mb-2"),
+                    share_button(url="/collections", style="link", label="Share",
+                                 title="Collections — Rhodesli", text="Browse photo collections from the Rhodes heritage archive"),
+                    cls="flex items-center justify-between",
+                ),
                 P(f"{len(collections)} collection{'s' if len(collections) != 1 else ''} in the archive", cls="text-slate-400 mb-8"),
                 Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"),
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
