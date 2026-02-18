@@ -64,7 +64,24 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Planned Sessions
 
-### Session 43: Life Events & Context Graph
+### Session 49B: Interactive Review (requires Nolan)
+- Birth year bulk review — generate ground truth anchors
+- Real GEDCOM upload + match review
+- Visual walkthrough of all features
+- See: docs/session_context/session_49_interactive_prep.md
+
+### Session 50: Admin/Public UX Unification
+- Progressive admin enhancement + admin toolbar
+- Route consolidation (?section=photos → /photos)
+- Design + admin bar + first pass
+
+### Session 51: Landing Page Refresh
+- Live-data entry points, mobile-first
+
+### Session 52+: ML Track (concurrent, safe)
+- Similarity calibration, active learning analysis
+
+### Session 43: Life Events & Context Graph (deferred)
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
 - PRD: docs/prds/011_life_events_context_graph.md
@@ -81,6 +98,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-18: **v0.49.2 — Session 49**: Production Polish. Health check (10/10 routes), Session 47/48 deliverable verification (all PASS), collection name truncation fix, triage bar tooltips, interactive session prep checklist. 5 new tests (2378 total).
 - [x] 2026-02-18: **v0.49.1 — Session 48**: Harness Inflection. Prompt decomposition, phase execution, verification gate rules. HARNESS_DECISIONS.md (HD-001-007). Age on face overlays (Session 47 Phase 2F completion). Session log infrastructure. CLAUDE.md compressed (113->77). 4 new tests (2373 total).
 - [x] 2026-02-18: **v0.49.0 — Session 47**: ML Gatekeeper + Feature Reality Contract. ML birth year estimates gated behind admin review. Bulk review page. Ground truth feedback loop. Dynamic version display. ROADMAP + BACKLOG splits. AD-097-100. 23 new tests (2365 total).
 - [x] 2026-02-18: **v0.48.0 — Session 46**: Match Page Polish + Year Estimation Tool V1. Help Identify sharing fixes, face carousel, deep link CTAs, lightbox face overlays. Year Estimation Tool V1 at /estimate with per-face reasoning. 56 new tests (2342 total).

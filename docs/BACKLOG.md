@@ -70,6 +70,40 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
+## Next Sessions (Prioritized)
+
+### Session 49B (Interactive — requires Nolan)
+- Birth year bulk review (generate ground truth anchors)
+- Real GEDCOM upload + match review
+- Visual walkthrough of all features
+- Bug list from manual testing
+- See: [docs/session_context/session_49_interactive_prep.md](../session_context/session_49_interactive_prep.md)
+
+### Session 50: Admin/Public UX Unification (1 of 3)
+- Pattern: Progressive Admin Enhancement + Admin Bar
+- Keep public view as canonical experience (it's better designed)
+- Layer admin controls inline when authenticated
+- Thin WordPress-style admin toolbar: inbox counts, quick links
+- Fix the "two different apps" problem (`/?section=photos` vs `/photos`)
+- Consolidate `/admin/pending` and `/admin/proposals` to use `_admin_nav_bar()`
+- Add `/admin/review-queue` to admin nav
+- This is a 3-session project; Session 50 is design + admin bar + first pass
+
+### Session 51: Landing Page Refresh
+- Feature showcase with live-data entry points:
+  "Browse 271 photos" | "Explore 46 people" | "View family tree"
+- Use FastHTML live-data preview components (auto-updating, no screenshots to maintain)
+- Mobile-first design
+- CLAUDE.md rule: landing page data must be dynamic, never hardcoded counts
+
+### Session 52+: Concurrent ML Track
+- Similarity calibration on frozen embeddings (rhodesli_ml/ only)
+- Active learning analysis: which unconfirmed faces would maximize ground truth?
+- Runs in rhodesli_ml/ — does NOT touch app/ or data/
+- Can run overnight in parallel with app work
+
+---
+
 ## Execution Phases
 
 ### Phase A: Stabilization — COMPLETE (2026-02-08)

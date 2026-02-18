@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.49.2] — 2026-02-18
+
+### Fixed
+- **Collection name truncation** — stat cards on /photos now wrap text instead of truncating with ellipsis
+- **Triage bar tooltips** — Ready/Rediscovered/Unmatched pills now show explanatory text on hover
+
+### Added
+- Production route health check baseline (10/10 routes verified)
+- Session 47/48 deliverable verification (gatekeeper, harness rules, age overlays — all PASS)
+- Interactive session prep checklist at `docs/session_context/session_49_interactive_prep.md`
+- Next sessions plan (49B interactive, 50 UX unification, 51 landing page, 52 ML)
+- 5 new tests: collection name, triage tooltips (2373 + 5 = 2378 total)
+
 ## [v0.49.1] — 2026-02-18
 
 ### Added
