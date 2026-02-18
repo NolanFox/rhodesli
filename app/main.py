@@ -70,6 +70,23 @@ photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_ro
 # Canonical site URL for Open Graph tags and sharing
 SITE_URL = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
 
+# App version — read from CHANGELOG.md first line matching [vX.Y.Z]
+def _read_app_version() -> str:
+    """Extract version from CHANGELOG.md header."""
+    changelog = project_root / "CHANGELOG.md"
+    if changelog.exists():
+        try:
+            with open(changelog) as f:
+                for line in f:
+                    m = re.search(r'\[v(\d+\.\d+\.\d+)\]', line)
+                    if m:
+                        return f"v{m.group(1)}"
+        except Exception:
+            pass
+    return "v0.0.0"
+
+APP_VERSION = _read_app_version()
+
 # No blanket auth — all GET routes are public.
 # Specific POST routes use @require_admin or @require_login decorators.
 
@@ -438,6 +455,7 @@ def _get_best_proposal_for_identity(identity_id: str) -> dict | None:
 _date_labels_cache = None
 _search_index_cache = None
 _birth_year_cache = None
+_ml_review_decisions_cache = None
 
 
 def _load_date_labels() -> dict:
@@ -572,8 +590,15 @@ def _load_birth_year_estimates() -> dict:
     return _birth_year_cache
 
 
-def _get_birth_year(identity_id: str, identity: dict = None) -> tuple:
+def _get_birth_year(identity_id: str, identity: dict = None, include_unreviewed: bool = True) -> tuple:
     """Get birth year for an identity, checking metadata first then ML estimates.
+
+    Args:
+        identity_id: The identity UUID
+        identity: Optional identity dict (avoids re-lookup)
+        include_unreviewed: If False, only return confirmed metadata birth years.
+            Public-facing code should pass False (Gatekeeper pattern: AD-097).
+            Admin code can pass True to see pending ML estimates.
 
     Returns:
         (birth_year: int or None, source: str, confidence: str or None)
@@ -592,13 +617,180 @@ def _get_birth_year(identity_id: str, identity: dict = None) -> tuple:
                 except (ValueError, TypeError):
                     pass
 
-    # Priority 2: ML-inferred estimate
-    estimates = _load_birth_year_estimates()
-    est = estimates.get(identity_id)
-    if est:
-        return est["birth_year_estimate"], "ml_inferred", est.get("birth_year_confidence")
+    # Priority 2: ML-inferred estimate (only if caller allows unreviewed data)
+    if include_unreviewed:
+        # Skip rejected estimates
+        decisions = _load_ml_review_decisions()
+        decision = decisions.get(identity_id)
+        if decision and decision.get("action") == "rejected":
+            return None, None, None
+
+        estimates = _load_birth_year_estimates()
+        est = estimates.get(identity_id)
+        if est:
+            return est["birth_year_estimate"], "ml_inferred", est.get("birth_year_confidence")
 
     return None, None, None
+
+
+def _load_ml_review_decisions() -> dict:
+    """Load ML birth year review decisions (accept/reject).
+
+    Returns dict mapping identity_id -> decision record.
+    """
+    global _ml_review_decisions_cache
+    if _ml_review_decisions_cache is not None:
+        return _ml_review_decisions_cache
+
+    decisions_path = data_path / "ml_review_decisions.json"
+    _ml_review_decisions_cache = {}
+    if decisions_path.exists():
+        try:
+            with open(decisions_path) as f:
+                data = json.load(f)
+            _ml_review_decisions_cache = data.get("decisions", {})
+        except Exception as e:
+            logging.warning(f"Failed to load ML review decisions: {e}")
+
+    return _ml_review_decisions_cache
+
+
+def _save_ml_review_decisions(decisions: dict):
+    """Save ML review decisions with atomic write."""
+    global _ml_review_decisions_cache
+    decisions_path = data_path / "ml_review_decisions.json"
+    payload = {
+        "schema_version": 1,
+        "decisions": decisions,
+    }
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(data_path), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(payload, f, indent=2)
+        os.replace(tmp_path, str(decisions_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+    _ml_review_decisions_cache = decisions
+
+
+def _save_ground_truth_birth_year(identity_id: str, identity: dict, birth_year: int,
+                                   source: str, source_detail: str = "",
+                                   original_ml_estimate: int = None,
+                                   confirmed_by: str = "admin"):
+    """Write confirmed birth year to ground truth file for ML feedback loop.
+
+    Each confirmed identity x photo appearance = one labeled training sample.
+    This is the bridge between the app and the ML pipeline (AD-099).
+    """
+    gt_path = data_path / "ground_truth_birth_years.json"
+
+    # Load existing
+    gt_data = {"schema_version": 1, "entries": {}}
+    if gt_path.exists():
+        try:
+            with open(gt_path) as f:
+                gt_data = json.load(f)
+        except Exception:
+            pass
+
+    # Build face appearances from photo data
+    photo_reg = load_photo_registry()
+    face_ids = [f if isinstance(f, str) else f.get("face_id", "")
+                for f in identity.get("anchor_ids", []) + identity.get("candidate_ids", [])]
+    photo_ids = photo_reg.get_photos_for_faces(face_ids)
+
+    face_appearances = []
+    labels = _load_date_labels()
+    for pid in photo_ids:
+        pm = get_photo_metadata(pid)
+        if not pm:
+            continue
+        label = labels.get(pid, {})
+        photo_year = label.get("best_year_estimate") or pm.get("date_taken", "")[:4]
+        if photo_year:
+            try:
+                py = int(str(photo_year)[:4])
+                face_appearances.append({
+                    "photo_id": pid,
+                    "photo_filename": pm.get("filename", ""),
+                    "photo_year": py,
+                    "true_age": py - birth_year,
+                })
+            except (ValueError, TypeError):
+                pass
+
+    gt_data["entries"][identity_id] = {
+        "name": ensure_utf8_display(identity.get("name", "")),
+        "birth_year": birth_year,
+        "source": source,
+        "source_detail": source_detail,
+        "original_ml_estimate": original_ml_estimate,
+        "confirmed_at": datetime.now(timezone.utc).isoformat(),
+        "confirmed_by": confirmed_by,
+        "face_appearances": face_appearances,
+    }
+
+    import tempfile
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(data_path), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(gt_data, f, indent=2)
+        os.replace(tmp_path, str(gt_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+
+def _get_pending_ml_birth_year_suggestions() -> list:
+    """Get all ML birth year estimates that haven't been reviewed yet.
+
+    Returns list of dicts with identity_id, name, estimate info.
+    Excludes identities that already have confirmed birth years or review decisions.
+    """
+    estimates = _load_birth_year_estimates()
+    decisions = _load_ml_review_decisions()
+    registry = load_registry()
+
+    pending = []
+    for iid, est in estimates.items():
+        # Skip if already reviewed
+        if iid in decisions:
+            continue
+        # Skip if identity already has confirmed birth year
+        try:
+            identity = registry.get_identity(iid)
+        except KeyError:
+            continue
+        if identity.get("merged_into"):
+            continue
+        for by in [identity.get("birth_year"), (identity.get("metadata") or {}).get("birth_year")]:
+            if by:
+                break
+        else:
+            by = None
+        if by:
+            continue
+        pending.append({
+            "identity_id": iid,
+            "name": ensure_utf8_display(identity.get("name", "")),
+            "state": identity.get("state", ""),
+            "birth_year_estimate": est["birth_year_estimate"],
+            "birth_year_confidence": est.get("birth_year_confidence", "low"),
+            "birth_year_range": est.get("birth_year_range", []),
+            "birth_year_std": est.get("birth_year_std"),
+            "n_appearances": est.get("n_appearances", 0),
+            "n_with_age_data": est.get("n_with_age_data", 0),
+            "evidence": est.get("evidence", []),
+        })
+
+    # Sort by confidence (high first), then by evidence count
+    conf_order = {"high": 0, "medium": 1, "low": 2}
+    pending.sort(key=lambda x: (conf_order.get(x["birth_year_confidence"], 3), -x["n_with_age_data"]))
+    return pending
 
 
 def _get_decade_counts() -> dict:
@@ -2471,7 +2663,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 f"{counts['confirmed']} of {counts['to_review'] + counts['confirmed'] + counts['skipped']} identified",
                 cls="sidebar-label text-xs text-slate-500 font-data"
             ),
-            Div("v0.6.0", cls="sidebar-label text-xs text-slate-600 mt-0.5"),
+            Div(APP_VERSION, cls="sidebar-label text-xs text-slate-600 mt-0.5"),
             cls="px-3 py-2 border-t border-slate-700/50"
         ),
         # Close button for mobile
@@ -9458,18 +9650,91 @@ def public_person_page(
     else:
         badge = Span("Under Review", cls="text-xs text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20")
 
-    # --- Birth year (metadata or ML estimate) ---
-    person_birth_year, by_source, by_confidence = _get_birth_year(person_id, identity)
+    # --- Birth year (Gatekeeper: public sees confirmed only, admin sees ML estimates) ---
+    # Public: only confirmed metadata birth years
+    person_birth_year, by_source, by_confidence = _get_birth_year(person_id, identity, include_unreviewed=False)
     birth_year_line = None
     if person_birth_year:
-        if by_source == "confirmed":
-            birth_year_line = f"Born {person_birth_year}"
-        elif by_confidence == "high":
-            birth_year_line = f"Born ~{person_birth_year}"
-        elif by_confidence == "medium":
-            birth_year_line = f"Born ~{person_birth_year} (estimated)"
-        else:
-            birth_year_line = f"Born ~{person_birth_year}?"
+        birth_year_line = f"Born {person_birth_year}"
+
+    # Admin: also check for pending ML suggestion
+    ml_suggestion_card = None
+    if is_admin and not person_birth_year:
+        _admin_by, _admin_src, _admin_conf = _get_birth_year(person_id, identity, include_unreviewed=True)
+        if _admin_by and _admin_src == "ml_inferred":
+            estimates = _load_birth_year_estimates()
+            est = estimates.get(person_id, {})
+            est_range = est.get("birth_year_range", [])
+            range_str = f"{est_range[0]}\u2013{est_range[1]}" if len(est_range) == 2 else ""
+            n_photos = est.get("n_with_age_data", 0)
+            conf_label = (_admin_conf or "low").capitalize()
+            conf_cls = {
+                "High": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+                "Medium": "text-amber-400 bg-amber-500/10 border-amber-500/20",
+                "Low": "text-slate-400 bg-slate-500/10 border-slate-500/20",
+            }.get(conf_label, "text-slate-400 bg-slate-500/10 border-slate-500/20")
+            ml_suggestion_card = Div(
+                Div(
+                    Span("\u2728 ", cls="mr-1"),
+                    Span("ML Estimate", cls="text-xs font-semibold text-indigo-300"),
+                    cls="mb-2",
+                ),
+                Div(
+                    Span(f"Born c. {_admin_by}", cls="text-white text-sm font-medium"),
+                    Span(f" ({range_str})" if range_str else "", cls="text-slate-400 text-xs"),
+                    cls="mb-1",
+                ),
+                Div(
+                    Span(conf_label, cls=f"text-xs px-2 py-0.5 rounded-full border {conf_cls} mr-2"),
+                    Span(f"Based on {n_photos} photo{'s' if n_photos != 1 else ''}", cls="text-xs text-slate-500"),
+                    cls="mb-3",
+                ),
+                Div(
+                    Button("Accept", type="button",
+                           hx_post=f"/api/ml-review/birth-year/{person_id}/accept",
+                           hx_target=f"#ml-suggestion-{person_id}",
+                           hx_swap="outerHTML",
+                           hx_vals=json.dumps({"birth_year": _admin_by}),
+                           cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded"),
+                    Button("Edit & Accept", type="button",
+                           onclick=f"document.getElementById('ml-edit-{person_id}').classList.toggle('hidden')",
+                           cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded"),
+                    Button("Reject", type="button",
+                           hx_post=f"/api/ml-review/birth-year/{person_id}/reject",
+                           hx_target=f"#ml-suggestion-{person_id}",
+                           hx_swap="outerHTML",
+                           hx_confirm="Reject this ML birth year estimate?",
+                           cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded"),
+                    cls="flex gap-2 flex-wrap",
+                ),
+                # Inline edit form (hidden by default)
+                Div(
+                    Form(
+                        Div(
+                            Label("Birth year:", cls="text-xs text-slate-400"),
+                            Input(type="number", name="birth_year", value=str(_admin_by),
+                                  cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-24"),
+                            cls="flex items-center gap-2",
+                        ),
+                        Div(
+                            Label("Source:", cls="text-xs text-slate-400"),
+                            Input(type="text", name="source_detail", placeholder="e.g. Italian census 1903",
+                                  cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-48"),
+                            cls="flex items-center gap-2 mt-2",
+                        ),
+                        Button("Save", type="submit",
+                               cls="mt-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded"),
+                        hx_post=f"/api/ml-review/birth-year/{person_id}/accept",
+                        hx_target=f"#ml-suggestion-{person_id}",
+                        hx_swap="outerHTML",
+                    ),
+                    id=f"ml-edit-{person_id}",
+                    cls="hidden mt-3 pt-3 border-t border-slate-700/50",
+                ),
+                id=f"ml-suggestion-{person_id}",
+                cls="bg-indigo-500/5 border border-indigo-500/20 rounded-lg p-4 mt-3 mb-3 text-left max-w-sm mx-auto",
+                data_testid="ml-suggestion-card",
+            )
 
     # --- Stats line ---
     stats_parts = []
@@ -9598,6 +9863,8 @@ def public_person_page(
                     P(stats_line, cls="text-slate-400 text-sm text-center mb-4") if stats_line else None,
                     # Life details (birth/death/place with prompts for unknowns)
                     life_details_section,
+                    # Admin: ML birth year suggestion card (Gatekeeper pattern)
+                    ml_suggestion_card,
                     # Admin: inline metadata editing
                     Div(
                         Form(
@@ -12264,13 +12531,13 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
             decades_order.append(dec)
         decades_map[dec].append(entry)
 
-    # Compute age if person has birth_year (metadata or ML estimate)
+    # Compute age if person has confirmed birth_year (Gatekeeper: public sees confirmed only)
     person_birth_year = None
     birth_year_source = None
     birth_year_confidence = None
     if person_identity:
         iid = person_identity.get("identity_id", "")
-        person_birth_year, birth_year_source, birth_year_confidence = _get_birth_year(iid, person_identity)
+        person_birth_year, birth_year_source, birth_year_confidence = _get_birth_year(iid, person_identity, include_unreviewed=False)
 
     # Build person filter options (checkboxes for multi-select)
     person_filter_items = []
@@ -17924,6 +18191,124 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
         return toast("Identity not found.", "error")
 
 
+# =============================================================================
+# ML BIRTH YEAR REVIEW ENDPOINTS (Gatekeeper Pattern — AD-097)
+# =============================================================================
+
+@rt("/api/ml-review/birth-year/{identity_id}/accept")
+def post(identity_id: str, birth_year: str = "", source_detail: str = "", sess=None):
+    """Accept (or edit & accept) an ML birth year estimate. Admin-only.
+
+    Writes the accepted birth year to canonical identity metadata.
+    Records in ground truth file for ML feedback loop.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        by = int(birth_year)
+    except (ValueError, TypeError):
+        return Div(
+            Span("Invalid birth year", cls="text-red-400 text-xs"),
+            id=f"ml-suggestion-{identity_id}",
+        )
+
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Div(
+            Span("Identity not found", cls="text-red-400 text-xs"),
+            id=f"ml-suggestion-{identity_id}",
+        )
+
+    # Get original ML estimate for ground truth
+    estimates = _load_birth_year_estimates()
+    est = estimates.get(identity_id, {})
+    original_ml = est.get("birth_year_estimate")
+
+    # Determine source provenance
+    if original_ml and by != original_ml:
+        source = "admin_correction"
+    else:
+        source = "ml_accepted"
+
+    # Write to canonical identity metadata
+    registry.set_metadata(identity_id, {"birth_year": by}, user_source="admin_ml_review")
+    save_registry(registry)
+
+    # Record review decision
+    decisions = dict(_load_ml_review_decisions())
+    decisions[identity_id] = {
+        "action": "accepted",
+        "birth_year": by,
+        "original_ml_estimate": original_ml,
+        "source": source,
+        "source_detail": source_detail.strip() if source_detail else "",
+        "decided_at": datetime.now(timezone.utc).isoformat(),
+        "decided_by": "admin",
+    }
+    _save_ml_review_decisions(decisions)
+
+    # Write ground truth for ML feedback loop
+    _save_ground_truth_birth_year(
+        identity_id=identity_id,
+        identity=registry.get_identity(identity_id),
+        birth_year=by,
+        source=source,
+        source_detail=source_detail.strip() if source_detail else "",
+        original_ml_estimate=original_ml,
+    )
+
+    name = ensure_utf8_display(identity.get("name", ""))
+    correction_note = f" (ML: {original_ml})" if original_ml and by != original_ml else ""
+    return Div(
+        Div(
+            Span("\u2705 ", cls="mr-1"),
+            Span(f"Born {by}{correction_note}", cls="text-emerald-400 text-sm font-medium"),
+            cls="mb-1",
+        ),
+        Span(f"Confirmed for {name}", cls="text-xs text-slate-500"),
+        id=f"ml-suggestion-{identity_id}",
+        cls="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 mt-3 mb-3 text-center max-w-sm mx-auto",
+        data_testid="ml-suggestion-accepted",
+    )
+
+
+@rt("/api/ml-review/birth-year/{identity_id}/reject")
+def post(identity_id: str, reason: str = "", sess=None):
+    """Reject an ML birth year estimate. Admin-only."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    estimates = _load_birth_year_estimates()
+    est = estimates.get(identity_id, {})
+    original_ml = est.get("birth_year_estimate")
+
+    decisions = dict(_load_ml_review_decisions())
+    decisions[identity_id] = {
+        "action": "rejected",
+        "original_ml_estimate": original_ml,
+        "reason": reason.strip() if reason else "",
+        "decided_at": datetime.now(timezone.utc).isoformat(),
+        "decided_by": "admin",
+    }
+    _save_ml_review_decisions(decisions)
+
+    # Invalidate cache
+    global _ml_review_decisions_cache
+    _ml_review_decisions_cache = None
+
+    return Div(
+        Span("\u274c Estimate rejected", cls="text-slate-500 text-xs"),
+        id=f"ml-suggestion-{identity_id}",
+        cls="text-center py-2",
+        data_testid="ml-suggestion-rejected",
+    )
+
+
 @rt("/api/photo/{photo_id}/metadata")
 def post(photo_id: str, date_taken: str = "", location: str = "",
          caption: str = "", occasion: str = "", donor: str = "",
@@ -21703,6 +22088,7 @@ def _admin_nav_bar(active: str = "") -> Div:
         ("Uploads", "/admin/pending", "uploads"),
         ("Approvals", "/admin/approvals", "approvals"),
         ("Proposals", "/admin/proposals", "proposals"),
+        ("Birth Years", "/admin/review/birth-years", "birth-year-review"),
         ("GEDCOM", "/admin/gedcom", "gedcom"),
         ("Audit Log", "/admin/audit", "audit"),
         ("ML Dashboard", "/admin/ml-dashboard", "ml-dashboard"),
@@ -22259,6 +22645,216 @@ def _log_audit(action: str, annotation_id: str, admin: str, details: str = ""):
     })
 
     audit_path.write_text(json.dumps(audit, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+# =============================================================================
+# ADMIN: ML BIRTH YEAR BULK REVIEW (Gatekeeper Pattern — AD-097)
+# =============================================================================
+
+@rt("/admin/review/birth-years")
+def get(sess=None):
+    """Admin bulk review page for ML birth year estimates."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    pending = _get_pending_ml_birth_year_suggestions()
+    crop_files = get_crop_files()
+    registry = load_registry()
+
+    rows = []
+    for item in pending:
+        iid = item["identity_id"]
+        name = item["name"]
+        est = item["birth_year_estimate"]
+        conf = (item["birth_year_confidence"] or "low").capitalize()
+        est_range = item.get("birth_year_range", [])
+        range_str = f"{est_range[0]}\u2013{est_range[1]}" if len(est_range) == 2 else ""
+        n_photos = item.get("n_with_age_data", 0)
+
+        conf_cls = {
+            "High": "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+            "Medium": "text-amber-400 bg-amber-500/10 border-amber-500/20",
+            "Low": "text-slate-400 bg-slate-500/10 border-slate-500/20",
+        }.get(conf, "text-slate-400 bg-slate-500/10 border-slate-500/20")
+
+        # Get face crop
+        try:
+            identity = registry.get_identity(iid)
+            all_faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+            best_fid = get_best_face_id(all_faces)
+            crop_url = resolve_face_image_url(best_fid, crop_files) if best_fid and crop_files else None
+        except KeyError:
+            crop_url = None
+
+        # Evidence preview (top 3)
+        evidence = item.get("evidence", [])[:3]
+        evidence_items = []
+        for ev in evidence:
+            py = ev.get("photo_year", "?")
+            age = ev.get("estimated_age", "?")
+            evidence_items.append(
+                Span(f"{py}: age ~{age}", cls="text-xs text-slate-500 block")
+            )
+
+        rows.append(
+            Div(
+                Div(
+                    # Face crop
+                    Img(src=crop_url, alt=name,
+                        cls="w-14 h-14 rounded-lg object-cover border border-slate-700",
+                        onerror="this.style.display='none'") if crop_url else Div(
+                        Span("?", cls="text-xl text-slate-500"),
+                        cls="w-14 h-14 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center",
+                    ),
+                    # Info
+                    Div(
+                        A(name, href=f"/person/{iid}", cls="text-white text-sm font-medium hover:text-indigo-400"),
+                        Div(
+                            Span(f"Born c. {est}", cls="text-slate-300 text-sm"),
+                            Span(f" ({range_str})" if range_str else "", cls="text-slate-500 text-xs"),
+                            cls="mt-0.5",
+                        ),
+                        Div(
+                            Span(conf, cls=f"text-xs px-2 py-0.5 rounded-full border {conf_cls} mr-2"),
+                            Span(f"{n_photos} photo{'s' if n_photos != 1 else ''} with age data", cls="text-xs text-slate-500"),
+                        ),
+                        cls="ml-3 flex-1 min-w-0",
+                    ),
+                    cls="flex items-center",
+                ),
+                # Evidence preview (collapsible)
+                Details(
+                    Summary("Evidence", cls="text-xs text-indigo-400 cursor-pointer hover:text-indigo-300 mt-2"),
+                    Div(*evidence_items, cls="mt-1 ml-2") if evidence_items else Span("No evidence", cls="text-xs text-slate-600"),
+                    cls="mt-1",
+                ) if evidence else None,
+                # Actions
+                Div(
+                    Button("Accept", type="button",
+                           hx_post=f"/api/ml-review/birth-year/{iid}/accept",
+                           hx_target=f"#review-row-{iid}",
+                           hx_swap="outerHTML",
+                           hx_vals=json.dumps({"birth_year": est}),
+                           cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded"),
+                    # Inline edit field with form
+                    Form(
+                        Input(type="number", name="birth_year", value=str(est),
+                              cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-20"),
+                        Input(type="hidden", name="source_detail", value="admin_bulk_review"),
+                        Button("Save Edit", type="submit",
+                               cls="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded"),
+                        hx_post=f"/api/ml-review/birth-year/{iid}/accept",
+                        hx_target=f"#review-row-{iid}",
+                        hx_swap="outerHTML",
+                        cls="inline-flex items-center gap-1",
+                    ),
+                    Button("Reject", type="button",
+                           hx_post=f"/api/ml-review/birth-year/{iid}/reject",
+                           hx_target=f"#review-row-{iid}",
+                           hx_swap="outerHTML",
+                           cls="px-3 py-1 bg-red-600/80 hover:bg-red-500 text-white text-xs rounded"),
+                    cls="flex items-center gap-2 mt-3",
+                ),
+                id=f"review-row-{iid}",
+                cls="bg-slate-800/50 border border-slate-700/50 rounded-lg p-4 mb-3",
+                data_testid="review-row",
+            )
+        )
+
+    # Accept all high-confidence button
+    high_count = sum(1 for p in pending if p["birth_year_confidence"] == "high")
+    accept_all_btn = None
+    if high_count > 0:
+        accept_all_btn = Div(
+            Button(
+                f"Accept All High-Confidence ({high_count})",
+                hx_post="/api/ml-review/birth-year/accept-all-high",
+                hx_target="#review-list",
+                hx_swap="innerHTML",
+                hx_confirm=f"Accept {high_count} high-confidence birth year estimates?",
+                cls="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg",
+            ),
+            cls="mb-4",
+        )
+
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+    return (
+        Title("ML Birth Year Review - Rhodesli Admin"),
+        page_style,
+        Main(
+            _admin_nav_bar("birth-year-review"),
+            Div(
+                H1("ML Birth Year Estimates", cls="text-2xl font-serif font-bold text-white mb-2"),
+                P(f"{len(pending)} pending review", cls="text-slate-400 text-sm mb-6"),
+                accept_all_btn,
+                Div(*rows, id="review-list") if rows else P("All estimates have been reviewed.", cls="text-slate-500 text-center py-8"),
+                cls="max-w-3xl mx-auto px-6 py-8",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/api/ml-review/birth-year/accept-all-high")
+def post(sess=None):
+    """Accept all high-confidence ML birth year estimates at once."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    pending = _get_pending_ml_birth_year_suggestions()
+    high_confidence = [p for p in pending if p["birth_year_confidence"] == "high"]
+
+    registry = load_registry()
+    decisions = dict(_load_ml_review_decisions())
+    accepted_count = 0
+
+    for item in high_confidence:
+        iid = item["identity_id"]
+        by = item["birth_year_estimate"]
+
+        try:
+            identity = registry.get_identity(iid)
+        except KeyError:
+            continue
+
+        # Write to canonical identity metadata
+        registry.set_metadata(iid, {"birth_year": by}, user_source="admin_ml_bulk_review")
+
+        # Record review decision
+        decisions[iid] = {
+            "action": "accepted",
+            "birth_year": by,
+            "original_ml_estimate": by,
+            "source": "ml_accepted",
+            "source_detail": "bulk_high_confidence_review",
+            "decided_at": datetime.now(timezone.utc).isoformat(),
+            "decided_by": "admin",
+        }
+
+        # Write ground truth
+        _save_ground_truth_birth_year(
+            identity_id=iid,
+            identity=registry.get_identity(iid),
+            birth_year=by,
+            source="ml_accepted",
+            source_detail="bulk_high_confidence_review",
+            original_ml_estimate=by,
+        )
+        accepted_count += 1
+
+    save_registry(registry)
+    _save_ml_review_decisions(decisions)
+
+    return Div(
+        Div(
+            Span(f"\u2705 Accepted {accepted_count} high-confidence estimates", cls="text-emerald-400 text-sm"),
+            cls="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-4 text-center mb-4",
+        ),
+        A("Refresh page", href="/admin/review/birth-years", cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+        data_testid="bulk-accept-result",
+    )
 
 
 @rt("/admin/audit")
@@ -23365,7 +23961,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _gedcom_matches_cache, _photo_locations_cache, _comparison_results_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _ml_review_decisions_cache, _gedcom_matches_cache, _photo_locations_cache, _comparison_results_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -23378,6 +23974,7 @@ async def post(request):
     _search_index_cache = None
     _context_events_cache = None
     _birth_year_cache = None
+    _ml_review_decisions_cache = None
     _gedcom_matches_cache = None
     _photo_locations_cache = None
     _comparison_results_cache = None
