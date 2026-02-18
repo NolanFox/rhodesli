@@ -862,7 +862,37 @@ When making any algorithmic choice in the ML pipeline:
 - **Rejected**: Using the HTMX photo modal instead (would require restructuring the match page's lightbox system), canvas-based overlays (more complex, no benefit for static overlays).
 - **Affected files**: `app/main.py` (`_match_lightbox_script()`, `_match_source_photo_card()`, lightbox HTML)
 
-1. Add a new entry with AD-XXX format (next: AD-097)
+### AD-097: ML Gatekeeper Pattern — Staged Review Before Public Display
+- **Date**: 2026-02-18
+- **Context**: Session 34 built a birth year estimation pipeline with 32 ML estimates, but they were displayed directly to the public on person pages and timelines without admin review. This created "phantom features" — data visible to users before validation.
+- **Decision**: All ML outputs are PROPOSALS, not facts. They must pass through an admin review gate before entering canonical identity data. Implementation: `_get_birth_year(include_unreviewed=False)` for public views, `True` for admin. Review decisions stored in `data/ml_review_decisions.json` with accept/reject/edit actions. Accepted values are written to identity metadata via `set_metadata()`. Rejected values are filtered from all views including admin.
+- **Rejected**: (1) Auto-publish high-confidence estimates (even 95% confidence can be wrong for heritage photos), (2) User voting on estimates (too few users currently), (3) Separate "ML estimates" UI section (adds complexity, still shows unverified data to public).
+- **Pattern**: This generalizes to ANY future ML output — relationship predictions, auto-tags, date estimates, etc. All must go through admin review before becoming canonical.
+- **Affected files**: `app/main.py` (`_get_birth_year()`, `_load_ml_review_decisions()`, `_save_ml_review_decisions()`, review API endpoints, bulk review page, person page, timeline), `data/ml_review_decisions.json`, `data/ground_truth_birth_years.json`
+- **Tests**: `tests/test_ml_gatekeeper.py` — 23 tests covering gatekeeper filtering, suggestion card visibility, review endpoints, bulk review, cache invalidation.
+- **See also**: `docs/session_context/session_47_planning_context.md` for full research context.
+
+### AD-098: Feature Reality Contract
+- **Date**: 2026-02-18
+- **Context**: The Year Estimation Tool V1 (/estimate) was built in Session 46 but returned 404 on production — a "phantom feature" that passed all tests locally but didn't exist for users. The birth year data was also partially visible without review gating.
+- **Decision**: A feature is NOT done unless it satisfies the full reality chain: (1) Data file exists, (2) App loads it at startup, (3) Route exposes it, (4) UI renders correctly, (5) Test verifies the chain end-to-end. Every session must run a production verification step (curl rendered HTML, not just check local files). Phantom features are categorized as: Ghost Routes (404 on production), Ungated Data (ML output shown without review), Dead Wiring (data loaded but never rendered).
+- **Enforcement**: `.claude/rules/feature-reality-contract.md` path-scoped rule.
+- **Affected files**: `.claude/rules/feature-reality-contract.md`, verification workflow.
+
+### AD-099: Confirmed Data → ML Feedback Loop
+- **Date**: 2026-02-18
+- **Context**: When admins confirm, reject, or correct ML birth year estimates, this creates high-value ground truth data. Each confirmed birth year + photo dates = labeled training sample (face_embedding, true_age). This data should feed back into future ML model retraining.
+- **Decision**: Admin review decisions are persisted to `data/ground_truth_birth_years.json` with provenance (ml_accepted vs admin_correction), the original ML estimate, reviewer identity, timestamp, and face appearances (face_id + photo_id + photo_date for each appearance). This enables semi-supervised learning: small labeled set (confirmed identities) anchors learning from large unlabeled set (all detected faces).
+- **Data schema**: `{identity_id, birth_year, source, original_ml_estimate, reviewed_at, reviewed_by, face_appearances: [{face_id, photo_id, photo_date}]}`
+- **Affected files**: `app/main.py` (`_save_ground_truth_birth_year()`), `data/ground_truth_birth_years.json`
+
+### AD-100: User Input Taxonomy — Seven Data Flow Categories
+- **Date**: 2026-02-18
+- **Context**: Rhodesli accepts user input through many channels. Understanding the taxonomy helps ensure each type gets appropriate validation and provenance tracking.
+- **Decision**: Seven categories of user input, from lowest to highest trust: (1) Anonymous annotations — guest comments, no auth, rate-limited. (2) Authenticated suggestions — logged-in users propose identifications, pending admin review. (3) Admin confirmations — merge/confirm/reject identity decisions, immediate effect. (4) ML review decisions — accept/reject/edit ML estimates (AD-097). (5) Metadata corrections — admin edits birth year, place, name, with provenance tracking. (6) Photo uploads — staged, admin-moderated before public. (7) GEDCOM import — batch family data with match review. Each category has different trust levels, validation requirements, and provenance tracking.
+- **Affected files**: `app/main.py` (various endpoints), `core/registry.py`, `data/annotations.json`, `data/ml_review_decisions.json`
+
+1. Add a new entry with AD-XXX format (next: AD-101)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
