@@ -12502,8 +12502,13 @@ async def post(photo: UploadFile = None, sess=None):
     suffix = _Path(original_filename).suffix or ".jpg"
 
     # Check if face detection is available (InsightFace — local dev only)
+    # Must probe the actual deferred dependencies (cv2, insightface), not just
+    # the function reference — core.ingest_inbox has only stdlib top-level imports
+    # so importing it always succeeds even without ML deps installed.
     has_insightface = False
     try:
+        import cv2  # noqa: F811
+        from insightface.app import FaceAnalysis  # noqa: F401
         from core.ingest_inbox import extract_faces
         has_insightface = True
     except ImportError:

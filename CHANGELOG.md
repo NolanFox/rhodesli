@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.46.1] — 2026-02-18
+
+### Fixed
+- **Compare upload crash** — `has_insightface` check imported the function reference (always succeeds) instead of probing actual deferred dependencies (cv2, insightface). Graceful degradation path was never reached on production.
+- **Missing opencv-python-headless** — added `opencv-python-headless<4.11` to requirements.txt (pinned for numpy 1.x compatibility)
+
+### Added
+- **Dependency gate tests** — `tests/test_dependency_gate.py` scans all app/core imports and verifies each resolves. Critical imports (cv2, PIL, fasthtml, numpy) get explicit regression tests. Prevents recurring "works locally, broken in production" bugs.
+- 7 new tests (2249 → 2256)
+
 ## [v0.46.0] — 2026-02-17
 
 ### Added
