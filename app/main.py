@@ -10048,6 +10048,33 @@ def get(person_id: str, sess=None):
         Meta(name="twitter:image", content=og_image),
     )
 
+    # "Explore the Archive" section — pull visitors deeper into the app
+    explore_links = []
+    if len(photo_ids) > 1:
+        explore_links.append(
+            A(f"See all {len(photo_ids)} photos of this person",
+              href=f"/identify/{person_id}#photos",
+              cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+        )
+    explore_links.extend([
+        A("Browse all photos",
+          href="/photos",
+          cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+        A("View identified people",
+          href="/people",
+          cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+        A("Explore the timeline",
+          href="/timeline",
+          cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
+    ])
+    explore_section = Div(
+        H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4"),
+        P("Hundreds of photos from the Rhodes Jewish community await identification.",
+          cls="text-sm text-slate-400 text-center mb-5"),
+        Div(*explore_links, cls="flex flex-wrap justify-center gap-3"),
+        cls="mt-10 pt-6 border-t border-slate-700/30",
+    )
+
     nav_links = _public_nav_links(user=user)
     page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
 
@@ -10076,6 +10103,7 @@ def get(person_id: str, sess=None):
                     matches_section,
                     form_section,
                     Div(share_btn, cls="flex justify-center mt-8 mb-4"),
+                    explore_section,
                     cls="max-w-3xl mx-auto pt-10 pb-16 px-6",
                 ),
             ),
