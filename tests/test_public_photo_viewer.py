@@ -317,3 +317,37 @@ class TestPublicPhotoViewerPartialUnchanged:
         html = response.text
         # Partial should contain the photo viewer content
         assert "photo-viewer" in html or "<img" in html.lower()
+
+
+class TestPhotoInlineEdit:
+    """Admin inline editing for photo collection/source on photo page."""
+
+    def test_admin_sees_inline_edit(self, client, real_photo_id, auth_disabled):
+        """Admin (auth disabled) sees inline edit form on photo page."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        assert response.status_code == 200
+        assert 'data-testid="photo-inline-edit"' in response.text
+
+    def test_inline_edit_has_collection_input(self, client, real_photo_id, auth_disabled):
+        """Inline edit has collection input field."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        assert 'name="collection"' in response.text
+
+    def test_inline_edit_has_source_input(self, client, real_photo_id, auth_disabled):
+        """Inline edit has source input field."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        assert 'name="source"' in response.text
+
+    def test_anonymous_no_inline_edit(self, client, real_photo_id, auth_enabled, no_user):
+        """Anonymous users do not see inline edit form."""
+        if not real_photo_id:
+            pytest.skip("No embeddings available")
+        response = client.get(f"/photo/{real_photo_id}")
+        assert response.status_code == 200
+        assert 'data-testid="photo-inline-edit"' not in response.text

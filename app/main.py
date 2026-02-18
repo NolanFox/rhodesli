@@ -715,6 +715,20 @@ def _place_datalist() -> tuple:
     )
 
 
+def _photo_collection_datalist():
+    """Return a Datalist with known collection names for inline photo editing."""
+    collections = set()
+    if _photo_cache:
+        for pdata in _photo_cache.values():
+            c = pdata.get("collection", "")
+            if c:
+                collections.add(c)
+    return Datalist(
+        *[Option(value=c) for c in sorted(collections)],
+        id="photo-collections",
+    )
+
+
 def _search_photos(query: str = "", decade: int = None, tag: str = None) -> list:
     """Search photos using in-memory index. Returns matching documents with match reason."""
     docs = _load_search_index()
@@ -9493,6 +9507,67 @@ def public_person_page(
                     P(stats_line, cls="text-slate-400 text-sm text-center mb-4") if stats_line else None,
                     # Life details (birth/death/place with prompts for unknowns)
                     life_details_section,
+                    # Admin: inline metadata editing
+                    Div(
+                        Form(
+                            Div(
+                                Div(
+                                    Label("Birth year:", cls="text-xs text-slate-500"),
+                                    Input(type="number", name="birth_year",
+                                          value=str(person_birth_year) if person_birth_year else "",
+                                          placeholder="e.g. 1905",
+                                          cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-24"),
+                                    cls="flex items-center gap-1",
+                                ),
+                                Div(
+                                    Label("Death year:", cls="text-xs text-slate-500"),
+                                    Input(type="number", name="death_year",
+                                          value=str(identity.get("death_year", "")) if identity.get("death_year") else "",
+                                          placeholder="e.g. 1985",
+                                          cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-24"),
+                                    cls="flex items-center gap-1",
+                                ),
+                                cls="flex flex-wrap gap-3 mb-1",
+                            ),
+                            Div(
+                                Div(
+                                    Label("Birth place:", cls="text-xs text-slate-500"),
+                                    Input(type="text", name="birth_place",
+                                          value=identity.get("birth_place", ""),
+                                          placeholder="e.g. Rhodes, Greece",
+                                          list="places-list",
+                                          cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-40"),
+                                    cls="flex items-center gap-1",
+                                ),
+                                Div(
+                                    Label("Death place:", cls="text-xs text-slate-500"),
+                                    Input(type="text", name="death_place",
+                                          value=identity.get("death_place", ""),
+                                          placeholder="e.g. New York, NY",
+                                          list="places-list",
+                                          cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-40"),
+                                    cls="flex items-center gap-1",
+                                ),
+                                cls="flex flex-wrap gap-3 mb-1",
+                            ),
+                            Div(
+                                Label("Maiden name:", cls="text-xs text-slate-500"),
+                                Input(type="text", name="maiden_name",
+                                      value=identity.get("maiden_name", ""),
+                                      cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-40"),
+                                cls="flex items-center gap-1 mb-2",
+                            ),
+                            Button("Save Metadata", type="submit",
+                                   cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded"),
+                            Div(id=f"metadata-status-{person_id}", cls="inline ml-2"),
+                            hx_post=f"/api/identity/{person_id}/metadata",
+                            hx_target=f"#metadata-status-{person_id}",
+                            hx_swap="innerHTML",
+                        ),
+                        _place_datalist(),
+                        cls="mt-3 mb-4 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50 text-left",
+                        data_testid="person-metadata-edit",
+                    ) if is_admin and is_confirmed else None,
                     # Action buttons
                     Div(
                         share_btn,
@@ -14605,7 +14680,7 @@ def public_photo_page(
                         P(f"Current: {front_transform}", cls="text-xs text-slate-500 mt-1") if front_transform else None,
                         cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50"
                     ) if is_admin else None,
-                    # Photo metadata
+                    # Photo metadata (with inline admin editing)
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
                         P(uploader_line, cls="mt-1") if uploader_line and not meta_line else None,
@@ -14620,6 +14695,52 @@ def public_photo_page(
                               cls="text-indigo-400/70 hover:text-indigo-300 text-xs underline"),
                             cls="mt-1"
                         ) if photo.get("source_url") else None,
+                        # Admin inline edit for collection/source
+                        Div(
+                            Form(
+                                Label("Collection:", cls="text-xs text-slate-500 mr-1"),
+                                Input(type="text", name="collection",
+                                      value=photo.get("collection", ""),
+                                      cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48",
+                                      list="photo-collections"),
+                                Button("Save", type="submit",
+                                       cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1"),
+                                Div(id=f"collection-status-{photo_id}", cls="inline ml-1"),
+                                hx_post=f"/api/photo/{photo_id}/collection",
+                                hx_target=f"#collection-status-{photo_id}",
+                                hx_swap="innerHTML",
+                                cls="flex items-center gap-1 mb-1",
+                            ),
+                            Form(
+                                Label("Source:", cls="text-xs text-slate-500 mr-1"),
+                                Input(type="text", name="source",
+                                      value=photo.get("source", ""),
+                                      cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48"),
+                                Button("Save", type="submit",
+                                       cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1"),
+                                Div(id=f"source-status-{photo_id}", cls="inline ml-1"),
+                                hx_post=f"/api/photo/{photo_id}/source",
+                                hx_target=f"#source-status-{photo_id}",
+                                hx_swap="innerHTML",
+                                cls="flex items-center gap-1 mb-1",
+                            ),
+                            Form(
+                                Label("Source URL:", cls="text-xs text-slate-500 mr-1"),
+                                Input(type="text", name="source_url",
+                                      value=photo.get("source_url", ""),
+                                      cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-56"),
+                                Button("Save", type="submit",
+                                       cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1"),
+                                Div(id=f"source-url-status-{photo_id}", cls="inline ml-1"),
+                                hx_post=f"/api/photo/{photo_id}/source-url",
+                                hx_target=f"#source-url-status-{photo_id}",
+                                hx_swap="innerHTML",
+                                cls="flex items-center gap-1",
+                            ),
+                            _photo_collection_datalist(),
+                            cls="mt-3 bg-slate-800/50 rounded-lg p-3 border border-slate-700/50",
+                            data_testid="photo-inline-edit",
+                        ) if is_admin else None,
                         cls="mt-4 text-center"
                     ),
                     cls="max-w-[900px] mx-auto"

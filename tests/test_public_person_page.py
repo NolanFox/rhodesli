@@ -488,3 +488,38 @@ class TestPersonPageLifeDetails:
         """404 person page does not show life details."""
         response = client.get("/person/nonexistent-id-12345")
         assert 'data-testid="life-details"' not in response.text
+
+
+class TestPersonMetadataEdit:
+    """Admin inline metadata editing on person page."""
+
+    def test_admin_sees_metadata_edit(self, client, confirmed_identity, auth_disabled):
+        """Admin (auth disabled) sees metadata edit form for confirmed person."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert 'data-testid="person-metadata-edit"' in response.text
+
+    def test_metadata_edit_has_birth_year(self, client, confirmed_identity, auth_disabled):
+        """Metadata edit form has birth year input."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert 'name="birth_year"' in response.text
+
+    def test_metadata_edit_has_birth_place(self, client, confirmed_identity, auth_disabled):
+        """Metadata edit form has birth place input with datalist."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert 'name="birth_place"' in response.text
+        assert 'list="places-list"' in response.text
+
+    def test_anonymous_no_metadata_edit(self, client, confirmed_identity, auth_enabled, no_user):
+        """Anonymous users do not see metadata edit form."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert 'data-testid="person-metadata-edit"' not in response.text
