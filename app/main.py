@@ -12202,6 +12202,16 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
 
     display_name = name if state == "CONFIRMED" else f"Face #{index + 1}"
 
+    # Calibrated confidence label based on percentage (AD-091)
+    if confidence_pct >= 85:
+        conf_label = "Very likely same person"
+    elif confidence_pct >= 70:
+        conf_label = "Strong match"
+    elif confidence_pct >= 50:
+        conf_label = "Possible match"
+    else:
+        conf_label = "Unlikely match"
+
     return Div(
         A(
             Img(src=crop_url, cls=f"w-20 h-20 rounded-full object-cover mx-auto {style['ring']}"),
@@ -12215,6 +12225,7 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
                 state_badge,
                 cls="flex items-center justify-center gap-2 mt-1",
             ),
+            P(conf_label, cls="text-[10px] text-slate-500 text-center mt-0.5", data_testid="confidence-label"),
             A("View Photo", href=photo_link, cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2") if photo_id else None,
             person_link,
             timeline_link,
@@ -12248,31 +12259,33 @@ def _compare_results_grid(results: list, crop_files: set) -> object:
     # Build sections
     sections = []
 
+    # Calibrated tier labels (AD-091): labels match what the confidence
+    # percentages actually mean. "Very likely" reserved for 85%+ only.
     tier_config = {
         "STRONG MATCH": {
-            "title": "Identity Matches",
-            "subtitle": "Very likely the same person",
+            "title": "Strong Matches",
+            "subtitle": "High confidence — likely the same person",
             "icon": "text-emerald-400",
             "border": "border-emerald-800/30",
             "testid": "tier-strong-match",
         },
         "POSSIBLE MATCH": {
             "title": "Possible Matches",
-            "subtitle": "Same person with age or pose variation",
+            "subtitle": "Moderate confidence — worth investigating",
             "icon": "text-amber-400",
             "border": "border-amber-800/20",
             "testid": "tier-possible-match",
         },
         "SIMILAR": {
             "title": "Similar Faces",
-            "subtitle": "Similar features found in archive",
+            "subtitle": "Some resemblance — may be related",
             "icon": "text-blue-400",
             "border": "border-blue-800/20",
             "testid": "tier-similar",
         },
         "WEAK": {
             "title": "Other Faces",
-            "subtitle": "Lower similarity",
+            "subtitle": "Low similarity",
             "icon": "text-slate-500",
             "border": "border-slate-800/20",
             "testid": "tier-weak",
@@ -12300,9 +12313,21 @@ def _compare_results_grid(results: list, crop_files: set) -> object:
             )
         )
 
+    # Action CTAs below results
+    cta_section = Div(
+        share_button(url="/compare", style="button", label="Share Results",
+                     title="Face Comparison Results", text="Check out these face comparison results from the Rhodes archive"),
+        A("Try Another Photo",
+          href="/compare",
+          cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center"),
+        cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-800",
+        data_testid="compare-ctas",
+    )
+
     return Div(
         H2(f"{total_shown} Match{'es' if total_shown != 1 else ''}", cls="text-lg font-serif text-white mb-4"),
         *sections,
+        cta_section,
         id="compare-results",
         data_testid="compare-results",
     )
