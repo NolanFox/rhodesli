@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.49.0 · 2365 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.49.1 · 2373 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -81,7 +81,8 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
-- [x] 2026-02-18: **v0.49.0 — Session 47**: ML Gatekeeper + Feature Reality Contract. ML birth year estimates gated behind admin review. Bulk review page. Ground truth feedback loop. Dynamic version display. ROADMAP + BACKLOG splits. AD-097–100. 23 new tests (2365 total).
+- [x] 2026-02-18: **v0.49.1 — Session 48**: Harness Inflection. Prompt decomposition, phase execution, verification gate rules. HARNESS_DECISIONS.md (HD-001-007). Age on face overlays (Session 47 Phase 2F completion). Session log infrastructure. CLAUDE.md compressed (113->77). 4 new tests (2373 total).
+- [x] 2026-02-18: **v0.49.0 — Session 47**: ML Gatekeeper + Feature Reality Contract. ML birth year estimates gated behind admin review. Bulk review page. Ground truth feedback loop. Dynamic version display. ROADMAP + BACKLOG splits. AD-097-100. 23 new tests (2365 total).
 - [x] 2026-02-18: **v0.48.0 — Session 46**: Match Page Polish + Year Estimation Tool V1. Help Identify sharing fixes, face carousel, deep link CTAs, lightbox face overlays. Year Estimation Tool V1 at /estimate with per-face reasoning. 56 new tests (2342 total).
 - [x] 2026-02-18: **v0.47.0 — Session 45**: Overnight Polish. All 12 remaining items from 36-item feature audit. Photo + person inline editing, admin nav consistency, structured logging. 32 new tests (2281 total).
 - [x] 2026-02-17: **v0.46.0 — Session 44**: Compare Faces Redesign + Sharing Design System. Unified og_tags() + share_button(). Compare upload-first redesign. Calibrated confidence labels. Shareable comparison pages. 21 new tests (2249 total).
