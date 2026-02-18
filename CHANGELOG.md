@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.48.0] — 2026-02-18
+
+### Added
+- **Help Identify sharing** — Best Match face now has View Photo + View Profile/Help Identify links; Photo Context shows both source photos side by side; share URL fixed to share `/photo/{id}` (FB-46-01, FB-46-02, FB-46-03)
+- **Face carousel** — multi-face identities on match page have prev/next arrows with face counter; source photo updates when face changes (FB-46-04, FB-46-05)
+- **Deep link CTAs** — "View full profile" / "Help Identify" links under each face on match page; "Explore the Archive" section on /identify pages with Browse/People/Timeline links (FB-46-06, FB-46-07)
+- **Lightbox improvements** — face bounding box overlays with state-based colors and clickable navigation; metadata bar (collection + date); "View Photo Page" link (FB-46-08, FB-46-09, FB-46-10)
+- **Year Estimation Tool V1** — `/estimate` page with archive photo selector, per-face reasoning display (birth_year + apparent_age = estimated_year), scene evidence from Gemini labels, confidence badges, share/view CTAs (FB-46-11, FB-46-12, FB-46-13, PRD-018)
+- **Compare/Estimate tab navigation** — tab links between /compare and /estimate pages
+- **`core/year_estimation.py`** — estimation engine with weighted aggregation (confirmed=2x, ML=1x), bbox left-to-right face ordering, scene fallback, graceful degradation
+- **AD-092 through AD-096** — year estimation algorithm decisions (weighted aggregation, face-age matching, scene fallback, confidence tiers, tab navigation)
+- 56 new tests (2281 → 2342 total)
+
+### Fixed
+- **Lightbox "Unidentified" leak** — "Unidentified Person NNN" no longer appears in face bbox data attributes
+
 ## [v0.47.0] — 2026-02-18
 
 ### Added

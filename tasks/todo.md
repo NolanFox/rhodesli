@@ -1,6 +1,19 @@
 # Rhodesli Project Backlog
 
-Last updated: 2026-02-17 (Session 44 — Compare Faces Redesign + Sharing Design System)
+Last updated: 2026-02-18 (Session 46 — Match Page Polish + Year Estimation Tool V1)
+
+## Session 46 Completed
+- [x] PRD-018 year estimation tool, research doc, feedback log
+- [x] Phase 1: Help Identify sharing — Best Match links, dual photo context, share URL fix
+- [x] Phase 2: Face carousel — prev/next arrows for multi-face identities on match page
+- [x] Phase 3: Deep link CTAs — "View full profile" / "Help Identify" on match page, "Explore the Archive" on /identify
+- [x] Phase 4: Lightbox — face overlays with state colors, metadata bar, View Photo Page link
+- [x] Phase 5: Year Estimation Tool V1 — /estimate page, per-face evidence, scene evidence, confidence, share
+- [x] core/year_estimation.py — estimation engine (weighted aggregation, bbox ordering, scene fallback)
+- [x] Compare/Estimate tab navigation
+- [x] AD-092 through AD-096 documented
+- [x] 56 new tests (2342 total)
+- [x] CHANGELOG v0.48.0, ROADMAP, BACKLOG, feedback log updated
 
 ## Session 44 Completed
 - [x] Research docs: compare_faces_competitive.md, sharing_design_system.md

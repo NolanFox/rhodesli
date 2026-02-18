@@ -1,14 +1,14 @@
 # Rhodesli: Comprehensive Project Backlog & Improvement Plan
 
-**Version**: 18.0 — February 18, 2026
-**Status**: 2281 tests passing, v0.47.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 19.0 — February 18, 2026
+**Status**: 2342 tests passing, v0.48.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
 
 ## Current State Summary
 
-Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). Auth is complete with Google OAuth, invite codes, and a locked-down permission model (public=view, admin=everything else). 45 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, and 2281 tests.
+Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). Auth is complete with Google OAuth, invite codes, and a locked-down permission model (public=view, admin=everything else). 46 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, and 2342 tests.
 
 ---
 

@@ -827,7 +827,42 @@ When making any algorithmic choice in the ML pipeline:
 - **Rejected**: Using tier names as labels (conflates grouping with confidence), using raw distance values (meaningless to non-technical users), binary same/different threshold (loses nuance).
 - **Affected files**: `app/main.py` (`_compare_result_card()`, `_compare_results_grid()`), `tests/test_face_comparison.py` (TestCalibratedLabels)
 
-1. Add a new entry with AD-XXX format (next: AD-092)
+### AD-092: Dual Photo Context in Help Identify Focus Mode
+- **Date**: 2026-02-18
+- **Context**: The Help Identify focus mode showed a "Photo Context" section with only the "Who is this?" source photo. Users couldn't see the best match's source photo for comparison.
+- **Decision**: Show both source photos side by side in the Photo Context section. Each photo card shows collection name, thumbnail, and "View Photo Page" link. Share button shares the photo page URL (not the match comparison URL).
+- **Rejected**: Single photo with tab toggle (adds unnecessary interaction), opening full photo modal (too disruptive in focus flow).
+- **Affected files**: `app/main.py` (`_build_skipped_photo_context()`, `_build_skipped_suggestion_with_strip()`)
+
+### AD-093: Face Carousel for Multi-Face Identities
+- **Date**: 2026-02-18
+- **Context**: On match comparison pages, only the best-quality face crop was shown for each person. Users with multiple appearances across different photos had no way to see alternative angles or contexts.
+- **Decision**: Add left/right arrow navigation when an identity has multiple face crops. Pure JS with event delegation (`data-action="face-carousel-prev/next"`). Face data encoded as JSON in `data-faces` attribute. Counter shows "1 of N". Source photo cards remain static (would require HTMX swap to update).
+- **Rejected**: Auto-playing slideshow (distracting), thumbnail grid below face (clutters comparison layout), HTMX-based carousel (adds server round-trips for a client-side concern).
+- **Affected files**: `app/main.py` (`_face_card()`, `_face_carousel_script()`)
+
+### AD-094: Year Estimation V1 — Gemini-First Approach
+- **Date**: 2026-02-18
+- **Context**: Most archive photos have no date. Existing Gemini labels include `subject_ages` (apparent ages left-to-right) and scene-based decade estimates. Birth year data exists from GEDCOM and ML pipeline. These can be combined without any new model training.
+- **Decision**: V1 uses pre-computed data only (no real-time Gemini API calls). Pipeline: (1) load subject_ages from date_labels.json, (2) match faces to identities via bbox x-coordinate sorting, (3) compute estimated_year = birth_year + apparent_age for identified faces, (4) weighted aggregation (confirmed=2x, ML=1x), (5) scene evidence as supporting context. Falls back to scene-only when no identified faces.
+- **Rejected**: Real-time Gemini API calls per request (cost, latency, API key requirement), dedicated age estimation model (requires training infrastructure, V2 goal), storing estimates in photo_index.json (computed on-the-fly from existing data is simpler).
+- **Affected files**: `core/year_estimation.py`, `app/main.py` (`/estimate` route)
+
+### AD-095: Multi-Face Probabilistic Aggregation for Year Estimation
+- **Date**: 2026-02-18
+- **Context**: When multiple identified faces have known birth years, their individual year estimates may disagree due to age estimation noise. Need a principled way to combine them.
+- **Decision**: Weighted average with confirmed birth years weighted 2x vs ML-inferred at 1x. Margin computed from spread between estimates (min 3, max 15 years). Confidence tiered: 2+ confirmed = high, 1 confirmed = medium, ML-only = medium, scene-only = low. This is intentionally simple for V1.
+- **Rejected**: Bayesian posterior with Gaussian likelihoods (over-engineering for V1), median instead of weighted mean (loses birth year source information), fixed margin regardless of agreement (doesn't reflect actual estimation quality).
+- **Affected files**: `core/year_estimation.py` (`estimate_photo_year()`)
+
+### AD-096: Lightbox Face Overlays on Match Page
+- **Date**: 2026-02-18
+- **Context**: The match page lightbox showed only the photo image with face chip thumbnails below. Users couldn't see exactly where faces were detected in the full-size photo view.
+- **Decision**: Add face bounding box overlays to the match page lightbox using percentage-based CSS positioning. Highlighted face (the one being compared) gets amber border + glow. Other faces get state-based colors (green=confirmed, gray=other). Overlays are clickable, navigating to /person or /identify pages. Name labels shown below each box. Metadata bar (collection + date) and "View Photo Page" link added below the image.
+- **Rejected**: Using the HTMX photo modal instead (would require restructuring the match page's lightbox system), canvas-based overlays (more complex, no benefit for static overlays).
+- **Affected files**: `app/main.py` (`_match_lightbox_script()`, `_match_source_photo_card()`, lightbox HTML)
+
+1. Add a new entry with AD-XXX format (next: AD-097)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

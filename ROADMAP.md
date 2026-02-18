@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.46.0 · 2249 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.48.0 · 2342 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -289,6 +289,17 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - [x] Activity feed sort crash fix (Block 14 verification)
 - [x] 32 new tests (2281 total)
 
+### Session 46: Match Page Polish + Year Estimation Tool V1 (COMPLETED 2026-02-18)
+- [x] Help Identify sharing — Best Match links (View Photo + View Profile/Help Identify), dual photo context, share URL fix
+- [x] Face carousel — prev/next arrows for multi-face identities, source photo updates on face change
+- [x] Deep link CTAs — "View full profile" / "Help Identify" on match page, "Explore the Archive" on /identify
+- [x] Lightbox improvements — face overlays with state colors, clickable navigation, metadata bar, View Photo Page link
+- [x] Year Estimation Tool V1 — /estimate page, per-face evidence, scene evidence, confidence, share
+- [x] core/year_estimation.py — estimation engine (weighted aggregation, bbox ordering, scene fallback)
+- [x] Compare/Estimate tab navigation
+- [x] AD-092–AD-096, PRD-018
+- [x] 56 new tests (2342 total)
+
 ### Session 43: Life Events & Context Graph
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
@@ -296,6 +307,7 @@ Goal: Production-grade infrastructure and multi-tenant potential.
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+- [x] 2026-02-18: v0.48.0 — Match Page Polish + Year Estimation Tool V1 (Session 46): Help Identify sharing fixes (Best Match links, dual photo context, share URL). Face carousel for multi-face identities. Deep link CTAs on match and identify pages. Lightbox face overlays with metadata. Year Estimation Tool V1 at /estimate with per-face reasoning, scene evidence, confidence badges. core/year_estimation.py engine. Compare/Estimate tab navigation. AD-092–096. PRD-018. 56 new tests (2342 total).
 - [x] 2026-02-18: v0.47.0 — Overnight Polish: Feature Audit Completion (Session 45): Completed all 12 remaining items from 36-item feature audit. Photo + person inline editing (admin-only). Life details with contribution prompts. Admin nav bar consistency. Structured action logging. Geographic autocomplete. Comment rate limiting. AD-081–089. 3 postmortems. Lessons.md restructured (401→109 lines). HTML entity fix. Activity feed sort crash fix. 32 new tests (2281 total).
 - [x] 2026-02-17: v0.46.0 — Compare Faces Redesign + Sharing Design System (Session 44): Unified sharing components (og_tags() + generalized share_button()). Compare page upload-first redesign. Calibrated confidence labels (Very likely/Strong/Possible/Unlikely). Shareable comparison result pages at /compare/result/{id} with OG tags and response form. Site-wide OG tags and share buttons on /photos, /people, /collections. Deduplicated share JS. Research docs + PRD-016 + PRD-017. AD-091. 21 new tests (2249 total).
 - [x] 2026-02-17: v0.44.0 — Systematic Verification + Fix Everything (Session 42): Comprehensive audit of all 16 routes and 20 features. Fixed /identify/{id} 500 (set not subscriptable), landing page nav (all 8 public pages), GEDCOM test data warning, Compare two-mode UX, collection "Add Photos" button. Critical route test mock fixed (set vs list). 7 new tests (2209 total). Verification audit at docs/verification/session_42_audit.md.
