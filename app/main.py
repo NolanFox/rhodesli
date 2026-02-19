@@ -1838,6 +1838,7 @@ def get_first_anchor_face_id(identity_id: str, registry) -> str | None:
 # Photo metadata cache (rebuilt on each request for simplicity)
 _photo_cache = None
 _face_to_photo_cache = None
+_photo_id_aliases = None  # Maps photo_index.json IDs → SHA256 cache IDs
 
 
 def _build_caches():
@@ -1848,7 +1849,7 @@ def _build_caches():
     This removes noise detections (e.g., a newspaper photo might have
     63 raw detections but only 21 real registered faces).
     """
-    global _photo_cache, _face_to_photo_cache
+    global _photo_cache, _face_to_photo_cache, _photo_id_aliases
     if _photo_cache is None:
         _photo_cache = load_embeddings_for_photos()
 
@@ -1924,11 +1925,40 @@ def _build_caches():
             for face in photo_data["faces"]:
                 _face_to_photo_cache[face["face_id"]] = photo_id
 
+        # Build alias map: photo_index.json IDs → SHA256 cache IDs
+        # Community/inbox photos have IDs like "inbox_community-batch-..."
+        # in photo_index.json, but _photo_cache uses SHA256(filename)[:16].
+        _photo_id_aliases = {}
+        try:
+            from core.photo_registry import PhotoRegistry
+            photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+            filename_to_cache_id = {}
+            for cache_id, pdata in _photo_cache.items():
+                fname = Path(pdata.get("filename", "")).name
+                if fname:
+                    filename_to_cache_id[fname] = cache_id
+            for pid in photo_registry._photos:
+                if pid not in _photo_cache:
+                    path = photo_registry.get_photo_path(pid)
+                    if path:
+                        fname = Path(path).name
+                        cache_id = filename_to_cache_id.get(fname)
+                        if cache_id:
+                            _photo_id_aliases[pid] = cache_id
+        except (FileNotFoundError, Exception):
+            pass
+
 
 def get_photo_metadata(photo_id: str) -> dict:
     """Get photo metadata including face bboxes."""
     _build_caches()
-    return _photo_cache.get(photo_id)
+    result = _photo_cache.get(photo_id)
+    if result is None and _photo_id_aliases:
+        # Try resolving photo_index.json ID → SHA256 cache ID
+        resolved = _photo_id_aliases.get(photo_id)
+        if resolved:
+            result = _photo_cache.get(resolved)
+    return result
 
 
 def get_photo_id_for_face(face_id: str) -> str:
@@ -3884,7 +3914,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
     # Build "Who is this?" photo card
     who_context_items = []
     if collection:
-        who_context_items.append(Span(collection, cls="text-xs text-slate-400 truncate"))
+        who_context_items.append(Span(collection, cls="text-xs text-slate-400 leading-snug"))
     if other_people:
         who_context_items.append(Span(f"Also: {', '.join(other_people)}", cls="text-xs text-slate-300 truncate"))
 
@@ -3926,7 +3956,7 @@ def _build_skipped_photo_context(face_id: str, photo_id: str, identity_id: str, 
 
                         match_context_items = []
                         if match_collection:
-                            match_context_items.append(Span(match_collection, cls="text-xs text-slate-400 truncate"))
+                            match_context_items.append(Span(match_collection, cls="text-xs text-slate-400 leading-snug"))
                         match_context_items.append(Span(match_name, cls="text-xs text-slate-300 truncate"))
 
                         match_card = Div(
@@ -4638,7 +4668,7 @@ def render_photos_section(counts: dict, registry, crop_files: set,
                 Div(
                     P(
                         f"\U0001F4C1 {photo['source']}",
-                        cls="text-xs text-slate-500 truncate"
+                        cls="text-xs text-slate-500 leading-snug"
                     ) if photo["source"] else None,
                     Span(
                         share_button(photo['photo_id'], style="icon"),
@@ -8605,8 +8635,9 @@ def post(photo_id: str, sess, collection: str = ""):
         return Response("Photo not found", status_code=404)
     photo_reg.set_collection(photo_id, collection.strip())
     save_photo_registry(photo_reg)
-    global _photo_cache
+    global _photo_cache, _photo_id_aliases
     _photo_cache = None
+    _photo_id_aliases = None
     return Div(
         Span(f"Collection updated to: {collection.strip() or '(none)'}",
              cls="text-sm text-emerald-400"),
@@ -8630,8 +8661,9 @@ def post(photo_id: str, sess, source: str = ""):
         return Response("Photo not found", status_code=404)
     photo_reg.set_source(photo_id, source.strip())
     save_photo_registry(photo_reg)
-    global _photo_cache
+    global _photo_cache, _photo_id_aliases
     _photo_cache = None
+    _photo_id_aliases = None
     return Div(
         Span(f"Source updated to: {source.strip() or '(none)'}",
              cls="text-sm text-emerald-400"),
@@ -8655,8 +8687,9 @@ def post(photo_id: str, sess, source_url: str = ""):
         return Response("Photo not found", status_code=404)
     photo_reg.set_source_url(photo_id, source_url.strip())
     save_photo_registry(photo_reg)
-    global _photo_cache
+    global _photo_cache, _photo_id_aliases
     _photo_cache = None
+    _photo_id_aliases = None
     if source_url.strip():
         return Div(
             Span("Source URL: ", cls="text-slate-500 text-sm"),
@@ -9394,7 +9427,7 @@ def public_person_page(
                     ),
                     cls="relative overflow-hidden rounded-lg",
                 ),
-                P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate") if collection_label else None,
+                P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug") if collection_label else None,
                 href=f"/photo/{pid}",
                 cls="flex flex-col group",
                 title=f"View photo of {display_name}",
@@ -10239,7 +10272,7 @@ def get(person_id: str, sess=None):
             photo_cards.append(
                 A(
                     Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
-                    P(collection, cls="text-xs text-slate-500 mt-1 truncate") if collection else None,
+                    P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
                     href=f"/photo/{pid}",
                     cls="block hover:opacity-80 transition-opacity",
                 )
@@ -11428,7 +11461,7 @@ def get(filter_collection: str = "", sort_by: str = "newest",
                     cls="aspect-[4/3] overflow-hidden relative",
                 ),
                 Div(
-                    P(photo["collection"] or "", cls="text-xs text-slate-500 truncate"),
+                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"),
                     cls="p-2",
                 ) if photo["collection"] else None,
                 match_label,
@@ -13105,6 +13138,7 @@ def get(face_id: str = "", sess=None):
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
                     Input(type="file", name="photo", accept="image/*",
                           cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                          onchange="this.closest('form').requestSubmit()",
                           data_testid="upload-input"),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-8 transition-colors cursor-pointer",
                 ),
@@ -18618,8 +18652,9 @@ def post(photo_ids: str = "[]", collection: str = "", source: str = "",
     save_photo_registry(photo_registry)
 
     # Invalidate photo cache so grid reflects changes
-    global _photo_cache
+    global _photo_cache, _photo_id_aliases
     _photo_cache = None
+    _photo_id_aliases = None
 
     fields = []
     if collection.strip():
@@ -23996,6 +24031,7 @@ async def post(request):
     _skipped_neighbor_cache_key = None
     _photo_cache = None
     _face_to_photo_cache = None
+    _photo_id_aliases = None
     _annotations_cache = None
     _date_labels_cache = None
     _search_index_cache = None

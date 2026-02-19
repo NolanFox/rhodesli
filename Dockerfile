@@ -32,6 +32,9 @@ COPY rhodesli_ml/__init__.py rhodesli_ml/__init__.py
 COPY rhodesli_ml/graph/ rhodesli_ml/graph/
 COPY rhodesli_ml/importers/ rhodesli_ml/importers/
 
+# Copy CHANGELOG.md for dynamic version display
+COPY CHANGELOG.md .
+
 # Bundle JSON data for first-run volume initialization
 # This is copied TO the volume on first deploy, then the volume persists
 # NOTE: Photos are NOT bundled - they're served from Cloudflare R2
