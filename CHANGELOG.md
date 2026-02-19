@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.50.0] — 2026-02-19
+
+### Fixed
+- **Estimate page "0 faces" bug (BUG-009)** — Grid used `face_ids` key but `_photo_cache` stores faces as `faces` list. Changed to `pm.get("faces", [])` so face counts display correctly.
+- **Compare upload validation** — Added client-side file type (JPG/PNG only) and size (<10MB) validation with inline error messages. Added server-side validation as defense-in-depth. Accept attribute narrowed from `image/*` to `image/jpeg,image/png`.
+- **Estimate "no evidence" text** — Changed unhelpful "No detailed evidence available" to actionable "Based on visual analysis. Identify more people to improve this estimate."
+
+### Added
+- **Standalone /estimate in navigation** — Added "Estimate" link to public nav bar and admin sidebar. No longer hidden behind Compare tab.
+- **Estimate page pagination** — Photo grid shows 24 photos initially with "Load More Photos" HTMX button (was loading 60+ at once).
+- **Estimate upload zone** — Drag-and-drop upload on /estimate with date label lookup. Shows existing AI estimate if available, or "check back soon" message.
+- **PRD-020: Estimate Page Overhaul** — P0/P1/P2 requirements for transforming /estimate into a standalone "Photo Date Detective" tool.
+- **AD-101: Gemini 3.1 Pro** — Use `gemini-3.1-pro-preview` for all vision work (77.1% ARC-AGI-2, improved bounding boxes, $2.00/$12.00 per 1M tokens).
+- **AD-102: Progressive Refinement** — Fact-enriched re-analysis architecture. Re-run VLM when verified facts accumulate. Combined API call for date + faces + location. Gatekeeper review pattern.
+- **AD-103: API Result Logging** — Comprehensive logging schema for every Gemini call. Build analytical dataset for model comparison and improvement tracking.
+- **PRD-015 updated** for Gemini 3.1 Pro — combined API call, media_resolution, updated cost estimates.
+- 16 new tests (2401 total)
+
 ## [v0.49.3] — 2026-02-19
 
 ### Fixed
