@@ -29,6 +29,7 @@ htmlcov/
 
 # Documentation (not needed in container)
 *.md
+!CHANGELOG.md
 docs/
 
 # Tests (not needed in production)
