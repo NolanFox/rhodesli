@@ -1,9 +1,9 @@
 # PRD: Gemini-InsightFace Face Alignment via Coordinate Bridging
 
 **Author:** Nolan Fox
-**Date:** 2026-02-17
+**Date:** 2026-02-17 (updated 2026-02-19)
 **Status:** Draft
-**Session:** TBD
+**Session:** Planned for Session 53 (after Gemini API integration in Session 52)
 
 ---
 
@@ -212,11 +212,22 @@ Steps:
 - Prompt size: ~100-200 additional tokens per photo for coordinates (12 faces x ~15 tokens each). Well within Gemini's context window.
 - Photos with >20 detected faces: Consider truncating to the 20 largest bounding boxes (by area) to avoid overwhelming the model. Flag omitted faces.
 
-### Cost
+### Model Selection
 
-- Re-processing all 271 photos at Gemini Flash pricing: ~$0.50-$1.00
-- The coordinate data adds minimal token cost (text, not image tokens)
+**Gemini 3.1 Pro (AD-101)** is the recommended model for face alignment:
+- Released Feb 19, 2026 with 77.1% ARC-AGI-2 (2x improvement over 3 Pro)
+- Improved bounding box capabilities — critical for coordinate bridging accuracy
+- `media_resolution` parameter allows controlling image token cost
+- Model string: `gemini-3.1-pro-preview`
+- Combined API call (AD-102): date estimation + face alignment + location analysis in ONE prompt — more cost-efficient and better cross-referencing
+
+### Cost (Updated for Gemini 3.1 Pro)
+
+- Re-processing all 271 photos at Gemini 3.1 Pro pricing ($2.00/$12.00 per 1M tokens): ~$7.60
+- Combined with date re-estimation: ~$7.60 total (one call does both)
+- The coordinate data adds ~100-200 tokens per photo (text, not image tokens)
 - Single API call per photo (same as current pipeline)
+- All API calls must be logged per AD-103 (API result logging schema)
 
 ### Prompt Engineering
 
@@ -332,6 +343,7 @@ Existing approaches in the literature:
 ## Migration Plan
 
 1. **Phase 1: Validate** -- Process 10 test photos with coordinate bridging prompt, manually verify alignment accuracy
-2. **Phase 2: Full re-process** -- Re-label all 271 photos with coordinate bridging (~$0.50-$1.00 cost)
+2. **Phase 2: Full re-process** -- Re-label all 271 photos with combined Gemini 3.1 Pro call (date + face alignment + location, ~$7.60 total, AD-102 combined call)
 3. **Phase 3: Birth year re-estimation** -- Re-run birth year pipeline with new face descriptions
 4. **Phase 4: Measure impact** -- Compare birth year estimate count and confidence before/after (target: Vida Capeluto gets an estimate)
+5. **Phase 5: API logging** -- All results logged per AD-103 schema for model comparison dataset
