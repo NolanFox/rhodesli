@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.51.0] — 2026-02-19
+
+### Added
+- **"Name These Faces" sequential mode** — Admin can click "Name These Faces (N unidentified)" button on any photo with 2+ unidentified faces. Activates sequential mode: first unidentified face auto-highlighted with tag dropdown open and auto-focused. After tagging, auto-advances to next face left-to-right. Progress banner shows "X of Y identified" with progress bar. "Done" button exits.
+- **PRD-021: Quick-Identify from Photo View** — Documents existing tag dropdown infrastructure (P0) and new sequential mode (P1).
+- **AD-104: Quick-Identify architecture** — Admin-only inline identification, same merge/create code paths as existing flow.
+- 16 new tests (2417 total).
+
+### Notes
+- P0 Quick-Identify (inline tag dropdown on face click) was already implemented in earlier sessions. This session focused on the P1 sequential mode for batch identification — the Carey Franco 8-names-in-one-comment use case.
+
 ## [v0.50.0] — 2026-02-19
 
 ### Fixed

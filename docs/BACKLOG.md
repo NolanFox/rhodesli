@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 21.0 — February 19, 2026
-**Status**: 2401 tests passing, v0.50.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 22.0 — February 19, 2026
+**Status**: 2417 tests passing, v0.51.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -19,7 +19,14 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
-## Latest: Session 50 (v0.50.0 — 2026-02-19)
+## Latest: Session 51 (v0.51.0 — 2026-02-19)
+
+- "Name These Faces" sequential batch identification mode
+- PRD-021: Quick-Identify from Photo View
+- AD-104: Quick-Identify architecture decision
+- 16 new tests (2417 total)
+
+## Session 50 (v0.50.0 — 2026-02-19)
 
 - Estimate page overhaul: face count fix (BUG-009), pagination (24/page), standalone /estimate nav, upload zone
 - Compare upload hardening: client/server file type + size validation
@@ -40,19 +47,15 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ## From Community Sharing Feedback (Session 49C)
 
-### Quick-Identify from Photo View (HIGH priority)
-When viewing a photo with multiple "Unknown" faces, user should be
-able to click a face thumbnail and type a name inline without
-navigating away. Current workflow requires per-face navigation which
-is very tedious when a community member identifies 8 people at once.
-See: docs/session_context/session_49C_community_feedback.md
+### Quick-Identify from Photo View — DONE (Session 51, v0.51.0)
+P0 tag dropdown was already implemented. Session 51 added P1 sequential
+"Name These Faces" mode: admin clicks button → auto-advances through
+unidentified faces left-to-right with progress tracking. See PRD-021.
 
-### Batch Identity Entry from External Source (HIGH priority)
-When a Facebook comment says "Left to right: Albert Cohen, Morris
-Franco, Ray Franco, Belle Franco, Isaac Franco" — we need a way to
-enter all those names against a photo in one workflow. Current:
-navigate to each face individually. Needed: "Name these faces" mode
-on the photo page.
+### Batch Identity Entry from External Source — PARTIALLY DONE (Session 51)
+"Name These Faces" sequential mode covers the left-to-right naming
+use case. Remaining: bulk text paste ("Albert Cohen, Morris Franco,
+Ray Franco") auto-assigned to faces. Deferred to future session.
 See: docs/session_context/session_49C_community_feedback.md
 
 ### Facebook Integration Research (LOW priority)
@@ -101,8 +104,8 @@ Schema defined — implementation with first API calls in Session 52+.
 
 ## Immediate Priority (Next 1-2 Sessions)
 
-- [ ] **Quick-Identify**: Inline face naming on photo page (community #1 request)
-- [ ] **Batch Identity Entry**: "Name these faces" left-to-right mode
+- [x] **Quick-Identify**: Inline face naming on photo page — DONE (Session 51)
+- [x] **Batch Identity Entry**: "Name These Faces" sequential mode — DONE (Session 51)
 - [ ] **OPS-001**: Custom SMTP for branded "Rhodesli" email sender
 - [ ] **FE-040-043**: Skipped faces workflow for non-admin users
 
@@ -150,11 +153,6 @@ Schema defined — implementation with first API calls in Session 52+.
 - Bug list from manual testing
 - See: [docs/session_context/session_49_interactive_prep.md](../session_context/session_49_interactive_prep.md)
 
-### Session 51: Quick-Identify from Photo View
-- Inline face naming on photo page (community's #1 request)
-- Batch identity entry mode ("Name these faces" left-to-right)
-- See: docs/session_context/session_49C_community_feedback.md
-
 ### Session 52: Gemini API Integration + Progressive Refinement
 - Run Gemini 3.1 Pro on all 271 photos (AD-101)
 - Implement API result logging (AD-103)
@@ -187,7 +185,7 @@ Threshold calibration, golden set, date estimation pipeline, Gemini 3.1 Pro arch
 Remaining: ML-051-053, FE-040-043, progressive refinement implementation.
 
 ### Phase E: Collaboration & Growth — IN PROGRESS
-Contributor roles done. Community sharing live. Remaining: Help Identify mode, quick-identify, batch entry, upload moderation, notifications.
+Contributor roles done. Community sharing live. Quick-Identify + "Name These Faces" done (Session 51). Remaining: Help Identify mode, upload moderation, notifications.
 
 ### Phase F: Scale & Generalize — FUTURE
 PostgreSQL migration, CI/CD, model evaluation, multi-tenant.

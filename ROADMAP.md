@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.50.0 · 2401 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.51.0 · 2417 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -39,7 +39,7 @@ Current: v0.50.0 · 2401 tests · 271 photos · 181 faces · 46 confirmed
 | **B: Share-Ready Polish** | ~95% complete | 53/54 items done. Remaining: OPS-001 (custom SMTP) |
 | **C: Annotation Engine** | COMPLETE | 16/16 items done. Full submit/review/approve workflow |
 | **D: ML Feedback** | ~80% complete | Date pipeline + golden set done. Remaining: ML-051-053, FE-040-043 |
-| **E: Collaboration** | ~60% complete | Contributor roles + activity feed done. Remaining: Help Identify mode, analytics, moderation queue |
+| **E: Collaboration** | ~70% complete | Contributor roles + activity feed + Quick-Identify + "Name These Faces" done. Remaining: Help Identify mode, analytics, moderation queue |
 | **F: Scale & Generalize** | ~10% complete | Playwright tests done. Remaining: Postgres, CI/CD, Sentry, model eval |
 
 For full feature checklists, see [docs/roadmap/FEATURE_STATUS.md](docs/roadmap/FEATURE_STATUS.md).
@@ -48,8 +48,8 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 ## Open Work (Prioritized)
 
 ### High Priority
-- [ ] Quick-Identify from Photo View (from community feedback Session 49C)
-- [ ] Batch Identity Entry (Carey Franco's 8 names in one comment)
+- [x] Quick-Identify from Photo View (2026-02-19, Session 51)
+- [x] Batch Identity Entry — "Name These Faces" sequential mode (2026-02-19, Session 51)
 - [ ] OPS-001: Custom SMTP for branded email sender
 
 ### Medium Priority
@@ -74,11 +74,6 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - Visual walkthrough of all features
 - See: docs/session_context/session_49_interactive_prep.md
 
-### Session 51: Quick-Identify from Photo View
-- Inline face naming on photo page (community's #1 request)
-- Batch identity entry mode ("Name these faces" left-to-right)
-- See: docs/session_context/session_49C_community_feedback.md
-
 ### Session 52: Gemini API Integration + Progressive Refinement
 - Run Gemini 3.1 Pro on all 271 photos (AD-101)
 - Implement API result logging (AD-103)
@@ -100,6 +95,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-19: **v0.51.0 — Session 51**: Quick-Identify + "Name These Faces". P0 tag dropdown already existed. Built P1 sequential batch identification: "Name These Faces (N unidentified)" button, auto-advance left-to-right, progress banner, Done exit. PRD-021. AD-104. 16 new tests (2417 total).
 - [x] 2026-02-19: **v0.50.0 — Session 50**: Estimate Overhaul + Gemini Upgrade. Estimate page: fix face count (BUG-009), pagination (24/page), standalone /estimate nav, upload zone, improved evidence display. Compare upload hardening (client/server validation). PRD-020 (estimate overhaul). AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging). PRD-015 updated for 3.1 Pro. 16 new tests (2401 total).
 - [x] 2026-02-19: **v0.49.3 — Session 49C**: Community Bug Fixes. Photo 404 for inbox photos (alias resolution), compare upload silent failure (onchange auto-submit), version v0.0.0 in admin footer (Dockerfile COPY), collection truncation (6 more locations). First real community sharing on Jews of Rhodes Facebook group. 9 new tests (2387 total).
 - [x] 2026-02-18: **v0.49.2 — Session 49**: Production Polish. Health check (10/10 routes), Session 47/48 deliverable verification (all PASS), collection name truncation fix, triage bar tooltips, interactive session prep checklist. 5 new tests (2378 total).

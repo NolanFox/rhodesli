@@ -917,7 +917,15 @@ When making any algorithmic choice in the ML pipeline:
 - **Status**: Schema defined. Implementation with first API calls in Session 52+.
 - **Affected files**: Future — `rhodesli_ml/data/api_logs/`, `rhodesli_ml/scripts/analyze_api_logs.py`
 
-1. Add a new entry with AD-XXX format (next: AD-104)
+### AD-104: Quick-Identify Architecture — Admin-Only Sequential Tagging
+- **Date**: 2026-02-19
+- **Context**: Community sharing on Facebook produced identifications faster than the admin could enter them (Carey Franco's 8 names in one comment). Needed: inline face naming without page navigation.
+- **Decision**: P0 (inline tag dropdown on face click) was already implemented. For P1 (sequential "Name These Faces" mode): admin-only, uses same merge/create code paths as existing tag flow, HTMX `seq=1` parameter propagated through tag/create/tag-search endpoints, photo view re-renders with seq_mode to auto-open next unidentified face's dropdown. Faces ordered left-to-right by bbox x1 coordinate. Non-admin users continue to use existing /identify/{id} page and annotation suggestion flow.
+- **Rejected**: Client-side-only sequential mode (fragile, loses state on re-render); separate quick-identify API endpoint (duplicate code path, invariant risk per Session 11); non-admin inline identification (requires building second approval flow, out of scope).
+- **Status**: IMPLEMENTED (Session 51).
+- **Affected files**: `app/main.py` (photo_view_content, /api/face/tag, /api/face/create-identity, /api/face/tag-search), `docs/prds/021_quick_identify.md`
+
+1. Add a new entry with AD-XXX format (next: AD-105)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
