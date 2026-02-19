@@ -892,7 +892,32 @@ When making any algorithmic choice in the ML pipeline:
 - **Decision**: Seven categories of user input, from lowest to highest trust: (1) Anonymous annotations — guest comments, no auth, rate-limited. (2) Authenticated suggestions — logged-in users propose identifications, pending admin review. (3) Admin confirmations — merge/confirm/reject identity decisions, immediate effect. (4) ML review decisions — accept/reject/edit ML estimates (AD-097). (5) Metadata corrections — admin edits birth year, place, name, with provenance tracking. (6) Photo uploads — staged, admin-moderated before public. (7) GEDCOM import — batch family data with match review. Each category has different trust levels, validation requirements, and provenance tracking.
 - **Affected files**: `app/main.py` (various endpoints), `core/registry.py`, `data/annotations.json`, `data/ml_review_decisions.json`
 
-1. Add a new entry with AD-XXX format (next: AD-101)
+### AD-101: Gemini 3.1 Pro for All Vision Work
+- **Date**: 2026-02-19
+- **Context**: Gemini 3.1 Pro released Feb 19, 2026 with 77.1% ARC-AGI-2 (2x improvement over 3 Pro), improved vision and bounding box capabilities, 1M token context. Same pricing as 3 Pro ($2.00/$12.00 per 1M tokens).
+- **Decision**: Use `gemini-3.1-pro-preview` for ALL vision tasks: date estimation, face alignment (PRD-015), evidence extraction, location analysis. Evidence quality is a core UX differentiator — the "wow factor" of Gemini describing "1920s Marcel wave hairstyle, hand-tinted coloring typical of Rhodes studios" is what makes users share the tool.
+- **Rejected**: Flash models for vision work (cheaper but worse evidence quality for the key differentiating feature); keeping 3 Pro when 3.1 Pro is available at same price with 2x reasoning improvement.
+- **Cost**: ~$7.60 for full library (271 photos), ~$15.20 for complete re-analysis (date + face alignment).
+- **Affected files**: `rhodesli_ml/scripts/generate_date_labels.py` (MODEL_COSTS), `rhodesli_ml/scripts/cost_tracker.py` (MODEL_PRICING), `docs/prds/015_gemini_face_alignment.md`
+
+### AD-102: Progressive Refinement — Re-Run VLM on Verified Facts
+- **Date**: 2026-02-19
+- **Context**: Initial Gemini analysis runs with zero context about a photo. But as community members identify people, confirm dates, provide location info, and upload GEDCOM data, we accumulate verified facts that could dramatically improve the analysis. Example: a postcard from Rhodes — initial estimate "1920s-1940s, low confidence." After confirming the location is Rhodes, Gemini can narrow to "1925-1935" using region-specific hairstyles and studio conventions.
+- **Decision**: Fact-Enriched Re-Analysis architecture. When a verified fact is confirmed (identity, date, location, event), trigger re-analysis: (1) Gather verified context (confirmed identities + birth years, confirmed location, confirmed events, GEDCOM data, previous analysis). (2) Build enriched prompt with known facts. (3) Call Gemini 3.1 Pro with enriched prompt + image. (4) Compare old vs new results quantitatively. (5) Stage for admin review via Gatekeeper pattern (AD-097). Key principles: ALWAYS log all API results; ALWAYS compare old vs new estimates; NEVER overwrite without admin review; build analytical dataset of which facts improve estimates most. Combined API call: date + faces + location in ONE Gemini call (more cost-efficient AND better results due to cross-referencing evidence).
+- **Rejected**: Separate API calls for date, faces, and location (3x cost, loses cross-referencing); automatic overwrite without review (violates AD-097 Gatekeeper pattern); self-generated feedback (SELF-REFINE pattern) — our approach uses external verified facts from community, which is more reliable.
+- **Academic context**: Closest to SELF-REFINE (Madaan et al. 2023) but with external verified facts rather than self-generated feedback. Also parallels DeepMind's Ithaca for dating ancient inscriptions using geographic + temporal context.
+- **Status**: Architecture documented. Implementation deferred to Session 52+ when Gemini API calls are enabled.
+- **Affected files**: Future — `rhodesli_ml/pipelines/progressive_refinement.py`, `data/api_logs/`, `app/main.py` (admin review routes)
+
+### AD-103: Comprehensive API Result Logging
+- **Date**: 2026-02-19
+- **Context**: To build an analytical dataset for understanding model performance, comparing model versions, and identifying which verified facts improve estimates most, every Gemini API call must be comprehensively logged.
+- **Decision**: Log every Gemini call to `rhodesli_ml/data/api_logs/YYYY-MM-DD_HH-MM-SS_{photo_id}.json` with: timestamp, photo_id, model, prompt_version, input_context (verified facts, previous estimate), full response, cost (input/output tokens + USD), comparison (if re-analysis: old vs new estimate, confidence change, delta years). Periodic analysis via `rhodesli_ml/scripts/analyze_api_logs.py`: cost per photo, accuracy improvement from verified facts, which fact types help most, model comparison. Automated eval suite on model upgrade: select 20 photos with known dates, run new model, compare to previous logged results, report accuracy/evidence/cost deltas.
+- **Rejected**: Logging only cost (misses analytical value); logging to database (premature — JSON files sufficient at current scale of ~300 photos); skip logging for re-analysis (loses the most valuable data about progressive improvement).
+- **Status**: Schema defined. Implementation with first API calls in Session 52+.
+- **Affected files**: Future — `rhodesli_ml/data/api_logs/`, `rhodesli_ml/scripts/analyze_api_logs.py`
+
+1. Add a new entry with AD-XXX format (next: AD-104)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

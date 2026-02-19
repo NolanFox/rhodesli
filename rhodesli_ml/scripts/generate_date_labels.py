@@ -38,11 +38,17 @@ from pathlib import Path
 # Per photo: ~1,790 input tokens (image + prompt) + ~2,800 output tokens
 # (increased from ~2,000 due to rich metadata fields — AD-048)
 MODEL_COSTS = {
+    "gemini-3.1-pro-preview": {
+        "input_per_million": 2.00,
+        "output_per_million": 12.00,
+        "per_photo": 0.037,
+        "note": "RECOMMENDED — best vision, 77.1% ARC-AGI-2, improved bounding boxes (AD-101)",
+    },
     "gemini-3-pro-preview": {
         "input_per_million": 2.00,
         "output_per_million": 12.00,
         "per_photo": 0.037,
-        "note": "Best quality, SOTA vision reasoning",
+        "note": "Previous best, SOTA vision reasoning",
     },
     "gemini-3-flash-preview": {
         "input_per_million": 0.50,
