@@ -8830,6 +8830,7 @@ def photo_view_content(
     identity_id: str = None,
     is_admin: bool = False,
     from_compare: bool = False,
+    seq_mode: bool = False,
 ) -> tuple:
     """
     Build the photo view content with face overlays.
@@ -8883,6 +8884,29 @@ def photo_view_content(
                 nav_total = len(seen_pids)
         except KeyError:
             pass
+
+    # Pre-pass: identify unidentified faces for sequential mode + "Name These Faces" button
+    # Sort by left-to-right bbox position for natural left-to-right naming order
+    unidentified_face_ids = []
+    total_face_count = len(photo.get("faces", []))
+    for fd in photo.get("faces", []):
+        fid = fd["face_id"]
+        ident = get_identity_for_face(registry, fid)
+        ident_state = ident.get("state", "INBOX") if ident else None
+        ident_name = ident.get("name", "Unidentified") if ident else "Unidentified"
+        is_named = ident_state == "CONFIRMED" and not ident_name.startswith("Unidentified")
+        if not is_named:
+            unidentified_face_ids.append(fid)
+    # Sort unidentified faces left-to-right by bbox x1
+    def _face_x1(fid):
+        for fd in photo.get("faces", []):
+            if fd["face_id"] == fid:
+                bbox = fd.get("bbox", [0, 0, 0, 0])
+                return bbox[0] if bbox else 0
+        return 0
+    unidentified_face_ids.sort(key=_face_x1)
+    seq_active_face_id = unidentified_face_ids[0] if (seq_mode and unidentified_face_ids) else None
+    identified_count = total_face_count - len(unidentified_face_ids)
 
     # Build face overlays with CSS percentages for responsive scaling
     # Only if we have dimensions (needed for percentage calculations)
@@ -8983,20 +9007,42 @@ def photo_view_content(
                 )
 
             tag_placeholder = "Type name to tag..." if is_admin else "Who is this person?"
+            is_seq_active = (seq_mode and face_id == seq_active_face_id)
+            seq_param = "&seq=1" if seq_mode else ""
+            tag_search_input = Input(
+                type="text",
+                placeholder=tag_placeholder,
+                cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
+                    "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
+                hx_get=f"/api/face/tag-search?face_id={face_id_encoded}{seq_param}",
+                hx_trigger="keyup changed delay:300ms",
+                hx_target=f"#{tag_results_id}",
+                hx_include="this",
+                name="q",
+                autocomplete="off",
+                **{"_": "on load focus() me"} if is_seq_active else {},
+            )
+            # In seq mode, "Close" becomes "Done" and exits sequential mode
+            if seq_mode:
+                close_btn = Button(
+                    "Done",
+                    cls="text-xs text-indigo-400 hover:text-indigo-300 ml-auto",
+                    hx_get=f"/photo/{photo_id}/partial",
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    type="button",
+                )
+            else:
+                close_btn = Button(
+                    "Close",
+                    cls="text-xs text-slate-400 hover:text-slate-300 ml-auto",
+                    **{"_": f"on click add .hidden to #{tag_dropdown_id}"},
+                    type="button",
+                )
+            dropdown_hidden = "" if is_seq_active else "hidden "
             tag_dropdown = Div(
                 # Search input
-                Input(
-                    type="text",
-                    placeholder=tag_placeholder,
-                    cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
-                        "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
-                    hx_get=f"/api/face/tag-search?face_id={face_id_encoded}",
-                    hx_trigger="keyup changed delay:300ms",
-                    hx_target=f"#{tag_results_id}",
-                    hx_include="this",
-                    name="q",
-                    autocomplete="off",
-                ),
+                tag_search_input,
                 # Results container (pre-populated with existing suggestions if any)
                 Div(
                     *_existing_suggestions_for_identity(identity_id, face_id_encoded),
@@ -9009,17 +9055,12 @@ def photo_view_content(
                         cls="text-xs text-indigo-400 hover:text-indigo-300",
                         **{"_": f"on click add .hidden to #photo-modal then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"} if identity_id else {},
                         type="button",
-                    ) if identity_id else None,
-                    Button(
-                        "Close",
-                        cls="text-xs text-slate-400 hover:text-slate-300 ml-auto",
-                        **{"_": f"on click add .hidden to #{tag_dropdown_id}"},
-                        type="button",
-                    ),
+                    ) if (identity_id and not seq_mode) else None,
+                    close_btn,
                     cls="flex items-center justify-between mt-2 pt-1 border-t border-slate-700"
                 ),
                 id=tag_dropdown_id,
-                cls="hidden tag-dropdown absolute top-full left-0 mt-1 w-56 sm:w-64 bg-slate-800 border border-slate-600 "
+                cls=f"{dropdown_hidden}tag-dropdown absolute top-full left-0 mt-1 w-56 sm:w-64 bg-slate-800 border border-slate-600 "
                     "rounded-lg shadow-xl p-2 z-20",
                 **{"_": "on click halt the event's bubbling"},  # Prevent clicks inside from closing
             )
@@ -9092,13 +9133,18 @@ def photo_view_content(
                     cls="absolute -top-8 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none"
                 )
 
+            # In sequential mode, highlight the active face
+            seq_highlight = ""
+            if is_seq_active:
+                seq_highlight = " ring-2 ring-indigo-400 ring-offset-1 ring-offset-black/50"
+
             overlay = Div(
                 hover_tooltip,
                 name_label,
                 status_badge,
                 quick_actions,
                 tag_dropdown,
-                cls=f"{overlay_classes} group",
+                cls=f"{overlay_classes}{seq_highlight} group",
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
                 title=display_name,
                 data_face_id=face_id,
@@ -9183,9 +9229,64 @@ def photo_view_content(
             cls="mb-3"
         )
 
+    # "Name These Faces" button (admin only, 2+ unidentified, not already in seq mode)
+    name_faces_banner = None
+    if is_admin and len(unidentified_face_ids) >= 2 and not seq_mode:
+        name_faces_banner = Div(
+            Button(
+                f"Name These Faces ({len(unidentified_face_ids)} unidentified)",
+                cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors",
+                hx_get=f"/photo/{photo_id}/partial?seq=1",
+                hx_target="#photo-modal-content",
+                hx_swap="innerHTML",
+                type="button",
+            ),
+            cls="mb-2"
+        )
+
+    # Sequential mode progress banner
+    seq_banner = None
+    if seq_mode and is_admin:
+        remaining = len(unidentified_face_ids)
+        if remaining > 0:
+            seq_banner = Div(
+                Span(f"Naming faces: {identified_count} of {total_face_count} identified", cls="text-sm text-white"),
+                Div(
+                    Div(
+                        style=f"width: {(identified_count / total_face_count * 100) if total_face_count > 0 else 0:.0f}%",
+                        cls="h-full bg-indigo-500 rounded-full transition-all",
+                    ),
+                    cls="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden mx-3",
+                ),
+                Button(
+                    "Done",
+                    cls="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                    hx_get=f"/photo/{photo_id}/partial",
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    type="button",
+                ),
+                cls="flex items-center gap-2 mb-2 px-3 py-2 bg-indigo-900/30 border border-indigo-500/30 rounded-lg"
+            )
+        else:
+            seq_banner = Div(
+                Span("All faces identified!", cls="text-sm text-emerald-300 font-medium"),
+                Button(
+                    "Done",
+                    cls="text-xs px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors ml-auto",
+                    hx_get=f"/photo/{photo_id}/partial",
+                    hx_target="#photo-modal-content",
+                    hx_swap="innerHTML",
+                    type="button",
+                ),
+                cls="flex items-center gap-2 mb-2 px-3 py-2 bg-emerald-900/30 border border-emerald-500/30 rounded-lg"
+            )
+
     # Main content
     content = Div(
         back_to_compare,
+        seq_banner,
+        name_faces_banner,
         # Photo container with overlays and nav arrows
         Div(
             Img(
@@ -16168,7 +16269,7 @@ def get(photo_id: str, face: str = None, sess=None):
 @rt("/photo/{photo_id}/partial")
 def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = None,
         nav_idx: int = -1, nav_total: int = 0, identity_id: str = None,
-        from_compare: bool = False, sess=None):
+        from_compare: bool = False, seq: bool = False, sess=None):
     """
     Render photo view partial for HTMX modal injection.
 
@@ -16177,6 +16278,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
     - nav_idx/nav_total: Current position for "X of Y" display
     - identity_id: Identity context for computing prev/next from identity's photos
     - from_compare: If True, show "Back to Compare" button (opened via compare modal)
+    - seq: If True, activate "Name These Faces" sequential mode
     """
     user_is_admin = (get_current_user(sess or {}).is_admin if get_current_user(sess or {}) else False) if is_auth_enabled() else True
     return photo_view_content(
@@ -16186,6 +16288,7 @@ def get(photo_id: str, face: str = None, prev_id: str = None, next_id: str = Non
         identity_id=identity_id,
         is_admin=user_is_admin,
         from_compare=from_compare,
+        seq_mode=seq and user_is_admin,
     )
 
 
@@ -16586,17 +16689,19 @@ def get(q: str = ""):
 
 
 @rt("/api/face/tag-search")
-def get(face_id: str, q: str = "", sess=None):
+def get(face_id: str, q: str = "", seq: str = "", sess=None):
     """
     Search for identities to tag a face with (Instagram-style tagging).
 
     Admin: returns merge buttons (direct action).
     Non-admin: returns suggestion buttons (creates annotation for review).
+    Pass seq=1 to propagate sequential "Name These Faces" mode through tag actions.
     """
     import json as _json
     from urllib.parse import quote as _url_quote
     safe_face_id = face_id.replace(":", "-").replace(" ", "_")
     face_id_encoded = _url_quote(face_id, safe="")
+    seq_suffix = "&seq=1" if seq == "1" else ""
     results_id = f"tag-results-{safe_face_id}"
 
     if len(q.strip()) < 2:
@@ -16644,7 +16749,7 @@ def get(face_id: str, q: str = "", sess=None):
                     cls="flex flex-col min-w-0 text-left"
                 ),
                 cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer",
-                hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={r['identity_id']}",
+                hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={r['identity_id']}{seq_suffix}",
                 hx_target="#photo-modal-content",
                 hx_swap="innerHTML",
                 type="button",
@@ -16686,7 +16791,7 @@ def get(face_id: str, q: str = "", sess=None):
             ),
             cls="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-slate-700 rounded transition-colors cursor-pointer "
                 "border-t border-slate-700 mt-1 pt-1",
-            hx_post=f"/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}",
+            hx_post=f"/api/face/create-identity?face_id={face_id_encoded}&name={_url_quote(q.strip())}{seq_suffix}",
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
             type="button",
@@ -16728,12 +16833,13 @@ def get(face_id: str, q: str = "", sess=None):
 
 
 @rt("/api/face/tag")
-def post(face_id: str, target_id: str, sess=None):
+def post(face_id: str, target_id: str, seq: str = "", sess=None):
     """
     Tag a face with an identity by merging the face's current identity into target.
 
     This is the one-click merge for Instagram-style face tagging.
     Returns the updated photo view with a success toast.
+    Pass seq=1 to stay in sequential "Name These Faces" mode.
     """
     denied = _check_admin(sess)
     if denied:
@@ -16788,7 +16894,9 @@ def post(face_id: str, target_id: str, sess=None):
         photo_id = get_photo_id_for_face(face_id)
         if photo_id:
             # Re-render the photo view to reflect the merge
-            photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True, is_admin=True)
+            # If seq=1, stay in sequential mode for the next unidentified face
+            seq_mode = seq == "1"
+            photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True, is_admin=True, seq_mode=seq_mode)
             oob_toast = Div(
                 toast(f"Tagged as {target_name}!", "success"),
                 hx_swap_oob="beforeend:#toast-container",
@@ -16865,12 +16973,13 @@ def post(identity_id: str, action: str, photo_id: str, sess=None):
 
 
 @rt("/api/face/create-identity")
-def post(face_id: str, name: str, sess=None):
+def post(face_id: str, name: str, seq: str = "", sess=None):
     """
     Create a named identity for a face by renaming its current identity.
 
     Used from the tag dropdown "+ Create" button. Renames the face's current
     identity (typically an INBOX singleton) to the user-provided name.
+    Pass seq=1 to stay in sequential "Name These Faces" mode.
     """
     denied = _check_admin(sess)
     if denied:
@@ -16913,9 +17022,11 @@ def post(face_id: str, name: str, sess=None):
     save_registry(registry)
 
     # Re-render the photo view to show the new name
+    # If seq=1, stay in sequential mode for the next unidentified face
+    seq_mode = seq == "1"
     photo_id = get_photo_id_for_face(face_id)
     if photo_id:
-        photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True, is_admin=True)
+        photo_content = photo_view_content(photo_id, selected_face_id=face_id, is_partial=True, is_admin=True, seq_mode=seq_mode)
         oob_toast = Div(
             toast(f'Named as "{name}"!', "success"),
             hx_swap_oob="beforeend:#toast-container",
