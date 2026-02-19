@@ -1,25 +1,34 @@
 # Rhodesli: Project Backlog
 
-**Version**: 20.0 — February 18, 2026
-**Status**: 2365 tests passing, v0.49.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 21.0 — February 19, 2026
+**Status**: 2401 tests passing, v0.50.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
 
 ## Current State Summary
 
-Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). 46 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, and 2342 tests.
+Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish heritage community. It uses InsightFace/AdaFace PFE with MLS distance metrics, FastHTML for the web layer, Supabase for auth, Railway for hosting, and Cloudflare R2 for photo storage. Admin: NolanFox@gmail.com (sole admin). 50 sessions have delivered deployment, auth, core UX, ML pipeline, stabilization, share-ready polish, ML validation, sync infrastructure, family tree, social graph, map, timeline, compare tool, sharing design system, feature audit polish, match page polish, year estimation tool, community bug fixes, estimate page overhaul, and 2401 tests. Community sharing live on Jews of Rhodes Facebook group with 3 active identifiers.
 
 ---
 
 ## Active Bugs
 
-**All P0 bugs resolved.** BUG-001 through BUG-008 fixed as of v0.14.1.
+**All P0 bugs resolved.** BUG-001 through BUG-009 fixed as of v0.50.0.
 Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTEND.md#1-bugs)
 
 ---
 
-## Latest: Session 49C (v0.49.3 — 2026-02-19)
+## Latest: Session 50 (v0.50.0 — 2026-02-19)
+
+- Estimate page overhaul: face count fix (BUG-009), pagination (24/page), standalone /estimate nav, upload zone
+- Compare upload hardening: client/server file type + size validation
+- PRD-020: Estimate page overhaul plan (P0/P1/P2 tiers)
+- AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging)
+- PRD-015 updated for Gemini 3.1 Pro + combined API call
+- 16 new tests (2401 total)
+
+## Session 49C (v0.49.3 — 2026-02-19)
 
 - Photo page 404 for community/inbox photos — alias resolution in _build_caches()
 - Compare upload silent failure — onchange auto-submit on file input
@@ -56,6 +65,27 @@ See: docs/session_context/session_49C_community_feedback.md
 
 ---
 
+## Progressive Refinement Architecture (Session 50)
+
+### Fact-Enriched Re-Analysis (AD-102)
+When verified facts accumulate (identities, dates, locations, GEDCOM data),
+re-run Gemini analysis with enriched context. Compare old vs new estimates.
+Stage for admin review. Build analytical dataset of which facts improve
+estimates most. Architecture documented — implementation in Session 52+.
+
+### Comprehensive API Result Logging (AD-103)
+Every Gemini API call logged with full prompt/response, cost, comparison
+to previous estimates. Enables model comparison and improvement analysis.
+Schema defined — implementation with first API calls in Session 52+.
+
+### Estimate Page Remaining (PRD-020 P1/P2)
+- [ ] Search/filter by collection, date range
+- [ ] Date correction flow — "Know the date?" → Gatekeeper pattern
+- [ ] Deep CTAs: "View in archive", "Help identify", "Explore era"
+- [ ] Auto-run Gemini on uploaded photos when API key configured
+
+---
+
 ## Session 47 (v0.49.0 — 2026-02-18)
 
 - ML Gatekeeper Pattern — ML birth year estimates gated behind admin review (AD-097)
@@ -71,14 +101,16 @@ See: docs/session_context/session_49C_community_feedback.md
 
 ## Immediate Priority (Next 1-2 Sessions)
 
-- [ ] **ML-051**: Date label pipeline — integrate into upload orchestrator
-- [ ] **ML-052**: New upload auto-dating — run date estimation on new photos
+- [ ] **Quick-Identify**: Inline face naming on photo page (community #1 request)
+- [ ] **Batch Identity Entry**: "Name these faces" left-to-right mode
 - [ ] **OPS-001**: Custom SMTP for branded "Rhodesli" email sender
 - [ ] **FE-040-043**: Skipped faces workflow for non-admin users
-- [ ] **Session 43**: Life Events & Context Graph (event tagging, richer timeline)
 
 ## Near-Term (3-5 Sessions)
 
+- [ ] **Gemini 3.1 Pro integration**: Run on all 271 photos (AD-101, Session 52)
+- [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
+- [ ] **Progressive refinement**: First test with verified facts (AD-102, Session 52)
 - [ ] **FE-041**: "Help Identify" mode for non-admin users
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
 - [ ] **ROLE-006**: Email notifications for contributors
@@ -95,6 +127,7 @@ See: docs/session_context/session_49C_community_feedback.md
 - [ ] **DOC-010-013**: In-app help, about page, admin guide, contributor onboarding
 - [ ] **FE-080-083**: Client-side analytics and admin dashboard
 - [ ] **ROLE-004**: Family member self-identification ("That's me!" button)
+- [ ] **Admin/Public UX Unification**: Progressive admin enhancement + admin toolbar (deferred from Session 50)
 
 ## Long-Term
 
@@ -104,6 +137,7 @@ See: docs/session_context/session_49C_community_feedback.md
 - [ ] **AI-001/003-005**: Auto-caption, photo restoration, handwriting OCR, story generation
 - [ ] **GEO-003**: Community-specific context events (diaspora cities)
 - [ ] **KIN-001**: Kinship recalibration post-GEDCOM
+- [ ] **Session 43**: Life Events & Context Graph (event tagging, richer timeline)
 
 ---
 
@@ -116,48 +150,44 @@ See: docs/session_context/session_49C_community_feedback.md
 - Bug list from manual testing
 - See: [docs/session_context/session_49_interactive_prep.md](../session_context/session_49_interactive_prep.md)
 
-### Session 50: Admin/Public UX Unification (1 of 3)
-- Pattern: Progressive Admin Enhancement + Admin Bar
-- Keep public view as canonical experience (it's better designed)
-- Layer admin controls inline when authenticated
-- Thin WordPress-style admin toolbar: inbox counts, quick links
-- Fix the "two different apps" problem (`/?section=photos` vs `/photos`)
-- Consolidate `/admin/pending` and `/admin/proposals` to use `_admin_nav_bar()`
-- Add `/admin/review-queue` to admin nav
-- This is a 3-session project; Session 50 is design + admin bar + first pass
+### Session 51: Quick-Identify from Photo View
+- Inline face naming on photo page (community's #1 request)
+- Batch identity entry mode ("Name these faces" left-to-right)
+- See: docs/session_context/session_49C_community_feedback.md
 
-### Session 51: Landing Page Refresh
-- Feature showcase with live-data entry points:
-  "Browse 271 photos" | "Explore 46 people" | "View family tree"
-- Use FastHTML live-data preview components (auto-updating, no screenshots to maintain)
+### Session 52: Gemini API Integration + Progressive Refinement
+- Run Gemini 3.1 Pro on all 271 photos (AD-101)
+- Implement API result logging (AD-103)
+- First progressive refinement test with verified facts (AD-102)
+
+### Session 53: PRD-015 Face Alignment Implementation
+- Coordinate bridging prompt with InsightFace bounding boxes
+- Combined API call: date + face alignment + location
+
+### Session 54: Landing Page Refresh
+- Feature showcase with live-data entry points
 - Mobile-first design
-- CLAUDE.md rule: landing page data must be dynamic, never hardcoded counts
-
-### Session 52+: Concurrent ML Track
-- Similarity calibration on frozen embeddings (rhodesli_ml/ only)
-- Active learning analysis: which unconfirmed faces would maximize ground truth?
-- Runs in rhodesli_ml/ — does NOT touch app/ or data/
-- Can run overnight in parallel with app work
 
 ---
 
 ## Execution Phases
 
 ### Phase A: Stabilization — COMPLETE (2026-02-08)
-All 8 bugs fixed. 103+ new tests. Event delegation pattern established.
+All 9 bugs fixed. 103+ new tests. Event delegation pattern established.
 
-### Phase B: Share-Ready Polish — MOSTLY COMPLETE (2026-02-06 to 2026-02-18)
-Landing page, search, mobile, sync, photo viewer, timeline, compare, sharing, year estimation.
+### Phase B: Share-Ready Polish — MOSTLY COMPLETE (2026-02-06 to 2026-02-19)
+Landing page, search, mobile, sync, photo viewer, timeline, compare, sharing, year estimation, estimate overhaul.
 Remaining: OPS-001 (branded email).
 
 ### Phase C: Annotation Engine — COMPLETE (2026-02-10 to 2026-02-13)
 Photo/identity annotations, merge safety, GEDCOM, suggestion lifecycle.
 
-### Phase D: ML Feedback & Intelligence — MOSTLY COMPLETE (2026-02-09 to 2026-02-14)
-Threshold calibration, golden set, date estimation pipeline. Remaining: ML-051-053, FE-040-043.
+### Phase D: ML Feedback & Intelligence — MOSTLY COMPLETE (2026-02-09 to 2026-02-19)
+Threshold calibration, golden set, date estimation pipeline, Gemini 3.1 Pro architecture.
+Remaining: ML-051-053, FE-040-043, progressive refinement implementation.
 
 ### Phase E: Collaboration & Growth — IN PROGRESS
-Contributor roles done. Remaining: Help Identify mode, upload moderation, notifications.
+Contributor roles done. Community sharing live. Remaining: Help Identify mode, quick-identify, batch entry, upload moderation, notifications.
 
 ### Phase F: Scale & Generalize — FUTURE
 PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
