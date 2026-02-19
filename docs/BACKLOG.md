@@ -19,7 +19,44 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
-## Latest: Session 47 (v0.49.0 — 2026-02-18)
+## Latest: Session 49C (v0.49.3 — 2026-02-19)
+
+- Photo page 404 for community/inbox photos — alias resolution in _build_caches()
+- Compare upload silent failure — onchange auto-submit on file input
+- Version v0.0.0 in admin footer — CHANGELOG.md now in Docker image
+- Collection name truncation — 6 remaining locations fixed
+- 9 new tests (2387 total)
+
+---
+
+## From Community Sharing Feedback (Session 49C)
+
+### Quick-Identify from Photo View (HIGH priority)
+When viewing a photo with multiple "Unknown" faces, user should be
+able to click a face thumbnail and type a name inline without
+navigating away. Current workflow requires per-face navigation which
+is very tedious when a community member identifies 8 people at once.
+See: docs/session_context/session_49C_community_feedback.md
+
+### Batch Identity Entry from External Source (HIGH priority)
+When a Facebook comment says "Left to right: Albert Cohen, Morris
+Franco, Ray Franco, Belle Franco, Isaac Franco" — we need a way to
+enter all those names against a photo in one workflow. Current:
+navigate to each face individually. Needed: "Name these faces" mode
+on the photo page.
+See: docs/session_context/session_49C_community_feedback.md
+
+### Facebook Integration Research (LOW priority)
+The sharing -> comment -> identification loop works manually but is
+friction-heavy. Research: can we create a bot or integration that
+monitors tagged posts and pulls identifications back into the system?
+Alternatively: shareable photo pages with inline commenting that
+feeds back to the admin review queue.
+See: docs/session_context/session_49C_community_feedback.md
+
+---
+
+## Session 47 (v0.49.0 — 2026-02-18)
 
 - ML Gatekeeper Pattern — ML birth year estimates gated behind admin review (AD-097)
 - Bulk review page at /admin/review/birth-years with Accept/Edit/Reject/Accept All High

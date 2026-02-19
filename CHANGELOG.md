@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.49.3] — 2026-02-19
+
+### Fixed
+- **Photo page 404 for community/inbox photos** — Added _photo_id_aliases map that resolves inbox_* IDs from photo_index.json to SHA256 cache IDs. All "View Photo" links from identify flow now work for community-submitted photos.
+- **Compare upload silent failure** — File input now auto-submits form on file selection via onchange handler. Previously, selecting a file did nothing because the HTMX form never received a submit event.
+- **Version v0.0.0 in admin footer** — Dockerfile now COPYs CHANGELOG.md so _read_app_version() works in production. Was falling back to v0.0.0 because the file didn't exist in the Docker image.
+- **Collection name truncation on identify/person/compare pages** — Removed CSS truncate class from 6 additional locations. Session 49 only fixed stat cards; now all collection names wrap properly.
+
+### Added
+- Community feedback context from first Jews of Rhodes Facebook group sharing (docs/session_context/session_49C_community_feedback.md)
+- 9 new regression tests (2387 total)
+
 ## [v0.49.2] — 2026-02-18
 
 ### Fixed

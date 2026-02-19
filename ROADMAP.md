@@ -98,6 +98,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-19: **v0.49.3 — Session 49C**: Community Bug Fixes. Photo 404 for inbox photos (alias resolution), compare upload silent failure (onchange auto-submit), version v0.0.0 in admin footer (Dockerfile COPY), collection truncation (6 more locations). First real community sharing on Jews of Rhodes Facebook group. 9 new tests (2387 total).
 - [x] 2026-02-18: **v0.49.2 — Session 49**: Production Polish. Health check (10/10 routes), Session 47/48 deliverable verification (all PASS), collection name truncation fix, triage bar tooltips, interactive session prep checklist. 5 new tests (2378 total).
 - [x] 2026-02-18: **v0.49.1 — Session 48**: Harness Inflection. Prompt decomposition, phase execution, verification gate rules. HARNESS_DECISIONS.md (HD-001-007). Age on face overlays (Session 47 Phase 2F completion). Session log infrastructure. CLAUDE.md compressed (113->77). 4 new tests (2373 total).
 - [x] 2026-02-18: **v0.49.0 — Session 47**: ML Gatekeeper + Feature Reality Contract. ML birth year estimates gated behind admin review. Bulk review page. Ground truth feedback loop. Dynamic version display. ROADMAP + BACKLOG splits. AD-097-100. 23 new tests (2365 total).
