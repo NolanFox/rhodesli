@@ -27,6 +27,7 @@ class TestPublicNavLinks:
         assert "/timeline" in hrefs
         assert "/connect" in hrefs
         assert "/compare" in hrefs
+        assert "/estimate" in hrefs
 
     def test_active_link_highlighted(self):
         links = _public_nav_links(active="map")
@@ -47,20 +48,20 @@ class TestPublicNavLinks:
     def test_no_sign_in_when_auth_disabled(self):
         with patch("app.main.is_auth_enabled", return_value=False):
             links = _public_nav_links(active="photos", user=None)
-            # Should have exactly 8 links (no Sign In)
-            assert len(links) == 8
+            # Should have exactly 9 links (no Sign In)
+            assert len(links) == 9
 
     def test_no_sign_in_when_user_logged_in(self):
         mock_user = MagicMock()
         mock_user.email = "test@test.com"
         with patch("app.main.is_auth_enabled", return_value=True):
             links = _public_nav_links(active="photos", user=mock_user)
-            assert len(links) == 8
+            assert len(links) == 9
 
     def test_link_order(self):
         links = _public_nav_links(active="")
         hrefs = [link.attrs.get("href", "") for link in links]
-        expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]
+        expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare", "/estimate"]
         assert hrefs == expected_order
 
 

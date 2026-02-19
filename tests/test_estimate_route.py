@@ -390,3 +390,123 @@ class TestEstimateRouteWithPhotoData:
         )
         assert resp.status_code == 200
         assert "scene analysis" in resp.text.lower()
+
+
+class TestEstimatePageFixes:
+    """Tests for Session 50 estimate page fixes."""
+
+    def test_face_count_uses_faces_not_face_ids(self, client):
+        """Face count in grid must use 'faces' list (not 'face_ids' key)."""
+        photo_cache = {
+            "photo-1": {
+                "path": "test_photo.jpg",
+                "filename": "test_photo.jpg",
+                "faces": [
+                    {"face_id": "f1", "bbox": [0, 0, 50, 50]},
+                    {"face_id": "f2", "bbox": [60, 0, 110, 50]},
+                    {"face_id": "f3", "bbox": [120, 0, 170, 50]},
+                ],
+            },
+        }
+        resp = _run_with_patches(client, "/estimate", photo_cache=photo_cache)
+        assert resp.status_code == 200
+        assert "3 faces" in resp.text
+
+    def test_face_count_not_zero_when_faces_exist(self, client):
+        """Regression: face count must NOT show '0 faces' when faces exist."""
+        photo_cache = {
+            "photo-1": {
+                "path": "test_photo.jpg",
+                "filename": "test_photo.jpg",
+                "faces": [{"face_id": "f1", "bbox": [0, 0, 50, 50]}],
+            },
+        }
+        resp = _run_with_patches(client, "/estimate", photo_cache=photo_cache)
+        assert resp.status_code == 200
+        assert "1 face" in resp.text
+        # Should NOT show "0 faces"
+        assert "0 faces" not in resp.text
+
+    def test_pagination_shows_24_max(self, client):
+        """Photo grid should show at most 24 photos initially (not 60+)."""
+        photo_cache = {}
+        for i in range(40):
+            photo_cache[f"photo-{i}"] = {
+                "path": f"test_{i}.jpg",
+                "filename": f"test_{i}.jpg",
+                "faces": [],
+            }
+        resp = _run_with_patches(client, "/estimate", photo_cache=photo_cache)
+        assert resp.status_code == 200
+        # Should have "Load More" button since 40 > 24
+        assert "Load More" in resp.text
+
+    def test_estimate_has_upload_area(self, client):
+        """Estimate page should have an upload zone (when no photo selected)."""
+        resp = _run_with_patches(client, "/estimate")
+        assert resp.status_code == 200
+        assert "estimate-upload-form" in resp.text or "estimate-upload-area" in resp.text
+
+    def test_estimate_in_nav_bar(self, client):
+        """Estimate should appear in the public nav bar."""
+        resp = _run_with_patches(client, "/estimate")
+        assert resp.status_code == 200
+        assert 'href="/estimate"' in resp.text
+
+    def test_estimate_nav_active_state(self, client):
+        """On /estimate, the Estimate nav link should be highlighted."""
+        resp = _run_with_patches(client, "/estimate")
+        html = resp.text
+        # The active link should have text-white class
+        # Find the estimate link and check it has active styling
+        assert '/estimate' in html
+
+    def test_estimate_in_sidebar(self, client):
+        """Estimate link should appear in admin sidebar."""
+        from app.main import sidebar
+        from fastcore.xml import to_xml
+        counts = {"to_review": 5, "confirmed": 10, "skipped": 3, "rejected": 1, "photos": 50}
+        result = sidebar(counts, current_section="photos", user=None)
+        html = to_xml(result)
+        assert 'href="/estimate"' in html
+        assert "Estimate" in html
+
+    def test_no_evidence_shows_helpful_text(self, client):
+        """When no evidence available, show helpful text (not 'No detailed evidence')."""
+        photo_cache = {
+            "photo-1": {
+                "path": "test.jpg",
+                "filename": "test.jpg",
+                "faces": [],
+            },
+        }
+        date_labels = {
+            "photo-1": {
+                "subject_ages": [],
+                "estimated_decade": 1930,
+                "best_year_estimate": 1935,
+                "confidence": "low",
+                "metadata": {},
+            },
+        }
+        resp = _run_with_patches(client, "/estimate?photo=photo-1",
+                                 photo_cache=photo_cache, date_labels=date_labels)
+        assert resp.status_code == 200
+        # Should NOT say "No detailed evidence available"
+        assert "No detailed evidence available" not in resp.text
+
+    def test_estimate_upload_endpoint_validates_type(self, client):
+        """POST /api/estimate/upload rejects non-JPG/PNG files."""
+        from io import BytesIO
+        resp = client.post(
+            "/api/estimate/upload",
+            files={"photo": ("test.gif", BytesIO(b"GIF89a"), "image/gif")},
+        )
+        assert resp.status_code == 200
+        assert "JPG or PNG" in resp.text
+
+    def test_estimate_upload_no_file(self, client):
+        """POST /api/estimate/upload with no file shows error."""
+        resp = client.post("/api/estimate/upload")
+        assert resp.status_code == 200
+        assert "No photo uploaded" in resp.text

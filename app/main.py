@@ -2485,6 +2485,7 @@ def _public_nav_links(active: str = "", user=None) -> list:
         A("Tree", href="/tree", cls=_active if active == "tree" else _inactive),
         A("Connect", href="/connect", cls=_active if active == "connect" else _inactive),
         A("Compare", href="/compare", cls=_active if active == "compare" else _inactive),
+        A("Estimate", href="/estimate", cls=_active if active == "estimate" else _inactive),
     ]
     if is_auth_enabled() and not user:
         links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
@@ -2650,6 +2651,12 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     Span("🔍", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
                     Span("Compare", cls="sidebar-label ml-2"),
                     href="/compare",
+                    cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+                ),
+                A(
+                    Span("📅", cls="text-base leading-none flex-shrink-0 w-5 text-center"),
+                    Span("Estimate", cls="sidebar-label ml-2"),
+                    href="/estimate",
                     cls="flex items-center px-3 py-1.5 text-sm text-slate-300 hover:bg-slate-700/50 rounded-lg transition-colors"
                 ),
                 A(
@@ -14221,11 +14228,15 @@ def get(photo: str = "", sess=None):
         )
 
     # Build the page
-    nav_links = _public_nav_links(active="compare", user=user)
+    nav_links = _public_nav_links(active="estimate", user=user)
 
-    # Photo grid selector
+    # Photo grid selector — paginated (24 per page via query param)
+    page_size = 24
+    page_num = 0  # Will be overridden by HTMX partial endpoint
     photo_grid_items = []
-    for pid in all_photo_ids[:60]:
+    visible_photos = all_photo_ids[:page_size]
+    has_more = len(all_photo_ids) > page_size
+    for pid in visible_photos:
         pm = _photo_cache.get(pid, {})
         if not pm:
             continue
@@ -14233,7 +14244,7 @@ def get(photo: str = "", sess=None):
         if not photo_path:
             continue
         purl = storage.get_photo_url(photo_path)
-        face_count = len(pm.get("face_ids", []))
+        face_count = len(pm.get("faces", []))
         is_selected = pid == photo
 
         photo_grid_items.append(
@@ -14322,7 +14333,7 @@ def get(photo: str = "", sess=None):
             # How we estimated this
             H3("How we estimated this", cls="text-lg font-serif font-semibold text-white mb-4"),
             Div(*face_cards, scene_card, cls="flex flex-col gap-3 mb-6") if face_cards or scene_card else
-            P("No detailed evidence available for this photo.", cls="text-sm text-slate-500 italic"),
+            P("Based on visual analysis. Identify more people to improve this estimate.", cls="text-sm text-slate-500 italic"),
             # CTAs
             Div(
                 share_button(url=f"/estimate?photo={photo}", style="button", label="Share Estimate",
@@ -14384,15 +14395,57 @@ def get(photo: str = "", sess=None):
                     tab_links,
                     H1("When Was This Photo Taken?",
                         cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2"),
-                    P("Select a photo from the archive. Our AI estimates the year using facial age analysis and historical clues.",
+                    P("Upload a photo or select one from the archive. Our AI estimates the year using facial age analysis and historical clues.",
                       cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto"),
+                    # Upload zone
+                    Div(
+                        Form(
+                            Div(
+                                Div(
+                                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                                    P("Upload a photo to estimate its date", cls="text-slate-400 text-sm mb-1"),
+                                    P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
+                                    Input(type="file", name="photo", accept="image/jpeg,image/png",
+                                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('estimate-upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}this.closest('form').requestSubmit()",
+                                          data_testid="estimate-upload-input"),
+                                    cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-6 transition-colors cursor-pointer",
+                                ),
+                                cls="mb-3",
+                            ),
+                            action="/api/estimate/upload",
+                            method="post",
+                            enctype="multipart/form-data",
+                            hx_post="/api/estimate/upload",
+                            hx_target="#estimate-upload-result",
+                            hx_swap="innerHTML",
+                            hx_indicator="#estimate-upload-spinner",
+                            data_testid="estimate-upload-form",
+                        ),
+                        Div(id="estimate-upload-spinner", cls="htmx-indicator text-center py-3",
+                            children=[Span("Analyzing photo...", cls="text-slate-400 text-sm animate-pulse")]),
+                        Div(id="estimate-upload-result"),
+                        cls="bg-slate-800/50 rounded-2xl p-6 max-w-md mx-auto mb-8",
+                        data_testid="estimate-upload-area",
+                    ) if not photo else None,
                     # Results (if photo selected)
                     result_section,
-                    # Photo selector
+                    # Photo selector with pagination
                     Div(
                         H3("Select a Photo" if not photo else "Try Another Photo",
                            cls="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3"),
-                        Div(*photo_grid_items, cls="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2"),
+                        Div(*photo_grid_items, cls="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2",
+                            id="estimate-photo-grid"),
+                        Div(
+                            Button("Load More Photos",
+                                   hx_get=f"/api/estimate/photos?page=1",
+                                   hx_target="#estimate-photo-grid",
+                                   hx_swap="beforeend",
+                                   hx_swap_oob="true",
+                                   cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors",
+                                   id="load-more-estimate"),
+                            cls="flex justify-center mt-4",
+                        ) if has_more else None,
                         cls="mt-8",
                     ) if photo_grid_items else None,
                     P("The more people you identify, the better the estimate.",
@@ -14404,6 +14457,141 @@ def get(photo: str = "", sess=None):
         ),
         _share_script(),
     )
+
+
+@rt("/api/estimate/photos")
+def get(page: int = 0, sess=None):
+    """Load more photos for the estimate grid (HTMX partial)."""
+    _build_caches()
+    page_size = 24
+    all_photo_ids = list(_photo_cache.keys()) if _photo_cache else []
+    start = page * page_size
+    end = start + page_size
+    visible_photos = all_photo_ids[start:end]
+    has_more = end < len(all_photo_ids)
+
+    items = []
+    for pid in visible_photos:
+        pm = _photo_cache.get(pid, {})
+        if not pm:
+            continue
+        photo_path = pm.get("path") or pm.get("filename", "")
+        if not photo_path:
+            continue
+        purl = storage.get_photo_url(photo_path)
+        face_count = len(pm.get("faces", []))
+        items.append(
+            A(
+                Img(src=purl, alt="Archive photo",
+                    cls="w-full h-20 object-cover rounded-lg hover:ring-2 hover:ring-indigo-400 transition-all"),
+                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500 block text-center mt-0.5"),
+                href=f"/estimate?photo={pid}",
+                cls="block",
+            )
+        )
+
+    # Replace the Load More button with an updated one (or remove if no more)
+    if has_more:
+        items.append(
+            Div(
+                Button("Load More Photos",
+                       hx_get=f"/api/estimate/photos?page={page + 1}",
+                       hx_target="#estimate-photo-grid",
+                       hx_swap="beforeend",
+                       hx_swap_oob="true",
+                       cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors",
+                       id="load-more-estimate"),
+                cls="flex justify-center mt-4",
+                id="load-more-container",
+                hx_swap_oob="true",
+            )
+        )
+
+    return tuple(items)
+
+
+@rt("/api/estimate/upload")
+async def post(photo: UploadFile = None, sess=None):
+    """Upload a photo for date estimation.
+
+    Shows existing date_labels.json data if available for the filename,
+    otherwise shows a "check back soon" message. Saves to uploads/estimate/.
+    """
+    if not photo:
+        return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
+
+    from pathlib import Path as _Path
+
+    content = await photo.read()
+    original_filename = photo.filename or "upload.jpg"
+    suffix = _Path(original_filename).suffix.lower() or ".jpg"
+
+    # Server-side validation
+    if suffix not in (".jpg", ".jpeg", ".png"):
+        return Div(P("Please upload a JPG or PNG image.", cls="text-red-400 text-center py-4"))
+    if len(content) > 10 * 1024 * 1024:
+        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"))
+
+    # Save the upload
+    import uuid as _uuid
+    upload_id = str(_uuid.uuid4())[:12]
+    image_key = f"uploads/estimate/{upload_id}{suffix}"
+
+    from core.storage import can_write_r2, upload_bytes_to_r2
+    import mimetypes
+    content_type = mimetypes.guess_type(original_filename)[0] or "image/jpeg"
+
+    if can_write_r2():
+        upload_bytes_to_r2(image_key, content, content_type=content_type)
+    else:
+        upload_dir = _Path("uploads/estimate")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        (_Path("uploads/estimate") / f"{upload_id}{suffix}").write_bytes(content)
+
+    # Check for existing date labels matching the filename
+    labels = _load_date_labels()
+    fname_stem = _Path(original_filename).stem
+    matched_label = None
+    for key, label in (labels or {}).items():
+        if fname_stem in key:
+            matched_label = label
+            break
+
+    if matched_label:
+        year = matched_label.get("estimated_year", "Unknown")
+        conf_range = matched_label.get("confidence_range", [])
+        scene = matched_label.get("scene_analysis", {})
+        clues = scene.get("photography_style", []) + scene.get("clothing_and_fashion", [])
+        clues_text = ", ".join(clues[:4]) if clues else "Based on visual analysis"
+
+        return Div(
+            Div(
+                Span("~", cls="text-2xl text-amber-400 font-serif"),
+                cls="flex justify-center mb-2",
+            ),
+            P(f"Estimated: c. {year}", cls="text-xl font-serif font-bold text-white text-center"),
+            P(f"Range: {conf_range[0]}–{conf_range[1]}" if len(conf_range) >= 2 else "",
+              cls="text-sm text-slate-400 text-center mt-1"),
+            P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic"),
+            Div(
+                A("View in archive", href="/photos",
+                  cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                cls="flex justify-center mt-4",
+            ),
+            cls="py-4",
+        )
+    else:
+        return Div(
+            Div(
+                Span("?", cls="text-2xl text-slate-500"),
+                cls="flex justify-center mb-2",
+            ),
+            P("Photo saved!", cls="text-lg font-semibold text-white text-center"),
+            P("No AI estimate available yet — check back soon.",
+              cls="text-sm text-slate-400 text-center mt-1"),
+            P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
+            cls="py-4",
+        )
 
 
 @rt("/tree")
