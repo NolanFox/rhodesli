@@ -13136,9 +13136,9 @@ def get(face_id: str = "", sess=None):
                     NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-500 mb-3 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
                     P("Drop a photo here or click to browse", cls="text-slate-400 text-sm mb-1"),
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
-                    Input(type="file", name="photo", accept="image/*",
+                    Input(type="file", name="photo", accept="image/jpeg,image/png",
                           cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                          onchange="this.closest('form').requestSubmit()",
+                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}this.closest('form').requestSubmit()",
                           data_testid="upload-input"),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-8 transition-colors cursor-pointer",
                 ),
@@ -13586,7 +13586,8 @@ async def post(photo: UploadFile = None, sess=None):
     Supports multi-face detection with face selection.
     """
     if not photo:
-        return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
+        return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"),
+                   id="compare-results")
 
     from pathlib import Path as _Path
     import tempfile
@@ -13594,7 +13595,17 @@ async def post(photo: UploadFile = None, sess=None):
     # Read upload content
     content = await photo.read()
     original_filename = photo.filename or "upload.jpg"
-    suffix = _Path(original_filename).suffix or ".jpg"
+    suffix = _Path(original_filename).suffix.lower() or ".jpg"
+
+    # Server-side file type validation
+    if suffix not in (".jpg", ".jpeg", ".png"):
+        return Div(P("Please upload a JPG or PNG image.", cls="text-red-400 text-center py-4"),
+                   id="compare-results")
+
+    # Server-side file size validation (10 MB)
+    if len(content) > 10 * 1024 * 1024:
+        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"),
+                   id="compare-results")
 
     # Check if face detection is available (InsightFace — local dev only)
     # Must probe the actual deferred dependencies (cv2, insightface), not just

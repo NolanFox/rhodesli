@@ -111,6 +111,53 @@ class TestCompareUploadFormSubmit:
         html = resp.text
         assert "/api/compare/upload" in html
 
+    def test_upload_input_restricts_file_types(self, client):
+        """File input must accept only JPG and PNG, not all images."""
+        resp = client.get("/compare")
+        html = resp.text
+        assert 'accept="image/jpeg,image/png"' in html
+
+    def test_upload_has_client_side_size_validation(self, client):
+        """File input must check file size before submitting."""
+        resp = client.get("/compare")
+        html = resp.text
+        assert "10*1024*1024" in html or "10485760" in html
+
+    def test_upload_has_loading_indicator(self, client):
+        """Upload form must have an hx-indicator for loading state."""
+        resp = client.get("/compare")
+        html = resp.text
+        assert "htmx-indicator" in html
+        assert "Analyzing" in html
+
+    def test_upload_rejects_invalid_file_type_server_side(self, client):
+        """Server must reject non-JPG/PNG files with error message."""
+        from io import BytesIO
+        resp = client.post(
+            "/api/compare/upload",
+            files={"photo": ("test.gif", BytesIO(b"GIF89a"), "image/gif")},
+        )
+        assert resp.status_code == 200
+        assert "JPG or PNG" in resp.text
+
+    def test_upload_rejects_oversized_file_server_side(self, client):
+        """Server must reject files over 10 MB."""
+        from io import BytesIO
+        # 11 MB of data
+        large_content = b"x" * (11 * 1024 * 1024)
+        resp = client.post(
+            "/api/compare/upload",
+            files={"photo": ("big.jpg", BytesIO(large_content), "image/jpeg")},
+        )
+        assert resp.status_code == 200
+        assert "too large" in resp.text
+
+    def test_upload_no_photo_returns_error(self, client):
+        """Posting without a photo should show error with proper target ID."""
+        resp = client.post("/api/compare/upload")
+        assert resp.status_code == 200
+        assert "No photo uploaded" in resp.text
+
 
 # ---------------------------------------------------------------------------
 # Bug 3: Version display
