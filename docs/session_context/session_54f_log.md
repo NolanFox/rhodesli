@@ -77,6 +77,41 @@ Root cause confirmed: **buffalo_sc not in Docker image → hybrid fallback → f
 - [x] Phase 2: Test locally with timing
 - [x] Phase 3: Diagnose and fix root causes
 - [x] Phase 4: Local verification post-fix
+- [x] Phase 5: Deploy and test production
+
+## Phase 5: Production Results
+
+### OOM Fix
+First deploy OOM crashed — loading both buffalo_l FaceAnalysis AND hybrid models
+exceeded Railway 512MB. Fixed: startup now loads ONLY hybrid models (det_500m + w600k_r50
+via get_model()), NOT buffalo_l FaceAnalysis. Dockerfile splits model downloads into
+separate RUN steps.
+
+### Production Compare Timing
+
+| Test | Photo | Before | After | Improvement |
+|------|-------|--------|-------|-------------|
+| 2-face (first) | Image 006 | 51.2s | 11.4s | 4.5x |
+| 2-face (warm) | Image 006 | N/A | 10.5s | — |
+| 14-face group | 596770938 | ~65s est. | 28.5s | ~2.3x |
+| 3-face | Image 001 | N/A | 12.7s | — |
+
+### Response Quality
+- All responses: HTTP 200, 21 images, 49 match references, no errors
+- Production smoke test: 11/11 pass
+
+### Remaining Bottleneck Analysis
+The ~10-12s for a typical 2-3 face photo breaks down approximately:
+- Network upload: ~0.5s
+- Image decode/resize: ~0.5s
+- det_500m detection on shared CPU: ~3-5s
+- w600k_r50 recognition per face: ~1-1.5s/face
+- Embedding comparison: ~0.1s
+- R2 upload (save image + faces): ~2-3s
+
+Further improvement would require GPU (not on Railway hobby plan),
+client-side detection (MediaPipe, future Session 56), or skipping
+R2 upload for ephemeral compare results.
 - [ ] Phase 3: Diagnose and fix root causes
 - [ ] Phase 4: Local verification post-fix
 - [ ] Phase 5: Deploy and test production
