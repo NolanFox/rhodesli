@@ -132,3 +132,34 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   questions. Also serves as portfolio documentation showing rigorous
   engineering process.
 - **Breadcrumbs:** ALGORITHMIC_DECISIONS.md, .claude/rules/ml-decisions.md
+
+## HD-008: Production Smoke Test as Session Prerequisite
+- **Date:** 2026-02-20
+- **Session:** 53
+- **Decision:** Every audit/polish session begins with a comprehensive
+  production smoke test of all routes. Results logged to
+  `docs/ux_audit/PRODUCTION_SMOKE_TEST.md`.
+- **Rationale:** Session 53 proved that a systematic curl-based smoke test
+  catches issues faster than manual browsing. All 35 routes can be tested
+  in under 30 seconds. The test catches broken images, auth leaks, 500 errors,
+  and content rendering issues that unit tests miss.
+- **Enforcement:** For audit sessions, Phase 1 is always the smoke test.
+  For feature sessions, a targeted smoke test of affected routes runs
+  at the verification gate.
+- **Breadcrumbs:** docs/ux_audit/PRODUCTION_SMOKE_TEST.md,
+  .claude/rules/verification-gate.md
+
+## HD-009: HTMX Indicator CSS Must Handle Both Selectors
+- **Date:** 2026-02-20
+- **Session:** 53
+- **Decision:** Any custom CSS overriding HTMX indicator behavior must
+  include BOTH `.htmx-request .htmx-indicator` (descendant) AND
+  `.htmx-request.htmx-indicator` (combined) selectors.
+- **Rationale:** When `hx-indicator="#id"` is used, HTMX adds `htmx-request`
+  directly to the indicator element itself. The descendant selector alone
+  won't match. This caused a silent bug where upload spinners never showed
+  in the triage dashboard.
+- **Alternatives considered:** Relying on HTMX's built-in opacity CSS.
+  Rejected because the custom CSS uses `display:none/inline` which overrides
+  HTMX's opacity transitions, creating inconsistent behavior.
+- **Breadcrumbs:** app/main.py CSS block, docs/ux_audit/FIX_LOG.md

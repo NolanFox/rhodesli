@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.52.0 · 2465 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.53.0 · 2480 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -90,6 +90,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested (all healthy). Compare upload fixes: loading indicator with spinner + duration warning, uploaded photo display in results, resize optimization (1280→1024px), HTMX indicator CSS dual-selector fix. UX audit framework (docs/ux_audit/). HD-008-009. 4 new tests (2480 total).
 - [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX Runtime in Docker with buffalo_l model pre-downloaded. Gemini 3.1 Pro wired to Estimate upload with graceful degradation. "Name These Faces" added to public photo page. Cloud-ready ingest pipeline (DATA_DIR support, R2 auto-upload). Health check reports ML status. 30 new tests (2465 total).
 - [x] 2026-02-19: **v0.51.1 — Session 51B**: Production Bug Fixes. Compare upload honest messaging (was misleading "check back soon"). Removed redundant Estimate/Compare tab switchers. Supabase keepalive in /health endpoint. Name These Faces confirmed admin-only by design. HD-008 (functional verification). 16 new tests (2433 total).
 - [x] 2026-02-19: **v0.51.0 — Session 51**: Quick-Identify + "Name These Faces". P0 tag dropdown already existed. Built P1 sequential batch identification: "Name These Faces (N unidentified)" button, auto-advance left-to-right, progress banner, Done exit. PRD-021. AD-104. 16 new tests (2417 total).

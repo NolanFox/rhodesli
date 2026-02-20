@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 23.0 — February 19, 2026
-**Status**: 2465 tests passing, v0.52.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 24.0 — February 20, 2026
+**Status**: 2480 tests passing, v0.53.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -19,7 +19,15 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
-## Latest: Session 52 (v0.52.0 — 2026-02-19)
+## Latest: Session 53 (v0.53.0 — 2026-02-20)
+
+- Comprehensive production audit: 35 routes tested, all healthy
+- Compare upload fixes: loading indicator, uploaded photo display, resize optimization
+- HTMX indicator CSS dual-selector fix (HD-009)
+- UX audit framework in docs/ux_audit/
+- 4 new tests (2480 total)
+
+## Session 52 (v0.52.0 — 2026-02-19)
 
 - ML pipeline on Railway: InsightFace + ONNX Runtime in Docker
 - Gemini 3.1 Pro real-time date estimation on Estimate upload

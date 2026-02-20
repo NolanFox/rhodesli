@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.53.0] — 2026-02-20
+
+### Fixed
+- **Compare upload loading indicator** — HTMX indicator CSS now handles both `.htmx-request .htmx-indicator` (descendant) and `.htmx-request.htmx-indicator` (combined) selectors. Spinners that use `hx-indicator="#id"` now display correctly.
+- **Compare upload feedback** — Loading message updated from "a few seconds" to "up to a minute for group photos" with animated spinner. Scroll-to-results on file selection.
+- **Uploaded photo visibility** — Compare upload results now show the uploaded photo with face count badge above the match results.
+- **Compare resize optimization** — Reduced resize target from 1280px to 1024px for faster face detection on Railway's shared CPU.
+
+### Added
+- **Comprehensive production audit** — 35 routes tested (12 public, 10 admin, 13 detail/API). All routes healthy, all auth guards correct, all R2 images verified. Results in `docs/ux_audit/`.
+- **UX assessment framework** — `docs/ux_audit/` directory with PRODUCTION_SMOKE_TEST.md, UX_FINDINGS.md, FIX_LOG.md, PROPOSALS.md for systematic UX tracking.
+- **Harness decisions HD-008, HD-009** — Production smoke test as session prerequisite, HTMX indicator CSS dual-selector rule.
+- 4 new tests (2480 total)
+
 ## [v0.52.1] — 2026-02-19
 
 ### Fixed
