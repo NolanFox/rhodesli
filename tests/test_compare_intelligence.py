@@ -594,7 +594,7 @@ class TestCompareUploadPerformance:
         """
         from pathlib import Path
         source = Path("app/main.py").read_text()
-        assert "[compare] Face detection:" in source
+        assert "[compare] Face detection" in source
         assert "[compare] Embedding comparison:" in source
         assert "[compare] Total:" in source
         assert "[compare] Image prep:" in source
@@ -710,6 +710,48 @@ class TestCompareUploadPerformance:
         # Both temp files cleaned up
         assert "ml_path.unlink" in source
 
+    def test_handler_uses_hybrid_detection(self):
+        """AD-114: Compare upload must use extract_faces_hybrid for faster detection.
+
+        The compare endpoint uses det_500m (fast) for detection and w600k_r50
+        (archive-compatible) for recognition, rather than the full buffalo_l pipeline.
+        """
+        from pathlib import Path
+        source = Path("app/main.py").read_text()
+        assert "extract_faces_hybrid" in source, "Compare must use hybrid detection (AD-114)"
+        assert "from core.ingest_inbox import extract_faces" in source or \
+               "from core.ingest_inbox import extract_faces_hybrid" in source
+
+    def test_hybrid_function_exists_with_correct_signature(self):
+        """extract_faces_hybrid must exist and accept a filepath."""
+        from core.ingest_inbox import extract_faces_hybrid
+        import inspect
+        sig = inspect.signature(extract_faces_hybrid)
+        params = list(sig.parameters.keys())
+        assert "filepath" in params
+
+    def test_hybrid_function_falls_back_gracefully(self):
+        """extract_faces_hybrid must fall back to extract_faces when models unavailable."""
+        import inspect
+        from core.ingest_inbox import extract_faces_hybrid
+        source = inspect.getsource(extract_faces_hybrid)
+        assert "extract_faces" in source, "Hybrid must fall back to extract_faces"
+        assert "get_hybrid_models" in source
+
+    def test_get_hybrid_models_function_exists(self):
+        """get_hybrid_models must exist and return a tuple."""
+        from core.ingest_inbox import get_hybrid_models
+        import inspect
+        source = inspect.getsource(get_hybrid_models)
+        assert "det_500m" in source, "Must reference det_500m detector"
+        assert "w600k_r50" in source, "Must reference w600k_r50 recognizer"
+
+    def test_startup_preloads_hybrid_models(self):
+        """Startup must preload hybrid detection models alongside buffalo_l."""
+        from pathlib import Path
+        source = Path("app/main.py").read_text()
+        assert "get_hybrid_models" in source, "Startup must preload hybrid models"
+
     def test_compare_upload_with_mocked_insightface(self):
         """End-to-end: compare upload with mocked face detection returns results.
 
@@ -750,7 +792,7 @@ class TestCompareUploadPerformance:
                  "insightface": MagicMock(),
                  "insightface.app": MagicMock(),
              }), \
-             patch("core.ingest_inbox.extract_faces", return_value=([mock_face], 480, 640)), \
+             patch("core.ingest_inbox.extract_faces_hybrid", return_value=([mock_face], 480, 640)), \
              patch("app.main.get_face_data", return_value=mock_face_data), \
              patch("app.main.load_registry") as mock_registry, \
              patch("app.main.get_crop_files", return_value=set()), \

@@ -18,7 +18,7 @@
 | UX-001 | Compare takes 65s with no feedback | PROD_SMOKE | ✅ FIXED (S53) | 53 | Loading indicator + spinner added |
 | UX-002 | Uploaded photo not shown in results | PROD_SMOKE | ✅ FIXED (S53) | 53 | Photo preview above results |
 | UX-003 | Resize only to 1024px (should be 640px) | FIX_LOG #4 | ✅ FIXED (S54) | 54 | Changed to 640px for ML path, original to R2 |
-| UX-004 | buffalo_sc not investigated | Architecture | ⏭️ DEFERRED | 54 | Incompatible embeddings (MobileFaceNet vs ResNet50). See AD-110. |
+| UX-004 | buffalo_sc hybrid detection | Architecture | ✅ FIXED (S54B) | 54B | Hybrid approach: det_500m + w600k_r50. See AD-114. |
 | UX-005 | Non-existent person/photo returns 200 not 404 | PROD_SMOKE minor #1 | ✅ FIXED (S54) | 54 | HTTP 404 semantics |
 | UX-006 | Duplicate activity entries | PROD_SMOKE minor #2 | 📋 BACKLOG | — | Data investigation needed |
 | UX-007 | Timeline/photos loads all 271 images | UX_FINDINGS | 🔜 PLANNED | 55 | Lazy loading before 500 photos |
@@ -77,9 +77,9 @@
 
 | Disposition | Count |
 |-------------|-------|
-| ✅ FIXED | 14 |
+| ✅ FIXED | 15 |
 | 🔜 PLANNED | 7 |
 | 📋 BACKLOG | 10 |
-| ⏭️ DEFERRED | 3 |
+| ⏭️ DEFERRED | 2 |
 | ❌ REJECTED | 1 |
 | **Total** | **35** |

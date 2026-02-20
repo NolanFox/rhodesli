@@ -1014,7 +1014,47 @@ buffalo_sc uses MobileFaceNet recognition backbone; buffalo_l uses ResNet50. Emb
 - **Why rejected**: This breaks compare today. Compare NEEDS face detection to work. The intermediate step (640px resize) makes compare usable while we build toward the pure architecture (client-side detection in Session 56+).
 - **The right path**: 640px resize NOW → MediaPipe client-side NEXT → then remove InsightFace from Docker entirely.
 
-1. Add a new entry with AD-XXX format (next: AD-114)
+### AD-114: Hybrid Detection — buffalo_sc Detector + buffalo_l Recognizer
+- **Date**: 2026-02-20
+- **Status**: ACCEPTED
+- **Source**: External review correction of Session 54's buffalo_sc investigation. Session 54 concluded buffalo_sc was fully incompatible. This was partially correct (recognition models ARE incompatible) but missed that detection and recognition are separate ONNX files that can be mixed.
+
+**The Models:**
+- buffalo_l: det_10g.onnx (10G FLOPs, 16MB) + w600k_r50.onnx (ResNet50, 166MB)
+- buffalo_sc: det_500m.onnx (500M FLOPs, 2.4MB) + w600k_mbf.onnx (MobileFaceNet, 13MB)
+
+**Key Insight:** InsightFace loads detection and recognition as separate ONNX models. We can use det_500m (fast, 20x less compute) for detection and w600k_r50 (archive-compatible) for recognition.
+
+**Empirical Results (Session 54B, local Mac):**
+
+| Config | Detection Time | Faces (40-face photo) | Embedding Compat |
+|--------|---------------|----------------------|-----------------|
+| buffalo_l full | 4.661s | 40 | baseline |
+| buffalo_sc full | 0.042s | 38 | 0.0 (incompatible) |
+| Hybrid (det_500m + w600k_r50) | 2.546s | 38 | 0.98 mean cosine sim |
+
+Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, max 0.993.
+
+**Detection Recall Tradeoff:** det_500m misses ~2 faces on large group photos (38/40, 19/21). These are marginal faces (small, low quality) that the heavier detector finds. This is acceptable for interactive compare where speed matters more than marginal face detection. Batch ingestion continues to use buffalo_l for maximum recall.
+
+**Decision:** Use hybrid for interactive endpoints (compare upload, estimate upload). Keep buffalo_l for batch pipeline (ingest_inbox). Hybrid falls back to buffalo_l if buffalo_sc models aren't available.
+
+**Performance Impact on Railway (estimated):**
+- det_10g on shared CPU: ~15-25s (the bottleneck in 65s compare times)
+- det_500m on shared CPU: ~1-3s (estimated from 20x FLOP reduction)
+- Expected compare total: 5-15s (down from 15-25s)
+
+**Files Affected:**
+- `core/ingest_inbox.py`: Added `get_hybrid_models()`, `extract_faces_hybrid()`
+- `app/main.py`: Compare and estimate upload endpoints use `extract_faces_hybrid()`
+- `app/main.py`: Startup preloads hybrid models alongside buffalo_l
+
+**Alternatives Considered:**
+- Full buffalo_sc replacement: REJECTED — recognition embeddings incompatible (cosine ~0.0), would require re-embedding all 550 faces
+- buffalo_m (medium): Not investigated — buffalo_sc detector is sufficient
+- Client-side detection (MediaPipe): Deferred to Session 56 — eliminates server detection entirely
+
+1. Add a new entry with AD-XXX format (next: AD-115)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

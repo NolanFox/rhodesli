@@ -13783,7 +13783,7 @@ async def post(photo: UploadFile = None, sess=None):
     try:
         import cv2  # noqa: F811
         from insightface.app import FaceAnalysis  # noqa: F401
-        from core.ingest_inbox import extract_faces
+        from core.ingest_inbox import extract_faces, extract_faces_hybrid
         has_insightface = True
     except ImportError:
         pass
@@ -13849,8 +13849,11 @@ async def post(photo: UploadFile = None, sess=None):
         print(f"[compare] Image prep: {_time.time()-t1:.2f}s")
 
         t1 = _time.time()
-        faces, _, _ = extract_faces(ml_path)
-        print(f"[compare] Face detection: {_time.time()-t1:.2f}s ({len(faces)} faces)")
+        # Use hybrid detection (AD-114): det_500m for fast detection +
+        # w600k_r50 for archive-compatible embeddings. Falls back to
+        # full buffalo_l if hybrid models aren't available.
+        faces, _, _ = extract_faces_hybrid(ml_path)
+        print(f"[compare] Face detection (hybrid): {_time.time()-t1:.2f}s ({len(faces)} faces)")
         if not faces:
             return Div(
                 P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
@@ -14900,7 +14903,7 @@ async def post(photo: UploadFile = None, sess=None):
     try:
         import cv2  # noqa: F811
         from insightface.app import FaceAnalysis  # noqa: F401
-        from core.ingest_inbox import extract_faces
+        from core.ingest_inbox import extract_faces_hybrid
         has_insightface = True
     except ImportError:
         pass
@@ -14920,7 +14923,8 @@ async def post(photo: UploadFile = None, sess=None):
                     sc = _ML_MAX / max(mh, mw)
                     ml_img = cv2.resize(ml_img, (int(mw * sc), int(mh * sc)), interpolation=cv2.INTER_AREA)
                     cv2.imwrite(str(tmp_path), ml_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
-            faces, img_w, img_h = extract_faces(tmp_path)
+            # Use hybrid detection (AD-114) for faster response
+            faces, img_w, img_h = extract_faces_hybrid(tmp_path)
             face_count = len(faces)
             if face_count > 0:
                 parts.append(
@@ -25209,14 +25213,20 @@ if __name__ == "__main__":
     staging_dir = data_path / "staging"
     staging_dir.mkdir(parents=True, exist_ok=True)
 
-    # Eagerly load InsightFace model at startup to avoid 502 timeout on first request.
+    # Eagerly load InsightFace models at startup to avoid 502 timeout on first request.
     # buffalo_l (~300MB) takes 30-60s to load — must happen before serving traffic.
     if PROCESSING_ENABLED:
         try:
-            from core.ingest_inbox import get_face_analyzer
+            from core.ingest_inbox import get_face_analyzer, get_hybrid_models
             print("[ml] Loading InsightFace buffalo_l model...")
             get_face_analyzer()
             print("[ml] InsightFace model loaded successfully")
+            # Also preload hybrid detection models (AD-114)
+            det, rec = get_hybrid_models()
+            if det and rec:
+                print("[ml] Hybrid detection models loaded (det_500m + w600k_r50)")
+            else:
+                print("[ml] Hybrid models not available, using buffalo_l for compare")
         except Exception as e:
             print(f"[ml] InsightFace not available: {e}")
 

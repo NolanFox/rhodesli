@@ -197,6 +197,8 @@ def create_inbox_identities(
 
 
 _face_analyzer = None
+_hybrid_detector = None
+_hybrid_recognizer = None
 
 
 def get_face_analyzer():
@@ -213,6 +215,40 @@ def get_face_analyzer():
         _face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
         logging.info("InsightFace buffalo_l model loaded and cached")
     return _face_analyzer
+
+
+def get_hybrid_models():
+    """Get or create cached hybrid detection models (AD-114).
+
+    Uses det_500m from buffalo_sc (20x less compute than det_10g) for
+    detection, and w600k_r50 from buffalo_l for recognition. This produces
+    embeddings compatible with the archive (same recognizer) but with
+    significantly faster detection on CPU.
+
+    Returns:
+        Tuple of (detector, recognizer) model instances.
+    """
+    global _hybrid_detector, _hybrid_recognizer
+    if _hybrid_detector is None or _hybrid_recognizer is None:
+        import os
+        from insightface.model_zoo import get_model
+
+        models_dir = os.path.expanduser("~/.insightface/models")
+        det_path = os.path.join(models_dir, "buffalo_sc", "det_500m.onnx")
+        rec_path = os.path.join(models_dir, "buffalo_l", "w600k_r50.onnx")
+
+        if not os.path.exists(det_path) or not os.path.exists(rec_path):
+            logging.warning("Hybrid models not found, falling back to buffalo_l")
+            return None, None
+
+        _hybrid_detector = get_model(det_path, providers=["CPUExecutionProvider"])
+        _hybrid_detector.prepare(ctx_id=0, input_size=(640, 640))
+
+        _hybrid_recognizer = get_model(rec_path, providers=["CPUExecutionProvider"])
+        _hybrid_recognizer.prepare(ctx_id=0)
+
+        logging.info("Hybrid detection models loaded (det_500m + w600k_r50)")
+    return _hybrid_detector, _hybrid_recognizer
 
 
 def extract_faces(filepath: Path) -> list[dict]:
@@ -257,6 +293,67 @@ def extract_faces(filepath: Path) -> list[dict]:
             "filename": filepath.name,
             "filepath": str(filepath),
             "embedding": embedding,
+            "quality": raw_norm,
+            "det_score": det_score,
+            "bbox": bbox,
+        }
+
+        pfe = create_pfe(face_data, image_shape)
+        results.append(pfe)
+
+    return results, image_width, image_height
+
+
+def extract_faces_hybrid(filepath: Path):
+    """Extract faces using hybrid detection: det_500m + w600k_r50 (AD-114).
+
+    Uses buffalo_sc's lightweight detector (500M FLOPs vs 10G) for fast face
+    detection, then buffalo_l's ResNet50 recognizer for archive-compatible
+    embeddings. Falls back to full buffalo_l if hybrid models aren't available.
+
+    Returns same format as extract_faces: (results, width, height).
+    """
+    import cv2
+    import numpy as np
+    from insightface.utils.face_align import norm_crop
+    from core.pfe import create_pfe
+
+    if not filepath.exists():
+        raise FileNotFoundError(f"Image not found: {filepath}")
+
+    detector, recognizer = get_hybrid_models()
+    if detector is None or recognizer is None:
+        logging.info("Hybrid models unavailable, falling back to extract_faces")
+        return extract_faces(filepath)
+
+    img = cv2.imread(str(filepath))
+    if img is None:
+        raise ValueError(f"Could not read image: {filepath}")
+
+    image_height, image_width = img.shape[:2]
+    image_shape = (image_height, image_width)
+
+    bboxes, kpss = detector.detect(img, max_num=0, metric="default")
+    results = []
+
+    for i in range(len(bboxes)):
+        kps = kpss[i] if kpss is not None else None
+        if kps is None:
+            continue
+
+        det_score = float(bboxes[i][4])
+        bbox = bboxes[i][:4].tolist()
+
+        # Align face using 5-point landmarks, then run recognition
+        aligned = norm_crop(img, kps, image_size=112)
+        emb = recognizer.get_feat(aligned).flatten()
+        raw_norm = float(np.linalg.norm(emb))
+        emb = emb / np.linalg.norm(emb)
+
+        face_data = {
+            "filename": filepath.name,
+            "filepath": str(filepath),
+            "embedding": emb,
             "quality": raw_norm,
             "det_score": det_score,
             "bbox": bbox,
