@@ -6497,11 +6497,22 @@ def lane_section(
 # =============================================================================
 
 
+_supabase_last_ping: float = 0.0
+_SUPABASE_PING_INTERVAL: int = 3600  # seconds
+
+
 def _ping_supabase() -> str:
     """Lightweight Supabase ping to prevent free-tier inactivity pause.
 
-    Returns status string: 'ok', 'not_configured', or 'error:...'
+    Throttled to once per hour (_SUPABASE_PING_INTERVAL seconds).
+    Returns status string: 'ok', 'skipped', 'not_configured', or 'error:...'
     """
+    global _supabase_last_ping
+    import time
+    now = time.time()
+    if now - _supabase_last_ping < _SUPABASE_PING_INTERVAL:
+        return "skipped"
+
     url = os.getenv("SUPABASE_URL", "")
     key = os.getenv("SUPABASE_ANON_KEY", "")
     if not url or not key:
@@ -6513,6 +6524,7 @@ def _ping_supabase() -> str:
             headers={"apikey": key},
             timeout=5.0,
         )
+        _supabase_last_ping = now
         return "ok" if resp.status_code == 200 else f"error:{resp.status_code}"
     except Exception as e:
         return f"error:{e}"

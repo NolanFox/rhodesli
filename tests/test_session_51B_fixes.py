@@ -236,8 +236,11 @@ class TestSupabaseKeepalive:
 
     @pytest.fixture(autouse=True)
     def setup(self):
+        import app.main as main_mod
         from app.main import app
         self.client = TestClient(app)
+        # Reset throttle so each test gets a fresh ping window
+        main_mod._supabase_last_ping = 0.0
 
     def test_health_check_includes_supabase_status(self):
         """Health check response includes 'supabase' key."""
@@ -271,6 +274,36 @@ class TestSupabaseKeepalive:
              patch("httpx.get", side_effect=Exception("Connection refused")):
             result = _ping_supabase()
             assert result.startswith("error:")
+
+    def test_ping_throttled_within_interval(self):
+        """Second ping within interval returns 'skipped'."""
+        import time
+        import app.main as main_mod
+        from app.main import _ping_supabase
+        # Simulate a recent successful ping
+        main_mod._supabase_last_ping = time.time()
+        result = _ping_supabase()
+        assert result == "skipped"
+
+    def test_ping_fires_after_interval(self):
+        """Ping fires again after interval elapses."""
+        import time
+        import app.main as main_mod
+        from app.main import _ping_supabase
+        # Simulate ping from over an hour ago
+        main_mod._supabase_last_ping = time.time() - 3601
+        with patch.dict("os.environ", {"SUPABASE_URL": "", "SUPABASE_ANON_KEY": ""}):
+            result = _ping_supabase()
+            assert result == "not_configured"  # Fires (not skipped), but env vars empty
+
+    def test_first_ping_always_fires(self):
+        """First call (timestamp=0) always fires, never skipped."""
+        import app.main as main_mod
+        from app.main import _ping_supabase
+        main_mod._supabase_last_ping = 0.0
+        with patch.dict("os.environ", {"SUPABASE_URL": "", "SUPABASE_ANON_KEY": ""}):
+            result = _ping_supabase()
+            assert result != "skipped"
 
 
 # ---------------------------------------------------------------------------
