@@ -414,3 +414,60 @@ class TestMobileOverflowPrevention:
         assert response.status_code == 200
         # The archival landing page nav items container should be hidden on mobile
         assert "hidden sm:flex" in response.text or "hidden md:flex" in response.text
+
+
+# ---------------------------------------------------------------------------
+# Public page mobile navigation (Session 49B audit fix H1)
+# ---------------------------------------------------------------------------
+
+class TestPublicPageMobileNav:
+    """Public pages must include mobile nav script for hamburger menu.
+
+    The global mobile nav script injects a hamburger button and overlay
+    on pages that have nav links hidden with 'hidden sm:flex'.
+    """
+
+    PUBLIC_PAGES = ["/", "/photos", "/people", "/compare", "/estimate",
+                    "/map", "/timeline", "/tree", "/connect", "/collections",
+                    "/about"]
+
+    def test_mobile_nav_script_on_landing(self, client):
+        """Landing page includes mobile nav injection script."""
+        response = client.get("/")
+        assert response.status_code == 200
+        assert "mobile-nav-overlay" in response.text
+
+    def test_mobile_nav_script_on_photos(self, client):
+        """Photos page includes mobile nav injection script."""
+        response = client.get("/photos")
+        assert response.status_code == 200
+        assert "mobile-nav-overlay" in response.text
+
+    def test_mobile_nav_script_on_people(self, client):
+        """People page includes mobile nav injection script."""
+        response = client.get("/people")
+        assert response.status_code == 200
+        assert "mobile-nav-overlay" in response.text
+
+    def test_mobile_nav_script_on_compare(self, client):
+        """Compare page includes mobile nav injection script."""
+        response = client.get("/compare")
+        assert response.status_code == 200
+        assert "mobile-nav-overlay" in response.text
+
+    def test_mobile_nav_script_on_map(self, client):
+        """Map page includes mobile nav injection script."""
+        response = client.get("/map")
+        assert response.status_code == 200
+        assert "mobile-nav-overlay" in response.text
+
+    def test_mobile_nav_hamburger_reference(self, client):
+        """Public pages include hamburger button injection logic."""
+        response = client.get("/photos")
+        assert "Open navigation menu" in response.text
+
+    def test_mobile_nav_skips_sidebar_pages(self, client):
+        """Script skips pages that already have sidebar navigation."""
+        response = client.get("/")
+        # Script checks for sidebar element and skips if present
+        assert "getElementById('sidebar')" in response.text

@@ -194,6 +194,76 @@ app, rt = fast_app(
                 }
             }
         """),
+        # Mobile nav: inject hamburger menu on public pages that have hidden sm:flex nav
+        Script("""
+            document.addEventListener('DOMContentLoaded', function() {
+                // Skip if sidebar already exists (admin/command center pages)
+                if (document.getElementById('sidebar')) return;
+
+                // Find the nav with hidden links
+                var navs = document.querySelectorAll('nav');
+                var targetNav = null;
+                var hiddenDiv = null;
+                for (var i = 0; i < navs.length; i++) {
+                    var hd = navs[i].querySelector('.hidden.sm\\\\:flex, [class*="hidden sm:flex"]');
+                    if (!hd) {
+                        // Tailwind JIT: class may be "hidden sm:flex ..."
+                        var divs = navs[i].querySelectorAll('div');
+                        for (var j = 0; j < divs.length; j++) {
+                            if (divs[j].className && divs[j].className.indexOf('hidden') !== -1 &&
+                                divs[j].className.indexOf('sm:flex') !== -1) {
+                                hd = divs[j]; break;
+                            }
+                        }
+                    }
+                    if (hd) { targetNav = navs[i]; hiddenDiv = hd; break; }
+                }
+                if (!targetNav || !hiddenDiv) return;
+
+                // Collect links from the hidden nav
+                var links = hiddenDiv.querySelectorAll('a');
+                if (links.length === 0) return;
+
+                // Create mobile overlay
+                var overlay = document.createElement('div');
+                overlay.id = 'mobile-nav-overlay';
+                overlay.className = 'hidden fixed inset-0 z-[60]';
+                overlay.innerHTML =
+                    '<div onclick="document.getElementById(\\'mobile-nav-overlay\\').classList.add(\\'hidden\\')" ' +
+                    'class="absolute inset-0 bg-black/50"></div>' +
+                    '<div class="absolute top-0 left-0 w-72 h-full bg-slate-800 shadow-xl overflow-y-auto">' +
+                    '<div class="flex items-center justify-between px-4 py-4 border-b border-slate-700">' +
+                    '<span class="text-lg font-bold text-white">Rhodesli</span>' +
+                    '<button onclick="document.getElementById(\\'mobile-nav-overlay\\').classList.add(\\'hidden\\')" ' +
+                    'class="text-slate-400 hover:text-white p-1" type="button">' +
+                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>' +
+                    '</button></div><div class="py-2 px-2" id="mobile-nav-links"></div></div>';
+                document.body.appendChild(overlay);
+
+                // Populate links
+                var linkContainer = document.getElementById('mobile-nav-links');
+                for (var k = 0; k < links.length; k++) {
+                    var a = document.createElement('a');
+                    a.href = links[k].href;
+                    a.textContent = links[k].textContent.trim();
+                    a.className = 'block px-4 py-3 text-slate-200 hover:bg-slate-700/50 hover:text-white text-base font-medium rounded-lg transition-colors';
+                    a.onclick = function() { overlay.classList.add('hidden'); };
+                    linkContainer.appendChild(a);
+                }
+
+                // Add hamburger button to nav (visible below sm only)
+                var innerDiv = targetNav.querySelector('div');
+                if (innerDiv) {
+                    var btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'sm:hidden text-white p-1 -ml-1 mr-2 flex-shrink-0';
+                    btn.setAttribute('aria-label', 'Open navigation menu');
+                    btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+                    btn.onclick = function() { overlay.classList.remove('hidden'); };
+                    innerDiv.insertBefore(btn, innerDiv.firstChild);
+                }
+            });
+        """),
     ),
     static_path=str(static_path),
 )
@@ -2505,6 +2575,85 @@ def _public_nav_links(active: str = "", user=None) -> list:
     if is_auth_enabled() and not user:
         links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
     return links
+
+
+def _public_page_nav(nav_links: list, *, active: str = "", user=None,
+                     max_w: str = "max-w-5xl", font_cls: str = "text-lg font-serif font-bold text-white",
+                     sticky: bool = True, fixed: bool = False,
+                     extra_links: list = None) -> Nav:
+    """Build a public page nav bar with mobile hamburger menu.
+
+    All public pages should use this instead of inlining Nav() with hidden sm:flex.
+    Includes a hamburger button visible below sm breakpoint.
+    """
+    hamburger_svg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>'
+    close_svg = '<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>'
+
+    # Mobile menu overlay (hidden by default, shown via JS)
+    mobile_menu_links = []
+    for link in nav_links:
+        # Clone link with mobile-friendly styling
+        href = link.attrs.get("href", "#") if hasattr(link, 'attrs') else "#"
+        text = link.children[0] if hasattr(link, 'children') and link.children else str(link)
+        if hasattr(text, 'children'):
+            text = str(text.children[0]) if text.children else str(text)
+        mobile_menu_links.append(
+            A(str(text), href=href,
+              cls="block px-4 py-3 text-slate-200 hover:bg-slate-700/50 hover:text-white text-base font-medium rounded-lg transition-colors",
+              onclick="document.getElementById('mobile-nav-overlay').classList.add('hidden');")
+        )
+
+    mobile_overlay = Div(
+        # Backdrop
+        Div(
+            onclick="document.getElementById('mobile-nav-overlay').classList.add('hidden');",
+            cls="absolute inset-0 bg-black/50",
+        ),
+        # Menu panel
+        Div(
+            Div(
+                Span("Rhodesli", cls="text-lg font-bold text-white"),
+                Button(
+                    NotStr(close_svg),
+                    cls="text-slate-400 hover:text-white p-1",
+                    onclick="document.getElementById('mobile-nav-overlay').classList.add('hidden');",
+                    type="button",
+                ),
+                cls="flex items-center justify-between px-4 py-4 border-b border-slate-700",
+            ),
+            Div(*mobile_menu_links, cls="py-2 px-2"),
+            cls="absolute top-0 left-0 w-72 h-full bg-slate-800 shadow-xl overflow-y-auto",
+        ),
+        id="mobile-nav-overlay",
+        cls="hidden fixed inset-0 z-[60]",
+    )
+
+    # Hamburger button (visible below sm, hidden at sm+)
+    hamburger_btn = Button(
+        NotStr(hamburger_svg),
+        cls="sm:hidden text-white p-1 -ml-1",
+        onclick="document.getElementById('mobile-nav-overlay').classList.remove('hidden');",
+        type="button",
+        aria_label="Open navigation menu",
+    )
+
+    right_items = list(extra_links) if extra_links else []
+
+    pos_cls = "sticky top-0" if sticky else ("fixed top-0 left-0 right-0" if fixed else "")
+
+    return Nav(
+        Div(
+            Div(
+                hamburger_btn,
+                A(Span("Rhodesli", cls=font_cls), href="/"),
+                cls="flex items-center gap-2",
+            ),
+            Div(*nav_links, *right_items, cls="hidden sm:flex items-center gap-6"),
+            cls=f"{max_w} mx-auto px-6 flex items-center justify-between h-16",
+        ),
+        mobile_overlay,
+        cls=f"bg-slate-900/80 backdrop-blur-md border-b border-slate-800 {pos_cls} z-50",
+    )
 
 
 def sidebar(counts: dict, current_section: str = "to_review", user: "User | None" = None) -> Aside:
