@@ -22,6 +22,7 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -1020,12 +1021,35 @@ def main():
         default="",
         help="Archive classification (e.g., 'Betty Capeluto Miami Collection'). Defaults to --source if empty.",
     )
+    parser.add_argument(
+        "--data-dir",
+        type=Path,
+        default=None,
+        help="Data directory (default: from DATA_DIR env var or 'data/')",
+    )
+    parser.add_argument(
+        "--crops-dir",
+        type=Path,
+        default=None,
+        help="Crops output directory (default: app/static/crops/)",
+    )
     args = parser.parse_args()
 
+    # Resolve data_dir: CLI arg > DATA_DIR env var > default
+    data_dir = args.data_dir
+    if data_dir is None:
+        env_data_dir = os.environ.get("DATA_DIR")
+        if env_data_dir:
+            data_dir = Path(env_data_dir)
+
     if args.directory:
-        result = process_directory(args.directory, args.job_id, source=args.source, collection=args.collection)
+        result = process_directory(args.directory, args.job_id, source=args.source,
+                                   collection=args.collection, data_dir=data_dir,
+                                   crops_dir=args.crops_dir)
     else:
-        result = process_uploaded_file(args.file, args.job_id, source=args.source, collection=args.collection)
+        result = process_uploaded_file(args.file, args.job_id, source=args.source,
+                                       collection=args.collection, data_dir=data_dir,
+                                       crops_dir=args.crops_dir)
 
     if result["status"] == "error":
         sys.exit(1)

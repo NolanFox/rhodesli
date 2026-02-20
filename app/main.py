@@ -14657,9 +14657,7 @@ def get(page: int = 0, sess=None):
 # Simplified version of rhodesli_ml/scripts/generate_date_labels.py::call_gemini()
 # for real-time single-photo estimation via the web upload.
 
-_GEMINI_DATE_PROMPT = """You are a forensic photo analyst specializing in dating historical photographs
-from Sephardic Jewish communities, particularly from Rhodes (Dodecanese), Greece and
-diaspora communities in New York City, Miami, and Tampa, Florida.
+_GEMINI_DATE_PROMPT = """You are a forensic photo analyst specializing in dating historical photographs from Sephardic Jewish communities, particularly from Rhodes (Dodecanese), Greece and diaspora communities in New York City, Miami, and Tampa, Florida.
 
 Analyze this photograph and estimate when it was ORIGINALLY TAKEN (not when printed or scanned).
 
@@ -19688,12 +19686,13 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
     All uploads go to data/staging/{job_id}/.
 
     Admin flow:
-        When PROCESSING_ENABLED=True (local dev):
+        When PROCESSING_ENABLED=True (default, local + Railway):
             - Subprocess spawned to run core/ingest_inbox.py
             - Real-time status polling
-        When PROCESSING_ENABLED=False (production):
-            - No subprocess spawned (ML deps not available)
-            - Shows "pending admin review" message
+            - R2 upload of photos + crops on completion (if R2 configured)
+        When PROCESSING_ENABLED=False:
+            - No subprocess spawned
+            - Shows "staged for local processing" message
 
     Non-admin flow:
         - Pending upload record created in pending_uploads.json
@@ -19919,6 +19918,8 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
         str(job_dir),
         "--job-id",
         job_id,
+        "--data-dir",
+        str(data_path),
     ]
     if source:
         subprocess_args.extend(["--source", source])
@@ -20077,6 +20078,41 @@ def get(job_id: str):
     faces = status.get("faces_extracted", 0)
     identities = len(status.get("identities_created", []))
     total = status.get("total_files")
+
+    # Upload original photos and crops to R2 (if R2 write is configured)
+    # This happens once on first success poll — the status file is the lock.
+    from core.storage import can_write_r2, upload_bytes_to_r2
+    if can_write_r2() and not status.get("r2_uploaded"):
+        try:
+            r2_count = 0
+            # Upload original photos from staging directory
+            staging_dir = data_path / "staging" / job_id
+            if staging_dir.exists():
+                import mimetypes
+                for fpath in staging_dir.iterdir():
+                    if fpath.is_file() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png"):
+                        ct = mimetypes.guess_type(fpath.name)[0] or "image/jpeg"
+                        upload_bytes_to_r2(f"raw_photos/{fpath.name}", fpath.read_bytes(), content_type=ct)
+                        r2_count += 1
+
+            # Upload new crop files (generated during ingest)
+            crops_dir = Path("app/static/crops")
+            if crops_dir.exists():
+                # Find crops for faces created in this job
+                for iid in status.get("identities_created", []):
+                    for crop_path in crops_dir.glob(f"{iid}*"):
+                        ct = "image/jpeg"
+                        upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type=ct)
+                        r2_count += 1
+
+            # Mark as uploaded to prevent duplicate uploads on next poll
+            status["r2_uploaded"] = True
+            status["r2_count"] = r2_count
+            with open(status_path, "w") as f:
+                json.dump(status, f, indent=2)
+            print(f"[upload] R2 upload complete: {r2_count} files for job {job_id}")
+        except Exception as e:
+            print(f"[upload] R2 upload error for job {job_id}: {e}")
 
     success_text = f"\u2713 {_pl(faces, 'face')} extracted"
     if total and total > 1:

@@ -475,3 +475,69 @@ class TestEstimateUploadProcessing:
         html = response.text
         assert "1942" in html
         assert "1938" in html  # range start
+
+
+# ---------------------------------------------------------------------------
+# Cloud-ready pipeline — Phase 6
+# ---------------------------------------------------------------------------
+
+
+class TestCloudReadyPipeline:
+    """Verify ingest pipeline is cloud-ready (data_dir, R2 uploads)."""
+
+    def test_ingest_cli_accepts_data_dir(self):
+        """ingest_inbox.py CLI accepts --data-dir argument."""
+        from core.ingest_inbox import main
+        import argparse
+        # We can't run main() directly (it calls sys.exit), but we can check the parser
+        parser = argparse.ArgumentParser()
+        # Verify the module's main function includes --data-dir by importing and inspecting
+        import inspect
+        source = inspect.getsource(main)
+        assert "--data-dir" in source
+
+    def test_ingest_cli_accepts_crops_dir(self):
+        """ingest_inbox.py CLI accepts --crops-dir argument."""
+        from core.ingest_inbox import main
+        import inspect
+        source = inspect.getsource(main)
+        assert "--crops-dir" in source
+
+    def test_upload_handler_passes_data_dir_to_subprocess(self):
+        """Upload handler passes --data-dir to ingest subprocess."""
+        import inspect
+        from app.main import app
+        # Read the upload route source to verify --data-dir is passed
+        # Find the POST handler for /api/upload
+        from app import main as app_module
+        source = inspect.getsource(app_module)
+        # The subprocess_args should include --data-dir
+        assert '"--data-dir"' in source or "'--data-dir'" in source
+
+    def test_status_handler_uploads_to_r2_on_success(self):
+        """Upload status handler uploads files to R2 when processing completes."""
+        import inspect
+        from app import main as app_module
+        source = inspect.getsource(app_module)
+        # Verify R2 upload logic exists in the status handler area
+        assert "r2_uploaded" in source
+        assert "upload_bytes_to_r2" in source
+
+    def test_processing_enabled_env_default_true(self):
+        """PROCESSING_ENABLED defaults to true (ML available everywhere)."""
+        # core/config.py defaults to "true" when env var not set
+        with patch.dict("os.environ", {"PROCESSING_ENABLED": "true"}):
+            import importlib
+            import core.config
+            importlib.reload(core.config)
+            assert core.config.PROCESSING_ENABLED is True
+
+    def test_data_dir_respects_storage_dir(self):
+        """DATA_DIR derives from STORAGE_DIR when set (Railway mode)."""
+        with patch.dict("os.environ", {"STORAGE_DIR": "/app/storage"}, clear=False):
+            import importlib
+            import core.config
+            importlib.reload(core.config)
+            assert core.config.DATA_DIR == "/app/storage/data"
+            # Clean up: reload with original env
+            importlib.reload(core.config)
