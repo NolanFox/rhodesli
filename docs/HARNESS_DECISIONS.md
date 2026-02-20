@@ -209,3 +209,23 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   - Script to sync ROADMAP → SESSION_HISTORY: Overhead for infrequent operation
 - **Breadcrumbs:** .claude/rules/verification-gate.md (document trimming rule),
   tasks/lessons/harness-lessons.md (Lesson 77)
+
+## HD-012: Silent ML Fallback Detection
+- **Date:** 2026-02-20
+- **Session:** 54G
+- **Trigger:** Session 54F: buffalo_sc not in Docker → silent fallback to
+  buffalo_l → 5x latency regression invisible to functional tests. Smoke
+  tests passed (200 OK, correct JSON shape). Only latency measurement
+  revealed the wrong model was loaded.
+- **Decision:** ML model loading must log actual model loaded (INFO) +
+  WARNING on any fallback. Applies to all model types: face detection,
+  CORAL, similarity calibration, Gemini API.
+- **Enforcement:** AD-120 documents the principle. CLAUDE.md ML section
+  references it. Code review should check for unlogged fallback paths.
+- **Alternatives considered:**
+  - Output shape validation: Rejected — both models produce identical
+    512-dim embeddings. Shape can't distinguish them.
+  - Startup-only logging: Rejected — some models are lazy-loaded on first
+    request; must log at actual load time.
+- **Breadcrumbs:** AD-119 (specific fix), AD-120 (principle),
+  docs/PERFORMANCE_CHRONICLE.md (optimization journey)

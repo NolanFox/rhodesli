@@ -20,6 +20,7 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 ## Architecture
 - `app/main.py` — FastHTML web app | `core/` — ML (local only) | `data/` — JSON (read-only)
 - **ML (AD-110/114)**: Web NEVER runs heavy ML. Compare: 640px + hybrid (det_500m + w600k_r50). Batch: buffalo_l local.
+- **ML loading (AD-120)**: Every model load must log actual model (INFO) + WARNING on fallback. Silent fallbacks are bugs.
 @docs/architecture/OVERVIEW.md @docs/architecture/DATA_MODEL.md
 @docs/architecture/PERMISSIONS.md @docs/architecture/PHOTO_STORAGE.md
 

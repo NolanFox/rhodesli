@@ -1185,7 +1185,32 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: Loading full buffalo_l FaceAnalysis at startup (OOM on Railway 512MB)
 - **Breadcrumbs**: docs/session_context/session_54f_log.md, AD-110, AD-114
 
-1. Add a new entry with AD-XXX format (next: AD-120)
+### AD-120: ML Model Loading Observability — Silent Fallbacks Are Bugs
+
+- **Date**: 2026-02-20
+- **Session**: 54G (generalized from 54F root cause)
+- **Status**: ACCEPTED — principle, not code change
+
+**Problem:** Session 54F discovered that hybrid face detection silently fell back from buffalo_sc (500M FLOPs) to buffalo_l (10G FLOPs) because buffalo_sc wasn't in the Docker image. The singleton was working correctly — it was loading the wrong (heavier) model. Smoke tests all passed because output format was identical between models. Only latency revealed the issue (51.2s vs expected ~10s).
+
+**Generalizable principle:** Silent ML model fallbacks are bugs, not features. When a fallback produces correct-looking output from the wrong model, it is invisible to functional tests. Only latency or resource metrics reveal the problem.
+
+**Decision:** All ML model loading in Rhodesli must:
+1. Log which model was actually loaded at INFO level (model name, path, size)
+2. Log WARNING if any fallback occurred (intended model, actual model, reason for fallback)
+3. Include model name in singleton cache keys so fallbacks don't silently replace the intended model
+4. Never swallow ImportError or FileNotFoundError during model loading without WARNING
+
+**Applies to:** Face detection (buffalo_sc/buffalo_l), CORAL age estimation, future similarity calibration, LoRA training, Gemini API calls (model version logging), any new model integration.
+
+**Why this matters beyond Rhodesli:** Any ML system with fallback chains (common in production — GPU → CPU, large → small model, local → API) is vulnerable to this class of bug. The fix is always the same: instrument the loading, not just the output.
+
+- **Rejected**: Relying on output format differences to detect fallbacks (buffalo_sc and buffalo_l produce identically-shaped outputs — 512-dim embeddings)
+- **Rejected**: Only logging at startup (some models are lazy-loaded on first request; must log at actual load time)
+- **Affects**: All files that call `get_model()`, `FaceAnalysis()`, `get_hybrid_models()`, or load ONNX/PyTorch models
+- **Breadcrumbs**: AD-119 (specific fix), HD-012 (harness decision), docs/PERFORMANCE_CHRONICLE.md, Session 54F
+
+1. Add a new entry with AD-XXX format (next: AD-121)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
