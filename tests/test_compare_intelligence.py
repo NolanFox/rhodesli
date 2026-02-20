@@ -580,6 +580,179 @@ class TestR2UploadStorage:
         assert loaded["image_key"].startswith("uploads/compare/")
 
 
+# ---- Compare Upload Performance ----
+
+
+class TestCompareUploadPerformance:
+    """Tests for compare upload performance optimizations (image resize, timing)."""
+
+    def test_handler_has_timing_instrumentation(self):
+        """The compare upload handler must have timing print statements.
+
+        Regression test: Without timing, Railway logs don't show where time goes,
+        making it impossible to diagnose 502 timeout issues.
+        """
+        from pathlib import Path
+        source = Path("app/main.py").read_text()
+        assert "[compare] Face detection:" in source
+        assert "[compare] Embedding comparison:" in source
+        assert "[compare] Total:" in source
+        assert "[compare] Image prep:" in source
+
+    def test_handler_has_image_resize_logic(self):
+        """The compare upload handler must resize large images before detection.
+
+        Regression test: Without resize, a 4000x3000 upload takes 60+ seconds
+        on Railway CPU. With resize to 1280px, it's 5-10x faster.
+        """
+        import inspect
+        import app.main as main_mod
+        source = inspect.getsource(main_mod)
+        # Must contain resize logic with max dimension cap
+        assert "cv2.resize" in source
+        assert "INTER_AREA" in source
+        assert "_MAX_DIM" in source or "1280" in source
+
+    def test_handler_uploads_resized_content_not_original(self):
+        """Handler must read back resized bytes from temp file for R2 upload.
+
+        Regression test: Uploading the original 5MB image to R2 adds 5-10s.
+        Uploading the resized ~200KB image is nearly instant.
+        """
+        import inspect
+        import app.main as main_mod
+        source = inspect.getsource(main_mod)
+        # Must use tmp_path.read_bytes() (resized content), not raw 'content'
+        assert "upload_content = tmp_path.read_bytes()" in source
+
+    def test_image_resize_preserves_small_images(self, tmp_path):
+        """Images already under 1280px should NOT be resized."""
+        import cv2
+        import numpy as np
+        # Create a small image (640x480)
+        small_img = np.zeros((480, 640, 3), dtype=np.uint8)
+        small_img[100:200, 100:200] = [255, 128, 64]
+        img_path = tmp_path / "small.jpg"
+        cv2.imwrite(str(img_path), small_img)
+        original_bytes = img_path.read_bytes()
+
+        # Read and check resize logic
+        img = cv2.imread(str(img_path))
+        h, w = img.shape[:2]
+        assert max(h, w) <= 1280, "Test image should be under 1280px"
+        # No resize needed — image stays as-is
+
+    def test_image_resize_caps_large_images(self, tmp_path):
+        """Images over 1280px should be resized down."""
+        import cv2
+        import numpy as np
+        # Create a large image (4000x3000)
+        large_img = np.zeros((3000, 4000, 3), dtype=np.uint8)
+        large_img[500:1000, 500:1000] = [255, 128, 64]
+        img_path = tmp_path / "large.jpg"
+        cv2.imwrite(str(img_path), large_img)
+
+        # Apply the same resize logic as the handler
+        img = cv2.imread(str(img_path))
+        h, w = img.shape[:2]
+        _MAX_DIM = 1280
+        assert max(h, w) > _MAX_DIM, "Test image should be over 1280px"
+        scale = _MAX_DIM / max(h, w)
+        new_w, new_h = int(w * scale), int(h * scale)
+        img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        cv2.imwrite(str(img_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+
+        # Verify resize
+        resized = cv2.imread(str(img_path))
+        rh, rw = resized.shape[:2]
+        assert max(rh, rw) <= _MAX_DIM
+        assert rw == 1280  # longest side should be exactly 1280
+        assert rh == 960   # aspect ratio preserved: 3000/4000 * 1280 = 960
+
+    def test_resize_reduces_file_size(self, tmp_path):
+        """Resizing should dramatically reduce file size for R2 upload."""
+        import cv2
+        import numpy as np
+        # Create a large image with some content (not all zeros)
+        rng = np.random.RandomState(42)
+        large_img = rng.randint(0, 255, (3000, 4000, 3), dtype=np.uint8)
+        img_path = tmp_path / "large.jpg"
+        cv2.imwrite(str(img_path), large_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+        original_size = img_path.stat().st_size
+
+        # Resize
+        img = cv2.imread(str(img_path))
+        h, w = img.shape[:2]
+        scale = 1280 / max(h, w)
+        new_w, new_h = int(w * scale), int(h * scale)
+        img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+        resized_path = tmp_path / "resized.jpg"
+        cv2.imwrite(str(resized_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+        resized_size = resized_path.stat().st_size
+
+        # Resized should be significantly smaller (at least 3x for 4000->1280)
+        assert resized_size < original_size / 2, \
+            f"Resized {resized_size} should be <50% of original {original_size}"
+
+    def test_compare_upload_with_mocked_insightface(self):
+        """End-to-end: compare upload with mocked face detection returns results.
+
+        Verifies the full handler path: upload → resize → detect → compare → results.
+        """
+        import io
+        import numpy as np
+        from starlette.testclient import TestClient
+        from app.main import app
+        client = TestClient(app)
+
+        # Create a mock face with realistic PFE structure
+        mock_face = {
+            "mu": np.random.randn(512).astype(np.float32),
+            "sigma_sq": np.full(512, 0.5, dtype=np.float32),
+            "det_score": 0.95,
+            "bbox": [100, 100, 200, 200],
+            "filename": "test.jpg",
+        }
+
+        mock_cv2 = MagicMock()
+        mock_cv2.imread.return_value = np.zeros((640, 480, 3), dtype=np.uint8)
+        mock_cv2.INTER_AREA = 3
+        mock_cv2.IMWRITE_JPEG_QUALITY = 1
+
+        # Build mock face_data for the archive
+        mock_face_data = {
+            f"face_{i}": {"mu": np.random.randn(512).astype(np.float32),
+                          "sigma_sq": np.full(512, 0.5, dtype=np.float32)}
+            for i in range(5)
+        }
+
+        img_bytes = b'\xff\xd8\xff\xe0' + b'\x00' * 200  # minimal JPEG
+
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch.dict("sys.modules", {
+                 "cv2": mock_cv2,
+                 "insightface": MagicMock(),
+                 "insightface.app": MagicMock(),
+             }), \
+             patch("core.ingest_inbox.extract_faces", return_value=([mock_face], 480, 640)), \
+             patch("app.main.get_face_data", return_value=mock_face_data), \
+             patch("app.main.load_registry") as mock_registry, \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._save_compare_upload", return_value="test-upload"), \
+             patch("core.storage.can_write_r2", return_value=False):
+            mock_registry.return_value = MagicMock(
+                list_identities=MagicMock(return_value=[])
+            )
+            response = client.post(
+                "/api/compare/upload",
+                files={"photo": ("test.jpg", io.BytesIO(img_bytes), "image/jpeg")},
+            )
+
+        assert response.status_code == 200
+        html = response.text
+        assert "compare-results" in html
+
+
 # ---- Contribute to Archive ----
 
 

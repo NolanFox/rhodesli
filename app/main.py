@@ -13735,11 +13735,14 @@ def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str
 
 @rt("/api/compare/upload")
 async def post(photo: UploadFile = None, sess=None):
-    """Upload a photo for face comparison (local dev only — requires InsightFace).
+    """Upload a photo for face comparison.
 
     Persists uploads to uploads/compare/ for later retrieval.
     Supports multi-face detection with face selection.
     """
+    import time as _time
+    t0 = _time.time()
+
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"),
                    id="compare-results")
@@ -13809,13 +13812,31 @@ async def post(photo: UploadFile = None, sess=None):
                 id="compare-results",
             )
 
-    # Local dev: full face detection + comparison
+    # Face detection + comparison
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(content)
         tmp_path = _Path(tmp.name)
 
     try:
+        # Resize to speed up InsightFace on CPU. Detection runs at det_size=(640,640)
+        # internally, so images >1280px provide no quality benefit but dramatically
+        # slow down processing on Railway's shared CPU.
+        t1 = _time.time()
+        img = cv2.imread(str(tmp_path))
+        if img is not None:
+            h, w = img.shape[:2]
+            _MAX_DIM = 1280
+            if max(h, w) > _MAX_DIM:
+                scale = _MAX_DIM / max(h, w)
+                new_w, new_h = int(w * scale), int(h * scale)
+                img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                cv2.imwrite(str(tmp_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                print(f"[compare] Resized {w}x{h} -> {new_w}x{new_h}")
+        print(f"[compare] Image prep: {_time.time()-t1:.2f}s")
+
+        t1 = _time.time()
         faces, _, _ = extract_faces(tmp_path)
+        print(f"[compare] Face detection: {_time.time()-t1:.2f}s ({len(faces)} faces)")
         if not faces:
             return Div(
                 P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
@@ -13824,6 +13845,7 @@ async def post(photo: UploadFile = None, sess=None):
             )
 
         # Compare first face by default
+        t1 = _time.time()
         query_embedding = faces[0]["mu"]
         face_data = get_face_data()
         registry = load_registry()
@@ -13834,11 +13856,16 @@ async def post(photo: UploadFile = None, sess=None):
             query_embedding, face_data, registry=registry,
             limit=20,
         )
+        print(f"[compare] Embedding comparison: {_time.time()-t1:.2f}s ({len(face_data)} archive faces)")
 
-        # Persist the upload
-        upload_id = _save_compare_upload(content, original_filename, faces, results)
+        # Persist the upload (use resized image bytes for faster R2 upload)
+        t1 = _time.time()
+        upload_content = tmp_path.read_bytes()
+        upload_id = _save_compare_upload(upload_content, original_filename, faces, results)
+        print(f"[compare] Save upload: {_time.time()-t1:.2f}s ({len(upload_content)} bytes)")
 
         # Save face embeddings for face selection (R2 or local)
+        t1 = _time.time()
         import pickle
         from core.storage import can_write_r2, upload_bytes_to_r2
         face_save_data = [{"mu": f["mu"].tolist(), "bbox": f.get("bbox", [0,0,0,0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()} for f in faces]
@@ -13850,8 +13877,10 @@ async def post(photo: UploadFile = None, sess=None):
             upload_dir = _Path("uploads/compare")
             upload_dir.mkdir(parents=True, exist_ok=True)
             (upload_dir / f"{upload_id}_faces.pkl").write_bytes(faces_pkl)
+        print(f"[compare] Save faces: {_time.time()-t1:.2f}s")
 
         # Build response
+        t1 = _time.time()
         parts = []
 
         # Multi-face selector (if more than one face)
@@ -13860,6 +13889,7 @@ async def post(photo: UploadFile = None, sess=None):
 
         # Results grid
         parts.append(_compare_results_grid(results, crop_files))
+        print(f"[compare] Response build: {_time.time()-t1:.2f}s")
 
         # Contribute CTA
         user = get_current_user(sess or {}) if is_auth_enabled() else None
@@ -13890,8 +13920,10 @@ async def post(photo: UploadFile = None, sess=None):
                 )
             )
 
+        print(f"[compare] Total: {_time.time()-t0:.2f}s")
         return Div(*parts, id="compare-results")
     except Exception as e:
+        print(f"[compare] Error after {_time.time()-t0:.2f}s: {e}")
         return Div(
             P(f"Error processing photo: {str(e)}", cls="text-red-500 text-center py-4"),
             id="compare-results",
