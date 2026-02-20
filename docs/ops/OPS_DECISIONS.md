@@ -47,3 +47,30 @@ This document records deployment, infrastructure, and operational decisions for 
   3. Clear the custom command after success
 - **Why**: The init script checks for `.initialized` and skips setup if it exists, even if data is actually empty.
 - **Affects**: Railway deployment, `scripts/init_railway_volume.py`.
+
+## OD-006: Railway MCP Server for Claude Code Integration
+- **Date**: 2026-02-20
+- **Session**: 54G
+- **Context**: CLAUDE.md rules told Claude Code to use `railway logs` for deploy
+  diagnosis, but Claude Code repeatedly ignored this across sessions 54A-54F. The
+  rule was unenforceable because it relied on instruction-following rather than
+  mechanical enforcement.
+- **Decision**: Install Railway MCP Server (`claude mcp add railway-mcp-server --
+  npx -y @railway/mcp-server`) to give Claude Code native API access to Railway.
+  This makes Railway tools (deploy status, logs, health checks) available as
+  first-class MCP tools rather than relying on Claude Code to remember to run
+  CLI commands.
+- **Why MCP over rules alone**: MCP integrates as a first-class tool that appears
+  in the tool list. Rules in CLAUDE.md can be forgotten or deprioritized. MCP tools
+  are mechanically available. Railway's own documentation recommends this integration.
+- **Alternatives rejected**:
+  - (1) Just adding more CLAUDE.md rules — already proven ineffective across 4+
+    sessions (54A, 54B, 54D, 54F all failed to use `railway logs`)
+  - (2) Railway Skills packages (less maintained than official MCP server)
+  - (3) Manual log checking (defeats automation purpose)
+- **Configuration**: Stored in `~/.claude.json` under project-scoped mcpServers.
+  Available after Claude Code session restart.
+- **Verification**: `claude mcp list` should show `railway-mcp-server`. If not
+  present, re-run: `claude mcp add railway-mcp-server -- npx -y @railway/mcp-server`
+- **Breadcrumbs**: Session 54F (didn't use railway logs despite rule),
+  HARNESS_DECISIONS.md HD-012, CLAUDE.md deployment section
