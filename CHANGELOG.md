@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.55.3] — 2026-02-20
+
+### Fixed
+- **Compare/Estimate loading indicator**: CSS `display: block` for div-based htmx indicators (was `inline`), submit button disabled during processing, spinner enlarged (h-10 w-10), auto-scroll to spinner on file selection, accurate "10-30 seconds" timing text
+
+### Documentation
+- **Test triage**: 127 test failures classified — all state pollution, 0 real bugs. All pass in isolation.
+- **Admin auth verification**: Auth mechanism documented (email-in-set, cookie sessions, 401/403). Playwright admin auth not configured (tests run with auth disabled).
+
+### Testing
+- 1 new test (submit button disable CSS assertion)
+
 ## [v0.55.2] — 2026-02-20
 
 ### Documentation
