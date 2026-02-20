@@ -144,6 +144,7 @@ Schema defined — implementation with first API calls in Session 52+.
 - [x] **Batch Identity Entry**: "Name These Faces" sequential mode — DONE (Session 51)
 - [ ] **OPS-001**: Custom SMTP for branded "Rhodesli" email sender
 - [ ] **FE-040-043**: Skipped faces workflow for non-admin users
+- [ ] **PRODUCT-001: Face Compare Standalone — Tier 1**: New FastHTML app at subdomain. Same InsightFace backend + kinship calibration from Session 32. Stripped-down UI: upload two photos → tiered results → no persistence. Mobile-responsive, privacy-first. Differentiation: "Calibrated against real genealogical data." Estimated 1-2 sessions. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
 
 ## Near-Term (3-5 Sessions)
 
@@ -159,6 +160,8 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **Overnight ML pipeline** — `scripts/ml_pipeline.py` with modes: overnight (full pipeline), interactive (quick), validate (re-check compare results). See session 54B context.
 - [ ] **Playwright MCP integration** — Browser-based production testing. `.mcp.json` configured, needs first test run.
 - [ ] **Production smoke test in CI** — Auto-run `scripts/production_smoke_test.py` on deploy
+- [ ] **ML-070: MLflow Integration — CORAL Training**: Add `mlflow.pytorch.autolog()` to CORAL date estimation training script. Run locally with `mlflow ui`. ~10 lines of code. Portfolio value: demonstrate MLflow proficiency. See AD-116, docs/session_context/session_54c_planning_context.md Part 1B.
+- [ ] **PRODUCT-002: Face Compare Tier 2 — Shared Backend**: Shared comparison engine between standalone and Rhodesli. Rhodesli path adds: archive identity matching, upload persistence, date context, contribute-to-archive flow. Public path: compare and discard. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
 
 ## Medium-Term
 
@@ -175,6 +178,13 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **Processing Timeline UI**: Per-photo status display for trust restoration. (Source: Expert review, Session 54. See AD-111)
 - [ ] **Observability over unit tests**: Prioritize integration tests, per-photo processing timelines, job status visibility. (Source: Expert review, Session 54. See AD-110)
 
+## Medium-Term — New Products & ML (Session 54c)
+
+- [ ] **ML-071: MLflow — Gemini Prompt Tracking**: Track how different Gemini API prompts yield better/worse photo context extraction over time. Log prompt text, model version, output quality metrics per run. See AD-116, docs/session_context/session_54c_planning_context.md Part 1B.
+- [ ] **ML-072: MLflow — Local vs Web ML Benchmarking**: Compare InsightFace local inference vs API-based face comparison. Track latency, accuracy, cost per comparison. See AD-116, docs/session_context/session_54c_planning_context.md Part 1B.
+- [ ] **PRODUCT-003: NL Archive Query MVP (LangChain)**: Natural language interface: "Show me photos from the 1930s with people who look like [uploaded face]." Chain: face detection → embedding search → date filtering → NL response. Prerequisites: similarity calibration + CORAL + stable identity matching. Estimated 2-3 sessions once prerequisites met. See AD-118, docs/session_context/session_54c_planning_context.md Part 1B.
+- [ ] **PRODUCT-004: Historical Photo Date Estimator Standalone**: Upload historical photo → estimate when taken using CORAL model. Genuinely novel — no existing tool offers this. Prerequisite: CORAL model trained and validated. Could combine with face comparison in shared "faces" tool site. See docs/session_context/session_54c_planning_context.md Part 2D.
+
 ## Long-Term
 
 - [ ] **BE-040-042**: PostgreSQL migration (JSON won't scale past ~500 photos)
@@ -184,6 +194,7 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **GEO-003**: Community-specific context events (diaspora cities)
 - [ ] **KIN-001**: Kinship recalibration post-GEDCOM
 - [ ] **Session 43**: Life Events & Context Graph (event tagging, richer timeline)
+- [ ] **PRODUCT-005: Face Compare Tier 3 — Product Grade**: User accounts, saved comparisons, API access, batch comparison. Post-employment priority. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
 
 ---
 
