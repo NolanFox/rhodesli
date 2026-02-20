@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.54.0] — 2026-02-20
+
+### Fixed
+- **Compare upload 640px ML resize** — Reduced from 1024px to 640px, matching InsightFace's internal `det_size=(640,640)`. Original image saved to R2 for display; separate 640px copy for ML processing only. Estimated 5-15x speedup vs original 1280px. (AD-110)
+- **Estimate upload 640px ML resize** — Same 640px optimization applied to estimate upload face detection path.
+- **HTTP 404 for non-existent resources** — `/person/{id}`, `/photo/{id}`, `/identify/{id}`, and `/identify/{a}/match/{b}` now return HTTP 404 (was 200) for non-existent resources. Friendly HTML preserved with same visual design.
+- **Estimate loading indicator** — Enhanced with SVG spinner and duration warning ("This may take a moment for group photos"), matching compare page pattern.
+
+### Added
+- **AD-110: Serving Path Contract** — Named invariant: web request path MUST NEVER run heavy ML. Hybrid architecture documented: cloud lightweight (640px, compare) + local heavy (buffalo_l, batch). Future: MediaPipe client-side → remove InsightFace from Docker.
+- **AD-111-113** — Face lifecycle states (future design), serverless GPU (rejected), ML removal from serving path (rejected as premature).
+- **UX Issue Tracker** — `docs/ux_audit/UX_ISSUE_TRACKER.md` with 35 issues, all with dispositions (14 fixed, 7 planned, 10 backlog, 3 deferred, 1 rejected).
+- **UX Audit README** — `docs/ux_audit/UX_AUDIT_README.md` explaining the audit framework.
+- **buffalo_sc investigation** — Embeddings NOT compatible with buffalo_l (MobileFaceNet vs ResNet50 backbone). Cannot switch without re-embedding all ~550 faces.
+- 1 new test, 6 updated tests (2481 total)
+
 ## [v0.53.0] — 2026-02-20
 
 ### Fixed

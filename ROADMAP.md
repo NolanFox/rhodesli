@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.53.0 · 2480 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.54.0 · 2481 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -16,7 +16,7 @@ Current: v0.53.0 · 2480 tests · 271 photos · 181 faces · 46 confirmed
 - ~~Face count / collection stats~~ FIXED — canonical functions, 19 regression tests
 - JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
 - Contributor roles implemented (ROLE-002/003) — needs first real contributor to test
-- **ML pipeline now runs on Railway** — InsightFace + ONNX Runtime in Docker, PROCESSING_ENABLED=true
+- **ML architecture: AD-110 Serving Path Contract** — web requests NEVER run heavy ML. Compare: 640px + buffalo_l. Batch: local.
 - Community sharing live on Jews of Rhodes Facebook group (~2,000 members) — first 3 active identifiers
 - Gemini 3.1 Pro wired to Estimate upload (AD-101) — progressive refinement architecture designed (AD-102)
 
@@ -68,20 +68,24 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Planned Sessions
 
-### Session 49B: Interactive Review (requires Nolan)
+### Session 49B: Interactive Review (requires Nolan) — OVERDUE
 - Birth year bulk review — generate ground truth anchors
 - Real GEDCOM upload + match review
 - Visual walkthrough of all features
+- **This is overdue — schedule this weekend**
 - See: docs/session_context/session_49_interactive_prep.md
 
-### Session 53: PRD-015 Face Alignment Implementation
-- Coordinate bridging prompt with InsightFace bounding boxes
-- Combined API call: date + face alignment + location
-- Solve Vida Capeluto's count mismatch problem
+### Session 55: Landing Page Refresh + Lazy Loading
+- Landing page: live-data entry points, mobile-first
+- Timeline/Photos lazy loading (271 images, needed before 500)
+- Activity feed enrichment (more event types)
+- Processing Timeline UI (trust restoration, AD-111)
 
-### Session 54: Landing Page Refresh
-- Live-data entry points, mobile-first
-- Feature showcase with dynamic counts
+### Session 56: ML Architecture Evolution
+- MediaPipe client-side face detection (replace InsightFace in browser)
+- Docker image slimming (target <500MB from current 3-4GB)
+- Bounding boxes on uploaded photo for multi-face selection
+- Upload pipeline wiring (AD-110)
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging: "Moise's wedding in Havana"
@@ -90,6 +94,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-20: **v0.54.0 — Session 54**: Quick Fixes + Architecture + Harness Evolution. Compare upload 640px ML resize (was 1024px), split display/ML paths, buffalo_sc investigated (incompatible — different backbone). AD-110 Serving Path Contract, AD-111-113 (face lifecycle, Modal rejected, ML removal rejected). UX Issue Tracker (35 issues, all with dispositions). HTTP 404 for non-existent person/photo pages. Estimate loading indicator enhanced. 1 new test (2481 total).
 - [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested (all healthy). Compare upload fixes: loading indicator with spinner + duration warning, uploaded photo display in results, resize optimization (1280→1024px), HTMX indicator CSS dual-selector fix. UX audit framework (docs/ux_audit/). HD-008-009. 4 new tests (2480 total).
 - [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX Runtime in Docker with buffalo_l model pre-downloaded. Gemini 3.1 Pro wired to Estimate upload with graceful degradation. "Name These Faces" added to public photo page. Cloud-ready ingest pipeline (DATA_DIR support, R2 auto-upload). Health check reports ML status. 30 new tests (2465 total).
 - [x] 2026-02-19: **v0.51.1 — Session 51B**: Production Bug Fixes. Compare upload honest messaging (was misleading "check back soon"). Removed redundant Estimate/Compare tab switchers. Supabase keepalive in /health endpoint. Name These Faces confirmed admin-only by design. HD-008 (functional verification). 16 new tests (2433 total).
@@ -112,4 +117,5 @@ For sessions 1-43: see [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HI
 - Session history: `docs/roadmap/SESSION_HISTORY.md`
 - ML decisions: `docs/ml/ALGORITHMIC_DECISIONS.md`
 - Ops decisions: `docs/ops/OPS_DECISIONS.md`
+- UX audit: `docs/ux_audit/UX_ISSUE_TRACKER.md`
 - Lessons learned: `tasks/lessons.md`

@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 24.0 — February 20, 2026
-**Status**: 2480 tests passing, v0.53.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 25.0 — February 20, 2026
+**Status**: 2481 tests passing, v0.54.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -19,7 +19,17 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
-## Latest: Session 53 (v0.53.0 — 2026-02-20)
+## Latest: Session 54 (v0.54.0 — 2026-02-20)
+
+- Compare upload: 640px ML resize (was 1024px), split display/ML paths (AD-110)
+- buffalo_sc investigated: incompatible embeddings (different backbone)
+- AD-110 Serving Path Contract, AD-111-113 (face lifecycle, Modal rejected, ML removal rejected)
+- UX Issue Tracker: 35 issues with dispositions (docs/ux_audit/UX_ISSUE_TRACKER.md)
+- HTTP 404 for non-existent person/photo pages (was 200)
+- Estimate loading indicator enhanced with spinner
+- 1 new test (2481 total)
+
+## Session 53 (v0.53.0 — 2026-02-20)
 
 - Comprehensive production audit: 35 routes tested, all healthy
 - Compare upload fixes: loading indicator, uploaded photo display, resize optimization
@@ -174,13 +184,15 @@ Schema defined — implementation with first API calls in Session 52+.
 - Bug list from manual testing
 - See: [docs/session_context/session_49_interactive_prep.md](../session_context/session_49_interactive_prep.md)
 
-### Session 53: PRD-015 Face Alignment Implementation
-- Coordinate bridging prompt with InsightFace bounding boxes
-- Combined API call: date + face alignment + location
+### Session 55: Landing Page Refresh + Lazy Loading
+- Landing page: live-data entry points, mobile-first
+- Timeline/Photos lazy loading (271 images, needed before 500)
+- Activity feed enrichment (more event types)
 
-### Session 54: Landing Page Refresh
-- Feature showcase with live-data entry points
-- Mobile-first design
+### Session 56: ML Architecture Evolution
+- MediaPipe client-side face detection
+- Docker image slimming (target <500MB)
+- Upload pipeline wiring (AD-110)
 
 ---
 
