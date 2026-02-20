@@ -95,6 +95,7 @@ app, rt = fast_app(
     secret_key=SESSION_SECRET,
     hdrs=(
         Meta(name="viewport", content="width=device-width, initial-scale=1"),
+        Link(rel="icon", type="image/svg+xml", href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%234f46e5'/%3E%3Ctext x='16' y='23' font-size='20' font-family='serif' font-weight='bold' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E"),
         Script(src="https://cdn.tailwindcss.com"),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
@@ -322,6 +323,44 @@ for i, route in enumerate(app.routes):
         photos_route = app.routes.pop(i)
         app.routes.insert(0, photos_route)
         break
+
+
+# ---------------------------------------------------------------------------
+# Global 404 handler — styled page for any unrecognized route
+# ---------------------------------------------------------------------------
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+@app.exception_handler(404)
+async def custom_404_handler(request, exc):
+    page_html = to_xml(
+        Title("Page Not Found - Rhodesli"),
+    ) + to_xml(
+        Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+    ) + to_xml(
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16"
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800"
+            ),
+            Div(
+                Div(
+                    Span("404", cls="text-6xl font-bold text-slate-700 block mb-4"),
+                    H1("Page not found", cls="text-2xl font-serif font-bold text-white mb-3"),
+                    P("The page you're looking for doesn't exist.", cls="text-slate-400 mb-8"),
+                    A("Explore the Archive", href="/",
+                      cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"),
+                    cls="text-center"
+                ),
+                cls="flex items-center justify-center min-h-[60vh]"
+            ),
+            cls="min-h-screen bg-slate-900"
+        ),
+    )
+    return HTMLResponse(page_html, status_code=404)
+
 
 # Registry path - single source of truth
 REGISTRY_PATH = data_path / "identities.json"

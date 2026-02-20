@@ -471,3 +471,50 @@ class TestPublicPageMobileNav:
         response = client.get("/")
         # Script checks for sidebar element and skips if present
         assert "getElementById('sidebar')" in response.text
+
+
+# ---------------------------------------------------------------------------
+# Styled 404 catch-all tests (Session 49B audit fix M1)
+# ---------------------------------------------------------------------------
+
+class TestStyled404CatchAll:
+    """Unknown routes must return a styled 404 page, not bare text."""
+
+    def test_unknown_route_returns_404(self, client):
+        """Arbitrary unknown path returns 404 status."""
+        response = client.get("/nonexistent-page-xyz")
+        assert response.status_code == 404
+
+    def test_unknown_route_has_styled_page(self, client):
+        """404 page has styled content, not bare text."""
+        response = client.get("/nonexistent-page-xyz")
+        assert "Rhodesli" in response.text
+        assert "Page not found" in response.text
+
+    def test_unknown_route_has_explore_link(self, client):
+        """404 page has a link back to the archive."""
+        response = client.get("/nonexistent-page-xyz")
+        assert "Explore the Archive" in response.text
+
+    def test_unknown_route_has_nav(self, client):
+        """404 page has navigation bar."""
+        response = client.get("/nonexistent-page-xyz")
+        assert 'href="/"' in response.text
+
+
+# ---------------------------------------------------------------------------
+# Favicon tests (Session 49B audit fix M4)
+# ---------------------------------------------------------------------------
+
+class TestFavicon:
+    """Pages must include a favicon to prevent console 404 errors."""
+
+    def test_landing_page_has_favicon(self, client):
+        """Landing page includes favicon link."""
+        response = client.get("/")
+        assert 'rel="icon"' in response.text
+
+    def test_workstation_has_favicon(self, client):
+        """Workstation includes favicon link."""
+        response = client.get(WORKSTATION_URL)
+        assert 'rel="icon"' in response.text
