@@ -346,3 +346,132 @@ class TestDeploySafetyML:
         dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
         assert "PROCESSING_ENABLED=true" in dockerfile, \
             "Dockerfile must set PROCESSING_ENABLED=true for Railway ML processing"
+
+    def test_google_genai_in_requirements(self):
+        """requirements.txt must include google-genai for Gemini date estimation."""
+        from pathlib import Path
+        reqs = (Path(__file__).parent.parent / "requirements.txt").read_text()
+        assert "google-genai" in reqs, \
+            "requirements.txt must include google-genai for Gemini date estimation"
+
+
+# ---------------------------------------------------------------------------
+# Estimate upload — graceful degradation
+# ---------------------------------------------------------------------------
+
+
+class TestEstimateUploadProcessing:
+    """Estimate upload handles ML + Gemini availability combinations."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        from app.main import app
+        from starlette.testclient import TestClient
+        self.client = TestClient(app)
+
+    def test_estimate_rejects_non_image(self):
+        """Non-image files are rejected."""
+        import io
+        txt = io.BytesIO(b"not an image")
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = self.client.post(
+                "/api/estimate/upload",
+                files={"photo": ("test.txt", txt, "text/plain")},
+            )
+        assert response.status_code == 200
+        assert "JPG or PNG" in response.text
+
+    def test_estimate_rejects_oversized(self):
+        """Files over 10MB are rejected."""
+        import io
+        big = io.BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * (11 * 1024 * 1024))
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = self.client.post(
+                "/api/estimate/upload",
+                files={"photo": ("big.jpg", big, "image/jpeg")},
+            )
+        assert response.status_code == 200
+        assert "too large" in response.text
+
+    def test_estimate_no_photo(self):
+        """Missing photo returns message."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = self.client.post("/api/estimate/upload")
+        assert response.status_code == 200
+        assert "No photo" in response.text
+
+    def test_estimate_no_ml_no_gemini_shows_honest_message(self):
+        """Without ML or Gemini, shows honest 'photo saved' message."""
+        import io
+        img = io.BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main._load_date_labels", return_value={}), \
+             patch("core.storage.can_write_r2", return_value=False), \
+             patch.dict("os.environ", {"GEMINI_API_KEY": ""}, clear=False), \
+             patch.dict("sys.modules", {"cv2": None, "insightface": None, "insightface.app": None}):
+            response = self.client.post(
+                "/api/estimate/upload",
+                files={"photo": ("test.jpg", img, "image/jpeg")},
+            )
+        assert response.status_code == 200
+        html = response.text
+        assert "Photo saved" in html
+        assert "estimate-upload-result" in html
+
+    def test_estimate_with_gemini_shows_date(self):
+        """When Gemini is available, shows estimated date."""
+        import io
+        img = io.BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+        mock_gemini_result = {
+            "best_year_estimate": 1938,
+            "estimated_decade": 1930,
+            "probable_range": [1935, 1945],
+            "confidence": "medium",
+            "reasoning_summary": "Fashion cues suggest late 1930s",
+            "evidence": {
+                "print_format": [{"cue": "white border", "strength": "moderate", "suggested_range": [1930, 1950]}],
+                "fashion": [],
+                "environment": [],
+                "technology": [],
+            },
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main._load_date_labels", return_value={}), \
+             patch("core.storage.can_write_r2", return_value=False), \
+             patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}, clear=False), \
+             patch.dict("sys.modules", {"cv2": None, "insightface": None, "insightface.app": None}), \
+             patch("app.main._call_gemini_date_estimate", return_value=mock_gemini_result):
+            response = self.client.post(
+                "/api/estimate/upload",
+                files={"photo": ("test.jpg", img, "image/jpeg")},
+            )
+        assert response.status_code == 200
+        html = response.text
+        assert "1938" in html
+        assert "estimate-gemini-result" in html
+
+    def test_estimate_matches_existing_label(self):
+        """When the uploaded photo matches an existing date label, show it."""
+        import io
+        img = io.BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)
+        mock_labels = {
+            "testphoto": {
+                "estimated_year": 1942,
+                "confidence_range": [1938, 1948],
+                "scene_analysis": {
+                    "photography_style": ["black and white"],
+                    "clothing_and_fashion": ["wide-lapel suits"],
+                },
+            }
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main._load_date_labels", return_value=mock_labels), \
+             patch("core.storage.can_write_r2", return_value=False):
+            response = self.client.post(
+                "/api/estimate/upload",
+                files={"photo": ("testphoto.jpg", img, "image/jpeg")},
+            )
+        assert response.status_code == 200
+        html = response.text
+        assert "1942" in html
+        assert "1938" in html  # range start

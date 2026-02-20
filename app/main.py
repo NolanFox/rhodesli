@@ -14653,12 +14653,106 @@ def get(page: int = 0, sess=None):
     return tuple(items)
 
 
+# --- Gemini date estimation helper ---
+# Simplified version of rhodesli_ml/scripts/generate_date_labels.py::call_gemini()
+# for real-time single-photo estimation via the web upload.
+
+_GEMINI_DATE_PROMPT = """You are a forensic photo analyst specializing in dating historical photographs
+from Sephardic Jewish communities, particularly from Rhodes (Dodecanese), Greece and
+diaspora communities in New York City, Miami, and Tampa, Florida.
+
+Analyze this photograph and estimate when it was ORIGINALLY TAKEN (not when printed or scanned).
+
+Examine FOUR evidence categories: (1) Print/Physical Format, (2) Fashion/Grooming,
+(3) Environmental/Geographic, (4) Technological/Object Markers.
+
+These photos are from a Sephardic Jewish community. Fashion often LAGGED 5-15 years behind
+Paris/London mainstream. Studio portraits used deliberately conservative formal attire.
+
+Return JSON only:
+{
+    "evidence": {
+        "print_format": [{"cue": "...", "strength": "strong|moderate|weak", "suggested_range": [YYYY, YYYY]}],
+        "fashion": [...],
+        "environment": [...],
+        "technology": [...]
+    },
+    "estimated_decade": DDDD,
+    "best_year_estimate": YYYY,
+    "confidence": "high|medium|low",
+    "probable_range": [YYYY, YYYY],
+    "reasoning_summary": "1-2 sentences",
+    "people_count": N,
+    "scene_description": "2-3 sentences describing the photo"
+}
+"""
+
+
+def _call_gemini_date_estimate(image_bytes: bytes, suffix: str, api_key: str) -> dict | None:
+    """Call Gemini Vision API for real-time date estimation of a single photo.
+
+    Returns parsed dict with date estimation fields, or None on failure.
+    """
+    from google import genai
+    from google.genai import types
+    import json as _json
+
+    client = genai.Client(
+        api_key=api_key,
+        http_options={"timeout": 30_000},  # 30s for real-time request
+    )
+
+    mime_type = "image/png" if suffix.lower() == ".png" else "image/jpeg"
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-pro-preview",
+            contents=[
+                types.Content(
+                    parts=[
+                        types.Part.from_text(text=_GEMINI_DATE_PROMPT),
+                        types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                    ]
+                )
+            ],
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                temperature=0.1,
+            ),
+        )
+
+        text = response.text
+        if not text:
+            return None
+
+        parsed = _json.loads(text)
+
+        # Handle nested date_estimation structure
+        date_est = parsed.get("date_estimation", parsed)
+
+        # Basic validation
+        decade = date_est.get("estimated_decade")
+        if not isinstance(decade, int) or decade < 1800 or decade > 2030:
+            return None
+
+        return date_est
+
+    except Exception as e:
+        print(f"[estimate] Gemini API error: {e}")
+        return None
+
+
 @rt("/api/estimate/upload")
 async def post(photo: UploadFile = None, sess=None):
     """Upload a photo for date estimation.
 
-    Shows existing date_labels.json data if available for the filename,
-    otherwise shows a "check back soon" message. Saves to uploads/estimate/.
+    Graceful degradation matrix:
+    | ML Available | Gemini Key | Behavior                          |
+    |-------------|-----------|-----------------------------------|
+    | Yes         | Yes       | Full: faces + AI date + evidence  |
+    | Yes         | No        | Partial: faces detected            |
+    | No          | Yes       | Partial: AI date only              |
+    | No          | No        | Minimal: photo saved, honest msg   |
     """
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"))
@@ -14723,18 +14817,105 @@ async def post(photo: UploadFile = None, sess=None):
             ),
             cls="py-4",
         )
-    else:
-        return Div(
+
+    # --- Real-time processing: face detection + Gemini date estimation ---
+    parts = []
+
+    # 1. Face detection (if InsightFace available)
+    face_count = 0
+    has_insightface = False
+    try:
+        import cv2  # noqa: F811
+        from insightface.app import FaceAnalysis  # noqa: F401
+        from core.ingest_inbox import extract_faces
+        has_insightface = True
+    except ImportError:
+        pass
+
+    if has_insightface:
+        import tempfile
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+            tmp.write(content)
+            tmp_path = _Path(tmp.name)
+        try:
+            faces, img_w, img_h = extract_faces(tmp_path)
+            face_count = len(faces)
+            if face_count > 0:
+                parts.append(
+                    Div(
+                        P(f"{face_count} {'face' if face_count == 1 else 'faces'} detected",
+                          cls="text-sm text-emerald-400 text-center"),
+                        cls="mb-3",
+                        data_testid="estimate-face-count",
+                    )
+                )
+        except Exception:
+            pass  # Face detection failure should not block date estimation
+        finally:
+            tmp_path.unlink(missing_ok=True)
+
+    # 2. Gemini date estimation (if API key available)
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    gemini_result = None
+    if gemini_key:
+        try:
+            gemini_result = _call_gemini_date_estimate(content, suffix, gemini_key)
+        except Exception as e:
+            print(f"[estimate] Gemini API error: {e}")
+
+    if gemini_result:
+        year = gemini_result.get("best_year_estimate") or gemini_result.get("estimated_decade", "Unknown")
+        prob_range = gemini_result.get("probable_range", [])
+        confidence = gemini_result.get("confidence", "unknown")
+        reasoning = gemini_result.get("reasoning_summary", "")
+
+        # Collect evidence clues
+        evidence = gemini_result.get("evidence", {})
+        clues = []
+        for category in ("print_format", "fashion", "environment", "technology"):
+            for cue in evidence.get(category, []):
+                if isinstance(cue, dict):
+                    clues.append(cue.get("cue", ""))
+        clues_text = "; ".join(clues[:4]) if clues else reasoning[:120] if reasoning else "Based on AI analysis"
+
+        parts.append(Div(
+            Div(
+                Span("~", cls="text-2xl text-amber-400 font-serif"),
+                cls="flex justify-center mb-2",
+            ),
+            P(f"Estimated: c. {year}", cls="text-xl font-serif font-bold text-white text-center"),
+            P(f"Range: {prob_range[0]}–{prob_range[1]}" if len(prob_range) >= 2 else "",
+              cls="text-sm text-slate-400 text-center mt-1"),
+            P(f"Confidence: {confidence}", cls="text-xs text-slate-500 text-center mt-1"),
+            P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic max-w-md mx-auto"),
+            cls="py-3",
+            data_testid="estimate-gemini-result",
+        ))
+    elif not has_insightface:
+        # No ML + no Gemini = honest minimal message
+        parts.append(Div(
             Div(
                 Span("?", cls="text-2xl text-slate-500"),
                 cls="flex justify-center mb-2",
             ),
             P("Photo saved!", cls="text-lg font-semibold text-white text-center"),
-            P("No AI estimate available yet — check back soon.",
+            P("Date estimation is being configured. Check back soon.",
               cls="text-sm text-slate-400 text-center mt-1"),
             P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
             cls="py-4",
-        )
+        ))
+    else:
+        # Faces detected but no Gemini = partial result
+        parts.append(Div(
+            P("Face detection complete — date estimation requires Gemini API.",
+              cls="text-sm text-slate-400 text-center"),
+            cls="py-2",
+        ))
+
+    if not parts:
+        parts.append(P("Photo saved.", cls="text-sm text-slate-400 text-center py-4"))
+
+    return Div(*parts, cls="py-4", data_testid="estimate-upload-result")
 
 
 @rt("/tree")
