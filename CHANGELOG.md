@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.54.2] — 2026-02-20
+
+### Added
+- **AD-115 through AD-118** — Memory infrastructure evaluation (current harness sufficient), MLflow integration strategy (targeted, CORAL training first), Face Compare three-tier product plan (Tier 1 prioritized), NL Archive Query deferred.
+- **8 new BACKLOG entries** — Face Compare Tiers 1-3, MLflow integration (3 entries), NL Archive Query, Historical Photo Date Estimator.
+- **ROADMAP priority restructure** — Confirmed priority ordering from ML tooling and product strategy research session.
+- **Planning context** — `docs/session_context/session_54c_planning_context.md` with competitive analysis of 7+ face comparison tools, evaluation of 5 memory/ML tools.
+
 ## [v0.54.1] — 2026-02-20
 
 ### Added
