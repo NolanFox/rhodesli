@@ -13,14 +13,14 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 ## Session Operations (Most Forgotten)
 1. Deploy: `git push origin main` — NEVER Railway dashboard. Check `railway logs` after push (OD-006). MCP auto-deferred via Tool Search.
 2. After UI/upload change: `python scripts/browser_smoke_test.py` (Playwright, not just curl — browser ≠ API)
-3. After deploy: `python scripts/production_smoke_test.py`
+3. After deploy: `production_smoke_test.py` + Playwright against production URL (HD-014, MANDATORY)
 4. Trimming docs: verify destination has content FIRST (HD-011)
 5. Every new file: reference from parent doc (BACKLOG, ROADMAP, or AD entry)
 
 ## Architecture
 - `app/main.py` — FastHTML web app | `core/` — ML (local only) | `data/` — JSON (read-only)
 - **ML (AD-110/114)**: Web NEVER runs heavy ML. Compare: 640px + hybrid (det_500m + w600k_r50). Batch: buffalo_l local.
-- **ML loading (AD-120)**: Every model load must log actual model (INFO) + WARNING on fallback. Silent fallbacks are bugs.
+- **ML loading (AD-120)**: Every model load must log actual model (INFO) + WARNING on fallback. Silent fallbacks are bugs. Never DEVNULL stderr (AD-122).
 @docs/architecture/OVERVIEW.md @docs/architecture/DATA_MODEL.md
 @docs/architecture/PERMISSIONS.md @docs/architecture/PHOTO_STORAGE.md
 

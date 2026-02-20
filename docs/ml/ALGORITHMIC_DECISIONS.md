@@ -1265,7 +1265,31 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: app/main.py (new routes), core/ingest_inbox.py (gatekeeper), compare/estimate handlers
 - **Breadcrumbs**: Session 54G planning context, BACKLOG SSE epic, docs/PERFORMANCE_CHRONICLE.md (latency context)
 
-1. Add a new entry with AD-XXX format (next: AD-122)
+### AD-122: Silent Failures Are Bugs — General Principle
+
+- **Date**: 2026-02-20
+- **Session**: 49B-Deploy (generalized from AD-120 + two subprocess instances)
+- **Status**: ACCEPTED — principle, not code change
+
+**Problem:** Three separate instances of silent failure found across sessions:
+1. AD-120: ML model silently falls back to wrong model (Session 54F)
+2. Session 49B triage Bug 1: Upload subprocess uses `stderr=DEVNULL`, dies silently
+3. Session 49B-Audit M3: Approve handler uses `stderr=DEVNULL`, same class
+
+**Decision:** No error output may be silently discarded anywhere in the codebase:
+1. Every subprocess must log stderr (to file or capture in variable)
+2. Every ML model load must log which model loaded (AD-120)
+3. Every error path must produce a visible signal (log, UI message, or status file)
+4. Never swallow exceptions without logging
+5. `subprocess.DEVNULL` for stderr is banned — use file logging instead
+
+**Enforcement:** grep for `DEVNULL|devnull` in code review. CLAUDE.md rule.
+
+- **Rejected**: Using DEVNULL as "intentional silence" — even intentional silence needs a comment explaining WHY the output is discarded and WHAT would fail silently
+- **Affects**: All subprocess calls in app/main.py, any future subprocess usage
+- **Breadcrumbs**: AD-120 (ML-specific), HD-012, HD-013, Session 49B triage, Session 49B-Audit
+
+1. Add a new entry with AD-XXX format (next: AD-123)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

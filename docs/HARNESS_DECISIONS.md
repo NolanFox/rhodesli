@@ -251,3 +251,28 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
     images in CI. Add when CI/CD pipeline exists (Phase F).
   - curl-based POST tests: Simplest to add now. Requires a small test image.
 - **Breadcrumbs:** Session 49B triage log, Lesson 78 (if added)
+
+## HD-014: Every Deploy Must Include Production Playwright Verification
+- **Date:** 2026-02-20
+- **Session:** 49B-Deploy
+- **Trigger:** Session 49B-Audit fixed 4 issues and wrote Playwright tests but
+  never pushed to production or re-ran tests against production. Same pattern
+  as 54F (11/11 smoke tests that only tested GET). Sessions 54G also failed
+  to verify changes on production.
+- **Decision:** After EVERY git push to main:
+  1. Wait for Railway deploy to complete (check via MCP or `railway logs`)
+  2. Run Playwright verification against production URL (NOT localhost)
+  3. Log result: "Production Playwright: X/Y passing"
+  4. If Playwright cannot run, log the specific error — do NOT silently skip
+- **Enforcement:** Post-deploy hook reminder + CLAUDE.md Session Operations #3 +
+  verification gate check
+- **Rationale:** "Tests pass locally" is not "production works." This gap has
+  recurred across 3+ sessions. The only fix is mandatory production verification
+  as a blocking step, not advisory.
+- **Alternatives considered:**
+  - Advisory only (just a reminder): Already failed — reminders in session logs
+    were ignored. Must be a blocking step.
+  - CI/CD Playwright: Ideal long-term but requires infrastructure (OPS-002).
+    This is the manual interim.
+- **Breadcrumbs:** Session 49B-Audit (skipped production verify), Session 54F
+  (GET-only smoke tests), HD-013, CLAUDE.md Session Operations, post-deploy hook
