@@ -25223,26 +25223,25 @@ if __name__ == "__main__":
     staging_dir = data_path / "staging"
     staging_dir.mkdir(parents=True, exist_ok=True)
 
-    # Eagerly load InsightFace models at startup to avoid 502 timeout on first request.
-    # buffalo_l (~300MB) takes 30-60s to load — must happen before serving traffic.
+    # Eagerly load hybrid models at startup to avoid 502 timeout on first request.
+    # Only load det_500m + w600k_r50 (hybrid path) — NOT full buffalo_l FaceAnalysis,
+    # which would double memory usage and OOM on Railway 512MB (AD-119).
+    # buffalo_l FaceAnalysis is lazy-loaded only if hybrid models are unavailable.
     if PROCESSING_ENABLED:
         import time as _startup_time
         try:
             from core.ingest_inbox import get_face_analyzer, get_hybrid_models
             t_ml_start = _startup_time.time()
 
-            print("[ml] Loading InsightFace buffalo_l model...")
-            t0 = _startup_time.time()
-            get_face_analyzer()
-            print(f"[ml] InsightFace buffalo_l loaded in {_startup_time.time()-t0:.1f}s")
-
-            # Also preload hybrid detection models (AD-114)
+            # Load hybrid detection models (AD-114): det_500m + w600k_r50
+            # These are individual ONNX models via get_model(), NOT full FaceAnalysis
             t0 = _startup_time.time()
             det, rec = get_hybrid_models()
             if det and rec:
                 print(f"[ml] Hybrid models loaded in {_startup_time.time()-t0:.1f}s (det_500m + w600k_r50)")
             else:
-                print(f"[ml] WARNING: Hybrid models NOT available — compare will use full buffalo_l (slow)")
+                # Fallback: load buffalo_l FaceAnalysis (detection+recognition only)
+                print("[ml] WARNING: Hybrid models NOT available, loading buffalo_l fallback...")
                 import os
                 models_dir = os.path.expanduser("~/.insightface/models")
                 for pack in ["buffalo_l", "buffalo_sc"]:
@@ -25252,6 +25251,9 @@ if __name__ == "__main__":
                         print(f"[ml]   {pack}: {files}")
                     else:
                         print(f"[ml]   {pack}: DIRECTORY NOT FOUND")
+                t0 = _startup_time.time()
+                get_face_analyzer()
+                print(f"[ml] buffalo_l fallback loaded in {_startup_time.time()-t0:.1f}s")
 
             # Warmup: run dummy inference to trigger ONNX JIT compilation (AD-119).
             # First real inference is 2-5x slower without this.

@@ -28,14 +28,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 # buffalo_l: full model pack for batch ingestion fallback (~300MB)
 # buffalo_sc: lightweight detector for hybrid compare (AD-114, AD-119)
 # Models stored in /root/.insightface/models/{buffalo_l,buffalo_sc}/
+# Downloaded separately to avoid OOM during build (AD-119).
 RUN python -c "\
 from insightface.app import FaceAnalysis; \
 fa = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider']); \
 fa.prepare(ctx_id=-1, det_size=(640, 640)); \
 print('InsightFace buffalo_l model downloaded and verified'); \
-fa2 = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider']); \
-fa2.prepare(ctx_id=-1, det_size=(640, 640)); \
-print('InsightFace buffalo_sc model downloaded and verified')"
+del fa"
+RUN python -c "\
+from insightface.app import FaceAnalysis; \
+fa = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider']); \
+fa.prepare(ctx_id=-1, det_size=(640, 640)); \
+print('InsightFace buffalo_sc model downloaded and verified'); \
+del fa"
 
 # Copy application code
 COPY app/ app/
