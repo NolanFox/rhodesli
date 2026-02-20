@@ -20881,12 +20881,15 @@ def post(job_id: str, sess=None):
             if upload_collection:
                 subprocess_args.extend(["--collection", upload_collection])
 
+            # Log subprocess output to file for debugging (not DEVNULL — AD-120)
+            approve_log_path = uploads_dir / f"{job_id}.log"
+            approve_log_file = open(approve_log_path, "w")
             subprocess.Popen(
                 subprocess_args,
                 cwd=project_root,
                 env=subprocess_env,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
+                stdout=approve_log_file,
+                stderr=approve_log_file,
             )
 
     file_count = upload.get("file_count", len(upload.get("files", [])))
