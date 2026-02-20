@@ -596,7 +596,7 @@ class TestCompareUploadPerformance:
         source = Path("app/main.py").read_text()
         assert "[compare] Face detection" in source
         assert "[compare] Embedding comparison:" in source
-        assert "[compare] Total:" in source
+        assert "[compare] TIMING SUMMARY:" in source
         assert "[compare] Image prep:" in source
 
     def test_handler_has_image_resize_logic(self):

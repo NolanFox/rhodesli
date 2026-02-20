@@ -313,6 +313,7 @@ def extract_faces_hybrid(filepath: Path):
 
     Returns same format as extract_faces: (results, width, height).
     """
+    import time as _time
     import cv2
     import numpy as np
     from insightface.utils.face_align import norm_crop
@@ -321,21 +322,38 @@ def extract_faces_hybrid(filepath: Path):
     if not filepath.exists():
         raise FileNotFoundError(f"Image not found: {filepath}")
 
+    t0 = _time.time()
     detector, recognizer = get_hybrid_models()
+    model_load_time = _time.time() - t0
     if detector is None or recognizer is None:
-        logging.info("Hybrid models unavailable, falling back to extract_faces")
+        logging.warning(
+            f"[hybrid] Models unavailable (load check: {model_load_time:.2f}s), "
+            f"falling back to extract_faces (full buffalo_l)"
+        )
         return extract_faces(filepath)
 
+    logging.info(
+        f"[hybrid] Using det_500m + w600k_r50 "
+        f"(model access: {model_load_time:.3f}s, "
+        f"cached={_hybrid_detector is not None})"
+    )
+
+    t_read = _time.time()
     img = cv2.imread(str(filepath))
     if img is None:
         raise ValueError(f"Could not read image: {filepath}")
 
     image_height, image_width = img.shape[:2]
     image_shape = (image_height, image_width)
+    logging.info(f"[hybrid] Image read: {_time.time()-t_read:.3f}s ({image_width}x{image_height})")
 
+    t_det = _time.time()
     bboxes, kpss = detector.detect(img, max_num=0, metric="default")
-    results = []
+    det_time = _time.time() - t_det
+    logging.info(f"[hybrid] Detection: {det_time:.3f}s ({len(bboxes)} faces)")
 
+    t_rec = _time.time()
+    results = []
     for i in range(len(bboxes)):
         kps = kpss[i] if kpss is not None else None
         if kps is None:
@@ -361,6 +379,14 @@ def extract_faces_hybrid(filepath: Path):
 
         pfe = create_pfe(face_data, image_shape)
         results.append(pfe)
+
+    rec_time = _time.time() - t_rec
+    total_time = _time.time() - t0
+    logging.info(
+        f"[hybrid] Recognition: {rec_time:.3f}s ({len(results)} faces) | "
+        f"Total extract: {total_time:.3f}s "
+        f"(model={model_load_time:.3f}s det={det_time:.3f}s rec={rec_time:.3f}s)"
+    )
 
     return results, image_width, image_height
 

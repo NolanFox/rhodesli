@@ -13835,6 +13835,8 @@ async def post(photo: UploadFile = None, sess=None):
         ml_path = _Path(ml_tmp.name)
 
     try:
+        timings = {}
+
         t1 = _time.time()
         img = cv2.imread(str(ml_path))
         if img is not None:
@@ -13846,14 +13848,16 @@ async def post(photo: UploadFile = None, sess=None):
                 img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
                 cv2.imwrite(str(ml_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
                 print(f"[compare] ML resize {w}x{h} -> {new_w}x{new_h}")
-        print(f"[compare] Image prep: {_time.time()-t1:.2f}s")
+        timings['image_prep'] = _time.time() - t1
+        print(f"[compare] Image prep: {timings['image_prep']:.2f}s")
 
         t1 = _time.time()
         # Use hybrid detection (AD-114): det_500m for fast detection +
         # w600k_r50 for archive-compatible embeddings. Falls back to
         # full buffalo_l if hybrid models aren't available.
         faces, _, _ = extract_faces_hybrid(ml_path)
-        print(f"[compare] Face detection (hybrid): {_time.time()-t1:.2f}s ({len(faces)} faces)")
+        timings['face_detection'] = _time.time() - t1
+        print(f"[compare] Face detection (hybrid): {timings['face_detection']:.2f}s ({len(faces)} faces)")
         if not faces:
             return Div(
                 P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
@@ -13873,13 +13877,15 @@ async def post(photo: UploadFile = None, sess=None):
             query_embedding, face_data, registry=registry,
             limit=20,
         )
-        print(f"[compare] Embedding comparison: {_time.time()-t1:.2f}s ({len(face_data)} archive faces)")
+        timings['embedding_compare'] = _time.time() - t1
+        print(f"[compare] Embedding comparison: {timings['embedding_compare']:.2f}s ({len(face_data)} archive faces)")
 
         # Persist original (not ML-resized) image to R2 for display
         t1 = _time.time()
         upload_content = tmp_path.read_bytes()
         upload_id = _save_compare_upload(upload_content, original_filename, faces, results)
-        print(f"[compare] Save upload: {_time.time()-t1:.2f}s ({len(upload_content)} bytes)")
+        timings['save_upload'] = _time.time() - t1
+        print(f"[compare] Save upload: {timings['save_upload']:.2f}s ({len(upload_content)} bytes)")
 
         # Save face embeddings for face selection (R2 or local)
         t1 = _time.time()
@@ -13894,7 +13900,8 @@ async def post(photo: UploadFile = None, sess=None):
             upload_dir = _Path("uploads/compare")
             upload_dir.mkdir(parents=True, exist_ok=True)
             (upload_dir / f"{upload_id}_faces.pkl").write_bytes(faces_pkl)
-        print(f"[compare] Save faces: {_time.time()-t1:.2f}s")
+        timings['save_faces'] = _time.time() - t1
+        print(f"[compare] Save faces: {timings['save_faces']:.2f}s")
 
         # Build response
         t1 = _time.time()
@@ -13922,7 +13929,8 @@ async def post(photo: UploadFile = None, sess=None):
 
         # Results grid
         parts.append(_compare_results_grid(results, crop_files))
-        print(f"[compare] Response build: {_time.time()-t1:.2f}s")
+        timings['response_build'] = _time.time() - t1
+        print(f"[compare] Response build: {timings['response_build']:.2f}s")
 
         # Contribute CTA
         user = get_current_user(sess or {}) if is_auth_enabled() else None
@@ -13953,7 +13961,9 @@ async def post(photo: UploadFile = None, sess=None):
                 )
             )
 
-        print(f"[compare] Total: {_time.time()-t0:.2f}s")
+        timings['total'] = _time.time() - t0
+        timing_str = " | ".join(f"{k}={v:.2f}s" for k, v in timings.items())
+        print(f"[compare] TIMING SUMMARY: {timing_str}")
         return Div(*parts, id="compare-results")
     except Exception as e:
         print(f"[compare] Error after {_time.time()-t0:.2f}s: {e}")
@@ -25216,17 +25226,34 @@ if __name__ == "__main__":
     # Eagerly load InsightFace models at startup to avoid 502 timeout on first request.
     # buffalo_l (~300MB) takes 30-60s to load — must happen before serving traffic.
     if PROCESSING_ENABLED:
+        import time as _startup_time
         try:
             from core.ingest_inbox import get_face_analyzer, get_hybrid_models
+            t_ml_start = _startup_time.time()
+
             print("[ml] Loading InsightFace buffalo_l model...")
+            t0 = _startup_time.time()
             get_face_analyzer()
-            print("[ml] InsightFace model loaded successfully")
+            print(f"[ml] InsightFace buffalo_l loaded in {_startup_time.time()-t0:.1f}s")
+
             # Also preload hybrid detection models (AD-114)
+            t0 = _startup_time.time()
             det, rec = get_hybrid_models()
             if det and rec:
-                print("[ml] Hybrid detection models loaded (det_500m + w600k_r50)")
+                print(f"[ml] Hybrid models loaded in {_startup_time.time()-t0:.1f}s (det_500m + w600k_r50)")
             else:
-                print("[ml] Hybrid models not available, using buffalo_l for compare")
+                print(f"[ml] WARNING: Hybrid models NOT available — compare will use full buffalo_l (slow)")
+                import os
+                models_dir = os.path.expanduser("~/.insightface/models")
+                for pack in ["buffalo_l", "buffalo_sc"]:
+                    pack_dir = os.path.join(models_dir, pack)
+                    if os.path.isdir(pack_dir):
+                        files = os.listdir(pack_dir)
+                        print(f"[ml]   {pack}: {files}")
+                    else:
+                        print(f"[ml]   {pack}: DIRECTORY NOT FOUND")
+
+            print(f"[ml] Total ML startup: {_startup_time.time()-t_ml_start:.1f}s")
         except Exception as e:
             print(f"[ml] InsightFace not available: {e}")
 
