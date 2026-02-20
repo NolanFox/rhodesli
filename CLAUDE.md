@@ -1,11 +1,6 @@
 ## Project Roadmap
 @ROADMAP.md
-
-Always check ROADMAP.md at session start. When completing ANY task, update ALL THREE:
-1. **ROADMAP.md** — `[x]`, date, move to "Recently Completed"
-2. **docs/BACKLOG.md** — Status to DONE, add date
-3. **CHANGELOG.md** — entry under current version
-Run: `python scripts/verify_docs_sync.py`
+Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md + CHANGELOG.md, run `python scripts/verify_docs_sync.py`
 
 # Rhodesli — Jewish Heritage Photo Archive
 
@@ -14,6 +9,13 @@ Run: `python scripts/verify_docs_sync.py`
 - **Admin**: NolanFox@gmail.com | **Live**: https://rhodesli.nolanandrewfox.com
 - **Test**: `pytest tests/ -v --ignore=tests/e2e/` | **Deploy**: push to main
 - **Local**: `source venv/bin/activate && python app/main.py`
+
+## Session Operations (Most Forgotten)
+1. Deploy: `git push origin main` — NEVER Railway dashboard
+2. After UI/upload change: `python scripts/browser_smoke_test.py` or test with real photo
+3. After deploy: `python scripts/production_smoke_test.py`
+4. Trimming docs: verify destination has content FIRST (HD-011)
+5. Every new file: reference from parent doc (BACKLOG, ROADMAP, or AD entry)
 
 ## Architecture
 - `app/main.py` — FastHTML web app | `core/` — ML (local only) | `data/` — JSON (read-only)
@@ -52,21 +54,17 @@ Run: `python scripts/verify_docs_sync.py`
 - Back up data/ before any migration (AD-047)
 
 ## Workflow
-1. Read `tasks/lessons.md` and `tasks/todo.md` at session start
-2. Plan before coding — update todo.md with checkboxes
-3. Commit after every sub-task (conventional commits)
-4. Add lessons to lessons.md after any correction
+1. Read `tasks/lessons.md` + `tasks/todo.md` at session start | Plan in todo.md
+2. Commit after every sub-task (conventional commits) | Add lessons after corrections
 
 ## Session Completion Checklist
 1. `pytest tests/ -x -q --ignore=tests/e2e/` | 2. `python scripts/verify_data_integrity.py`
 3. `python scripts/verify_docs_sync.py` | 4. `git status` — no untracked data/ changes
 5. Dockerfile covers new imports | 6. requirements.txt updated | 7. CHANGELOG.md updated
 
-## Batch Ingest Rules
-- Explicit collection + source required | Back up data/ first | Verify counts before/after
-
-## Compaction Instructions
-Preserve: current task status, files modified, test commands, active bugs
+## Batch Ingest / Compaction
+- **Ingest**: explicit collection + source | Back up data/ | Verify counts
+- **Compaction**: preserve current task status, files modified, test commands, active bugs
 
 ## Key Docs (read on-demand)
 - `docs/architecture/` — OVERVIEW, DATA_MODEL, PERMISSIONS, PHOTO_STORAGE
