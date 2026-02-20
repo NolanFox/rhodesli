@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.55.0] — 2026-02-20
+
+### Fixed
+- **Sort routing in browse mode** — Sort controls (A-Z, Faces, Newest) on `/?section=to_review&view=browse` dropped the `view=browse` parameter, causing clicks to revert to focus mode where sorting is ignored. Sort links now preserve the current view mode.
+- **Upload stuck at 0% forever** — When background upload processing failed (subprocess crash), `stderr` was piped to DEVNULL and no status file was created, causing infinite "Starting..." polling. Now writes initial status file before spawning, logs subprocess output to file, and shows error with log excerpt after 2-minute timeout.
+- **Compare upload confirmed working** — Investigated "silent failure" report; compare endpoint processes uploads correctly on production (verified via curl and Playwright). Issue was likely transient or UX-related (no visible progress during 5-10s processing).
+
+### Testing
+- 10 new regression tests (2496 total): sort link view preservation (4), upload status timeout detection (4), compare form smoke (2)
+
+### Documentation
+- Session 49B triage log with root cause analysis for all 3 bugs
+- HD-013: Smoke tests must test actual user flows (POST/upload), not just page loads
+
 ## [v0.54.4] — 2026-02-20
 
 ### Documentation

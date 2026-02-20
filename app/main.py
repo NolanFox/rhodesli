@@ -3346,7 +3346,7 @@ def render_to_review_section(
     )
     if view_mode == "browse":
         return Div(
-            Div(header, _sort_control("to_review", sort_by), cls="flex items-center justify-between flex-wrap gap-2 mb-6"),
+            Div(header, _sort_control("to_review", sort_by, view_mode=view_mode), cls="flex items-center justify-between flex-wrap gap-2 mb-6"),
             triage_bar,
             content,
             cls="space-y-4"
@@ -3354,7 +3354,7 @@ def render_to_review_section(
     return Div(header, triage_bar, content, cls="space-y-6")
 
 
-def _sort_control(section: str, current_sort: str) -> Div:
+def _sort_control(section: str, current_sort: str, view_mode: str = None) -> Div:
     """Render sort control buttons for a section."""
     options = [
         ("name", "A-Z"),
@@ -3362,6 +3362,7 @@ def _sort_control(section: str, current_sort: str) -> Div:
         ("newest", "Newest"),
     ]
     buttons = []
+    view_param = f"&view={view_mode}" if view_mode else ""
     for value, label in options:
         is_active = current_sort == value
         cls = "px-2 py-1 text-xs font-medium rounded transition-colors "
@@ -3370,7 +3371,7 @@ def _sort_control(section: str, current_sort: str) -> Div:
         else:
             cls += "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
         buttons.append(
-            A(label, href=f"/?section={section}&sort_by={value}", cls=cls)
+            A(label, href=f"/?section={section}&sort_by={value}{view_param}", cls=cls)
         )
     return Div(
         Span("Sort:", cls="text-xs text-slate-500 mr-1"),
@@ -3406,7 +3407,7 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
     return Div(
         Div(
             section_header("People", f"{counts['confirmed']} identified \u2014 click anyone to see all their photos"),
-            _sort_control("confirmed", sort_by),
+            _sort_control("confirmed", sort_by, view_mode="browse"),
             cls="flex items-center justify-between flex-wrap gap-2 mb-6"
         ),
         content,
@@ -20025,12 +20026,30 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
     if collection:
         subprocess_args.extend(["--collection", collection])
 
+    # Write initial status file so we can detect process death
+    import json as _json_upload
+    inbox_dir = data_path / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    initial_status = {
+        "status": "starting",
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "total_files": len(saved_files),
+        "files_succeeded": 0,
+        "files_failed": 0,
+    }
+    with open(inbox_dir / f"{job_id}.status.json", "w") as _sf:
+        _json_upload.dump(initial_status, _sf)
+
+    # Log subprocess output to file for debugging (not DEVNULL)
+    log_path = inbox_dir / f"{job_id}.log"
+    log_file = open(log_path, "w")
+
     subprocess.Popen(
         subprocess_args,
         cwd=project_root,
         env=subprocess_env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=log_file,
+        stderr=log_file,
     )
 
     # Build initial status message
@@ -20076,6 +20095,55 @@ def get(job_id: str):
 
     with open(status_path) as f:
         status = json.load(f)
+
+    # Detect stuck "starting" status — subprocess wrote initial file but never
+    # progressed to "processing" (likely crashed on import or OOM)
+    if status["status"] == "starting":
+        from datetime import datetime as _dt_status, timezone as _tz_status
+        started_at = status.get("started_at", "")
+        try:
+            start_time = _dt_status.fromisoformat(started_at)
+            elapsed = (_dt_status.now(_tz_status.utc) - start_time).total_seconds()
+        except (ValueError, TypeError):
+            elapsed = 0
+
+        if elapsed > 120:
+            # Process has been "starting" for > 2 minutes — it's dead
+            log_path = data_path / "inbox" / f"{job_id}.log"
+            log_excerpt = ""
+            if log_path.exists():
+                try:
+                    log_text = log_path.read_text()
+                    # Last 500 chars of the log
+                    log_excerpt = log_text[-500:] if len(log_text) > 500 else log_text
+                except Exception:
+                    log_excerpt = "(could not read log)"
+
+            elements = [
+                P("Processing failed to start.", cls="text-red-400 text-sm font-medium"),
+                P("The background processing task did not complete. "
+                  "This may be due to insufficient memory or missing dependencies.",
+                  cls="text-slate-400 text-xs mt-1"),
+            ]
+            if log_excerpt:
+                elements.append(
+                    Div(
+                        P("Log output:", cls="text-slate-500 text-xs mb-1"),
+                        Pre(log_excerpt, cls="text-xs text-red-300 bg-slate-900 p-2 rounded overflow-x-auto max-h-32"),
+                        cls="mt-2"
+                    )
+                )
+            return Div(*elements, cls="p-3 bg-red-900/20 border border-red-500/30 rounded")
+
+        # Still within timeout — keep polling
+        return Div(
+            P("Starting processing...", cls="text-slate-300 text-sm"),
+            Span("\u23f3", cls="animate-pulse"),
+            hx_get=f"/upload/status/{job_id}",
+            hx_trigger="every 2s",
+            hx_swap="outerHTML",
+            cls="p-2 bg-blue-900/30 border border-blue-500/30 rounded flex items-center gap-2"
+        )
 
     if status["status"] == "processing":
         # Show real progress from job state
