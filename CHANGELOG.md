@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.54.3] — 2026-02-20
+
+### Performance
+- **Compare upload 51.2s → 10.5s on production (AD-119)** — Root cause: buffalo_sc model pack missing from Docker image, forcing fallback to full buffalo_l (det_10g, 10G FLOPs). Fixed by adding buffalo_sc to Dockerfile, loading only hybrid models at startup (not full FaceAnalysis — OOM on Railway 512MB), adding `allowed_modules=['detection', 'recognition']`, ONNX thread optimization, and model warmup. 4.9x improvement for typical photos.
+
+### Fixed
+- **OOM crash on Railway** — Startup was loading both buffalo_l FaceAnalysis (5 models) and hybrid models, exceeding 512MB. Now loads only hybrid (det_500m + w600k_r50) at startup; buffalo_l lazy-loaded as fallback.
+
 ## [v0.54.2] — 2026-02-20
 
 ### Added

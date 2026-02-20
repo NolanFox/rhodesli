@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.54.2 · 2486 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.54.3 · 2486 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -101,6 +101,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-20: **v0.54.3 — Session 54F**: Compare Performance Fix. 51.2s → 10.5s (4.9x). AD-119. buffalo_sc in Docker, hybrid-only startup, OOM fix.
 - [x] 2026-02-20: **Session 54E**: Verification Sweep. 22 deliverables audited, 1 gap closed. Playwright browser tests (8/8). CLAUDE.md Session Operations Checklist.
 - [x] 2026-02-20: **Session 54D**: Production Verification + Hybrid Analysis. 11/11 smoke test. Compare upload 51.2s. Hybrid detection analysis doc.
 - [x] 2026-02-20: **Session 54c**: ML Tooling & Product Strategy. AD-115-118. Face Compare 3-tier plan. 8 new BACKLOG entries.

@@ -1138,7 +1138,54 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: Future new module, would chain existing Rhodesli ML capabilities
 - **Breadcrumbs**: docs/session_context/session_54c_planning_context.md (Part 1B: LangChain section)
 
-1. Add a new entry with AD-XXX format (next: AD-119)
+### AD-119: Compare Performance Optimization — Model Lifecycle
+
+- **Date**: 2026-02-20
+- **Session**: 54F
+- **Status**: ACCEPTED — deployed and verified in production
+
+**Problem:** Compare upload took 51.2s on Railway production (Session 54D). Local Mac: 0.3-1.3s. The 40-50x gap was not normal CPU speed difference.
+
+**Root causes found:**
+1. **buffalo_sc not in Docker image** (PRIMARY — ~30-40s impact): Dockerfile only downloaded buffalo_l. On Railway, `get_hybrid_models()` returned (None, None), falling back to full buffalo_l with all 5 ONNX models via `FaceAnalysis`. det_10g (10G FLOPs) on Railway shared CPU ≈ 30-40s for detection alone.
+2. **Unnecessary models loaded**: buffalo_l FaceAnalysis loaded all 5 models (1k3d68, 2d106det, det_10g, genderage, w600k_r50). Only detection + recognition needed.
+3. **No ONNX thread optimization**: ONNX defaults to threads = physical cores with spin-waiting, causing contention on shared vCPU.
+4. **No model warmup**: First ONNX inference pays JIT compilation cost (3.78s → 0.34s locally).
+5. **OOM from dual FaceAnalysis** (discovered during deploy): Loading both buffalo_l FaceAnalysis AND hybrid models exceeded Railway 512MB.
+
+**Fixes applied:**
+1. Added buffalo_sc to Dockerfile (separate RUN step to avoid build OOM)
+2. `allowed_modules=['detection', 'recognition']` for buffalo_l fallback
+3. `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1` in Dockerfile
+4. Dummy warmup inference at startup
+5. Startup loads ONLY hybrid models; buffalo_l FaceAnalysis lazy-loaded as fallback
+
+**Performance results:**
+
+| Environment | Before | After | Improvement |
+|-------------|--------|-------|-------------|
+| Local first (cold) | 3.78s | 0.34s | 11x |
+| Local warm | 0.50s | 0.19s | 2.6x |
+| Production 2-face (warm) | 51.2s | 10.5s | 4.9x |
+| Production 14-face | ~65s est. | 28.5s | ~2.3x |
+
+**Remaining bottleneck (production):**
+- det_500m detection on shared CPU: ~3-5s
+- w600k_r50 recognition: ~1-1.5s per face
+- R2 upload (save result): ~2-3s
+- Further improvement requires GPU or client-side detection (MediaPipe, Session 56)
+
+**ONNX Runtime configuration:**
+- intra_op_num_threads: 1 (via OMP_NUM_THREADS env var)
+- Hybrid: det_500m + w600k_r50 (via get_model, not FaceAnalysis)
+- Warmup: yes (dummy 640x640 image at startup)
+- Startup memory: ~200MB (one detector + one recognizer)
+
+- **Affects**: Dockerfile, app/main.py (startup), core/ingest_inbox.py (get_face_analyzer, get_hybrid_models, extract_faces_hybrid)
+- **Rejected**: Loading full buffalo_l FaceAnalysis at startup (OOM on Railway 512MB)
+- **Breadcrumbs**: docs/session_context/session_54f_log.md, AD-110, AD-114
+
+1. Add a new entry with AD-XXX format (next: AD-120)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

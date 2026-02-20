@@ -117,7 +117,42 @@ R2 upload for ephemeral compare results.
 - [ ] Phase 5: Deploy and test production
 - [ ] Phase 6: Document and close (AD-119, ROADMAP, etc.)
 
+- [x] Phase 5: Deploy and test production (OOM fix applied and verified)
+- [x] Phase 6: Document and close (AD-119, CHANGELOG, ROADMAP)
+
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] Tests pass: `pytest tests/ -x -q`
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed
+- [x] Tests pass: `pytest tests/ -x -q` (2486 pass)
+- [x] Production smoke test: 11/11 pass
+- [x] Production compare: 51.2s → 10.5s verified
+
+## Session Summary
+
+**Root Cause:** buffalo_sc model pack missing from Docker image → hybrid fallback to full
+buffalo_l → det_10g (10G FLOPs) on Railway shared CPU ≈ 30-40s detection.
+
+**Fixes Applied:**
+1. Added buffalo_sc to Dockerfile (separate RUN steps): enables hybrid detection
+2. Startup loads ONLY hybrid models: prevents OOM on Railway 512MB
+3. allowed_modules=['detection', 'recognition']: skips 3 unnecessary models
+4. OMP_NUM_THREADS=1: prevents ONNX spin-wait contention
+5. Dummy warmup inference at startup: eliminates JIT cost on first request
+
+**Results:**
+| Metric | Before | After |
+|--------|--------|-------|
+| Production compare (2-face, warm) | 51.2s | 10.5s |
+| Production compare (14-face) | ~65s | 28.5s |
+| Local compare (first request) | 3.78s | 0.34s |
+| Local compare (warm) | 0.50s | 0.19s |
+
+**Files Modified:**
+- `Dockerfile` — buffalo_sc download, OMP_NUM_THREADS
+- `app/main.py` — startup model loading, warmup, timing instrumentation
+- `core/ingest_inbox.py` — allowed_modules, hybrid timing, extract_faces_hybrid logging
+- `tests/test_compare_intelligence.py` — updated timing assertion
+- `docs/ml/ALGORITHMIC_DECISIONS.md` — AD-119
+- `docs/ml/HYBRID_DETECTION_ANALYSIS.md` — production performance section
+- `CHANGELOG.md` — v0.54.3
+- `ROADMAP.md` — Session 54F entry

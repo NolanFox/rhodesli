@@ -118,8 +118,29 @@ pipeline item.
 Full buffalo_l remains the standard for local batch processing. Overnight
 validation (when implemented) will catch any quality regressions.
 
+## Production Performance (Post-Optimization, Session 54F)
+
+**AD-119 fixes deployed 2026-02-20.** Root cause: buffalo_sc was missing from
+Docker image, causing fallback to full buffalo_l (det_10g, 10G FLOPs).
+
+| Test | Before (54D) | After (54F) | Improvement |
+|------|-------------|-------------|-------------|
+| 2-face photo (warm) | 51.2s | 10.5s | 4.9x |
+| 14-face group | ~65s est. | 28.5s | ~2.3x |
+| 3-face photo | N/A | 12.7s | — |
+
+**Railway shared CPU approximate breakdown (2-face photo):**
+- det_500m detection: ~3-5s
+- w600k_r50 recognition (×2 faces): ~2-3s
+- R2 upload (save result): ~2-3s
+- Image decode + resize + comparison: ~1-2s
+
+**Memory:** ~200MB at runtime (one detector + one recognizer).
+Full buffalo_l FaceAnalysis caused OOM on Railway 512MB plan.
+
 ## Files
 
 - `core/ingest_inbox.py` — `get_hybrid_models()`, `extract_faces_hybrid()`
 - `app/main.py` — Compare/estimate endpoints use hybrid; startup preloads
+- `Dockerfile` — Downloads buffalo_sc + buffalo_l; OMP_NUM_THREADS=1
 - `tests/test_compare_intelligence.py` — 5 hybrid detection tests
