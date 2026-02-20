@@ -207,13 +207,21 @@ def get_face_analyzer():
     The buffalo_l model (~300MB) takes 30-60s to load. This singleton
     ensures it loads once (at startup or first use) and is reused for
     all subsequent face detection calls.
+
+    Only loads detection + recognition modules (AD-119). Landmarks and
+    gender/age are not needed — extract_faces() only uses normed_embedding,
+    det_score, and bbox.
     """
     global _face_analyzer
     if _face_analyzer is None:
         from insightface.app import FaceAnalysis
-        _face_analyzer = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+        _face_analyzer = FaceAnalysis(
+            name="buffalo_l",
+            allowed_modules=["detection", "recognition"],
+            providers=["CPUExecutionProvider"],
+        )
         _face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
-        logging.info("InsightFace buffalo_l model loaded and cached")
+        logging.info("InsightFace buffalo_l model loaded (detection+recognition only)")
     return _face_analyzer
 
 
