@@ -16068,12 +16068,27 @@ def public_photo_page(
                             data_action="flip-photo",
                             id="flip-photo-btn",
                         ) if has_back else None,
+                        # Admin: Name These Faces button (2+ unidentified faces required)
+                        Button(
+                            f"Name These Faces ({unidentified_count} unidentified)",
+                            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
+                            type="button",
+                            hx_get=f"/photo/{photo_id}/partial?seq=1",
+                            hx_target="#admin-name-faces-container",
+                            hx_swap="innerHTML",
+                            data_testid="name-these-faces-public",
+                        ) if is_admin and unidentified_count >= 2 else None,
                         cls="flex flex-wrap items-center justify-center gap-3 mt-4"
                     ),
                     Span(
                         "This photograph has writing on the back" if back_transcription else "Turn over to see the back of this photograph",
                         cls="text-slate-500 text-xs text-center block mt-2"
                     ) if has_back else None,
+                    # Admin: HTMX target for "Name These Faces" inline sequential identifier
+                    Div(
+                        id="admin-name-faces-container",
+                        cls="mt-4",
+                    ) if is_admin and unidentified_count >= 2 else None,
                     # Admin: Upload back image (only shown to admin when no back image)
                     Div(
                         Div(
