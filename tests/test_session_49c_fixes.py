@@ -111,6 +111,13 @@ class TestCompareUploadFormSubmit:
         html = resp.text
         assert "/api/compare/upload" in html
 
+    def test_upload_form_has_htmx_multipart_encoding(self, client):
+        """Upload form must have hx-encoding=multipart/form-data for HTMX file uploads.
+        Without this, HTMX sends URL-encoded data and the file is never received."""
+        resp = client.get("/compare")
+        html = resp.text
+        assert 'hx-encoding="multipart/form-data"' in html
+
     def test_upload_input_restricts_file_types(self, client):
         """File input must accept only JPG and PNG, not all images."""
         resp = client.get("/compare")
