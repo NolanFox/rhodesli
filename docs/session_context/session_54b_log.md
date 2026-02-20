@@ -7,7 +7,7 @@
 ## Phase Checklist
 - [x] Phase 0: Setup
 - [x] Phase 1: Hybrid Detection Fix (AD-114)
-- [ ] Phase 2: Real Upload Testing
+- [x] Phase 2: Real Upload Testing
 - [ ] Phase 3: Production Testing Infrastructure
 - [ ] Phase 4: UX Issue Tracker Verification
 - [ ] Phase 5: Harness Updates
@@ -45,6 +45,26 @@ Multi-photo validation (3 photos, 8 face pairs at 640px):
 - Startup preloads hybrid models alongside buffalo_l
 - Fallback: if buffalo_sc models unavailable, uses full buffalo_l
 - 5 new tests (2486 total)
+
+## Phase 2 Results — Real Upload Testing
+
+### Upload Test Results (Local, hybrid detection)
+
+| Test | Photo | Size | HTTP | Time | Faces | Matches | Upload Visible | Issues |
+|------|-------|------|------|------|-------|---------|---------------|--------|
+| Compare 2-face | Image 006 | 1.2M | 200 | 1.34s | 2 | 16 | Yes | None |
+| Compare 14-face | 596770938 | 828K | 200 | 0.82s | 12 | Yes | Yes | None |
+| Compare 3-face | lucia_cap | 8K | 200 | 0.33s | 3 | Yes | Yes | None |
+| Estimate 2-face | Image 006 | 1.2M | 200 | 0.36s | 2 | N/A | N/A | None |
+
+### Observations
+- All uploads return HTTP 200 with correct face detection
+- Hybrid detection active (startup logs confirm det_500m + w600k_r50)
+- 14-face photo detected 12 faces (vs 14 in index) — expected det_500m recall tradeoff
+- Response times excellent on local Mac (0.3-1.3s)
+- Upload preview image present in compare results
+- Multi-face selector present when >1 face detected
+- No errors or crashes
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
