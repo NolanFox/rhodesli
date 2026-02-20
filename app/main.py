@@ -25253,6 +25253,21 @@ if __name__ == "__main__":
                     else:
                         print(f"[ml]   {pack}: DIRECTORY NOT FOUND")
 
+            # Warmup: run dummy inference to trigger ONNX JIT compilation (AD-119).
+            # First real inference is 2-5x slower without this.
+            t0 = _startup_time.time()
+            import numpy as np
+            dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
+            if det and rec:
+                # Warmup hybrid path (primary compare path)
+                det.detect(dummy_img, max_num=0, metric="default")
+                print(f"[ml] Hybrid warmup: {_startup_time.time()-t0:.1f}s")
+            else:
+                # Warmup full buffalo_l (fallback path)
+                analyzer = get_face_analyzer()
+                analyzer.get(dummy_img)
+                print(f"[ml] buffalo_l warmup: {_startup_time.time()-t0:.1f}s")
+
             print(f"[ml] Total ML startup: {_startup_time.time()-t_ml_start:.1f}s")
         except Exception as e:
             print(f"[ml] InsightFace not available: {e}")
