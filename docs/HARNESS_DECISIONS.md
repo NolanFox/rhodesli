@@ -229,3 +229,25 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
     request; must log at actual load time.
 - **Breadcrumbs:** AD-119 (specific fix), AD-120 (principle),
   docs/PERFORMANCE_CHRONICLE.md (optimization journey)
+
+## HD-013: Smoke Tests Must Test Actual User Flows
+- **Date:** 2026-02-20
+- **Session:** 49B
+- **Trigger:** Session 54F reported "11/11 smoke tests passing" for compare,
+  but `scripts/production_smoke_test.py` only tests GET requests (page loads).
+  Compare POST (actual file upload) was never tested. Nolan discovered the
+  gap during manual testing. Compare endpoint turned out to be working, but
+  the smoke tests could not have detected a real failure.
+- **Decision:** Every smoke test for a feature that accepts user input must
+  test the input path (POST/upload), not just the page load (GET). Smoke
+  tests that only verify "page returns 200" give false confidence about
+  upload/submission functionality.
+- **Action items:**
+  - Add POST-based smoke tests for /api/compare/upload and /upload endpoints
+  - Production smoke test should include at least one file upload test
+  - Distinguish "page load tests" from "functional flow tests" in test naming
+- **Alternatives considered:**
+  - Full Playwright e2e in CI: Ideal but requires headless browser + test
+    images in CI. Add when CI/CD pipeline exists (Phase F).
+  - curl-based POST tests: Simplest to add now. Requires a small test image.
+- **Breadcrumbs:** Session 49B triage log, Lesson 78 (if added)
