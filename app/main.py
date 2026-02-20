@@ -13820,30 +13820,33 @@ async def post(photo: UploadFile = None, sess=None):
             )
 
     # Face detection + comparison
+    # Save two copies: original for R2 display, resized for ML processing.
+    # InsightFace runs detection at det_size=(640,640) internally, so anything
+    # above 640px on the longest edge is wasted compute (AD-110).
     with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
         tmp.write(content)
         tmp_path = _Path(tmp.name)
 
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as ml_tmp:
+        ml_tmp.write(content)
+        ml_path = _Path(ml_tmp.name)
+
     try:
-        # Resize to speed up InsightFace on CPU. Detection runs at det_size=(640,640)
-        # internally, so images beyond that provide diminishing quality benefit
-        # while dramatically slowing processing on Railway's shared CPU.
-        # Using 1024 as max to balance quality and speed (~4x faster than original).
         t1 = _time.time()
-        img = cv2.imread(str(tmp_path))
+        img = cv2.imread(str(ml_path))
         if img is not None:
             h, w = img.shape[:2]
-            _MAX_DIM = 1024
-            if max(h, w) > _MAX_DIM:
-                scale = _MAX_DIM / max(h, w)
+            _ML_MAX_DIM = 640  # Match InsightFace det_size — no benefit above this
+            if max(h, w) > _ML_MAX_DIM:
+                scale = _ML_MAX_DIM / max(h, w)
                 new_w, new_h = int(w * scale), int(h * scale)
                 img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                cv2.imwrite(str(tmp_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                print(f"[compare] Resized {w}x{h} -> {new_w}x{new_h}")
+                cv2.imwrite(str(ml_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                print(f"[compare] ML resize {w}x{h} -> {new_w}x{new_h}")
         print(f"[compare] Image prep: {_time.time()-t1:.2f}s")
 
         t1 = _time.time()
-        faces, _, _ = extract_faces(tmp_path)
+        faces, _, _ = extract_faces(ml_path)
         print(f"[compare] Face detection: {_time.time()-t1:.2f}s ({len(faces)} faces)")
         if not faces:
             return Div(
@@ -13866,7 +13869,7 @@ async def post(photo: UploadFile = None, sess=None):
         )
         print(f"[compare] Embedding comparison: {_time.time()-t1:.2f}s ({len(face_data)} archive faces)")
 
-        # Persist the upload (use resized image bytes for faster R2 upload)
+        # Persist original (not ML-resized) image to R2 for display
         t1 = _time.time()
         upload_content = tmp_path.read_bytes()
         upload_id = _save_compare_upload(upload_content, original_filename, faces, results)
@@ -13954,6 +13957,7 @@ async def post(photo: UploadFile = None, sess=None):
         )
     finally:
         tmp_path.unlink(missing_ok=True)
+        ml_path.unlink(missing_ok=True)
 
 
 @rt("/api/compare/upload/select")
@@ -14896,6 +14900,15 @@ async def post(photo: UploadFile = None, sess=None):
             tmp.write(content)
             tmp_path = _Path(tmp.name)
         try:
+            # Resize to 640px for ML — InsightFace det_size=(640,640) (AD-110)
+            ml_img = cv2.imread(str(tmp_path))
+            if ml_img is not None:
+                mh, mw = ml_img.shape[:2]
+                _ML_MAX = 640
+                if max(mh, mw) > _ML_MAX:
+                    sc = _ML_MAX / max(mh, mw)
+                    ml_img = cv2.resize(ml_img, (int(mw * sc), int(mh * sc)), interpolation=cv2.INTER_AREA)
+                    cv2.imwrite(str(tmp_path), ml_img, [cv2.IMWRITE_JPEG_QUALITY, 85])
             faces, img_w, img_h = extract_faces(tmp_path)
             face_count = len(faces)
             if face_count > 0:

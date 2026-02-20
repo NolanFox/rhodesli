@@ -600,50 +600,48 @@ class TestCompareUploadPerformance:
         assert "[compare] Image prep:" in source
 
     def test_handler_has_image_resize_logic(self):
-        """The compare upload handler must resize large images before detection.
+        """The compare upload handler must resize to 640px for ML processing.
 
         Regression test: Without resize, a 4000x3000 upload takes 60+ seconds
-        on Railway CPU. With resize to 1280px, it's 5-10x faster.
+        on Railway CPU. With resize to 640px (InsightFace det_size), 10-20x faster.
+        AD-110: ML path uses 640px; original preserved for R2 display.
         """
         import inspect
         import app.main as main_mod
         source = inspect.getsource(main_mod)
-        # Must contain resize logic with max dimension cap
+        # Must contain resize logic with ML max dimension cap
         assert "cv2.resize" in source
         assert "INTER_AREA" in source
-        assert "_MAX_DIM" in source or "1280" in source
+        assert "_ML_MAX_DIM" in source or "_ML_MAX" in source
 
-    def test_handler_uploads_resized_content_not_original(self):
-        """Handler must read back resized bytes from temp file for R2 upload.
+    def test_handler_saves_original_to_r2_not_ml_resized(self):
+        """Handler must save original image to R2 for display, not ML-resized.
 
-        Regression test: Uploading the original 5MB image to R2 adds 5-10s.
-        Uploading the resized ~200KB image is nearly instant.
+        AD-110: ML path resizes to 640px for face detection, but the original
+        full-resolution image is saved to R2 for user display.
         """
         import inspect
         import app.main as main_mod
         source = inspect.getsource(main_mod)
-        # Must use tmp_path.read_bytes() (resized content), not raw 'content'
+        # Must use tmp_path (original) for R2 upload, not ml_path (640px resized)
         assert "upload_content = tmp_path.read_bytes()" in source
 
-    def test_image_resize_preserves_small_images(self, tmp_path):
-        """Images already under 1280px should NOT be resized."""
+    def test_ml_resize_preserves_small_images(self, tmp_path):
+        """Images already under 640px should NOT be resized for ML."""
         import cv2
         import numpy as np
-        # Create a small image (640x480)
-        small_img = np.zeros((480, 640, 3), dtype=np.uint8)
-        small_img[100:200, 100:200] = [255, 128, 64]
+        # Create a small image (320x240)
+        small_img = np.zeros((240, 320, 3), dtype=np.uint8)
+        small_img[50:100, 50:100] = [255, 128, 64]
         img_path = tmp_path / "small.jpg"
         cv2.imwrite(str(img_path), small_img)
-        original_bytes = img_path.read_bytes()
 
-        # Read and check resize logic
         img = cv2.imread(str(img_path))
         h, w = img.shape[:2]
-        assert max(h, w) <= 1280, "Test image should be under 1280px"
-        # No resize needed — image stays as-is
+        assert max(h, w) <= 640, "Test image should be under 640px"
 
-    def test_image_resize_caps_large_images(self, tmp_path):
-        """Images over 1280px should be resized down."""
+    def test_ml_resize_caps_large_images(self, tmp_path):
+        """Images over 640px should be resized to 640px for ML processing."""
         import cv2
         import numpy as np
         # Create a large image (4000x3000)
@@ -652,12 +650,12 @@ class TestCompareUploadPerformance:
         img_path = tmp_path / "large.jpg"
         cv2.imwrite(str(img_path), large_img)
 
-        # Apply the same resize logic as the handler
+        # Apply the same resize logic as the handler (640px ML max)
         img = cv2.imread(str(img_path))
         h, w = img.shape[:2]
-        _MAX_DIM = 1280
-        assert max(h, w) > _MAX_DIM, "Test image should be over 1280px"
-        scale = _MAX_DIM / max(h, w)
+        _ML_MAX_DIM = 640
+        assert max(h, w) > _ML_MAX_DIM, "Test image should be over 640px"
+        scale = _ML_MAX_DIM / max(h, w)
         new_w, new_h = int(w * scale), int(h * scale)
         img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
         cv2.imwrite(str(img_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
@@ -665,34 +663,52 @@ class TestCompareUploadPerformance:
         # Verify resize
         resized = cv2.imread(str(img_path))
         rh, rw = resized.shape[:2]
-        assert max(rh, rw) <= _MAX_DIM
-        assert rw == 1280  # longest side should be exactly 1280
-        assert rh == 960   # aspect ratio preserved: 3000/4000 * 1280 = 960
+        assert max(rh, rw) <= _ML_MAX_DIM
+        assert rw == 640  # longest side should be exactly 640
+        assert rh == 480  # aspect ratio preserved: 3000/4000 * 640 = 480
 
-    def test_resize_reduces_file_size(self, tmp_path):
-        """Resizing should dramatically reduce file size for R2 upload."""
+    def test_ml_resize_reduces_file_size(self, tmp_path):
+        """Resizing to 640px should dramatically reduce file size for ML."""
         import cv2
         import numpy as np
-        # Create a large image with some content (not all zeros)
         rng = np.random.RandomState(42)
         large_img = rng.randint(0, 255, (3000, 4000, 3), dtype=np.uint8)
         img_path = tmp_path / "large.jpg"
         cv2.imwrite(str(img_path), large_img, [cv2.IMWRITE_JPEG_QUALITY, 90])
         original_size = img_path.stat().st_size
 
-        # Resize
+        # Resize to 640px (ML path)
         img = cv2.imread(str(img_path))
         h, w = img.shape[:2]
-        scale = 1280 / max(h, w)
+        scale = 640 / max(h, w)
         new_w, new_h = int(w * scale), int(h * scale)
         img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
         resized_path = tmp_path / "resized.jpg"
         cv2.imwrite(str(resized_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
         resized_size = resized_path.stat().st_size
 
-        # Resized should be significantly smaller (at least 3x for 4000->1280)
-        assert resized_size < original_size / 2, \
-            f"Resized {resized_size} should be <50% of original {original_size}"
+        # 4000->640 is >6x reduction, file size should shrink dramatically
+        assert resized_size < original_size / 4, \
+            f"Resized {resized_size} should be <25% of original {original_size}"
+
+    def test_split_path_original_for_display_640_for_ml(self):
+        """AD-110: Original image saved to R2 for display, 640px copy for ML.
+
+        The handler must create two temp files:
+        - tmp_path: original image, saved to R2 for user display
+        - ml_path: resized to 640px max, used only for InsightFace detection
+        """
+        from pathlib import Path
+        source = Path("app/main.py").read_text()
+        # Must have separate ML path
+        assert "ml_path" in source, "Handler must use separate ml_path for ML processing"
+        assert "ml_tmp" in source or "ml_path" in source
+        # ML path uses 640
+        assert "_ML_MAX_DIM = 640" in source or "_ML_MAX = 640" in source
+        # Original saved to R2 (tmp_path, not ml_path)
+        assert "upload_content = tmp_path.read_bytes()" in source
+        # Both temp files cleaned up
+        assert "ml_path.unlink" in source
 
     def test_compare_upload_with_mocked_insightface(self):
         """End-to-end: compare upload with mocked face detection returns results.
