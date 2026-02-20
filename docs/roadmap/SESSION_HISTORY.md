@@ -221,6 +221,26 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - CLAUDE.md: added Session Operations Checklist, compressed to 76/80 lines
 - All 2486 tests passing
 
+## Session 54F: Compare Performance Fix (2026-02-20) — v0.54.3
+- Compare pipeline latency 51.2s → 10.5s on production (4.9x improvement)
+- Root cause: buffalo_sc not in Docker → silent fallback to full buffalo_l (det_10g, 10G FLOPs)
+- Fixes: buffalo_sc in Dockerfile, hybrid-only startup, OOM fix, ONNX thread optimization, warmup
+- AD-119: Compare performance optimization — model lifecycle
+- 14-face group photo: 28.5s (first measurement)
+- Production verified: 11/11 smoke tests pass
+
+## Session 54G: Final Cleanup Before 49B Interactive (2026-02-20)
+- Harness hardening, documentation, verification. Zero new features.
+- AD-120: ML model loading observability — silent fallbacks are bugs (generalized from 54F)
+- AD-121: Interactive upload UX — SSE progress streaming architecture (design only)
+- HD-012: Silent ML fallback detection harness rule
+- OD-006: Railway MCP Server for Claude Code integration (installed, verify next session)
+- PERFORMANCE_CHRONICLE.md created (Chronicle 1: compare pipeline journey)
+- Browser testing audit: 54F had NO Playwright tests (only curl). 8/8 pass now.
+- SSE upload epic added to BACKLOG (2-3 session epic, AD-121)
+- Railway MCP installed, npm cache issue noted, Tool Search auto-defers
+- All 2486 tests passing
+
 ---
 
 ## Release Version History

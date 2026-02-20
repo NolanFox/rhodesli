@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.54.4] — 2026-02-20
+
+### Documentation
+- **AD-120: Silent fallback observability principle** — Generalized from Session 54F: all ML model loading must log actual model (INFO) + WARNING on fallback. Silent fallbacks are invisible to functional tests.
+- **AD-121: SSE upload architecture (design only)** — Server-Sent Events for compare/estimate upload progress streaming. 2-3 session epic added to BACKLOG.
+- **PERFORMANCE_CHRONICLE.md** — New append-only document tracking optimization journeys. Chronicle 1: compare pipeline 51.2s → 10.5s.
+- **HD-012**: Silent ML fallback detection harness rule.
+- **OD-006**: Railway MCP Server installed for Claude Code integration.
+
+### Infrastructure
+- **Railway MCP Server** — Installed for mechanical enforcement of `railway logs` after deploy. Replaces instruction-following which failed across 4+ sessions.
+- **Playwright browser testing audit** — Session 54F confirmed to have NO browser tests (only curl). 8/8 Playwright tests pass now. CLAUDE.md rule updated.
+
 ## [v0.54.3] — 2026-02-20
 
 ### Performance
