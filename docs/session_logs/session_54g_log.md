@@ -37,3 +37,66 @@
 
 ## Verification Gate
 See Phase 7B results below.
+
+---
+
+## 54H Pre-49B Verification (amendment)
+
+**Date**: 2026-02-20
+**Goal**: Verify 54G deliverables before interactive session 49B. No new features.
+
+| Check | Result | Action Taken |
+|-------|--------|-------------|
+| Railway MCP loaded | NO — installation didn't persist | OD-006 updated with fix steps |
+| npm cache fix | BLOCKED — requires `sudo chown -R 501:20 /Users/nolanfox/.npm` | Documented, needs manual fix |
+| Post-deploy hook | NO — `.claude/hooks/` directory doesn't exist | Noted; hook was never created |
+| MCP token overhead | N/A (MCP not loaded) | Skipped |
+| Playwright test scope | Page-load smoke tests ONLY (no upload tests) | Documented below |
+| /compare HTTP status | 200 | PASS |
+| /compare loading indicator | YES — spinner with "Analyzing your photo for faces..." | PASS |
+| /compare file upload input | YES — upload form with file input present | PASS |
+
+### CHECK 1: Railway MCP — NOT FUNCTIONAL
+
+The `claude mcp add` from 54G did not persist to config:
+- `~/.claude.json` mcpServers: `{}` (empty)
+- `.mcp.json`: only Playwright MCP, no Railway
+- `claude mcp list`: returns nothing
+
+Root cause: npm cache ownership issue prevents `@railway/mcp-server` from installing.
+Fix requires: `sudo chown -R 501:20 /Users/nolanfox/.npm`, then re-run `claude mcp add`.
+
+**Current enforcement for `railway logs` after deploy: CLAUDE.md rule only (known to be unreliable).**
+
+Updated OD-006 with full status and fix steps.
+
+### CHECK 2: MCP Token Overhead — N/A
+
+Skipped since MCP is not loaded.
+
+### CHECK 3: Playwright Test Scope — PAGE-LOAD ONLY
+
+The 8 tests in `scripts/browser_smoke_test.py` verify:
+1. Landing page — loads with images
+2. Timeline — loads with images
+3. Compare — page has `input[type="file"]` element
+4. Estimate — page loads
+5. People — page loads
+6. Photos — loads with images
+7. 404 handling — returns HTTP 404
+8. Health endpoint — returns 200 with "ok"
+
+**No test uploads a file.** No test verifies processing feedback, loading indicators, or result rendering. These are page-load smoke tests, not functional upload tests.
+
+**BACKLOG item needed**: Add upload-to-results e2e test for /compare (upload photo → verify spinner → verify results render). This requires manual verification in 49B until automated.
+
+### CHECK 4: Compare Upload UX Status (Production)
+
+1. **Loading indicator during processing**: YES — `hx-indicator="#upload-spinner"` with animated SVG spinner and "Analyzing your photo for faces..." text
+2. **File upload form**: YES — `<input type="file">` inside upload form with `hx-post="/api/compare/upload"`
+3. **Photos display in results**: Cannot verify without actual upload — needs manual test in 49B
+4. **Uploaded images persist to archive**: Cannot verify without admin login — needs manual test in 49B
+
+### Files Changed (54H)
+- docs/ops/OPS_DECISIONS.md — OD-006 status updated (MCP not functional)
+- docs/session_logs/session_54g_log.md — this 54H section appended

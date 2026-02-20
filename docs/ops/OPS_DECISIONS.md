@@ -64,11 +64,14 @@ This document records deployment, infrastructure, and operational decisions for 
   in the tool list. Rules in CLAUDE.md can be forgotten or deprioritized. MCP tools
   are mechanically available. Railway's own documentation recommends this integration.
 - **Token efficiency**: As of Jan 2026, Claude Code auto-defers MCP tools via Tool
-  Search. Railway tools load on-demand, not at startup. MCP not yet loaded in
-  54G session (requires restart). Verify with `/context` next session. If idle
-  overhead >2k tokens, hook-only approach is acceptable (zero token cost). Note:
-  npm cache permission issue observed on first launch — may need `sudo npm cache
-  clean --force` before MCP server can load.
+  Search. Railway tools load on-demand, not at startup.
+- **Status (54H verification)**: NOT LOADED. The `claude mcp add` from 54G did NOT
+  persist — `~/.claude.json` mcpServers is empty, `.mcp.json` only has Playwright.
+  npm cache has ownership issue (`/Users/nolanfox/.npm` needs `sudo chown -R 501:20`).
+  No `.claude/hooks/` directory exists either, so the post-deploy hook fallback is
+  also not functional. **Current enforcement: `railway logs` CLI command only.**
+  To fix: (1) `sudo chown -R 501:20 /Users/nolanfox/.npm`, (2) `claude mcp add
+  railway-mcp-server -- npx -y @railway/mcp-server`, (3) restart Claude Code session.
 - **Alternatives rejected**:
   - (1) Just adding more CLAUDE.md rules — already proven ineffective across 4+
     sessions (54A, 54B, 54D, 54F all failed to use `railway logs`)
