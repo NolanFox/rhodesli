@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.54.0 · 2481 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.54.1 · 2486 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -93,6 +93,8 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - PRD: docs/prds/011_life_events_context_graph.md
 
 ## Recently Completed
+
+- [x] 2026-02-20: **v0.54.1 — Session 54B**: Hybrid Detection + Testing Infrastructure. buffalo_sc detector + buffalo_l recognizer (AD-114, mean cosine sim 0.98). Real upload testing (4 tests, all pass, 0.3-1.3s). Production smoke test script (11 paths). Production verification harness rule (HD-010). UX tracker coverage verified (35/35). Playwright MCP configured. 5 new tests (2486 total).
 
 - [x] 2026-02-20: **v0.54.0 — Session 54**: Quick Fixes + Architecture + Harness Evolution. Compare upload 640px ML resize (was 1024px), split display/ML paths, buffalo_sc investigated (incompatible — different backbone). AD-110 Serving Path Contract, AD-111-113 (face lifecycle, Modal rejected, ML removal rejected). UX Issue Tracker (35 issues, all with dispositions). HTTP 404 for non-existent person/photo pages. Estimate loading indicator enhanced. 1 new test (2481 total).
 - [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested (all healthy). Compare upload fixes: loading indicator with spinner + duration warning, uploaded photo display in results, resize optimization (1280→1024px), HTMX indicator CSS dual-selector fix. UX audit framework (docs/ux_audit/). HD-008-009. 4 new tests (2480 total).

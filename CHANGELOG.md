@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.54.1] — 2026-02-20
+
+### Added
+- **Hybrid detection (AD-114)** — Compare and estimate uploads now use det_500m from buffalo_sc (500M FLOPs, 20x lighter) for face detection + w600k_r50 from buffalo_l for archive-compatible embeddings. Session 54 incorrectly concluded buffalo_sc was fully incompatible — detection and recognition are separate ONNX files that can be mixed. Embedding compatibility: mean cosine sim 0.98. Detection recall: misses ~2 marginal faces on 40-face photos (acceptable for interactive use). Falls back to full buffalo_l if hybrid models unavailable.
+- **Production smoke test script** — `scripts/production_smoke_test.py` tests 11 critical paths. Returns non-zero on critical failures. Outputs markdown table for session logs.
+- **Production verification harness rule** — `.claude/rules/production-verification.md` (HD-010): mandatory verification after code changes affecting UI or uploads.
+- **Playwright MCP config** — `.mcp.json` (gitignored) for future browser-based testing.
+- **UX issue tracker coverage verified** — All 5 source files cross-referenced: 35/35 issues mapped. UX-004 updated from DEFERRED to FIXED.
+- Real upload testing with timing data: 4 upload tests, all HTTP 200, 0.3-1.3s response times.
+- 5 new tests, 1 updated test (2486 total)
+
 ## [v0.54.0] — 2026-02-20
 
 ### Fixed

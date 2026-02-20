@@ -163,3 +163,25 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   Rejected because the custom CSS uses `display:none/inline` which overrides
   HTMX's opacity transitions, creating inconsistent behavior.
 - **Breadcrumbs:** app/main.py CSS block, docs/ux_audit/FIX_LOG.md
+
+## HD-010: Production Verification is Mandatory After UI/Upload Changes
+- **Date:** 2026-02-20
+- **Session:** 54B
+- **Decision:** After any code change affecting UI, uploads, or routes,
+  run `python scripts/production_smoke_test.py` and log results.
+  After upload-affecting changes, perform actual upload tests with timing.
+- **Rationale:** Session 54 skipped real upload testing and buffalo_sc was
+  investigated only theoretically. Session 54B corrected this: hybrid
+  detection was only discovered to work by actually running the tests.
+  The production smoke test script (11 paths, markdown output, non-zero
+  on critical failure) makes verification fast and reproducible.
+- **Rule file:** .claude/rules/production-verification.md
+- **Alternatives considered:**
+  - Manual curl commands: Too error-prone, not logged.
+  - Only unit tests: Session 53/54 proved unit tests pass while
+    production behavior differs (tests pass ≠ production works).
+  - Playwright e2e only: Heavier setup, not available for all
+    environments. Smoke test is a lighter alternative.
+- **Breadcrumbs:** scripts/production_smoke_test.py,
+  .claude/rules/production-verification.md,
+  docs/ux_audit/UX_AUDIT_README.md

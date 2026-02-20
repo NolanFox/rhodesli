@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 25.0 — February 20, 2026
-**Status**: 2481 tests passing, v0.54.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 26.0 — February 20, 2026
+**Status**: 2486 tests passing, v0.54.1, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -19,7 +19,16 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
-## Latest: Session 54 (v0.54.0 — 2026-02-20)
+## Latest: Session 54B (v0.54.1 — 2026-02-20)
+
+- Hybrid detection: det_500m + w600k_r50 for compare/estimate uploads (AD-114)
+- Real upload testing: 4 tests, all pass, 0.3-1.3s response times
+- Production smoke test script: scripts/production_smoke_test.py (11 paths)
+- Production verification harness rule: .claude/rules/production-verification.md (HD-010)
+- UX tracker coverage verified: 35/35 issues mapped
+- 5 new tests (2486 total)
+
+## Session 54 (v0.54.0 — 2026-02-20)
 
 - Compare upload: 640px ML resize (was 1024px), split display/ML paths (AD-110)
 - buffalo_sc investigated: incompatible embeddings (different backbone)
@@ -147,6 +156,9 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **ML-053**: Multi-pass Gemini for low-confidence re-labeling
 - [ ] **BE-015-016**: Geographic data model + temporal date handling
 - [ ] **FE-061-063**: Quick Compare, batch confirmation, browser performance audit
+- [ ] **Overnight ML pipeline** — `scripts/ml_pipeline.py` with modes: overnight (full pipeline), interactive (quick), validate (re-check compare results). See session 54B context.
+- [ ] **Playwright MCP integration** — Browser-based production testing. `.mcp.json` configured, needs first test run.
+- [ ] **Production smoke test in CI** — Auto-run `scripts/production_smoke_test.py` on deploy
 
 ## Medium-Term
 
