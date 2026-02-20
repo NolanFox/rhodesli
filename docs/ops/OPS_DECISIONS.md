@@ -63,6 +63,12 @@ This document records deployment, infrastructure, and operational decisions for 
 - **Why MCP over rules alone**: MCP integrates as a first-class tool that appears
   in the tool list. Rules in CLAUDE.md can be forgotten or deprioritized. MCP tools
   are mechanically available. Railway's own documentation recommends this integration.
+- **Token efficiency**: As of Jan 2026, Claude Code auto-defers MCP tools via Tool
+  Search. Railway tools load on-demand, not at startup. MCP not yet loaded in
+  54G session (requires restart). Verify with `/context` next session. If idle
+  overhead >2k tokens, hook-only approach is acceptable (zero token cost). Note:
+  npm cache permission issue observed on first launch — may need `sudo npm cache
+  clean --force` before MCP server can load.
 - **Alternatives rejected**:
   - (1) Just adding more CLAUDE.md rules — already proven ineffective across 4+
     sessions (54A, 54B, 54D, 54F all failed to use `railway logs`)

@@ -11,7 +11,7 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 - **Local**: `source venv/bin/activate && python app/main.py`
 
 ## Session Operations (Most Forgotten)
-1. Deploy: `git push origin main` — NEVER Railway dashboard. Check Railway MCP/`railway logs` after push (OD-006)
+1. Deploy: `git push origin main` — NEVER Railway dashboard. Check `railway logs` after push (OD-006). MCP auto-deferred via Tool Search.
 2. After UI/upload change: `python scripts/browser_smoke_test.py` (Playwright, not just curl — browser ≠ API)
 3. After deploy: `python scripts/production_smoke_test.py`
 4. Trimming docs: verify destination has content FIRST (HD-011)
