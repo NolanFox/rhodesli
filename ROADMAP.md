@@ -49,7 +49,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate (Current Sprint)
 - [ ] Similarity calibration on frozen embeddings — Very High portfolio value
-- [ ] Fix production UX issues — phantom features, broken loading, missing nav
+- [-] Fix production UX issues — mobile nav fixed (49B), phantom features + broken loading remain
 - [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
 
 ### Next (After Immediate)
@@ -102,6 +102,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-20: **v0.55.1 — Session 49B-Audit**: Comprehensive Playwright site audit. 18 pages, 25+ user actions. Fixed: mobile nav (H1), styled 404 (M1), subprocess.DEVNULL (M3), favicon (M4). 13 new tests (2509 total).
 - [x] 2026-02-20: **Session 54G**: Final Cleanup. AD-120 (silent fallback principle), AD-121 (SSE upload architecture), HD-012, OD-006 (Railway MCP), PERFORMANCE_CHRONICLE.md, browser testing audit, SSE epic documented.
 - [x] 2026-02-20: **v0.54.3 — Session 54F**: Compare Performance Fix. 51.2s → 10.5s (4.9x). AD-119. buffalo_sc in Docker, hybrid-only startup, OOM fix.
 - [x] 2026-02-20: **Session 54E**: Verification Sweep. 22 deliverables audited, 1 gap closed. Playwright browser tests (8/8). CLAUDE.md Session Operations Checklist.

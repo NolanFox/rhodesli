@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.55.1] — 2026-02-20
+
+### Fixed
+- **Mobile navigation on public pages** — All 15+ public pages (/, /photos, /people, /map, etc.) had nav links hidden below 640px with no alternative. Added global JS that injects hamburger menu + slide-out overlay on mobile. (H1)
+- **Styled 404 for unknown routes** — Arbitrary paths like `/nonexistent-page` returned bare "404 Not Found" text. Now returns styled page matching existing photo/person 404 design. (M1)
+- **subprocess.DEVNULL in approve handler** — Same class of bug as v0.55.0 upload fix: approve-upload handler silenced all subprocess output, making debugging impossible. Now logs to file. (M3)
+- **Missing favicon** — All pages returned console 404 for favicon.ico. Added inline SVG favicon (indigo "R") via site-wide headers. (M4)
+
+### Testing
+- 13 new tests (2509 total): public page mobile nav (7), styled 404 catch-all (4), favicon (2)
+
+### Documentation
+- Comprehensive Playwright-first site audit: 18 pages, 25+ user actions tested
+- Audit findings: docs/ux_audit/session_findings/session_49b_audit.md
+
 ## [v0.55.0] — 2026-02-20
 
 ### Fixed

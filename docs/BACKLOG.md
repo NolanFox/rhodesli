@@ -17,9 +17,27 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 **All P0 bugs resolved.** BUG-001 through BUG-009 fixed as of v0.50.0.
 Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTEND.md#1-bugs)
 
+### Deferred from Session 49B Audit (Medium/Low)
+- **M2**: Compare file input lacks preview feedback — dropzone shows "Drop a photo here" after file selection, no filename or thumbnail. See: `docs/ux_audit/session_findings/session_49b_audit.md`
+- **L1**: Login inputs missing `autocomplete` attribute (browser warning)
+- **L2**: Tailwind CDN development warning in console (move to production build)
+- **L3**: Landing stats counter visible at 0 before scroll triggers IntersectionObserver animation
+- **Pre-existing test ordering bug**: `test_nav_consistency` `/map` test fails in full suite (state pollution), passes in isolation. Not caused by audit session.
+
 ---
 
-## Latest: Session 54B (v0.54.1 — 2026-02-20)
+## Latest: Session 49B-Audit (v0.55.1 — 2026-02-20)
+
+- Comprehensive Playwright-first site audit: 18 pages, 25+ user actions tested
+- **H1 FIXED**: Mobile navigation on all public pages (global JS hamburger + overlay)
+- **M1 FIXED**: Styled 404 catch-all handler for unknown routes
+- **M3 FIXED**: subprocess.DEVNULL in approve-upload handler → file logging
+- **M4 FIXED**: Missing favicon (inline SVG)
+- Triage fixes verified: upload (Bug 1), compare (Bug 2), sort routing (Bug 3)
+- 13 new tests (2509 total)
+- Audit findings: docs/ux_audit/session_findings/session_49b_audit.md
+
+---
 
 - Hybrid detection: det_500m + w600k_r50 for compare/estimate uploads (AD-114)
 - Real upload testing: 4 tests, all pass, 0.3-1.3s response times
