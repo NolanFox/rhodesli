@@ -1054,7 +1054,91 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - buffalo_m (medium): Not investigated — buffalo_sc detector is sufficient
 - Client-side detection (MediaPipe): Deferred to Session 56 — eliminates server detection entirely
 
-1. Add a new entry with AD-XXX format (next: AD-115)
+### AD-115: Memory Infrastructure Evaluation — Current In-Repo Harness Sufficient
+- **Date**: 2026-02-20
+- **Session**: 54c
+- **Status**: Decided — no external memory tools adopted
+- **Context**: As ML pipeline complexity grows (face detection, kinship calibration, date estimation, similarity calibration, future LoRA), evaluated whether external memory tooling would improve decision recall, cross-session context, or cross-project reuse.
+- **Decision**: Continue with existing in-repo documentation (ALGORITHMIC_DECISIONS.md, DECISION_LOG.md, session_context files, .claude/rules/). No external memory tools adopted.
+
+**Alternatives Evaluated and Rejected:**
+
+1. **NotebookLM MCP** — Community-built MCP using browser automation (headless Chrome) to drive NotebookLM. Fragile: session cookies expire every 2-4 weeks. One implementation provides 29 tools (massive context window cost). Uses undocumented internal APIs. Good as manual interview prep explainer, not as primary system.
+2. **Mem0 / Vector Memory MCP** — Semantic memory layer via embeddings (free tier: 10k memories/month). No explicit reasoning chain — can't audit WHY a decision was made. Terrible for interviews. Structured ALGORITHMIC_DECISIONS.md with context/alternatives/tradeoffs is MORE useful for both agent recall and interview prep.
+3. **Notion MCP** — Lets Claude query Notion databases. Creates second source of truth that drifts from repo. Changes in Notion don't get committed. Better for product planning than system memory.
+4. **LangChain memory modules** — Solves a different problem (LLM app orchestration, not dev workflow documentation).
+
+- **Rationale**: Context rot in Rhodesli is primarily session-level (addressed by prompt decomposition/verification gates from Session 48), not project-level. Existing docs handle project-level knowledge preservation well. Vector stores add infrastructure maintenance without proportional benefit at current scale (~115 AD entries, 1 project).
+- **Revisit conditions**: (a) 500+ decisions across 5+ projects → semantic search becomes valuable (b) Google ships proper NotebookLM API (c) Project grows to need cross-tool memory
+- **Breadcrumbs**: docs/session_context/session_54c_planning_context.md (Part 1: full research)
+
+### AD-116: MLflow Integration Strategy — Targeted, Starting with CORAL Training
+- **Date**: 2026-02-20
+- **Session**: 54c
+- **Status**: Accepted — targeted integration
+- **Context**: Needed to decide whether formal experiment tracking infrastructure was warranted for a solo developer with ~155 photos and <50 total expected experiment runs.
+- **Decision**: Add MLflow with minimal overhead. Start with `mlflow.pytorch.autolog()` in CORAL training (~10 lines of code). Run locally via `mlflow ui`. Expand to Gemini prompt tracking and local-vs-web ML benchmarking as those features mature.
+
+**Alternatives Considered:**
+1. Manual EXPERIMENTS.md markdown log — sufficient at current scale, but no portfolio talking point
+2. Weights & Biases — cloud-hosted, more polished UI, but adds external dependency and cost
+3. Full MLflow server deployment — overkill for solo developer
+
+- **Rationale**: Primary value is portfolio demonstration ("Do you have MLflow experience?" → "Yes, here's my tracking UI"), not operational necessity. Secondary value: tracking Gemini API prompt iterations to see if different prompts yield better photo labeling. Minimal code overhead with autolog.
+- **Affects**: rhodesli_ml/ training scripts, local development environment
+- **Breadcrumbs**: docs/session_context/session_54c_planning_context.md (Part 1B: MLflow section)
+
+### AD-117: Face Compare Product Architecture — Three-Tier Plan
+- **Date**: 2026-02-20
+- **Session**: 54c
+- **Status**: Accepted — Tier 1 prioritized for near-term build
+- **Context**: Competitive analysis of 7+ existing face comparison tools revealed all provide single percentage scores with no kinship context, no cross-age capability, and no calibration against real genealogical data. Rhodesli's Session 32 kinship calibration (AD-067) and multi-face detection (AD-069) already exceed the capabilities of every free tool surveyed.
+
+**Decision: Three-tier product plan.**
+
+**Tier 1 — Minimal Viable Standalone (1-2 sessions):**
+- New FastHTML app at subdomain (TBD: facecompare.nolanandrewfox.com or similar)
+- Same InsightFace backend + kinship calibration from Session 32
+- Stripped-down UI: upload two photos → tiered results → no persistence
+- Mobile-responsive, privacy-first (photos deleted after comparison)
+- Differentiation: "Calibrated against real genealogical data"
+
+**Tier 2 — Shared Backend Architecture (2-3 sessions):**
+- Shared comparison engine between standalone and Rhodesli
+- Rhodesli path adds: archive identity matching, upload persistence, date context
+- Public path: compare and discard
+
+**Tier 3 — Product Grade (deferred post-employment):**
+- User accounts, saved comparisons, API access, batch comparison
+
+**Key Differentiators vs. Competition:**
+- Empirically calibrated kinship thresholds from confirmed genealogical identities
+- Tiered results (identity match / possible relative / similar features) instead of single score
+- Multi-face detection on group photos
+- Cross-age matching capability
+- Scientifically honest about limitations (Cohen's d=0.43 for family resemblance)
+
+**Alternatives Considered:**
+- Build only within Rhodesli (no standalone) — misses opportunity for portfolio piece and potential product
+- Jump straight to Tier 3 — scope creep, months of work, distracts from job search
+
+- **Affects**: New deployment (subdomain TBD), shared code with Rhodesli compare route
+- **Breadcrumbs**: docs/session_context/session_54c_planning_context.md (Part 2: full competitive analysis), AD-067, AD-068, AD-069
+
+### AD-118: [Deferred] LangChain NL Archive Query
+- **Date**: 2026-02-20
+- **Session**: 54c
+- **Status**: Deferred — future product feature after core ML is solid
+- **Context**: Identified that LangChain's orchestration capabilities map well to a natural language interface for the photo archive: "Show me photos of people who look like my grandmother from the 1930s" → chain face detection → embedding search → date filtering → NL response.
+- **Decision**: Document as future initiative. Do not build until similarity calibration, LoRA, and core UX are stable. Estimated 2-3 sessions for basic MVP once prerequisites are met.
+- **Why deferred**: LangChain adds complexity (extra abstraction layers, frequent breaking changes, steep learning curve). Core ML capabilities it would chain together don't all exist yet. Portfolio value is high but only after the underlying ML is demonstrably strong.
+
+**Prerequisite milestones:** Similarity calibration complete, CORAL date estimation deployed, identity matching reliable
+
+- **Affects**: Future new module, would chain existing Rhodesli ML capabilities
+- **Breadcrumbs**: docs/session_context/session_54c_planning_context.md (Part 1B: LangChain section)
+
+1. Add a new entry with AD-XXX format (next: AD-119)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
