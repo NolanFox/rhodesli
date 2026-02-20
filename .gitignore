@@ -88,3 +88,6 @@ rhodesli_ml/checkpoints/
 logs/
 evaluation/run_log.jsonl
 uploads/
+
+# Session test photos
+test_photos_session_audit/
