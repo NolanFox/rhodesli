@@ -5,7 +5,7 @@ Tests cover:
 - GET /estimate returns 200 with page title
 - GET /estimate?photo=nonexistent returns 200 (graceful)
 - Page has "When Was This Photo Taken?" heading
-- Page has Compare Faces / Estimate Year tabs
+- Page no longer has Compare Faces / Estimate Year tabs (standalone route)
 - OG tags are present
 - Photo selection renders photo grid
 - Estimate result section renders when photo has data
@@ -145,18 +145,12 @@ class TestEstimateRoute:
         assert resp.status_code == 200
         assert "When Was This Photo Taken?" in resp.text
 
-    def test_estimate_has_compare_tab(self, client):
-        """Page has a 'Compare Faces' tab link."""
+    def test_estimate_no_tab_navigation(self, client):
+        """Estimate page no longer has Compare/Estimate tabs (standalone route)."""
         resp = _run_with_patches(client, "/estimate")
         assert resp.status_code == 200
-        assert "Compare Faces" in resp.text
-        assert "/compare" in resp.text
-
-    def test_estimate_has_estimate_year_tab(self, client):
-        """Page has an 'Estimate Year' tab link (active state)."""
-        resp = _run_with_patches(client, "/estimate")
-        assert resp.status_code == 200
-        assert "Estimate Year" in resp.text
+        assert "Compare Faces" not in resp.text
+        assert "Estimate Year" not in resp.text
 
     def test_estimate_has_og_tags(self, client):
         """Page includes Open Graph meta tags."""

@@ -350,6 +350,18 @@ def _check_contributor(sess) -> Response | None:
     )
 
 
+def _auth_disabled_warning():
+    """Return a warning banner when auth is disabled, or None when enabled."""
+    if is_auth_enabled():
+        return None
+    return Div(
+        P("Authentication is disabled. All admin features are publicly accessible.",
+          cls="text-amber-400 text-xs text-center"),
+        cls="bg-amber-900/30 border border-amber-700/30 rounded px-3 py-1.5 mb-3",
+        data_testid="auth-disabled-warning",
+    )
+
+
 def log_user_action(action: str, **kwargs) -> None:
     """
     Log a user action to the append-only user_actions.log.
@@ -6485,6 +6497,27 @@ def lane_section(
 # =============================================================================
 
 
+def _ping_supabase() -> str:
+    """Lightweight Supabase ping to prevent free-tier inactivity pause.
+
+    Returns status string: 'ok', 'not_configured', or 'error:...'
+    """
+    url = os.getenv("SUPABASE_URL", "")
+    key = os.getenv("SUPABASE_ANON_KEY", "")
+    if not url or not key:
+        return "not_configured"
+    try:
+        import httpx
+        resp = httpx.get(
+            f"{url}/auth/v1/health",
+            headers={"apikey": key},
+            timeout=5.0,
+        )
+        return "ok" if resp.status_code == 200 else f"error:{resp.status_code}"
+    except Exception as e:
+        return f"error:{e}"
+
+
 @rt("/health")
 def health():
     """Health check endpoint for Railway deployment."""
@@ -6503,6 +6536,7 @@ def health():
         "identities": len(registry.list_identities()),
         "photos": photo_count,
         "processing_enabled": PROCESSING_ENABLED,
+        "supabase": _ping_supabase(),
     }
 
 
@@ -13317,19 +13351,6 @@ def get(face_id: str = "", sess=None):
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
-            # Tab navigation
-            Section(
-                Div(
-                    Div(
-                        A("Compare Faces", href="/compare",
-                          cls="px-4 py-2 text-sm font-medium text-white border-b-2 border-indigo-400 transition-colors"),
-                        A("Estimate Year", href="/estimate",
-                          cls="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white border-b-2 border-transparent hover:border-indigo-400 transition-colors"),
-                        cls="flex items-center justify-center gap-6 border-b border-slate-700/50 pb-0",
-                    ),
-                    cls="max-w-4xl mx-auto px-6 pt-8",
-                ),
-            ),
             # Header
             Section(
                 Div(
@@ -13729,7 +13750,7 @@ async def post(photo: UploadFile = None, sess=None):
         pass
 
     if not has_insightface:
-        # Production mode: save to R2 without face detection
+        # Production mode: save to R2 for later local processing
         from core.storage import can_write_r2
         if can_write_r2():
             upload_id = _save_compare_upload(content, original_filename, faces=[], results=[], status="awaiting_analysis")
@@ -13738,8 +13759,13 @@ async def post(photo: UploadFile = None, sess=None):
                     Span("✓", cls="text-2xl text-green-400"),
                     cls="flex justify-center mb-3"
                 ),
-                P("Photo saved!", cls="text-lg font-semibold text-white text-center"),
-                P("Face analysis will be processed shortly. Check back soon for comparison results.",
+                P("Photo received!", cls="text-lg font-semibold text-white text-center"),
+                P("Face comparison requires offline processing by the archive team. "
+                  "We'll include your photo in the next analysis batch.",
+                  cls="text-sm text-slate-400 text-center mt-2"),
+                P("Want faster results? Email your photo to ",
+                  A("NolanFox@gmail.com", href="mailto:NolanFox@gmail.com", cls="text-indigo-400 hover:text-indigo-300"),
+                  " and we'll run a comparison for you.",
                   cls="text-sm text-slate-400 text-center mt-2"),
                 P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
                 cls="py-8 px-4",
@@ -13748,9 +13774,12 @@ async def post(photo: UploadFile = None, sess=None):
             )
         else:
             return Div(
-                P("Photo comparison uploads are not yet available in production.",
+                P("Photo comparison uploads are not yet available.",
                   cls="text-amber-500 text-center py-4"),
-                P("Browse the archive above to compare existing faces.", cls="text-slate-500 text-center text-sm mt-2"),
+                P("Email your photo to ",
+                  A("NolanFox@gmail.com", href="mailto:NolanFox@gmail.com", cls="text-indigo-400 hover:text-indigo-300"),
+                  " and we'll run a comparison for you.",
+                  cls="text-slate-400 text-center text-sm mt-2"),
                 id="compare-results",
             )
 
@@ -14462,14 +14491,6 @@ def get(photo: str = "", sess=None):
         )
 
     # Tab links: Compare Faces | Estimate Year
-    tab_links = Div(
-        A("Compare Faces", href="/compare",
-          cls="px-4 py-2 text-sm font-medium text-slate-400 hover:text-white border-b-2 border-transparent hover:border-indigo-400 transition-colors"),
-        A("Estimate Year", href="/estimate",
-          cls="px-4 py-2 text-sm font-medium text-white border-b-2 border-indigo-400 transition-colors"),
-        cls="flex items-center justify-center gap-6 mb-8 border-b border-slate-700/50 pb-0",
-    )
-
     og = og_tags(
         title="When Was This Photo Taken? — Rhodesli",
         description="Our AI estimates the year a photo was taken using facial age analysis and historical clues.",
@@ -14493,7 +14514,6 @@ def get(photo: str = "", sess=None):
             ),
             Section(
                 Div(
-                    tab_links,
                     H1("When Was This Photo Taken?",
                         cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2"),
                     P("Upload a photo or select one from the archive. Our AI estimates the year using facial age analysis and historical clues.",
