@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.51.1] — 2026-02-19
+
+### Fixed
+- **Compare upload honest messaging** — Production uploads now show "Photo received!" with honest messaging about offline processing and email fallback, instead of misleading "Check back soon for comparison results."
+- **Removed Estimate/Compare tab duplication** — /compare and /estimate no longer show redundant tab switchers. Both are standalone routes accessible from the top nav.
+- **Supabase keepalive in health check** — `/health` endpoint now pings Supabase auth API (`/auth/v1/health`) to prevent free-tier inactivity pause. Railway's 30-second health check interval generates the needed API traffic.
+
+### Added
+- `_ping_supabase()` function with error handling (returns ok/not_configured/error status)
+- `_auth_disabled_warning()` helper — returns warning banner when auth env vars not configured
+- 16 new tests (2433 total)
+
+### Notes
+- **BUG 2 (Name These Faces)**: Diagnosed as NOT A BUG — button is correctly admin-only per AD-104. Tester was not logged in as admin. Tests verify this.
+- **BUG 5 (Email notifications)**: Audited — no misleading user-facing text. Backend email (Resend API) is gated behind env var. OPS-001 (custom SMTP) remains in backlog.
+
 ## [v0.51.0] — 2026-02-19
 
 ### Added

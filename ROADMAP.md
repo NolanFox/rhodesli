@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.51.0 · 2417 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.51.1 · 2433 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -95,6 +95,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-19: **v0.51.1 — Session 51B**: Production Bug Fixes. Compare upload honest messaging (was misleading "check back soon"). Removed redundant Estimate/Compare tab switchers. Supabase keepalive in /health endpoint. Name These Faces confirmed admin-only by design. HD-008 (functional verification). 16 new tests (2433 total).
 - [x] 2026-02-19: **v0.51.0 — Session 51**: Quick-Identify + "Name These Faces". P0 tag dropdown already existed. Built P1 sequential batch identification: "Name These Faces (N unidentified)" button, auto-advance left-to-right, progress banner, Done exit. PRD-021. AD-104. 16 new tests (2417 total).
 - [x] 2026-02-19: **v0.50.0 — Session 50**: Estimate Overhaul + Gemini Upgrade. Estimate page: fix face count (BUG-009), pagination (24/page), standalone /estimate nav, upload zone, improved evidence display. Compare upload hardening (client/server validation). PRD-020 (estimate overhaul). AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging). PRD-015 updated for 3.1 Pro. 16 new tests (2401 total).
 - [x] 2026-02-19: **v0.49.3 — Session 49C**: Community Bug Fixes. Photo 404 for inbox photos (alias resolution), compare upload silent failure (onchange auto-submit), version v0.0.0 in admin footer (Dockerfile COPY), collection truncation (6 more locations). First real community sharing on Jews of Rhodes Facebook group. 9 new tests (2387 total).
