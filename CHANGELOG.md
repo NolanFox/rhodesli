@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.52.1] — 2026-02-19
+
+### Fixed
+- **Docker build failure** — Added `g++` to Dockerfile apt-get for insightface Cython extension (`mesh_core_cython`) compilation. Previous deploy failed with "command 'g++' failed: No such file or directory."
+
+### Added
+- **Production smoke test** — `scripts/smoke_test.sh` verifies homepage, health/ML status, photo page with face overlays, compare, estimate, admin auth gate, people, and photos pages against the live site.
+
 ## [v0.52.0] — 2026-02-19
 
 ### Added
