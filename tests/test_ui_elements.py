@@ -151,7 +151,14 @@ class TestCompareUploadIndicator:
         """The upload spinner warns about longer wait for group photos."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert "up to a minute" in response.text
+            assert "group photos" in response.text
+
+    def test_submit_button_disabled_during_request_css(self, client):
+        """CSS rule disables submit button during htmx request."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/compare")
+            assert "form.htmx-request button[type=\"submit\"]" in response.text
+            assert "pointer-events: none" in response.text
 
     def test_htmx_indicator_css_handles_direct_class(self, client):
         """Triage dashboard CSS must handle .htmx-request.htmx-indicator for hx-indicator usage."""
