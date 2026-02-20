@@ -1,7 +1,7 @@
 # UX Audit Framework
 
 **Created:** Session 53 (2026-02-20)
-**Updated:** Session 54 (2026-02-20)
+**Updated:** Session 54B (2026-02-20)
 
 ## What This Directory Contains
 
@@ -13,6 +13,7 @@
 | FIX_LOG.md | Detailed fix documentation for each resolved issue. |
 | PROPOSALS.md | Prioritized improvement proposals with session targets. |
 | REGRESSION_LOG.md | Regressions found during cross-feature verification. |
+| session_findings/ | Per-session detailed findings (when files approach 300 lines). |
 
 ## How to Use
 
@@ -47,8 +48,32 @@ done
 ```
 Log results in PRODUCTION_SMOKE_TEST.md and check against UX_ISSUE_TRACKER.md.
 
+## Coverage Verification Process
+
+After creating or updating the tracker, verify coverage by reading EVERY source file
+and confirming each issue appears in UX_ISSUE_TRACKER.md. Log results:
+
+```markdown
+## UX Issue Coverage Verification
+| Source File | Issues Found | Issues in Tracker | Coverage |
+|-------------|-------------|-------------------|----------|
+| PRODUCTION_SMOKE_TEST.md | X | X | X/X |
+| UX_FINDINGS.md | X | X | X/X |
+| PROPOSALS.md | X | X | X/X |
+| FIX_LOG.md | X | X | X/X |
+| REGRESSION_LOG.md | X | X | X/X |
+```
+
+Any missing item = session incomplete. Add before proceeding.
+
+## Automated Smoke Testing
+
+Use `python scripts/production_smoke_test.py` for automated route verification.
+See `.claude/rules/production-verification.md` for the harness rule (HD-010).
+
 ## Breadcrumbs
 - ROADMAP.md references this directory
 - CLAUDE.md Key Docs does not (too granular) — access via ROADMAP.md
 - HD-008 (docs/HARNESS_DECISIONS.md) — production smoke test as session prerequisite
 - HD-009 — HTMX indicator CSS dual-selector rule
+- HD-010 — production verification rule (.claude/rules/production-verification.md)
