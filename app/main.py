@@ -8009,7 +8009,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
         .htmx-indicator {
             display: none;
         }
-        .htmx-request .htmx-indicator {
+        .htmx-request .htmx-indicator,
+        .htmx-request.htmx-indicator {
             display: inline;
         }
         /* Keyboard focus states */
@@ -13305,7 +13306,7 @@ def get(face_id: str = "", sess=None):
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
                     Input(type="file", name="photo", accept="image/jpeg,image/png",
                           cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}this.closest('form').requestSubmit()",
+                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}var r=document.getElementById('compare-results');if(r){r.scrollIntoView({behavior:'smooth',block:'start'})}this.closest('form').requestSubmit()",
                           data_testid="upload-input"),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-8 transition-colors cursor-pointer",
                 ),
@@ -13327,8 +13328,14 @@ def get(face_id: str = "", sess=None):
             hx_indicator="#upload-spinner",
             data_testid="upload-form",
         ),
-        Div(id="upload-spinner", cls="htmx-indicator text-center py-4",
-            children=[Span("Searching for matching faces — this may take a few seconds...", cls="text-slate-400 text-sm animate-pulse")]),
+        Div(id="upload-spinner", cls="htmx-indicator text-center py-6",
+            children=[
+                Div(
+                    NotStr('<svg class="animate-spin h-8 w-8 text-indigo-400 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>'),
+                    P("Analyzing your photo for faces...", cls="text-white text-sm font-medium mb-1"),
+                    P("This may take up to a minute for group photos.", cls="text-slate-500 text-xs"),
+                ),
+            ]),
         P("Photos are saved to help grow the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
@@ -13819,13 +13826,14 @@ async def post(photo: UploadFile = None, sess=None):
 
     try:
         # Resize to speed up InsightFace on CPU. Detection runs at det_size=(640,640)
-        # internally, so images >1280px provide no quality benefit but dramatically
-        # slow down processing on Railway's shared CPU.
+        # internally, so images beyond that provide diminishing quality benefit
+        # while dramatically slowing processing on Railway's shared CPU.
+        # Using 1024 as max to balance quality and speed (~4x faster than original).
         t1 = _time.time()
         img = cv2.imread(str(tmp_path))
         if img is not None:
             h, w = img.shape[:2]
-            _MAX_DIM = 1280
+            _MAX_DIM = 1024
             if max(h, w) > _MAX_DIM:
                 scale = _MAX_DIM / max(h, w)
                 new_w, new_h = int(w * scale), int(h * scale)
@@ -13882,6 +13890,22 @@ async def post(photo: UploadFile = None, sess=None):
         # Build response
         t1 = _time.time()
         parts = []
+
+        # Show the uploaded photo with face count
+        upload_image_url = storage.get_upload_url(f"uploads/compare/{upload_id}{suffix}")
+        parts.append(
+            Div(
+                Div(
+                    Img(src=upload_image_url, cls="max-h-48 rounded-lg object-contain mx-auto",
+                        alt="Your uploaded photo"),
+                    cls="flex justify-center mb-3",
+                ),
+                P(f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected",
+                  cls="text-sm text-slate-400 text-center"),
+                cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+                data_testid="upload-preview",
+            )
+        )
 
         # Multi-face selector (if more than one face)
         if len(faces) > 1:

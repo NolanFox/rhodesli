@@ -145,7 +145,20 @@ class TestCompareUploadIndicator:
         """The upload spinner shows a descriptive message."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert "Searching for matching faces" in response.text
+            assert "Analyzing your photo" in response.text
+
+    def test_upload_spinner_has_duration_warning(self, client):
+        """The upload spinner warns about longer wait for group photos."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/compare")
+            assert "up to a minute" in response.text
+
+    def test_htmx_indicator_css_handles_direct_class(self, client):
+        """Triage dashboard CSS must handle .htmx-request.htmx-indicator for hx-indicator usage."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            # The triage dashboard (/?section=to_review) has custom CSS overriding HTMX defaults
+            response = client.get("/?section=to_review")
+            assert ".htmx-request.htmx-indicator" in response.text
 
 
 class TestEmailTemplateDesign:
