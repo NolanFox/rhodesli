@@ -17,6 +17,7 @@ Run: `python scripts/verify_docs_sync.py`
 
 ## Architecture
 - `app/main.py` — FastHTML web app | `core/` — ML (local only) | `data/` — JSON (read-only)
+- **ML (AD-110)**: Web request path MUST NEVER run heavy ML. Compare: 640px + buffalo_l. Batch: local.
 @docs/architecture/OVERVIEW.md @docs/architecture/DATA_MODEL.md
 @docs/architecture/PERMISSIONS.md @docs/architecture/PHOTO_STORAGE.md
 

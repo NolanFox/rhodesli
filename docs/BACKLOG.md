@@ -148,6 +148,10 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **FE-080-083**: Client-side analytics and admin dashboard
 - [ ] **ROLE-004**: Family member self-identification ("That's me!" button)
 - [ ] **Admin/Public UX Unification**: Progressive admin enhancement + admin toolbar (deferred from Session 50)
+- [ ] **Confidence scores per identification**: Show which results are ground truth vs provisional. Genealogy-specific differentiation. (Source: Expert review, Session 54)
+- [ ] **Identity voting / community verification**: Let users confirm/reject ML matches. Improves embeddings over time. (Source: Expert review, Session 54)
+- [ ] **Processing Timeline UI**: Per-photo status display for trust restoration. (Source: Expert review, Session 54. See AD-111)
+- [ ] **Observability over unit tests**: Prioritize integration tests, per-photo processing timelines, job status visibility. (Source: Expert review, Session 54. See AD-110)
 
 ## Long-Term
 

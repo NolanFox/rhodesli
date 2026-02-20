@@ -925,7 +925,96 @@ When making any algorithmic choice in the ML pipeline:
 - **Status**: IMPLEMENTED (Session 51).
 - **Affected files**: `app/main.py` (photo_view_content, /api/face/tag, /api/face/create-identity, /api/face/tag-search), `docs/prds/021_quick_identify.md`
 
-1. Add a new entry with AD-XXX format (next: AD-105)
+### AD-110: Hybrid ML Architecture — Serving Path Contract + Cloud Lightweight + Local Heavy
+- **Date**: 2026-02-20
+- **Status**: ACCEPTED
+- **Source**: Comprehensive ML architecture review, Session 54. Research: Immich (docs.immich.app/developer/architecture), PhotoPrism, Facebook DeepFace. Previous discussions: Sessions 4-8 (local-only), Session 32 (compare introduced), Session 52 (ML to cloud).
+
+**The Serving Path Contract (Non-Negotiable Invariant):**
+The user-facing request path MUST NEVER run heavy ML processing. Every successful photo system (Facebook, Immich, PhotoPrism) enforces this. All of Rhodesli's architectural drift occurred because this invariant was never named or locked. This invariant is the foundation — everything else is implementation detail.
+
+**Hard Product Constraints (derived from the contract):**
+1. Upload returns immediately
+2. Photo is visible immediately
+3. Enrichment arrives progressively
+4. All interactive features use precomputed data
+
+**Context:**
+Session 52 moved InsightFace into the Docker image (PROCESSING_ENABLED=true), making the web app a monolith that serves pages AND runs ML. This causes: 65-second compare times on Railway shared CPU (19-face group photo), 3-4GB Docker image (was 200MB), unpredictable CPU availability on shared Railway hosting.
+
+**Decision:** Adopt a hybrid architecture:
+
+CLOUD (Railway web app):
+- Serve pages, handle auth, manage data
+- Compare: use pre-computed archive embeddings for matching (0.4s)
+- Compare face detection: resize to 640px (matching InsightFace det_size), target <15s
+- Estimate: Gemini API calls (already cloud-native, fast)
+- Upload: save to R2 immediately, show photo, queue for local processing
+- NO heavy batch processing on Railway
+
+LOCAL (Nolan's machine):
+- Batch face detection with buffalo_l (highest quality)
+- Embedding generation for new photos
+- Clustering / reclustering (DBSCAN)
+- Quality scoring
+- Batch Gemini enrichment
+- Ground truth pipeline
+
+FUTURE EVOLUTION (Session 56+):
+- Move face detection to client-side JS (MediaPipe Face Detection)
+- Server only does embedding comparison (numpy, no InsightFace)
+- Remove InsightFace from Docker image entirely (return to ~200MB)
+
+**buffalo_sc Investigation Result (Session 54):**
+buffalo_sc uses MobileFaceNet recognition backbone; buffalo_l uses ResNet50. Embeddings are NOT interchangeable — different embedding spaces despite same 512 dimensions and same training data. Switching would require re-embedding all ~550 faces. buffalo_m shares buffalo_l's recognition model (w600k_r50) but lighter detection model — potential future optimization. For now, 640px resize is the primary performance lever.
+
+**Note on test pyramid inversion:** 2480 tests validate data logic in isolation, but production failures are cross-service, async, environment, and UX-timing issues. Future sessions should prioritize observability and integration tests over unit test count.
+
+**Rationale:**
+- At 271 photos and single-admin scale, a full job queue (Redis/BullMQ) is overkill
+- The hybrid approach gives instant interactive responses while keeping quality high for batch
+- Removing InsightFace from Docker is the end goal but requires client-side face detection work
+- 640px resize alone estimated 5-15s vs 65s
+
+**Tradeoffs:**
+- New photos don't get full ML processing until local pipeline runs
+- Compare quality slightly lower with 640px resize (acceptable for interactive use)
+- Two processing paths to maintain (cloud lightweight vs local heavy)
+
+**Enforcement:**
+- Compare endpoint MUST resize to 640px for ML (original to R2 for display)
+- Batch ingestion MUST use buffalo_l locally
+- Upload endpoint MUST return within 5 seconds (save to R2, no ML blocking)
+- Docker image size should be monitored — target <2GB, goal <500MB
+
+**Affected files:** `app/main.py` (compare upload, estimate upload), `core/ingest_inbox.py` (get_face_analyzer), `Dockerfile`, `scripts/push_to_production.py`
+
+### AD-111: [Future Design] Face Processing Lifecycle States
+- **Date**: 2026-02-20
+- **Status**: DOCUMENTED (implement with Postgres migration, Phase F)
+- **Source**: External expert review of Session 54 architecture
+- **Concept**: Every face moves through: UPLOADED → DETECTED → EMBEDDED → IDENTIFIED → VERIFIED. These must be separate lifecycle states, not conflated. Currently Rhodesli mixes "photo exists" / "face detected" / "embedding exists" / "identity known" without clear state boundaries. This causes fragile features.
+- **Why not now**: Rhodesli uses JSON files. Proper lifecycle states require a relational data layer. Save for Postgres migration (Phase F).
+- **When**: Phase F (Postgres migration) or when face count exceeds JSON performance limits.
+
+### AD-112: [Rejected] Serverless GPU (Modal) in Session 56
+- **Date**: 2026-02-20
+- **Status**: REJECTED (for now)
+- **Source**: External assistant review of Session 54 architecture
+- **Proposal**: Deploy InsightFace to Modal.com serverless GPU for <2s face detection.
+- **Why rejected**: Scale mismatch. 271 photos, 3 community users, single admin. Modal adds API key management, cross-service networking, cold starts (10-30s on free tier), cost monitoring, and a new deployment target. This solves a 10x-scale problem today.
+- **The right move**: 640px resize gets compare to ~5-10s. Acceptable for a heritage archive at current scale. Modal is the correct evolution AFTER client-side face detection and AFTER community scale justifies distributed systems complexity.
+- **Revisit**: When community grows to 50+ active users or photo count exceeds 2000.
+
+### AD-113: [Rejected] Remove ML from Serving Path Immediately
+- **Date**: 2026-02-20
+- **Status**: REJECTED (premature)
+- **Source**: External expert review of Session 54 architecture
+- **Proposal**: Remove ALL ML execution from request/response flow immediately.
+- **Why rejected**: This breaks compare today. Compare NEEDS face detection to work. The intermediate step (640px resize) makes compare usable while we build toward the pure architecture (client-side detection in Session 56+).
+- **The right path**: 640px resize NOW → MediaPipe client-side NEXT → then remove InsightFace from Docker entirely.
+
+1. Add a new entry with AD-XXX format (next: AD-114)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
