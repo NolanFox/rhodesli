@@ -10,7 +10,7 @@
 - [x] Phase 4: ML pipeline verification
 - [x] Phase 5: Regression check
 - [x] Phase 6: Synthesis + proposals + rules
-- [ ] Phase 7: Final deploy + verification
+- [x] Phase 7: Final deploy + verification
 
 ## Environment
 - Railway CLI: Authenticated (Nolan Fox)
@@ -60,6 +60,13 @@
 - Harness decisions HD-008, HD-009 added
 - CHANGELOG v0.53.0 updated
 
+## Phase 7: Deploy + Verification
+- Pushed 3 commits to main
+- Railway auto-deploy completed (Docker build ~5 min)
+- Production verification: all 6 key routes return 200
+- Compare page confirmed: new loading indicator, spinner, duration warning all present
+- Health: 664 identities, 271 photos, ML pipeline ready
+
 ## Summary
 - Routes tested: 35
 - Issues found: 4 (all Category A — fixed)
@@ -67,3 +74,9 @@
 - Regressions found: 0
 - New harness rules: 2 (HD-008, HD-009)
 - Tests: 2480 passed, 0 failed
+
+## For Nolan to Review
+1. Read docs/ux_audit/PROPOSALS.md — prioritized UX improvements
+2. Read docs/ux_audit/UX_FINDINGS.md — detailed per-page assessments
+3. Test /compare in production — upload a photo and verify the new loading indicator
+4. Review new harness rules in docs/HARNESS_DECISIONS.md (HD-008, HD-009)
