@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 22.0 — February 19, 2026
-**Status**: 2417 tests passing, v0.51.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 23.0 — February 19, 2026
+**Status**: 2465 tests passing, v0.52.0, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -19,7 +19,16 @@ Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTE
 
 ---
 
-## Latest: Session 51 (v0.51.0 — 2026-02-19)
+## Latest: Session 52 (v0.52.0 — 2026-02-19)
+
+- ML pipeline on Railway: InsightFace + ONNX Runtime in Docker
+- Gemini 3.1 Pro real-time date estimation on Estimate upload
+- "Name These Faces" on public photo page (was modal-only)
+- Cloud-ready ingest pipeline (DATA_DIR support, R2 auto-upload)
+- Health check reports ML status
+- 30 new tests (2465 total)
+
+## Session 51 (v0.51.0 — 2026-02-19)
 
 - "Name These Faces" sequential batch identification mode
 - PRD-021: Quick-Identify from Photo View
@@ -111,9 +120,9 @@ Schema defined — implementation with first API calls in Session 52+.
 
 ## Near-Term (3-5 Sessions)
 
-- [ ] **Gemini 3.1 Pro integration**: Run on all 271 photos (AD-101, Session 52)
+- [x] **Gemini 3.1 Pro integration**: Wired to Estimate upload (Session 52). Batch run on 271 photos deferred.
 - [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
-- [ ] **Progressive refinement**: First test with verified facts (AD-102, Session 52)
+- [ ] **Progressive refinement**: First test with verified facts (AD-102)
 - [ ] **FE-041**: "Help Identify" mode for non-admin users
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
 - [ ] **ROLE-006**: Email notifications for contributors
@@ -153,11 +162,6 @@ Schema defined — implementation with first API calls in Session 52+.
 - Bug list from manual testing
 - See: [docs/session_context/session_49_interactive_prep.md](../session_context/session_49_interactive_prep.md)
 
-### Session 52: Gemini API Integration + Progressive Refinement
-- Run Gemini 3.1 Pro on all 271 photos (AD-101)
-- Implement API result logging (AD-103)
-- First progressive refinement test with verified facts (AD-102)
-
 ### Session 53: PRD-015 Face Alignment Implementation
 - Coordinate bridging prompt with InsightFace bounding boxes
 - Combined API call: date + face alignment + location
@@ -181,8 +185,8 @@ Remaining: OPS-001 (branded email).
 Photo/identity annotations, merge safety, GEDCOM, suggestion lifecycle.
 
 ### Phase D: ML Feedback & Intelligence — MOSTLY COMPLETE (2026-02-09 to 2026-02-19)
-Threshold calibration, golden set, date estimation pipeline, Gemini 3.1 Pro architecture.
-Remaining: ML-051-053, FE-040-043, progressive refinement implementation.
+Threshold calibration, golden set, date estimation pipeline, Gemini 3.1 Pro wired to Estimate upload, ML on Railway.
+Remaining: ML-053 (multi-pass Gemini), FE-040-043, progressive refinement, batch Gemini run on 271 photos.
 
 ### Phase E: Collaboration & Growth — IN PROGRESS
 Contributor roles done. Community sharing live. Quick-Identify + "Name These Faces" done (Session 51). Remaining: Help Identify mode, upload moderation, notifications.

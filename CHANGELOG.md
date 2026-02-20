@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.52.0] — 2026-02-19
+
+### Added
+- **ML pipeline on Railway** — InsightFace buffalo_l face detection + ONNX Runtime now run in Docker. Pre-downloaded model at build time (~300MB). `PROCESSING_ENABLED=true` by default.
+- **Gemini date estimation on upload** — Estimate upload now calls Gemini 3.1 Pro Vision API in real-time for date estimation. Graceful degradation: ML+Gemini (full), ML-only (faces), Gemini-only (date), neither (honest message).
+- **"Name These Faces" on public photo page** — Admin users see the sequential identifier button on `/photo/{id}` (was modal-only). HTMX loads inline sequential mode.
+- **Cloud-ready photo processing** — Admin uploads on Railway trigger full face detection pipeline. `ingest_inbox.py` respects `DATA_DIR`/`STORAGE_DIR` env vars. Photos and crops auto-uploaded to R2 on completion.
+- **Health check ML status** — `/health` reports `ml_pipeline: ready|unavailable` and `processing_enabled: true|false`.
+- 30 new tests (2465 total)
+
+### Changed
+- Dockerfile upgraded from lightweight web-only to full ML processing image
+- `requirements.txt`: added `insightface==0.7.3`, `onnxruntime>=1.20`, `google-genai>=1.0`
+- Upload handler passes `--data-dir` to ingest subprocess (Railway STORAGE_DIR support)
+
+### Notes
+- Face overlay clicks on public `/photo/{id}` page confirmed working — no Session 51 regression found (overlays are standard `<a>` tags with `href`)
+- Compare upload handler already had InsightFace detection with graceful fallback — just needed dependencies installed
+
 ## [v0.51.1] — 2026-02-19
 
 ### Fixed

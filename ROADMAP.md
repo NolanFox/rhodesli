@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.51.1 · 2433 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.52.0 · 2465 tests · 271 photos · 181 faces · 46 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -16,9 +16,9 @@ Current: v0.51.1 · 2433 tests · 271 photos · 181 faces · 46 confirmed
 - ~~Face count / collection stats~~ FIXED — canonical functions, 19 regression tests
 - JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
 - Contributor roles implemented (ROLE-002/003) — needs first real contributor to test
-- ML date estimation pipeline ready (CORAL + EfficientNet-B0 + Gemini labeling) — needs UX integration
+- **ML pipeline now runs on Railway** — InsightFace + ONNX Runtime in Docker, PROCESSING_ENABLED=true
 - Community sharing live on Jews of Rhodes Facebook group (~2,000 members) — first 3 active identifiers
-- Gemini 3.1 Pro available (AD-101) — progressive refinement architecture designed (AD-102)
+- Gemini 3.1 Pro wired to Estimate upload (AD-101) — progressive refinement architecture designed (AD-102)
 
 ## Active Bugs (P0)
 - [x] BUG-001: Lightbox arrows disappear after first photo — fixed with event delegation (2026-02-08)
@@ -38,7 +38,7 @@ Current: v0.51.1 · 2433 tests · 271 photos · 181 faces · 46 confirmed
 | **A: Stabilization** | COMPLETE | All P0 bugs fixed, 103 tests added |
 | **B: Share-Ready Polish** | ~95% complete | 53/54 items done. Remaining: OPS-001 (custom SMTP) |
 | **C: Annotation Engine** | COMPLETE | 16/16 items done. Full submit/review/approve workflow |
-| **D: ML Feedback** | ~80% complete | Date pipeline + golden set done. Remaining: ML-051-053, FE-040-043 |
+| **D: ML Feedback** | ~90% complete | Date pipeline + golden set + cloud ML done. Remaining: ML-053 (multi-pass Gemini), FE-040-043 |
 | **E: Collaboration** | ~70% complete | Contributor roles + activity feed + Quick-Identify + "Name These Faces" done. Remaining: Help Identify mode, analytics, moderation queue |
 | **F: Scale & Generalize** | ~10% complete | Playwright tests done. Remaining: Postgres, CI/CD, Sentry, model eval |
 
@@ -74,11 +74,6 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - Visual walkthrough of all features
 - See: docs/session_context/session_49_interactive_prep.md
 
-### Session 52: Gemini API Integration + Progressive Refinement
-- Run Gemini 3.1 Pro on all 271 photos (AD-101)
-- Implement API result logging (AD-103)
-- First progressive refinement test with verified facts (AD-102)
-
 ### Session 53: PRD-015 Face Alignment Implementation
 - Coordinate bridging prompt with InsightFace bounding boxes
 - Combined API call: date + face alignment + location
@@ -95,6 +90,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
+- [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX Runtime in Docker with buffalo_l model pre-downloaded. Gemini 3.1 Pro wired to Estimate upload with graceful degradation. "Name These Faces" added to public photo page. Cloud-ready ingest pipeline (DATA_DIR support, R2 auto-upload). Health check reports ML status. 30 new tests (2465 total).
 - [x] 2026-02-19: **v0.51.1 — Session 51B**: Production Bug Fixes. Compare upload honest messaging (was misleading "check back soon"). Removed redundant Estimate/Compare tab switchers. Supabase keepalive in /health endpoint. Name These Faces confirmed admin-only by design. HD-008 (functional verification). 16 new tests (2433 total).
 - [x] 2026-02-19: **v0.51.0 — Session 51**: Quick-Identify + "Name These Faces". P0 tag dropdown already existed. Built P1 sequential batch identification: "Name These Faces (N unidentified)" button, auto-advance left-to-right, progress banner, Done exit. PRD-021. AD-104. 16 new tests (2417 total).
 - [x] 2026-02-19: **v0.50.0 — Session 50**: Estimate Overhaul + Gemini Upgrade. Estimate page: fix face count (BUG-009), pagination (24/page), standalone /estimate nav, upload zone, improved evidence display. Compare upload hardening (client/server validation). PRD-020 (estimate overhaul). AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging). PRD-015 updated for 3.1 Pro. 16 new tests (2401 total).
