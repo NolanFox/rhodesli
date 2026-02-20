@@ -107,7 +107,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested. Compare upload fixes. UX audit framework. HD-008-009. 4 new tests (2480 total).
 - [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX in Docker. Gemini 3.1 Pro on Estimate upload. 30 new tests (2465 total).
 
-For sessions 1-51: see [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md).
+For all sessions: see [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md).
 
 ## Reference Documents
 - Detailed backlog: `docs/BACKLOG.md`

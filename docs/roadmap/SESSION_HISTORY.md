@@ -116,6 +116,89 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - core/year_estimation.py estimation engine, Compare/Estimate tab navigation
 - 56 new tests (2342 total). AD-092-096, PRD-018
 
+## Session 47: ML Gatekeeper + Feature Reality Contract (2026-02-18)
+- ML birth year estimates gated behind admin review (AD-097)
+- Bulk review page at /admin/review/birth-years with Accept/Edit/Reject/Accept All High
+- Ground truth feedback loop — confirmed data → retraining samples (AD-099)
+- Feature Reality Contract harness rule (AD-098), User Input Taxonomy (AD-100)
+- Dynamic version display from CHANGELOG.md (was hardcoded "v0.6.0")
+- ROADMAP + BACKLOG splits (394→90, 558→102 lines)
+- 23 new tests (2365 total). AD-097-100
+
+## Session 48: Harness Inflection (2026-02-18)
+- Prompt decomposition, phase execution, verification gate rules
+- HARNESS_DECISIONS.md (HD-001-007)
+- Age on face overlays (Session 47 Phase 2F completion)
+- Session log infrastructure, CLAUDE.md compressed (113→77 lines)
+- 4 new tests (2373 total)
+
+## Session 49: Production Polish (2026-02-18)
+- Health check (10/10 routes), Session 47/48 deliverable verification (all PASS)
+- Collection name truncation fix, triage bar tooltips
+- Interactive session prep checklist
+- 5 new tests (2378 total)
+
+## Session 49C: Community Bug Fixes (2026-02-19)
+- Photo 404 for inbox photos (alias resolution in _build_caches())
+- Compare upload silent failure (onchange auto-submit on file input)
+- Version v0.0.0 in admin footer (CHANGELOG.md now in Docker image)
+- Collection name truncation (6 remaining locations)
+- First real community sharing on Jews of Rhodes Facebook group
+- 9 new tests (2387 total)
+
+## Session 50: Estimate Overhaul + Gemini Upgrade (2026-02-19)
+- Estimate page: face count fix (BUG-009), pagination (24/page), standalone /estimate nav, upload zone
+- Compare upload hardening (client/server validation)
+- PRD-020 (estimate overhaul), AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging)
+- 16 new tests (2401 total)
+
+## Session 51: Quick-Identify + "Name These Faces" (2026-02-19)
+- "Name These Faces" sequential batch identification mode
+- PRD-021: Quick-Identify from Photo View, AD-104
+- 16 new tests (2417 total)
+
+## Session 51B: Production Bug Fixes (2026-02-19)
+- Compare upload honest messaging (was misleading "check back soon")
+- Removed redundant Estimate/Compare tab switchers
+- Supabase keepalive in /health endpoint
+- HD-008 (functional verification)
+- 16 new tests (2433 total)
+
+## Session 52: ML Pipeline to Cloud (2026-02-19)
+- InsightFace + ONNX Runtime in Docker with buffalo_l model pre-downloaded
+- Gemini 3.1 Pro wired to Estimate upload with graceful degradation
+- "Name These Faces" on public photo page, cloud-ready ingest pipeline
+- Health check reports ML status
+- 30 new tests (2465 total)
+
+## Session 53: Comprehensive Production Audit (2026-02-20)
+- 35 routes tested, all healthy. Compare upload fixes (loading indicator, uploaded photo display, resize)
+- HTMX indicator CSS dual-selector fix (HD-009)
+- UX audit framework (docs/ux_audit/)
+- 4 new tests (2480 total)
+
+## Session 54: Quick Fixes + Architecture (2026-02-20)
+- Compare upload 640px ML resize (was 1024px), split display/ML paths
+- AD-110 Serving Path Contract, AD-111-113
+- UX Issue Tracker (35 issues, all with dispositions)
+- HTTP 404 for non-existent person/photo pages
+- 1 new test (2481 total)
+
+## Session 54B: Hybrid Detection + Testing Infrastructure (2026-02-20)
+- buffalo_sc detector + buffalo_l recognizer (AD-114, mean cosine sim 0.98)
+- Real upload testing (4 tests, all pass, 0.3-1.3s)
+- Production smoke test script (11 paths), production verification rule (HD-010)
+- UX tracker coverage verified (35/35)
+- 5 new tests (2486 total)
+
+## Session 54c: ML Tooling & Product Strategy (2026-02-20)
+- Memory infrastructure evaluation: rejected NotebookLM MCP, Mem0, Notion MCP, LangChain (AD-115)
+- MLflow integration strategy: targeted, CORAL training first (AD-116)
+- Face Compare three-tier product plan, Tier 1 prioritized (AD-117)
+- NL Archive Query deferred (AD-118)
+- 8 new BACKLOG entries, ROADMAP priority restructure
+- Planning context: docs/session_context/session_54c_planning_context.md
+
 ---
 
 ## Release Version History
