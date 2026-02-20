@@ -135,7 +135,7 @@ class TestCompareUploadFormSubmit:
         resp = client.get("/compare")
         html = resp.text
         assert "htmx-indicator" in html
-        assert "Analyzing" in html
+        assert "Searching for matching faces" in html
 
     def test_upload_rejects_invalid_file_type_server_side(self, client):
         """Server must reject non-JPG/PNG files with error message."""

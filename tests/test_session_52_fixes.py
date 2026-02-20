@@ -275,6 +275,55 @@ class TestCompareUploadProcessing:
 
 
 # ---------------------------------------------------------------------------
+# InsightFace model caching — singleton pattern
+# ---------------------------------------------------------------------------
+
+
+class TestFaceAnalyzerCaching:
+    """get_face_analyzer() must cache the model as a singleton."""
+
+    def test_get_face_analyzer_returns_cached_instance(self):
+        """Calling get_face_analyzer() twice returns the same object.
+
+        Regression test: Previously, extract_faces() created a new FaceAnalysis
+        instance on every call, causing 30-60s model reload on each compare upload.
+        """
+        import core.ingest_inbox as module
+        mock_analyzer = MagicMock()
+        original = module._face_analyzer
+        try:
+            module._face_analyzer = None  # Reset cache
+            with patch("core.ingest_inbox.FaceAnalysis", create=True) as MockFA:
+                MockFA.return_value = mock_analyzer
+                # Mock the import path used inside get_face_analyzer
+                with patch.dict("sys.modules", {
+                    "insightface": MagicMock(),
+                    "insightface.app": MagicMock(FaceAnalysis=MockFA),
+                }):
+                    first = module.get_face_analyzer()
+                    second = module.get_face_analyzer()
+                    assert first is second, "get_face_analyzer() must return cached instance"
+                    # FaceAnalysis should only be instantiated once
+                    assert MockFA.call_count == 1
+        finally:
+            module._face_analyzer = original
+
+    def test_extract_faces_does_not_create_new_analyzer(self):
+        """extract_faces() should use get_face_analyzer(), not create a new instance.
+
+        Source inspection test: verify the function body does NOT instantiate
+        FaceAnalysis directly.
+        """
+        import inspect
+        from core.ingest_inbox import extract_faces
+        source = inspect.getsource(extract_faces)
+        assert "FaceAnalysis(" not in source, \
+            "extract_faces() must use get_face_analyzer(), not instantiate FaceAnalysis directly"
+        assert "get_face_analyzer" in source, \
+            "extract_faces() must call get_face_analyzer()"
+
+
+# ---------------------------------------------------------------------------
 # Health check — ML status
 # ---------------------------------------------------------------------------
 

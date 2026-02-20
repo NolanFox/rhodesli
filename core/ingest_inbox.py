@@ -196,6 +196,25 @@ def create_inbox_identities(
     return identity_ids
 
 
+_face_analyzer = None
+
+
+def get_face_analyzer():
+    """Get or create the cached InsightFace FaceAnalysis instance.
+
+    The buffalo_l model (~300MB) takes 30-60s to load. This singleton
+    ensures it loads once (at startup or first use) and is reused for
+    all subsequent face detection calls.
+    """
+    global _face_analyzer
+    if _face_analyzer is None:
+        from insightface.app import FaceAnalysis
+        _face_analyzer = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+        _face_analyzer.prepare(ctx_id=-1, det_size=(640, 640))
+        logging.info("InsightFace buffalo_l model loaded and cached")
+    return _face_analyzer
+
+
 def extract_faces(filepath: Path) -> list[dict]:
     """
     Extract faces from an image using InsightFace.
@@ -211,7 +230,6 @@ def extract_faces(filepath: Path) -> list[dict]:
     # Defer heavy imports
     import cv2
     import numpy as np
-    from insightface.app import FaceAnalysis
 
     from core.pfe import create_pfe
 
@@ -225,11 +243,8 @@ def extract_faces(filepath: Path) -> list[dict]:
     image_height, image_width = img.shape[:2]
     image_shape = (image_height, image_width)
 
-    # Initialize InsightFace
-    app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
-    app.prepare(ctx_id=-1, det_size=(640, 640))
-
-    faces = app.get(img)
+    analyzer = get_face_analyzer()
+    faces = analyzer.get(img)
     results = []
 
     for face in faces:

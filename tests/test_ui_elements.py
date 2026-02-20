@@ -120,6 +120,33 @@ class TestConfirmModal:
         response = client.get("/?section=to_review")
         assert 'id="confirm-modal-message"' in response.text
 
+    def test_confirm_handler_guards_empty_question(self, client):
+        """htmx:confirm handler only shows modal when evt.detail.question exists.
+
+        Regression test: Without the guard, ALL htmx requests triggered an empty
+        confirm modal because htmx:confirm fires for every request in HTMX 1.9+.
+        """
+        response = client.get("/?section=to_review")
+        # The handler must check for question before calling preventDefault
+        assert "if (!evt.detail.question) return;" in response.text
+
+
+class TestCompareUploadIndicator:
+    """Compare upload form should show a loading indicator during processing."""
+
+    def test_upload_form_has_indicator(self, client):
+        """Compare page upload form has an htmx-indicator for loading state."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/compare")
+            assert 'id="upload-spinner"' in response.text
+            assert "htmx-indicator" in response.text
+
+    def test_upload_spinner_has_message(self, client):
+        """The upload spinner shows a descriptive message."""
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/compare")
+            assert "Searching for matching faces" in response.text
+
 
 class TestEmailTemplateDesign:
     """Email templates in the update script should have correct inline styles."""

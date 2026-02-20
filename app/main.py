@@ -156,8 +156,11 @@ app, rt = fast_app(
             });
         """),
         # Global: styled confirmation dialog replacing native confirm()
+        # Only intercept requests that have hx-confirm (evt.detail.question is set).
+        # Without this guard, ALL htmx requests trigger an empty confirm modal.
         Script("""
             document.addEventListener('htmx:confirm', function(evt) {
+                if (!evt.detail.question) return;
                 evt.preventDefault();
                 var modal = document.getElementById('confirm-modal');
                 if (!modal) { evt.detail.issueRequest(true); return; }
@@ -13325,7 +13328,7 @@ def get(face_id: str = "", sess=None):
             data_testid="upload-form",
         ),
         Div(id="upload-spinner", cls="htmx-indicator text-center py-4",
-            children=[Span("Analyzing faces...", cls="text-slate-400 text-sm animate-pulse")]),
+            children=[Span("Searching for matching faces — this may take a few seconds...", cls="text-slate-400 text-sm animate-pulse")]),
         P("Photos are saved to help grow the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
@@ -25124,6 +25127,17 @@ if __name__ == "__main__":
     # Ensure staging directory exists for production uploads
     staging_dir = data_path / "staging"
     staging_dir.mkdir(parents=True, exist_ok=True)
+
+    # Eagerly load InsightFace model at startup to avoid 502 timeout on first request.
+    # buffalo_l (~300MB) takes 30-60s to load — must happen before serving traffic.
+    if PROCESSING_ENABLED:
+        try:
+            from core.ingest_inbox import get_face_analyzer
+            print("[ml] Loading InsightFace buffalo_l model...")
+            get_face_analyzer()
+            print("[ml] InsightFace model loaded successfully")
+        except Exception as e:
+            print(f"[ml] InsightFace not available: {e}")
 
     print("=" * 60)
     print(f"Server starting at http://{HOST}:{PORT}")
