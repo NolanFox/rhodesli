@@ -44,11 +44,21 @@ BEFORE declaring the session done or pushing to main.
    - Update ROADMAP.md
    - Declare session complete
 
+## Document trimming rule (Lesson 77):
+When trimming entries from ANY document (e.g., ROADMAP "Recently Completed"):
+1. **Before removing**: verify the destination file (e.g., SESSION_HISTORY.md)
+   already contains equivalent content for every entry being removed
+2. **Backfill first**: if the destination is missing entries, add them BEFORE
+   or in the SAME commit as the trim
+3. **Never point to a file you haven't verified**: "See [other file]" is only
+   valid if you've confirmed the other file actually has the data
+
 ## Common failure patterns to watch for:
 - Data file exists in ML directory but not copied to app data/
 - Route defined but not wired to navigation
 - Test passes with mocks but feature doesn't work in browser
 - Documentation created but no breadcrumbs to BACKLOG
 - .gitignore or .dockerignore blocking required files
+- **Entries trimmed from ROADMAP but not backfilled to SESSION_HISTORY** (Lesson 77)
 
 See: docs/HARNESS_DECISIONS.md HD-003

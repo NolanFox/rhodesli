@@ -125,6 +125,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - ROADMAP + BACKLOG splits (394→90, 558→102 lines)
 - 23 new tests (2365 total). AD-097-100
 
+## Session 47B: Audit & Gap Fill (2026-02-18)
+- Feature Reality Contract audit of Session 47 deliverables (9/11 REAL, 2 gaps found)
+- birth_year_estimates.json deployed to data/ (was only in rhodesli_ml/data/)
+- BACKLOG breadcrumbs updated to reference session_47_planning_context.md
+- Deploy safety tests for production-origin files (ml_review_decisions.json, ground_truth_birth_years.json)
+- 4 new tests (2369 total)
+- Session log: docs/session_logs/session_47B_log.md
+
 ## Session 48: Harness Inflection (2026-02-18)
 - Prompt decomposition, phase execution, verification gate rules
 - HARNESS_DECISIONS.md (HD-001-007)

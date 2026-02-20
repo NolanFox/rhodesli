@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-76 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+77 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -117,3 +117,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 74 | Self-reported completion unreliable — external verification (FRC) is mandatory |
 | 75 | Harness decisions need provenance tracking (HD-NNN) just like algorithmic decisions |
 | 76 | Audits can have blind spots — always audit against ACTUAL PROMPT TEXT, not assumed scope |
+| 77 | Trimming docs without verifying destination loses context — always confirm target file has the data before removing |

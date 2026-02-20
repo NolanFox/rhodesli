@@ -185,3 +185,27 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Breadcrumbs:** scripts/production_smoke_test.py,
   .claude/rules/production-verification.md,
   docs/ux_audit/UX_AUDIT_README.md
+
+## HD-011: Document Trimming Must Verify Destination Completeness
+- **Date:** 2026-02-20
+- **Session:** 54c
+- **Decision:** When trimming entries from any document (ROADMAP "Recently
+  Completed", BACKLOG completed items, etc.), the destination file must be
+  verified to contain equivalent content BEFORE or in the SAME commit as
+  the removal. Added to verification gate common failure patterns.
+- **Rationale:** Session 54c trimmed ROADMAP "Recently Completed" from 14
+  to 5 entries, pointing to SESSION_HISTORY.md. But SESSION_HISTORY.md was
+  missing sessions 47-54B (never backfilled after the Session 47 ROADMAP
+  split). Session 47B (real audit with 4 tests, deploy fix) had no entry
+  at all. The gap was caught during review but would have been silent
+  context loss otherwise.
+- **Root cause:** The Session 47 ROADMAP split created SESSION_HISTORY.md
+  with sessions 1-46, but no process ensured new sessions were added to
+  SESSION_HISTORY.md as they completed. The "Recently Completed" section
+  in ROADMAP was the only record for sessions 47+.
+- **Alternatives considered:**
+  - Auto-generate SESSION_HISTORY from git tags: Fragile, loses narrative
+  - Keep all entries in ROADMAP forever: Violates 150-line limit
+  - Script to sync ROADMAP → SESSION_HISTORY: Overhead for infrequent operation
+- **Breadcrumbs:** .claude/rules/verification-gate.md (document trimming rule),
+  tasks/lessons/harness-lessons.md (Lesson 77)
