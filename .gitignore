@@ -28,6 +28,7 @@ env/
 
 # Environment files (never commit secrets)
 .env
+.mcp.json
 .env.local
 .env.*.local
 
