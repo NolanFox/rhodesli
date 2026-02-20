@@ -101,11 +101,11 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
-- [x] 2026-02-20: **Session 54c**: ML Tooling & Product Strategy. Memory infra evaluation (AD-115), MLflow strategy (AD-116), Face Compare 3-tier plan (AD-117), NL Query deferred (AD-118). 8 new BACKLOG entries.
-- [x] 2026-02-20: **v0.54.1 — Session 54B**: Hybrid Detection + Testing Infrastructure. buffalo_sc detector + buffalo_l recognizer (AD-114). Real upload testing. Production smoke test script. 5 new tests (2486 total).
-- [x] 2026-02-20: **v0.54.0 — Session 54**: Quick Fixes + Architecture. AD-110 Serving Path Contract, AD-111-113. UX Issue Tracker (35 issues). HTTP 404 for non-existent pages. 1 new test (2481 total).
-- [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested. Compare upload fixes. UX audit framework. HD-008-009. 4 new tests (2480 total).
-- [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX in Docker. Gemini 3.1 Pro on Estimate upload. 30 new tests (2465 total).
+- [x] 2026-02-20: **Session 54E**: Verification Sweep. 22 deliverables audited, 1 gap closed. Playwright browser tests (8/8). CLAUDE.md Session Operations Checklist.
+- [x] 2026-02-20: **Session 54D**: Production Verification + Hybrid Analysis. 11/11 smoke test. Compare upload 51.2s. Hybrid detection analysis doc.
+- [x] 2026-02-20: **Session 54c**: ML Tooling & Product Strategy. AD-115-118. Face Compare 3-tier plan. 8 new BACKLOG entries.
+- [x] 2026-02-20: **v0.54.1 — Session 54B**: Hybrid Detection + Testing. AD-114. Production smoke test script. 5 new tests (2486 total).
+- [x] 2026-02-20: **v0.54.0 — Session 54**: Quick Fixes + Architecture. AD-110-113. UX Issue Tracker (35 issues). 1 new test (2481 total).
 
 For all sessions: see [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md).
 
