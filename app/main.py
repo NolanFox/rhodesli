@@ -137,7 +137,7 @@ app, rt = fast_app(
         """),
         # Global: intercept HTMX 401 responses to show login modal instead of swapping content
         Script("""
-            document.body.addEventListener('htmx:beforeSwap', function(evt) {
+            document.addEventListener('htmx:beforeSwap', function(evt) {
                 if (evt.detail.xhr.status === 401) {
                     evt.detail.shouldSwap = false;
                     var modal = document.getElementById('login-modal');
@@ -157,7 +157,7 @@ app, rt = fast_app(
         """),
         # Global: styled confirmation dialog replacing native confirm()
         Script("""
-            document.body.addEventListener('htmx:confirm', function(evt) {
+            document.addEventListener('htmx:confirm', function(evt) {
                 evt.preventDefault();
                 var modal = document.getElementById('confirm-modal');
                 if (!modal) { evt.detail.issueRequest(true); return; }
