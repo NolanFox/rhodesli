@@ -17,6 +17,19 @@ import time
 from datetime import datetime, timezone
 
 
+def _get_ssl_context():
+    """Get an SSL context that works on macOS with Python venvs."""
+    import ssl
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        pass
+    # macOS: try system cert store
+    ctx = ssl.create_default_context()
+    return ctx
+
+
 def fetch(url, timeout=30):
     """Fetch a URL and return (status_code, body, elapsed_seconds)."""
     import urllib.request
@@ -24,8 +37,9 @@ def fetch(url, timeout=30):
 
     start = time.time()
     try:
+        ctx = _get_ssl_context()
         req = urllib.request.Request(url, headers={"User-Agent": "RhodesliSmokeTest/1.0"})
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
             body = resp.read().decode("utf-8", errors="replace")
             return resp.status, body, time.time() - start
     except urllib.error.HTTPError as e:
