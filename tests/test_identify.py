@@ -152,7 +152,7 @@ class TestIdentifyPage:
         resp = client.get("/identify/nonexistent-id")
         for p in patches:
             p.stop()
-        assert resp.status_code == 200
+        assert resp.status_code == 404
         assert "not found" in resp.text.lower()
 
     def test_has_share_button(self, client):
@@ -370,7 +370,7 @@ class TestMatchConfirmation:
         resp = client.get("/identify/unknown-1/match/nonexistent")
         for p in patches:
             p.stop()
-        assert resp.status_code == 200
+        assert resp.status_code == 404
         assert "not found" in resp.text.lower()
 
     def test_match_share_button(self, client):

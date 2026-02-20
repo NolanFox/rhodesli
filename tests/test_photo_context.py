@@ -112,10 +112,10 @@ class TestPhotoViewRoute:
         content_type = response.headers.get("content-type", "")
         assert "text/html" in content_type
 
-    def test_photo_view_not_found_shows_error(self, client):
-        """Photo view shows error for unknown photo."""
+    def test_photo_view_not_found_returns_404(self, client):
+        """Photo view returns HTTP 404 for unknown photo with friendly message."""
         response = client.get("/photo/nonexistent-id")
-        assert response.status_code == 200  # Still returns HTML page
+        assert response.status_code == 404
         assert "Photo not found" in response.text
 
     def test_photo_view_contains_photo_image(self, client, real_photo_id):

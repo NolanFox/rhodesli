@@ -28,7 +28,7 @@ import numpy as np
 from fasthtml.common import *
 from PIL import Image
 from starlette.datastructures import UploadFile
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, HTMLResponse
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
@@ -9493,9 +9493,9 @@ def public_person_page(
 
     if not identity:
         style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
-        return (
+        page_html = to_xml(
             Title("Person Not Found - Rhodesli"),
-            style_404,
+        ) + to_xml(style_404) + to_xml(
             Main(
                 Nav(
                     Div(
@@ -9518,6 +9518,7 @@ def public_person_page(
                 cls="min-h-screen bg-slate-900"
             ),
         )
+        return HTMLResponse(page_html, status_code=404)
 
     raw_name = ensure_utf8_display(identity.get("name"))
     display_name = raw_name or f"Person {person_id[:8]}"
@@ -10395,10 +10396,11 @@ def get(person_id: str, sess=None):
     registry = load_registry()
     identity = _safe_get_identity(registry, person_id)
     if not identity or identity.get("merged_into"):
-        return Title("Person Not Found"), Main(
+        html_404 = to_xml(Title("Person Not Found")) + to_xml(Main(
             Div(H2("Person not found", cls="text-xl text-white"), cls="text-center py-20"),
             cls="min-h-screen bg-slate-900",
-        )
+        ))
+        return HTMLResponse(html_404, status_code=404)
 
     display_name = ensure_utf8_display(identity.get("name", "Unknown"))
     state = identity.get("state", "INBOX")
@@ -11019,10 +11021,11 @@ def get(person_a: str, person_b: str, sess=None):
     ident_b = _safe_get_identity(registry, person_b)
 
     if not ident_a or not ident_b:
-        return Title("People Not Found"), Main(
+        html_404 = to_xml(Title("People Not Found")) + to_xml(Main(
             Div(H2("One or both people not found", cls="text-xl text-white"), cls="text-center py-20"),
             cls="min-h-screen bg-slate-900",
-        )
+        ))
+        return HTMLResponse(html_404, status_code=404)
 
     _build_caches()
     crop_files = get_crop_files()
@@ -14630,7 +14633,15 @@ def get(photo: str = "", sess=None):
                             data_testid="estimate-upload-form",
                         ),
                         Div(id="estimate-upload-spinner", cls="htmx-indicator text-center py-3",
-                            children=[Span("Analyzing photo...", cls="text-slate-400 text-sm animate-pulse")]),
+                            children=[
+                                Div(
+                                    Svg(viewBox="0 0 24 24", fill="none", cls="animate-spin h-5 w-5 text-amber-400 inline-block mr-2",
+                                        children=[NotStr('<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" class="opacity-75"></path>')]),
+                                    Span("Analyzing your photo for date clues...", cls="text-slate-400 text-sm"),
+                                    cls="flex items-center justify-center"
+                                ),
+                                P("This may take a moment for group photos.", cls="text-slate-500 text-xs mt-1"),
+                            ]),
                         Div(id="estimate-upload-result"),
                         cls="bg-slate-800/50 rounded-2xl p-6 max-w-md mx-auto mb-8",
                         data_testid="estimate-upload-area",
@@ -15797,11 +15808,11 @@ def public_photo_page(
     """
     photo = get_photo_metadata(photo_id)
     if not photo:
-        # Gentle 404 page
+        # Gentle 404 page with correct HTTP status
         style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
-        return (
+        page_html = to_xml(
             Title("Photo Not Found - Rhodesli"),
-            style_404,
+        ) + to_xml(style_404) + to_xml(
             Main(
                 Nav(
                     Div(
@@ -15824,6 +15835,7 @@ def public_photo_page(
                 cls="min-h-screen bg-slate-900"
             ),
         )
+        return HTMLResponse(page_html, status_code=404)
 
     filename = photo["filename"]
     width, height = get_photo_dimensions(filename)

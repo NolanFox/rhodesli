@@ -207,9 +207,9 @@ class TestCriticalRoutes:
         assert resp.status_code == 200
 
     def test_person_page_404(self, client):
-        """GET /person/{bogus} returns 200 (gentle 404)."""
+        """GET /person/{bogus} returns HTTP 404 with friendly message."""
         resp = _run_with_patches(client, "GET", "/person/nonexistent-bogus-id")
-        assert resp.status_code == 200
+        assert resp.status_code == 404
         assert "Person not found" in resp.text
 
     def test_activity_page(self, client):

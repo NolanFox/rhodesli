@@ -83,10 +83,10 @@ class TestPublicPhotoViewerAccess:
 class TestPublicPhotoViewer404:
     """404 handling for invalid photo IDs."""
 
-    def test_invalid_photo_id_returns_200_with_404_content(self, client):
-        """Invalid photo_id shows a gentle 404 page (HTTP 200 with friendly message)."""
+    def test_invalid_photo_id_returns_404_with_friendly_page(self, client):
+        """Invalid photo_id returns HTTP 404 with a friendly message."""
         response = client.get("/photo/nonexistent-photo-id-12345")
-        assert response.status_code == 200
+        assert response.status_code == 404
         html = response.text
         assert "Photo not found" in html
         assert "hasn't been added" in html

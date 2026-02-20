@@ -68,9 +68,9 @@ class TestPublicPersonPageAccess:
         assert response.status_code == 200
 
     def test_invalid_person_id_returns_404_page(self, client):
-        """Invalid person ID shows a gentle 404 page, not an error."""
+        """Invalid person ID returns HTTP 404 with a friendly page."""
         response = client.get("/person/nonexistent-id-12345")
-        assert response.status_code == 200  # Gentle 404, not HTTP 404
+        assert response.status_code == 404
         html = response.text
         assert "Person not found" in html
         assert "hasn&#x27;t been identified" in html or "hasn't been identified" in html
