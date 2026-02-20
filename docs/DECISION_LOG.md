@@ -22,3 +22,8 @@ Chronological record of major architectural, algorithmic, and product decisions.
 | 2026-02-11 | **Co-occurrence signals**: "N shared photos" badge on neighbors | Boost confidence when identities appear together |
 | 2026-02-12 | **Global reclustering**: Include SKIPPED faces in ML grouping | Skip = deferral, not exclusion; continuous re-evaluation |
 | 2026-02-12 | **Actionability sorting**: Sort inbox by confidence + proposal status | Confirmed leads first; admin time on high-value actions |
+| 2026-02-20 | **Memory infra evaluation** (AD-115): Rejected NotebookLM MCP, Mem0, Notion MCP, LangChain for dev workflow | Current in-repo harness (AD docs, session_context, .claude/rules/) is sufficient. See session_54c_planning_context.md |
+| 2026-02-20 | **MLflow integration** (AD-116): Accepted for targeted use starting with CORAL training | Portfolio talking point + Gemini prompt tracking. ~10 lines via autolog. Local only. |
+| 2026-02-20 | **Face Compare product** (AD-117): Three-tier plan accepted, Tier 1 prioritized | Competitive analysis: all 7+ existing tools give single % with no kinship/cross-age context. Rhodesli already exceeds them. |
+| 2026-02-20 | **NL Archive Query** (AD-118): Deferred LangChain-powered natural language interface | High portfolio value but prerequisites (similarity calibration, CORAL, stable matching) not ready |
+| 2026-02-20 | **Historical Photo Date Estimator**: Identified as future standalone product | Novel — no existing tool. Depends on CORAL model training. See session_54c_planning_context.md Part 2D |
