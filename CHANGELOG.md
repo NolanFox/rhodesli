@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.55.2] — 2026-02-20
+
+### Documentation
+- **HD-014**: Every deploy must include production Playwright verification
+- **AD-122**: Silent failures are bugs — general principle (subprocess.DEVNULL, ML fallbacks, swallowed exceptions)
+- Post-deploy hook updated with Playwright reminder
+- CLAUDE.md: post-deploy Playwright rule (Session Operations #3), DEVNULL ban (AD-122)
+- Production verification: all 4 audit fixes confirmed live on production via MCP Playwright
+- Admin routes: all 60 admin-protected routes correctly return 401 for unauthenticated access
+
 ## [v0.55.1] — 2026-02-20
 
 ### Fixed
