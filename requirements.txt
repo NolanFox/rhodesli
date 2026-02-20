@@ -8,3 +8,6 @@ boto3
 httpx>=0.24.0
 python-gedcom
 opencv-python-headless<4.11
+# ML processing (InsightFace face detection + embedding on Railway)
+insightface==0.7.3
+onnxruntime>=1.20

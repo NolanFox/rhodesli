@@ -1,5 +1,5 @@
 # Dockerfile for Rhodesli web application
-# Lightweight image - only web dependencies, no ML processing
+# Full image with ML processing (InsightFace face detection + comparison)
 
 FROM python:3.11-slim
 
@@ -7,11 +7,13 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install minimal system dependencies
-# libgl1 and libglib2.0-0 are needed by Pillow for some image formats
+# Install system dependencies
+# libgl1, libglib2.0-0 — OpenCV image format support
+# libgomp1 — OpenMP threading for ONNX Runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
@@ -20,6 +22,15 @@ WORKDIR /app
 # Install Python dependencies first (better layer caching)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Pre-download InsightFace buffalo_l model at build time (~300MB)
+# This ensures face detection is available immediately on Railway
+# The model is stored in /root/.insightface/models/buffalo_l/
+RUN python -c "\
+from insightface.app import FaceAnalysis; \
+fa = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider']); \
+fa.prepare(ctx_id=-1, det_size=(640, 640)); \
+print('InsightFace buffalo_l model downloaded and verified')"
 
 # Copy application code
 COPY app/ app/
@@ -56,7 +67,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
 ENV HOST=0.0.0.0
 ENV PORT=5001
 ENV DEBUG=false
-ENV PROCESSING_ENABLED=false
+ENV PROCESSING_ENABLED=true
 
 # Storage configuration:
 # - JSON data lives on Railway volume (STORAGE_DIR=/app/storage)

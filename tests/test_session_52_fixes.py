@@ -294,3 +294,55 @@ class TestHealthCheckMLStatus:
         assert response.status_code == 200
         data = response.json()
         assert "processing_enabled" in data
+
+    def test_health_check_returns_ml_pipeline_status(self):
+        """Health check includes ml_pipeline field."""
+        response = self.client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert "ml_pipeline" in data
+        assert data["ml_pipeline"] in ("ready", "unavailable")
+
+
+# ---------------------------------------------------------------------------
+# Deploy Safety — InsightFace in requirements and Dockerfile
+# ---------------------------------------------------------------------------
+
+
+class TestDeploySafetyML:
+    """Verify InsightFace is properly configured for Railway deployment."""
+
+    def test_insightface_in_requirements(self):
+        """requirements.txt must include insightface for Railway face detection."""
+        from pathlib import Path
+        reqs = (Path(__file__).parent.parent / "requirements.txt").read_text()
+        assert "insightface" in reqs, \
+            "requirements.txt must include insightface for Railway ML processing"
+
+    def test_onnxruntime_in_requirements(self):
+        """requirements.txt must include onnxruntime for InsightFace inference."""
+        from pathlib import Path
+        reqs = (Path(__file__).parent.parent / "requirements.txt").read_text()
+        assert "onnxruntime" in reqs, \
+            "requirements.txt must include onnxruntime for InsightFace inference"
+
+    def test_dockerfile_downloads_model(self):
+        """Dockerfile must pre-download buffalo_l model at build time."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "buffalo_l" in dockerfile, \
+            "Dockerfile must download buffalo_l model for face detection"
+
+    def test_dockerfile_has_libgomp(self):
+        """Dockerfile must install libgomp1 for ONNX Runtime threading."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "libgomp" in dockerfile, \
+            "Dockerfile must install libgomp1 for ONNX Runtime"
+
+    def test_processing_enabled_true_in_dockerfile(self):
+        """Dockerfile should set PROCESSING_ENABLED=true for Railway."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "PROCESSING_ENABLED=true" in dockerfile, \
+            "Dockerfile must set PROCESSING_ENABLED=true for Railway ML processing"

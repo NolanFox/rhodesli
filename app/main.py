@@ -6543,11 +6543,21 @@ def health():
             index = json.load(f)
             photo_count = len(index.get("photos", {}))
 
+    # Check ML pipeline availability
+    ml_available = False
+    try:
+        import cv2  # noqa: F811
+        from insightface.app import FaceAnalysis  # noqa: F401
+        ml_available = True
+    except ImportError:
+        pass
+
     return {
         "status": "ok",
         "identities": len(registry.list_identities()),
         "photos": photo_count,
         "processing_enabled": PROCESSING_ENABLED,
+        "ml_pipeline": "ready" if ml_available else "unavailable",
         "supabase": _ping_supabase(),
     }
 
