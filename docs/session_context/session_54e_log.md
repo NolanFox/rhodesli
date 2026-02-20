@@ -6,7 +6,7 @@
 
 ## Phase Checklist
 - [x] Phase 1: Deliverable Existence Audit
-- [ ] Phase 2: Playwright MCP Setup + Browser Testing
+- [x] Phase 2: Playwright MCP Setup + Browser Testing
 - [ ] Phase 3: CLAUDE.md Session Operations Checklist
 - [ ] Phase 4: Final Verification + Push
 
@@ -38,3 +38,30 @@
 | SESSION_HISTORY: 54D | 54D | MISSING | Added |
 
 **Total: 22 checked, 21 already present, 1 missing (Session 54D in SESSION_HISTORY), 1 created.**
+
+## Phase 2: Playwright MCP Setup + Browser Testing
+
+### Prerequisites
+- npx available: YES (v11.6.2, node v24.13.0)
+- .mcp.json configured: YES (already existed from Session 54B)
+- Python playwright installed: YES (in venv)
+- Chromium browser: INSTALLED (v145.0.7632.6)
+
+### Browser Test Results (Production)
+
+| Test | Status | Detail | Time |
+|------|--------|--------|------|
+| Landing page | PASS | 10 images, title='Rhodesli -- Jewish Community of Rhodes Photo Archive' | 2.0s |
+| Timeline | PASS | 271 images | 1.4s |
+| Compare page | PASS | upload zone FOUND | 1.7s |
+| Estimate page | PASS | title='When Was This Photo Taken? — Rhodesli' | 2.7s |
+| People page | PASS | title='People — Rhodesli Heritage Archive' | 1.0s |
+| Photos page | PASS | 271 images | 2.1s |
+| 404 handling | PASS | HTTP 404 | 0.2s |
+| Health endpoint | PASS | HTTP 200, ok=yes | 0.1s |
+
+**8/8 passed**
+
+### Artifacts
+- Script: `scripts/browser_smoke_test.py` (reusable, `--url` and `--screenshots` args)
+- Screenshots: `docs/ux_audit/session_findings/screenshots/` (gitignored)
