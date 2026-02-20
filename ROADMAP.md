@@ -58,6 +58,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [ ] OPS-001: Custom SMTP for branded email sender
 
 ### Medium-Term
+- [ ] **EPIC: Interactive Upload UX with SSE Progress** — 2-3 session epic (AD-121, BACKLOG)
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [ ] FE-041: "Help Identify" mode for non-admin users

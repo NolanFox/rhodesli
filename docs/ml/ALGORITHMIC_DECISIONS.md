@@ -1210,7 +1210,62 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: All files that call `get_model()`, `FaceAnalysis()`, `get_hybrid_models()`, or load ONNX/PyTorch models
 - **Breadcrumbs**: AD-119 (specific fix), HD-012 (harness decision), docs/PERFORMANCE_CHRONICLE.md, Session 54F
 
-1. Add a new entry with AD-XXX format (next: AD-121)
+### AD-121: Interactive Upload UX — SSE Progress Streaming Architecture
+
+- **Date**: 2026-02-20
+- **Session**: 54G (design only — not yet implemented)
+- **Status**: DESIGN ONLY — implementation is a 2-3 session epic
+
+**Problem:** Compare/estimate uploads take 10-28s on Railway shared CPU with zero user feedback. Users think the page is broken. The current UX is: click upload → stare at nothing → maybe results appear.
+
+**Nolan's UX specification:**
+1. Photo preview appears immediately after upload
+2. Progress bar with text summarizing current step, face count, and pipeline stage
+3. Faces populate below one-by-one as detection completes
+4. Face overlays on photo change colors through pipeline stages (detection → embedding → comparison)
+5. Fully interactive when complete (same as other photo views)
+6. Transition between compare and estimate views with same photo
+7. Every uploaded photo saved as if submitted through main upload flow (gatekeeper pattern)
+8. Support 2-3 concurrent uploads via server-side queue
+9. Multi-photo upload required for compare; TBD for estimate
+10. Progress text: "distilled for non-technical person that a technical person could still use to figure out what part of the ML pipeline it was at"
+
+**Decision:** Use Server-Sent Events (SSE) for server→client progress streaming.
+- POST upload returns job_id immediately (202 Accepted)
+- Client opens SSE connection to `/api/upload/progress/{job_id}`
+- Server emits events: `face_detected`, `embedding_computed`, `comparison_result`, `complete`
+- HTMX partial swaps render faces progressively as each event arrives
+- `asyncio.Queue` for concurrent upload management (Railway single-worker)
+
+**Why SSE over WebSockets:**
+- One-way server→client only needed for progress updates
+- SSE auto-reconnects on connection drop (browser-native)
+- FastHTML compatible (no WebSocket library needed)
+- No bidirectional overhead
+- HTMX has native SSE extension support
+
+**Why asyncio.Queue over Redis:**
+- Railway single-worker would timeout without serialization
+- Queue allows 2-3 concurrent uploads to process sequentially while showing progress for all
+- asyncio.Queue is simplest (no Redis dependency, no external service)
+- Can upgrade to Redis-backed if Railway adds workers later
+
+**Multi-photo design:** Required for compare (upload reference + candidates). Single photo for estimate. TBD: unified upload zone that switches mode based on photo count.
+
+**Every uploaded photo enters gatekeeper pipeline** (same as main upload flow) — no photo enters the archive without face detection + embedding + quality check.
+
+**Research references:**
+- FastHTML SSE example: fabge/fasthtml-sse (GitHub) — chatbot pattern, adaptable
+- "SSE: The Streaming Protocol" (Medium, Jan 2026) — exact pattern for long-running AI tasks
+- HTMX SSE extension: `hx-ext="sse"`, `sse-connect`, `sse-swap` attributes
+
+- **Rejected**: WebSockets (bidirectional overhead unnecessary for one-way progress)
+- **Rejected**: Polling (higher latency, more server load, worse UX than SSE)
+- **Rejected**: Long-polling (complex, no advantage over SSE for this use case)
+- **Affects**: app/main.py (new routes), core/ingest_inbox.py (gatekeeper), compare/estimate handlers
+- **Breadcrumbs**: Session 54G planning context, BACKLOG SSE epic, docs/PERFORMANCE_CHRONICLE.md (latency context)
+
+1. Add a new entry with AD-XXX format (next: AD-122)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

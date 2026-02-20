@@ -185,6 +185,39 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **PRODUCT-003: NL Archive Query MVP (LangChain)**: Natural language interface: "Show me photos from the 1930s with people who look like [uploaded face]." Chain: face detection → embedding search → date filtering → NL response. Prerequisites: similarity calibration + CORAL + stable identity matching. Estimated 2-3 sessions once prerequisites met. See AD-118, docs/session_context/session_54c_planning_context.md Part 1B.
 - [ ] **PRODUCT-004: Historical Photo Date Estimator Standalone**: Upload historical photo → estimate when taken using CORAL model. Genuinely novel — no existing tool offers this. Prerequisite: CORAL model trained and validated. Could combine with face comparison in shared "faces" tool site. See docs/session_context/session_54c_planning_context.md Part 2D.
 
+## EPIC: Interactive Upload UX with SSE Progress (2-3 sessions)
+
+### Why
+Compare/estimate uploads take 10-28s with zero feedback. Users think it's broken.
+The current UX is: click upload → stare at nothing → maybe results appear.
+
+### What
+- Photo preview immediately on upload
+- SSE-powered progress bar showing pipeline stage + face count
+- Faces populate one-by-one below the photo as detection completes
+- Face overlays on photo change colors through pipeline stages
+- Fully interactive result when complete (same as other photo views)
+- Transition between compare/estimate views with same photo
+- Every uploaded photo saved through gatekeeper pipeline
+- Support 2-3 concurrent uploads via asyncio.Queue
+- Multi-photo upload for compare; single for estimate
+
+### Technical Stack
+- SSE (Server-Sent Events) for progress streaming
+- HTMX SSE extension (`hx-ext="sse"`) for progressive face rendering
+- asyncio.Queue for upload serialization on Railway single-worker
+- Gatekeeper pattern for photo persistence
+
+### Sessions Estimate
+- Session A: SSE infrastructure + queue + basic progress bar
+- Session B: Face-by-face progressive rendering + overlay animations
+- Session C: Multi-photo upload + compare/estimate view switching
+
+### Breadcrumbs
+- AD-121: Architecture decision
+- Session 54G planning context: Full UX specification from Nolan
+- PERFORMANCE_CHRONICLE.md: Latency context (10-28s baseline)
+
 ## Performance Chronicle Maintenance
 - Keep `docs/PERFORMANCE_CHRONICLE.md` updated with future optimizations
 - Planned future entries: SSE upload progress, ML pipeline scaling, GPU migration
