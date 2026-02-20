@@ -24,14 +24,18 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Pre-download InsightFace buffalo_l model at build time (~300MB)
-# This ensures face detection is available immediately on Railway
-# The model is stored in /root/.insightface/models/buffalo_l/
+# Pre-download InsightFace models at build time
+# buffalo_l: full model pack for batch ingestion fallback (~300MB)
+# buffalo_sc: lightweight detector for hybrid compare (AD-114, AD-119)
+# Models stored in /root/.insightface/models/{buffalo_l,buffalo_sc}/
 RUN python -c "\
 from insightface.app import FaceAnalysis; \
 fa = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider']); \
 fa.prepare(ctx_id=-1, det_size=(640, 640)); \
-print('InsightFace buffalo_l model downloaded and verified')"
+print('InsightFace buffalo_l model downloaded and verified'); \
+fa2 = FaceAnalysis(name='buffalo_sc', providers=['CPUExecutionProvider']); \
+fa2.prepare(ctx_id=-1, det_size=(640, 640)); \
+print('InsightFace buffalo_sc model downloaded and verified')"
 
 # Copy application code
 COPY app/ app/
@@ -69,6 +73,12 @@ ENV HOST=0.0.0.0
 ENV PORT=5001
 ENV DEBUG=false
 ENV PROCESSING_ENABLED=true
+
+# ONNX Runtime thread optimization for Railway shared CPU (AD-119).
+# Default thread count = physical cores, which causes spin-wait contention
+# on shared vCPU. Single-threaded inference is faster on shared CPU.
+ENV OMP_NUM_THREADS=1
+ENV OPENBLAS_NUM_THREADS=1
 
 # Storage configuration:
 # - JSON data lives on Railway volume (STORAGE_DIR=/app/storage)
