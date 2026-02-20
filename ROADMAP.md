@@ -45,26 +45,33 @@ Current: v0.54.1 · 2486 tests · 271 photos · 181 faces · 46 confirmed
 For full feature checklists, see [docs/roadmap/FEATURE_STATUS.md](docs/roadmap/FEATURE_STATUS.md).
 For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMAP.md).
 
-## Open Work (Prioritized)
+## Open Work (Prioritized — confirmed Session 54c)
 
-### High Priority
-- [x] Quick-Identify from Photo View (2026-02-19, Session 51)
-- [x] Batch Identity Entry — "Name These Faces" sequential mode (2026-02-19, Session 51)
+### Immediate (Current Sprint)
+- [ ] Similarity calibration on frozen embeddings — Very High portfolio value
+- [ ] Fix production UX issues — phantom features, broken loading, missing nav
+- [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
+
+### Next (After Immediate)
+- [ ] CORAL date estimation training — PyTorch portfolio centerpiece
+- [ ] ML-070: MLflow integration — add to CORAL training script (AD-116)
 - [ ] OPS-001: Custom SMTP for branded email sender
 
-### Medium Priority
-- [ ] ML-051: Date label pipeline — integrate into upload orchestrator
-- [ ] ML-052: New upload auto-dating
+### Medium-Term
+- [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [ ] FE-041: "Help Identify" mode for non-admin users
-- [ ] ROLE-006: Email notifications for contributors
+- [ ] Active learning pipeline
 
-### Low Priority (Phase F)
+### Future
+- [ ] PRODUCT-003: NL Archive Query MVP — LangChain (AD-118)
+- [ ] PRODUCT-004: Historical Photo Date Estimator Standalone
 - [ ] BE-040–042: PostgreSQL migration
 - [ ] OPS-002: CI/CD pipeline
-- [ ] OPS-004: Error tracking (Sentry)
-- [ ] ML-030–032: Model evaluation (ArcFace, ensemble, fine-tuning)
+- [ ] PRODUCT-005: Face Compare Tier 3 — product grade (post-employment)
 - [ ] GEN-001+: Multi-tenant architecture
+
+See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
@@ -94,23 +101,13 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Recently Completed
 
-- [x] 2026-02-20: **v0.54.1 — Session 54B**: Hybrid Detection + Testing Infrastructure. buffalo_sc detector + buffalo_l recognizer (AD-114, mean cosine sim 0.98). Real upload testing (4 tests, all pass, 0.3-1.3s). Production smoke test script (11 paths). Production verification harness rule (HD-010). UX tracker coverage verified (35/35). Playwright MCP configured. 5 new tests (2486 total).
+- [x] 2026-02-20: **Session 54c**: ML Tooling & Product Strategy. Memory infra evaluation (AD-115), MLflow strategy (AD-116), Face Compare 3-tier plan (AD-117), NL Query deferred (AD-118). 8 new BACKLOG entries.
+- [x] 2026-02-20: **v0.54.1 — Session 54B**: Hybrid Detection + Testing Infrastructure. buffalo_sc detector + buffalo_l recognizer (AD-114). Real upload testing. Production smoke test script. 5 new tests (2486 total).
+- [x] 2026-02-20: **v0.54.0 — Session 54**: Quick Fixes + Architecture. AD-110 Serving Path Contract, AD-111-113. UX Issue Tracker (35 issues). HTTP 404 for non-existent pages. 1 new test (2481 total).
+- [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested. Compare upload fixes. UX audit framework. HD-008-009. 4 new tests (2480 total).
+- [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX in Docker. Gemini 3.1 Pro on Estimate upload. 30 new tests (2465 total).
 
-- [x] 2026-02-20: **v0.54.0 — Session 54**: Quick Fixes + Architecture + Harness Evolution. Compare upload 640px ML resize (was 1024px), split display/ML paths, buffalo_sc investigated (incompatible — different backbone). AD-110 Serving Path Contract, AD-111-113 (face lifecycle, Modal rejected, ML removal rejected). UX Issue Tracker (35 issues, all with dispositions). HTTP 404 for non-existent person/photo pages. Estimate loading indicator enhanced. 1 new test (2481 total).
-- [x] 2026-02-20: **v0.53.0 — Session 53**: Comprehensive Production Audit. 35 routes tested (all healthy). Compare upload fixes: loading indicator with spinner + duration warning, uploaded photo display in results, resize optimization (1280→1024px), HTMX indicator CSS dual-selector fix. UX audit framework (docs/ux_audit/). HD-008-009. 4 new tests (2480 total).
-- [x] 2026-02-19: **v0.52.0 — Session 52**: ML Pipeline to Cloud. InsightFace + ONNX Runtime in Docker with buffalo_l model pre-downloaded. Gemini 3.1 Pro wired to Estimate upload with graceful degradation. "Name These Faces" added to public photo page. Cloud-ready ingest pipeline (DATA_DIR support, R2 auto-upload). Health check reports ML status. 30 new tests (2465 total).
-- [x] 2026-02-19: **v0.51.1 — Session 51B**: Production Bug Fixes. Compare upload honest messaging (was misleading "check back soon"). Removed redundant Estimate/Compare tab switchers. Supabase keepalive in /health endpoint. Name These Faces confirmed admin-only by design. HD-008 (functional verification). 16 new tests (2433 total).
-- [x] 2026-02-19: **v0.51.0 — Session 51**: Quick-Identify + "Name These Faces". P0 tag dropdown already existed. Built P1 sequential batch identification: "Name These Faces (N unidentified)" button, auto-advance left-to-right, progress banner, Done exit. PRD-021. AD-104. 16 new tests (2417 total).
-- [x] 2026-02-19: **v0.50.0 — Session 50**: Estimate Overhaul + Gemini Upgrade. Estimate page: fix face count (BUG-009), pagination (24/page), standalone /estimate nav, upload zone, improved evidence display. Compare upload hardening (client/server validation). PRD-020 (estimate overhaul). AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging). PRD-015 updated for 3.1 Pro. 16 new tests (2401 total).
-- [x] 2026-02-19: **v0.49.3 — Session 49C**: Community Bug Fixes. Photo 404 for inbox photos (alias resolution), compare upload silent failure (onchange auto-submit), version v0.0.0 in admin footer (Dockerfile COPY), collection truncation (6 more locations). First real community sharing on Jews of Rhodes Facebook group. 9 new tests (2387 total).
-- [x] 2026-02-18: **v0.49.2 — Session 49**: Production Polish. Health check (10/10 routes), Session 47/48 deliverable verification (all PASS), collection name truncation fix, triage bar tooltips, interactive session prep checklist. 5 new tests (2378 total).
-- [x] 2026-02-18: **v0.49.1 — Session 48**: Harness Inflection. Prompt decomposition, phase execution, verification gate rules. HARNESS_DECISIONS.md (HD-001-007). Age on face overlays (Session 47 Phase 2F completion). Session log infrastructure. CLAUDE.md compressed (113->77). 4 new tests (2373 total).
-- [x] 2026-02-18: **v0.49.0 — Session 47**: ML Gatekeeper + Feature Reality Contract. ML birth year estimates gated behind admin review. Bulk review page. Ground truth feedback loop. Dynamic version display. ROADMAP + BACKLOG splits. AD-097-100. 23 new tests (2365 total).
-- [x] 2026-02-18: **v0.48.0 — Session 46**: Match Page Polish + Year Estimation Tool V1. Help Identify sharing fixes, face carousel, deep link CTAs, lightbox face overlays. Year Estimation Tool V1 at /estimate with per-face reasoning. 56 new tests (2342 total).
-- [x] 2026-02-18: **v0.47.0 — Session 45**: Overnight Polish. All 12 remaining items from 36-item feature audit. Photo + person inline editing, admin nav consistency, structured logging. 32 new tests (2281 total).
-- [x] 2026-02-17: **v0.46.0 — Session 44**: Compare Faces Redesign + Sharing Design System. Unified og_tags() + share_button(). Compare upload-first redesign. Calibrated confidence labels. Shareable comparison pages. 21 new tests (2249 total).
-
-For sessions 1-43: see [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md).
+For sessions 1-51: see [docs/roadmap/SESSION_HISTORY.md](docs/roadmap/SESSION_HISTORY.md).
 
 ## Reference Documents
 - Detailed backlog: `docs/BACKLOG.md`
