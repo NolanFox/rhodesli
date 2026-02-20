@@ -185,6 +185,11 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **PRODUCT-003: NL Archive Query MVP (LangChain)**: Natural language interface: "Show me photos from the 1930s with people who look like [uploaded face]." Chain: face detection → embedding search → date filtering → NL response. Prerequisites: similarity calibration + CORAL + stable identity matching. Estimated 2-3 sessions once prerequisites met. See AD-118, docs/session_context/session_54c_planning_context.md Part 1B.
 - [ ] **PRODUCT-004: Historical Photo Date Estimator Standalone**: Upload historical photo → estimate when taken using CORAL model. Genuinely novel — no existing tool offers this. Prerequisite: CORAL model trained and validated. Could combine with face comparison in shared "faces" tool site. See docs/session_context/session_54c_planning_context.md Part 2D.
 
+## Performance Chronicle Maintenance
+- Keep `docs/PERFORMANCE_CHRONICLE.md` updated with future optimizations
+- Planned future entries: SSE upload progress, ML pipeline scaling, GPU migration
+- Breadcrumbs: docs/PERFORMANCE_CHRONICLE.md, AD-119, AD-120
+
 ## Long-Term
 
 - [ ] **BE-040-042**: PostgreSQL migration (JSON won't scale past ~500 photos)
