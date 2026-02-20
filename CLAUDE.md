@@ -12,7 +12,7 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 
 ## Session Operations (Most Forgotten)
 1. Deploy: `git push origin main` — NEVER Railway dashboard. Check Railway MCP/`railway logs` after push (OD-006)
-2. After UI/upload change: `python scripts/browser_smoke_test.py` or test with real photo
+2. After UI/upload change: `python scripts/browser_smoke_test.py` (Playwright, not just curl — browser ≠ API)
 3. After deploy: `python scripts/production_smoke_test.py`
 4. Trimming docs: verify destination has content FIRST (HD-011)
 5. Every new file: reference from parent doc (BACKLOG, ROADMAP, or AD entry)
