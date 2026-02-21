@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 27.0 — February 21, 2026
-**Status**: 2509 tests passing, v0.56.1, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
+**Version**: 28.0 — February 21, 2026
+**Status**: 2909 tests passing, v0.56.3, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -15,9 +15,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ## Active Bugs
 
 ### P0 — Blocks Core Workflow
-- **UX-036**: Merge button 404 — Focus mode merge URL uses `&` instead of `?` for query params (app/main.py:5780)
-- **UX-070-072**: Name These Faces completely broken on /photo/ pages — all HTMX actions fail with targetError (#photo-modal-content missing). User trapped in mode.
-- **UX-044/052**: Compare/Estimate uploads not queued for admin review — files stored but not in pending_uploads.json
+- ~~**UX-036**: Merge button 404~~ FIXED (Session 49D)
+- ~~**UX-070-072**: Name These Faces broken on /photo/ pages~~ FIXED (Session 49D)
+- ~~**UX-044/052**: Compare/Estimate upload messaging~~ FIXED (Session 49D/49E)
 
 ### P1 — Significant Friction
 - **UX-037-038**: Merge direction unintuitive + operations on merged-away IDs return 200 silently
@@ -40,86 +40,13 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Latest: Session 49B Interactive Review (v0.56.1 — 2026-02-21)
+## Recent Sessions (v0.56.3 — 2026-02-21)
 
-- **Section 1**: 31 birth years reviewed — 28 accepted (10 exact, 18 corrected). ML accuracy: ~32% exact, ~48% within 2 years.
-- **Section 2**: Real GEDCOM import — 21,809 individuals, 33 identity matches, 19 relationships.
-- **Section 3**: 8 people tagged in 1970s photo via production API (merge button broken, used direct API).
-- **Items 5-7**: Compare, Estimate, Quick-Identify tested. 36 UX issues found.
-- **Item 8**: Visual walkthrough of 15 pages. 12 new UX issues.
-- **Item 9**: Bug compilation — 67 new entries in UX_ISSUE_TRACKER.md (100 total).
-- **Item 10**: Smoke test 11/11 PASS.
-- **Item 11**: Docs updated, code pushed.
-- Session log: docs/session_context/session_49b_interactive_log.md
-
-## Session 49B-Audit (v0.55.1 — 2026-02-20)
-
-- Comprehensive Playwright-first site audit: 18 pages, 25+ user actions tested
-- **H1 FIXED**: Mobile navigation on all public pages (global JS hamburger + overlay)
-- **M1 FIXED**: Styled 404 catch-all handler for unknown routes
-- **M3 FIXED**: subprocess.DEVNULL in approve-upload handler → file logging
-- **M4 FIXED**: Missing favicon (inline SVG)
-- 13 new tests (2509 total)
-
----
-
-- Hybrid detection: det_500m + w600k_r50 for compare/estimate uploads (AD-114)
-- Real upload testing: 4 tests, all pass, 0.3-1.3s response times
-- Production smoke test script: scripts/production_smoke_test.py (11 paths)
-- Production verification harness rule: .claude/rules/production-verification.md (HD-010)
-- UX tracker coverage verified: 35/35 issues mapped
-- 5 new tests (2486 total)
-
-## Session 54 (v0.54.0 — 2026-02-20)
-
-- Compare upload: 640px ML resize (was 1024px), split display/ML paths (AD-110)
-- buffalo_sc investigated: incompatible embeddings (different backbone)
-- AD-110 Serving Path Contract, AD-111-113 (face lifecycle, Modal rejected, ML removal rejected)
-- UX Issue Tracker: 35 issues with dispositions (docs/ux_audit/UX_ISSUE_TRACKER.md)
-- HTTP 404 for non-existent person/photo pages (was 200)
-- Estimate loading indicator enhanced with spinner
-- 1 new test (2481 total)
-
-## Session 53 (v0.53.0 — 2026-02-20)
-
-- Comprehensive production audit: 35 routes tested, all healthy
-- Compare upload fixes: loading indicator, uploaded photo display, resize optimization
-- HTMX indicator CSS dual-selector fix (HD-009)
-- UX audit framework in docs/ux_audit/
-- 4 new tests (2480 total)
-
-## Session 52 (v0.52.0 — 2026-02-19)
-
-- ML pipeline on Railway: InsightFace + ONNX Runtime in Docker
-- Gemini 3.1 Pro real-time date estimation on Estimate upload
-- "Name These Faces" on public photo page (was modal-only)
-- Cloud-ready ingest pipeline (DATA_DIR support, R2 auto-upload)
-- Health check reports ML status
-- 30 new tests (2465 total)
-
-## Session 51 (v0.51.0 — 2026-02-19)
-
-- "Name These Faces" sequential batch identification mode
-- PRD-021: Quick-Identify from Photo View
-- AD-104: Quick-Identify architecture decision
-- 16 new tests (2417 total)
-
-## Session 50 (v0.50.0 — 2026-02-19)
-
-- Estimate page overhaul: face count fix (BUG-009), pagination (24/page), standalone /estimate nav, upload zone
-- Compare upload hardening: client/server file type + size validation
-- PRD-020: Estimate page overhaul plan (P0/P1/P2 tiers)
-- AD-101 (Gemini 3.1 Pro), AD-102 (progressive refinement), AD-103 (API logging)
-- PRD-015 updated for Gemini 3.1 Pro + combined API call
-- 16 new tests (2401 total)
-
-## Session 49C (v0.49.3 — 2026-02-19)
-
-- Photo page 404 for community/inbox photos — alias resolution in _build_caches()
-- Compare upload silent failure — onchange auto-submit on file input
-- Version v0.0.0 in admin footer — CHANGELOG.md now in Docker image
-- Collection name truncation — 6 remaining locations fixed
-- 9 new tests (2387 total)
+- **Session 49E** (v0.56.3): Stabilization. 130 test state-pollution failures fixed (ExitStack). All 49D fixes verified in production (10/10 PASS). 2909 total tests.
+- **Session 49D** (v0.56.2): 12 UX bugs fixed (6 P0 + 6 P1). Name These Faces, upload messaging, merge URL, birth year race condition. 35 new tests.
+- **Session 49B** (v0.56.1): Interactive review. 28 birth years accepted, GEDCOM import (33 matches), 67 UX issues compiled. 54 confirmed identities.
+- **Sessions 50-54** (v0.50-0.54): ML on Railway, Gemini integration, hybrid detection (AD-114), compare 4.9x perf fix, Name These Faces, Estimate overhaul, UX tracker, 428 tests added. See docs/roadmap/SESSION_HISTORY.md.
+- **Session 49C** (v0.49.3): Community bug fixes, alias resolution, compare auto-submit.
 
 ---
 
@@ -190,7 +117,8 @@ Schema defined — implementation with first API calls in Session 52+.
 
 ## Near-Term (3-5 Sessions)
 
-- [x] **Gemini 3.1 Pro integration**: Wired to Estimate upload (Session 52). Batch run on 271 photos deferred.
+- [x] **Gemini 3.1 Pro integration**: Wired to Estimate upload (Session 52).
+- [ ] **ML-075: Batch Gemini Run on 271 Photos**: Run date estimation on all existing photos. Deferred from Session 52.
 - [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
 - [ ] **Progressive refinement**: First test with verified facts (AD-102)
 - [ ] **FE-041**: "Help Identify" mode for non-admin users
@@ -201,6 +129,7 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **FE-061-063**: Quick Compare, batch confirmation, browser performance audit
 - [ ] **Overnight ML pipeline** — `scripts/ml_pipeline.py` with modes: overnight (full pipeline), interactive (quick), validate (re-check compare results). See session 54B context.
 - [ ] **Playwright MCP integration** — Browser-based production testing. `.mcp.json` configured, needs first test run.
+- [ ] **COMMUNITY-001: Nancy Gormezano Beta Test**: Engage Nancy as first non-family beta tester. Source: Session 49C community thread.
 - [ ] **Production smoke test in CI** — Auto-run `scripts/production_smoke_test.py` on deploy
 - [ ] **ML-070: MLflow Integration — CORAL Training**: Add `mlflow.pytorch.autolog()` to CORAL date estimation training script. Run locally with `mlflow ui`. ~10 lines of code. Portfolio value: demonstrate MLflow proficiency. See AD-116, docs/session_context/session_54c_planning_context.md Part 1B.
 - [ ] **PRODUCT-002: Face Compare Tier 2 — Shared Backend**: Shared comparison engine between standalone and Rhodesli. Rhodesli path adds: archive identity matching, upload persistence, date context, contribute-to-archive flow. Public path: compare and discard. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
@@ -272,30 +201,35 @@ The current UX is: click upload → stare at nothing → maybe results appear.
 - [ ] **GEN-001+**: Multi-tenant architecture (if traction)
 - [ ] **AI-001/003-005**: Auto-caption, photo restoration, handwriting OCR, story generation
 - [ ] **GEO-003**: Community-specific context events (diaspora cities)
-- [ ] **KIN-001**: Kinship recalibration post-GEDCOM
+- [ ] **GEO-004: Geographic Migration Analysis**: Combine Gemini-extracted locations with GEDCOM data to trace family migration patterns (Rhodes → diaspora cities). Source: Session 54c planning.
+- [ ] **KIN-001**: Kinship recalibration post-GEDCOM (19 relationships now available)
 - [ ] **Session 43**: Life Events & Context Graph (event tagging, richer timeline)
-- [ ] **PRODUCT-005: Face Compare Tier 3 — Product Grade**: User accounts, saved comparisons, API access, batch comparison. Post-employment priority. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
+- [ ] **PRODUCT-005: Face Compare Tier 3 — Product Grade**: User accounts, saved comparisons, API access, batch comparison. Post-employment priority. See AD-117.
+- [ ] **GRAPH-001: "Six Degrees" Connection Finder**: Graph traversal showing shortest path between any two people in the archive via photos, family, events. Novel feature. Source: Session 54c planning.
+- [ ] **ML-080: DNA Matching Integration**: Explore DNA-based family matching as complement to face comparison. Community interest from Leo Di Leyo (Facebook). Source: Session 49C community feedback.
+- [ ] **PARTNER-001: Institutional Partnership**: Museum/archive collaboration for expanded photo access and academic credibility. Source: Session 49C community feedback.
+- [ ] **UX-110: Three-Mode Cognitive Framing**: Explore/Investigate/Curate modes with progressive complexity. Adopted conceptually, not yet built. Source: Session 50 planning.
 
 ---
 
 ## Next Sessions (Prioritized)
 
-### Session 49B (Interactive — requires Nolan)
-- Birth year bulk review (generate ground truth anchors)
-- Real GEDCOM upload + match review
-- Visual walkthrough of all features
-- Bug list from manual testing
-- See: [docs/session_context/session_49_interactive_prep.md](../session_context/session_49_interactive_prep.md)
+### Session 55: Similarity Calibration + Backlog Audit (CURRENT)
+- Learned calibration layer on frozen InsightFace embeddings
+- PyTorch Lightning + MLflow experiment tracking
+- PRD-023, SDD-023, full training pipeline + evaluation
 
-### Session 55: Landing Page Refresh + Lazy Loading
+### Session 56: Landing Page Refresh + P1 UX Polish
 - Landing page: live-data entry points, mobile-first
 - Timeline/Photos lazy loading (271 images, needed before 500)
-- Activity feed enrichment (more event types)
+- P1 UX fixes from UX tracker
 
-### Session 56: ML Architecture Evolution
-- MediaPipe client-side face detection
-- Docker image slimming (target <500MB)
-- Upload pipeline wiring (AD-110)
+### Session 57: CORAL Date Estimation Model
+- PyTorch portfolio centerpiece
+
+### Session 58: MLflow Integration + Experiment Dashboard
+
+### Session 59: Face Compare Standalone Tier 1 (PRODUCT-001)
 
 ---
 

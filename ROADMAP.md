@@ -48,7 +48,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 ## Open Work (Prioritized — confirmed Session 54c)
 
 ### Immediate (Current Sprint)
-- [ ] Similarity calibration on frozen embeddings — Very High portfolio value
+- [-] **ML-076: Similarity Calibration on Frozen Embeddings** — Session 55. Very High portfolio value. PyTorch Lightning + MLflow (2026-02-21)
 - [x] Fix production UX issues — 12 bugs fixed (49D): 6 P0 + 6 P1, 35 new tests (2026-02-21)
 - [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
 
@@ -87,17 +87,20 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Smoke test 11/11 PASS (2026-02-21)
 - See: docs/session_context/session_49b_interactive_log.md
 
-### Session 55: Landing Page Refresh + Lazy Loading
+### Session 55: Similarity Calibration + Backlog Audit (CURRENT)
+- [-] Learned calibration layer on frozen InsightFace embeddings (2026-02-21)
+- [-] PyTorch Lightning + MLflow experiment tracking
+- [-] PRD-023 + SDD-023 similarity calibration
+- [-] Backlog/roadmap audit — all discussed items tracked
+
+### Session 56: Landing Page Refresh + P1 UX Polish
 - Landing page: live-data entry points, mobile-first
 - Timeline/Photos lazy loading (271 images, needed before 500)
-- Activity feed enrichment (more event types)
-- Processing Timeline UI (trust restoration, AD-111)
+- P1 UX fixes from UX tracker
 
-### Session 56: ML Architecture Evolution
-- MediaPipe client-side face detection (replace InsightFace in browser)
-- Docker image slimming (target <500MB from current 3-4GB)
-- Bounding boxes on uploaded photo for multi-face selection
-- Upload pipeline wiring (AD-110)
+### Session 57: CORAL Date Estimation Model
+### Session 58: MLflow Integration + Experiment Dashboard
+### Session 59: Face Compare Standalone Tier 1 (PRODUCT-001)
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging: "Moise's wedding in Havana"
