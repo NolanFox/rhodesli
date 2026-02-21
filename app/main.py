@@ -28,7 +28,7 @@ import numpy as np
 from fasthtml.common import *
 from PIL import Image
 from starlette.datastructures import UploadFile
-from starlette.responses import FileResponse, HTMLResponse
+from starlette.responses import FileResponse, HTMLResponse, RedirectResponse
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
@@ -5769,7 +5769,7 @@ def face_card(
     )
 
 
-def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "", focus_section: str = "") -> Div:
+def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "", focus_section: str = "", target_name: str = "") -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
     name = ensure_utf8_display(neighbor["name"])
@@ -5820,9 +5820,12 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
                            hx_post=f"/api/identity/{target_identity_id}/suggest-merge/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}",
                            hx_swap="outerHTML", data_auth_action="suggest a merge")
     else:
-        merge_btn = Button("Merge", cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+        # UX-037: Show merge direction — neighbor merges INTO target
+        _merge_label = f"Merge \u2192 {target_name}" if target_name and not target_name.startswith("Unidentified") else "Merge"
+        merge_btn = Button(_merge_label, cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
                            hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}", hx_target=merge_target,
-                           hx_swap=merge_swap, data_auth_action="merge these identities")
+                           hx_swap=merge_swap, data_auth_action="merge these identities",
+                           title=f"Merge {name} into {target_name}" if target_name else "Merge these identities")
 
     # Compare button -- opens side-by-side comparison modal
     _compare_filter = f"?filter={triage_filter}" if triage_filter else ""
@@ -5995,7 +5998,7 @@ def manual_search_section(identity_id: str) -> Div:
     )
 
 
-def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False, focus_section: str = "") -> Div:
+def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False, focus_section: str = "", target_name: str = "") -> Div:
     toggle_btn = Button(
         "▾ Collapse",
         cls="text-sm text-slate-400 hover:text-slate-300",
@@ -6007,7 +6010,7 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
 
     # Mergeable neighbors get checkboxes for bulk operations
     mergeable = [n for n in neighbors if n.get("can_merge")]
-    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role, from_focus=from_focus, focus_section=focus_section) for n in neighbors]
+    cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role, from_focus=from_focus, focus_section=focus_section, target_name=target_name) for n in neighbors]
     _focus_section_param = f"&focus_section={focus_section}" if focus_section else ""
     focus_param = f"&from_focus=true{_focus_section_param}" if from_focus else ""
     load_more = Button("Load More", cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
@@ -9722,9 +9725,10 @@ def public_person_page(
     except KeyError:
         identity = None
 
-    # Check for merged identities
+    # UX-038: Redirect merged identities to canonical person
     if identity and identity.get("merged_into"):
-        identity = None
+        canonical_id = identity["merged_into"]
+        return RedirectResponse(f"/person/{canonical_id}", status_code=301)
 
     if not identity:
         style_404 = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
@@ -10395,6 +10399,20 @@ def public_person_page(
                         share_btn,
                         cls="flex justify-center gap-3 mb-4",
                     ),
+                    # UX-039: Admin controls on person page
+                    Div(
+                        A("Edit Name",
+                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
+                        A("Find Similar",
+                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
+                        A("View in Admin",
+                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-700/50 text-slate-400 hover:text-white border border-slate-600/50 hover:border-slate-500 transition-colors"),
+                        cls="flex flex-wrap justify-center gap-2 mb-4",
+                        data_testid="admin-controls",
+                    ) if is_admin else None,
                     # Cross-feature action bar
                     Div(
                         A("Timeline", href=f"/timeline?person={person_id}",
@@ -10630,7 +10648,10 @@ def get(person_id: str, sess=None):
 
     registry = load_registry()
     identity = _safe_get_identity(registry, person_id)
-    if not identity or identity.get("merged_into"):
+    # UX-038: Redirect merged identities to canonical person
+    if identity and identity.get("merged_into"):
+        return RedirectResponse(f"/identify/{identity['merged_into']}", status_code=301)
+    if not identity:
         html_404 = to_xml(Title("Person Not Found")) + to_xml(Main(
             Div(H2("Person not found", cls="text-xl text-white"), cls="text-center py-20"),
             cls="min-h-screen bg-slate-900",
@@ -10643,7 +10664,6 @@ def get(person_id: str, sess=None):
 
     # If already identified, redirect to person page
     if is_identified:
-        from starlette.responses import RedirectResponse
         return RedirectResponse(f"/person/{person_id}", status_code=303)
 
     # Get face crops and photos
@@ -17011,6 +17031,7 @@ def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = Fa
         if neg.startswith("identity:")
     )
 
+    target_name = ensure_utf8_display(identity.get("name", "")) or ""
     return neighbors_sidebar(
         identity_id, neighbors, crop_files,
         offset=offset + limit,  # Next offset for Load More
@@ -17019,6 +17040,7 @@ def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = Fa
         user_role=_get_user_role(sess),
         from_focus=from_focus,
         focus_section=focus_section,
+        target_name=target_name,
     )
 
 
@@ -18123,8 +18145,10 @@ def _post_merge_suggestions(target_id: str, registry, crop_files: set, max_sugge
         return Span()
 
     cards = []
+    target_identity = registry.get_identity(target_id)
+    _target_name = ensure_utf8_display(target_identity.get("name", "")) if target_identity else ""
     for n in high_matches:
-        cards.append(neighbor_card(n, target_id, crop_files, show_checkbox=False))
+        cards.append(neighbor_card(n, target_id, crop_files, show_checkbox=False, target_name=_target_name))
 
     return Div(
         Div(

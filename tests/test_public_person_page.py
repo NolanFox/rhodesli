@@ -523,3 +523,54 @@ class TestPersonMetadataEdit:
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
         assert response.status_code == 200
         assert 'data-testid="person-metadata-edit"' not in response.text
+
+
+class TestMergedIdentityRedirect:
+    """UX-038: Visiting a merged person's URL redirects to the canonical identity."""
+
+    def test_merged_person_redirects_to_canonical(self, client):
+        """Visiting /person/{merged_id} returns 301 to canonical person."""
+        registry = load_registry()
+        all_ids = registry.list_identities()
+        merged = [i for i in all_ids if i.get("merged_into")]
+        if not merged:
+            pytest.skip("No merged identities in test data")
+        merged_id = merged[0]["identity_id"]
+        canonical_id = merged[0]["merged_into"]
+        response = client.get(f"/person/{merged_id}", follow_redirects=False)
+        assert response.status_code == 301
+        assert f"/person/{canonical_id}" in response.headers.get("location", "")
+
+    def test_merged_person_redirect_follow(self, client):
+        """Following the redirect from a merged person shows the canonical page."""
+        registry = load_registry()
+        all_ids = registry.list_identities()
+        merged = [i for i in all_ids if i.get("merged_into")]
+        if not merged:
+            pytest.skip("No merged identities in test data")
+        merged_id = merged[0]["identity_id"]
+        response = client.get(f"/person/{merged_id}", follow_redirects=True)
+        assert response.status_code == 200
+
+
+class TestAdminControlsOnPersonPage:
+    """UX-039: Admin controls visible on /person/ page for admins."""
+
+    def test_admin_sees_controls(self, client, confirmed_identity, auth_disabled):
+        """Admin user sees admin action buttons on person page."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert 'data-testid="admin-controls"' in response.text
+        assert "Edit Name" in response.text
+        assert "Find Similar" in response.text
+        assert "View in Admin" in response.text
+
+    def test_anonymous_no_admin_controls(self, client, confirmed_identity, auth_enabled, no_user):
+        """Anonymous users do NOT see admin controls."""
+        if not confirmed_identity:
+            pytest.skip("No confirmed identities available")
+        response = client.get(f"/person/{confirmed_identity['identity_id']}")
+        assert response.status_code == 200
+        assert 'data-testid="admin-controls"' not in response.text
