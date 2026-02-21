@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.56.1] — 2026-02-21
+
+### Documentation
+- **Session 49B Items 5-11 complete**: Comprehensive UX audit of Compare (8 issues), Estimate (18 issues), Quick-Identify (10 issues), and full visual walkthrough (12 issues)
+- **UX Issue Tracker expanded**: 67 new issues (UX-036 to UX-102), total now 100 tracked issues
+- 6 P0 bugs documented: merge button 404, Name These Faces targetError on /photo/ pages, uploads not queued for review
+- Production smoke test: 11/11 PASS, all routes healthy
+- Session 49B interactive log: 8 people tagged in production (Section 3), 31 birth years reviewed (Section 1), GEDCOM import (Section 2)
+
+### Known Issues (documented, not fixed this session)
+- 404 page styling broken (UX-080) — Tailwind not loading on custom 404
+- About page missing navbar (UX-081)
+- Name These Faces mode completely broken on /photo/ pages due to HTMX targetError (UX-070-072)
+- Merge button generates 404 from & vs ? in query params (UX-036)
+
 ## [v0.56.0] — 2026-02-21
 
 ### Added

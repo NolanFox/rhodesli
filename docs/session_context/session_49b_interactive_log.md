@@ -10,7 +10,7 @@
 - [x] Visual walkthrough (admin + public views) (Item 8) — 2026-02-21, 15 pages visited, 12 new issues logged
 - [x] Smoke test (Item 10) — 2026-02-21, 11/11 PASS
 - [x] Bug compilation + UX tracker update (Item 9) — 2026-02-21, 67 new issues (UX-036 to UX-102)
-- [ ] Doc updates + code push (Item 11)
+- [x] Doc updates + code push (Item 11) — 2026-02-21, CHANGELOG v0.56.1, BACKLOG + ROADMAP updated
 
 ## Section Status
 - [x] Section 0: Session infrastructure (2026-02-20)
@@ -21,7 +21,7 @@
 - [x] Section 7: Item 8 — Visual walkthrough (2026-02-21) — 15 pages screenshotted, 12 new UX issues found (1 P1, 11 P2). 404 page unstyled. About page missing navbar. All other pages functional.
 - [x] Section 8: Item 10 — Smoke test (2026-02-21) — 11/11 PASS. All routes healthy.
 - [x] Section 9: Item 9 — Bug compilation (2026-02-21) — 67 new issues added to UX_ISSUE_TRACKER.md (UX-036 through UX-102). Total: 100 issues tracked. 6 P0, 22 P1, 38 P2, 4 P3.
-- [ ] Section 10: Item 11 — Doc updates + code push
+- [x] Section 10: Item 11 — Doc updates + code push (2026-02-21) — CHANGELOG v0.56.1, BACKLOG, ROADMAP updated. Code-only push to main.
 
 ## Issues Found
 

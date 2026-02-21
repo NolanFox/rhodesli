@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.54.3 · 2486 tests · 271 photos · 181 faces · 46 confirmed
+Current: v0.56.1 · 2509 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -49,7 +49,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate (Current Sprint)
 - [ ] Similarity calibration on frozen embeddings — Very High portfolio value
-- [-] Fix production UX issues — mobile nav fixed (49B), phantom features + broken loading remain
+- [-] Fix production UX issues — 6 P0 bugs documented (49B): merge button 404, Name These Faces targetError, uploads not queued
 - [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
 
 ### Next (After Immediate)
@@ -76,12 +76,15 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 49B: Interactive Review (requires Nolan) — IN PROGRESS
+### Session 49B: Interactive Review (requires Nolan) — COMPLETE
 - [x] Birth year bulk review — 31 estimates reviewed, 28 accepted (2026-02-20)
 - [x] Real GEDCOM upload + match review — 33 matches, 19 relationships (2026-02-21)
-- [ ] Enter Carey Franco's 8 IDs (Thanksgiving Eve 1946 photo)
-- [ ] Howie/Stu confirmations (Isaac Franco, Morris Franco, Stu Nadel)
-- [ ] Visual walkthrough of all features
+- [x] Enter Carey Franco's 8 IDs (1970s photo, corrected from Thanksgiving 1946) (2026-02-21)
+- [x] Isaac Franco + Morris Franco merged and confirmed (2026-02-21)
+- [x] Visual walkthrough of all features — 15 pages, 12 issues (2026-02-21)
+- [x] Compare/Estimate/Quick-Identify UX audit — 36 issues (2026-02-21)
+- [x] Bug compilation — 67 new entries, UX tracker at 100 total (2026-02-21)
+- [x] Smoke test 11/11 PASS (2026-02-21)
 - See: docs/session_context/session_49b_interactive_log.md
 
 ### Session 55: Landing Page Refresh + Lazy Loading
@@ -103,6 +106,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.56.1 — Session 49B Complete**: Items 5-11 autonomous. Compare/Estimate/Quick-Identify UX audit (36 issues). Visual walkthrough 15 pages (12 issues). Bug compilation: 67 new UX issues (100 total). Smoke test 11/11. 8 people tagged in 1970s photo (Section 3). 54 confirmed identities.
 - [x] 2026-02-21: **v0.56.0 — Session 49B Section 2**: Real GEDCOM import (21,809 individuals). 33 identities matched to Ancestry tree via CSV review workflow. 19 relationships (5 spouse, 14 parent-child). ancestry_links.json. Production data merge preserved 31 birth years. Lesson 78 (data sync).
 - [x] 2026-02-20: **v0.55.3 — Session 49B-Final**: Compare/estimate loading indicator (block display, button disable, auto-scroll, accurate timing). Test triage: 127 failures all state pollution, 0 real bugs. Admin auth verification documented.
 - [x] 2026-02-20: **v0.55.1 — Session 49B-Audit**: Comprehensive Playwright site audit. 18 pages, 25+ user actions. Fixed: mobile nav (H1), styled 404 (M1), subprocess.DEVNULL (M3), favicon (M4). 13 new tests (2509 total).

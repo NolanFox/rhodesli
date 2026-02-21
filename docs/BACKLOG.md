@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 26.0 — February 20, 2026
-**Status**: 2486 tests passing, v0.54.1, 271 photos, 46 confirmed identities, 181 faces, 267 geocoded
+**Version**: 27.0 — February 21, 2026
+**Status**: 2509 tests passing, v0.56.1, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -14,28 +14,52 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ## Active Bugs
 
-**All P0 bugs resolved.** BUG-001 through BUG-009 fixed as of v0.50.0.
-Details: [docs/backlog/FEATURE_MATRIX_FRONTEND.md](backlog/FEATURE_MATRIX_FRONTEND.md#1-bugs)
+### P0 — Blocks Core Workflow
+- **UX-036**: Merge button 404 — Focus mode merge URL uses `&` instead of `?` for query params (app/main.py:5780)
+- **UX-070-072**: Name These Faces completely broken on /photo/ pages — all HTMX actions fail with targetError (#photo-modal-content missing). User trapped in mode.
+- **UX-044/052**: Compare/Estimate uploads not queued for admin review — files stored but not in pending_uploads.json
 
-### Deferred from Session 49B Audit (Medium/Low)
-- **M2**: Compare file input lacks preview feedback — dropzone shows "Drop a photo here" after file selection, no filename or thumbnail. See: `docs/ux_audit/session_findings/session_49b_audit.md`
-- **L1**: Login inputs missing `autocomplete` attribute (browser warning)
-- **L2**: Tailwind CDN development warning in console (move to production build)
-- **L3**: Landing stats counter visible at 0 before scroll triggers IntersectionObserver animation
-- **Pre-existing test ordering bug**: `test_nav_consistency` `/map` test fails in full suite (state pollution), passes in isolation. Not caused by audit session.
+### P1 — Significant Friction
+- **UX-037-038**: Merge direction unintuitive + operations on merged-away IDs return 200 silently
+- **UX-039**: No admin controls on /person/ page (no rename/confirm/merge)
+- **UX-042**: /identify/{id} shareable page has no link to source photo (critical for community onboarding)
+- **UX-045-046**: No loading indicator + no auto-scroll on compare upload results
+- **UX-053-057**: Estimate upload: no photo preview, no loading, no CTAs, dead end
+- **UX-080**: 404 page unstyled — Tailwind not loading
+- **UX-081**: About page missing navbar
+- **UX-092**: Birth year Save Edit race condition (click interference)
+
+### Deferred from Earlier Audits (Medium/Low)
+- **M2**: Compare file input lacks preview feedback
+- **L1**: Login inputs missing `autocomplete` attribute
+- **L2**: Tailwind CDN development warning
+- **L3**: Landing stats counter shows 0 before scroll
+- **Pre-existing**: `test_nav_consistency` `/map` state pollution (passes in isolation)
+
+Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRACKER.md) — 100 issues total
 
 ---
 
-## Latest: Session 49B-Audit (v0.55.1 — 2026-02-20)
+## Latest: Session 49B Interactive Review (v0.56.1 — 2026-02-21)
+
+- **Section 1**: 31 birth years reviewed — 28 accepted (10 exact, 18 corrected). ML accuracy: ~32% exact, ~48% within 2 years.
+- **Section 2**: Real GEDCOM import — 21,809 individuals, 33 identity matches, 19 relationships.
+- **Section 3**: 8 people tagged in 1970s photo via production API (merge button broken, used direct API).
+- **Items 5-7**: Compare, Estimate, Quick-Identify tested. 36 UX issues found.
+- **Item 8**: Visual walkthrough of 15 pages. 12 new UX issues.
+- **Item 9**: Bug compilation — 67 new entries in UX_ISSUE_TRACKER.md (100 total).
+- **Item 10**: Smoke test 11/11 PASS.
+- **Item 11**: Docs updated, code pushed.
+- Session log: docs/session_context/session_49b_interactive_log.md
+
+## Session 49B-Audit (v0.55.1 — 2026-02-20)
 
 - Comprehensive Playwright-first site audit: 18 pages, 25+ user actions tested
 - **H1 FIXED**: Mobile navigation on all public pages (global JS hamburger + overlay)
 - **M1 FIXED**: Styled 404 catch-all handler for unknown routes
 - **M3 FIXED**: subprocess.DEVNULL in approve-upload handler → file logging
 - **M4 FIXED**: Missing favicon (inline SVG)
-- Triage fixes verified: upload (Bug 1), compare (Bug 2), sort routing (Bug 3)
 - 13 new tests (2509 total)
-- Audit findings: docs/ux_audit/session_findings/session_49b_audit.md
 
 ---
 
