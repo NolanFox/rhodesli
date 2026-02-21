@@ -11,7 +11,7 @@
 - [x] Section 0: Session infrastructure (2026-02-20)
 - [x] Section 1: Birth year bulk review (2026-02-20) — 31 estimates reviewed. 28 accepted (10 exact, 18 corrected). ML accuracy: ~32% exact, ~48% within 2 years, mean absolute error ~5.4 years.
 - [x] Section 2: GEDCOM upload (2026-02-21) — Real GEDCOM imported (21,809 individuals). 33 identities matched to Ancestry tree. User reviewed all matches in CSV, corrected 15 Ancestry IDs. 19 relationships built (5 spouse, 14 parent-child). 33 identities enriched with GEDCOM birth/death dates, places, gender, Ancestry URLs. Birth years from Section 1 preserved through production merge. ancestry_links.json created. Lesson 78 added (production-local data divergence).
-- [-] Section 3: Identity tagging — Thanksgiving Eve 1946 photo (2026-02-21, in progress)
+- [x] Section 3: Identity tagging (2026-02-21) — 8 people tagged in /photo/8f6a6a0108f019cf (1970s photo, Vida Capeluto NYC). Morris Franco, Isaac Franco merged+confirmed. Albert Cohen, Eleanore Cohen, Ray Franco, Molly Benson, Herman Benson, Belle Franco confirmed. All via direct API calls (merge button 404 bug). 8 P0/P1 UX issues logged.
 - [ ] Section 4: Autonomous UX audit
 - [ ] Section 5: Synthesis and prioritization
 
@@ -117,4 +117,10 @@ Target: 8 people to identify (Albert Cohen, Eleanore Cohen, Morris Franco, Ray F
 - CORRECTION: The Cohens/Bensons/Francos are in /photo/8f6a6a0108f019cf (1970s photo, Vida Capeluto NYC Collection), NOT /photo/0f83d98adbea2d7e (1940s Thanksgiving). Source: Carey Franco Facebook post.
 - Carey Franco's identifications (from Facebook): "Top left in picture is Albert and Eleanore Cohen. Morris and Ray Franco my aunt and Uncle. Molly and Herman Benson my aunt and uncle. Right is my mother and father Belle and Isaac Franco not sure on the Others."
 - Albert Cohen: Identity 4a993942-2ed7-4cba-bb78-ada588853642 confirmed by Carey Franco via Facebook reply to /identify/ shareable link.
-- Remaining to tag in /photo/8f6a6a0108f019cf: Eleanore Cohen, Ray Franco, Molly Benson, Herman Benson, Belle Franco. (Morris Franco and Isaac Franco already tagged from skipped section — they appear in both photos.)
+- Eleanore Cohen: Identity bac7731a-a1d2-4350-b528-c11f1b947b3a. Renamed, confirmed, metadata (gender=F). Albert's wife. Back row, next to Albert Cohen. Tagged via production API.
+- Ray Rica Franco: Identity e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5. Renamed, confirmed, metadata (gender=F, ancestry_id=132395618059). To the right of Morris Franco. Tagged via production API. Note: user accidentally pasted same /identify/ URL as Eleanore — found correct identity from open browser tab.
+- Molly Benson: Identity d85b2279-caac-4e56-b572-5431c4be48e5. Renamed, confirmed, metadata (gender=F). Back row right, one of the couple. Carey's aunt. Tagged via production API.
+- Herman Benson: Identity 9dfc300a-1c86-460a-85df-e62c6781eb6d. Renamed, confirmed, metadata (gender=M). Back row right, one of the couple. Carey's uncle. Relationship to Franco/Cohen family TBD. Tagged via production API.
+- Belle/Bella Bennoun Franco: Identity 1549d2b4-5d1f-4b0d-8ef2-430087a76d67. Renamed, confirmed, metadata (gender=F, ancestry_id=132765098259). Isaac Franco's wife, Carey Franco's mother. Immediately to left of Isaac. Tagged via production API.
+- ALL 8 PEOPLE TAGGED in /photo/8f6a6a0108f019cf: Albert Cohen, Eleanore Cohen, Morris Franco, Ray Franco, Molly Benson, Herman Benson, Belle Franco, Isaac Franco. All confirmed via production API calls (merge button was broken, direct API used throughout). ~3-4 unidentified faces remain in this photo ("not sure on the Others" — Carey Franco).
+- METHODOLOGY: All tagging done via JavaScript fetch() calls in Chrome DevTools due to merge button 404 bug. Workflow: rename → confirm → metadata for each identity. Production data is updated but local data/ files are NOT synced yet.
