@@ -13587,7 +13587,7 @@ def get(face_id: str = "", sess=None):
                     P("This may take 10\u201330 seconds for group photos.", cls="text-slate-400 text-sm"),
                 ),
             ]),
-        P("Your photo is analyzed for matching but not stored in the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
+        P("Your photo is used for matching. Sign in to contribute it to the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
     )

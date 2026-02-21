@@ -4,7 +4,7 @@ Covers:
 - UX-036: Merge button URL in focus mode uses ? not & for query string start
 - UX-070-072: /photo/{id} page has id="photo-modal-content" and Name These Faces
   targets #photo-modal-content (not the old #admin-name-faces-container)
-- UX-044/052: Compare upload area messaging updated to "not stored in the archive"
+- UX-044/052: Compare upload area messaging (49E: corrected to "used for matching")
 """
 
 import pytest
@@ -287,12 +287,12 @@ class TestPhotoPartialRouteModalContent:
 
 
 class TestCompareUploadMessaging:
-    """The compare upload area must say photos are not stored, not that they
-    are saved to grow the archive.
+    """The compare upload area must accurately describe what happens with uploads.
 
-    UX-044: Upload area said "Photos are saved to help grow the archive."
-    UX-052: Repeated in a second location on the compare page.
-    Fix:    Changed to "Your photo is analyzed for matching but not stored in the archive."
+    UX-044: Upload area originally said "Photos are saved to help grow the archive."
+    49D Fix: Changed to "not stored in the archive" — but this was also inaccurate.
+    49E Fix: Changed to "used for matching. Sign in to contribute" — accurate.
+    Photos ARE uploaded to R2 for processing, and logged-in users can contribute.
     """
 
     @pytest.fixture(autouse=True)
@@ -300,12 +300,12 @@ class TestCompareUploadMessaging:
         from app.main import app
         self.client = TestClient(app)
 
-    def test_compare_page_contains_not_stored_messaging(self):
-        """The compare page must say the photo is not stored in the archive."""
+    def test_compare_page_contains_matching_messaging(self):
+        """The compare page must say the photo is used for matching."""
         resp = self.client.get("/compare")
         assert resp.status_code == 200
-        assert "not stored in the archive" in resp.text, \
-            "Compare page must tell users their photo is not stored"
+        assert "used for matching" in resp.text, \
+            "Compare page must tell users their photo is used for matching"
 
     def test_compare_page_does_not_contain_saved_to_grow(self):
         """The compare page must NOT say 'saved to help grow the archive'."""
@@ -314,12 +314,12 @@ class TestCompareUploadMessaging:
         assert "saved to help grow the archive" not in resp.text, \
             "Old misleading 'saved to help grow the archive' text must be removed"
 
-    def test_compare_page_analyzed_for_matching_messaging(self):
-        """The compare page should tell users the photo is analyzed for matching."""
+    def test_compare_page_contribute_messaging(self):
+        """The compare page should mention contributing to the archive."""
         resp = self.client.get("/compare")
         assert resp.status_code == 200
-        assert "analyzed for matching" in resp.text, \
-            "Compare page must explain that the photo is analyzed for matching"
+        assert "contribute" in resp.text.lower(), \
+            "Compare page must mention the option to contribute"
 
     def test_compare_page_upload_messaging_with_auth_enabled(self):
         """Correct messaging also appears when auth is enabled."""
@@ -327,6 +327,6 @@ class TestCompareUploadMessaging:
              patch("app.main.get_current_user", return_value=None):
             resp = self.client.get("/compare")
         assert resp.status_code == 200
-        assert "not stored in the archive" in resp.text, \
+        assert "used for matching" in resp.text, \
             "Upload messaging must be correct regardless of auth state"
         assert "saved to help grow the archive" not in resp.text
