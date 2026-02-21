@@ -9307,6 +9307,14 @@ def photo_view_content(
             tag_placeholder = "Type name to tag..." if is_admin else "Who is this person?"
             is_seq_active = (seq_mode and face_id == seq_active_face_id)
             seq_param = "&seq=1" if seq_mode else ""
+            # UX-073: Enter key submits first result in dropdown
+            _enter_handler = (
+                f"on keydown[key=='Enter'] halt the event "
+                f"then set firstBtn to first <button/> in #{tag_results_id} "
+                f"then if firstBtn click firstBtn"
+            )
+            _focus_handler = "on load focus() me" if is_seq_active else ""
+            _hyperscript_val = f"{_enter_handler} {_focus_handler}".strip()
             tag_search_input = Input(
                 type="text",
                 placeholder=tag_placeholder,
@@ -9318,7 +9326,7 @@ def photo_view_content(
                 hx_include="this",
                 name="q",
                 autocomplete="off",
-                **{"_": "on load focus() me"} if is_seq_active else {},
+                **{"_": _hyperscript_val},
             )
             # In seq mode, "Close" becomes "Done" and exits sequential mode
             if seq_mode:
@@ -9354,6 +9362,15 @@ def photo_view_content(
                         **{"_": f"on click add .hidden to #photo-modal then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"} if identity_id else {},
                         type="button",
                     ) if (identity_id and not seq_mode) else None,
+                    # UX-075: Skip button in sequential mode
+                    Button(
+                        "Skip \u2192",
+                        cls="text-xs text-amber-400 hover:text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 hover:bg-amber-500/10",
+                        hx_post=f"/api/face/quick-action?identity_id={identity_id}&action=skip&photo_id={photo_id}&seq=1",
+                        hx_target="#photo-modal-content",
+                        hx_swap="innerHTML",
+                        type="button",
+                    ) if (seq_mode and identity_id) else None,
                     close_btn,
                     cls="flex items-center justify-between mt-2 pt-1 border-t border-slate-700"
                 ),
@@ -17433,8 +17450,7 @@ def get(face_id: str, q: str = "", seq: str = "", sess=None):
             hx_swap="innerHTML",
             type="button",
         )
-    items.append(create_btn)
-
+    # UX-074: "Create New" at top of dropdown (first option, before search results)
     if not results:
         # Show only the create/suggest button with a "no matches" message
         return Div(
@@ -17443,7 +17459,7 @@ def get(face_id: str, q: str = "", seq: str = "", sess=None):
             id=results_id,
         )
 
-    return Div(*items, id=results_id)
+    return Div(create_btn, *items, id=results_id)
 
 
 @rt("/api/face/tag")
