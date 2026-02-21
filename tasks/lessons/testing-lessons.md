@@ -69,3 +69,13 @@ See also: `docs/CODING_RULES.md` (Testing & TDD section)
 - **Mistake**: Existing test asserted `"1 photos"` — which was the buggy grammar. When fixing the bug to output `"1 photo"`, the test correctly failed. The fix is to update the test, not revert the fix.
 - **Rule**: When a grammar/display fix causes test failures, verify whether the test was asserting the bug. Update the test to assert correct behavior.
 - **Prevention**: When writing display string assertions, always include a negative assertion for the known-incorrect form (e.g., `assert "1 photos" not in html`).
+
+### Lesson 79: NEVER use manual patch.start()/patch.stop() without try/finally — use ExitStack
+- **Mistake**: test_nav_consistency.py used `for p in patches: p.start()` then `client.get()` then `for p in patches: p.stop()`. When client.get() threw TypeError, stop() never ran — leaving 9 patches active for all subsequent tests. Caused 128 cascading failures (person/photo routes returning 404).
+- **Rule**: Always use `contextlib.ExitStack` for multiple patches, or `with patch(...):` for single patches. Never use manual start/stop without try/finally.
+- **Prevention**: `grep -rn "\.start()" tests/ | grep -v "ExitStack\|try:"` — flag any manual patch.start() calls.
+
+### Lesson 80: Always run tests in venv — `source venv/bin/activate && pytest`
+- **Mistake**: Running `pytest` without activating venv used system Python, which lacks fasthtml/torch. This caused 28 collection errors and reported only 1293 tests instead of 2909.
+- **Rule**: Always prefix pytest commands with `source venv/bin/activate &&`.
+- **Prevention**: Add to session startup checklist. The first command should always be `source venv/bin/activate`.

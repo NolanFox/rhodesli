@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-78 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+80 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -40,6 +40,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 51 | Tests that POST to data-modifying routes MUST mock BOTH load AND save |
 | 52 | "Restore original" is not isolation — history and version still change |
 | 58 | Test assertions must match CORRECT behavior, not historical behavior |
+| 79 | NEVER use manual patch.start()/patch.stop() without try/finally — use ExitStack |
+| 80 | Always run tests in venv — `source venv/bin/activate && pytest` |
 
 ## Deployment & Infrastructure — `tasks/lessons/deployment-lessons.md`
 
