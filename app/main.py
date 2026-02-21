@@ -335,6 +335,8 @@ async def custom_404_handler(request, exc):
     page_html = to_xml(
         Title("Page Not Found - Rhodesli"),
     ) + to_xml(
+        Script(src="https://cdn.tailwindcss.com"),
+    ) + to_xml(
         Style("html, body { margin: 0; } body { background-color: #0f172a; }")
     ) + to_xml(
         Main(
@@ -915,6 +917,32 @@ def _get_pending_ml_birth_year_suggestions() -> list:
     conf_order = {"high": 0, "medium": 1, "low": 2}
     pending.sort(key=lambda x: (conf_order.get(x["birth_year_confidence"], 3), -x["n_with_age_data"]))
     return pending
+
+
+def _count_pending_birth_year_reviews() -> int:
+    """Count pending ML birth year reviews (for OOB counter updates)."""
+    estimates = _load_birth_year_estimates()
+    decisions = _load_ml_review_decisions()
+    registry = load_registry()
+    count = 0
+    for iid, est in estimates.items():
+        if iid in decisions:
+            continue
+        try:
+            identity = registry.get_identity(iid)
+        except KeyError:
+            continue
+        if identity.get("merged_into"):
+            continue
+        for by in [identity.get("birth_year"), (identity.get("metadata") or {}).get("birth_year")]:
+            if by:
+                break
+        else:
+            by = None
+        if by:
+            continue
+        count += 1
+    return count
 
 
 def _get_decade_counts() -> dict:
@@ -7767,16 +7795,26 @@ def get():
             .faq-q:hover { color: #fbbf24; }
         """),
         Main(
-            # Back nav
-            Div(
-                A("\u2190 Back to Archive", href="/", cls="text-amber-300/70 hover:text-amber-200 text-sm"),
-                cls="max-w-3xl mx-auto px-6 pt-8"
+            # Navigation bar
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(
+                        A("Photos", href="/photos", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+                        A("People", href="/people", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+                        A("Timeline", href="/timeline", cls="text-slate-300 hover:text-white text-sm font-medium transition-colors"),
+                        A("About", href="/about", cls="text-white text-sm font-medium"),
+                        cls="hidden sm:flex items-center gap-6",
+                    ),
+                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
             # Title
             Div(
                 H1("About Rhodesli", cls="text-3xl font-serif font-bold text-amber-100 mb-2"),
                 Div(cls="w-16 h-0.5 bg-amber-400/40 mb-6"),
-                cls="max-w-3xl mx-auto px-6 pt-4"
+                cls="max-w-3xl mx-auto px-6 pt-8"
             ),
             # The Community
             Div(
@@ -7976,8 +8014,6 @@ def get():
             Div(
                 P("Built with care. No generative AI \u2014 only forensic face matching.",
                   cls="text-amber-100/30 text-xs text-center"),
-                A("\u2190 Back to Archive", href="/",
-                  cls="text-amber-300/60 hover:text-amber-200 text-sm block text-center mt-3"),
                 cls="about-section px-6 py-8 border-t border-amber-900/20"
             ),
             cls="min-h-screen about-bg"
@@ -10642,6 +10678,7 @@ def get(person_id: str, sess=None):
                 A(
                     Img(src=photo_url, alt="Source photo", cls="w-full h-40 object-cover rounded-lg"),
                     P(collection, cls="text-xs text-slate-500 mt-1 leading-snug") if collection else None,
+                    P("See full photo \u2192", cls="text-xs text-indigo-400 mt-1"),
                     href=f"/photo/{pid}",
                     cls="block hover:opacity-80 transition-opacity",
                 )
@@ -19189,6 +19226,12 @@ def post(identity_id: str, birth_year: str = "", source_detail: str = "", sess=N
 
     name = ensure_utf8_display(identity.get("name", ""))
     correction_note = f" (ML: {original_ml})" if original_ml and by != original_ml else ""
+
+    # Count remaining pending for OOB counter update (UX-101)
+    remaining = _count_pending_birth_year_reviews()
+    oob_counter = P(f"{remaining} pending review", cls="text-slate-400 text-sm mb-6",
+                     id="pending-count", hx_swap_oob="true")
+
     return Div(
         Div(
             Span("\u2705 ", cls="mr-1"),
@@ -19196,9 +19239,12 @@ def post(identity_id: str, birth_year: str = "", source_detail: str = "", sess=N
             cls="mb-1",
         ),
         Span(f"Confirmed for {name}", cls="text-xs text-slate-500"),
-        id=f"ml-suggestion-{identity_id}",
+        oob_counter,
+        id=f"review-row-{identity_id}",
         cls="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3 mt-3 mb-3 text-center max-w-sm mx-auto",
         data_testid="ml-suggestion-accepted",
+        # Auto-dismiss after 4s (UX-100)
+        _="on load wait 4s then transition my opacity to 0 over 0.5s then remove me",
     )
 
 
@@ -19227,11 +19273,19 @@ def post(identity_id: str, reason: str = "", sess=None):
     global _ml_review_decisions_cache
     _ml_review_decisions_cache = None
 
+    # Count remaining pending for OOB counter update (UX-101)
+    remaining = _count_pending_birth_year_reviews()
+    oob_counter = P(f"{remaining} pending review", cls="text-slate-400 text-sm mb-6",
+                     id="pending-count", hx_swap_oob="true")
+
     return Div(
         Span("\u274c Estimate rejected", cls="text-slate-500 text-xs"),
-        id=f"ml-suggestion-{identity_id}",
+        oob_counter,
+        id=f"review-row-{identity_id}",
         cls="text-center py-2",
         data_testid="ml-suggestion-rejected",
+        # Auto-dismiss after 4s (UX-100)
+        _="on load wait 4s then transition my opacity to 0 over 0.5s then remove me",
     )
 
 
@@ -23764,16 +23818,11 @@ def get(sess=None):
                     Div(*evidence_items, cls="mt-1 ml-2") if evidence_items else Span("No evidence", cls="text-xs text-slate-600"),
                     cls="mt-1",
                 ) if evidence else None,
-                # Actions
+                # Actions — single form so Accept always uses current input value (UX-092)
                 Div(
-                    Button("Accept", type="button",
-                           hx_post=f"/api/ml-review/birth-year/{iid}/accept",
-                           hx_target=f"#review-row-{iid}",
-                           hx_swap="outerHTML",
-                           hx_vals=json.dumps({"birth_year": est}),
-                           cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded"),
-                    # Inline edit field with form
                     Form(
+                        Button("Accept", type="submit",
+                               cls="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded"),
                         Input(type="number", name="birth_year", value=str(est),
                               cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-xs text-white w-20"),
                         Input(type="hidden", name="source_detail", value="admin_bulk_review"),
@@ -23782,7 +23831,7 @@ def get(sess=None):
                         hx_post=f"/api/ml-review/birth-year/{iid}/accept",
                         hx_target=f"#review-row-{iid}",
                         hx_swap="outerHTML",
-                        cls="inline-flex items-center gap-1",
+                        cls="inline-flex items-center gap-2",
                     ),
                     Button("Reject", type="button",
                            hx_post=f"/api/ml-review/birth-year/{iid}/reject",
@@ -23821,7 +23870,7 @@ def get(sess=None):
             _admin_nav_bar("birth-year-review"),
             Div(
                 H1("ML Birth Year Estimates", cls="text-2xl font-serif font-bold text-white mb-2"),
-                P(f"{len(pending)} pending review", cls="text-slate-400 text-sm mb-6"),
+                P(f"{len(pending)} pending review", cls="text-slate-400 text-sm mb-6", id="pending-count"),
                 accept_all_btn,
                 Div(*rows, id="review-list") if rows else P("All estimates have been reviewed.", cls="text-slate-500 text-center py-8"),
                 cls="max-w-3xl mx-auto px-6 py-8",
