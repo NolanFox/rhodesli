@@ -28,3 +28,34 @@
 - Integration via core/neighbors.py → rhodesli_ml.calibration.inference
 - Production gap: inference.py uses torch.load which isn't available on Railway
 - ONNX export will bridge the gap (onnxruntime already a dependency)
+
+### Phase 1: Calibration Results
+- AUC drop (0.0102) < SE (0.0146) — statistically insignificant
+- Eval set: 9 identities, 532 pairs, only 4 multi-face
+- Baseline precision=1.0 at all thresholds because baseline is ultra-conservative
+- AD-127 documented with full metrics table and interview framing
+
+### Phase 2: Backlog Audit
+- Session 55 trimmed BACKLOG from 338→272 lines by condensing session histories
+- No items lost. All 20 planning context items verified:
+  1. Nancy Gormezano ✓ COMMUNITY-001
+  2. DNA matching ✓ ML-080
+  3. Institutional partnership ✓ PARTNER-001
+  4. Batch Gemini ✓ ML-075
+  5. KIN-001 ✓ updated with "19 relationships"
+  6. Life Events ✓ Session 43 tracked
+  7. Admin/Public UX ✓ Medium-Term
+  8. Three-mode framing ✓ UX-110
+  9. Serving Path Contract harness rule — AD-110 documented, no .claude/rules/ file (minor gap)
+  10. Pre-existing test failures ✓ resolved in 49E
+  11. Railway CLI enforcement ✓ HD-014
+  12. Architecture optimization ✓ PERFORMANCE_CHRONICLE.md
+  13. Progressive loading UX ✓ Full EPIC section
+  14. MLflow ✓ ML-070
+  15. Face Compare standalone ✓ PRODUCT-001
+  16. NL query ✓ PRODUCT-003
+  17. Silent ML fallback — AD-120/122 documented, no .claude/rules/ file (minor gap)
+  18. Six Degrees ✓ GRAPH-001
+  19. Geographic Migration ✓ GEO-004
+  20. Session 49E outcomes ✓ documented in ROADMAP + BACKLOG
+- Two minor gaps: items 9 and 17 have algorithmic decisions but no harness rules. These are documentation polish, not lost items.
