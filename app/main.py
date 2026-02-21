@@ -5777,7 +5777,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     # endpoint advances to the next identity instead of returning a browse-mode card.
     _focus_filter = f"&filter={triage_filter}" if triage_filter else ""
     _focus_section = f"&focus_section={focus_section}" if focus_section else ""
-    focus_suffix = f"&from_focus=true{_focus_filter}{_focus_section}" if from_focus else ""
+    focus_suffix = f"?from_focus=true{_focus_filter}{_focus_section}" if from_focus else ""
     if from_focus and focus_section == "skipped":
         merge_target = "#skipped-focus-container"
     elif from_focus:

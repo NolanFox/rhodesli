@@ -11,7 +11,7 @@
 - [x] Section 0: Session infrastructure (2026-02-20)
 - [x] Section 1: Birth year bulk review (2026-02-20) — 31 estimates reviewed. 28 accepted (10 exact, 18 corrected). ML accuracy: ~32% exact, ~48% within 2 years, mean absolute error ~5.4 years.
 - [x] Section 2: GEDCOM upload (2026-02-21) — Real GEDCOM imported (21,809 individuals). 33 identities matched to Ancestry tree. User reviewed all matches in CSV, corrected 15 Ancestry IDs. 19 relationships built (5 spouse, 14 parent-child). 33 identities enriched with GEDCOM birth/death dates, places, gender, Ancestry URLs. Birth years from Section 1 preserved through production merge. ancestry_links.json created. Lesson 78 added (production-local data divergence).
-- [ ] Section 3: Visual walkthrough
+- [-] Section 3: Identity tagging — Thanksgiving Eve 1946 photo (2026-02-21, in progress)
 - [ ] Section 4: Autonomous UX audit
 - [ ] Section 5: Synthesis and prioritization
 
@@ -22,6 +22,14 @@
 - [ ] /admin/review/birth-years: Save Edit does not persist edited value — confirmed twice: (1) Mary Maria Capelouto Hasson edited to 1915, saved as 1916; (2) Abraham Moussafer edited to 1895, saved as 1894. Both reverted to original ML value. Likely the HTMX form submit reads the input before the browser updates the DOM value from typed text. Both fixed via /api/identity/{id}/metadata POST workaround. This is a real data integrity bug. [BACKLOG: yes]
 - [ ] ML pipeline / Gemini OCR: Confused arrival date with birth date for Mary Maria Capelouto Hasson. Document shows arrival Sep 25, 1916 and birth Aug 8, 1915. ML/Gemini extracted 1916 (arrival) as birth year. This is a systemic risk with document photos — OCR can confuse different date fields. Pipeline needs date-field disambiguation or multiple-date extraction with labeling. [BACKLOG: yes]
 - [ ] ML model evaluation: Whether OCR dates are present in a photo is a critical variable for model accuracy. Should segment evaluation by: (1) photos with NO OCR dates — pure visual age estimation, (2) photos with OCR birth dates — nearly free ground truth, (3) photos with OTHER OCR dates (newspaper dates, event dates) — useful for photo dating but not birth year, (4) photos with non-date OCR text. Model accuracy optimization should focus on case 1 (visual-only) since case 2 is essentially solved by extraction. This segmentation matters for honest model evaluation and for knowing where to invest improvement effort. [BACKLOG: yes]
+
+### Critical — Identity Tagging Workflow (Section 3, 2026-02-21)
+- [ ] MERGE BUTTON 404: Focus mode merge button generates URL with `&` instead of `?` for query params. `/api/identity/{id}/merge/{neighbor_id}&from_focus=true` → 404. Should be `?from_focus=true`. Bug is at app/main.py:5780. `focus_suffix` starts with `&` not `?`. Fix applied locally but NOT yet deployed. Every merge from Focus mode is broken on production. [BACKLOG: yes, P0]
+- [ ] MERGE DIRECTION UNINTUITIVE: When merging A into B via `/api/identity/A/merge/B`, the NEIGHBOR (B) survives, not the target (A). This is counterintuitive — "merge B into A" should mean A survives. Caused metadata loss twice this session: after merging, rename/confirm/metadata was applied to the now-deleted target ID instead of the surviving neighbor ID. Admin has no visibility into which ID survived. [BACKLOG: yes, P1]
+- [ ] METADATA LOST ON WRONG MERGE TARGET: Because merge direction is unintuitive, rename + confirm + metadata operations applied to the deleted identity (target) instead of the surviving one (neighbor). All operations returned 200 but silently did nothing useful — the identity was already merged away. No error, no warning. Operations on merged-away identities should either (a) redirect to the surviving identity or (b) return an error. [BACKLOG: yes, P1]
+- [ ] NO ADMIN CONTROLS ON PERSON PAGE: /person/{id} shows metadata form (birth year, etc.) but has NO rename, confirm, merge, or state-change buttons. Admin must navigate to the identity system (/?section=...) to find the identity, then use Focus mode. For the tagging workflow (identify a face → name it → confirm it), this means constant tab-switching between the photo page and the admin identity system. Person page needs admin action buttons. [BACKLOG: yes, P1]
+- [ ] IDENTITY TAGGING WORKFLOW IS 5+ STEPS: To identify a person: (1) find them in Help Identify/skipped, (2) merge duplicates, (3) rename, (4) confirm, (5) add metadata, (6) link to GEDCOM. Each step is a separate API call with no batching. Should be a single "Identify This Person" form: enter name, select state=confirmed, add metadata, merge candidates — one submit. [BACKLOG: yes]
+- [ ] PHOTO PAGE → IDENTITY SYSTEM DISCONNECT: Viewing /photo/{id} shows face overlays with names, but clicking an unidentified face has no path to "name this face". User sees the face, knows who it is, but must leave the photo page entirely to tag them. Need "Name This Face" click action on unidentified face overlays. [BACKLOG: yes]
 
 ### Notable (should fix but not blocking)
 <!-- Format: - [ ] ROUTE: Description [BACKLOG: yes/no] -->
@@ -97,3 +105,11 @@
 - Isaac Capelouto: ML estimated ~1902, corrected to 1888 via Save Edit (form_input). ML was 14 years off. Source: family records, ~10 AUG 1888, Rhodes.
 - Esther Brenda Israel: ML estimated ~1948, corrected to 1945 via Save Edit (form_input). ML was 3 years off. Source: family records, 11 AUG 1945, Los Angeles.
 - Mathilda Capouano Capelouto: ML estimated ~1899, corrected to 1897 via Save Edit (form_input). ML was 2 years off. Source: family records, ~15 MAY 1897, Rhodes.
+
+### Section 3: Identity Tagging — Thanksgiving Eve 1946 Photo (2026-02-21)
+Photo: /photo/0f83d98adbea2d7e — "Jews of Rhodes: Family Memories & Heritage", Thanksgiving Eve 1946, Central Plaza
+Target: 8 people to identify (Albert Cohen, Eleanore Cohen, Morris Franco, Ray Franco, Molly Benson, Herman Benson, Belle Franco, Isaac Franco)
+
+- Morris Franco: Person 039 + Person 399 merged. Surviving ID: a772360a-64f6-4daf-8312-fcc7586304a7. Renamed, confirmed, metadata (birth_year=1888, gender=M, ancestry_id=132508216815). Note: merge button was broken (404 from `&` vs `?` bug), used direct API call. Rename/confirm applied to correct surviving identity on second attempt after discovering merge direction issue.
+- Isaac Franco: Person 049 + Person 400 merged. Surviving ID: ac3b43b2-3e74-4237-ab71-b8ded0f8bfda. Renamed, confirmed, metadata (birth_year=1893, gender=M, ancestry_id=132395618061). Morris' brother-in-law. First attempt: rename/confirm/metadata applied to wrong (deleted) identity ID — all returned 200 but were no-ops. Fixed by applying to surviving ID. Ancestry: https://www.ancestry.com/family-tree/person/tree/162873127/person/132395618061/facts
+- Remaining 6: Albert Cohen, Eleanore Cohen, Ray Franco, Molly Benson, Herman Benson, Belle Franco — awaiting user identification of which face is which in the photo.
