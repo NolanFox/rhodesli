@@ -1,6 +1,7 @@
 """Tests for consistent navigation across all public pages."""
 
 import json
+from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -81,6 +82,7 @@ class TestNavOnPublicPages:
         mock_photo_reg.list_photos = MagicMock(return_value=[])
         mock_photo_reg.get_photo = MagicMock(return_value=None)
         mock_photo_reg.get_photo_for_face = MagicMock(return_value=None)
+        mock_photo_reg._photos = {}  # Prevent MagicMock auto-attrs leaking into JSON serialization
 
         import pathlib
         orig_exists = pathlib.Path.exists
@@ -119,12 +121,10 @@ class TestNavOnPublicPages:
         if extra_patches:
             patches.extend(extra_patches)
 
-        for p in patches:
-            p.start()
-        resp = client.get(path)
-        for p in patches:
-            p.stop()
-        return resp
+        with ExitStack() as stack:
+            for p in patches:
+                stack.enter_context(p)
+            return client.get(path)
 
     @pytest.mark.parametrize("path,expected_links", [
         ("/photos", ["/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),

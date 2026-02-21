@@ -112,7 +112,9 @@ def test_about_page_content(page, app_server):
     faq_items = page.locator(".faq-q")
     assert faq_items.count() >= 3, f"Expected >=3 FAQ items, found {faq_items.count()}"
 
-    assert page.locator("a:has-text('Back to Archive')").count() > 0
+    # Session 49D (UX-081) replaced standalone "Back to Archive" link with full navbar
+    nav = page.locator("nav")
+    assert nav.count() > 0, "Expected navigation bar on about page"
 
 
 # ---------------------------------------------------------------------------
