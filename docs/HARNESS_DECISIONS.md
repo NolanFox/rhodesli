@@ -252,6 +252,23 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   - curl-based POST tests: Simplest to add now. Requires a small test image.
 - **Breadcrumbs:** Session 49B triage log, Lesson 78 (if added)
 
+## HD-015: Session Type Routing
+- **Date:** 2026-02-20
+- **Session:** 49B prep
+- **Decision:** Session protocols live in docs/session_protocols/
+  with an INDEX.md routing table. CLAUDE.md points to INDEX (1 hop),
+  INDEX routes to protocol files (2 hops), protocols point to
+  context files (3 hops max). Each protocol type has trigger
+  keywords for automatic identification.
+- **Problem:** Path-scoped rules trigger on code files but nothing
+  triggered on session types. Interactive session rules, browser
+  audit protocols, and overnight safeguards existed only in manually
+  pasted prompts — invisible to new sessions.
+- **Rejected:** Inlining all session rules in CLAUDE.md (bloat),
+  using .claude/rules/ for session types (wrong trigger mechanism —
+  rules trigger on file paths, not session types).
+- **Breadcrumbs:** docs/session_protocols/INDEX.md, CLAUDE.md
+
 ## HD-014: Every Deploy Must Include Production Playwright Verification
 - **Date:** 2026-02-20
 - **Session:** 49B-Deploy
