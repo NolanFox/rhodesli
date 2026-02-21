@@ -59,3 +59,12 @@
   19. Geographic Migration ✓ GEO-004
   20. Session 49E outcomes ✓ documented in ROADMAP + BACKLOG
 - Two minor gaps: items 9 and 17 have algorithmic decisions but no harness rules. These are documentation polish, not lost items.
+
+### Phase 3: ONNX Export + Production Deployment
+- Created: export_onnx.py, inference_onnx.py, updated inference.py fallback chain
+- ONNX artifact: 129.2 KB, exact numerical match (max diff = 0.00)
+- Fallback chain: ONNX → PyTorch → None (per AD-120, logs backend at INFO)
+- 15 new ONNX tests, all pass
+- Deployed to production: 11/11 smoke test PASS
+- AD-128 documented
+- Test count: 2604 app + 372 ML = 2976 total

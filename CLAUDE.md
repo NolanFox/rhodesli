@@ -70,7 +70,7 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 
 ## Key Docs (read on-demand)
 - `docs/architecture/` — OVERVIEW, DATA_MODEL, PERMISSIONS, PHOTO_STORAGE
-- `docs/ml/` — ALGORITHMIC_DECISIONS (AD-NNN), MODEL_INVENTORY
+- `docs/ml/` — ML_ARCHITECTURE (system overview), ALGORITHMIC_DECISIONS (AD-NNN)
 - `docs/ops/` — OPS_DECISIONS (OD-NNN), PIPELINE
 - `docs/HARNESS_DECISIONS.md` — Workflow/harness decisions (HD-NNN)
 - `docs/PERFORMANCE_CHRONICLE.md` — Optimization journeys (update after any perf work)
