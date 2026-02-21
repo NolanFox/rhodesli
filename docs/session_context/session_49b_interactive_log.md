@@ -7,8 +7,10 @@
 - [x] Compare upload test (Item 5) — 2026-02-21, 8 UX issues logged
 - [x] Estimate page test (Item 6) — 2026-02-21, comprehensive UX audit, 18 issues logged
 - [x] Quick-Identify test (Item 7) — 2026-02-21, "Name These Faces" mode completely broken on /photo/ pages (htmx targetError), 10 issues logged
-- [ ] Visual walkthrough (admin + public views) (Item 8)
-- [ ] Bug list + smoke test + cleanup (Items 9-11)
+- [x] Visual walkthrough (admin + public views) (Item 8) — 2026-02-21, 15 pages visited, 12 new issues logged
+- [x] Smoke test (Item 10) — 2026-02-21, 11/11 PASS
+- [ ] Bug compilation + UX tracker update (Item 9)
+- [ ] Doc updates + code push (Item 11)
 
 ## Section Status
 - [x] Section 0: Session infrastructure (2026-02-20)
@@ -16,7 +18,10 @@
 - [x] Section 2: GEDCOM upload (2026-02-21) — Real GEDCOM imported (21,809 individuals). 33 identities matched to Ancestry tree. User reviewed all matches in CSV, corrected 15 Ancestry IDs. 19 relationships built (5 spouse, 14 parent-child). 33 identities enriched with GEDCOM birth/death dates, places, gender, Ancestry URLs. Birth years from Section 1 preserved through production merge. ancestry_links.json created. Lesson 78 added (production-local data divergence).
 - [x] Section 3: Identity tagging (2026-02-21) — 8 people tagged in /photo/8f6a6a0108f019cf (1970s photo, Vida Capeluto NYC). Morris Franco, Isaac Franco merged+confirmed. Albert Cohen, Eleanore Cohen, Ray Franco, Molly Benson, Herman Benson, Belle Franco confirmed. All via direct API calls (merge button 404 bug). 8 P0/P1 UX issues logged.
 - [x] Section 6: Item 7 — Quick-Identify test (2026-02-21) — "Name These Faces" mode tested on /photo/8f6a6a0108f019cf. Feature concept is good but completely non-functional on /photo/ pages due to HTMX targetError (#photo-modal-content missing). 10 issues logged (3 P0, 3 P1, 4 P2). No data changed.
-- [ ] Section 7: Items 8-11 — Autonomous UX audit, bug compilation, smoke test, wrap-up
+- [x] Section 7: Item 8 — Visual walkthrough (2026-02-21) — 15 pages screenshotted, 12 new UX issues found (1 P1, 11 P2). 404 page unstyled. About page missing navbar. All other pages functional.
+- [x] Section 8: Item 10 — Smoke test (2026-02-21) — 11/11 PASS. All routes healthy.
+- [ ] Section 9: Item 9 — Bug compilation + UX tracker update
+- [ ] Section 10: Item 11 — Doc updates + code push
 
 ## Issues Found
 
@@ -327,6 +332,87 @@ The core value proposition ("When was this photo taken?") is compelling and the 
 - Verified root cause: `document.getElementById('photo-modal-content')` returns null on /photo/ pages
 - Clicked Done buttons (per-face and progress-bar) — both failed with targetError
 - Reloaded page to exit mode — data confirmed unchanged
+
+---
+
+### Section 7: Item 8 — Visual Walkthrough of Production Site (2026-02-21)
+
+**Method:** Chrome extension (admin session, nolanfox@gmail.com) + screenshots of every major page.
+
+#### Pages Visited & Status
+
+| Page | URL | Status | Key Observations |
+|------|-----|--------|-----------------|
+| Admin Home (/) | / | 200 | Identity system. 403 New Matches, 54 People, 203 Help Identify. Focus mode showing correctly. v0.55.3. |
+| Photos | /photos | 200 | 271 photos. Decade filters, scene type tags, collection dropdown, sort. Photo grid with face count badges and date badges. |
+| Collections | /collections | 200 | 8 collections with photo mosaics and identified/unknown counts. Clean layout. |
+| People | /people | 200 | 54 identified people (Section 3 additions confirmed). Circular face crops with names and photo counts. |
+| Timeline | /timeline | 200 | "A Century of Rhodes" — 271 photos, 15 historical events. Person/collection filters. Historical events with citations. |
+| Map | /map | 200 | 267 photos across 18 locations. Leaflet map with clustered markers. Filters for collection/person/decade. |
+| Tree | /tree | 200 | Family tree with GEDCOM data. Birth/death years showing. Focus on dropdown. Parent-child/spouse legend. |
+| Connect | /connect | 200 | Network graph visualization. Family (orange) and photo (blue) connections. Person A/B selector. |
+| Person Detail | /person/{id} | 200 | Morris Franco confirmed live. Birth year 1888, "Identified" badge, metadata form, share button, Timeline/Map/Family Tree/Connections links. |
+| Photo Detail | /photo/8f6a6a0108f019cf | 200 | 1970s photo. All 8 Section 3 tagged people shown with face overlays. 9 identified, 3 unidentified. Admin tools (back image, orientation, collection/source). "Name These Faces (3 unidentified)" button present. |
+| Compare | /compare | 200 | (Tested in Item 5 — not re-screenshotted) |
+| Estimate | /estimate | 200 | (Tested in Item 6 — not re-screenshotted) |
+| About | /about | 200 | Historical context (The Community, The Diaspora, The Project). Well-written. |
+| 404 Page | /nonexistent | 404 | Returns 404 correctly but page is UNSTYLED — no Tailwind, no navbar, dark text on dark background. |
+| Health | /health | 200 | JSON: status=ok, identities=662, photos=271, processing_enabled=true, ml_pipeline=ready. |
+
+#### UX Issues Found — Item 8
+
+##### P1 — Layout/Navigation Issues
+- [ ] VW-001: **404 PAGE UNSTYLED**: The custom 404 page has no Tailwind CSS applied. Dark text barely visible on dark background. No main navbar. "Rhodesli" and "Explore the Archive" links are purple (browser default) on dark bg. Previously supposedly fixed in Session 54 (M1 styled 404) but the styling is not working in production. [BACKLOG: yes, P1]
+- [ ] VW-002: **ABOUT PAGE MISSING NAVBAR**: /about page has no top navigation bar — just a "Back to Archive" link. Inconsistent with every other page that has the full Photos/Collections/People/Map/Timeline/Tree/Connect/Compare/Estimate nav. [BACKLOG: yes, P1]
+- [ ] VW-003: **"EXPLORE MORE PHOTOS" NAV CTA**: Orange "Explore More Photos" link appears in the main navbar on /photo/ and /person/ pages. It's styled as a CTA but positioned as navigation. Looks like an ad in the navbar. Doesn't appear on other pages. Inconsistent and visually jarring. [BACKLOG: yes, P2]
+
+##### P2 — People Page Issues
+- [ ] VW-004: **NO SEARCH ON PEOPLE PAGE**: /people has 54 people but no search bar or filter. Only sort (A-Z). With growing identified count, search becomes essential. /photos has a search bar — /people should too. [BACKLOG: yes, P2]
+- [ ] VW-005: **NO BIRTH/DEATH YEARS ON PEOPLE GRID**: People cards show only name and photo count. Birth/death years are now available for many people (from Section 1 and GEDCOM import) but not displayed. Showing "1888–1960" under the name would add historical context and help disambiguation. [BACKLOG: yes, P2]
+- [ ] VW-006: **FACE CROP QUALITY VARIES WILDLY**: Some crops are clear, others are very blurry/dark/reddish. Worst: Abraham Moussafer, David Raymond Capouano. This is the first visual impression for each person — low quality crops undermine the archive's credibility. [BACKLOG: yes, P2]
+
+##### P2 — Tree Page Issues
+- [ ] VW-007: **TREE NAMES TRUNCATED**: "Big Leon Cape...", "Selma Capouya...", "a Capua..." — names cut off at ~12 chars. Sephardic names are long. Tree nodes should show full names or truncate at word boundaries. [BACKLOG: yes, P2]
+- [ ] VW-008: **TREE VERY WIDE — HORIZONTAL SCROLL**: Family tree extends well beyond viewport width. Large empty space at top. Requires horizontal scrolling to see all nodes. Need zoom controls or better layout algorithm. [BACKLOG: yes, P2]
+
+##### P2 — Photo Page Issues
+- [ ] VW-009: **FACE OVERLAY NAME LABELS TRUNCATED**: On group photos, name labels on face bounding boxes truncate: "Albert...", "Morri...", "Herma...". Should show at least full first name. In thumbnail grid (/photos), labels are even smaller. [BACKLOG: yes, P2]
+
+##### P2 — Person Page Issues
+- [ ] VW-010: **"DIED: Unknown" AND "FROM: Unknown" PLACEHOLDER TEXT**: Person pages show "Died: Unknown" and "From: Unknown" which looks like actual data. Should omit these fields or show "—" when data is missing. [BACKLOG: yes, P2]
+- [ ] VW-011: **NO ANCESTRY LINK DISPLAYED**: Morris Franco has ancestry_id=132508216815 (set in Section 3) but no visible Ancestry URL link on the person page. The data exists but the UI doesn't render it. [BACKLOG: yes, P2]
+
+##### P2 — Photos Grid Issues
+- [ ] VW-012: **FACE COUNT BADGE FORMAT INCONSISTENT**: Some photos show "1/1" (identified/total), others show "1 face" or "6 faces". The "N/M" format is more informative but not consistently applied. [BACKLOG: yes, P2]
+
+##### Positive Observations
+- All major pages load correctly (11/11 smoke test pass)
+- Section 3 identity tagging data confirmed live on production (Morris Franco, Albert Cohen, Belle Franco, etc.)
+- GEDCOM birth/death years showing on Tree page
+- Map page is genuinely impressive — diaspora visualization
+- Connect page network graph is compelling
+- Photo face overlays with identification status (green=identified, dashed=unidentified) clear and intuitive
+- Navigation is consistent across most pages (except About and 404)
+- Admin vs public separation working correctly
+
+### Section 8: Item 10 — Production Smoke Test (2026-02-21)
+
+**Command:** `python scripts/production_smoke_test.py --url https://rhodesli.nolanandrewfox.com`
+**Result:** 11/11 PASS
+
+| Test | Path | Status | Time |
+|------|------|--------|------|
+| Health | /health | 200 | 1.02s |
+| Landing page | / | 200 | 0.40s |
+| Timeline | /photos | 200 | 0.60s |
+| People | /people | 200 | 0.44s |
+| Compare page | /compare | 200 | 0.19s |
+| Estimate page | /estimate | 200 | 0.18s |
+| Collections | /collections | 200 | 0.75s |
+| Search API | /api/search?q=cohen | 200 | 0.16s |
+| Invalid person 404 | /person/nonexistent | 404 | 0.16s |
+| Invalid photo 404 | /photo/nonexistent | 404 | 0.44s |
+| Login page | /login | 200 | 0.37s |
 
 ---
 
