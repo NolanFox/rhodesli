@@ -9,7 +9,7 @@
 - [x] Quick-Identify test (Item 7) — 2026-02-21, "Name These Faces" mode completely broken on /photo/ pages (htmx targetError), 10 issues logged
 - [x] Visual walkthrough (admin + public views) (Item 8) — 2026-02-21, 15 pages visited, 12 new issues logged
 - [x] Smoke test (Item 10) — 2026-02-21, 11/11 PASS
-- [ ] Bug compilation + UX tracker update (Item 9)
+- [x] Bug compilation + UX tracker update (Item 9) — 2026-02-21, 67 new issues (UX-036 to UX-102)
 - [ ] Doc updates + code push (Item 11)
 
 ## Section Status
@@ -20,7 +20,7 @@
 - [x] Section 6: Item 7 — Quick-Identify test (2026-02-21) — "Name These Faces" mode tested on /photo/8f6a6a0108f019cf. Feature concept is good but completely non-functional on /photo/ pages due to HTMX targetError (#photo-modal-content missing). 10 issues logged (3 P0, 3 P1, 4 P2). No data changed.
 - [x] Section 7: Item 8 — Visual walkthrough (2026-02-21) — 15 pages screenshotted, 12 new UX issues found (1 P1, 11 P2). 404 page unstyled. About page missing navbar. All other pages functional.
 - [x] Section 8: Item 10 — Smoke test (2026-02-21) — 11/11 PASS. All routes healthy.
-- [ ] Section 9: Item 9 — Bug compilation + UX tracker update
+- [x] Section 9: Item 9 — Bug compilation (2026-02-21) — 67 new issues added to UX_ISSUE_TRACKER.md (UX-036 through UX-102). Total: 100 issues tracked. 6 P0, 22 P1, 38 P2, 4 P3.
 - [ ] Section 10: Item 11 — Doc updates + code push
 
 ## Issues Found
