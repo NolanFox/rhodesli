@@ -14,6 +14,35 @@
       "status": "approved",
       "reviewed_by": "nolanfox@gmail.com",
       "reviewed_at": "2026-02-13T19:41:26.838998+00:00"
+    },
+    "c6d3b32e-d6b3-4b35-aa74-b117f27fd85e": {
+      "annotation_id": "c6d3b32e-d6b3-4b35-aa74-b117f27fd85e",
+      "type": "bio",
+      "target_type": "identity",
+      "target_id": "54682ede-9424-4295-abca-9317679e5636",
+      "value": "A mi querida Estrella de tu hermano Samuel",
+      "confidence": "likely",
+      "reason": "",
+      "submitted_by": "poisson1957@hotmail.com",
+      "submitted_at": "2026-02-13T19:28:10.588014+00:00",
+      "status": "approved",
+      "reviewed_by": "nolanfox@gmail.com",
+      "reviewed_at": "2026-02-13T19:41:19.444080+00:00"
+    },
+    "448a328b-f9fe-466f-9f51-0ad71b832602": {
+      "annotation_id": "448a328b-f9fe-466f-9f51-0ad71b832602",
+      "type": "name_suggestion",
+      "target_type": "identity",
+      "target_id": "737cc037-d46e-495c-9a6b-d022424d4db4",
+      "value": "test name",
+      "confidence": "likely",
+      "reason": "face_tag:inbox_b0542d169e4a:new_name",
+      "submitted_by": "anonymous",
+      "submitted_at": "2026-02-13T22:14:24.087995+00:00",
+      "status": "rejected",
+      "reviewed_by": "nolanfox@gmail.com",
+      "reviewed_at": "2026-02-13T22:15:19.259334+00:00",
+      "confirmations": []
     }
   }
 }

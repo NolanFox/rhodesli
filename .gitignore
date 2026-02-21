@@ -80,6 +80,7 @@ data/*
 !data/location_dictionary.json
 !data/photo_locations.json
 !data/birth_year_estimates.json
+!data/ancestry_links.json
 
 # ML experiment tracking
 rhodesli_ml/mlruns/

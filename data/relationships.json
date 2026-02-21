@@ -2,174 +2,166 @@
   "schema_version": 1,
   "relationships": [
     {
-      "person_a": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265469+00:00"
-    },
-    {
-      "person_a": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "person_b": "925904af-af2c-49af-a721-e4b74a312182",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265477+00:00"
-    },
-    {
-      "person_a": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "person_b": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265480+00:00"
-    },
-    {
-      "person_a": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "person_b": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265482+00:00"
-    },
-    {
-      "person_a": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "person_b": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265485+00:00"
-    },
-    {
-      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
-      "person_b": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265487+00:00"
-    },
-    {
-      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
-      "person_b": "925904af-af2c-49af-a721-e4b74a312182",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265489+00:00"
-    },
-    {
-      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
-      "person_b": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265491+00:00"
-    },
-    {
-      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
-      "person_b": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265493+00:00"
-    },
-    {
-      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
-      "person_b": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
-      "type": "parent_child",
-      "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265495+00:00"
-    },
-    {
-      "person_a": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
-      "person_b": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "person_a": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+      "person_b": "609d7e34-38a3-4bdd-9879-35560b624bae",
       "type": "spouse",
       "source": "gedcom",
-      "gedcom_family_id": "@F1@",
-      "created_at": "2026-02-17T04:59:28.265500+00:00"
+      "gedcom_family_id": "@F427@",
+      "created_at": "2026-02-21T05:22:59.938741+00:00"
+    },
+    {
+      "person_a": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "person_b": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "type": "spouse",
+      "source": "gedcom",
+      "gedcom_family_id": "@F568@",
+      "created_at": "2026-02-21T05:22:59.939295+00:00"
+    },
+    {
+      "person_a": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "person_b": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F579@",
+      "created_at": "2026-02-21T05:22:59.939310+00:00"
+    },
+    {
+      "person_a": "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
+      "person_b": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "type": "spouse",
+      "source": "gedcom",
+      "gedcom_family_id": "@F581@",
+      "created_at": "2026-02-21T05:22:59.939318+00:00"
+    },
+    {
+      "person_a": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "person_b": "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F587@",
+      "created_at": "2026-02-21T05:22:59.939326+00:00"
+    },
+    {
+      "person_a": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F587@",
+      "created_at": "2026-02-21T05:22:59.939329+00:00"
+    },
+    {
+      "person_a": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "person_b": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F587@",
+      "created_at": "2026-02-21T05:22:59.939335+00:00"
+    },
+    {
+      "person_a": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "person_b": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F778@",
+      "created_at": "2026-02-21T05:22:59.939471+00:00"
     },
     {
       "person_a": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
-      "person_b": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "person_b": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "type": "parent_child",
       "source": "gedcom",
-      "gedcom_family_id": "@F2@",
-      "created_at": "2026-02-17T04:59:28.265503+00:00"
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940230+00:00"
     },
     {
       "person_a": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
-      "person_b": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "person_b": "1547d786-4349-41ed-abb4-02e63b2ba313",
       "type": "parent_child",
       "source": "gedcom",
-      "gedcom_family_id": "@F2@",
-      "created_at": "2026-02-17T04:59:28.265505+00:00"
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940234+00:00"
+    },
+    {
+      "person_a": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "person_b": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940236+00:00"
+    },
+    {
+      "person_a": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "person_b": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940239+00:00"
     },
     {
       "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
-      "person_b": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "person_b": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
       "type": "parent_child",
       "source": "gedcom",
-      "gedcom_family_id": "@F2@",
-      "created_at": "2026-02-17T04:59:28.265510+00:00"
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940242+00:00"
     },
     {
       "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
-      "person_b": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "person_b": "1547d786-4349-41ed-abb4-02e63b2ba313",
       "type": "parent_child",
       "source": "gedcom",
-      "gedcom_family_id": "@F2@",
-      "created_at": "2026-02-17T04:59:28.265512+00:00"
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940245+00:00"
+    },
+    {
+      "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "person_b": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940248+00:00"
+    },
+    {
+      "person_a": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "person_b": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "type": "parent_child",
+      "source": "gedcom",
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940250+00:00"
     },
     {
       "person_a": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
       "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
       "type": "spouse",
       "source": "gedcom",
-      "gedcom_family_id": "@F2@",
-      "created_at": "2026-02-17T04:59:28.265515+00:00"
-    },
-    {
-      "person_a": "925904af-af2c-49af-a721-e4b74a312182",
-      "person_b": "2cf08b25-075c-41a8-a20d-d03686aafd06",
-      "type": "spouse",
-      "source": "gedcom",
-      "gedcom_family_id": "@F3@",
-      "created_at": "2026-02-17T04:59:28.265520+00:00"
-    },
-    {
-      "person_a": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
-      "person_b": "fd43c9dd-8558-4305-8bda-90c3f320daac",
-      "type": "spouse",
-      "source": "gedcom",
-      "gedcom_family_id": "@F4@",
-      "created_at": "2026-02-17T04:59:28.265523+00:00"
+      "gedcom_family_id": "@F1876@",
+      "created_at": "2026-02-21T05:22:59.940254+00:00"
     },
     {
       "person_a": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
-      "person_b": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "person_b": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
       "type": "spouse",
       "source": "gedcom",
-      "gedcom_family_id": "@F5@",
-      "created_at": "2026-02-17T04:59:28.265527+00:00"
+      "gedcom_family_id": "@F2199@",
+      "created_at": "2026-02-21T05:22:59.940485+00:00"
     },
     {
-      "person_a": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+      "person_a": "925904af-af2c-49af-a721-e4b74a312182",
       "person_b": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
-      "type": "spouse",
+      "type": "parent_child",
       "source": "gedcom",
-      "gedcom_family_id": "@F6@",
-      "created_at": "2026-02-17T04:59:28.265530+00:00"
+      "gedcom_family_id": "@F2223@",
+      "created_at": "2026-02-21T05:22:59.940507+00:00"
     }
   ],
   "gedcom_imports": [
     {
-      "filename": "test_capeluto.ged",
-      "imported_at": "2026-02-17T04:59:28.265538+00:00",
-      "individuals_count": 14,
-      "families_count": 6,
-      "matches_confirmed": 14,
-      "relationships_added": 20
+      "filename": "Fox_Capeluto_Fogel_Waldorf Family Tree.ged",
+      "imported_at": "2026-02-21T05:22:59.943450+00:00",
+      "individuals_count": 21809,
+      "families_count": 6680,
+      "matches_confirmed": 33,
+      "relationships_added": 19
     }
   ]
 }
