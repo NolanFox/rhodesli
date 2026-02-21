@@ -108,12 +108,13 @@ def compute_metrics(
 def train(
     data_dir: Path,
     output_dir: Path | None = None,
-    epochs: int = 100,
-    lr: float = 1e-3,
+    epochs: int = 200,
+    lr: float = 5e-4,
     batch_size: int = 64,
     neg_ratio: int = 3,
     hard_neg_threshold: float = 1.2,
-    patience: int = 10,
+    patience: int = 20,
+    weight_decay: float = 1e-2,
     seed: int = 42,
     use_mlflow: bool = True,
 ) -> dict:
@@ -161,7 +162,7 @@ def train(
 
     # Model
     model = CalibrationModel(embed_dim=512)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = nn.BCELoss()
 
     # MLflow setup
@@ -177,6 +178,7 @@ def train(
                 "batch_size": batch_size,
                 "neg_ratio": neg_ratio,
                 "hard_neg_threshold": hard_neg_threshold,
+                "weight_decay": weight_decay,
                 "epochs": epochs,
                 "patience": patience,
                 "seed": seed,
@@ -184,9 +186,9 @@ def train(
                 "eval_pairs": len(eval_pairs) if eval_pairs else 0,
                 "train_identities": len(train_ids),
                 "eval_identities": len(eval_ids),
-                "model": "siamese_mlp",
+                "model": "siamese_mlp_compact",
                 "embed_dim": 512,
-                "hidden_dim": 256,
+                "hidden_dim": 32,
             })
         except ImportError:
             use_mlflow = False
@@ -280,8 +282,8 @@ def train(
             "model_state_dict": model.state_dict(),
             "config": {
                 "embed_dim": 512,
-                "hidden_dim": 256,
-                "dropout": 0.3,
+                "hidden_dim": 32,
+                "dropout": 0.5,
             },
             "metrics": final_metrics,
             "training_time": training_time,
@@ -323,11 +325,12 @@ def main():
     parser.add_argument("--output-dir", type=Path,
                         default=Path("rhodesli_ml/artifacts"),
                         help="Output directory for model artifacts")
-    parser.add_argument("--epochs", type=int, default=100)
-    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--epochs", type=int, default=200)
+    parser.add_argument("--lr", type=float, default=5e-4)
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--neg-ratio", type=int, default=3)
-    parser.add_argument("--patience", type=int, default=10)
+    parser.add_argument("--patience", type=int, default=20)
+    parser.add_argument("--weight-decay", type=float, default=1e-2)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--no-mlflow", action="store_true")
     args = parser.parse_args()
@@ -340,6 +343,7 @@ def main():
         batch_size=args.batch_size,
         neg_ratio=args.neg_ratio,
         patience=args.patience,
+        weight_decay=args.weight_decay,
         seed=args.seed,
         use_mlflow=not args.no_mlflow,
     )

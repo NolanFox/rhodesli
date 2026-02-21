@@ -1320,7 +1320,24 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: Face-level split — creates data leakage. Random pair-level split — same leakage risk.
 - **Affects**: rhodesli_ml/calibration/data.py
 
-1. Add a new entry with AD-XXX format (next: AD-126)
+### AD-126: Simplified CalibrationModel Architecture (33K params)
+
+- **Date**: 2026-02-21
+- **Session**: 55
+- **Status**: ACCEPTED
+- **Context**: Initial Siamese MLP (AD-123) used 4-feature input (a, b, |a-b|, a*b = 2048-dim) with hidden_dim=256, producing ~540K params. With only 3304 training pairs, this overfits catastrophically — train loss 0.003 but eval loss increasing after epoch 5. Hyperparameter sweep (4 configs) showed the same pattern. Baseline Euclidean AUC (0.9493) beat calibrated AUC (0.7854).
+- **Decision**: Simplified to 2-feature input (|a-b|, a*b = 1024-dim), hidden_dim=32, dropout=0.5, weight_decay=1e-2. Total ~33K params. This achieves:
+  - F1@0.5: 0.6042 (vs baseline 0.1268 — **4.8x improvement**)
+  - Recall@0.5: 0.4361 (vs baseline 0.0677 — **6.4x improvement**)
+  - Precision@0.5: 0.9831 (vs baseline 1.0 — virtually unchanged)
+  - AUC: 0.9391 (vs baseline 0.9493 — comparable)
+  - Trains 153 epochs with early stopping (patience=20), no overfitting
+- **Rejected**: 4-feature 540K model — overfits on 3304 samples. Raw embedding concat (a, b) adds 512 redundant dims already captured by interaction features.
+- **Key insight**: With 46 identities and ~3K training pairs, the model must be small enough to generalize. The difference and product features (|a-b|, a*b) capture all pairwise interaction without redundant capacity.
+- **Affects**: rhodesli_ml/calibration/model.py, rhodesli_ml/calibration/train.py (defaults)
+- **Config**: embed_dim=512, hidden_dim=32, dropout=0.5, lr=5e-4, weight_decay=1e-2, epochs=200, patience=20
+
+1. Add a new entry with AD-XXX format (next: AD-127)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

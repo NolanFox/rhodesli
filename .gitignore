@@ -83,6 +83,7 @@ data/*
 !data/ancestry_links.json
 
 # ML experiment tracking
+mlruns/
 rhodesli_ml/mlruns/
 rhodesli_ml/checkpoints/
 

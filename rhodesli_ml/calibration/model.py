@@ -1,9 +1,10 @@
 """Siamese MLP for similarity calibration on frozen embeddings.
 
 Takes a pair of 512-dim face embeddings and outputs P(same_person).
-Architecture: concat(a, b, |a-b|, a*b) -> FC layers -> sigmoid.
+Uses difference and element-wise product features (not raw concatenation)
+to reduce parameter count and prevent overfitting on small datasets.
 
-Decision provenance: AD-123 (Siamese MLP over metric learning).
+Decision provenance: AD-123 (Siamese MLP), AD-126 (simplified architecture).
 """
 
 import torch
@@ -14,20 +15,21 @@ class CalibrationModel(nn.Module):
     """Siamese MLP that predicts P(same_person) from embedding pairs.
 
     Input: Two 512-dim face embeddings.
+    Features: |a-b| and a*b (interaction features only, 1024-dim).
     Output: Scalar probability in [0, 1].
+
+    Uses a compact architecture (32K params) to prevent overfitting
+    on the ~3K training pairs from 46 confirmed identities.
     """
 
-    def __init__(self, embed_dim: int = 512, hidden_dim: int = 256, dropout: float = 0.3):
+    def __init__(self, embed_dim: int = 512, hidden_dim: int = 32, dropout: float = 0.5):
         super().__init__()
-        input_dim = embed_dim * 4  # concat(a, b, |a-b|, a*b)
+        input_dim = embed_dim * 2  # |a-b| and a*b only
         self.net = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),
             nn.ReLU(),
             nn.Dropout(dropout),
-            nn.Linear(hidden_dim, 64),
-            nn.ReLU(),
-            nn.Dropout(dropout * 0.67),  # Lighter dropout in later layers
-            nn.Linear(64, 1),
+            nn.Linear(hidden_dim, 1),
             nn.Sigmoid(),
         )
 
@@ -35,15 +37,15 @@ class CalibrationModel(nn.Module):
         """Predict P(same_person) for embedding pairs.
 
         Args:
-            emb_a: (batch, 512) tensor
-            emb_b: (batch, 512) tensor
+            emb_a: (batch, embed_dim) tensor
+            emb_b: (batch, embed_dim) tensor
 
         Returns:
             (batch, 1) tensor of probabilities
         """
         diff = torch.abs(emb_a - emb_b)
         prod = emb_a * emb_b
-        x = torch.cat([emb_a, emb_b, diff, prod], dim=-1)
+        x = torch.cat([diff, prod], dim=-1)
         return self.net(x)
 
     def predict(self, emb_a: torch.Tensor, emb_b: torch.Tensor) -> float:

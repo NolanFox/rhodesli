@@ -64,13 +64,13 @@ class TestCalibrationModel:
         assert emb_b.grad is not None
 
     def test_parameter_count(self):
-        model = CalibrationModel(embed_dim=512, hidden_dim=256)
+        model = CalibrationModel(embed_dim=512, hidden_dim=32)
         params = sum(p.numel() for p in model.parameters())
-        # 2048*256 + 256 + 256*64 + 64 + 64*1 + 1 = ~540K
-        assert 500_000 < params < 600_000
+        # 1024*32 + 32 + 32*1 + 1 = ~33K (compact architecture)
+        assert 30_000 < params < 40_000
 
     def test_custom_embed_dim(self):
-        model = CalibrationModel(embed_dim=128, hidden_dim=64)
+        model = CalibrationModel(embed_dim=128, hidden_dim=16)
         emb_a = torch.randn(4, 128)
         emb_b = torch.randn(4, 128)
         out = model(emb_a, emb_b)
