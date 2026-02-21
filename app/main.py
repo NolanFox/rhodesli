@@ -13587,14 +13587,15 @@ def get(face_id: str = "", sess=None):
         ),
         Form(
             Div(
-                # Drag-and-drop zone
+                # Drag-and-drop zone with photo preview (UX-053)
                 Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-500 mb-3 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
-                    P("Drop a photo here or click to browse", cls="text-slate-400 text-sm mb-1"),
+                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-500 mb-3 mx-auto" id="compare-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    Img(id="compare-preview", cls="hidden max-h-32 rounded-lg mx-auto mb-2 border border-slate-600", alt="Selected photo"),
+                    P("Drop a photo here or click to browse", id="compare-upload-text", cls="text-slate-400 text-sm mb-1"),
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
                     Input(type="file", name="photo", accept="image/jpeg,image/png",
                           cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}this.closest('form').requestSubmit();setTimeout(function(){var s=document.getElementById('upload-spinner');if(s){s.scrollIntoView({behavior:'smooth',block:'center'})}},100)",
+                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}var preview=document.getElementById('compare-preview');var icon=document.getElementById('compare-upload-icon');var txt=document.getElementById('compare-upload-text');if(preview){var r=new FileReader();r.onload=function(e){preview.src=e.target.result;preview.classList.remove('hidden');if(icon)icon.classList.add('hidden');if(txt)txt.textContent='Photo selected - uploading...'};r.readAsDataURL(f)}this.closest('form').requestSubmit();setTimeout(function(){var s=document.getElementById('upload-spinner');if(s){s.scrollIntoView({behavior:'smooth',block:'center'})}},100)",
                           data_testid="upload-input"),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-8 transition-colors cursor-pointer",
                 ),
@@ -14922,12 +14923,13 @@ def get(photo: str = "", sess=None):
                         Form(
                             Div(
                                 Div(
-                                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
-                                    P("Upload a photo to estimate its date", cls="text-slate-400 text-sm mb-1"),
+                                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" id="estimate-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                                    Img(id="estimate-preview", cls="hidden max-h-24 rounded-lg mx-auto mb-2 border border-slate-600", alt="Selected photo"),
+                                    P("Upload a photo to estimate its date", id="estimate-upload-text", cls="text-slate-400 text-sm mb-1"),
                                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
                                     Input(type="file", name="photo", accept="image/jpeg,image/png",
                                           cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('estimate-upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}this.closest('form').requestSubmit()",
+                                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('estimate-upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}var preview=document.getElementById('estimate-preview');var icon=document.getElementById('estimate-upload-icon');var txt=document.getElementById('estimate-upload-text');if(preview){var r=new FileReader();r.onload=function(e){preview.src=e.target.result;preview.classList.remove('hidden');if(icon)icon.classList.add('hidden');if(txt)txt.textContent='Photo selected - analyzing...'};r.readAsDataURL(f)}this.closest('form').requestSubmit()",
                                           data_testid="estimate-upload-input"),
                                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-6 transition-colors cursor-pointer",
                                 ),
@@ -14938,7 +14940,7 @@ def get(photo: str = "", sess=None):
                             enctype="multipart/form-data",
                             hx_post="/api/estimate/upload",
                             hx_target="#estimate-upload-result",
-                            hx_swap="innerHTML",
+                            hx_swap="innerHTML show:#estimate-upload-result:top",
                             hx_indicator="#estimate-upload-spinner",
                             data_testid="estimate-upload-form",
                         ),
@@ -15307,6 +15309,18 @@ async def post(photo: UploadFile = None, sess=None):
 
     if not parts:
         parts.append(P("Photo saved.", cls="text-sm text-slate-400 text-center py-4"))
+
+    # UX-056: CTAs after estimate results
+    parts.append(Div(
+        A("Estimate Another Photo", href="/estimate",
+          cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors"),
+        A("Compare This Photo", href="/compare",
+          cls="px-4 py-2 text-sm border border-indigo-500/50 text-indigo-400 rounded-lg hover:bg-indigo-500/10 transition-colors"),
+        A("Browse the Archive", href="/photos",
+          cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors"),
+        cls="flex flex-wrap justify-center gap-3 mt-6 pt-4 border-t border-slate-700/50",
+        data_testid="estimate-ctas",
+    ))
 
     return Div(*parts, cls="py-4", data_testid="estimate-upload-result")
 
