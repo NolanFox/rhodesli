@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.56.3] — 2026-02-21
+
+### Fixed — Session 49E: Stabilization & Verification
+- **Test state pollution**: Root cause of 130 test failures was leaked patches in test_nav_consistency.py. Fixed with ExitStack context manager (Lesson 79)
+- **Compare messaging corrected**: "not stored in the archive" was inaccurate — uploads DO save to R2 with a contribute-to-archive flow. Updated to "used for matching. Sign in to contribute."
+- **Name These Faces test assertions**: Updated stale assertions (admin-name-faces-container → photo-modal-content)
+- **About page e2e test**: Updated to match 49D navbar change (full nav bar instead of "Back to Archive" link)
+
+### Verified
+- All 10 Session 49D fixes verified PASS in production browser
+- Name These Faces sequential mode fully functional end-to-end
+- Compare/Estimate upload pipeline already saves to R2 (no new code needed)
+
+### Infrastructure
+- Test count: 2909 total (2603 app + 306 ML) — previous undercounts from missing venv
+- Compaction-resilient checkpoint system installed (PreCompact hook)
+- Lessons 79-80 added (ExitStack for patches, venv for tests)
+
 ## [v0.56.2] — 2026-02-21
 
 ### Fixed — P0 Bugs (Session 49D)

@@ -252,12 +252,28 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Lesson 78: Production-local data divergence is the #1 recurring deployment failure (4th occurrence)
 - All 2486 tests passing
 
+## Session 49D: P0 + P1 Bug Fixes (2026-02-21) — v0.56.2
+- 12 UX issues fixed: 6 P0 (Name These Faces, upload messaging, merge URL) + 6 P1 (birth year, 404, navbar, identify links, banners, pending count)
+- 35 new tests in test_p0_fixes_49d.py and test_p1_fixes_49d.py
+- All 2544 tests passing
+
+## Session 49E: Stabilization & Verification (2026-02-21) — v0.56.3
+- Fixed 130 state-pollution test failures (root cause: leaked patches in test_nav_consistency.py, fix: ExitStack)
+- Verified all 49D fixes in production browser (10/10 PASS)
+- Name These Faces confirmed fully functional end-to-end in production
+- Compare/Estimate uploads confirmed saving to R2 (corrected inaccurate "not stored" messaging)
+- Test count corrected: 2545 app + 306 ML = 2851 total (previous undercounts from missing venv)
+- Compaction-resilient checkpoint system installed (PreCompact hook, HD-015)
+- Lessons 79-80 added
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.56.3 | 2026-02-21 | 49E | 2545+306 |
+| v0.56.2 | 2026-02-21 | 49D | 2544 |
 | v0.56.0 | 2026-02-21 | 49B-S2 | 2486 |
 | v0.48.0 | 2026-02-18 | 46 | 2342 |
 | v0.47.0 | 2026-02-18 | 45 | 2281 |
@@ -282,20 +298,5 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 | v0.29.1 | 2026-02-12 | 21 | 1769 |
 | v0.29.0 | 2026-02-12 | 20 | 1733 |
 | v0.28.x | 2026-02-12 | 19-19f | 1567-1672 |
-| v0.26.0 | 2026-02-12 | 18c | 1557 |
-| v0.25.0 | 2026-02-11 | 18/18b | 1527 |
-| v0.24.0 | 2026-02-11 | — | 1473 |
-| v0.23.0 | 2026-02-11 | — | 1438 |
-| v0.22.x | 2026-02-11 | — | 1400-1415 |
-| v0.21.0 | 2026-02-11 | — | 1355 |
-| v0.20.0 | 2026-02-10 | — | 1282 |
-| v0.19.0 | 2026-02-10 | — | 1235 |
-| v0.18.0 | 2026-02-10 | — | 1221 |
-| v0.17.x | 2026-02-10 | — | 1032-1152 |
-| v0.16.0 | 2026-02-10 | — | 969 |
-| v0.15.0 | 2026-02-10 | — | 943 |
-| v0.14.x | 2026-02-10 | — | 891-900 |
-| v0.13.0 | 2026-02-09 | — | 879 |
-| v0.12.x | 2026-02-08 | 4-5 | 847-864 |
-| v0.11.0 | 2026-02-08 | — | 766 |
-| v0.10.0 | 2026-02-08 | — | 663 |
+| v0.20-0.26 | 2026-02-10 to 2026-02-12 | 18-21 | 1282-1557 |
+| v0.10-0.19 | 2026-02-08 to 2026-02-10 | 4-19f | 663-1235 |
