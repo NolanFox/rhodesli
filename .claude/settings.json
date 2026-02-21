@@ -1,1 +1,19 @@
-{"permissions":{"defaultMode":"bypassPermissions"}}
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions"
+  },
+  "hooks": {
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/recovery-instructions.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

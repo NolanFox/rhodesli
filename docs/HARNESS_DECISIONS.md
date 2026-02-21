@@ -293,3 +293,30 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
     This is the manual interim.
 - **Breadcrumbs:** Session 49B-Audit (skipped production verify), Session 54F
   (GET-only smoke tests), HD-013, CLAUDE.md Session Operations, post-deploy hook
+
+## HD-015: PreCompact Recovery Hook for Session Continuity
+- **Date:** 2026-02-21
+- **Session:** 49E
+- **Trigger:** Context compaction loses critical session instructions (prompt
+  details, phase tracking, rules). This was identified in HD-001 and GitHub
+  issue #25265 as a known failure mode.
+- **Decision:** Install a PreCompact hook (`.claude/hooks/recovery-instructions.sh`)
+  that injects recovery instructions into the compacted context via
+  `additionalContext`. Combined with saving prompts to disk and maintaining
+  a checkpoint file (`docs/session_context/session_*_checkpoint.md`).
+- **Implementation:**
+  1. PreCompact hook fires before auto-compaction
+  2. Injects: session number, prompt file path, checkpoint file path, key rules
+  3. Checkpoint file updated after every phase with current progress
+  4. Prompt saved to `docs/prompts/` at session start
+- **Alternatives rejected:**
+  - Relying on compaction summary alone: Known to lose critical instructions
+    (~20-30% context degradation per HD-001)
+  - Manual `/compact` at breakpoints: Requires human intervention, not
+    compatible with autonomous sessions
+  - SessionStart hook only: Fires too late — context is already compressed.
+    PreCompact injects BEFORE compression, ensuring survival.
+- **Rationale:** Deterministic recovery > probabilistic memory. Hooks fire
+  outside the agentic loop — they always execute regardless of context state.
+- **Breadcrumbs:** .claude/settings.json (hooks config),
+  .claude/hooks/recovery-instructions.sh, HD-001
