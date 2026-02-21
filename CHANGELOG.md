@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.57.0] — 2026-02-21
+
+### Added — Session 55: Similarity Calibration on Frozen Embeddings
+- **Calibration model (AD-123/126)**: Siamese MLP trained on 46 confirmed identities (3304 pairs). 33K param architecture: |a-b| + a*b features → hidden=32 → sigmoid. F1@0.5 improves 4.8x (0.13→0.60), precision@0.5 stays 98%.
+- **Training pipeline**: `rhodesli_ml/calibration/` — data.py (pair generation, hard negatives), model.py, train.py (with MLflow tracking), evaluate.py (baseline comparison), inference.py (production serving)
+- **Compare integration**: `find_similar_faces()` now computes calibrated P(same_person) alongside Euclidean distance. Graceful degradation when torch unavailable.
+- **Batch inference**: `calibrated_similarity_batch()` for efficient scoring of one query vs many candidates.
+- **MLflow experiment tracking**: All training runs logged with params, per-epoch metrics, and model artifacts.
+
+### Documentation
+- PRD-023: Similarity Calibration product requirements
+- SDD-023: Similarity Calibration system design
+- AD-123 (Siamese MLP), AD-124 (hard negative mining), AD-125 (identity-level split), AD-126 (simplified architecture)
+- BACKLOG audit: 8 new items, trimmed 338→272 lines, session numbering corrected
+
+### Infrastructure
+- Dockerfile updated to deploy calibration module + model artifact
+- Test count: 2961 total (2604 app + 357 ML)
+- 19 new tests for compare integration + inference module
+
 ## [v0.56.3] — 2026-02-21
 
 ### Fixed — Session 49E: Stabilization & Verification

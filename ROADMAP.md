@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.56.3 · 2545 tests · 271 photos · 662 identities · 54 confirmed
+Current: v0.57.0 · 2961 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -48,7 +48,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 ## Open Work (Prioritized — confirmed Session 54c)
 
 ### Immediate (Current Sprint)
-- [-] **ML-076: Similarity Calibration on Frozen Embeddings** — Session 55. Very High portfolio value. PyTorch Lightning + MLflow (2026-02-21)
+- [x] **ML-076: Similarity Calibration on Frozen Embeddings** — Session 55. F1@0.5 improved 4.8x (0.13→0.60). 33K param Siamese MLP + MLflow. (2026-02-21)
 - [x] Fix production UX issues — 12 bugs fixed (49D): 6 P0 + 6 P1, 35 new tests (2026-02-21)
 - [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
 
@@ -87,11 +87,13 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Smoke test 11/11 PASS (2026-02-21)
 - See: docs/session_context/session_49b_interactive_log.md
 
-### Session 55: Similarity Calibration + Backlog Audit (CURRENT)
-- [-] Learned calibration layer on frozen InsightFace embeddings (2026-02-21)
-- [-] PyTorch Lightning + MLflow experiment tracking
-- [-] PRD-023 + SDD-023 similarity calibration
-- [-] Backlog/roadmap audit — all discussed items tracked
+### Session 55: Similarity Calibration + Backlog Audit — COMPLETE
+- [x] Learned calibration layer on frozen InsightFace embeddings (2026-02-21)
+- [x] PyTorch + MLflow experiment tracking (33K param Siamese MLP)
+- [x] PRD-023 + SDD-023 + AD-123/124/125/126
+- [x] Backlog/roadmap audit — 8 new items, BACKLOG trimmed
+- [x] Integrated into compare pipeline with graceful degradation
+- [x] 2961 total tests (2604 app + 357 ML)
 
 ### Session 56: Landing Page Refresh + P1 UX Polish
 - Landing page: live-data entry points, mobile-first
@@ -109,6 +111,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.57.0 — Session 55**: Similarity Calibration. Siamese MLP (33K params) on frozen InsightFace embeddings. F1@0.5 improved 4.8x (0.13→0.60), precision@0.5=98%. MLflow tracked. PRD-023, SDD-023, AD-123-126. Integrated into compare pipeline. Backlog audit (8 new items). Test count: 2604 app + 357 ML = 2961 total.
 - [x] 2026-02-21: **v0.56.3 — Session 49E**: Stabilization & Verification. Fixed 130 state-pollution test failures (ExitStack). Verified all 49D fixes in production (10/10 PASS). Name These Faces confirmed working end-to-end. Compare/Estimate uploads confirmed saving to R2 (messaging corrected). Test count: 2545 app + 306 ML = 2851 total.
 - [x] 2026-02-21: **v0.56.2 — Session 49D**: P0 + P1 Bug Fixes. 12 UX issues fixed (6 P0 + 6 P1). Name These Faces targeting (UX-070-072), upload messaging (UX-044/052), merge URL (UX-036), birth year race condition (UX-092), 404 styling (UX-080), about navbar (UX-081), identify links (UX-042), review polish (UX-100/101). 35 new tests (2544 total).
 - [x] 2026-02-21: **v0.56.1 — Session 49B Complete**: Items 5-11 autonomous. Compare/Estimate/Quick-Identify UX audit (36 issues). Visual walkthrough 15 pages (12 issues). Bug compilation: 67 new UX issues (100 total). Smoke test 11/11. 8 people tagged in 1970s photo (Section 3). 54 confirmed identities.
