@@ -6,7 +6,7 @@
 - [x] Carey Franco's 8 IDs + Howie/Stu confirmations — Section 3
 - [x] Compare upload test (Item 5) — 2026-02-21, 8 UX issues logged
 - [x] Estimate page test (Item 6) — 2026-02-21, comprehensive UX audit, 18 issues logged
-- [ ] Quick-Identify test (Item 7)
+- [x] Quick-Identify test (Item 7) — 2026-02-21, "Name These Faces" mode completely broken on /photo/ pages (htmx targetError), 10 issues logged
 - [ ] Visual walkthrough (admin + public views) (Item 8)
 - [ ] Bug list + smoke test + cleanup (Items 9-11)
 
@@ -15,8 +15,8 @@
 - [x] Section 1: Birth year bulk review (2026-02-20) — 31 estimates reviewed. 28 accepted (10 exact, 18 corrected). ML accuracy: ~32% exact, ~48% within 2 years, mean absolute error ~5.4 years.
 - [x] Section 2: GEDCOM upload (2026-02-21) — Real GEDCOM imported (21,809 individuals). 33 identities matched to Ancestry tree. User reviewed all matches in CSV, corrected 15 Ancestry IDs. 19 relationships built (5 spouse, 14 parent-child). 33 identities enriched with GEDCOM birth/death dates, places, gender, Ancestry URLs. Birth years from Section 1 preserved through production merge. ancestry_links.json created. Lesson 78 added (production-local data divergence).
 - [x] Section 3: Identity tagging (2026-02-21) — 8 people tagged in /photo/8f6a6a0108f019cf (1970s photo, Vida Capeluto NYC). Morris Franco, Isaac Franco merged+confirmed. Albert Cohen, Eleanore Cohen, Ray Franco, Molly Benson, Herman Benson, Belle Franco confirmed. All via direct API calls (merge button 404 bug). 8 P0/P1 UX issues logged.
-- [ ] Section 4: Autonomous UX audit
-- [ ] Section 5: Synthesis and prioritization
+- [x] Section 6: Item 7 — Quick-Identify test (2026-02-21) — "Name These Faces" mode tested on /photo/8f6a6a0108f019cf. Feature concept is good but completely non-functional on /photo/ pages due to HTMX targetError (#photo-modal-content missing). 10 issues logged (3 P0, 3 P1, 4 P2). No data changed.
+- [ ] Section 7: Items 8-11 — Autonomous UX audit, bug compilation, smoke test, wrap-up
 
 ## Issues Found
 
@@ -263,22 +263,99 @@ The core value proposition ("When was this photo taken?") is compelling and the 
 5. Show face-by-face breakdown (EST-009)
 6. Unify upload and archive result layouts (EST-007)
 
-### Remaining Plan (Items 6-11)
+### Section 6: Item 7 — Quick-Identify / "Name These Faces" Test (2026-02-21)
 
-**Items 6-7: Interactive feature tests (requires Nolan)**
-- Item 6: Estimate page — face counts, pagination, Gemini analysis display
-- Item 7: Quick-Identify — click unidentified face → inline naming, "Name These Faces" mode
+**Test page:** /photo/8f6a6a0108f019cf (1970s photo, Vida Capeluto NYC Collection)
+**Context:** 12 faces detected, 9 identified (from Section 3 tagging), 3 unidentified remaining
+**Test name:** "Regina Reina Israel Capeluto" — user suspects this is the person in the first unidentified slot (seated woman, left-center, next to Vida Capeluto)
 
-**Item 8: Visual walkthrough (partly autonomous)**
-- Incognito browsing: photos, person pages, timeline, map, 404 handling
-- Admin views: health endpoint, version footer
+#### What Works Well
+- **"Name These Faces" button**: Appears correctly with accurate count "(3 unidentified)". Orange button, prominent placement next to Share/Download. Good discoverability.
+- **Sequential mode activation**: Clicking the button transforms the photo view — face overlays change to show identification status with green checkmarks on identified faces and orange borders on unidentified faces. Clear visual distinction.
+- **Autocomplete search**: Text input "Type name to tag..." appears near the active unidentified face. Typing triggers a dropdown with fuzzy-matched existing identities. Each suggestion shows a face crop thumbnail + name + face count (e.g., "Betty Capeluto — 12 faces"). Good for matching to existing people.
+- **"Create new identity" option**: At the bottom of the autocomplete dropdown, a blue "+" button offers "Create 'Regina Reina Isra...' — New identity" for names that don't match existing people. Correct behavior.
+- **Progress bar**: "Naming faces: 9 of 12 identified" with a visual progress bar. Good feedback on overall tagging progress.
+- **Legend update**: Legend changes from "Identified / Unidentified" to "Identified / Help Identify / New" — correctly reflects the tagging context.
+- **Face label**: Active unidentified face shows "Unidentified Person 033" label, so admin knows which identity record is being edited.
+- **Green checkmark + red X overlays**: Identified faces show confirm/reject action buttons on their overlays during sequential mode.
 
-**Items 9-11: Wrap-up (mostly autonomous)**
-- Item 9: Compile bug list, prioritize (8 P0/P1 issues already logged from Section 3)
-- Item 10: Production smoke test (`python scripts/production_smoke_test.py`)
-- Item 11: UX tracker update, push CODE ONLY to production, session log finalization
+#### P0 Bugs — "Name These Faces" Mode Completely Broken on /photo/ Pages
 
-**Push strategy:**
+- [ ] QI-001: **ALL HTMX ACTIONS FAIL WITH targetError**: The entire "Name These Faces" sequential mode is non-functional on `/photo/{id}` pages. Every action button (Create new identity, Tag existing identity, Done) uses `hx_target="#photo-modal-content"` (line 17353 in app/main.py), but this element does NOT exist on the `/photo/{id}` page. It only exists inside the photo lightbox/modal view accessed from the gallery. HTMX throws `htmx:targetError` and the request never fires. 7 consecutive targetError console errors observed during testing. No data is written, no UI updates — buttons are completely inert. This means the entire feature is broken on dedicated photo pages, which is the primary context where admins would use it. [BACKLOG: yes, P0]
+
+- [ ] QI-002: **CAN'T EXIT THE MODE**: The "Done" button (both the per-face Done and the progress-bar Done) also targets `#photo-modal-content` and fails with the same targetError. Once a user enters "Name These Faces" mode, there is NO way to exit except reloading the page. This is a trap — user clicks a prominent button, enters a mode, and is stuck. [BACKLOG: yes, P0]
+
+- [ ] QI-003: **ROOT CAUSE**: `app/main.py:17353` — Create button hardcodes `hx_target="#photo-modal-content"`. The sequential tag endpoints (`/api/face/create-identity`, `/api/face/tag`, Done handler) all return HTML meant to swap into `#photo-modal-content`. These endpoints need to detect whether they're being called from a modal context vs. a `/photo/{id}` page context and target the correct container. The `/photo/{id}` page renders the sequential identifier into a different DOM container (possibly `#seq-identifier` or the photo detail area). [BACKLOG: yes, P0]
+
+#### P1 Bugs — UX Issues Within the Mode
+
+- [ ] QI-004: **ENTER KEY DOESN'T SUBMIT NEW NAME**: After typing a new name (not matching any existing identity), pressing Enter does nothing. The dropdown stays open. User must manually scroll the dropdown to find and click the "Create" button. This is a major friction point — every other text input on the web submits on Enter. For the Quick-Identify flow where speed matters, requiring a mouse click to a hidden button kills the workflow. [BACKLOG: yes, P1]
+
+- [ ] QI-005: **"CREATE NEW IDENTITY" HIDDEN BELOW FOLD**: The "Create" option is at the very bottom of the autocomplete dropdown, below 4-7 existing identity suggestions. Requires scrolling to discover. A first-time user typing a new name will see only existing matches and think there's no way to enter a new person. The Create option should be at the TOP of the dropdown (or at minimum, Enter should trigger it). [BACKLOG: yes, P1]
+
+- [ ] QI-006: **AUTOCOMPLETE MATCHES ON SURNAME ONLY**: When typing "Regina Reina Israel Capeluto", the dropdown shows matches for "Capeluto" (Boulissa Pizanti Capeluto, Leon Capeluto, Betty Capeluto, etc.) and "Israel" (Esther Brenda Israel). It does not find anyone named "Regina" — the search appears to match on individual words, showing results that match ANY word. This produces many false matches for common Sephardic surnames. For a Rhodesli archive where many people share surnames (Capeluto, Franco, Cohen), the autocomplete is noisy. Consider: fuzzy full-name matching, or showing the closest match first, or grouping by match quality. [BACKLOG: yes, P2]
+
+#### P2 — Layout & Polish Issues
+
+- [ ] QI-007: **TWO PHOTOS RENDERED**: After clicking "Name These Faces", the page shows the original photo at the top (normal view) AND a second copy below the progress bar (with face overlays in tagging mode). This is confusing — it looks like the page broke and duplicated the image. Should either replace the top photo with the tagging version, or hide the top photo during tagging mode. [BACKLOG: yes, P2]
+
+- [ ] QI-008: **CREATE BUTTON NAME TRUNCATED**: The Create button shows "Create 'Regina Reina Isra...'" — the full name is truncated. For long Sephardic names (which are common in this archive), the user can't verify the full name that will be created. The button should show the full name or have a tooltip. [BACKLOG: yes, P2]
+
+- [ ] QI-009: **NO SKIP BUTTON FOR UNKNOWN FACES**: In sequential mode, if the admin doesn't know who a face is, there's no obvious "Skip" or "I don't know" button. The only options are: type a name, or click Done. But Done appears to exit the entire mode (if it worked), not skip to the next face. For the real-world workflow where you might know 1 of 3 unidentified people, you need to skip the ones you don't know. [BACKLOG: yes, P1]
+
+- [ ] QI-010: **NO VISUAL HIGHLIGHT ON ACTIVE FACE**: In sequential mode, it's not immediately clear which face the input field is attached to. The input appears near one of the unidentified faces, but there's no arrow, highlight, or animation connecting the input to the specific face. With 3 unidentified faces in this photo, it took careful looking to determine which face was being tagged. [BACKLOG: yes, P2]
+
+#### Positive UX Notes
+- The concept is sound — "Name These Faces" is exactly the right workflow for photo identification
+- The autocomplete with face crop thumbnails is a great touch for matching to existing people
+- Progress bar ("9 of 12 identified") provides good motivation feedback
+- The color-coding (green=identified, orange=unidentified) is clear and intuitive
+- The feature would be genuinely useful once the targetError bug is fixed
+
+#### Data Safety
+- **No data was changed during testing.** All Create/Tag attempts failed due to targetError before any network request was made. Confirmed by: (1) zero API network requests captured, (2) page reload shows all 9 identities unchanged, (3) "3 unidentified" count unchanged.
+
+#### Test Methodology
+- Navigated to /photo/8f6a6a0108f019cf on production via Chrome extension (admin session)
+- Clicked "Name These Faces (3 unidentified)" button
+- Typed "Regina Reina Israel Capeluto" into the tag input
+- Attempted to submit via Enter (failed — no effect)
+- Scrolled dropdown to find "Create" option
+- Attempted to click Create button 4 times (coordinate click x2, ref click x1, JS click x1) — all silently failed
+- Checked console: 7 htmx:targetError errors
+- Checked network: 0 API requests fired
+- Verified root cause: `document.getElementById('photo-modal-content')` returns null on /photo/ pages
+- Clicked Done buttons (per-face and progress-bar) — both failed with targetError
+- Reloaded page to exit mode — data confirmed unchanged
+
+---
+
+### Remaining Plan (Items 8-11) — Autonomous (no Nolan needed)
+
+**Item 8: Visual walkthrough**
+- Public (incognito-style) browsing: photos grid, person pages, timeline, map, collections, 404 handling
+- Admin views: health endpoint, version footer, pending uploads, admin panels
+- Screenshot each page, note UX/UI issues
+
+**Item 9: Compile full bug list & prioritize**
+- Consolidate all issues from Items 5-7 and Section 3
+- Prioritize by: P0 (blocks core workflow), P1 (significant friction), P2 (polish), P3 (delight)
+- Cross-reference with existing UX_ISSUE_TRACKER.md
+
+**Item 10: Production smoke test**
+- Run `python scripts/production_smoke_test.py`
+- Verify key routes return 200
+- Check that Section 3 identity data is still intact on production
+
+**Item 11: Session wrap-up**
+- Update UX_ISSUE_TRACKER.md with all new findings
+- Update BACKLOG.md with new entries
+- Update ROADMAP.md session status
+- Update CHANGELOG.md
+- Push CODE ONLY (no data/) to production
+- Final session log
+
+**Push strategy (unchanged):**
 1. Push CODE changes only (merge button fix) — `git push origin main`
 2. Do NOT include data/ in the push
 3. After push, verify production still has all tagged identities (check photo page)
