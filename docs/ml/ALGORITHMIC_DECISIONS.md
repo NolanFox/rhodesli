@@ -1289,7 +1289,38 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: All subprocess calls in app/main.py, any future subprocess usage
 - **Breadcrumbs**: AD-120 (ML-specific), HD-012, HD-013, Session 49B triage, Session 49B-Audit
 
-1. Add a new entry with AD-XXX format (next: AD-123)
+### AD-123: Similarity Calibration — Siamese MLP on Frozen Embeddings
+
+- **Date**: 2026-02-21
+- **Session**: 55
+- **Status**: ACCEPTED — implementation in progress
+- **Context**: With 46 confirmed identities (18 multi-face, 959 same-person pairs), needed to choose between (A) Siamese MLP that directly predicts P(same_person) from embedding pairs, and (B) Metric Learning Head that learns a new embedding space via contrastive/triplet loss.
+- **Decision**: Siamese MLP (Option A). Input: concat(a, b, |a-b|, a*b) = 2048-dim → FC layers → P(same_person).
+- **Rejected**: Metric Learning Head — requires more identities to learn a generalizable embedding space. With only 18 multi-face identities, the Siamese approach is more sample-efficient because it directly models the comparison task.
+- **Affects**: rhodesli_ml/calibration/model.py, core/neighbors.py (integration)
+- **Breadcrumbs**: PRD-023, SDD-023, AD-067 (kinship calibration baseline)
+
+### AD-124: Pair Generation — Hard Negative Mining
+
+- **Date**: 2026-02-21
+- **Session**: 55
+- **Status**: ACCEPTED
+- **Context**: For training the calibration model, negative pairs (different-person) could be sampled randomly or mined for difficulty. Random sampling produces mostly "easy" negatives (very different faces) that the model learns quickly but doesn't help with the hard cases.
+- **Decision**: Use hard negative mining — cross-identity pairs where Euclidean distance < 1.2 (within "possible match" zone). These are the false positives the model must learn to reject. Supplement with random easy negatives for balance.
+- **Ratio**: 1:3 positive:negative (hyperparameter). 959 positives → ~2877 negatives.
+- **Affects**: rhodesli_ml/calibration/data.py
+
+### AD-125: Train/Eval Split — Identity-Level Stratification
+
+- **Date**: 2026-02-21
+- **Session**: 55
+- **Status**: ACCEPTED
+- **Context**: When splitting data for training and evaluation, splitting at the face level would leak information — a model could memorize individual faces and score well on eval by recognizing faces seen during training.
+- **Decision**: Split at the identity level. 80% train / 20% eval. No identity's faces appear in both sets. Stratify to ensure eval contains at least 4 multi-face identities.
+- **Rejected**: Face-level split — creates data leakage. Random pair-level split — same leakage risk.
+- **Affects**: rhodesli_ml/calibration/data.py
+
+1. Add a new entry with AD-XXX format (next: AD-126)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
