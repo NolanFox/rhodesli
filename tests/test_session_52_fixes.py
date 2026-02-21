@@ -205,9 +205,9 @@ class TestPublicPageNameTheseFaces:
         result = public_photo_page("p1", is_admin=True)
         html = to_xml(result)
 
-        # Button should target the inline container with seq=1
+        # Button should target #photo-modal-content with seq=1
         assert "seq=1" in html
-        assert "admin-name-faces-container" in html
+        assert "photo-modal-content" in html
 
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
@@ -216,7 +216,7 @@ class TestPublicPageNameTheseFaces:
     @patch("app.main.get_crop_files", return_value={})
     def test_htmx_container_present_for_admin(self, mock_crops, mock_get_id,
                                                mock_reg, mock_dim, mock_meta):
-        """HTMX target container exists on page for admin."""
+        """HTMX target container (#photo-modal-content) exists on page for admin."""
         from app.main import public_photo_page, to_xml
 
         mock_meta.return_value = _make_photo(face_count=4, identified_ids=set())
@@ -226,7 +226,7 @@ class TestPublicPageNameTheseFaces:
         result = public_photo_page("p1", is_admin=True)
         html = to_xml(result)
 
-        assert 'id="admin-name-faces-container"' in html
+        assert 'id="photo-modal-content"' in html
 
 
 # ---------------------------------------------------------------------------
