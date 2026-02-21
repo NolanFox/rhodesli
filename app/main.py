@@ -13550,7 +13550,7 @@ def get(face_id: str = "", sess=None):
                     P("This may take 10\u201330 seconds for group photos.", cls="text-slate-400 text-sm"),
                 ),
             ]),
-        P("Photos are saved to help grow the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
+        P("Your photo is analyzed for matching but not stored in the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
     )
@@ -16585,7 +16585,7 @@ def public_photo_page(
                             cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
                             type="button",
                             hx_get=f"/photo/{photo_id}/partial?seq=1",
-                            hx_target="#admin-name-faces-container",
+                            hx_target="#photo-modal-content",
                             hx_swap="innerHTML",
                             data_testid="name-these-faces-public",
                         ) if is_admin and unidentified_count >= 2 else None,
@@ -16595,11 +16595,7 @@ def public_photo_page(
                         "This photograph has writing on the back" if back_transcription else "Turn over to see the back of this photograph",
                         cls="text-slate-500 text-xs text-center block mt-2"
                     ) if has_back else None,
-                    # Admin: HTMX target for "Name These Faces" inline sequential identifier
-                    Div(
-                        id="admin-name-faces-container",
-                        cls="mt-4",
-                    ) if is_admin and unidentified_count >= 2 else None,
+                    # (Name These Faces now targets #photo-modal-content directly)
                     # Admin: Upload back image (only shown to admin when no back image)
                     Div(
                         Div(
@@ -16711,7 +16707,8 @@ def public_photo_page(
                         ) if is_admin else None,
                         cls="mt-4 text-center"
                     ),
-                    cls="max-w-[900px] mx-auto"
+                    cls="max-w-[900px] mx-auto",
+                    id="photo-modal-content",
                 ),
                 cls="px-4 sm:px-6 pt-8 pb-6"
             ),
