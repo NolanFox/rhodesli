@@ -42,8 +42,8 @@ def load_calibration_model(model_path: Path | None = None) -> bool:
         config = checkpoint.get("config", {})
         model = CalibrationModel(
             embed_dim=config.get("embed_dim", 512),
-            hidden_dim=config.get("hidden_dim", 256),
-            dropout=config.get("dropout", 0.3),
+            hidden_dim=config.get("hidden_dim", 32),
+            dropout=config.get("dropout", 0.5),
         )
         model.load_state_dict(checkpoint["model_state_dict"])
         model.eval()
@@ -69,6 +69,34 @@ def calibrated_similarity(emb_a: np.ndarray, emb_b: np.ndarray) -> float | None:
         a = torch.tensor(emb_a, dtype=torch.float32)
         b = torch.tensor(emb_b, dtype=torch.float32)
         return _model.predict(a, b)
+    except Exception:
+        return None
+
+
+def calibrated_similarity_batch(
+    query_emb: np.ndarray, candidate_embs: np.ndarray
+) -> np.ndarray | None:
+    """Compute calibrated P(same_person) for one query vs many candidates.
+
+    Args:
+        query_emb: (512,) numpy array
+        candidate_embs: (N, 512) numpy array
+
+    Returns:
+        (N,) numpy array of probabilities, or None if model unavailable.
+    """
+    if not load_calibration_model():
+        return None
+
+    try:
+        import torch
+        q = torch.tensor(query_emb, dtype=torch.float32).unsqueeze(0)  # (1, 512)
+        q_expanded = q.expand(len(candidate_embs), -1)  # (N, 512)
+        c = torch.tensor(candidate_embs, dtype=torch.float32)  # (N, 512)
+        _model.eval()
+        with torch.no_grad():
+            scores = _model(q_expanded, c).squeeze(-1)  # (N,)
+        return scores.numpy()
     except Exception:
         return None
 

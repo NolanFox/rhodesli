@@ -342,8 +342,20 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
     kinship_data = _load_kinship_thresholds()
     sp_stats = kinship_data.get("same_person") if kinship_data else None
 
+    # Calibrated similarity scoring (AD-126) — optional enhancement
+    top_indices = sorted_indices[:limit]
+    calibrated_scores = None
+    try:
+        from rhodesli_ml.calibration.inference import calibrated_similarity_batch
+        top_embs = candidate_matrix[top_indices]
+        calibrated_scores = calibrated_similarity_batch(
+            query.flatten(), top_embs
+        )
+    except (ImportError, Exception):
+        pass
+
     results = []
-    for idx in sorted_indices[:limit]:
+    for i, idx in enumerate(top_indices):
         fid = candidate_ids[idx]
         dist = float(dists[idx])
         ident_info = face_to_identity.get(fid, {})
@@ -362,10 +374,15 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
             tier = "WEAK"
             confidence = "LOW"
 
-        # CDF-based confidence percentage
-        confidence_pct = _compute_confidence_pct(dist, sp_stats)
+        # Confidence percentage: prefer calibrated model, fall back to heuristic
+        cal_score = None
+        if calibrated_scores is not None:
+            cal_score = float(calibrated_scores[i])
+            confidence_pct = max(1, min(99, int(cal_score * 100)))
+        else:
+            confidence_pct = _compute_confidence_pct(dist, sp_stats)
 
-        results.append({
+        result = {
             "face_id": fid,
             "distance": dist,
             "tier": tier,
@@ -374,7 +391,11 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
             "identity_id": ident_info.get("identity_id", ""),
             "identity_name": ident_info.get("name", "Unknown"),
             "state": ident_info.get("state", "INBOX"),
-        })
+        }
+        if cal_score is not None:
+            result["calibrated_score"] = round(cal_score, 4)
+
+        results.append(result)
 
     return results
 

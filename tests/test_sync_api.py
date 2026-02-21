@@ -574,3 +574,26 @@ class TestDockerfileModuleCoverage:
         from rhodesli_ml.importers.identity_matcher import match_gedcom_to_identities
         from rhodesli_ml.importers.gedcom_matches import update_match_status
         # If these imports succeed, the modules are available
+
+    def test_dockerfile_copies_rhodesli_ml_calibration(self):
+        """Dockerfile must COPY rhodesli_ml/calibration/ — needed by core/neighbors.py."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "rhodesli_ml/calibration/" in dockerfile, \
+            "Dockerfile must COPY rhodesli_ml/calibration/ — core/neighbors.py imports from it"
+
+    def test_dockerfile_copies_rhodesli_ml_artifacts(self):
+        """Dockerfile must COPY rhodesli_ml/artifacts/ — calibration model artifact."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "rhodesli_ml/artifacts/" in dockerfile, \
+            "Dockerfile must COPY rhodesli_ml/artifacts/ — calibration model .pt file"
+
+    def test_rhodesli_ml_calibration_inference_importable(self):
+        """Calibration inference module must be importable."""
+        from rhodesli_ml.calibration.inference import (
+            calibrated_similarity,
+            calibrated_similarity_batch,
+            is_calibration_available,
+        )
+        # If these imports succeed, the module is available

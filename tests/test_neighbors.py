@@ -387,3 +387,117 @@ class TestSortFacesByOutlierScore:
         face_ids = [f[0] for f in sorted_faces]
         assert "face_a" in face_ids
         assert "face_b" in face_ids
+
+
+class TestFindSimilarFaces:
+    """Tests for find_similar_faces() including calibration integration."""
+
+    def _make_face_data(self, n=10, seed=42):
+        rng = np.random.RandomState(seed)
+        face_data = {}
+        for i in range(n):
+            mu = rng.randn(512).astype(np.float32)
+            mu = mu / np.linalg.norm(mu)
+            face_data[f"face_{i}"] = {"mu": mu}
+        return face_data
+
+    def test_returns_sorted_by_distance(self):
+        from core.neighbors import find_similar_faces
+        face_data = self._make_face_data(20)
+        query = face_data["face_0"]["mu"]
+        results = find_similar_faces(query, face_data, exclude_face_ids={"face_0"})
+        dists = [r["distance"] for r in results]
+        assert dists == sorted(dists)
+
+    def test_excludes_specified_faces(self):
+        from core.neighbors import find_similar_faces
+        face_data = self._make_face_data(10)
+        query = face_data["face_0"]["mu"]
+        results = find_similar_faces(query, face_data, exclude_face_ids={"face_0", "face_1"})
+        result_ids = {r["face_id"] for r in results}
+        assert "face_0" not in result_ids
+        assert "face_1" not in result_ids
+
+    def test_returns_tier_classification(self):
+        from core.neighbors import find_similar_faces
+        face_data = self._make_face_data(10)
+        query = face_data["face_0"]["mu"]
+        results = find_similar_faces(query, face_data, exclude_face_ids={"face_0"})
+        for r in results:
+            assert r["tier"] in {"STRONG MATCH", "POSSIBLE MATCH", "SIMILAR", "WEAK"}
+            assert 1 <= r["confidence_pct"] <= 99
+
+    def test_respects_limit(self):
+        from core.neighbors import find_similar_faces
+        face_data = self._make_face_data(30)
+        query = face_data["face_0"]["mu"]
+        results = find_similar_faces(query, face_data, limit=5, exclude_face_ids={"face_0"})
+        assert len(results) == 5
+
+    def test_empty_face_data_returns_empty(self):
+        from core.neighbors import find_similar_faces
+        query = np.random.randn(512).astype(np.float32)
+        results = find_similar_faces(query, {})
+        assert results == []
+
+    def test_calibration_graceful_degradation(self):
+        """When calibration model import fails, results still have confidence_pct."""
+        from unittest.mock import patch
+        from core.neighbors import find_similar_faces
+        face_data = self._make_face_data(10)
+        query = face_data["face_0"]["mu"]
+        # Mock the import to fail
+        with patch.dict("sys.modules", {"rhodesli_ml.calibration.inference": None}):
+            results = find_similar_faces(query, face_data, exclude_face_ids={"face_0"})
+        assert len(results) > 0
+        for r in results:
+            assert "confidence_pct" in r
+            # No calibrated_score when model unavailable
+            assert "calibrated_score" not in r
+
+    def test_calibration_scores_when_available(self):
+        """When calibration model is available, results include calibrated_score."""
+        from unittest.mock import patch
+        from core.neighbors import find_similar_faces
+        face_data = self._make_face_data(10)
+        query = face_data["face_0"]["mu"]
+
+        mock_scores = np.array([0.95, 0.8, 0.6, 0.4, 0.3, 0.2, 0.1, 0.05, 0.02])
+
+        def mock_batch(q, c):
+            return mock_scores[:len(c)]
+
+        with patch(
+            "core.neighbors.calibrated_similarity_batch",
+            side_effect=mock_batch,
+            create=True,
+        ):
+            # Patch at the import site
+            import core.neighbors as cn
+            original_code = cn.find_similar_faces
+            # We need to mock the import inside find_similar_faces
+            with patch(
+                "rhodesli_ml.calibration.inference.calibrated_similarity_batch",
+                side_effect=mock_batch,
+            ):
+                results = find_similar_faces(query, face_data, exclude_face_ids={"face_0"})
+
+        assert len(results) > 0
+        for r in results:
+            assert "calibrated_score" in r
+            assert 0 <= r["calibrated_score"] <= 1
+
+    def test_identical_embedding_high_confidence(self):
+        """A face compared to itself (clone) should have high confidence."""
+        from core.neighbors import find_similar_faces
+        mu = np.random.randn(512).astype(np.float32)
+        mu = mu / np.linalg.norm(mu)
+        face_data = {
+            "face_a": {"mu": mu.copy()},
+            "face_b": {"mu": mu.copy()},
+        }
+        results = find_similar_faces(mu, face_data, exclude_face_ids={"face_a"})
+        assert len(results) >= 1
+        assert results[0]["face_id"] == "face_b"
+        assert results[0]["distance"] < 0.01
+        assert results[0]["tier"] == "STRONG MATCH"
