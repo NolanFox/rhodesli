@@ -1,11 +1,14 @@
 # Session 49B Interactive Log — 2026-02-20
 
 ## Session Goals
-- [ ] Birth year bulk review (accept/reject ML estimates)
-- [ ] GEDCOM upload (real family data)
-- [ ] Visual walkthrough (admin + public views)
-- [ ] Autonomous UX audit (browser-driven)
-- [ ] Synthesis and prioritization
+- [x] Birth year bulk review (accept/reject ML estimates) — Section 1
+- [x] GEDCOM upload (real family data) — Section 2
+- [x] Carey Franco's 8 IDs + Howie/Stu confirmations — Section 3
+- [ ] Compare upload test (Item 5)
+- [ ] Estimate page test (Item 6)
+- [ ] Quick-Identify test (Item 7)
+- [ ] Visual walkthrough (admin + public views) (Item 8)
+- [ ] Bug list + smoke test + cleanup (Items 9-11)
 
 ## Section Status
 - [x] Section 0: Session infrastructure (2026-02-20)
@@ -124,3 +127,53 @@ Target: 8 people to identify (Albert Cohen, Eleanore Cohen, Morris Franco, Ray F
 - Belle/Bella Bennoun Franco: Identity 1549d2b4-5d1f-4b0d-8ef2-430087a76d67. Renamed, confirmed, metadata (gender=F, ancestry_id=132765098259). Isaac Franco's wife, Carey Franco's mother. Immediately to left of Isaac. Tagged via production API.
 - ALL 8 PEOPLE TAGGED in /photo/8f6a6a0108f019cf: Albert Cohen, Eleanore Cohen, Morris Franco, Ray Franco, Molly Benson, Herman Benson, Belle Franco, Isaac Franco. All confirmed via production API calls (merge button was broken, direct API used throughout). ~3-4 unidentified faces remain in this photo ("not sure on the Others" — Carey Franco).
 - METHODOLOGY: All tagging done via JavaScript fetch() calls in Chrome DevTools due to merge button 404 bug. Workflow: rename → confirm → metadata for each identity. Production data is updated but local data/ files are NOT synced yet.
+
+### DATA DIVERGENCE WARNING (Lesson 78 — READ BEFORE ANY PUSH)
+
+**Production has data that local does NOT have.** Pushing local data/ files will OVERWRITE production changes.
+
+**What's on production but NOT local:**
+All Section 3 identity changes (8 people tagged via production API):
+
+| Identity ID | Name | Operations | Metadata |
+|---|---|---|---|
+| a772360a-64f6-4daf-8312-fcc7586304a7 | Morris Franco | merge(039+399), rename, confirm | birth_year=1888, gender=M, ancestry_id=132508216815 |
+| ac3b43b2-3e74-4237-ab71-b8ded0f8bfda | Isaac Israel Franco | merge(049+400), rename, confirm | birth_year=1893, gender=M, ancestry_id=132395618061 |
+| 4a993942-2ed7-4cba-bb78-ada588853642 | Albert Cohen | confirm | gender=M |
+| bac7731a-a1d2-4350-b528-c11f1b947b3a | Eleanore Cohen | rename, confirm | gender=F |
+| e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5 | Ray Rica Franco | rename, confirm | gender=F, ancestry_id=132395618059 |
+| d85b2279-caac-4e56-b572-5431c4be48e5 | Molly Benson | rename, confirm | gender=F |
+| 9dfc300a-1c86-460a-85df-e62c6781eb6d | Herman Benson | rename, confirm | gender=M |
+| 1549d2b4-5d1f-4b0d-8ef2-430087a76d67 | Belle Bennoun Franco | rename, confirm | gender=F, ancestry_id=132765098259 |
+
+**Also on production from Section 2 (GEDCOM import, previous context):**
+- 33 identities enriched with ancestry_id, birth/death dates, gender, places
+- 19 relationships (5 spouse, 14 parent-child)
+- ancestry_links.json created
+- 31 birth year corrections from Section 1
+
+**Safe to push:** Code changes ONLY (app/main.py merge button fix). Do NOT push data/ files.
+**Before ANY data push:** Run `python scripts/sync_from_production.py` FIRST to pull production data locally, THEN merge local changes on top.
+**Recovery:** If data is accidentally overwritten, this table + the Section 1/2 data changes log above contain enough detail to re-apply all changes via API.
+
+### Remaining Plan (Items 5-11)
+
+**Items 5-7: Interactive feature tests (requires Nolan)**
+- Item 5: Compare upload — test with real photo, verify hybrid detection, timing, loading indicator
+- Item 6: Estimate page — face counts, pagination, Gemini analysis display
+- Item 7: Quick-Identify — click unidentified face → inline naming, "Name These Faces" mode
+
+**Item 8: Visual walkthrough (partly autonomous)**
+- Incognito browsing: photos, person pages, timeline, map, 404 handling
+- Admin views: health endpoint, version footer
+
+**Items 9-11: Wrap-up (mostly autonomous)**
+- Item 9: Compile bug list, prioritize (8 P0/P1 issues already logged from Section 3)
+- Item 10: Production smoke test (`python scripts/production_smoke_test.py`)
+- Item 11: UX tracker update, push CODE ONLY to production, session log finalization
+
+**Push strategy:**
+1. Push CODE changes only (merge button fix) — `git push origin main`
+2. Do NOT include data/ in the push
+3. After push, verify production still has all tagged identities (check photo page)
+4. If data sync needed later, ALWAYS pull production first
