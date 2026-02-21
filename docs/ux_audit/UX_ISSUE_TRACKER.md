@@ -1,6 +1,6 @@
 # UX Issue Tracker
 
-**Last updated:** 2026-02-21 (Session 49B — comprehensive audit, 48 new issues)
+**Last updated:** 2026-02-21 (Session 49D — 12 fixes: 6 P0 + 6 P1)
 
 ## Issue Dispositions
 - ✅ FIXED — implemented and verified
@@ -57,20 +57,20 @@
 
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
-| UX-036 | P0 | Merge button 404 — `&` instead of `?` in focus mode URL | 📋 BACKLOG | app/main.py:5780. Every merge from Focus mode broken. |
+| UX-036 | P0 | Merge button 404 — `&` instead of `?` in focus mode URL | ✅ FIXED (S49D) | Already fixed in S49B commit 4693203. Regression tests added. |
 | UX-037 | P1 | Merge direction unintuitive — neighbor survives, not target | 📋 BACKLOG | Caused metadata loss twice. |
 | UX-038 | P1 | Operations on merged-away identities return 200 silently | 📋 BACKLOG | Should error or redirect to survivor. |
 | UX-039 | P1 | No admin controls on /person/ page | 📋 BACKLOG | No rename/confirm/merge/detach buttons. |
 | UX-040 | P1 | Identity tagging is 5+ steps with no batching | 📋 BACKLOG | Need "Identify This Person" single form. |
 | UX-041 | P1 | /photo/ → identity system disconnect | 📋 BACKLOG | Clicking unidentified face has no path to name it. |
-| UX-042 | P1 | /identify/{id} shareable page has no link to source photo | 📋 BACKLOG | Critical for community engagement. #1 onboarding path. |
+| UX-042 | P1 | /identify/{id} shareable page has no link to source photo | ✅ FIXED (S49D) | Added "See full photo →" links on photo cards. |
 | UX-043 | P2 | Community identification workflow gap | 📋 BACKLOG | No "community said this is X" quick-tag. |
 
 ## Issues from Session 49B — Item 5: Compare Upload
 
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
-| UX-044 | P0 | Compare upload not in pending queue — "saved to archive" misleading | 📋 BACKLOG | File stored but not queued for admin review. |
+| UX-044 | P0 | Compare upload not in pending queue — "saved to archive" misleading | ✅ FIXED (S49D) | Messaging updated per AD-110: "analyzed for matching but not stored." |
 | UX-045 | P1 | No loading indicator during compare upload processing | 📋 BACKLOG | Page appears to hang. Existing indicator not visible. |
 | UX-046 | P1 | No auto-scroll to compare results | 📋 BACKLOG | Results below fold, user thinks upload failed. |
 | UX-047 | P1 | Face selector is blind — "Face 1/2/3" with no visual | 📋 BACKLOG | No bounding boxes on uploaded photo. See UX-012. |
@@ -83,7 +83,7 @@
 
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
-| UX-052 | P0 | Estimate upload not in pending queue | 📋 BACKLOG | Same as UX-044 for estimate flow. |
+| UX-052 | P0 | Estimate upload not in pending queue | ✅ FIXED (S49D) | Same fix as UX-044. |
 | UX-053 | P1 | No uploaded photo preview in estimate results | 📋 BACKLOG | Text-only results. Archive flow shows photo. |
 | UX-054 | P1 | No loading indicator visible during estimate upload | 📋 BACKLOG | #estimate-upload-spinner CSS issue. |
 | UX-055 | P1 | No auto-scroll to estimate results | 📋 BACKLOG | Same pattern as UX-046. |
@@ -106,9 +106,9 @@
 
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
-| UX-070 | P0 | All HTMX actions fail with targetError on /photo/ pages | 📋 BACKLOG | hx_target="#photo-modal-content" doesn't exist. |
-| UX-071 | P0 | Can't exit Name These Faces mode (Done button broken too) | 📋 BACKLOG | User trapped — must reload page. |
-| UX-072 | P0 | Root cause: app/main.py:17353 hardcodes modal target | 📋 BACKLOG | Needs context detection (modal vs page). |
+| UX-070 | P0 | All HTMX actions fail with targetError on /photo/ pages | ✅ FIXED (S49D) | Added id="photo-modal-content" to /photo/ page container. |
+| UX-071 | P0 | Can't exit Name These Faces mode (Done button broken too) | ✅ FIXED (S49D) | Same root cause as UX-070. |
+| UX-072 | P0 | Root cause: app/main.py:17353 hardcodes modal target | ✅ FIXED (S49D) | Target now exists in both lightbox and /photo/ page. |
 | UX-073 | P1 | Enter key doesn't submit new name | 📋 BACKLOG | Must mouse-click Create button. |
 | UX-074 | P1 | "Create new identity" hidden below fold in dropdown | 📋 BACKLOG | Should be at top or triggered by Enter. |
 | UX-075 | P1 | No Skip button for unknown faces in sequential mode | 📋 BACKLOG | Can't skip faces you don't know. |
@@ -121,8 +121,8 @@
 
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
-| UX-080 | P1 | 404 page unstyled — no Tailwind, no navbar, dark-on-dark text | 📋 BACKLOG | Supposed to be fixed (S54 M1). |
-| UX-081 | P1 | About page missing navbar | 📋 BACKLOG | Only "Back to Archive" link. |
+| UX-080 | P1 | 404 page unstyled — no Tailwind, no navbar, dark-on-dark text | ✅ FIXED (S49D) | Added Tailwind CDN script to 404 handler. |
+| UX-081 | P1 | About page missing navbar | ✅ FIXED (S49D) | Replaced "Back to Archive" with full navbar. |
 | UX-082 | P2 | "Explore More Photos" orange CTA in navbar | 📋 BACKLOG | Inconsistent, looks like an ad. |
 | UX-083 | P2 | No search on People page | 📋 BACKLOG | 54 people, no filter/search. |
 | UX-084 | P2 | No birth/death years on People grid | 📋 BACKLOG | Data available, not displayed. |
@@ -138,7 +138,7 @@
 
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
-| UX-092 | P1 | Save Edit doesn't persist typed value (race condition) | 📋 BACKLOG | Click interference steals focus. |
+| UX-092 | P1 | Save Edit doesn't persist typed value (race condition) | ✅ FIXED (S49D) | Accept button moved inside form — both buttons use current input value. |
 | UX-093 | P1 | No undo after Accept/Save on birth year review | 📋 BACKLOG | Violates reversibility. Need Confirmed queue. |
 | UX-094 | P2 | Person name not clickable on review page | 📋 BACKLOG | Should link to /person/{id}. |
 | UX-095 | P2 | Evidence lines don't link to specific photos | 📋 BACKLOG | |
@@ -146,8 +146,8 @@
 | UX-097 | P2 | No source attribution (internal vs Gemini) | 📋 BACKLOG | |
 | UX-098 | P2 | Only supports birth year, not full date | 📋 BACKLOG | Data model enhancement. |
 | UX-099 | P2 | No date source citation support | 📋 BACKLOG | |
-| UX-100 | P2 | Confirmation banners stack and push content down | 📋 BACKLOG | Auto-dismiss or collapse. |
-| UX-101 | P2 | Pending count doesn't decrement after confirms | 📋 BACKLOG | |
+| UX-100 | P2 | Confirmation banners stack and push content down | ✅ FIXED (S49D) | Auto-dismiss after 4s with opacity transition. |
+| UX-101 | P2 | Pending count doesn't decrement after confirms | ✅ FIXED (S49D) | OOB swap updates counter on accept/reject. |
 | UX-102 | P3 | "Accept All High-Confidence" has no confirmation | 📋 BACKLOG | |
 
 ---

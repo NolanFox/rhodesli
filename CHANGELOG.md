@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.56.2] — 2026-02-21
+
+### Fixed — P0 Bugs (Session 49D)
+- **UX-070-072: Name These Faces mode fixed on /photo/ pages** — Added `id="photo-modal-content"` to page container; all HTMX actions (tag, create-identity, done) now work in both lightbox and direct /photo/ pages
+- **UX-044/052: Upload messaging corrected** — Changed from "saved to grow the archive" to "analyzed for matching but not stored" per AD-110 Serving Path Contract
+- **UX-036: Merge button 404** — Already fixed in S49B; regression tests added (5 tests)
+
+### Fixed — P1 Bugs (Session 49D)
+- **UX-092: Birth year Save Edit race condition** — Accept button moved inside form so both Accept and Save Edit always use the current input value
+- **UX-080: 404 page styling** — Added Tailwind CDN script to custom 404 handler
+- **UX-081: About page navbar** — Replaced standalone "← Back to Archive" link with full navigation bar (Photos, People, Timeline, About)
+- **UX-042: /identify/ page source photo links** — Added "See full photo →" text links on photo cards
+- **UX-100: Confirmation banners stacking** — Auto-dismiss after 4s with opacity fade transition
+- **UX-101: Pending count not updating** — OOB swap decrements counter on accept/reject
+
+### Added
+- 35 new tests (15 P0 + 20 P1) in test_p0_fixes_49d.py and test_p1_fixes_49d.py
+- `_count_pending_birth_year_reviews()` helper for OOB counter updates
+
 ## [v0.56.1] — 2026-02-21
 
 ### Documentation
@@ -10,12 +29,6 @@ All notable changes to this project will be documented in this file.
 - 6 P0 bugs documented: merge button 404, Name These Faces targetError on /photo/ pages, uploads not queued for review
 - Production smoke test: 11/11 PASS, all routes healthy
 - Session 49B interactive log: 8 people tagged in production (Section 3), 31 birth years reviewed (Section 1), GEDCOM import (Section 2)
-
-### Known Issues (documented, not fixed this session)
-- 404 page styling broken (UX-080) — Tailwind not loading on custom 404
-- About page missing navbar (UX-081)
-- Name These Faces mode completely broken on /photo/ pages due to HTMX targetError (UX-070-072)
-- Merge button generates 404 from & vs ? in query params (UX-036)
 
 ## [v0.56.0] — 2026-02-21
 

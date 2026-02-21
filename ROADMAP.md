@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.56.1 · 2509 tests · 271 photos · 662 identities · 54 confirmed
+Current: v0.56.2 · 2544 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -49,7 +49,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate (Current Sprint)
 - [ ] Similarity calibration on frozen embeddings — Very High portfolio value
-- [-] Fix production UX issues — 6 P0 bugs documented (49B): merge button 404, Name These Faces targetError, uploads not queued
+- [x] Fix production UX issues — 12 bugs fixed (49D): 6 P0 + 6 P1, 35 new tests (2026-02-21)
 - [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
 
 ### Next (After Immediate)
@@ -106,6 +106,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.56.2 — Session 49D**: P0 + P1 Bug Fixes. 12 UX issues fixed (6 P0 + 6 P1). Name These Faces targeting (UX-070-072), upload messaging (UX-044/052), merge URL (UX-036), birth year race condition (UX-092), 404 styling (UX-080), about navbar (UX-081), identify links (UX-042), review polish (UX-100/101). 35 new tests (2544 total).
 - [x] 2026-02-21: **v0.56.1 — Session 49B Complete**: Items 5-11 autonomous. Compare/Estimate/Quick-Identify UX audit (36 issues). Visual walkthrough 15 pages (12 issues). Bug compilation: 67 new UX issues (100 total). Smoke test 11/11. 8 people tagged in 1970s photo (Section 3). 54 confirmed identities.
 - [x] 2026-02-21: **v0.56.0 — Session 49B Section 2**: Real GEDCOM import (21,809 individuals). 33 identities matched to Ancestry tree via CSV review workflow. 19 relationships (5 spouse, 14 parent-child). ancestry_links.json. Production data merge preserved 31 birth years. Lesson 78 (data sync).
 - [x] 2026-02-20: **v0.55.3 — Session 49B-Final**: Compare/estimate loading indicator (block display, button disable, auto-scroll, accurate timing). Test triage: 127 failures all state pollution, 0 real bugs. Admin auth verification documented.
