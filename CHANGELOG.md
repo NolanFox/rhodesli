@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.57.1] — 2026-02-21
+
+### Added — Session 55b: ONNX Production Serving + ML Documentation
+- **ONNX export (AD-128)**: Calibration model exported to ONNX format (129KB). Production now uses onnxruntime (15MB) instead of requiring PyTorch (500MB+). Exact numerical match validated across 100 random samples.
+- **ONNX inference module**: `rhodesli_ml/calibration/inference_onnx.py` — ONNXCalibrationInference with predict() and predict_batch().
+- **Fallback chain**: inference.py now tries ONNX → PyTorch → raw Euclidean. Logs which backend loaded per AD-120.
+- **ML Architecture doc**: `docs/ml/ML_ARCHITECTURE.md` — single source of truth for ML system (178 lines). Covers serving path contract, all components, active learning loop, artifact management.
+- **AD-127**: Calibration results interpretation — AUC drop (0.0102) proven statistically insignificant (SE=0.0146). Full metrics table and interview framing.
+- **AD-128**: ONNX Runtime production serving decision with rejected alternatives.
+- **Backlog audit**: 20/20 planning context items verified tracked. No items lost in Session 55 trim.
+- Test count: 2976 total (2604 app + 372 ML — 15 new ONNX tests)
+
 ## [v0.57.0] — 2026-02-21
 
 ### Added — Session 55: Similarity Calibration on Frozen Embeddings

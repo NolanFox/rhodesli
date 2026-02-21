@@ -9,8 +9,8 @@
 - [ ] Phase 1: Calibration results investigation + AD-127
 - [ ] Phase 2: Backlog audit verification
 - [ ] Phase 3: ONNX export + production deployment
-- [ ] Phase 4: ML architecture documentation
-- [ ] Phase 5: Verification gate + final docs
+- [x] Phase 4: ML architecture documentation
+- [x] Phase 5: Verification gate + final docs
 
 ## Key State at Session Start
 - Version: v0.57.0

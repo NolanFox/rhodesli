@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.57.0 · 2961 tests · 271 photos · 662 identities · 54 confirmed
+Current: v0.57.1 · 2976 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -95,6 +95,15 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Integrated into compare pipeline with graceful degradation
 - [x] 2961 total tests (2604 app + 357 ML)
 
+### Session 55b: ONNX Production Serving + ML Docs — COMPLETE
+- [x] AD-127: Calibration results interpretation (AUC drop = noise, F1 = signal) (2026-02-21)
+- [x] Backlog audit verification: 20/20 planning context items tracked (2026-02-21)
+- [x] ONNX export: calibration_v1.onnx (129KB, exact numerical match) (2026-02-21)
+- [x] Production serving via onnxruntime (ONNX → PyTorch → Euclidean fallback) (2026-02-21)
+- [x] AD-128: ONNX Runtime production serving decision (2026-02-21)
+- [x] ML_ARCHITECTURE.md: comprehensive ML system docs (178 lines) (2026-02-21)
+- [x] 2976 total tests (2604 app + 372 ML)
+
 ### Session 56: Landing Page Refresh + P1 UX Polish
 - Landing page: live-data entry points, mobile-first
 - Timeline/Photos lazy loading (271 images, needed before 500)
@@ -111,6 +120,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.57.1 — Session 55b**: ONNX Production Serving + ML Docs. Calibration model exported to ONNX (129KB). Production now uses onnxruntime (15MB) vs PyTorch (500MB+). Fallback chain: ONNX→PyTorch→Euclidean. AD-127 (results interpretation), AD-128 (ONNX serving). ML_ARCHITECTURE.md (178 lines). Backlog audit: 20/20 items verified. Test count: 2604 app + 372 ML = 2976 total.
 - [x] 2026-02-21: **v0.57.0 — Session 55**: Similarity Calibration. Siamese MLP (33K params) on frozen InsightFace embeddings. F1@0.5 improved 4.8x (0.13→0.60), precision@0.5=98%. MLflow tracked. PRD-023, SDD-023, AD-123-126. Integrated into compare pipeline. Backlog audit (8 new items). Test count: 2604 app + 357 ML = 2961 total.
 - [x] 2026-02-21: **v0.56.3 — Session 49E**: Stabilization & Verification. Fixed 130 state-pollution test failures (ExitStack). Verified all 49D fixes in production (10/10 PASS). Name These Faces confirmed working end-to-end. Compare/Estimate uploads confirmed saving to R2 (messaging corrected). Test count: 2545 app + 306 ML = 2851 total.
 - [x] 2026-02-21: **v0.56.2 — Session 49D**: P0 + P1 Bug Fixes. 12 UX issues fixed (6 P0 + 6 P1). Name These Faces targeting (UX-070-072), upload messaging (UX-044/052), merge URL (UX-036), birth year race condition (UX-092), 404 styling (UX-080), about navbar (UX-081), identify links (UX-042), review polish (UX-100/101). 35 new tests (2544 total).
