@@ -1,0 +1,54 @@
+{
+  "session": "49D",
+  "total_phases": 6,
+  "phases": [
+    {
+      "id": 0,
+      "name": "Orient",
+      "depends_on": [],
+      "files_touched": ["CLAUDE.md", "ROADMAP.md", "docs/prompts/"],
+      "acceptance_criteria": ["Data synced", "Tests pass", "Browser connected"],
+      "estimated_minutes": 5
+    },
+    {
+      "id": 1,
+      "name": "P0 Fixes",
+      "depends_on": [0],
+      "files_touched": ["app/main.py", "tests/"],
+      "acceptance_criteria": ["UX-036 merge URL fixed", "UX-070-072 Name These Faces fixed", "UX-044/052 upload messaging fixed"],
+      "estimated_minutes": 25
+    },
+    {
+      "id": 2,
+      "name": "P1 Fixes",
+      "depends_on": [1],
+      "files_touched": ["app/main.py", "tests/"],
+      "acceptance_criteria": ["UX-092 birth year race condition", "UX-080/081 404/about pages", "UX-042 identify photo link", "UX-100/101 review polish"],
+      "estimated_minutes": 30
+    },
+    {
+      "id": 3,
+      "name": "Harness Files",
+      "depends_on": [2],
+      "files_touched": ["docs/ux_audit/UX_ISSUE_TRACKER.md", "ROADMAP.md", "CHANGELOG.md", "docs/BACKLOG.md"],
+      "acceptance_criteria": ["All fixed issues marked", "New issues logged", "Harness files updated"],
+      "estimated_minutes": 10
+    },
+    {
+      "id": 4,
+      "name": "Deploy + Verify",
+      "depends_on": [3],
+      "files_touched": [],
+      "acceptance_criteria": ["Tests pass", "Push clean", "Smoke test pass"],
+      "estimated_minutes": 5
+    },
+    {
+      "id": 5,
+      "name": "Verification Gate",
+      "depends_on": [4],
+      "files_touched": ["docs/session_logs/session_49d_log.md"],
+      "acceptance_criteria": ["All 12 fixes verified", "Gate results logged"],
+      "estimated_minutes": 5
+    }
+  ]
+}
