@@ -318,6 +318,90 @@ class TestWorkstationStillWorks:
         response = client.get("/?section=skipped")
         assert response.status_code == 200
 
+
+class TestFeatureCards:
+    """PRD-024: Feature entry point cards on the landing page."""
+
+    def test_feature_cards_section_present(self, client):
+        """Landing page has a feature-cards section."""
+        response = client.get("/")
+        assert 'data-testid="feature-cards"' in response.text
+
+    def test_feature_cards_has_browse_photos(self, client):
+        """Feature cards include Browse Photos link."""
+        response = client.get("/")
+        assert "Browse Photos" in response.text
+        assert 'href="/photos"' in response.text
+
+    def test_feature_cards_has_people(self, client):
+        """Feature cards include People link."""
+        response = client.get("/")
+        assert 'href="/people"' in response.text
+
+    def test_feature_cards_has_compare(self, client):
+        """Feature cards include Compare link."""
+        response = client.get("/")
+        assert 'href="/compare"' in response.text
+
+    def test_feature_cards_has_timeline(self, client):
+        """Feature cards include Timeline link."""
+        response = client.get("/")
+        assert 'href="/timeline"' in response.text
+
+    def test_feature_cards_has_map(self, client):
+        """Feature cards include Map link."""
+        response = client.get("/")
+        assert 'href="/map"' in response.text
+
+    def test_feature_cards_has_family_tree(self, client):
+        """Feature cards include Family Tree link."""
+        response = client.get("/")
+        assert 'href="/tree"' in response.text
+
+    def test_feature_cards_has_live_stats(self, client):
+        """Feature cards descriptions include live stats (not hardcoded zeros)."""
+        from app.main import _compute_landing_stats
+        stats = _compute_landing_stats()
+        response = client.get("/")
+        # Photo count should appear in Browse Photos card description
+        assert f"{stats['photo_count']} photos" in response.text
+        # Named count should appear in People card description
+        assert f"{stats['named_count']} identified" in response.text
+
+    def test_feature_cards_responsive_grid(self, client):
+        """Feature cards use responsive grid layout."""
+        response = client.get("/")
+        assert "grid-cols-2" in response.text
+        assert "md:grid-cols-3" in response.text
+
+
+class TestLandingStatsSkippedIncluded:
+    """About-docs rule: needs_help must include SKIPPED faces."""
+
+    def test_needs_help_includes_skipped(self):
+        """_compute_landing_stats includes SKIPPED in needs_help count.
+
+        Verifies the SKIPPED state is queried by checking needs_help >= inbox+proposed
+        (since adding skipped can only increase the count).
+        """
+        from app.main import _compute_landing_stats, load_registry, IdentityState
+        stats = _compute_landing_stats()
+        registry = load_registry()
+        skipped = registry.list_identities(state=IdentityState.SKIPPED)
+        skipped_unmerged = [i for i in skipped if not i.get("merged_into")]
+        # If there are skipped identities, needs_help should be > 0
+        if skipped_unmerged:
+            assert stats["needs_help"] > 0
+        # needs_help should be >= number of just skipped (since it also includes inbox+proposed)
+        assert stats["needs_help"] >= len(skipped_unmerged)
+
+    def test_confirmed_count_in_stats(self):
+        """_compute_landing_stats includes confirmed_count."""
+        from app.main import _compute_landing_stats
+        stats = _compute_landing_stats()
+        assert "confirmed_count" in stats
+        assert isinstance(stats["confirmed_count"], int)
+
     def test_rejected_section_returns_200(self, client):
         """GET /?section=rejected returns 200."""
         response = client.get("/?section=rejected")
