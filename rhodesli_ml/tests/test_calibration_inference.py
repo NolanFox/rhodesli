@@ -6,6 +6,7 @@ import pytest
 from rhodesli_ml.calibration.inference import (
     calibrated_similarity,
     calibrated_similarity_batch,
+    get_backend,
     is_calibration_available,
     load_calibration_model,
     reset,

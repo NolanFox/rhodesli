@@ -1386,7 +1386,26 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - Threshold tuning per use case (compare tool vs. auto-clustering)
 - More confirmed identities → larger eval set → tighter confidence intervals
 
-1. Add a new entry with AD-XXX format (next: AD-128)
+### AD-128: ONNX Runtime for Production Calibration Serving
+
+- **Date**: 2026-02-21
+- **Session**: 55b
+- **Status**: ACCEPTED
+- **Context**: The calibration model (AD-126) is trained with PyTorch but PyTorch is ~500MB installed. Railway production needs lightweight inference. ONNX Runtime is ~15MB and purpose-built for inference.
+- **Decision**: Export calibration model to ONNX via `torch.onnx.export()`. Serve in production using `onnxruntime.InferenceSession`. Keep PyTorch for local development/training only.
+- **Architecture — fallback chain**: (1) ONNX model via onnxruntime → (2) PyTorch model via torch → (3) raw Euclidean similarity. Per AD-120, each level logs which backend loaded.
+- **Numerical validation**: 100 random samples, max difference = 0.00e+00 between PyTorch and ONNX outputs. Exact match.
+- **Artifact sizes**: calibration_v1.pt = 131KB, calibration_v1.onnx = 129KB. Both committed to git (well under 5MB threshold).
+- **Rejected alternatives**:
+  1. Add PyTorch to production requirements — 500MB+ dependency for a 129KB model. Conflicts with Docker slimming goals.
+  2. Keep calibration local-only, pre-compute scores — breaks real-time compare tool. Community users uploading photos need live calibrated scoring.
+  3. TorchScript export — still requires torch runtime (~500MB). ONNX Runtime is strictly smaller.
+  4. Serverless function for ML inference — over-engineered for current scale (271 photos, single-digit concurrent users).
+- **Applies to future models**: CORAL date estimation → same pattern (train PyTorch, serve ONNX). Active learning retrains should auto-export ONNX.
+- **Affects**: rhodesli_ml/calibration/inference.py (updated fallback chain), rhodesli_ml/calibration/inference_onnx.py (new), rhodesli_ml/calibration/export_onnx.py (new), rhodesli_ml/artifacts/calibration_v1.onnx (new)
+- **Tests**: rhodesli_ml/tests/test_calibration_onnx.py — 15 tests covering export, inference, fallback chain, numerical validation
+
+1. Add a new entry with AD-XXX format (next: AD-129)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
