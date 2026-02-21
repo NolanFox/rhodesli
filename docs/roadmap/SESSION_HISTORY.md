@@ -241,12 +241,24 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Railway MCP installed, npm cache issue noted, Tool Search auto-defers
 - All 2486 tests passing
 
+## Session 49B Section 2: GEDCOM Import (2026-02-21) — v0.56.0
+- Real GEDCOM import: Fox_Capeluto_Fogel_Waldorf Family Tree.ged (21,809 individuals, 6,680 families)
+- 33 identities matched to Ancestry tree (CSV review workflow: export → user corrects → re-import)
+- User corrected 15 of 33 Ancestry IDs via spreadsheet review
+- 19 relationships built (5 spouse, 14 parent-child) from GEDCOM family records
+- 33 identities enriched with GEDCOM data (birth/death dates, places, gender, Ancestry URLs)
+- ancestry_links.json created (33 identity-to-Ancestry mappings)
+- Production data merge: synced from production → applied GEDCOM enrichment → preserved 31 Session 49B birth years → pushed
+- Lesson 78: Production-local data divergence is the #1 recurring deployment failure (4th occurrence)
+- All 2486 tests passing
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.56.0 | 2026-02-21 | 49B-S2 | 2486 |
 | v0.48.0 | 2026-02-18 | 46 | 2342 |
 | v0.47.0 | 2026-02-18 | 45 | 2281 |
 | v0.46.0 | 2026-02-17 | 44 | 2249 |

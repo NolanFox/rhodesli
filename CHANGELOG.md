@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.56.0] — 2026-02-21
+
+### Added
+- **Real GEDCOM import**: Fox/Capeluto/Fogel/Waldorf Family Tree (21,809 individuals, 6,680 families) from Ancestry.com
+- 33 archive identities linked to Ancestry records with direct URLs
+- 19 family relationships (5 spouse, 14 parent-child) from real genealogical data
+- `ancestry_links.json` — maps identity IDs to Ancestry person pages
+- Human-reviewed CSV workflow for correcting automated GEDCOM matches
+
+### Fixed
+- **Birth year data preservation**: Synced from production before pushing to prevent overwriting 31 admin-reviewed birth years (Lesson 78)
+- Merged GEDCOM enrichment (birth/death dates, places, gender) with Session 49B manual reviews
+
+### Documentation
+- Lesson 78: Production-local data divergence flagged as #1 recurring deployment failure
+
 ## [v0.55.3] — 2026-02-20
 
 ### Fixed

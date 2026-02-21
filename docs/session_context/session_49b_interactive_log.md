@@ -10,7 +10,7 @@
 ## Section Status
 - [x] Section 0: Session infrastructure (2026-02-20)
 - [x] Section 1: Birth year bulk review (2026-02-20) — 31 estimates reviewed. 28 accepted (10 exact, 18 corrected). ML accuracy: ~32% exact, ~48% within 2 years, mean absolute error ~5.4 years.
-- [ ] Section 2: GEDCOM upload
+- [x] Section 2: GEDCOM upload (2026-02-21) — Real GEDCOM imported (21,809 individuals). 33 identities matched to Ancestry tree. User reviewed all matches in CSV, corrected 15 Ancestry IDs. 19 relationships built (5 spouse, 14 parent-child). 33 identities enriched with GEDCOM birth/death dates, places, gender, Ancestry URLs. Birth years from Section 1 preserved through production merge. ancestry_links.json created. Lesson 78 added (production-local data divergence).
 - [ ] Section 3: Visual walkthrough
 - [ ] Section 4: Autonomous UX audit
 - [ ] Section 5: Synthesis and prioritization

@@ -76,12 +76,13 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 49B: Interactive Review (requires Nolan) — OVERDUE
-- Birth year bulk review — generate ground truth anchors
-- Real GEDCOM upload + match review
-- Visual walkthrough of all features
-- **This is overdue — schedule this weekend**
-- See: docs/session_context/session_49_interactive_prep.md
+### Session 49B: Interactive Review (requires Nolan) — IN PROGRESS
+- [x] Birth year bulk review — 31 estimates reviewed, 28 accepted (2026-02-20)
+- [x] Real GEDCOM upload + match review — 33 matches, 19 relationships (2026-02-21)
+- [ ] Enter Carey Franco's 8 IDs (Thanksgiving Eve 1946 photo)
+- [ ] Howie/Stu confirmations (Isaac Franco, Morris Franco, Stu Nadel)
+- [ ] Visual walkthrough of all features
+- See: docs/session_context/session_49b_interactive_log.md
 
 ### Session 55: Landing Page Refresh + Lazy Loading
 - Landing page: live-data entry points, mobile-first
@@ -102,6 +103,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.56.0 — Session 49B Section 2**: Real GEDCOM import (21,809 individuals). 33 identities matched to Ancestry tree via CSV review workflow. 19 relationships (5 spouse, 14 parent-child). ancestry_links.json. Production data merge preserved 31 birth years. Lesson 78 (data sync).
 - [x] 2026-02-20: **v0.55.3 — Session 49B-Final**: Compare/estimate loading indicator (block display, button disable, auto-scroll, accurate timing). Test triage: 127 failures all state pollution, 0 real bugs. Admin auth verification documented.
 - [x] 2026-02-20: **v0.55.1 — Session 49B-Audit**: Comprehensive Playwright site audit. 18 pages, 25+ user actions. Fixed: mobile nav (H1), styled 404 (M1), subprocess.DEVNULL (M3), favicon (M4). 13 new tests (2509 total).
 - [x] 2026-02-20: **Session 54G**: Final Cleanup. AD-120 (silent fallback principle), AD-121 (SSE upload architecture), HD-012, OD-006 (Railway MCP), PERFORMANCE_CHRONICLE.md, browser testing audit, SSE epic documented.

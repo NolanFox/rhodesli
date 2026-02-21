@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-77 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+78 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -63,6 +63,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 68 | Multiple community uploads may come in separate batches |
 | 69 | Production-origin data must NEVER be in deploy sync lists |
 | 70 | Dockerfile must COPY every package the web app imports at runtime |
+| 78 | **Production-local data divergence is the #1 recurring deployment failure** |
 | 71 | has_insightface check must probe actual deferred imports |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
