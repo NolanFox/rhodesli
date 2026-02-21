@@ -7,8 +7,8 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 ## Quick Reference
 - **Stack**: FastHTML, InsightFace/AdaFace, Supabase Auth, Railway, R2
 - **Admin**: NolanFox@gmail.com | **Live**: https://rhodesli.nolanandrewfox.com
-- **Test**: `pytest tests/ -v --ignore=tests/e2e/` | **Deploy**: push to main
-- **Local**: `source venv/bin/activate && python app/main.py`
+- **Test**: `source venv/bin/activate && pytest tests/ -x -q` + `pytest rhodesli_ml/tests/ -x -q` (BOTH suites)
+- **Local**: `source venv/bin/activate && python app/main.py` | **Deploy**: push to main
 
 ## Session Operations (Most Forgotten)
 1. Deploy: `git push origin main` — NEVER Railway dashboard. Check `railway logs` after push (OD-006). MCP auto-deferred via Tool Search.
@@ -60,7 +60,7 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 2. Commit after every sub-task (conventional commits) | Add lessons after corrections
 
 ## Session Completion Checklist
-1. `pytest tests/ -x -q --ignore=tests/e2e/` | 2. `python scripts/verify_data_integrity.py`
+1. `pytest tests/ -x -q` + `pytest rhodesli_ml/tests/` | 2. `python scripts/verify_data_integrity.py`
 3. `python scripts/verify_docs_sync.py` | 4. `git status` — no untracked data/ changes
 5. Dockerfile covers new imports | 6. requirements.txt updated | 7. CHANGELOG.md updated
 
