@@ -4,8 +4,8 @@
 - [x] Birth year bulk review (accept/reject ML estimates) — Section 1
 - [x] GEDCOM upload (real family data) — Section 2
 - [x] Carey Franco's 8 IDs + Howie/Stu confirmations — Section 3
-- [ ] Compare upload test (Item 5)
-- [ ] Estimate page test (Item 6)
+- [x] Compare upload test (Item 5) — 2026-02-21, 8 UX issues logged
+- [x] Estimate page test (Item 6) — 2026-02-21, comprehensive UX audit, 18 issues logged
 - [ ] Quick-Identify test (Item 7)
 - [ ] Visual walkthrough (admin + public views) (Item 8)
 - [ ] Bug list + smoke test + cleanup (Items 9-11)
@@ -156,10 +156,116 @@ All Section 3 identity changes (8 people tagged via production API):
 **Before ANY data push:** Run `python scripts/sync_from_production.py` FIRST to pull production data locally, THEN merge local changes on top.
 **Recovery:** If data is accidentally overwritten, this table + the Section 1/2 data changes log above contain enough detail to re-apply all changes via API.
 
-### Remaining Plan (Items 5-11)
+### Section 4: Item 5 — Compare Upload Test (2026-02-21)
 
-**Items 5-7: Interactive feature tests (requires Nolan)**
-- Item 5: Compare upload — test with real photo, verify hybrid detection, timing, loading indicator
+**Test photo:** `howie_frano_collection_59639822_10216844893127554_6438337993123037184_n.jpg` from `~/Downloads/rhodesli_photo_testing/`
+
+**Results:**
+- 17 faces detected in group photo
+- Face 1 → Isaac Franco (54%, 53%) — **CORRECT** (confirmed by Nolan)
+- Face 2 → Morris Franco (55%, 54%) — **CORRECT** (switched face, results updated)
+- Face switching (Face 1/2/3 buttons) works functionally
+- Herman Benson appeared as Possible Match for Face 2 at 38%
+- Only 3/20 matches were named people (Isaac Franco x2, Morris Franco x2, Albert Cohen, Herman Benson). Rest were unidentified "Face #N"
+
+**UX Issues Found:**
+
+#### P0 — Compare Upload Not Saved
+- [ ] COMPARE UPLOAD NOT IN PENDING QUEUE: The Compare page says "Photos are saved to help grow the archive" but the upload did NOT appear in /admin/pending (showed "0 uploads awaiting review"). Investigation found: uploads save to R2 immediately, but only enter pending_uploads.json if user clicks a "Contribute" button. The "saved to help grow the archive" message is misleading — it stores the file but doesn't queue it for admin review automatically. The Contribute button is at the very bottom of results and easy to miss. For the use case of community members uploading family photos, this is a major gap — most users won't scroll past results to find and click Contribute. [BACKLOG: yes, P0]
+
+#### P1 — Loading & Feedback
+- [ ] NO LOADING INDICATOR: Absolutely no loading indicator during compare upload processing. Page appears to hang completely. User thought upload failed. Need spinner, progress bar, or "Analyzing faces..." message. The loading indicator that was built (AD-121 area, block display + button disable + auto-scroll) either isn't wired to the compare flow or isn't visible. [BACKLOG: yes, P1]
+- [ ] NO AUTO-SCROLL TO RESULTS: After upload completes, results appear below the fold. Page stays at the top showing the empty upload area. User sees no change and thinks upload failed. Must auto-scroll to results section. [BACKLOG: yes, P1]
+- [ ] UPLOAD AREA DOESN'T RESET: After successful upload, the upload area still shows "Drop a photo here or click to browse" — should show the uploaded filename or a success state. [BACKLOG: yes, P2]
+
+#### P1 — Face Selector UX
+- [ ] FACE SELECTOR IS BLIND: Compare page uses "Face 1", "Face 2", etc. as text-only buttons with no visual indication of which face is which. No bounding boxes on the uploaded photo. Contrast with /photo/ page which draws face bounding boxes with name labels directly on the photo — dramatically better UX. The uploaded photo preview should have clickable face overlay boxes like the photo page does. [BACKLOG: yes, P1]
+
+#### P2 — Confidence Labels
+- [ ] CONTRADICTORY CONFIDENCE TIERS: "Strong Matches" section header says "High confidence — likely the same person" but individual cards show "Possible match" at 54%. "Possible Matches" header says "Moderate confidence — worth investigating" but cards show "Unlikely match" at 41%. The tier grouping thresholds and the per-card confidence labels use different scales. Need to align them. [BACKLOG: yes, P2]
+
+#### P2 — Broken Thumbnails
+- [ ] BROKEN FACE CROP THUMBNAILS: Face #17, #18, #20 showed empty/broken crop images (frame icon placeholder, no face). These are faces detected in the uploaded photo but the server-side crop generation failed or the crop URL is broken. [BACKLOG: yes, P2]
+
+#### P1 — Missing Feature: Two-Photo Compare
+- [ ] TWO-PHOTO COMPARE NOT SUPPORTED: Currently Compare only matches an uploaded face against the existing archive. There is no mode to upload TWO photos and compare faces between them (e.g., "is this person in photo A the same as this person in photo B?"). This was originally in scope and discussed at length. This is a core use case for family historians who have two photos and want to know if the same person appears in both. The architecture supports it (just compute cosine similarity between two uploaded embeddings) but no UI or route exists. See AD-117 Face Compare tiers. [BACKLOG: yes, P1]
+
+#### P2 — Source/Collection Assignment
+- [ ] NO SOURCE/COLLECTION ON COMPARE UPLOADS: If a user contributes a compare upload, there's no mechanism for them to specify source (e.g., "Howie Franco's Facebook") or collection. Admin would need to assign manually. Should prompt contributor for source/collection during contribute flow. [BACKLOG: yes, P2]
+
+### Section 5: Item 6 — Estimate Page Test (2026-02-21)
+
+**Test photo:** Same `howie_frano_collection_59639822_10216844893127554_6438337993123037184_n.jpg`
+**User context:** Isaac Franco (born 1917) is in the photo, looks ~40s. User confirmed c.1962 is approximately correct.
+
+**Two flows tested:**
+1. **Upload flow** (POST /api/estimate/upload via HTMX) — uploaded test photo
+2. **Archive selection flow** (GET /estimate?photo=d4fd0727068369ec) — clicked archive photo
+
+#### Upload Flow Results
+- 17 faces detected (consistent with Compare test)
+- Estimated: c. 1962, Range: 1959–1965, Confidence: high
+- Gemini analysis: B&W photo, white border, bouffant hairstyles, narrow ties, "Mad Men" era suits, sleeveless dresses, boat necklines — late 1950s to early 1960s
+- Photo is NOT saved to pending_uploads.json (ephemeral storage only in uploads/estimate/ on R2)
+
+#### Archive Selection Results (same photo in archive)
+- Shows actual photo in result area
+- Estimated: c. 1962, +/- 10 years, Low confidence
+- "Based on scene analysis" — no per-face age evidence shown
+- Has CTAs: Share Estimate | View Photo Page | Try Another
+
+#### UX Issues — Comprehensive Estimate Page Audit
+
+##### P0 — Upload Not Saved to Archive
+- [ ] EST-001: ESTIMATE UPLOAD NOT IN PENDING QUEUE: Like Compare (Item 5), the estimate upload saves to R2 (`uploads/estimate/{id}.jpg`) but does NOT enter `pending_uploads.json`. No admin review path. Community members uploading family photos for date estimation have no way to contribute them to the archive. Same fundamental gap as Compare page. [BACKLOG: yes, P0]
+
+##### P1 — Critical UX Gaps (Upload Flow)
+- [ ] EST-002: NO UPLOADED PHOTO PREVIEW: Upload results show only text — face count, date estimate, Gemini analysis. The photo itself is NEVER displayed. User cannot confirm which photo was analyzed. Contrast with archive selection flow which shows the photo prominently. This is the single biggest UX gap — a date estimation tool should show the photo alongside the estimate. [BACKLOG: yes, P1]
+- [ ] EST-003: NO LOADING INDICATOR VISIBLE: Code has a `#estimate-upload-spinner` div with `htmx-indicator` class, but it didn't appear during the ~30s processing time. The HTMX indicator CSS rule uses `display: inline` which may conflict with the spinner's layout. Same issue as Compare (logged in Item 5). User sees zero feedback during ML processing. [BACKLOG: yes, P1]
+- [ ] EST-004: NO AUTO-SCROLL TO RESULTS: After upload completes, results appear below the upload area but page stays at top. User sees the unchanged upload zone and thinks nothing happened. Compare page has same issue. The `hx_target="#estimate-upload-result"` swaps content into a div below the form but doesn't scroll to it. [BACKLOG: yes, P1]
+- [ ] EST-005: NO CTAs AFTER UPLOAD: Archive selection shows Share Estimate / View Photo Page / Try Another buttons. Upload results show NOTHING — no way to share, no "try another", no "contribute this photo". Dead end. User has to manually scroll back up or refresh. [BACKLOG: yes, P1]
+- [ ] EST-006: UPLOAD AREA DOESN'T RESET: After successful upload, the upload zone still shows "Upload a photo to estimate its date" with the dashed border and upload icon — as if nothing happened. Should either show the uploaded filename/thumbnail, show a "Upload another" state, or collapse the upload area. [BACKLOG: yes, P1]
+
+##### P1 — Inconsistency Between Upload vs Archive Flows
+- [ ] EST-007: TWO COMPLETELY DIFFERENT RESULT FORMATS: Upload and archive selection produce dramatically different result UIs for the same feature. Upload: text-only (face count → estimate → range → confidence → Gemini text). Archive: photo + estimate + confidence badge + "How we estimated this" + CTAs. These should be the same layout. A user who tries upload first gets a broken-feeling experience; one who clicks an archive photo gets a polished one. [BACKLOG: yes, P1]
+- [ ] EST-008: CONFIDENCE DISAGREES BETWEEN FLOWS: Same photo gets "high confidence, Range: 1959–1965" via upload (Gemini) but "Low confidence, +/- 10 years" via archive selection (internal pipeline). The upload path trusts Gemini's self-reported confidence; the archive path computes confidence from identified people with known birth years. These should be reconciled — or at minimum, the method should be clearly labeled so users understand why results differ. [BACKLOG: yes, P2]
+
+##### P1 — Missing "Wow Factor" Features
+- [ ] EST-009: NO FACE-BY-FACE BREAKDOWN (UPLOAD): Upload says "17 faces detected" but shows nothing about individual faces. The archive flow can show per-face age evidence cards (person name, birth year, apparent age, estimated year). Upload should detect faces, show face crop thumbnails, and for any that match known people, show per-person date evidence — this is the most compelling part of the tool. [BACKLOG: yes, P1]
+- [ ] EST-010: NO FACE BOUNDING BOXES ON PHOTO: Neither flow draws face bounding boxes on the photo (Compare does for uploaded photos). For date estimation, showing detected faces with age estimates overlaid would be powerful — "We found 17 people and estimated their ages" with clickable face boxes. [BACKLOG: yes, P2]
+- [ ] EST-011: NO VISUAL EVIDENCE CLUES: Gemini analysis mentions specific visual clues (hairstyles, suit styles, dress styles) but these are just text. Annotating the photo with callouts or highlighted regions ("narrow ties typical of 1960s" with an arrow) would be genuinely impressive and educational. Longer-term but high wow factor. [BACKLOG: yes, P3]
+
+##### P2 — Layout & Polish
+- [ ] EST-012: RESULTS SANDWICHED BETWEEN UPLOAD AND GALLERY: Upload results appear between the upload zone (above) and "Select a Photo" grid (below). The gallery should collapse or hide when showing upload results, or results should replace the entire content area. Currently feels like results are squeezed in as an afterthought. [BACKLOG: yes, P2]
+- [ ] EST-013: "SELECT A PHOTO" GRID LACKS CONTEXT: Archive photo thumbnails show only face count badges. No photo title, collection name, date range, or identifiable people shown. For date estimation, the most interesting photos are group photos with many faces — but user can't tell which photos have identified people (which produce better estimates). Should show "3 of 6 identified" or highlight photos with strong estimates. [BACKLOG: yes, P2]
+- [ ] EST-014: ARCHIVE RESULT SHOWS "+/- 10 YEARS" — TOO VAGUE: Low confidence with +/- 10 years means the estimate is essentially 1952–1972. This is barely useful. When confidence is this low, the UI should say something like "Not enough data for a precise estimate — identify more people to narrow it down" rather than presenting a confident-looking "Estimated: c. 1962" heading. [BACKLOG: yes, P2]
+- [ ] EST-015: "HOW WE ESTIMATED THIS" EMPTY: Archive selection shows "How we estimated this" heading with just "Based on visual analysis. Identify more people to improve this estimate." — no actual methodology explanation. Should show what signals were used (photo style, clothing, hair, known people if any). The upload flow actually DOES show this via Gemini analysis, but the archive flow doesn't. [BACKLOG: yes, P2]
+- [ ] EST-016: "SHARE ESTIMATE" BUTTON — WHAT DOES IT SHARE? Only appears on archive flow. Appears to be a share/link button but unclear what URL/content it shares. Clipboard? Social media? No tooltip or feedback. [BACKLOG: yes, P3]
+
+##### P2 — Performance & Speed
+- [ ] EST-017: UPLOAD PROCESSING TIME ~30 SECONDS: The upload took approximately 30 seconds with zero user feedback. Breakdown: face detection (InsightFace hybrid) + Gemini API call. For the "wow factor", this needs to be under 10 seconds or show progressive results (faces detected first → then Gemini analysis streams in). SSE/streaming architecture (AD-121) would help here. [BACKLOG: yes, P2]
+
+##### P3 — Delight / Wow Factor Opportunities
+- [ ] EST-018: NO TIMELINE VISUALIZATION: The date estimate could be shown on a visual timeline with key historical events for context ("Your photo was likely taken around the time of the Cuban Missile Crisis, 1962"). For a heritage archive, connecting family photos to historical context would be genuinely moving and shareable. [BACKLOG: yes, P3]
+
+#### Summary
+The Estimate page has two dramatically different quality levels:
+- **Archive selection**: Decent — shows photo, has CTAs, clean layout. But lacks depth (no per-face evidence, low confidence on most photos).
+- **Upload flow**: Broken-feeling — no photo preview, no loading indicator, no CTAs, results squeezed in. The Gemini analysis is actually BETTER content than the archive flow gets, but the presentation is far worse.
+
+The core value proposition ("When was this photo taken?") is compelling and the ML results are reasonable (c. 1962 for a ~1960 photo is solid). But the UX actively undermines the results. A first-time user uploading a family photo would: (1) see no loading indicator and think it's broken, (2) not scroll down to see results, (3) see text-only results with no photo, (4) hit a dead end with no next action. Every step loses engagement.
+
+**Priority for making this shippable:**
+1. Show the uploaded photo in results (EST-002)
+2. Fix loading indicator (EST-003)
+3. Auto-scroll to results (EST-004)
+4. Add CTAs to upload results (EST-005)
+5. Show face-by-face breakdown (EST-009)
+6. Unify upload and archive result layouts (EST-007)
+
+### Remaining Plan (Items 6-11)
+
+**Items 6-7: Interactive feature tests (requires Nolan)**
 - Item 6: Estimate page — face counts, pagination, Gemini analysis display
 - Item 7: Quick-Identify — click unidentified face → inline naming, "Name These Faces" mode
 
