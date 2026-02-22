@@ -9841,7 +9841,7 @@
     },
     "2333130a-adca-4d30-8a98-e02619bcd96b": {
       "identity_id": "2333130a-adca-4d30-8a98-e02619bcd96b",
-      "name": "Unidentified Person 394",
+      "name": "Benvenuta/Bessie Halio Franco (1908- 1998)",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_d0d407a46932"
@@ -9850,7 +9850,7 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.224837+00:00",
-      "updated_at": "2026-02-14T14:45:50.224837+00:00",
+      "updated_at": "2026-02-22T06:03:32.736947+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -9883,7 +9883,7 @@
     },
     "23de1618-512a-4e82-90c4-74b28dedb934": {
       "identity_id": "23de1618-512a-4e82-90c4-74b28dedb934",
-      "name": "Unidentified Person 396",
+      "name": "Rebecca Rousso Gormezano (1912-1997)",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_ef31017b0210"
@@ -9892,7 +9892,7 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.224894+00:00",
-      "updated_at": "2026-02-14T14:45:50.224894+00:00",
+      "updated_at": "2026-02-22T15:52:42.145739+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -9904,7 +9904,7 @@
     },
     "4e51cdf1-bb08-453d-8cac-18d898f22865": {
       "identity_id": "4e51cdf1-bb08-453d-8cac-18d898f22865",
-      "name": "Unidentified Person 397",
+      "name": "Amada/Mary Gormezano Halio (1888-1968)",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_aa093e7dba12"
@@ -9913,7 +9913,7 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.224915+00:00",
-      "updated_at": "2026-02-14T14:45:50.224915+00:00",
+      "updated_at": "2026-02-22T15:48:00.314290+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -9994,7 +9994,7 @@
     },
     "38fce6ca-d309-477f-9b23-f7faeb47c6a7": {
       "identity_id": "38fce6ca-d309-477f-9b23-f7faeb47c6a7",
-      "name": "Unidentified Person 401",
+      "name": "Samuel Israel Gormezano (1880-1969)",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_4eb02c7e058e"
@@ -10003,7 +10003,7 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.224996+00:00",
-      "updated_at": "2026-02-14T14:45:50.224996+00:00",
+      "updated_at": "2026-02-22T19:17:43.070025+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -10036,7 +10036,7 @@
     },
     "21e02a82-ad6d-4bfd-aac8-7a230527f0d6": {
       "identity_id": "21e02a82-ad6d-4bfd-aac8-7a230527f0d6",
-      "name": "Unidentified Person 403",
+      "name": "Gabriel Abraham Franco (1904-1968)",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_6afc025c5bd8"
@@ -10045,7 +10045,7 @@
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.225036+00:00",
-      "updated_at": "2026-02-14T14:45:50.225036+00:00",
+      "updated_at": "2026-02-22T05:01:10.406124+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
