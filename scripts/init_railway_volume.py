@@ -131,19 +131,141 @@ def _migrate_photo_dimensions(data_dir: Path) -> None:
         # Non-fatal - volume still works, just without face overlays
 
 
+def _auto_backup_volume(data_dir: Path) -> str | None:
+    """Create a timestamped backup of all critical volume data files.
+
+    Called before any sync operation to ensure recovery is always possible.
+    Keeps last 10 backups to prevent unbounded disk growth.
+
+    Returns the backup directory path, or None if nothing to back up.
+    """
+    import datetime
+
+    backup_root = data_dir / "auto_backups"
+    backup_root.mkdir(exist_ok=True)
+
+    ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    backup_dir = backup_root / ts
+
+    files_to_backup = [
+        "identities.json", "photo_index.json", "embeddings.npy",
+        "annotations.json", "relationships.json", "ancestry_links.json",
+        "match_decisions.jsonl", "identification_responses.json",
+    ]
+
+    backed_up = 0
+    for filename in files_to_backup:
+        src = data_dir / filename
+        if src.exists():
+            if not backup_dir.exists():
+                backup_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, backup_dir / filename)
+            backed_up += 1
+
+    if backed_up > 0:
+        print(f"[init] Auto-backup: {backed_up} files saved to auto_backups/{ts}")
+    else:
+        return None
+
+    # Prune old backups — keep last 10
+    existing = sorted(backup_root.iterdir())
+    while len(existing) > 10:
+        old = existing.pop(0)
+        if old.is_dir():
+            shutil.rmtree(old)
+            print(f"[init] Pruned old backup: {old.name}")
+
+    return str(backup_dir)
+
+
+def _count_confirmed_identities(filepath: Path) -> int:
+    """Count CONFIRMED identities in an identities.json file."""
+    import json
+
+    try:
+        with open(filepath) as f:
+            data = json.load(f)
+        ids = data.get("identities", data)
+        return sum(
+            1 for v in ids.values()
+            if isinstance(v, dict) and v.get("state") == "CONFIRMED"
+        )
+    except Exception:
+        return -1
+
+
+def _is_volume_user_modified(data_dir: Path, filename: str) -> bool:
+    """Check if a volume file has user modifications that must not be overwritten.
+
+    For identities.json: volume has MORE confirmed identities than bundle.
+    For photo_index.json: volume has MORE photos than bundle.
+    For other files: always returns False (safe to overwrite).
+    """
+    import json
+
+    volume_file = data_dir / filename
+    bundle_file = BUNDLED_DATA / filename
+
+    if not volume_file.exists() or not bundle_file.exists():
+        return False
+
+    if filename == "identities.json":
+        volume_confirmed = _count_confirmed_identities(volume_file)
+        bundle_confirmed = _count_confirmed_identities(bundle_file)
+        if volume_confirmed > bundle_confirmed:
+            print(
+                f"[init] SAFETY GATE: Volume {filename} has {volume_confirmed} "
+                f"confirmed identities but bundle only has {bundle_confirmed}. "
+                f"Refusing to overwrite — volume has user modifications."
+            )
+            return True
+
+    elif filename == "photo_index.json":
+        try:
+            with open(volume_file) as f:
+                v_data = json.load(f)
+            with open(bundle_file) as f:
+                b_data = json.load(f)
+            v_count = len(v_data.get("photos", {}))
+            b_count = len(b_data.get("photos", {}))
+            if v_count > b_count:
+                print(
+                    f"[init] SAFETY GATE: Volume {filename} has {v_count} "
+                    f"photos but bundle only has {b_count}. "
+                    f"Refusing to overwrite — volume has user modifications."
+                )
+                return True
+        except Exception:
+            pass
+
+    return False
+
+
 def _sync_essential_files(data_dir: Path) -> int:
     """Update essential data files from bundle if they differ.
 
-    Git-tracked data files are the source of truth. When the Docker image
-    bundles newer data (from a git push), overwrite the volume copy.
+    Git-tracked data files are the source of truth for pipeline-generated data.
+    When the Docker image bundles newer data (from a git push), overwrite the
+    volume copy — UNLESS the volume has user modifications (more confirmed
+    identities, more photos, etc.).
+
     Creates a timestamped backup of the volume copy before overwriting.
+
+    Safety gates (AD-134):
+    - Auto-backup all volume data before any sync
+    - Count-based check: refuse to overwrite if volume has more confirmed/photos
+    - Timestamped .bak files for individual file recovery
 
     Returns the number of files updated.
     """
     import hashlib
     import time
 
+    # Protection B: Auto-backup before any sync
+    _auto_backup_volume(data_dir)
+
     updated = 0
+    blocked = 0
     ts = int(time.time())
 
     all_sync_files = REQUIRED_DATA_FILES + OPTIONAL_SYNC_FILES
@@ -162,12 +284,20 @@ def _sync_essential_files(data_dir: Path) -> int:
         if bundle_hash == volume_hash:
             continue
 
-        # Bundle differs from volume — update volume from bundle
+        # Protection A+C: Check if volume has user modifications
+        if _is_volume_user_modified(data_dir, filename):
+            blocked += 1
+            continue
+
+        # Bundle differs from volume and is safe to overwrite
         backup = data_dir / f"{filename}.bak.{ts}"
         shutil.copy2(volume_file, backup)
         shutil.copy2(bundle_file, volume_file)
         updated += 1
         print(f"[init] Updated {filename} from bundle (backup: {backup.name})")
+
+    if blocked > 0:
+        print(f"[init] Safety gate blocked {blocked} file(s) from being overwritten.")
 
     return updated
 

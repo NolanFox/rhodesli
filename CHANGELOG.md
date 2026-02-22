@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.61.1] — 2026-02-21
+
+### Fixed — Session 59b: Emergency Recovery + Deploy Safety Gate
+- **Recovered Session 49B data**: 9 identity confirmations (Albert Cohen, Eleanore Cohen, Morris Franco, Ray Franco, Molly Benson, Herman Benson, Belle Franco, 2x Isaac Franco), 9 name assignments, 3 birth years, 2 merges — all lost when deploys overwritten the Railway volume. Recovered from `.bak` file on the volume.
+- **Deploy data safety gate (AD-134)**: Triple protection in `init_railway_volume.py`:
+  - Count-based safety gate: refuses to overwrite identities.json/photo_index.json if volume has MORE confirmed identities/photos than bundle
+  - Auto-backup: saves all critical files to `auto_backups/<timestamp>/` before any sync (keeps last 10)
+  - Per-file .bak timestamps (existing, preserved)
+- **Lesson 85**: 5th occurrence of deploy overwriting production data documented with prevention rules.
+- Test count: 3123+ total (21 new deploy safety gate tests)
+
 ## [v0.61.0] — 2026-02-21
 
 ### Added — Session 59: Face Compare Standalone

@@ -451,8 +451,8 @@
     },
     "450ebd52-f768-4768-aa1b-3b24ea1c86b0": {
       "identity_id": "450ebd52-f768-4768-aa1b-3b24ea1c86b0",
-      "name": "Unidentified Person 049",
-      "state": "SKIPPED",
+      "name": "Isaac Franco",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face4"
@@ -460,8 +460,10 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547499+00:00",
-      "updated_at": "2026-02-10T04:07:30.100226+00:00",
-      "metadata": {}
+      "updated_at": "2026-02-21T05:48:41.700660+00:00",
+      "metadata": {},
+      "birth_year": 1893,
+      "merged_into": "ac3b43b2-3e74-4237-ab71-b8ded0f8bfda"
     },
     "3d9d711f-77c2-406b-8522-dd448bcb7e87": {
       "identity_id": "3d9d711f-77c2-406b-8522-dd448bcb7e87",
@@ -1191,8 +1193,8 @@
     },
     "d85b2279-caac-4e56-b572-5431c4be48e5": {
       "identity_id": "d85b2279-caac-4e56-b572-5431c4be48e5",
-      "name": "Unidentified Person 118",
-      "state": "SKIPPED",
+      "name": "Molly Benson",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face10"
@@ -1200,7 +1202,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.549610+00:00",
-      "updated_at": "2026-02-10T04:07:13.933438+00:00",
+      "updated_at": "2026-02-21T07:10:56.480363+00:00",
       "metadata": {}
     },
     "caae1213-bca5-4d50-aff3-2e807f846203": {
@@ -4777,8 +4779,8 @@
     },
     "1549d2b4-5d1f-4b0d-8ef2-430087a76d67": {
       "identity_id": "1549d2b4-5d1f-4b0d-8ef2-430087a76d67",
-      "name": "Unidentified Person 035",
-      "state": "SKIPPED",
+      "name": "Belle Franco",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face2"
@@ -4786,7 +4788,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547250+00:00",
-      "updated_at": "2026-02-10T04:07:34.352888+00:00",
+      "updated_at": "2026-02-21T07:10:57.650459+00:00",
       "metadata": {}
     },
     "35424c36-5af2-4758-a73c-cff0fe84a171": {
@@ -6079,7 +6081,7 @@
       ],
       "birth_year": 1902,
       "metadata": {
-        "birth_place": "Milas, Muğla, Türkiye",
+        "birth_place": "Milas, Mu\u011fla, T\u00fcrkiye",
         "death_place": "Pinellas, Florida, United States",
         "death_year": 1983,
         "gender": "M",
@@ -6337,8 +6339,8 @@
     },
     "4a993942-2ed7-4cba-bb78-ada588853642": {
       "identity_id": "4a993942-2ed7-4cba-bb78-ada588853642",
-      "name": "Unidentified Person 050",
-      "state": "SKIPPED",
+      "name": "Albert Cohen",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face9"
@@ -6346,7 +6348,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547516+00:00",
-      "updated_at": "2026-02-10T04:07:29.675639+00:00",
+      "updated_at": "2026-02-21T06:10:47.047587+00:00",
       "metadata": {}
     },
     "2079ded6-5997-46c2-8fca-1ca82e0d9945": {
@@ -7241,8 +7243,8 @@
     },
     "9dfc300a-1c86-460a-85df-e62c6781eb6d": {
       "identity_id": "9dfc300a-1c86-460a-85df-e62c6781eb6d",
-      "name": "Unidentified Person 040",
-      "state": "SKIPPED",
+      "name": "Herman Benson",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face7"
@@ -7250,7 +7252,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547340+00:00",
-      "updated_at": "2026-02-10T04:07:33.122123+00:00",
+      "updated_at": "2026-02-21T07:10:57.219505+00:00",
       "metadata": {}
     },
     "1dadd1b7-606e-4d5e-a821-9b05e23c9760": {
@@ -7496,8 +7498,8 @@
     },
     "bac7731a-a1d2-4350-b528-c11f1b947b3a": {
       "identity_id": "bac7731a-a1d2-4350-b528-c11f1b947b3a",
-      "name": "Unidentified Person 042",
-      "state": "SKIPPED",
+      "name": "Eleanore Cohen",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face8"
@@ -7505,7 +7507,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547374+00:00",
-      "updated_at": "2026-02-10T04:07:32.278502+00:00",
+      "updated_at": "2026-02-21T07:10:39.569752+00:00",
       "metadata": {}
     },
     "27ad73fb-8a72-498a-815c-660afd51a86c": {
@@ -7631,8 +7633,9 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.547320+00:00",
-      "updated_at": "2026-02-10T04:07:33.513286+00:00",
-      "metadata": {}
+      "updated_at": "2026-02-21T05:42:43.549874+00:00",
+      "metadata": {},
+      "merged_into": "a772360a-64f6-4daf-8312-fcc7586304a7"
     },
     "00a97034-8f44-4b17-a72c-474ee96372d5": {
       "identity_id": "00a97034-8f44-4b17-a72c-474ee96372d5",
@@ -9138,8 +9141,8 @@
     },
     "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5": {
       "identity_id": "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5",
-      "name": "Unidentified Person 117",
-      "state": "SKIPPED",
+      "name": "Ray Franco",
+      "state": "CONFIRMED",
       "anchor_ids": [],
       "candidate_ids": [
         "Image 968_compress:face6"
@@ -9147,7 +9150,7 @@
       "negative_ids": [],
       "version_id": 2,
       "created_at": "2026-02-01T21:29:26.549590+00:00",
-      "updated_at": "2026-02-10T04:07:14.343532+00:00",
+      "updated_at": "2026-02-21T07:11:30.756738+00:00",
       "metadata": {}
     },
     "3316e2c7-8d34-451c-a626-3a4d2dac27fa": {
@@ -9943,16 +9946,18 @@
     },
     "a772360a-64f6-4daf-8312-fcc7586304a7": {
       "identity_id": "a772360a-64f6-4daf-8312-fcc7586304a7",
-      "name": "Unidentified Person 399",
-      "state": "INBOX",
+      "name": "Morris Franco",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_988e0e8b70d2"
       ],
-      "candidate_ids": [],
+      "candidate_ids": [
+        "Image 968_compress:face5"
+      ],
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.224955+00:00",
-      "updated_at": "2026-02-14T14:45:50.224955+00:00",
+      "updated_at": "2026-02-21T05:45:44.937141+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -9960,20 +9965,23 @@
         "ingested_at": "2026-02-14T14:45:50.224947+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "metadata": {},
+      "birth_year": 1888
     },
     "ac3b43b2-3e74-4237-ab71-b8ded0f8bfda": {
       "identity_id": "ac3b43b2-3e74-4237-ab71-b8ded0f8bfda",
-      "name": "Unidentified Person 400",
-      "state": "INBOX",
+      "name": "Isaac Franco",
+      "state": "CONFIRMED",
       "anchor_ids": [
         "inbox_3d0078a63002"
       ],
-      "candidate_ids": [],
+      "candidate_ids": [
+        "Image 968_compress:face4"
+      ],
       "negative_ids": [],
       "version_id": 1,
       "created_at": "2026-02-14T14:45:50.224975+00:00",
-      "updated_at": "2026-02-14T14:45:50.224975+00:00",
+      "updated_at": "2026-02-21T05:49:46.997375+00:00",
       "provenance": {
         "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
@@ -9981,7 +9989,8 @@
         "ingested_at": "2026-02-14T14:45:50.224968+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "metadata": {},
+      "birth_year": 1893
     },
     "38fce6ca-d309-477f-9b23-f7faeb47c6a7": {
       "identity_id": "38fce6ca-d309-477f-9b23-f7faeb47c6a7",

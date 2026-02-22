@@ -1459,7 +1459,23 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rationale**: Portfolio impact — "Upload a photo and my system detects faces, finds matches with calibrated confidence, and estimates the decade — all local ONNX models on a $5/month server."
 - **Affects**: /api/facecompare/upload handler, _fc_results_section()
 
-1. Add a new entry with AD-XXX format (next: AD-134)
+### AD-134: Deploy Data Safety Gate — Triple Protection Against Volume Overwrite
+- **Date**: 2026-02-21 | **Session**: 59b (emergency recovery)
+- **Context**: 5th occurrence of deploy overwriting user-entered production data. Session 49B entered 9 identity confirmations + names + birth years + merges through the web UI on production. Sessions 55-59 pushed code, triggering Railway redeploys. The `init_railway_volume.py._sync_essential_files()` function compared bundle hash (46 confirmed) to volume hash (55 confirmed), found they differed, and overwrote the volume with the stale bundle data. Previous occurrences: Session 12, Session 16, annotations.json incident, Lesson 78.
+- **Decision**: Triple protection in init_railway_volume.py:
+  - **Protection A — Count-based safety gate**: `_is_volume_user_modified()` checks if the volume has MORE confirmed identities (or more photos) than the bundle. If so, refuses to overwrite. This catches the exact failure pattern.
+  - **Protection B — Auto-backup before sync**: `_auto_backup_volume()` saves all critical data files to `auto_backups/<timestamp>/` before any sync operation. Keeps last 10 backups. Ensures recovery is always possible.
+  - **Protection C — Per-file .bak timestamps**: Existing behavior preserved — individual .bak files created before each overwrite. This was already present and enabled the 49B recovery.
+- **Rejected alternatives**:
+  1. "Just fix the init script again" — tried 4+ times, keeps regressing because the fundamental design (bundle overwrites volume) is wrong for user-modified files
+  2. "Move to Supabase/Postgres" — correct long-term fix but too large a migration for emergency session
+  3. "Pre-push hook requiring sync_from_production" — helps but doesn't protect against direct git push or CI-triggered deploys
+  4. "Split identities.json into seed + mutable" — architectural debt, defer to Postgres migration
+- **Recovery**: Data recovered from Railway volume backup file `identities.json.bak.1771662663` (created by the overwrite that lost the data). 55 confirmed → merged into local → pushed to production.
+- **Affects**: scripts/init_railway_volume.py (_sync_essential_files, _auto_backup_volume, _is_volume_user_modified, _count_confirmed_identities)
+- **Tests**: tests/test_deploy_safety_gate.py (21 tests including Session 49B regression test)
+
+1. Add a new entry with AD-XXX format (next: AD-135)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
