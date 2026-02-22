@@ -5,14 +5,20 @@ Copies bundled JSON data files into the volume if they don't already exist.
 This runs as part of the start command on first deploy.
 # Force rebuild: 2026-02-05-v3
 
-Architecture:
-  - JSON data (identities.json, photo_index.json) → Railway Volume
+Architecture (AD-135):
+  - ML-generated data (photo_index.json, embeddings.npy) → Railway Volume (from bundle)
+  - User-entered data (confirmations, annotations, etc.) → Supabase Postgres
+  - JSON files on volume are a READ CACHE rebuilt from Supabase on app startup
   - Photos and crops → Cloudflare R2 (NOT bundled in image)
 
 Railway supports only ONE persistent volume per service. When STORAGE_DIR
 is set, the volume is mounted at that path and we create subdirectories:
   /app/storage/
   └── data/          ← identities.json, photo_index.json, embeddings, etc.
+
+Startup sequence:
+  1. init_railway_volume.py — seeds ML data from Docker bundle
+  2. app startup_event() — syncs user data from Supabase → JSON cache
 
 Photos are served from Cloudflare R2 via public URLs. They are NOT seeded
 from Docker image bundles. See scripts/upload_to_r2.py to upload photos.
@@ -50,9 +56,15 @@ REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
 
 # Optional files that should be synced from bundle when they differ.
 # These are NOT required for the app to start, but enhance functionality.
-# annotations.json is NOT in this list — it is production-origin data written by
-# users via the web UI. Syncing from bundle would overwrite user submissions.
-OPTIONAL_SYNC_FILES = ["proposals.json", "surname_variants.json", "date_labels.json", "photo_search_index.json", "rhodes_context_events.json", "relationships.json", "gedcom_matches.json", "co_occurrence_graph.json", "location_dictionary.json", "photo_locations.json", "birth_year_estimates.json", "ancestry_links.json"]
+#
+# AD-135: User-entered data is NO LONGER synced from bundle — it lives in
+# Supabase and is synced to JSON on app startup. Files excluded:
+#   - annotations.json — user submissions via web UI
+#   - relationships.json — user-entered and GEDCOM-derived relationships
+#   - gedcom_matches.json — user review decisions on GEDCOM matches
+#   - ancestry_links.json — derived from user-reviewed GEDCOM matches
+# These are rebuilt from Supabase on every app start (see app/supabase_data.py).
+OPTIONAL_SYNC_FILES = ["proposals.json", "surname_variants.json", "date_labels.json", "photo_search_index.json", "rhodes_context_events.json", "co_occurrence_graph.json", "location_dictionary.json", "photo_locations.json", "birth_year_estimates.json"]
 
 
 def volume_is_valid(data_dir: Path) -> bool:
