@@ -11779,6 +11779,52 @@ def post(person_id: str, comment_id: str, sess=None):
     return Div(P("Comment hidden.", cls="text-xs text-slate-500 italic py-2"))
 
 
+def _build_photo_cards(photos: list) -> list:
+    """Build photo card elements for a list of photo dicts."""
+    cards = []
+    for photo in photos:
+        badge_cls = "bg-emerald-600/80" if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0 else "bg-black/70"
+        date_text, date_conf, date_tooltip = _get_date_badge(photo["photo_id"])
+        date_badge = None
+        if date_text:
+            if date_conf == "high":
+                date_cls = "bg-amber-800/80 text-amber-100"
+            elif date_conf == "medium":
+                date_cls = "bg-amber-800/50 border border-amber-600/50 text-amber-200/90"
+            else:
+                date_cls = "border border-dashed border-amber-600/40 text-amber-400/60"
+            date_badge = Span(
+                date_text,
+                cls=f"absolute bottom-2 left-2 text-[11px] font-serif px-1.5 py-0.5 rounded backdrop-blur-sm {date_cls}",
+                title=date_tooltip, data_testid="date-badge", data_confidence=date_conf,
+            )
+        match_label = None
+        if photo.get("match_reason"):
+            match_label = Div(
+                Span(f"Matched: {photo['match_reason']}", cls="text-[10px] text-indigo-300/70 italic"),
+                cls="px-2 pb-1", data_testid="match-reason",
+            )
+        cards.append(
+            A(
+                Div(
+                    Img(src=photo_url(photo["filename"]),
+                        cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
+                        loading="lazy"),
+                    Div(f"{photo['confirmed_count']}/{photo['face_count']}" if photo["confirmed_count"] > 0 else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
+                        cls=f"absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm {badge_cls}",
+                    ) if photo["face_count"] > 0 else None,
+                    date_badge,
+                    cls="aspect-[4/3] overflow-hidden relative",
+                ),
+                Div(P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"), cls="p-2") if photo["collection"] else None,
+                match_label,
+                href=f"/photo/{photo['photo_id']}",
+                cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition-colors group block",
+            )
+        )
+    return cards
+
+
 @rt("/photos")
 def get(filter_collection: str = "", sort_by: str = "newest",
         decade: int = None, search_q: str = "", tag: str = "", sess=None):
@@ -11844,60 +11890,28 @@ def get(filter_collection: str = "", sort_by: str = "newest",
     else:  # newest
         photos.sort(key=lambda p: p["filename"], reverse=True)
 
-    # Build photo cards
-    photo_cards = []
-    for photo in photos:
-        badge_cls = "bg-emerald-600/80" if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0 else "bg-black/70"
+    # Build photo cards (paginated — 24 per page for lazy loading)
+    PHOTOS_PER_PAGE = 24
+    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE])
 
-        # Date badge (bottom-left, confidence-styled)
-        date_text, date_conf, date_tooltip = _get_date_badge(photo["photo_id"])
-        date_badge = None
-        if date_text:
-            if date_conf == "high":
-                date_cls = "bg-amber-800/80 text-amber-100"
-            elif date_conf == "medium":
-                date_cls = "bg-amber-800/50 border border-amber-600/50 text-amber-200/90"
-            else:
-                date_cls = "border border-dashed border-amber-600/40 text-amber-400/60"
-            date_badge = Span(
-                date_text,
-                cls=f"absolute bottom-2 left-2 text-[11px] font-serif px-1.5 py-0.5 rounded backdrop-blur-sm {date_cls}",
-                title=date_tooltip,
-                data_testid="date-badge",
-                data_confidence=date_conf,
-            )
-
-        # Match reason label when search is active
-        match_label = None
-        if photo.get("match_reason"):
-            match_label = Div(
-                Span(f"Matched: {photo['match_reason']}", cls="text-[10px] text-indigo-300/70 italic"),
-                cls="px-2 pb-1",
-                data_testid="match-reason",
-            )
-
+    # Lazy loading sentinel: loads next page when scrolled into view
+    total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
+    if total_pages > 1:
+        from urllib.parse import urlencode as _ue
+        _lazy_params = {"page": 2, "filter_collection": filter_collection,
+                        "sort_by": sort_by, "search_q": search_q, "tag": tag}
+        if decade:
+            _lazy_params["decade"] = decade
+        _lazy_params = {k: v for k, v in _lazy_params.items() if v}
         photo_cards.append(
-            A(
-                Div(
-                    Img(
-                        src=photo_url(photo["filename"]),
-                        cls="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
-                        loading="lazy",
-                    ),
-                    Div(
-                        f"{photo['confirmed_count']}/{photo['face_count']}" if photo["confirmed_count"] > 0 else f"{photo['face_count']} face{'s' if photo['face_count'] != 1 else ''}",
-                        cls=f"absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm {badge_cls}",
-                    ) if photo["face_count"] > 0 else None,
-                    date_badge,
-                    cls="aspect-[4/3] overflow-hidden relative",
-                ),
-                Div(
-                    P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"),
-                    cls="p-2",
-                ) if photo["collection"] else None,
-                match_label,
-                href=f"/photo/{photo['photo_id']}",
-                cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition-colors group block",
+            Div(
+                Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
+                P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
+                id="photos-lazy-sentinel",
+                cls="col-span-full flex flex-col items-center py-8",
+                hx_get=f"/api/photos/more?{_ue(_lazy_params)}",
+                hx_trigger="revealed",
+                hx_swap="outerHTML",
             )
         )
 
@@ -12059,6 +12073,91 @@ def get(filter_collection: str = "", sort_by: str = "newest",
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
+@rt("/api/photos/more")
+def photos_more(page: int = 2, filter_collection: str = "", sort_by: str = "newest",
+                decade: int = None, search_q: str = "", tag: str = ""):
+    """HTMX endpoint for infinite scroll — returns next batch of photo cards."""
+    from urllib.parse import urlencode as _ue
+    PHOTOS_PER_PAGE = 24
+
+    _build_caches()
+    registry = load_registry()
+
+    # Replicate same filtering/sorting as /photos
+    search_photo_ids = None
+    if search_q or decade or tag:
+        search_results = _search_photos(query=search_q, decade=decade, tag=tag)
+        search_photo_ids = {r.get("cache_photo_id", r["photo_id"]): r.get("match_reason") for r in search_results}
+
+    photos = []
+    for photo_id_val, photo_data in (_photo_cache or {}).items():
+        collection = photo_data.get("collection", "")
+        if filter_collection and collection != filter_collection:
+            continue
+        if search_photo_ids is not None and photo_id_val not in search_photo_ids:
+            continue
+        filename = photo_data.get("filename", "unknown")
+        face_ids = photo_data.get("face_ids", [])
+        face_count = len(face_ids)
+        confirmed_face_ids = set()
+        for fid in face_ids:
+            identity = registry.find_identity_for_face(fid) if hasattr(registry, 'find_identity_for_face') else None
+            if identity and identity.get("state") == "CONFIRMED":
+                confirmed_face_ids.add(fid)
+        confirmed_count = 0
+        for fid in face_ids:
+            ident = registry.find_identity_for_face(fid) if hasattr(registry, 'find_identity_for_face') else None
+            if ident and ident.get("state") == "CONFIRMED":
+                confirmed_count += 1
+        photos.append({
+            "photo_id": photo_id_val,
+            "filename": filename,
+            "collection": collection,
+            "face_count": face_count,
+            "confirmed_count": confirmed_count,
+            "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
+        })
+
+    if sort_by == "oldest":
+        photos.sort(key=lambda p: p["filename"])
+    elif sort_by == "most_faces":
+        photos.sort(key=lambda p: p["face_count"], reverse=True)
+    else:
+        photos.sort(key=lambda p: p["filename"], reverse=True)
+
+    # Paginate
+    start = (page - 1) * PHOTOS_PER_PAGE
+    end = start + PHOTOS_PER_PAGE
+    page_photos = photos[start:end]
+
+    if not page_photos:
+        return ""  # No more photos
+
+    cards = _build_photo_cards(page_photos)
+
+    # Add sentinel for next page if there are more
+    total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
+    if page < total_pages:
+        _lazy_params = {"page": page + 1, "filter_collection": filter_collection,
+                        "sort_by": sort_by, "search_q": search_q, "tag": tag}
+        if decade:
+            _lazy_params["decade"] = decade
+        _lazy_params = {k: v for k, v in _lazy_params.items() if v}
+        cards.append(
+            Div(
+                Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
+                P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
+                id="photos-lazy-sentinel",
+                cls="col-span-full flex flex-col items-center py-8",
+                hx_get=f"/api/photos/more?{_ue(_lazy_params)}",
+                hx_trigger="revealed",
+                hx_swap="outerHTML",
+            )
+        )
+
+    return tuple(cards)
 
 
 @rt("/people")
@@ -13400,13 +13499,23 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
                 ),
                 cls="sticky top-16 z-40 bg-slate-900/95 backdrop-blur-sm border-b border-slate-800/50",
             ),
-            # Timeline
+            # Timeline (lazy loading — show enough decades to include ~20 photos, load rest on scroll)
             Section(
                 Div(
                     # The vertical line
                     Div(cls="timeline-line", data_testid="timeline-line"),
-                    # Decade sections
-                    *decade_sections,
+                    # Show decades until we have >=20 photo entries or exhaust them
+                    *(_tl_initial := _timeline_initial_decades(decade_sections, decades_order, decades_map, limit=20)),
+                    # Lazy sentinel for remaining decades
+                    (Div(
+                        Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
+                        P("Loading more decades...", cls="text-slate-500 text-xs mt-2"),
+                        id="timeline-lazy-sentinel",
+                        cls="flex flex-col items-center py-8",
+                        hx_get=f"/api/timeline/more?offset={len(_tl_initial)}&person={_url_quote(person or '')}&people={_url_quote(people or '')}&start={start or ''}&end={end or ''}&context={context}&collection={_url_quote(collection or '')}",
+                        hx_trigger="revealed",
+                        hx_swap="outerHTML",
+                    ) if len(_tl_initial) < len(decade_sections) else None),
                     # Empty state
                     Div(
                         P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
@@ -13430,6 +13539,224 @@ def get(person: str = "", people: str = "", start: int = None, end: int = None,
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
+def _timeline_initial_decades(decade_sections, decades_order, decades_map, limit=20):
+    """Return enough decade sections to include at least `limit` photo entries."""
+    result = []
+    photo_count = 0
+    for i, dec in enumerate(decades_order):
+        result.append(decade_sections[i])
+        photo_count += sum(1 for e in decades_map[dec] if e["type"] == "photo")
+        if photo_count >= limit:
+            break
+    return result
+
+
+@rt("/api/timeline/more")
+def get(offset: int = 3, person: str = "", people: str = "", start: int = None,
+        end: int = None, context: str = "on", collection: str = ""):
+    """HTMX endpoint for timeline lazy loading — returns remaining decade sections."""
+    from urllib.parse import quote as _url_quote
+
+    _build_caches()
+    registry = load_registry()
+    search_docs = _load_search_index()
+    date_labels = _load_date_labels()
+    context_events = _load_context_events() if context != "off" else []
+
+    # Resolve person filter
+    person_ids = []
+    if people:
+        person_ids = [p.strip() for p in people.split(",") if p.strip()]
+    elif person:
+        person_ids = [person]
+
+    person_photo_ids = None
+    photo_person_map = {}
+    if person_ids:
+        person_photo_ids = set()
+        for pid in person_ids:
+            try:
+                ident = registry.get_identity(pid)
+            except KeyError:
+                continue
+            if not ident:
+                continue
+            face_ids = [f if isinstance(f, str) else f.get("face_id", "")
+                        for f in ident.get("anchor_ids", []) + ident.get("candidate_ids", [])]
+            pname = ensure_utf8_display(ident.get("name", ""))
+            for fid in face_ids:
+                photo_id = get_photo_id_for_face(fid)
+                if photo_id:
+                    person_photo_ids.add(photo_id)
+                    photo_person_map.setdefault(photo_id, set()).add(pname)
+
+    person_identity = None
+    if len(person_ids) == 1:
+        try:
+            person_identity = registry.get_identity(person_ids[0])
+        except KeyError:
+            pass
+
+    # Build timeline entries (same logic as /timeline)
+    timeline_entries = []
+    for doc in search_docs:
+        photo_id = doc.get("cache_photo_id", doc.get("photo_id", ""))
+        best_year = doc.get("best_year_estimate")
+        decade_val = doc.get("estimated_decade")
+        if not best_year and not decade_val:
+            continue
+        year = best_year or decade_val
+        if not year:
+            continue
+        if start and year < start:
+            continue
+        if end and year > end:
+            continue
+        if person_photo_ids is not None and photo_id not in person_photo_ids:
+            continue
+        photo_data = (_photo_cache or {}).get(photo_id, {})
+        filename = photo_data.get("filename", "")
+        photo_collection = photo_data.get("collection", "")
+        if collection and photo_collection != collection:
+            continue
+        label = date_labels.get(photo_id, {})
+        faces = photo_data.get("faces", [])
+        people_names = []
+        for face in faces:
+            fid = face.get("face_id", "")
+            ident_for_face = get_identity_for_face(registry, fid)
+            if ident_for_face and ident_for_face.get("state") == "CONFIRMED" and not ident_for_face.get("name", "").startswith("Unidentified"):
+                people_names.append(ident_for_face["name"])
+        highlighted_people = sorted(photo_person_map.get(photo_id, set()))
+        timeline_entries.append({
+            "type": "photo", "year": year, "decade": decade_val or (year // 10 * 10),
+            "photo_id": photo_id, "filename": filename, "collection": photo_collection,
+            "confidence": label.get("confidence", "medium"),
+            "prob_range": label.get("probable_range", []),
+            "people": people_names, "highlighted_people": highlighted_people,
+            "scene": label.get("scene_description", ""),
+        })
+
+    # Add context events
+    person_era_start = None
+    person_era_end = None
+    if person_photo_ids is not None and timeline_entries:
+        photo_years = [e["year"] for e in timeline_entries if e["type"] == "photo"]
+        if photo_years:
+            person_era_start = min(photo_years) - 30
+            person_era_end = max(photo_years) + 10
+
+    for event in context_events:
+        year = event.get("year", 0)
+        if start and year < start:
+            continue
+        if end and year > end:
+            continue
+        if person_era_start is not None and (year < person_era_start or year > person_era_end):
+            continue
+        timeline_entries.append({
+            "type": "context", "year": year, "decade": year // 10 * 10,
+            "title": event.get("title", ""), "description": event.get("description", ""),
+            "category": event.get("category", ""), "source": event.get("source", ""),
+        })
+
+    timeline_entries.sort(key=lambda e: e["year"])
+
+    # Group by decade
+    decades_order = []
+    decades_map = {}
+    for entry in timeline_entries:
+        dec = entry["decade"]
+        if dec not in decades_map:
+            decades_map[dec] = []
+            decades_order.append(dec)
+        decades_map[dec].append(entry)
+
+    # Age computation
+    person_birth_year = None
+    if person_identity:
+        iid = person_identity.get("identity_id", "")
+        person_birth_year, _, _ = _get_birth_year(iid, person_identity, include_unreviewed=False)
+
+    category_colors = {
+        "holocaust": "border-red-700/60 bg-red-950/30",
+        "persecution": "border-red-800/50 bg-red-950/20",
+        "liberation": "border-emerald-700/50 bg-emerald-950/20",
+        "immigration": "border-blue-700/50 bg-blue-950/20",
+        "community": "border-amber-700/50 bg-amber-950/20",
+        "political": "border-slate-600/50 bg-slate-800/30",
+    }
+
+    # Build decade sections (same rendering as /timeline)
+    decade_sections = []
+    for dec in decades_order:
+        entries = decades_map[dec]
+        marker = Div(
+            Div(Span(f"{dec}s", cls="text-lg font-serif font-bold text-amber-400/80"),
+                cls="bg-slate-900 px-3 py-1 relative z-10"),
+            cls="flex items-center justify-center my-6", data_testid="decade-marker",
+        )
+        cards = []
+        for entry in entries:
+            if entry["type"] == "photo":
+                conf = entry.get("confidence", "medium")
+                age_badge = None
+                if person_birth_year:
+                    age = entry["year"] - person_birth_year
+                    if 0 < age < 120:
+                        age_badge = Span(f"Age ~{age}", cls="text-[10px] text-amber-300/60 ml-2")
+                year_label = str(entry["year"])
+                if conf == "high":
+                    year_cls = "text-amber-200 font-semibold"
+                elif conf == "medium":
+                    year_cls = "text-amber-300/70"
+                else:
+                    year_cls = "text-amber-400/50 italic"
+                cards.append(Div(
+                    Div(Div(cls="w-3 h-3 rounded-full bg-amber-700/80 border-2 border-amber-500/50 absolute -left-[6px] top-5"),
+                        cls="relative"),
+                    Div(
+                        A(
+                            Img(src=photo_url(entry["filename"]),
+                                cls="w-full h-40 sm:h-48 object-cover rounded-t-lg", loading="lazy"),
+                            href=f"/photo/{entry['photo_id']}",
+                        ),
+                        Div(
+                            Div(Span(year_label, cls=year_cls), age_badge, cls="flex items-baseline"),
+                            P(entry.get("collection", ""), cls="text-[10px] text-slate-500") if entry.get("collection") else None,
+                            P(", ".join(entry.get("people", [])[:4]), cls="text-xs text-slate-400 mt-1") if entry.get("people") else None,
+                            cls="p-3",
+                        ),
+                        cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-600 transition-colors",
+                    ),
+                    cls="ml-8 sm:ml-12 mb-4", data_testid="timeline-entry",
+                ))
+            elif entry["type"] == "context":
+                cat = entry.get("category", "")
+                color_cls = category_colors.get(cat, "border-slate-600/50 bg-slate-800/30")
+                cards.append(Div(
+                    Div(Div(cls="w-2.5 h-2.5 rounded-full bg-slate-600 border-2 border-slate-500/50 absolute -left-[5px] top-5"),
+                        cls="relative"),
+                    Div(
+                        Div(Span(str(entry["year"]), cls="text-sm font-serif text-slate-300"),
+                            Span(f" \u00b7 {entry['title']}", cls="text-sm text-slate-400"),
+                            cls="flex items-start gap-2.5"),
+                        P(entry["description"], cls="text-xs text-slate-400 leading-relaxed mt-2"),
+                        P(entry.get("source", ""), cls="text-[9px] text-slate-600 mt-2 italic") if entry.get("source") else None,
+                        cls=f"p-4 rounded-lg border-l-4 {color_cls}",
+                    ),
+                    cls="ml-8 sm:ml-12 mb-4", data_testid="timeline-context-event",
+                ))
+        decade_sections.append(Div(marker, *cards))
+
+    # Return only sections from offset onward
+    remaining = decade_sections[offset:]
+    if not remaining:
+        return ""
+
+    return tuple(remaining)
 
 
 # ---- Face Comparison Tool ----
