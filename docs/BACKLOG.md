@@ -148,6 +148,9 @@ AD-137. See Session 60 log.
 - [ ] **ML-097: Run full 271-photo re-analysis with 3.1 Pro**: After ML-096 validates quality. Needs cost approval. (Session 61)
 - [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
 - [x] **Progressive refinement**: Pipeline fully wired — enriched prompt now sent to Gemini. Session 60 (AD-138) + Session 61 (ML-090 fixed).
+- [ ] **UX-130**: Homepage visitor experience — non-admin landing page with CTAs (P2). Source: Session 61B UX evaluation.
+- [ ] **UX-131**: Photo page admin tools below evidence — collapse behind toggle (P2). Source: Session 61B UX evaluation.
+- [ ] **UX-132**: Homepage "Compare a Face" CTA for non-admin visitors (P2). Source: Session 61B UX evaluation.
 - [ ] **FE-041**: "Help Identify" mode for non-admin users
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
 - [ ] **ROLE-006**: Email notifications for contributors
