@@ -87,6 +87,7 @@ data/*
 mlruns/
 rhodesli_ml/mlruns/
 rhodesli_ml/checkpoints/
+rhodesli_ml/data/api_logs/
 
 # Scientific Instrumentation Runtime
 logs/
