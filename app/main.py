@@ -2696,7 +2696,7 @@ def _public_nav_links(active: str = "", user=None) -> list:
 def _public_page_nav(nav_links: list, *, active: str = "", user=None,
                      max_w: str = "max-w-5xl", font_cls: str = "text-lg font-serif font-bold text-white",
                      sticky: bool = True, fixed: bool = False,
-                     extra_links: list = None) -> Nav:
+                     extra_links: list = None, include_admin_bar: bool = True) -> object:
     """Build a public page nav bar with mobile hamburger menu.
 
     All public pages should use this instead of inlining Nav() with hidden sm:flex.
@@ -2757,7 +2757,7 @@ def _public_page_nav(nav_links: list, *, active: str = "", user=None,
 
     pos_cls = "sticky top-0" if sticky else ("fixed top-0 left-0 right-0" if fixed else "")
 
-    return Nav(
+    nav = Nav(
         Div(
             Div(
                 hamburger_btn,
@@ -2769,6 +2769,57 @@ def _public_page_nav(nav_links: list, *, active: str = "", user=None,
         ),
         mobile_overlay,
         cls=f"bg-slate-900/80 backdrop-blur-md border-b border-slate-800 {pos_cls} z-50",
+    )
+
+    if include_admin_bar and user and getattr(user, 'is_admin', False):
+        return Div(nav, _admin_bar(user), id="nav-with-admin")
+    return nav
+
+
+def _admin_bar(user=None) -> object:
+    """Admin mode indicator bar — only visible for admin users.
+
+    Shows pending count, quick links to admin sections.
+    Returns empty string for non-admin users.
+    """
+    if not user or not getattr(user, 'is_admin', False):
+        return NotStr("")
+
+    # Count pending items
+    pending_count = 0
+    proposal_count = 0
+    try:
+        registry = load_registry()
+        for ident in registry.identities.values():
+            if ident.get("merged_into"):
+                continue
+            state = ident.get("state", "")
+            if state == "INBOX":
+                pending_count += 1
+            elif state == "PROPOSED":
+                proposal_count += 1
+    except Exception:
+        pass
+
+    return Div(
+        Div(
+            Span("Admin Mode", cls="text-amber-400/80 text-xs font-medium tracking-wide uppercase"),
+            Div(
+                A(f"Pending ({pending_count})", href="/admin/section/to_review",
+                  cls="text-slate-400 hover:text-white text-xs transition-colors"),
+                Span("|", cls="text-slate-700 mx-2"),
+                A(f"Proposals ({proposal_count})", href="/admin/section/proposals",
+                  cls="text-slate-400 hover:text-white text-xs transition-colors"),
+                Span("|", cls="text-slate-700 mx-2"),
+                A("Upload", href="/admin/upload",
+                  cls="text-slate-400 hover:text-white text-xs transition-colors"),
+                cls="flex items-center",
+            ),
+            cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+        ),
+        cls="bg-slate-950 border-b border-amber-400/20 py-1.5",
+        id="admin-bar",
+        data_testid="admin-bar",
     )
 
 
@@ -10383,6 +10434,7 @@ def public_person_page(
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50"
             ),
+            _admin_bar(user),
 
             # Hero section
             Section(
@@ -17419,6 +17471,7 @@ def public_photo_page(
                 ),
                 cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50"
             ),
+            _admin_bar(user),
 
             # Hero photo section
             Section(
