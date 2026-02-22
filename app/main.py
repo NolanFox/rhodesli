@@ -15543,7 +15543,7 @@ async def post(photo: UploadFile = None, sess=None):
             cls="py-4",
         )
 
-    # --- Real-time processing: face detection + Gemini date estimation ---
+    # --- Real-time processing: face detection + CORAL model + Gemini ---
     parts = []
 
     # 1. Face detection (if InsightFace available)
@@ -15589,7 +15589,79 @@ async def post(photo: UploadFile = None, sess=None):
         finally:
             tmp_path.unlink(missing_ok=True)
 
-    # 2. Gemini date estimation (if API key available)
+    # 2. CORAL date estimation model (local ONNX, instant, free — AD-129)
+    coral_result = None
+    try:
+        from rhodesli_ml.date_inference.inference import predict_date
+        from PIL import Image as _PILImage
+        import io as _io
+        pil_img = _PILImage.open(_io.BytesIO(content)).convert("RGB")
+        import numpy as _np
+        rgb_array = _np.array(pil_img)
+        coral_result = predict_date(rgb_array)
+    except Exception as e:
+        print(f"[estimate] CORAL model error: {e}")
+
+    if coral_result:
+        decade = coral_result["predicted_decade"]
+        confidence = coral_result["confidence"]
+        expected_year = coral_result["expected_year"]
+        decade_probs = coral_result["decade_probabilities"]
+
+        # Confidence tier for display
+        if confidence >= 0.5:
+            conf_label = "High confidence"
+            conf_color = "text-emerald-400"
+        elif confidence >= 0.3:
+            conf_label = "Moderate confidence"
+            conf_color = "text-amber-400"
+        else:
+            conf_label = "Low confidence"
+            conf_color = "text-slate-400"
+
+        # Build probability bar chart
+        prob_bars = []
+        for dec_str, prob in sorted(decade_probs.items()):
+            dec = int(dec_str)
+            pct = prob * 100
+            bar_width = max(1, pct)  # Minimum 1% width for visibility
+            is_predicted = (dec == decade)
+            bar_color = "bg-amber-400" if is_predicted else "bg-slate-600"
+            text_color = "text-amber-400 font-semibold" if is_predicted else "text-slate-500"
+            prob_bars.append(
+                Div(
+                    Span(f"{dec}s", cls=f"text-[10px] {text_color} w-10 text-right mr-2 shrink-0"),
+                    Div(
+                        Div(cls=f"{bar_color} h-full rounded-r", style=f"width:{bar_width}%"),
+                        cls="flex-1 bg-slate-800 rounded h-3",
+                    ),
+                    Span(f"{pct:.0f}%", cls=f"text-[10px] {text_color} w-8 ml-2 shrink-0"),
+                    cls="flex items-center",
+                )
+            )
+
+        parts.append(Div(
+            P(f"Estimated era: circa {decade}s", cls="text-xl font-serif font-bold text-white text-center",
+              data_testid="estimate-coral-decade"),
+            P(f"Expected year: ~{expected_year}",
+              cls="text-sm text-slate-400 text-center mt-1"),
+            Div(
+                Span(conf_label, cls=f"text-xs font-medium {conf_color}"),
+                Span(" · ", cls="text-slate-600"),
+                Span("CORAL ordinal regression model", cls="text-xs text-slate-500"),
+                cls="flex items-center justify-center gap-1 mt-2",
+            ),
+            # Decade probability distribution
+            Div(
+                P("Decade probability distribution", cls="text-xs text-slate-500 uppercase tracking-wider mb-2"),
+                Div(*prob_bars, cls="flex flex-col gap-1"),
+                cls="mt-4 bg-slate-800/30 rounded-lg p-3 border border-slate-700/30",
+            ),
+            cls="py-3",
+            data_testid="estimate-coral-result",
+        ))
+
+    # 3. Gemini date estimation (if API key available — supplementary, richer evidence)
     gemini_key = os.getenv("GEMINI_API_KEY", "")
     gemini_result = None
     if gemini_key:
@@ -15613,21 +15685,26 @@ async def post(photo: UploadFile = None, sess=None):
                     clues.append(cue.get("cue", ""))
         clues_text = "; ".join(clues[:4]) if clues else reasoning[:120] if reasoning else "Based on AI analysis"
 
+        # If we already have CORAL result, show Gemini as supplementary
+        heading = "Detailed AI Analysis" if coral_result else "AI Date Estimate"
         parts.append(Div(
             Div(
-                Span("~", cls="text-2xl text-amber-400 font-serif"),
-                cls="flex justify-center mb-2",
+                Span("~", cls="text-2xl text-amber-400 font-serif") if not coral_result else None,
+                cls="flex justify-center mb-2" if not coral_result else "hidden",
             ),
-            P(f"Estimated: c. {year}", cls="text-xl font-serif font-bold text-white text-center"),
+            P(heading if coral_result else f"Estimated: c. {year}",
+              cls=f"text-{'sm text-slate-400 font-semibold' if coral_result else 'xl font-serif font-bold text-white'} text-center"),
+            P(f"Gemini suggests c. {year}" if coral_result else "",
+              cls="text-sm text-slate-400 text-center mt-1") if coral_result else None,
             P(f"Range: {prob_range[0]}–{prob_range[1]}" if len(prob_range) >= 2 else "",
-              cls="text-sm text-slate-400 text-center mt-1"),
+              cls="text-sm text-slate-400 text-center mt-1") if not coral_result else None,
             P(f"Confidence: {confidence}", cls="text-xs text-slate-500 text-center mt-1"),
             P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic max-w-md mx-auto"),
-            cls="py-3",
+            cls="py-3 mt-3 border-t border-slate-700/30" if coral_result else "py-3",
             data_testid="estimate-gemini-result",
         ))
-    elif not has_insightface:
-        # No ML + no Gemini = honest minimal message
+    elif not coral_result and not has_insightface:
+        # No CORAL + no Gemini + no InsightFace = honest minimal message
         parts.append(Div(
             Div(
                 Span("?", cls="text-2xl text-slate-500"),
@@ -15639,10 +15716,10 @@ async def post(photo: UploadFile = None, sess=None):
             P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
             cls="py-4",
         ))
-    else:
-        # Faces detected but no Gemini = partial result
+    elif not coral_result:
+        # No CORAL + no Gemini but has InsightFace = faces only
         parts.append(Div(
-            P("Face detection complete — date estimation requires Gemini API.",
+            P("Face detection complete — date estimation model loading.",
               cls="text-sm text-slate-400 text-center"),
             cls="py-2",
         ))
