@@ -1147,6 +1147,52 @@ def _get_date_badge(photo_id: str) -> tuple:
     return badge_text, confidence, tooltip
 
 
+def _build_photo_date_badge(photo_id: str):
+    """Build prominent date estimate badge for photo detail page.
+
+    Returns a Section with the estimate badge, or None if no estimate.
+    PRD-022: Show 'c. 1935 ± 5 years' prominently on photo pages.
+    """
+    date_text, confidence, tooltip = _get_date_badge(photo_id)
+    if not date_text:
+        return None
+
+    # Load full label for range info
+    labels = _load_date_labels()
+    label = labels.get(photo_id, {})
+    prob_range = label.get("probable_range", [])
+    best_year = label.get("best_year_estimate")
+    range_str = ""
+    if best_year and len(prob_range) == 2:
+        margin = max(abs(prob_range[1] - best_year), abs(best_year - prob_range[0]))
+        range_str = f" \u00b1 {margin} years"
+
+    conf_cls = {
+        "high": "border-emerald-500/40 bg-emerald-950/20",
+        "medium": "border-amber-500/40 bg-amber-950/20",
+        "low": "border-slate-500/40 bg-slate-800/40",
+    }.get(confidence, "border-slate-500/40 bg-slate-800/40")
+
+    refinement_badge = _progressive_refinement_badge(label)
+
+    return Section(
+        Div(
+            Div(
+                Span(date_text + range_str,
+                     cls="text-xl font-serif text-amber-200",
+                     data_testid="photo-date-badge"),
+                Span(f"{confidence} confidence",
+                     cls="text-[11px] text-slate-400 ml-3"),
+                refinement_badge,
+                cls="flex items-center gap-2 flex-wrap",
+            ),
+            cls=f"max-w-[900px] mx-auto border-l-2 {conf_cls} rounded-lg px-4 py-3",
+        ),
+        cls="px-4 sm:px-6 py-4 border-t border-slate-800/50",
+        data_testid="photo-date-badge-section",
+    )
+
+
 def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     """Build the AI Analysis metadata panel for a photo detail page.
 
@@ -1295,7 +1341,8 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             Div(
                 Span(f"Confidence: {confidence}", cls=f"text-[11px] px-2 py-0.5 rounded-full {conf_badge_cls}"),
                 Span(f"Range: {range_str}", cls="text-[11px] text-slate-500 ml-2") if range_str else None,
-                cls="flex items-center gap-2"
+                _progressive_refinement_badge(label),
+                cls="flex items-center gap-2 flex-wrap"
             ),
             prob_bars_el,
             correction_form,
@@ -1331,27 +1378,32 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         ]
         sections.append(_field("Tags", Div(*tag_pills, cls="flex flex-wrap gap-1.5")))
 
-    # Dating evidence
-    evidence = label.get("evidence", {})
-    if evidence:
-        evidence_items = []
-        for category, cues in evidence.items():
-            if not isinstance(cues, list):
-                continue
-            for cue in cues[:3]:  # Max 3 per category
-                cue_text = cue.get("cue", "") if isinstance(cue, dict) else str(cue)
-                strength = cue.get("strength", "") if isinstance(cue, dict) else ""
-                if cue_text:
-                    strength_cls = {"strong": "text-emerald-400", "moderate": "text-amber-400", "weak": "text-slate-500"}.get(strength, "text-slate-500")
-                    evidence_items.append(
-                        Li(
-                            Span(cue_text, cls="text-slate-400"),
-                            Span(f" ({strength})", cls=f"text-[10px] {strength_cls}") if strength else None,
-                            cls="text-xs mb-1"
+    # Dating evidence — Photo Detective card layout
+    detective_section = _detective_evidence_section(label)
+    if detective_section:
+        sections.append(_field("Photo Detective Evidence", detective_section, expanded=False))
+    else:
+        # Fallback: simple list for labels without structured evidence
+        evidence = label.get("evidence", {})
+        if evidence:
+            evidence_items = []
+            for category, cues in evidence.items():
+                if not isinstance(cues, list):
+                    continue
+                for cue in cues[:3]:  # Max 3 per category
+                    cue_text = cue.get("cue", "") if isinstance(cue, dict) else str(cue)
+                    strength = cue.get("strength", "") if isinstance(cue, dict) else ""
+                    if cue_text:
+                        strength_cls = {"strong": "text-emerald-400", "moderate": "text-amber-400", "weak": "text-slate-500"}.get(strength, "text-slate-500")
+                        evidence_items.append(
+                            Li(
+                                Span(cue_text, cls="text-slate-400"),
+                                Span(f" ({strength})", cls=f"text-[10px] {strength_cls}") if strength else None,
+                                cls="text-xs mb-1"
+                            )
                         )
-                    )
-        if evidence_items:
-            sections.append(_field("Dating Evidence", Ul(*evidence_items, cls="list-disc list-inside space-y-0.5")))
+            if evidence_items:
+                sections.append(_field("Dating Evidence", Ul(*evidence_items, cls="list-disc list-inside space-y-0.5")))
 
     # Subject ages
     ages = label.get("subject_ages")
@@ -15782,6 +15834,126 @@ def _connection_path_html(path_steps, registry):
 # =============================================================================
 
 
+# --- Photo Detective Evidence Display Components (PRD-022, Session 61) ---
+
+def _evidence_card(category: str, cues: list) -> object:
+    """Render a single evidence category card for Photo Detective display.
+
+    Args:
+        category: Evidence category name (e.g., 'print_format', 'fashion').
+        cues: List of cue dicts with 'cue', 'strength', 'suggested_range'.
+    """
+    icons = {
+        "print_format": "Print/Physical",
+        "fashion": "Fashion/Grooming",
+        "environment": "Environment",
+        "technology": "Technology",
+        "cultural": "Cultural Context",
+    }
+    strength_colors = {
+        "strong": "text-emerald-400 bg-emerald-900/30",
+        "moderate": "text-amber-400 bg-amber-900/30",
+        "weak": "text-slate-400 bg-slate-700/30",
+    }
+    display_name = icons.get(category, category.replace("_", " ").title())
+    if not cues:
+        return None
+
+    cue_items = []
+    for cue in cues[:3]:  # Show top 3 cues per category
+        strength = cue.get("strength", "moderate")
+        color_cls = strength_colors.get(strength, strength_colors["moderate"])
+        date_range = cue.get("suggested_range", [])
+        range_text = f" ({date_range[0]}-{date_range[1]})" if len(date_range) == 2 else ""
+        cue_items.append(
+            Div(
+                P(cue.get("cue", ""), cls="text-xs text-slate-300"),
+                Span(f"{strength}{range_text}", cls=f"text-[10px] px-1.5 py-0.5 rounded-full {color_cls}"),
+                cls="flex items-start justify-between gap-2 py-1",
+            )
+        )
+
+    return Div(
+        H4(display_name, cls="text-sm font-semibold text-white mb-2"),
+        *cue_items,
+        cls="bg-slate-800/40 rounded-lg p-3 border border-slate-700/30",
+        data_testid=f"evidence-card-{category}",
+    )
+
+
+def _detective_evidence_section(label: dict) -> object:
+    """Build Photo Detective evidence display from a Gemini date label.
+
+    Args:
+        label: Date label dict from date_labels.json (Gemini output).
+    """
+    if not label:
+        return None
+
+    evidence = label.get("evidence", {})
+    if not evidence and not label.get("date_estimation", {}).get("evidence"):
+        return None
+
+    # Handle nested date_estimation structure
+    if "date_estimation" in label:
+        evidence = label["date_estimation"].get("evidence", {})
+
+    cards = []
+    for category in ("print_format", "fashion", "environment", "technology"):
+        cues = evidence.get(category, [])
+        card = _evidence_card(category, cues)
+        if card:
+            cards.append(card)
+
+    if not cards:
+        return None
+
+    # Model badge
+    model = label.get("model", label.get("_model", ""))
+    model_badge = None
+    if model:
+        display_model = model.replace("gemini-", "Gemini ").replace("-preview", "")
+        model_badge = Span(
+            f"Analyzed with {display_model}",
+            cls="text-[10px] text-indigo-300 bg-indigo-900/30 px-2 py-1 rounded-full",
+            data_testid="model-badge",
+        )
+
+    # Cultural context note
+    cultural_note = label.get("cultural_lag_note") or (
+        label.get("date_estimation", {}).get("cultural_lag_note")
+    )
+
+    return Div(
+        Div(
+            H3("Photo Detective Analysis", cls="text-base font-serif font-semibold text-white"),
+            model_badge,
+            cls="flex items-center justify-between mb-3",
+        ),
+        Div(*cards, cls="grid grid-cols-1 sm:grid-cols-2 gap-3"),
+        P(f"Cultural context: {cultural_note}",
+          cls="text-xs text-slate-500 mt-3 italic") if cultural_note else None,
+        cls="mt-6 p-4 bg-slate-800/20 rounded-lg border border-slate-700/20",
+        data_testid="detective-evidence",
+    )
+
+
+def _progressive_refinement_badge(label: dict) -> object:
+    """Show badge when estimate was refined with verified facts."""
+    if not label:
+        return None
+    metadata = label.get("_metadata", label.get("metadata", {}))
+    if not metadata.get("refinement"):
+        return None
+
+    fact_count = metadata.get("fact_count", 0)
+    return Span(
+        f"Refined with {fact_count} verified fact{'s' if fact_count != 1 else ''}",
+        cls="text-[10px] text-amber-300 bg-amber-900/30 px-2 py-1 rounded-full",
+        data_testid="refinement-badge",
+    )
+
+
 @rt("/estimate")
 def get(photo: str = "", sess=None):
     """
@@ -15927,6 +16099,9 @@ def get(photo: str = "", sess=None):
             H3("How we estimated this", cls="text-lg font-serif font-semibold text-white mb-4"),
             Div(*face_cards, scene_card, cls="flex flex-col gap-3 mb-6") if face_cards or scene_card else
             P("Based on visual analysis. Identify more people to improve this estimate.", cls="text-sm text-slate-500 italic"),
+            # Photo Detective evidence from Gemini (PRD-022)
+            _detective_evidence_section(labels.get(photo, {})),
+            _progressive_refinement_badge(labels.get(photo, {})),
             # CTAs
             Div(
                 share_button(url=f"/estimate?photo={photo}", style="button", label="Share Estimate",
@@ -17998,6 +18173,9 @@ def public_photo_page(
                 ),
                 cls="px-4 sm:px-6 py-6 border-t border-slate-800/50"
             ) if face_info_list else None,
+
+            # Prominent date estimate badge (PRD-022: Photo Detective UX)
+            _build_photo_date_badge(photo_id),
 
             # AI Analysis panel (from date labels + search index)
             _build_ai_analysis_section(photo_id, is_admin),
