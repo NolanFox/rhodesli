@@ -1474,8 +1474,34 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Recovery**: Data recovered from Railway volume backup file `identities.json.bak.1771662663` (created by the overwrite that lost the data). 55 confirmed → merged into local → pushed to production.
 - **Affects**: scripts/init_railway_volume.py (_sync_essential_files, _auto_backup_volume, _is_volume_user_modified, _count_confirmed_identities)
 - **Tests**: tests/test_deploy_safety_gate.py (21 tests including Session 49B regression test)
+- **Note**: This is a band-aid. See AD-135 for the structural fix (Supabase migration).
 
-1. Add a new entry with AD-XXX format (next: AD-135)
+### AD-135: Migrate User-Entered Data to Supabase (Structural Fix for Deploy Data Loss)
+- **Date**: 2026-02-21 | **Session**: 59B follow-up | **Status**: PLANNED (Session 59C)
+- **Context**: 5th data loss incident from deploy overwriting Railway volume. Triple safety gate (AD-134) is a band-aid. Problem history:
+  - Session 12: Data integrity fix not pushed to production, stale data served for weeks
+  - Session 16: Overnight session overwrote web triage work (Zeb Capuano regression)
+  - Session 25: annotations.json overwritten by deploy (Claude Benatar inscription nearly lost)
+  - Session 49B/59B: Full interactive session lost — 9 identity confirmations, 3 birth years, 2 merges overwritten by subsequent deploys. Recovered from .bak file.
+  - Lessons: 43, 56, 69, 78, 85 | Decisions: AD-134 (band-aid)
+  - Issue tracker: DATA-001 in docs/ISSUES_LOG.md
+- **Root cause**: User-entered data lives in JSON files on a Railway persistent volume. Every deploy bundles stale copies of these files into the Docker image. The init script has been patched 5+ times to avoid overwriting, but the architecture is fundamentally fragile — it couples deployment with data storage.
+- **Decision**: Migrate all user-entered/user-modified data to Supabase Postgres (project already configured for auth, ID: fvynibivlphxwfowzkjl).
+  - **Data to migrate** (user-entered, mutable): Identity confirmations, merges, annotations, GEDCOM match decisions, birth year corrections, match responses, tags/labels entered through web UI
+  - **Data that stays in JSON + git** (ML-generated, immutable): photo_index.json, embeddings.npy, base identity proposals, face crop metadata
+  - **Architecture after migration**: Supabase = source of truth for all user decisions. JSON files = read cache rebuilt from Supabase on deploy. Deploy can never destroy data because it doesn't own it. Eliminates sync_from_production/push_to_production dance.
+- **Rejected alternatives**:
+  1. "Just fix the init script" — tried 5 times, keeps regressing (AD-134 is the 5th attempt)
+  2. "R2 backup + restore" — recovery mechanism, not prevention
+  3. "Git-track data files" — merge conflicts, stale bundles
+  4. "Delete volume seeding entirely" — breaks fresh deploys
+  5. "Move everything to Supabase" — too large; ML data doesn't belong in a DB
+- **Schema design**: See docs/design/FUTURE_COMMUNITY.md (profiles, invites, annotations, photo_uploads, activity_log tables)
+- **Depends on**: Supabase project staying active (keepalive ping mechanism needed)
+- **Enables**: Multi-user collaboration, community data safety, elimination of sync scripts
+- **Breadcrumbs**: AD-134, DATA-001, Lessons 43/56/69/78/85, docs/design/FUTURE_COMMUNITY.md, BACKLOG BE-040-042
+
+1. Add a new entry with AD-XXX format (next: AD-136)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
