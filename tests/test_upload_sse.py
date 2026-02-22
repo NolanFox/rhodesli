@@ -166,3 +166,81 @@ class TestFacecompareProgressiveUI:
         facecompare = client.get("/facecompare").text
         assert "/api/upload/stream" in compare
         assert "/api/upload/stream" in facecompare
+
+
+class TestClientSideValidation:
+    """Test that client-side validation JS is present."""
+
+    def test_validate_function_exists(self, client, auth_disabled):
+        """Client-side validation function is in the page."""
+        response = client.get("/compare")
+        assert "validateUploadFile" in response.text
+
+    def test_validate_checks_file_type(self, client, auth_disabled):
+        """Validation checks for valid image types."""
+        html = client.get("/compare").text
+        assert "image/jpeg" in html
+        assert "image/png" in html
+        assert "image/webp" in html
+
+    def test_validate_checks_file_size(self, client, auth_disabled):
+        """Validation checks file size limit."""
+        html = client.get("/compare").text
+        assert "10 * 1024 * 1024" in html
+
+    def test_timeout_handling_in_js(self, client, auth_disabled):
+        """JS includes timeout warning for long processing."""
+        html = client.get("/compare").text
+        assert "Taking longer than expected" in html
+
+
+class TestSSEEdgeCases:
+    """Test SSE endpoint edge cases."""
+
+    def test_stream_webp_accepted(self, client, auth_disabled):
+        """WebP files are accepted by the stream endpoint."""
+        import io
+        # A minimal valid WebP header (RIFF + WEBP)
+        webp_header = b"RIFF\x00\x00\x00\x00WEBP"
+        files = {"photo": ("test.webp", io.BytesIO(webp_header), "image/webp")}
+        response = client.post("/api/upload/stream", files=files)
+        lines = response.text.strip().split("\n")
+        data_lines = [l for l in lines if l.startswith("data: ")]
+        # Should get past validation (may fail at ML stage, not at validation)
+        events = [json.loads(l.replace("data: ", "")) for l in data_lines]
+        # Should not have a file type error
+        type_errors = [e for e in events if e.get("stage") == "error" and "JPEG" in e.get("message", "")]
+        assert len(type_errors) == 0
+
+    def test_stream_empty_file(self, client, auth_disabled):
+        """Empty file gets handled gracefully."""
+        import io
+        files = {"photo": ("empty.jpg", io.BytesIO(b""), "image/jpeg")}
+        response = client.post("/api/upload/stream", files=files)
+        lines = response.text.strip().split("\n")
+        data_lines = [l for l in lines if l.startswith("data: ")]
+        events = [json.loads(l.replace("data: ", "")) for l in data_lines]
+        # Should get an error (either at ML or gracefully), not a crash
+        assert any(e.get("stage") in ("error", "received") for e in events)
+
+    def test_stream_flow_parameter_forwarded(self, client, auth_disabled):
+        """The flow parameter is accepted without error."""
+        import io
+        files = {"photo": ("test.jpg", io.BytesIO(b"not-real"), "image/jpeg")}
+        data = {"flow": "facecompare"}
+        response = client.post("/api/upload/stream", files=files, data=data)
+        assert response.status_code == 200
+
+    def test_stream_returns_received_before_error(self, client, auth_disabled):
+        """Valid file gets 'received' event before any potential ML errors."""
+        import io
+        # Create minimal JPEG bytes (invalid but passes extension check)
+        files = {"photo": ("test.jpg", io.BytesIO(b"\xff\xd8\xff\xe0" + b"\x00" * 100), "image/jpeg")}
+        response = client.post("/api/upload/stream", files=files)
+        lines = response.text.strip().split("\n")
+        data_lines = [l for l in lines if l.startswith("data: ")]
+        events = [json.loads(l.replace("data: ", "")) for l in data_lines]
+        # First non-error event should be "received"
+        non_error = [e for e in events if e.get("stage") != "error"]
+        if non_error:
+            assert non_error[0]["stage"] == "received"

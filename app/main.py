@@ -14250,7 +14250,31 @@ def _upload_progress_script() -> str:
     """JavaScript for SSE-based progressive upload with stage indicators."""
     return """
 <script>
+function validateUploadFile(form) {
+    var input = form.querySelector('input[type="file"]');
+    if (!input || !input.files || !input.files.length) {
+        return 'Please select a photo to upload.';
+    }
+    var file = input.files[0];
+    var validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (validTypes.indexOf(file.type) === -1) {
+        return 'Please upload a JPEG, PNG, or WebP image.';
+    }
+    if (file.size > 10 * 1024 * 1024) {
+        return 'File is too large (max 10 MB). Please choose a smaller photo.';
+    }
+    return null;
+}
+
 function startProgressUpload(form, flow) {
+    // Client-side validation first
+    var validationError = validateUploadFile(form);
+    if (validationError) {
+        var results = document.getElementById('compare-results') || document.getElementById('fc-results');
+        if (results) results.innerHTML = '<p class="text-amber-400 text-center py-4">' + validationError + '</p>';
+        return false;
+    }
+
     var formData = new FormData(form);
     formData.append('flow', flow || 'compare');
 
@@ -14261,9 +14285,26 @@ function startProgressUpload(form, flow) {
     if (progress) { progress.classList.remove('hidden'); progress.style.display = ''; }
     if (spinner) { spinner.classList.add('hidden'); spinner.style.display = 'none'; }
 
+    // Reset all stage indicators to pending
+    var stages = ['received', 'detecting', 'comparing', 'estimating', 'complete'];
+    stages.forEach(function(s) {
+        var el = document.getElementById('stage-' + s);
+        if (!el) return;
+        var icon = el.querySelector('span:first-child, svg');
+        var label = el.querySelector('span.ml-3');
+        if (icon) icon.outerHTML = '<span class="text-slate-600 text-lg">\\u25CB</span>';
+        if (label) label.className = 'ml-3 text-slate-600';
+    });
+
     // Disable submit button
     var btn = form.querySelector('button[type="submit"]');
     if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+
+    // Timeout: warn user after 45s
+    var timeoutId = setTimeout(function() {
+        var detail = document.getElementById('stage-detail-detecting') || document.getElementById('stage-detail-comparing');
+        if (detail) detail.textContent = 'Taking longer than expected...';
+    }, 45000);
 
     fetch('/api/upload/stream', {
         method: 'POST',
@@ -14275,7 +14316,7 @@ function startProgressUpload(form, flow) {
 
         function readChunk() {
             reader.read().then(function(result) {
-                if (result.done) return;
+                if (result.done) { clearTimeout(timeoutId); return; }
                 buffer += decoder.decode(result.value, {stream: true});
 
                 var lines = buffer.split('\\n');
@@ -14290,10 +14331,14 @@ function startProgressUpload(form, flow) {
                     }
                 });
                 readChunk();
+            }).catch(function() {
+                clearTimeout(timeoutId);
+                handleStageEvent({stage: 'error', message: 'Connection lost. Please try again.'}, flow);
             });
         }
         readChunk();
     }).catch(function(err) {
+        clearTimeout(timeoutId);
         if (progress) { progress.classList.add('hidden'); progress.style.display = 'none'; }
         if (results) results.innerHTML = '<p class="text-red-400 text-center py-4">Connection error. Please try again.</p>';
         if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
