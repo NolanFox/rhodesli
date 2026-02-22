@@ -52,6 +52,7 @@ Check ROADMAP.md at session start. On completion: update ROADMAP.md + BACKLOG.md
 - **Decision Provenance**: AD-NNN, OD-NNN, HD-NNN (see Key Docs below)
 - **Session Protocols**: `docs/session_protocols/INDEX.md` (interactive, audit, overnight, standard)
 - **Session Management**: `.claude/rules/prompt-decomposition.md`, `phase-execution.md`, `verification-gate.md`
+- **Session End**: `.claude/rules/self-assessment.md` (mandatory), `.claude/rules/ux-evaluation.md`
 - **Feature Reality Contract**: `.claude/rules/feature-reality-contract.md`
 - Back up data/ before any migration (AD-047)
 

@@ -320,3 +320,26 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   outside the agentic loop — they always execute regardless of context state.
 - **Breadcrumbs:** .claude/settings.json (hooks config),
   .claude/hooks/recovery-instructions.sh, HD-001
+
+## HD-016: Mandatory Self-Assessment Protocol
+- **Date:** 2026-02-22
+- **Session:** 61B
+- **Trigger:** Sessions 60B and 61 shipped features that were partially broken
+  in production (ENOSPC deploy failures, enriched prompt gap ML-090). The
+  verification gate (HD-003) catches structural issues but not "did we actually
+  deliver what was promised?"
+- **Decision:** Every session MUST end with a self-assessment that re-reads the
+  original prompt and verifies each phase was completed with evidence. Written to
+  `docs/session_context/session_NN_assessment.md`. Includes UX evaluation of any
+  screenshots taken (separate rule in `.claude/rules/ux-evaluation.md`).
+- **Implementation:** `.claude/rules/self-assessment.md` + `.claude/rules/ux-evaluation.md`
+- **Alternatives rejected:**
+  - Relying on the verification gate alone: HD-003 checks file existence but not
+    semantic correctness (e.g., "does the prompt actually get sent to Gemini?")
+  - Human-only review: Nolan doesn't always have time to verify every session
+  - Session log checkboxes: Easy to check off without verifying (satisficing pattern)
+- **Rationale:** The verification gate checks structure; self-assessment checks
+  substance. Together they catch both "did the file get created?" and "does the
+  feature actually work?"
+- **Breadcrumbs:** .claude/rules/self-assessment.md, .claude/rules/ux-evaluation.md,
+  HD-003 (verification gate), CLAUDE.md (Session End line)
