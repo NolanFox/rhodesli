@@ -7,7 +7,7 @@ copied to BACKLOG.md with breadcrumbs back here.
 ## Recurring Incidents
 
 ### DATA-001: Deploy Data Loss (CRITICAL, recurring)
-- **Status**: MITIGATED (AD-134 safety gate), STRUCTURAL FIX PLANNED (AD-135 Supabase)
+- **Status**: RESOLVED (AD-135 Supabase migration, Session 59C)
 - **Severity**: P0
 - **Occurrences**: 5
   1. Session 12 — data integrity fix not deployed, stale data served for weeks
@@ -19,6 +19,7 @@ copied to BACKLOG.md with breadcrumbs back here.
 - **Root cause**: JSON on Railway volume + Docker bundle overwrite
 - **Band-aid**: Triple safety gate in init_railway_volume.py (AD-134, Session 59B)
 - **Structural fix**: Supabase migration (AD-135, planned Session 59C)
+- **Resolution**: Structural fix implemented Session 59C (2026-02-22). User data in Supabase Postgres (4 tables: identity_overrides, annotations, relationships, gedcom_matches). Dual-write ensures every user action persists to Supabase. Startup sync rebuilds JSON cache from Supabase. Deploys cannot overwrite user data. See AD-135.
 - **Breadcrumbs**: AD-134, AD-135, Lessons 43/56/69/78/85, docs/design/FUTURE_COMMUNITY.md
 - **Priority justification**: Every occurrence costs hours of manual re-entry and risks losing community contributions that cannot be recreated. This is the #1 operational risk in the project.
 

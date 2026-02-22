@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.60.0 · 3068 tests · 271 photos · 662 identities · 54 confirmed
+Current: v0.62.0 · 3102 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -14,7 +14,7 @@ Current: v0.60.0 · 3068 tests · 271 photos · 662 identities · 54 confirmed
 - ~~Merge direction bug (BUG-003)~~ FIXED — auto-correction + 18 direction tests
 - ~~Lightbox arrows~~ FIXED (4th attempt) — event delegation pattern with 16 regression tests
 - ~~Face count / collection stats~~ FIXED — canonical functions, 19 regression tests
-- JSON data files won't scale past ~500 photos — Postgres migration is on the horizon
+- ~~JSON data files won't scale past ~500 photos~~ User data migrated to Supabase Postgres (Session 59C). ML data (photo_index, embeddings) still in JSON/NumPy.
 - Contributor roles implemented (ROLE-002/003) — needs first real contributor to test
 - **ML architecture: AD-110 Serving Path Contract** — web requests NEVER run heavy ML. Compare: 640px + buffalo_l. Batch: local.
 - Community sharing live on Jews of Rhodes Facebook group (~2,000 members) — first 3 active identifiers
@@ -53,10 +53,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] **ML-070: MLflow Model Registry + Promotion Pipeline** — Session 58, v0.60.0, both ONNX models registered with @champion aliases, automated gate → register → alias → export pipeline (2026-02-21)
 - [x] **PRODUCT-001: Face Compare Standalone Tier 1** — Session 59, v0.61.0 (2026-02-21)
 
-### Next (PRIORITY — data safety)
-- [ ] **INFRA-001: Supabase Migration for User Data** — Session 59C (AD-135, DATA-001). Migrate user-entered data (confirmations, merges, annotations, birth years) to Supabase Postgres. Eliminates deploy data loss risk. See docs/session_context/session_59c_supabase_migration.md
-
-### Next (After Supabase Migration)
+### Next
 - [x] CORAL date estimation → ONNX production serving (Session 57, v0.59.0, 2026-02-21)
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
 
@@ -150,10 +147,14 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Email diagnosis: code ready but RESEND_API_KEY not set (no code fix needed)
 - [x] 3123 total tests (2704 app + 419 ML)
 
-### Session 59C: Supabase Migration — User Data Safety (NEXT PRIORITY)
-- [ ] Migrate user-entered data to Supabase Postgres (AD-135)
-- [ ] See docs/session_context/session_59c_supabase_migration.md
-- Blocks: All feature work until user data is safe
+### Session 59C: Supabase Migration — User Data Safety — COMPLETE
+- [x] Migrated user-entered data to Supabase Postgres (AD-135) (2026-02-22)
+- [x] 4 Supabase tables: identity_overrides (372), annotations (8), relationships (19), gedcom_matches (33) (2026-02-22)
+- [x] Dual-write: save_registry() and _save_annotations() sync to Supabase after JSON save (2026-02-22)
+- [x] Startup sync rebuilds JSON cache from Supabase on every deploy (2026-02-22)
+- [x] DATA-001 resolved — deploys can never lose user data (2026-02-22)
+- [x] 27 new tests for Supabase persistence + deploy safety regression (2026-02-22)
+- [x] 3102 total tests (2683 app + 419 ML)
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging: "Moise's wedding in Havana"
@@ -162,6 +163,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-22: **v0.62.0 — Session 59C**: Supabase Migration for User Data Safety. All user-entered data (confirmations, merges, annotations, birth years, relationships, GEDCOM matches) migrated to Supabase Postgres. 4 tables: identity_overrides (372), annotations (8), relationships (19), gedcom_matches (33). Dual-write pattern ensures every user action persists to both Supabase and JSON cache. Startup sync rebuilds JSON from Supabase on every deploy. DATA-001 (deploy data loss, 5 incidents) structurally resolved. AD-135. Test count: 2683 app + 419 ML = 3102 total.
 - [x] 2026-02-21: **v0.61.1 — Session 59B**: Emergency Recovery + Deploy Safety Gate. Recovered 9 identity confirmations, 3 birth years, 2 merges from Railway volume backup. Triple safety gate (AD-134). 21 deploy safety tests. Session 59B follow-up: full cross-check, AD-135 Supabase migration plan, DATA-001 recurring incident tracker, GEDCOM CSV tracked, email system diagnosed. Test count: 2704 app + 419 ML = 3123 total.
 - [x] 2026-02-21: **v0.61.0 — Session 59**: Face Compare Standalone. Museum-quality /facecompare page — upload a photo, detect faces, find matches with calibrated confidence, estimate decade. Three ML systems in one flow (InsightFace + Calibration + CORAL). Shareable result URLs. Bridge CTAs to full archive. No login required. Community-agnostic language for future expansion. AD-131/132/133. Test count: 2683 app + 419 ML = 3102 total.
 - [x] 2026-02-21: **v0.60.0 — Session 58**: MLflow Model Registry + Promotion Pipeline. Both ONNX models registered in MLflow with signatures, gate tags, and @champion aliases. Automated promotion script (promote_model.py): regression gate → register version → tag results → assign @champion if passed → copy ONNX to artifacts. AD-130. Session 57 audit confirmed CORAL conversion correct. Test count: 2649 app + 419 ML = 3068 total.

@@ -8,6 +8,30 @@ from starlette.testclient import TestClient
 
 
 # ---------------------------------------------------------------------------
+# Supabase isolation (AD-135)
+# Prevent real Supabase writes during tests. Tests that specifically test
+# Supabase behavior should mock get_supabase_client themselves.
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def disable_supabase_writes():
+    """Disable all real Supabase writes during tests.
+
+    This prevents save_registry() and _save_annotations() from hitting
+    real Supabase when existing tests exercise write routes.
+    Tests in test_supabase_data.py mock the client explicitly.
+    """
+    import app.supabase_data as sd
+    old_available = sd._supabase_available
+    old_client = sd._supabase_client
+    sd._supabase_available = False
+    sd._supabase_client = None
+    yield
+    sd._supabase_available = old_available
+    sd._supabase_client = old_client
+
+
+# ---------------------------------------------------------------------------
 # Auth state fixtures
 # ---------------------------------------------------------------------------
 

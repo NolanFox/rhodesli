@@ -1477,7 +1477,7 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Note**: This is a band-aid. See AD-135 for the structural fix (Supabase migration).
 
 ### AD-135: Migrate User-Entered Data to Supabase (Structural Fix for Deploy Data Loss)
-- **Date**: 2026-02-21 | **Session**: 59B follow-up | **Status**: PLANNED (Session 59C)
+- **Date**: 2026-02-21 | **Session**: 59B follow-up | **Status**: IMPLEMENTED (Session 59C, 2026-02-22)
 - **Context**: 5th data loss incident from deploy overwriting Railway volume. Triple safety gate (AD-134) is a band-aid. Problem history:
   - Session 12: Data integrity fix not pushed to production, stale data served for weeks
   - Session 16: Overnight session overwrote web triage work (Zeb Capuano regression)
@@ -1499,6 +1499,12 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Schema design**: See docs/design/FUTURE_COMMUNITY.md (profiles, invites, annotations, photo_uploads, activity_log tables)
 - **Depends on**: Supabase project staying active (keepalive ping mechanism needed)
 - **Enables**: Multi-user collaboration, community data safety, elimination of sync scripts
+- **Implementation notes (Session 59C)**:
+  - **4 Supabase tables**: identity_overrides (372 rows — confirmations, merges, renames, birth years), annotations (8 rows), relationships (19 rows), gedcom_matches (33 rows)
+  - **Dual-write pattern**: save_registry() and _save_annotations() sync to Supabase after JSON save. Every user action persists to both JSON cache and Supabase Postgres.
+  - **Startup sync**: App startup rebuilds JSON cache from Supabase, ensuring deploys never lose user data even if Docker bundle overwrites volume files.
+  - **Deploy safety**: Deploys can never destroy user data because Supabase is the source of truth, not the Railway volume.
+  - **27 new tests**: Supabase persistence + deploy safety regression tests
 - **Breadcrumbs**: AD-134, DATA-001, Lessons 43/56/69/78/85, docs/design/FUTURE_COMMUNITY.md, BACKLOG BE-040-042
 
 1. Add a new entry with AD-XXX format (next: AD-136)

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.62.0] — 2026-02-22 (Session 59C)
+
+### Added
+- Supabase Postgres persistence for all user-entered data (AD-135)
+- 4 Supabase tables: identity_overrides, annotations, relationships, gedcom_matches
+- Dual-write: every user action writes to Supabase + JSON cache
+- Startup sync rebuilds JSON from Supabase on every deploy
+- 27 new tests for Supabase persistence + deploy safety regression
+
+### Changed
+- save_registry() now syncs to Supabase after JSON save
+- _save_annotations() now syncs to Supabase after JSON save
+- init_railway_volume.py: removed user-data files from OPTIONAL_SYNC_FILES
+- Added supabase>=2.0 to requirements.txt
+
+### Fixed
+- DATA-001: Deploy data loss (5 incidents) — structural fix. User data now in Supabase, deploys cannot destroy it.
+
 ## [v0.61.1] — 2026-02-21
 
 ### Fixed — Session 59b: Emergency Recovery + Deploy Safety Gate
