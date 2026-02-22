@@ -1423,7 +1423,20 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: rhodesli_ml/scripts/export_date_onnx.py (new), rhodesli_ml/artifacts/date_estimation_v1.onnx (new)
 - **Tests**: rhodesli_ml/tests/test_date_export_onnx.py — 11 tests
 
-1. Add a new entry with AD-XXX format (next: AD-130)
+### AD-130: MLflow Model Registry with Alias-Based Promotion
+- **Date**: 2026-02-21 | **Session**: 58
+- **Decision**: Use MLflow Model Registry with `@champion`/`@candidate` aliases to manage model versions. Automated promotion pipeline: regression gate → register version → tag with gate results → assign @champion if passed.
+- **Rationale**: Provides version history, regression gate audit trail, and automated promotion. Modern pattern (aliases replaced deprecated stages in MLflow 2.9+). Enables future A/B testing and rollback.
+- **Rejected alternatives**:
+  1. Manual ONNX file versioning — no audit trail, no gate integration
+  2. MLflow Stages (Staging/Production/Archived) — deprecated in MLflow 2.9+
+  3. W&B Model Registry — additional dependency, heavier than needed
+- **Registered models**: `rhodesli-date-estimation` (CORAL, 16.5MB), `rhodesli-similarity-calibration` (Siamese MLP, 129KB)
+- **Workflow**: Train → Export ONNX → `promote_model.py` (gate → register → alias → copy to artifacts/) → git push → production
+- **Affects**: rhodesli_ml/config/mlflow_config.py (new), rhodesli_ml/scripts/register_models.py (new), rhodesli_ml/scripts/promote_model.py (new)
+- **Tests**: rhodesli_ml/tests/test_mlflow_registry.py (12 tests), rhodesli_ml/tests/test_promote_model.py (8 tests)
+
+1. Add a new entry with AD-XXX format (next: AD-131)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

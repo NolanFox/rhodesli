@@ -7,68 +7,40 @@
 ## Phase Checklist
 - [x] Phase 0: Orient + checkpoint
 - [x] Phase 0.5: Audit Session 57 deliverables (SOUND)
-- [ ] Phase 1: Model Registry setup + register both models
-- [ ] Phase 2: Promotion pipeline (promote_model.py)
-- [ ] Phase 3: Backfill + docs + verification gate
+- [x] Phase 1: Model Registry setup + register both models
+- [x] Phase 2: Promotion pipeline (promote_model.py)
+- [x] Phase 3: Backfill + docs + verification gate
 
-## Phase 0 Findings
+## Deliverables
 
-### Current MLflow State
-- **MLflow version:** 3.9.0
-- **Two tracking URIs:**
-  - `rhodesli_ml/mlruns/` — date estimation (11 runs, 1 experiment)
-  - `mlruns/` (top-level) — similarity calibration (1 run, 1 experiment)
-- **Registered models:** 0 (neither model is in the registry)
-- **ONNX artifacts:** date_estimation_v1.onnx, calibration_v1.onnx
+### Phase 1: Model Registry
+- `rhodesli_ml/config/mlflow_config.py` — canonical tracking URI + constants
+- `rhodesli_ml/scripts/register_models.py` — register both ONNX models
+- Both models registered as v1 with @champion alias, gate tags, signatures
+- 12 new tests in `test_mlflow_registry.py`
 
-### Date Estimation Runs (rhodesli_ml/mlruns/)
-| Run ID (short) | Status | adj_accuracy | mae_decades | Notes |
-|---|---|---|---|---|
-| c122dd48 | RUNNING | 0.925 | 0.453 | Best metrics, epoch 29 |
-| 040ea0f7 | FINISHED | 0.931 | 0.552 | Best adj, epoch 22 |
-| 5a8209b2 | FINISHED | 0.782 | 0.764 | Latest FINISHED |
-| af4d63ed | FINISHED | 0.857 | 0.714 | |
+### Phase 2: Promotion Pipeline
+- `rhodesli_ml/scripts/promote_model.py` — gate → register → alias → export
+- run_date_gate() evaluates ONNX against labels
+- promote() registers version, tags with gate results, assigns @champion if passed
+- Previous champion demoted to @candidate for rollback
+- 8 new tests in `test_promote_model.py`
 
-### Similarity Calibration Runs (mlruns/)
-| Run ID | Status | best_f1 |
-|---|---|---|
-| f7113921 | FINISHED | 0.753 |
-
-### Key Decision Needed
-The two experiment directories need to be consolidated under one tracking URI.
-Decision: Use `rhodesli_ml/mlruns` as the canonical URI. Move/register calibration runs there.
+### Phase 3: Documentation
+- AD-130: MLflow Model Registry with Alias-Based Promotion
+- README updated with Model Registry section + promote workflow
+- CHANGELOG v0.60.0
+- ROADMAP Session 58 complete
 
 ## Session 57 Audit (Phase 0.5)
+- CORAL conversion: CORRECT (10 logits → 11 probs, sum=1.0)
+- Gatekeeper: MINIMAL (pencil/correction UI, no "(unreviewed)" labels)
+- Gemini: CORRECT (supplementary, subordinate to CORAL)
+- Overall: SOUND
 
-### CORAL probability conversion: CORRECT
-- Model outputs 10 ordinal logits → 11 decade probabilities (1900s-2000s)
-- `inference_onnx.py` implements standard CORAL: sigmoid → cumprobs → class probs
-- Probabilities sum to 1.0, expected year is reasonable
-- Both `/estimate` endpoint and photo detail pages use same conversion
+## Test Count
+- ML tests: 419 (was 399, +20 new)
+- App tests: 2649 (unchanged)
+- Total: 3068
 
-### Gatekeeper completeness: MINIMAL (acceptable)
-| Component | Expected | Found |
-|---|---|---|
-| ML estimates labeled "(unreviewed)" | Yes | No — birth year has this, dates do not |
-| Admin accept/correct/dismiss buttons | Yes | Partial — correct-date endpoint exists (pencil button) |
-| Public users never see unreviewed ML dates | Yes | N/A — dates only shown on /estimate upload, not on photo pages by default |
-| Corrections saved to feedback file | Yes | Yes — date_corrections.json referenced in code |
-| Probability bars on photo pages | Yes | Yes — decade_probability_bars from Gemini/label data |
-
-**Assessment:** The Gatekeeper for dates is simpler than for birth years — reuses the
-existing pencil/correction UI rather than a full proposal flow. This is adequate because
-date estimates are shown as supplementary info, not as primary metadata.
-
-### Gemini supplementary UX: CORRECT
-- Gemini runs automatically after CORAL (not user-triggered button)
-- But it's rendered as "Detailed AI Analysis" section, visually subordinate to CORAL
-- This is a reasonable simplification: Gemini adds evidence (fashion, tech cues)
-
-### Overall: SOUND — proceed to Phase 1
-No blocking issues. Minor gap: dates don't have "(unreviewed)" labels, but
-date estimates are only shown in /estimate results, not on photo metadata.
-Not worth a backlog item.
-
-## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
+## SESSION COMPLETE

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.60.0] — 2026-02-21
+
+### Added — Session 58: MLflow Model Registry + Promotion Pipeline
+- **MLflow Model Registry (AD-130)**: Both ONNX models registered with versioning, signatures, and `@champion` aliases. `rhodesli-date-estimation` (CORAL, 16.5 MB) and `rhodesli-similarity-calibration` (Siamese MLP, 129 KB).
+- **Automated promotion pipeline**: `promote_model.py` — regression gate evaluates model, registers version in MLflow with gate metrics as tags, promotes to `@champion` if passed, demotes previous to `@candidate` for rollback.
+- **MLflow config module**: `rhodesli_ml/config/mlflow_config.py` — canonical tracking URI and model name constants for consistent MLflow access across scripts.
+- **Session 57 audit**: CORAL probability conversion verified correct. Gatekeeper minimal but adequate. Gemini supplementary UX confirmed.
+- Test count: 3068 total (2649 app + 419 ML — 20 new tests)
+
 ## [v0.59.0] — 2026-02-21
 
 ### Added — Session 57: CORAL Date Estimation → Production

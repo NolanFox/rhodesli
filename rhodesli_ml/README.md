@@ -49,10 +49,24 @@ python -m rhodesli_ml.scripts.run_evaluation \
   --photos-dir raw_photos
 ```
 
-### 4. View experiment results
+### 4. Promote a model to production
+```bash
+# Run regression gate + register in MLflow + assign @champion if passed
+python -m rhodesli_ml.scripts.promote_model \
+  --model rhodesli-date-estimation \
+  --onnx-path rhodesli_ml/artifacts/date_estimation_v1.onnx
+
+# Dry run (evaluate gate without registering)
+python -m rhodesli_ml.scripts.promote_model \
+  --model rhodesli-date-estimation \
+  --onnx-path rhodesli_ml/artifacts/date_estimation_v1.onnx --dry-run
+```
+
+### 5. View experiment history + model registry
 ```bash
 cd rhodesli_ml && mlflow ui --backend-store-uri mlruns
 # Open http://localhost:5000
+# Models tab shows registered models with @champion aliases
 ```
 
 ## Components
@@ -64,8 +78,8 @@ cd rhodesli_ml && mlflow ui --backend-store-uri mlruns
 | `models/` | PyTorch Lightning modules (date classifier with CORAL loss) |
 | `evaluation/` | Regression gate with mandatory quality thresholds |
 | `training/` | Training loops with MLflow logging |
-| `scripts/` | CLI tools (label generation, evaluation, signal harvesting) |
-| `tests/` | 53 tests covering all pipeline components |
+| `scripts/` | CLI tools (label generation, evaluation, promotion, registration) |
+| `tests/` | 419 tests covering pipeline, registry, and promotion |
 
 ## Date Estimation Pipeline
 
@@ -87,7 +101,7 @@ cd rhodesli_ml
 python -m pytest tests/ -v
 ```
 
-53 tests covering: CORAL loss, ordinal probabilities, dataset creation, augmentations, model forward/backward, regression gate, label generation.
+419 tests covering: CORAL loss, ordinal probabilities, dataset creation, augmentations, model forward/backward, regression gate, label generation, MLflow registry, model promotion.
 
 ## Architecture Decisions
 
@@ -99,6 +113,19 @@ python -m pytest tests/ -v
 6. **CORAL ordinal regression** — predicting 1940s when answer is 1950s is less wrong than 2000s.
 7. **Soft label training** — Gemini's decade probability distributions used as auxiliary KL loss.
 8. **Heritage augmentations** — sepia, grain, fading simulate real archive degradation.
+
+## Model Registry
+
+Two models are registered in MLflow Model Registry:
+
+| Model | Artifact | Description |
+|-------|----------|-------------|
+| `rhodesli-date-estimation` | `date_estimation_v1.onnx` (16.5 MB) | CORAL ordinal regression, EfficientNet-B0, 11 decades |
+| `rhodesli-similarity-calibration` | `calibration_v1.onnx` (129 KB) | Siamese MLP, 33K params, P(same_person) |
+
+**Aliases**: `@champion` = deployed to production, `@candidate` = previous champion (for rollback).
+
+**Promotion flow**: Train → ONNX export → `promote_model.py` (gate → register → alias) → `git push` → Railway deploys.
 
 ## Key Rules
 
