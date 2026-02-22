@@ -14081,6 +14081,43 @@ def get(face_id: str = "", sess=None):
             data_testid="upload-progress",
         ),
         P("Your photo is used for matching. Sign in to contribute it to the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
+        # Multi-photo compare link
+        Div(
+            P("Have multiple photos? ",
+              A("Compare 2-5 photos at once →",
+                href="#multi-upload",
+                cls="text-indigo-400 hover:text-indigo-300 underline",
+                onclick="document.getElementById('multi-upload-zone').classList.toggle('hidden');return false"),
+              cls="text-xs text-slate-500 text-center mt-4"),
+        ),
+        # Multi-photo upload zone (hidden by default)
+        Div(
+            Form(
+                H3("Compare Multiple Photos", cls="text-base font-serif text-white mb-2"),
+                P("Upload 2-5 photos to cross-compare faces between them and search the archive.",
+                  cls="text-xs text-slate-400 mb-4"),
+                Input(type="file", name="photos", accept="image/jpeg,image/png",
+                      multiple=True,
+                      cls="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 mb-4",
+                      data_testid="multi-upload-input"),
+                Button(
+                    "Compare All Photos",
+                    type="submit",
+                    cls="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 transition-colors w-full",
+                ),
+                action="/api/compare/upload-multiple",
+                method="post",
+                enctype="multipart/form-data",
+                hx_encoding="multipart/form-data",
+                hx_post="/api/compare/upload-multiple",
+                hx_target="#compare-results",
+                hx_swap="innerHTML show:#compare-results:top",
+                hx_indicator="#upload-spinner",
+                data_testid="multi-upload-form",
+            ),
+            id="multi-upload-zone",
+            cls="hidden mt-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+        ),
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
     )
@@ -14894,6 +14931,223 @@ async def post(photo: UploadFile = None, sess=None):
     finally:
         tmp_path.unlink(missing_ok=True)
         ml_path.unlink(missing_ok=True)
+
+
+@rt("/api/compare/upload-multiple")
+async def post(request, sess=None):
+    """Upload 2-5 photos for cross-comparison and archive matching.
+
+    Accepts multiple files via 'photos' form field. Detects faces in each,
+    cross-compares between uploaded photos, and matches against archive.
+    All photos saved for pipeline processing. (PRD-021, Session 61)
+    """
+    import time as _time
+    t0 = _time.time()
+
+    form = await request.form()
+    photos = form.getlist("photos")
+
+    if not photos or len(photos) < 2:
+        return Div(P("Please upload at least 2 photos for cross-comparison.",
+                     cls="text-amber-500 text-center py-4"),
+                   P("For single photo comparison, use the form above.",
+                     cls="text-slate-500 text-center text-sm mt-2"),
+                   id="compare-results")
+
+    if len(photos) > 5:
+        return Div(P("Maximum 5 photos per batch.",
+                     cls="text-red-400 text-center py-4"),
+                   id="compare-results")
+
+    from pathlib import Path as _Path
+    import tempfile
+
+    # Check ML availability
+    has_insightface = False
+    try:
+        import cv2
+        from insightface.app import FaceAnalysis  # noqa: F401
+        from core.ingest_inbox import extract_faces_hybrid
+        has_insightface = True
+    except ImportError:
+        pass
+
+    if not has_insightface:
+        # Save all photos to R2 for later processing
+        from core.storage import can_write_r2
+        if can_write_r2():
+            upload_ids = []
+            for photo_file in photos:
+                content = await photo_file.read()
+                filename = photo_file.filename or "upload.jpg"
+                uid = _save_compare_upload(content, filename, faces=[], results=[], status="awaiting_analysis")
+                upload_ids.append(uid)
+            return Div(
+                P("Photos received!", cls="text-lg font-semibold text-white text-center"),
+                P(f"{len(upload_ids)} photos saved for offline analysis by the archive team.",
+                  cls="text-sm text-slate-400 text-center mt-2"),
+                cls="py-8 px-4", id="compare-results",
+            )
+        return Div(P("Multi-photo uploads not available yet.",
+                     cls="text-amber-500 text-center py-4"),
+                   id="compare-results")
+
+    # Process each photo
+    photo_results = []
+    all_faces = []  # (photo_idx, face_idx, embedding, bbox)
+    tmp_files = []
+
+    try:
+        for pi, photo_file in enumerate(photos):
+            content = await photo_file.read()
+            filename = photo_file.filename or f"upload_{pi}.jpg"
+            suffix = _Path(filename).suffix.lower() or ".jpg"
+
+            if suffix not in (".jpg", ".jpeg", ".png"):
+                photo_results.append({"idx": pi, "filename": filename, "error": "Invalid file type"})
+                continue
+            if len(content) > 10 * 1024 * 1024:
+                photo_results.append({"idx": pi, "filename": filename, "error": "File too large (max 10 MB)"})
+                continue
+
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+                tmp.write(content)
+                tmp_path = _Path(tmp.name)
+                tmp_files.append(tmp_path)
+
+            # Resize for ML
+            img = cv2.imread(str(tmp_path))
+            if img is not None:
+                h, w = img.shape[:2]
+                if max(h, w) > 640:
+                    scale = 640 / max(h, w)
+                    img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+                    cv2.imwrite(str(tmp_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+
+            faces, _, _ = extract_faces_hybrid(tmp_path)
+
+            # Save upload
+            upload_id = _save_compare_upload(content, filename, faces, [], status="uploaded")
+
+            # Compare each face to archive
+            results_for_photo = []
+            if faces:
+                face_data = get_face_data()
+                _registry = load_registry()
+                from core.neighbors import find_similar_faces
+                results_for_photo = find_similar_faces(
+                    faces[0]["mu"], face_data, registry=_registry, limit=10,
+                )
+
+            for fi, face in enumerate(faces):
+                all_faces.append((pi, fi, face["mu"], face.get("bbox", [0, 0, 0, 0])))
+
+            photo_results.append({
+                "idx": pi,
+                "filename": filename,
+                "upload_id": upload_id,
+                "face_count": len(faces),
+                "archive_matches": results_for_photo,
+                "suffix": suffix,
+            })
+
+        # Cross-compare faces between different photos
+        import numpy as np
+        cross_matches = []
+        for i, (pi_a, fi_a, emb_a, _) in enumerate(all_faces):
+            for j, (pi_b, fi_b, emb_b, _) in enumerate(all_faces):
+                if j <= i:
+                    continue
+                if pi_a == pi_b:
+                    continue  # Skip same-photo comparisons
+                # Cosine similarity
+                sim = float(np.dot(emb_a, emb_b) / (np.linalg.norm(emb_a) * np.linalg.norm(emb_b) + 1e-8))
+                if sim > 0.3:  # Only show meaningful matches
+                    cross_matches.append({
+                        "photo_a": pi_a, "face_a": fi_a,
+                        "photo_b": pi_b, "face_b": fi_b,
+                        "similarity": sim,
+                        "filename_a": photo_results[pi_a]["filename"],
+                        "filename_b": photo_results[pi_b]["filename"],
+                    })
+        cross_matches.sort(key=lambda x: x["similarity"], reverse=True)
+
+        # Build response
+        parts = []
+        parts.append(
+            Div(
+                H3(f"Compared {len(photos)} Photos", cls="text-lg font-serif text-white mb-2"),
+                P(f"Detected {sum(pr.get('face_count', 0) for pr in photo_results)} total faces",
+                  cls="text-sm text-slate-400"),
+                cls="text-center mb-6",
+            )
+        )
+
+        # Cross-matches section
+        if cross_matches:
+            match_items = []
+            for cm in cross_matches[:10]:
+                conf_pct = int(cm["similarity"] * 100)
+                tier = "Very likely" if conf_pct >= 85 else "Strong" if conf_pct >= 70 else "Possible" if conf_pct >= 50 else "Unlikely"
+                match_items.append(
+                    Div(
+                        P(f"Photo {cm['photo_a']+1} ↔ Photo {cm['photo_b']+1}",
+                          cls="text-sm font-medium text-white"),
+                        P(f"{tier} match ({conf_pct}%)",
+                          cls=f"text-xs {'text-green-400' if conf_pct >= 70 else 'text-amber-400' if conf_pct >= 50 else 'text-slate-400'}"),
+                        cls="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50",
+                    )
+                )
+            parts.append(
+                Div(
+                    H3("Cross-Matches Between Your Photos", cls="text-base font-semibold text-indigo-300 mb-3"),
+                    Div(*match_items, cls="grid grid-cols-1 sm:grid-cols-2 gap-3"),
+                    cls="mb-8 p-4 bg-slate-800/30 rounded-lg border border-indigo-500/20",
+                    data_testid="cross-matches",
+                )
+            )
+
+        # Per-photo results
+        crop_files = get_crop_files()
+        for pr in photo_results:
+            if "error" in pr:
+                parts.append(
+                    Div(P(f"Photo {pr['idx']+1}: {pr['error']}", cls="text-red-400 text-sm"),
+                        cls="mb-4")
+                )
+                continue
+
+            upload_url = storage.get_upload_url(f"uploads/compare/{pr['upload_id']}{pr.get('suffix', '.jpg')}")
+            parts.append(
+                Div(
+                    H3(f"Photo {pr['idx']+1}: {pr['filename']}", cls="text-base font-medium text-white mb-2"),
+                    Div(
+                        Img(src=upload_url, cls="max-h-32 rounded-lg object-contain",
+                            alt=f"Uploaded photo {pr['idx']+1}"),
+                        P(f"{pr['face_count']} face{'s' if pr['face_count'] != 1 else ''} detected",
+                          cls="text-xs text-slate-400 mt-1"),
+                        cls="flex flex-col items-center mb-3",
+                    ),
+                    _compare_results_grid(pr.get("archive_matches", []), crop_files)
+                        if pr.get("archive_matches") else
+                        P("No archive matches found.", cls="text-sm text-slate-500"),
+                    cls="mb-8 p-4 bg-slate-800/20 rounded-lg border border-slate-700/30",
+                    data_testid=f"photo-result-{pr['idx']}",
+                )
+            )
+
+        timing = _time.time() - t0
+        print(f"[compare-multi] Processed {len(photos)} photos in {timing:.2f}s")
+        return Div(*parts, id="compare-results")
+
+    except Exception as e:
+        print(f"[compare-multi] Error: {e}")
+        return Div(P(f"Error processing photos: {str(e)}",
+                     cls="text-red-500 text-center py-4"),
+                   id="compare-results")
+    finally:
+        for tf in tmp_files:
+            tf.unlink(missing_ok=True)
 
 
 @rt("/api/upload/stream")
