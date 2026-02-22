@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.63.0] — 2026-02-22 (Session 60)
+
+### Added — ML: Gemini Progressive Refinement
+- Centralized Gemini config: `rhodesli_ml/gemini_config.py` — single source of truth for model names, pricing, API keys (AD-136)
+- API logging infrastructure: `rhodesli_ml/utils/api_logger.py` — per-call JSON logs with cost tracking and comparison to previous analysis (AD-137)
+- Progressive refinement pipeline: `rhodesli_ml/scripts/progressive_refinement.py` — re-analyze photos with verified facts (confirmed identities, birth years, GEDCOM relationships) for improved date estimates (AD-138)
+- Dry-run evaluation: 41 eligible photos identified, top candidates have 19+ verified facts
+
+### Added — UX: Upload SSE Progressive Loading
+- SSE streaming endpoint: `/api/upload/stream` returns `text/event-stream` with stage events (received → detecting → comparing → estimating → complete)
+- Progressive UI on both `/compare` and `/facecompare` pages with animated stage indicators
+- Client-side file validation (type + size) before upload
+- Timeout warning at 45s, connection drop recovery
+- 24 SSE upload tests
+
+### Added — UX: Admin/Public Unification
+- Admin bar component: `_admin_bar()` shows pending/proposal counts + quick links (photo + person pages)
+- Quick-identify inline flow: pencil button on unidentified face cards (admin-only, hover-reveal), inline text input with autocomplete from confirmed identities
+- Public-first verification: all 6 key pages verified clean for anonymous users
+
+### Fixed
+- FastHTML `children=` keyword renders as HTML attribute, not nested elements — must use positional args
+
+### Stats
+- 96 new tests: 41 app + 55 ML = 3190 total (2724 app + 466 ML)
+
 ## [v0.62.0] — 2026-02-22 (Session 59C)
 
 ### Added

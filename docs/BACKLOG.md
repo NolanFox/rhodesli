@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 29.0 — February 21, 2026
-**Status**: 3048 tests passing, v0.59.0, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
+**Version**: 30.0 — February 22, 2026
+**Status**: 3190 tests passing, v0.63.0, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,15 +40,14 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.59.0 — 2026-02-21)
+## Recent Sessions (v0.63.0 — 2026-02-22)
 
+- **Session 60** (v0.63.0): Gemini Progressive Refinement + SSE Upload UX + Admin Unification. Three-act session: centralized Gemini config (AD-136), API logging (AD-137), progressive refinement pipeline (AD-138), SSE streaming upload on /compare + /facecompare, admin bar, quick-identify inline flow. 96 new tests. 3190 total.
+- **Session 59C** (v0.62.0): Supabase Migration for User Data Safety. All user-entered data migrated to Postgres. DATA-001 structurally resolved (AD-135). 3102 total tests.
+- **Session 59/59B** (v0.61.0/v0.61.1): Face Compare Standalone Tier 1 + Emergency Recovery. Museum-quality /facecompare page (AD-131/132/133). Deploy safety gate (AD-134). 3123 total tests.
+- **Session 58** (v0.60.0): MLflow Model Registry + Promotion Pipeline (AD-130). 3068 total tests.
 - **Session 57** (v0.59.0): CORAL Date Estimation → Production. ONNX export (16.5 MB), /estimate uses local ML model (instant, free), decade probability bars on photo detail. 3048 total tests.
-- **Session 56** (v0.58.0): Landing Page Refresh + P1 UX Polish. 12 P1 fixes, feature cards, lazy loading. 3003 total tests.
-- **Session 49E** (v0.56.3): Stabilization. 130 test state-pollution failures fixed (ExitStack). All 49D fixes verified in production (10/10 PASS). 2909 total tests.
-- **Session 49D** (v0.56.2): 12 UX bugs fixed (6 P0 + 6 P1). Name These Faces, upload messaging, merge URL, birth year race condition. 35 new tests.
-- **Session 49B** (v0.56.1): Interactive review. 28 birth years accepted, GEDCOM import (33 matches), 67 UX issues compiled. 54 confirmed identities.
-- **Sessions 50-54** (v0.50-0.54): ML on Railway, Gemini integration, hybrid detection (AD-114), compare 4.9x perf fix, Name These Faces, Estimate overhaul, UX tracker, 428 tests added. See docs/roadmap/SESSION_HISTORY.md.
-- **Session 49C** (v0.49.3): Community bug fixes, alias resolution, compare auto-submit.
+- **Sessions 49B-56** (v0.55-0.58): Similarity calibration, ONNX serving, landing page refresh, UX fixes, GEDCOM import. See docs/roadmap/SESSION_HISTORY.md.
 
 ---
 
@@ -77,16 +76,16 @@ See: docs/session_context/session_49C_community_feedback.md
 
 ## Progressive Refinement Architecture (Session 50)
 
-### Fact-Enriched Re-Analysis (AD-102)
-When verified facts accumulate (identities, dates, locations, GEDCOM data),
-re-run Gemini analysis with enriched context. Compare old vs new estimates.
-Stage for admin review. Build analytical dataset of which facts improve
-estimates most. Architecture documented — implementation in Session 52+.
+### Fact-Enriched Re-Analysis (AD-102) — DONE (Session 60)
+Progressive refinement pipeline implemented: `rhodesli_ml/scripts/progressive_refinement.py`.
+Gathers verified facts (confirmed identities, birth years, GEDCOM relationships),
+builds enriched prompts, compares old vs new estimates. 41 eligible photos identified.
+AD-138. See Session 60 log.
 
-### Comprehensive API Result Logging (AD-103)
-Every Gemini API call logged with full prompt/response, cost, comparison
-to previous estimates. Enables model comparison and improvement analysis.
-Schema defined — implementation with first API calls in Session 52+.
+### Comprehensive API Result Logging (AD-103) — DONE (Session 60)
+API logging infrastructure: `rhodesli_ml/utils/api_logger.py`. Per-call JSON logs
+with full prompt, response, token counts, cost tracking, comparison to previous analysis.
+AD-137. See Session 60 log.
 
 ### Estimate Page Remaining (PRD-020 P1/P2)
 - [ ] Search/filter by collection, date range
@@ -115,14 +114,14 @@ Schema defined — implementation with first API calls in Session 52+.
 - [x] **Batch Identity Entry**: "Name These Faces" sequential mode — DONE (Session 51)
 - [ ] **OPS-001**: Custom SMTP for branded "Rhodesli" email sender
 - [ ] **FE-040-043**: Skipped faces workflow for non-admin users
-- [ ] **PRODUCT-001: Face Compare Standalone — Tier 1**: New FastHTML app at subdomain. Same InsightFace backend + kinship calibration from Session 32. Stripped-down UI: upload two photos → tiered results → no persistence. Mobile-responsive, privacy-first. Differentiation: "Calibrated against real genealogical data." Estimated 1-2 sessions. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
+- [x] **PRODUCT-001: Face Compare Standalone — Tier 1**: Museum-quality /facecompare page. Session 59, v0.61.0. AD-131/132/133.
 
 ## Near-Term (3-5 Sessions)
 
 - [x] **Gemini 3.1 Pro integration**: Wired to Estimate upload (Session 52).
 - [ ] **ML-075: Batch Gemini Run on 271 Photos**: Run date estimation on all existing photos. Deferred from Session 52.
 - [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
-- [ ] **Progressive refinement**: First test with verified facts (AD-102)
+- [x] **Progressive refinement**: Pipeline built with fact gathering, enriched prompts, comparison engine — Session 60 (AD-138). Needs real Gemini API run.
 - [ ] **FE-041**: "Help Identify" mode for non-admin users
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
 - [ ] **ROLE-006**: Email notifications for contributors
@@ -133,7 +132,7 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **Playwright MCP integration** — Browser-based production testing. `.mcp.json` configured, needs first test run.
 - [ ] **COMMUNITY-001: Nancy Gormezano Beta Test**: Engage Nancy as first non-family beta tester. Source: Session 49C community thread.
 - [ ] **Production smoke test in CI** — Auto-run `scripts/production_smoke_test.py` on deploy
-- [ ] **ML-070: MLflow Integration — CORAL Training**: Add `mlflow.pytorch.autolog()` to CORAL date estimation training script. Run locally with `mlflow ui`. ~10 lines of code. Portfolio value: demonstrate MLflow proficiency. See AD-116, docs/session_context/session_54c_planning_context.md Part 1B.
+- [x] **ML-070: MLflow Integration — CORAL Training**: MLflow Model Registry + Promotion Pipeline. Session 58, v0.60.0. AD-130.
 - [ ] **PRODUCT-002: Face Compare Tier 2 — Shared Backend**: Shared comparison engine between standalone and Rhodesli. Rhodesli path adds: archive identity matching, upload persistence, date context, contribute-to-archive flow. Public path: compare and discard. See AD-117, docs/session_context/session_54c_planning_context.md Part 2C.
 
 ## Medium-Term
@@ -145,7 +144,7 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **DOC-010-013**: In-app help, about page, admin guide, contributor onboarding
 - [ ] **FE-080-083**: Client-side analytics and admin dashboard
 - [ ] **ROLE-004**: Family member self-identification ("That's me!" button)
-- [ ] **Admin/Public UX Unification**: Progressive admin enhancement + admin toolbar (deferred from Session 50)
+- [x] **Admin/Public UX Unification**: Admin bar + quick-identify inline flow — Session 60, v0.63.0
 - [ ] **Confidence scores per identification**: Show which results are ground truth vs provisional. Genealogy-specific differentiation. (Source: Expert review, Session 54)
 - [ ] **Identity voting / community verification**: Let users confirm/reject ML matches. Improves embeddings over time. (Source: Expert review, Session 54)
 - [ ] **Processing Timeline UI**: Per-photo status display for trust restoration. (Source: Expert review, Session 54. See AD-111)
@@ -158,38 +157,16 @@ Schema defined — implementation with first API calls in Session 52+.
 - [ ] **PRODUCT-003: NL Archive Query MVP (LangChain)**: Natural language interface: "Show me photos from the 1930s with people who look like [uploaded face]." Chain: face detection → embedding search → date filtering → NL response. Prerequisites: similarity calibration + CORAL + stable identity matching. Estimated 2-3 sessions once prerequisites met. See AD-118, docs/session_context/session_54c_planning_context.md Part 1B.
 - [ ] **PRODUCT-004: Historical Photo Date Estimator Standalone**: Upload historical photo → estimate when taken using CORAL model. Genuinely novel — no existing tool offers this. Prerequisite: CORAL model trained and validated. Could combine with face comparison in shared "faces" tool site. See docs/session_context/session_54c_planning_context.md Part 2D.
 
-## EPIC: Interactive Upload UX with SSE Progress (2-3 sessions)
+## EPIC: Interactive Upload UX with SSE Progress — DONE (Session 60)
 
-### Why
-Compare/estimate uploads take 10-28s with zero feedback. Users think it's broken.
-The current UX is: click upload → stare at nothing → maybe results appear.
+SSE streaming endpoint (`/api/upload/stream`) with progressive stage indicators
+on both `/compare` and `/facecompare`. Client-side validation, timeout warning,
+connection drop recovery. 24 tests. AD-121. See Session 60 log.
 
-### What
-- Photo preview immediately on upload
-- SSE-powered progress bar showing pipeline stage + face count
-- Faces populate one-by-one below the photo as detection completes
-- Face overlays on photo change colors through pipeline stages
-- Fully interactive result when complete (same as other photo views)
-- Transition between compare/estimate views with same photo
-- Every uploaded photo saved through gatekeeper pipeline
-- Support 2-3 concurrent uploads via asyncio.Queue
-- Multi-photo upload for compare; single for estimate
-
-### Technical Stack
-- SSE (Server-Sent Events) for progress streaming
-- HTMX SSE extension (`hx-ext="sse"`) for progressive face rendering
-- asyncio.Queue for upload serialization on Railway single-worker
-- Gatekeeper pattern for photo persistence
-
-### Sessions Estimate
-- Session A: SSE infrastructure + queue + basic progress bar
-- Session B: Face-by-face progressive rendering + overlay animations
-- Session C: Multi-photo upload + compare/estimate view switching
-
-### Breadcrumbs
-- AD-121: Architecture decision
-- Session 54G planning context: Full UX specification from Nolan
-- PERFORMANCE_CHRONICLE.md: Latency context (10-28s baseline)
+Remaining from original epic (deferred):
+- [ ] Face-by-face progressive rendering + overlay animations
+- [ ] Multi-photo upload + compare/estimate view switching
+- [ ] asyncio.Queue for concurrent upload serialization
 
 ## Performance Chronicle Maintenance
 - Keep `docs/PERFORMANCE_CHRONICLE.md` updated with future optimizations
