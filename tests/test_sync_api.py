@@ -597,3 +597,19 @@ class TestDockerfileModuleCoverage:
             is_calibration_available,
         )
         # If these imports succeed, the module is available
+
+    def test_dockerfile_copies_rhodesli_ml_date_inference(self):
+        """Dockerfile must COPY rhodesli_ml/date_inference/ — needed by /estimate (AD-129)."""
+        from pathlib import Path
+        dockerfile = (Path(__file__).parent.parent / "Dockerfile").read_text()
+        assert "rhodesli_ml/date_inference/" in dockerfile, \
+            "Dockerfile must COPY rhodesli_ml/date_inference/ — /estimate imports date model"
+
+    def test_rhodesli_ml_date_inference_importable(self):
+        """Date estimation inference module must be importable."""
+        from rhodesli_ml.date_inference.inference import (
+            predict_date,
+            is_date_model_available,
+            get_backend,
+        )
+        # If these imports succeed, the module is available

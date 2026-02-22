@@ -352,6 +352,20 @@ class TestHealthCheckMLStatus:
         assert "ml_pipeline" in data
         assert data["ml_pipeline"] in ("ready", "unavailable")
 
+    def test_health_check_returns_date_model_status(self):
+        """Health check includes date_model field (AD-129)."""
+        response = self.client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert "date_model" in data
+
+    def test_health_check_returns_calibration_model_status(self):
+        """Health check includes calibration_model field."""
+        response = self.client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert "calibration_model" in data
+
 
 # ---------------------------------------------------------------------------
 # Deploy Safety — InsightFace in requirements and Dockerfile

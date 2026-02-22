@@ -47,12 +47,13 @@ COPY app/ app/
 COPY core/ core/
 COPY scripts/ scripts/
 
-# Copy rhodesli_ml subpackages needed at runtime (graph + importers + calibration)
+# Copy rhodesli_ml subpackages needed at runtime (graph + importers + calibration + date inference)
 # Full ML package has 3GB+ of .venv/checkpoints — only copy pure-Python modules
 COPY rhodesli_ml/__init__.py rhodesli_ml/__init__.py
 COPY rhodesli_ml/graph/ rhodesli_ml/graph/
 COPY rhodesli_ml/importers/ rhodesli_ml/importers/
 COPY rhodesli_ml/calibration/ rhodesli_ml/calibration/
+COPY rhodesli_ml/date_inference/ rhodesli_ml/date_inference/
 COPY rhodesli_ml/artifacts/ rhodesli_ml/artifacts/
 
 # Copy CHANGELOG.md for dynamic version display

@@ -6775,12 +6775,38 @@ def health():
     except ImportError:
         pass
 
+    # Check date estimation model
+    date_model_status = "unavailable"
+    try:
+        from rhodesli_ml.date_inference.inference import (
+            is_date_model_available,
+            get_backend as date_backend,
+        )
+        if is_date_model_available():
+            date_model_status = f"ready ({date_backend()})"
+    except ImportError:
+        pass
+
+    # Check calibration model
+    calibration_status = "unavailable"
+    try:
+        from rhodesli_ml.calibration.inference import (
+            is_calibration_available,
+            get_backend as cal_backend,
+        )
+        if is_calibration_available():
+            calibration_status = f"ready ({cal_backend()})"
+    except ImportError:
+        pass
+
     return {
         "status": "ok",
         "identities": len(registry.list_identities()),
         "photos": photo_count,
         "processing_enabled": PROCESSING_ENABLED,
         "ml_pipeline": "ready" if ml_available else "unavailable",
+        "date_model": date_model_status,
+        "calibration_model": calibration_status,
         "supabase": _ping_supabase(),
     }
 
