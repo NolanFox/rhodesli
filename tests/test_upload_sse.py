@@ -124,3 +124,45 @@ class TestProgressiveUI:
         # The upload-progress div should have 'hidden' class
         assert 'id="upload-progress"' in html
         assert 'class="hidden' in html or 'class="hidden ' in html
+
+
+class TestFacecompareProgressiveUI:
+    """Test that /facecompare page has progressive upload UI."""
+
+    def test_facecompare_has_progress_stages(self, client, auth_disabled):
+        """Facecompare page includes progress stage indicators."""
+        response = client.get("/facecompare")
+        assert response.status_code == 200
+        html = response.text
+        assert "upload-progress" in html
+        assert "stage-detecting" in html
+        assert "stage-comparing" in html
+        assert "stage-estimating" in html
+
+    def test_facecompare_has_progress_script(self, client, auth_disabled):
+        """Facecompare page includes the progressive upload JS."""
+        response = client.get("/facecompare")
+        html = response.text
+        assert "startProgressUpload" in html
+        assert "handleStageEvent" in html
+
+    def test_facecompare_form_has_onsubmit(self, client, auth_disabled):
+        """Facecompare upload form has onsubmit for progressive upload."""
+        response = client.get("/facecompare")
+        html = response.text
+        assert "startProgressUpload(this,'facecompare')" in html
+
+    def test_facecompare_progress_hidden_by_default(self, client, auth_disabled):
+        """Progress stages hidden until upload starts on facecompare."""
+        response = client.get("/facecompare")
+        html = response.text
+        assert 'id="upload-progress"' in html
+        # Facecompare uses inline style display:none
+        assert 'display: none' in html or 'display:none' in html
+
+    def test_both_pages_share_same_sse_endpoint(self, client, auth_disabled):
+        """Both compare and facecompare point to the same SSE stream."""
+        compare = client.get("/compare").text
+        facecompare = client.get("/facecompare").text
+        assert "/api/upload/stream" in compare
+        assert "/api/upload/stream" in facecompare

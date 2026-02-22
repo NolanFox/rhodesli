@@ -14256,10 +14256,10 @@ function startProgressUpload(form, flow) {
 
     // Show progress, hide spinner
     var progress = document.getElementById('upload-progress');
-    var spinner = document.getElementById('upload-spinner');
+    var spinner = document.getElementById('upload-spinner') || document.getElementById('fc-loading');
     var results = document.getElementById('compare-results') || document.getElementById('fc-results');
-    if (progress) progress.classList.remove('hidden');
-    if (spinner) spinner.classList.add('hidden');
+    if (progress) { progress.classList.remove('hidden'); progress.style.display = ''; }
+    if (spinner) { spinner.classList.add('hidden'); spinner.style.display = 'none'; }
 
     // Disable submit button
     var btn = form.querySelector('button[type="submit"]');
@@ -14294,7 +14294,7 @@ function startProgressUpload(form, flow) {
         }
         readChunk();
     }).catch(function(err) {
-        if (progress) progress.classList.add('hidden');
+        if (progress) { progress.classList.add('hidden'); progress.style.display = 'none'; }
         if (results) results.innerHTML = '<p class="text-red-400 text-center py-4">Connection error. Please try again.</p>';
         if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
     });
@@ -14344,7 +14344,7 @@ function handleStageEvent(data, flow) {
     // Handle error
     if (data.stage === 'error') {
         var progress = document.getElementById('upload-progress');
-        if (progress) progress.classList.add('hidden');
+        if (progress) { progress.classList.add('hidden'); progress.style.display = 'none'; }
         var results = document.getElementById('compare-results') || document.getElementById('fc-results');
         if (results) results.innerHTML = '<p class="text-amber-400 text-center py-4">' + (data.message || 'An error occurred.') + '</p>';
         var btn = document.querySelector('button[type="submit"]');
@@ -26511,6 +26511,7 @@ def _fc_page(title_text: str, *content, og_title: str = "", og_desc: str = "",
             """),
         ),
         Body(
+            NotStr(_upload_progress_script()),
             *content,
             data_theme="facecompare",
         ),
@@ -26869,6 +26870,7 @@ def get():
                     hx_encoding="multipart/form-data",
                     hx_indicator="#fc-loading",
                     data_testid="fc-upload-form",
+                    onsubmit="if(typeof startProgressUpload==='function'){return startProgressUpload(this,'facecompare')}",
                 ),
                 # Loading indicator
                 Div(
@@ -26882,6 +26884,21 @@ def get():
                     ),
                     id="fc-loading",
                     cls="htmx-indicator",
+                ),
+                # Progressive upload stages
+                Div(
+                    Div(
+                        _upload_stage_item("received", "Photo received", "pending"),
+                        _upload_stage_item("detecting", "Detecting faces", "pending"),
+                        _upload_stage_item("comparing", "Searching archive", "pending"),
+                        _upload_stage_item("estimating", "Estimating date", "pending"),
+                        _upload_stage_item("complete", "Analysis complete", "pending"),
+                        style="text-align: left; max-width: 16rem; margin: 0 auto; display: flex; flex-direction: column; gap: 0.75rem;",
+                        id="stage-list",
+                    ),
+                    id="upload-progress",
+                    style="display: none; text-align: center; padding: 1.5rem;",
+                    data_testid="fc-upload-progress",
                 ),
                 style="max-width: 32rem;",
             ),
