@@ -194,17 +194,24 @@ def load_existing_labels(path: str) -> dict:
 
 
 def call_gemini(image_path: str, api_key: str, model: str = None,
-                max_retries: int = 5) -> dict | None:
+                max_retries: int = 5, prompt: str = None) -> dict | None:
     """Call Gemini Vision API with a photo and return parsed structured response.
 
     Uses the google-genai SDK (new unified SDK).
     Retries on 429 (rate limit) and 503 (overloaded) with exponential backoff.
     Returns the full structured evidence dict or None on failure.
+
+    Args:
+        prompt: Optional custom prompt text. If None, uses the default PROMPT.
+                Used by progressive_refinement to pass enriched prompts with
+                verified facts.
     """
     if model is None:
         model = GEMINI_MODEL
     from google import genai
     from google.genai import types
+
+    prompt_text = prompt if prompt is not None else PROMPT
 
     client = genai.Client(
         api_key=api_key,
@@ -225,7 +232,7 @@ def call_gemini(image_path: str, api_key: str, model: str = None,
                 contents=[
                     types.Content(
                         parts=[
-                            types.Part.from_text(text=PROMPT),
+                            types.Part.from_text(text=prompt_text),
                             types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
                         ]
                     )

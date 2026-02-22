@@ -342,3 +342,170 @@ class TestDryRunSafety:
     def test_max_cost_default(self):
         from rhodesli_ml.gemini_config import MAX_COST_DEFAULT
         assert MAX_COST_DEFAULT == 1.00
+
+
+# --- Enriched Prompt Wiring Tests (Session 61) ---
+
+class TestEnrichedPromptWiring:
+    """Test that enriched prompt actually reaches the Gemini API call."""
+
+    def test_call_gemini_accepts_custom_prompt(self):
+        """call_gemini() has a prompt parameter."""
+        import inspect
+        from rhodesli_ml.scripts.generate_date_labels import call_gemini
+        sig = inspect.signature(call_gemini)
+        assert "prompt" in sig.parameters, "call_gemini must accept a 'prompt' parameter"
+
+    def test_enriched_prompt_passed_to_call_gemini(self, tmp_path, monkeypatch):
+        """run_refinement passes enriched prompt to call_gemini (not hardcoded PROMPT)."""
+        from rhodesli_ml.scripts.progressive_refinement import run_refinement
+
+        captured_prompts = []
+
+        def mock_call_gemini(image_path, api_key, model=None, prompt=None, max_retries=5):
+            captured_prompts.append(prompt)
+            # Return valid response
+            return {
+                "estimated_decade": 1940,
+                "best_year_estimate": 1942,
+                "confidence": "high",
+                "probable_range": [1938, 1945],
+                "decade_probabilities": {"1940": 0.8, "1930": 0.2},
+            }
+
+        # Create a dummy image file
+        img_path = tmp_path / "raw_photos"
+        img_path.mkdir()
+        (img_path / "test.jpg").write_bytes(b"\xff\xd8\xff")  # minimal JPEG
+
+        monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+        monkeypatch.chdir(tmp_path)
+
+        facts = {
+            "confirmed_people": [{"name": "Albert Cohen", "identity_id": "id-1", "face_ids": ["f1"]}],
+            "birth_years": {"Albert Cohen": 1905},
+            "relationships": [],
+            "annotations": [],
+            "collection": "Test Collection",
+            "source": "",
+            "photo_id": "p001",
+        }
+
+        with patch("rhodesli_ml.scripts.generate_date_labels.call_gemini", mock_call_gemini):
+            with patch("rhodesli_ml.utils.api_logger.LOG_DIR", tmp_path / "logs"):
+                (tmp_path / "logs").mkdir()
+                result = run_refinement(
+                    "p001", {"path": "test.jpg"}, facts, {},
+                    "gemini-3.1-pro-preview", mock=False
+                )
+
+        assert result is not None
+        assert len(captured_prompts) == 1
+        # The prompt should be the enriched one with verified facts
+        assert captured_prompts[0] is not None
+        assert "Albert Cohen" in captured_prompts[0]
+        assert "born 1905" in captured_prompts[0]
+        assert "VERIFIED FACTS" in captured_prompts[0]
+
+    def test_enriched_prompt_includes_all_fact_types(self):
+        """Enriched prompt includes people, birth years, relationships, annotations."""
+        from rhodesli_ml.scripts.progressive_refinement import build_enriched_prompt
+
+        facts = {
+            "confirmed_people": [
+                {"name": "Albert Cohen", "identity_id": "id-1", "face_ids": ["f1"]},
+                {"name": "Sarah Cohen", "identity_id": "id-2", "face_ids": ["f2"]},
+            ],
+            "birth_years": {"Albert Cohen": 1905, "Sarah Cohen": 1908},
+            "relationships": [{"type": "spouse", "person_a": "Albert Cohen", "person_b": "Sarah Cohen"}],
+            "annotations": [{"target": "Albert Cohen", "type": "bio", "value": "Tailor in NYC"}],
+            "collection": "Vida Capeluto NYC Collection",
+            "source": "",
+        }
+
+        prompt = build_enriched_prompt(facts)
+        assert "Albert Cohen" in prompt
+        assert "Sarah Cohen" in prompt
+        assert "born 1905" in prompt
+        assert "born 1908" in prompt
+        assert "spouse" in prompt
+        assert "Tailor in NYC" in prompt
+        assert "Vida Capeluto NYC Collection" in prompt
+
+
+class TestGeminiConfigCentralized:
+    """Test that model strings are centralized in gemini_config.py."""
+
+    def test_default_model_is_3_1_pro(self):
+        """Default GEMINI_MODEL should be gemini-3.1-pro-preview."""
+        from rhodesli_ml.gemini_config import GEMINI_MODEL
+        assert GEMINI_MODEL == "gemini-3.1-pro-preview"
+
+    def test_fast_model_is_3_flash(self):
+        """Default GEMINI_MODEL_FAST should be gemini-3-flash."""
+        from rhodesli_ml.gemini_config import GEMINI_MODEL_FAST
+        assert GEMINI_MODEL_FAST == "gemini-3-flash"
+
+    def test_both_models_have_pricing(self):
+        """Both default models must have pricing entries."""
+        from rhodesli_ml.gemini_config import MODEL_PRICING, GEMINI_MODEL, GEMINI_MODEL_FAST
+        assert GEMINI_MODEL in MODEL_PRICING
+        assert GEMINI_MODEL_FAST in MODEL_PRICING
+
+
+class TestMLflowTracking:
+    """Test MLflow experiment tracking module."""
+
+    def test_log_gemini_call_creates_run(self, tmp_path, monkeypatch):
+        """log_gemini_call creates an MLflow run with expected params."""
+        from rhodesli_ml.tracking import log_gemini_call, MLFLOW_DIR
+        import mlflow
+
+        # Use temp directory for MLflow
+        test_mlflow_dir = str(tmp_path / "mlruns")
+        monkeypatch.setattr("rhodesli_ml.tracking.MLFLOW_DIR", test_mlflow_dir)
+
+        log_gemini_call(
+            photo_id="test-photo-001",
+            model="gemini-3.1-pro-preview",
+            prompt_text="Test prompt with verified facts",
+            response_text='{"estimated_decade": 1940, "best_year_estimate": 1942, "confidence": "high"}',
+            input_tokens=1000,
+            output_tokens=500,
+            cost_usd=0.037,
+            verified_facts={"confirmed_people": [{"name": "Test Person"}], "birth_years": {}, "relationships": [], "annotations": []},
+        )
+
+        # Verify MLflow run was created
+        mlflow.set_tracking_uri(f"file://{test_mlflow_dir}")
+        client = mlflow.MlflowClient()
+        experiments = client.search_experiments()
+        assert len(experiments) > 0
+
+    def test_log_model_comparison(self, tmp_path, monkeypatch):
+        """log_model_comparison creates a comparison run."""
+        from rhodesli_ml.tracking import log_model_comparison
+
+        test_mlflow_dir = str(tmp_path / "mlruns")
+        monkeypatch.setattr("rhodesli_ml.tracking.MLFLOW_DIR", test_mlflow_dir)
+
+        results_a = {
+            "p1": {"estimated_decade": 1940, "confidence": "high"},
+            "p2": {"estimated_decade": 1930, "confidence": "medium"},
+        }
+        results_b = {
+            "p1": {"estimated_decade": 1940, "confidence": "medium"},
+            "p2": {"estimated_decade": 1940, "confidence": "high"},
+        }
+
+        log_model_comparison(
+            "gemini-3.1-pro-preview", "gemini-3-flash",
+            results_a, results_b, ["p1", "p2"]
+        )
+
+        # Verify run was created
+        import mlflow
+        mlflow.set_tracking_uri(f"file://{test_mlflow_dir}")
+        client = mlflow.MlflowClient()
+        experiments = client.search_experiments()
+        assert len(experiments) > 0

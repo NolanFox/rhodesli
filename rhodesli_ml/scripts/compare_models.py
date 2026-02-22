@@ -279,18 +279,40 @@ def main():
     parser.add_argument("--model-a", default=GEMINI_MODEL, help="First model")
     parser.add_argument("--model-b", default=GEMINI_MODEL_FAST, help="Second model")
     parser.add_argument("--photo-dir", default="raw_photos", help="Directory containing photos")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Show what would be analyzed without making API calls")
     args = parser.parse_args()
-
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        print("ERROR: GEMINI_API_KEY not set")
-        sys.exit(1)
 
     with open(args.photos) as f:
         photo_names = json.load(f)
 
     print(f"A/B Comparison: {args.model_a} vs {args.model_b}")
     print(f"Photos: {len(photo_names)}")
+
+    if args.dry_run:
+        cost_a_info = MODEL_COSTS.get(args.model_a, MODEL_COSTS.get(GEMINI_MODEL, {}))
+        cost_b_info = MODEL_COSTS.get(args.model_b, MODEL_COSTS.get(GEMINI_MODEL_FAST, {}))
+        est_cost_a = len(photo_names) * cost_a_info.get("per_photo", 0.037)
+        est_cost_b = len(photo_names) * cost_b_info.get("per_photo", 0.010)
+        est_total = est_cost_a + est_cost_b
+        print(f"\n=== DRY RUN ===")
+        print(f"Would compare {len(photo_names)} photos:")
+        for name in photo_names:
+            exists = Path(args.photo_dir, name).exists()
+            status = "OK" if exists else "MISSING"
+            print(f"  [{status}] {name}")
+        found = sum(1 for n in photo_names if Path(args.photo_dir, n).exists())
+        print(f"\nFound: {found}/{len(photo_names)} photos")
+        print(f"Estimated cost: ${est_cost_a:.3f} ({args.model_a}) + ${est_cost_b:.3f} ({args.model_b}) = ${est_total:.3f}")
+        print(f"\nTo run for real: remove --dry-run flag")
+        print(f"Requires: GEMINI_API_KEY environment variable")
+        return
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        print("ERROR: GEMINI_API_KEY not set")
+        sys.exit(1)
+
     print(f"Cost limit: ${COST_HARD_LIMIT:.2f}")
 
     cost_a_info = MODEL_COSTS.get(args.model_a, MODEL_COSTS[GEMINI_MODEL])

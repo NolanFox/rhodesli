@@ -8,11 +8,11 @@ import os
 
 # --- Model Selection ---
 # Preferred model for vision analysis tasks (date estimation, progressive refinement)
-# Update this when a new model becomes available
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-pro-preview-05-06")
+# Updated to 3.1 Pro (Session 61) — best reasoning + vision, ARC-AGI-2: 77.1%
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-pro-preview")
 
-# Fallback model for cost-sensitive or batch operations
-GEMINI_MODEL_FAST = os.getenv("GEMINI_MODEL_FAST", "gemini-2.5-flash-preview-04-17")
+# Fast model for cost-sensitive, batch, or real-time operations
+GEMINI_MODEL_FAST = os.getenv("GEMINI_MODEL_FAST", "gemini-3-flash")
 
 # --- API Configuration ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
@@ -27,14 +27,23 @@ DRY_RUN_PHOTO_LIMIT = 3
 # --- Model Pricing (per 1M tokens) ---
 # Update when models change. Historical models kept for cost_tracker compatibility.
 MODEL_PRICING = {
-    # Current models
+    # Current recommended models (Session 61 — AD-139)
+    "gemini-3.1-pro-preview": {
+        "input": 2.00, "output": 12.00, "per_photo": 0.037,
+        "note": "RECOMMENDED — best reasoning + vision, ARC-AGI-2: 77.1%",
+    },
+    "gemini-3-flash": {
+        "input": 0.50, "output": 3.00, "per_photo": 0.010,
+        "note": "Fast + cheap, good for batch/real-time operations",
+    },
+    # Previous defaults
     "gemini-2.5-pro-preview-05-06": {
         "input": 1.25, "output": 10.00, "per_photo": 0.032,
-        "note": "RECOMMENDED — best reasoning + vision (AD-136)",
+        "note": "Previous RECOMMENDED (AD-136)",
     },
     "gemini-2.5-flash-preview-04-17": {
         "input": 0.15, "output": 3.50, "per_photo": 0.011,
-        "note": "Fast + cheap, good for batch operations",
+        "note": "Previous fast model",
     },
     # Legacy models (for historical cost tracking)
     "gemini-2.0-flash": {
@@ -56,10 +65,6 @@ MODEL_PRICING = {
     "gemini-3-flash-preview": {
         "input": 0.50, "output": 3.00, "per_photo": 0.010,
         "note": "Previous free tier, very good quality",
-    },
-    "gemini-3.1-pro-preview": {
-        "input": 2.00, "output": 12.00, "per_photo": 0.037,
-        "note": "Previous RECOMMENDED (AD-101)",
     },
 }
 

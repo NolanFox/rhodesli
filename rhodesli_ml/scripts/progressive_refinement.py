@@ -394,7 +394,7 @@ def run_refinement(
         input_tokens = 2000
         output_tokens = 1500
     else:
-        # Real API call
+        # Real API call — uses enriched prompt with verified facts
         api_key = os.environ.get("GEMINI_API_KEY")
         if not api_key:
             print("ERROR: GEMINI_API_KEY not set.")
@@ -407,7 +407,11 @@ def run_refinement(
             return None
 
         from rhodesli_ml.scripts.generate_date_labels import call_gemini
-        result = call_gemini(str(image_path), api_key, model=model)
+        # Pass enriched prompt with verified facts — this is the critical
+        # connection that was missing in Session 60 (see Session 61, ACT 1)
+        result = call_gemini(
+            str(image_path), api_key, model=model, prompt=prompt
+        )
         if result is None:
             return None
         response_text = json.dumps(result)
