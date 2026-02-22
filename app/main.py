@@ -272,7 +272,7 @@ app, rt = fast_app(
 # --- INSTRUMENTATION LIFECYCLE HOOKS ---
 @app.on_event("startup")
 async def startup_event():
-    """Initialize required directories and log the start of a session/run."""
+    """Initialize required directories, sync from Supabase, and log start."""
     # Deployment safety: ensure all required directories exist
     required_dirs = [
         data_path / "staging",
@@ -283,6 +283,15 @@ async def startup_event():
     ]
     for dir_path in required_dirs:
         dir_path.mkdir(parents=True, exist_ok=True)
+
+    # AD-135: Sync user data from Supabase on startup.
+    # This ensures deploys can never lose user-entered data —
+    # even if the Docker bundle has stale JSON, Supabase has the truth.
+    try:
+        from app.supabase_data import sync_from_supabase_on_startup
+        sync_from_supabase_on_startup(data_path)
+    except Exception as e:
+        logging.warning(f"Supabase startup sync failed (using existing JSON): {e}")
 
     get_event_recorder().record("RUN_START", {
         "action": "server_start",
@@ -384,8 +393,14 @@ def load_registry():
 
 
 def save_registry(registry):
-    """Save registry with atomic write (backend handles locking)."""
+    """Save registry with atomic write + sync to Supabase (AD-135)."""
     registry.save(REGISTRY_PATH)
+    # Sync user-modified identities to Supabase (non-blocking on failure)
+    try:
+        from app.supabase_data import sync_identity_overrides
+        sync_identity_overrides(registry._identities)
+    except Exception as e:
+        logging.warning(f"Supabase identity sync failed (degraded mode): {e}")
 
 
 # =============================================================================
@@ -22853,7 +22868,7 @@ def _load_annotations() -> dict:
 
 
 def _save_annotations(data: dict):
-    """Save annotations atomically."""
+    """Save annotations atomically + sync to Supabase (AD-135)."""
     global _annotations_cache
     ann_path = data_path / "annotations.json"
     import json as _json
@@ -22868,6 +22883,12 @@ def _save_annotations(data: dict):
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
         raise
+    # Sync annotations to Supabase (non-blocking on failure)
+    try:
+        from app.supabase_data import sync_annotations
+        sync_annotations(data.get('annotations', {}))
+    except Exception as e:
+        logging.warning(f"Supabase annotation sync failed (degraded mode): {e}")
 
 
 def _invalidate_annotations_cache():
@@ -24534,9 +24555,15 @@ def _load_relationship_graph():
 
 
 def _save_relationship_graph(graph: dict):
-    """Save relationship graph to data/relationships.json."""
+    """Save relationship graph to data/relationships.json + sync to Supabase (AD-135)."""
     rel_path = data_path / "relationships.json"
     rel_path.write_text(json.dumps(graph, indent=2), encoding="utf-8")
+    # Sync relationships to Supabase
+    try:
+        from app.supabase_data import sync_relationships
+        sync_relationships(graph.get('relationships', []))
+    except Exception as e:
+        logging.warning(f"Supabase relationship sync failed (degraded mode): {e}")
 
 
 @rt("/api/relationship/add")
@@ -24871,6 +24898,15 @@ async def post(gedcom_file: UploadFile = None, sess=None):
         global _gedcom_matches_cache
         _gedcom_matches_cache = None
 
+        # Sync GEDCOM matches to Supabase (AD-135)
+        try:
+            from rhodesli_ml.importers.gedcom_matches import load_gedcom_matches
+            from app.supabase_data import sync_gedcom_matches
+            gm_data = load_gedcom_matches(str(data_path / "gedcom_matches.json"))
+            sync_gedcom_matches(gm_data.get("matches", []))
+        except Exception as e:
+            logging.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
+
         return Div(
             P(f"Parsed {parsed.individual_count} individuals, {parsed.family_count} families",
               cls="text-emerald-400 font-medium"),
@@ -24940,6 +24976,13 @@ def post(xref: str, sess=None):
     _gedcom_matches_cache = None
     _birth_year_cache = None
 
+    # Sync GEDCOM matches to Supabase (AD-135)
+    try:
+        from app.supabase_data import sync_gedcom_matches
+        sync_gedcom_matches(matches_data.get("matches", []))
+    except Exception as e:
+        logging.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
+
     return Div(
         Span(match.get("gedcom_name", "?"), cls="text-emerald-400 font-medium"),
         Span("→", cls="text-slate-500 mx-2"),
@@ -24973,6 +25016,13 @@ def post(xref: str, sess=None):
     global _gedcom_matches_cache
     _gedcom_matches_cache = None
 
+    # Sync GEDCOM matches to Supabase (AD-135)
+    try:
+        from app.supabase_data import sync_gedcom_matches
+        sync_gedcom_matches(matches_data.get("matches", []))
+    except Exception as e:
+        logging.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
+
     return Div(
         Span(match.get("gedcom_name", "?") if match else "?", cls="text-red-400/50 line-through"),
         Span("→", cls="text-slate-600 mx-2"),
@@ -24991,7 +25041,7 @@ def post(xref: str, sess=None):
 
     from rhodesli_ml.importers.gedcom_matches import update_match_status
 
-    update_match_status(
+    matches_data = update_match_status(
         filepath=str(data_path / "gedcom_matches.json"),
         gedcom_xref=xref,
         status="skipped",
@@ -24999,6 +25049,13 @@ def post(xref: str, sess=None):
 
     global _gedcom_matches_cache
     _gedcom_matches_cache = None
+
+    # Sync GEDCOM matches to Supabase (AD-135)
+    try:
+        from app.supabase_data import sync_gedcom_matches
+        sync_gedcom_matches(matches_data.get("matches", []))
+    except Exception as e:
+        logging.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
 
     return Div(
         Span("Skipped — will reappear on refresh", cls="text-slate-500 text-sm italic"),
