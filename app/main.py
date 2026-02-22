@@ -17241,17 +17241,23 @@ def public_photo_page(
         quick_id_btn = None
         quick_id_area = None
         if is_admin and not fi["is_identified"] and fi["face_id"]:
+            # Sanitize face_id for use in CSS selectors / DOM IDs
+            # Legacy face IDs contain colons and spaces (e.g. "Image 968_compress:face0")
+            # which break CSS selectors like #qid-Image 968_compress:face0
+            safe_fid = re.sub(r'[^a-zA-Z0-9_-]', '_', fi['face_id'])
+            from urllib.parse import quote as _url_quote
+            encoded_fid = _url_quote(fi['face_id'], safe='')
             quick_id_btn = Button(
                 NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>'),
                 type="button",
                 cls="absolute top-1 right-1 p-1 bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10",
-                hx_get=f"/api/admin/quick-identify-form/{fi['face_id']}",
-                hx_target=f"#qid-{fi['face_id']}",
+                hx_get=f"/api/admin/quick-identify-form/{encoded_fid}",
+                hx_target=f"#qid-{safe_fid}",
                 hx_swap="innerHTML",
                 title="Quick identify",
                 data_testid="quick-identify-btn",
             )
-            quick_id_area = Div(id=f"qid-{fi['face_id']}", cls="w-full")
+            quick_id_area = Div(id=f"qid-{safe_fid}", cls="w-full")
 
         card_inner = Div(
             Div(
@@ -18613,6 +18619,9 @@ def get(face_id: str, sess=None):
     if denied:
         return denied
 
+    # Sanitize face_id for CSS-safe DOM IDs (colons/spaces break selectors)
+    safe_fid = re.sub(r'[^a-zA-Z0-9_-]', '_', face_id)
+
     # Get confirmed identity names for autocomplete suggestions
     registry = load_registry()
     confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
@@ -18625,7 +18634,7 @@ def get(face_id: str, sess=None):
     # Datalist for autocomplete
     datalist = Datalist(
         *[Option(value=n) for n in name_suggestions[:50]],
-        id=f"names-{face_id}",
+        id=f"names-{safe_fid}",
     ) if name_suggestions else None
 
     return Div(
@@ -18633,7 +18642,7 @@ def get(face_id: str, sess=None):
             Div(
                 Input(
                     type="text", name="name", placeholder="Enter name...",
-                    list=f"names-{face_id}" if datalist else None,
+                    list=f"names-{safe_fid}" if datalist else None,
                     cls="bg-slate-700 text-white text-sm rounded-lg px-3 py-2 w-full border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none",
                     autofocus=True,
                     data_testid="quick-identify-input",
@@ -18651,7 +18660,7 @@ def get(face_id: str, sess=None):
                     "Cancel",
                     type="button",
                     cls="px-3 py-2 text-slate-400 hover:text-white text-sm transition-colors",
-                    onclick=f"document.getElementById('qid-{face_id}').innerHTML='';",
+                    onclick=f"document.getElementById('qid-{safe_fid}').innerHTML='';",
                 ),
                 cls="flex gap-2 mt-2",
             ),
@@ -18661,7 +18670,7 @@ def get(face_id: str, sess=None):
             hx_swap="outerHTML",
             data_testid="quick-identify-form",
         ),
-        id=f"qid-{face_id}",
+        id=f"qid-{safe_fid}",
         cls="mt-2",
     )
 

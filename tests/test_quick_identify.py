@@ -85,6 +85,38 @@ class TestQuickIdentifyForm:
         assert "datalist" in html.lower() or "names-" in html
 
 
+    def test_form_handles_face_id_with_special_chars(self, client, admin_user):
+        """Face IDs with colons/spaces must produce valid CSS-safe DOM IDs.
+
+        Legacy face IDs like 'Image 968_compress:face0' contain colons and
+        spaces that break CSS selectors. The form must sanitize these for
+        DOM element IDs while preserving the raw face_id in the hidden input.
+        Regression test for Session 60b P0 bug.
+        """
+        from urllib.parse import quote
+        face_id = "Image 968_compress:face0"
+        encoded = quote(face_id, safe='')
+        response = client.get(f"/api/admin/quick-identify-form/{encoded}")
+        assert response.status_code == 200
+        html = response.text
+        # The hidden input must preserve the raw face_id for server-side use
+        assert f'value="{face_id}"' in html
+        # DOM element IDs must NOT contain colons or spaces
+        assert 'id="qid-Image 968_compress:face0"' not in html
+        # Sanitized ID should be present
+        assert 'id="qid-Image_968_compress_face0"' in html
+        # Cancel button getElementById must also use sanitized ID
+        assert "qid-Image_968_compress_face0" in html
+
+    def test_form_handles_inbox_face_id(self, client, admin_user):
+        """Inbox face IDs (no special chars) still work correctly."""
+        response = client.get("/api/admin/quick-identify-form/inbox_4eb02c7e058e")
+        assert response.status_code == 200
+        html = response.text
+        assert 'value="inbox_4eb02c7e058e"' in html
+        assert 'id="qid-inbox_4eb02c7e058e"' in html
+
+
 class TestQuickIdentifyOnPhotoPage:
     """Test that quick-identify buttons appear on photo pages."""
 
