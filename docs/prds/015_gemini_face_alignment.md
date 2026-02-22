@@ -1,9 +1,10 @@
-# PRD: Gemini-InsightFace Face Alignment via Coordinate Bridging
+# PRD-015 v2: Gemini-InsightFace Face Alignment via Coordinate Bridging
 
 **Author:** Nolan Fox
-**Date:** 2026-02-17 (updated 2026-02-19)
-**Status:** Draft
-**Session:** Planned for Session 53 (after Gemini API integration in Session 52)
+**Date:** 2026-02-17 (updated 2026-02-22)
+**Status:** Ready for Implementation
+**Session:** Designed Session 53, updated Session 61B (unified extraction integration)
+**Supersedes:** PRD-015 v1 (same file, pre-61B)
 
 ---
 
@@ -214,38 +215,67 @@ Steps:
 
 ### Model Selection
 
-**Gemini 3.1 Pro (AD-101)** is the recommended model for face alignment:
+**Gemini 3.1 Pro (AD-139)** is the recommended model for face alignment:
 - Released Feb 19, 2026 with 77.1% ARC-AGI-2 (2x improvement over 3 Pro)
-- Improved bounding box capabilities — critical for coordinate bridging accuracy
+- Improved spatial reasoning — critical for coordinate bridging accuracy
 - `media_resolution` parameter allows controlling image token cost
 - Model string: `gemini-3.1-pro-preview`
-- Combined API call (AD-102): date estimation + face alignment + location analysis in ONE prompt — more cost-efficient and better cross-referencing
+- Combined API call via unified extraction architecture (AD-143): date estimation + face alignment + location analysis in ONE prompt
 
-### Cost (Updated for Gemini 3.1 Pro)
+### Integration with Unified Extraction Architecture (Session 61B)
 
-- Re-processing all 271 photos at Gemini 3.1 Pro pricing ($2.00/$12.00 per 1M tokens): ~$7.60
-- Combined with date re-estimation: ~$7.60 total (one call does both)
-- The coordinate data adds ~100-200 tokens per photo (text, not image tokens)
-- Single API call per photo (same as current pipeline)
-- All API calls must be logged per AD-103 (API result logging schema)
+**Key change from v1**: Face alignment is now a built-in extraction type in `rhodesli_ml/gemini_extraction.py`, not a separate prompt variant.
+
+The `face_analysis` extraction type in the unified architecture already accepts `face_coordinates` parameter:
+
+```python
+from rhodesli_ml.gemini_extraction import build_extraction_prompt
+
+# Coordinate bridging is built into the unified prompt
+prompt = build_extraction_prompt(
+    preset="full",  # or "compare" — both include face_analysis
+    face_coordinates=[
+        {"bbox": [120, 45, 210, 180]},
+        {"bbox": [350, 90, 420, 230]},
+    ]
+)
+```
+
+This means:
+1. No separate "coordinate bridging prompt variant" needed — it's part of the standard extraction
+2. Face descriptions arrive in the same JSON response as date estimation, location, etc.
+3. Presets control whether face analysis is included (full/compare: yes, quick: no)
+4. `include=["face_analysis"]` can add it to any preset on demand
+
+### Cost (Updated for Gemini 3.1 Pro + Unified Extraction)
+
+- Unified call processes date + faces + location in ONE API call (~$0.04/photo with Pro)
+- Re-processing all 271 photos: ~$11 (full preset with Pro) or ~$5.50 via Batch API (50% off)
+- Coordinate data adds ~100-200 tokens per photo (text, not image tokens)
+- See `docs/PENDING_APPROVALS.md` for cost approval status
+- All API calls logged per AD-103 (API result logging schema)
 
 ### Prompt Engineering
 
-The coordinate bridging prompt must clearly instruct Gemini to:
+The coordinate bridging prompt is defined in `_PROMPT_SECTIONS["face_analysis"]` in `rhodesli_ml/gemini_extraction.py`. It instructs Gemini to:
 1. Match each labeled face region to what it sees in the image
 2. Report `is_subject: false` for non-subject faces (background, newspaper, artifacts)
 3. Provide age, gender, clothing for subject faces
 4. Handle cases where a bounding box doesn't correspond to a visible face (occluded, false positive)
 
+The `{face_coordinates_section}` placeholder is automatically replaced with InsightFace bounding box data when `face_coordinates` is provided.
+
 ### Existing Code Impact
 
-| File | Change |
-|------|--------|
-| `rhodesli_ml/scripts/generate_date_labels.py` | Add coordinate bridging prompt variant, face label generation |
-| `rhodesli_ml/pipelines/birth_year_estimation.py` | Check `face_descriptions` before falling back to `match_faces_to_ages()` |
-| `rhodesli_ml/data/date_labels.py` | Schema validation for new fields |
-| `rhodesli_ml/scripts/clean_labels.py` | Validate `face_descriptions` structure |
-| `rhodesli_ml/scripts/audit_temporal_consistency.py` | Use direct face-to-age mapping when available |
+| File | Change | Status |
+|------|--------|--------|
+| `rhodesli_ml/gemini_extraction.py` | face_analysis extraction type with coordinate injection | DONE (Session 61B) |
+| `rhodesli_ml/tests/test_gemini_extraction.py` | Face coordinate tests (TEST 7, 8) | DONE (Session 61B) |
+| `scripts/batch_analyze.py` | Batch processing with preset selection | DONE (Session 61B) |
+| `rhodesli_ml/pipelines/birth_year_estimation.py` | Check `face_descriptions` before x-sort fallback | TODO |
+| `rhodesli_ml/data/date_labels.py` | Schema validation for new fields | TODO |
+| `rhodesli_ml/scripts/generate_date_labels.py` | Pass InsightFace coords to unified prompt | TODO |
+| `rhodesli_ml/scripts/audit_temporal_consistency.py` | Use direct face-to-age mapping when available | TODO |
 
 ---
 
@@ -340,10 +370,18 @@ Existing approaches in the literature:
 
 ---
 
-## Migration Plan
+## Migration Plan (Updated for Unified Extraction)
 
-1. **Phase 1: Validate** -- Process 10 test photos with coordinate bridging prompt, manually verify alignment accuracy
-2. **Phase 2: Full re-process** -- Re-label all 271 photos with combined Gemini 3.1 Pro call (date + face alignment + location, ~$7.60 total, AD-102 combined call)
-3. **Phase 3: Birth year re-estimation** -- Re-run birth year pipeline with new face descriptions
-4. **Phase 4: Measure impact** -- Compare birth year estimate count and confidence before/after (target: Vida Capeluto gets an estimate)
-5. **Phase 5: API logging** -- All results logged per AD-103 schema for model comparison dataset
+1. **Phase 1: Validate** — Process 10 test photos using `build_extraction_prompt(preset="full", face_coordinates=...)`, manually verify alignment accuracy
+2. **Phase 2: Full re-process** — Use `scripts/batch_analyze.py --preset full` for all 271 photos via Batch API (~$5.50 at 50% discount). See `docs/PENDING_APPROVALS.md`.
+3. **Phase 3: Birth year re-estimation** — Re-run birth year pipeline using face_descriptions from unified extraction output
+4. **Phase 4: Measure impact** — Compare birth year estimate count and confidence before/after (target: Vida Capeluto gets an estimate)
+5. **Phase 5: API logging** — All results logged per AD-103 schema + MLflow experiment tracking (AD-140)
+
+## Breadcrumbs
+- AD-143: Unified Extraction Architecture (Session 61B)
+- AD-144: Face Alignment Coordinate Bridging v2 (Session 61B)
+- AD-101/139: Gemini 3.1 Pro adoption
+- AD-102: Progressive refinement architecture
+- PRD-022: Photo Detective UX (evidence cards from unified extraction)
+- `rhodesli_ml/gemini_extraction.py`: Implementation module

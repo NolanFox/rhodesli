@@ -1548,7 +1548,56 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: app/main.py (_evidence_card, _detective_evidence_section, _progressive_refinement_badge, _build_photo_date_badge)
 - **Breadcrumbs**: AD-102 (progressive refinement), AD-094 (year estimation V1), AD-041 (evidence-first prompt architecture)
 
-1. Add a new entry with AD-XXX format (next: AD-143)
+### AD-143: Unified Gemini Extraction Architecture — One Call Per Photo
+- **Date**: 2026-02-22 | **Session**: 61B
+- **Context**: Rhodesli's Gemini integration had separate prompt patterns for date estimation (AD-094), face analysis (PRD-015), location identification, cultural markers, and text/signage detection. Each required a separate API call, resulting in 3-5x cost overhead and inability to cross-reference evidence across extraction types. AD-102 (progressive refinement) called for a combined API call but the architecture didn't exist.
+- **Decision**: Single configurable prompt architecture with presets. One API call per photo extracts everything needed. Three presets: "full" (all 10 extraction types — batch analysis), "quick" (date + location + text — interactive upload), "compare" (date + faces + ages — face comparison). `include`/`exclude` parameters allow per-call customization. Face coordinates injected via `face_coordinates` parameter. Verified facts injected via `verified_facts` parameter for progressive refinement (AD-102).
+- **Rejected alternatives**:
+  1. "Separate prompts per extraction type" — 3-5x cost, loses cross-referencing (fashion evidence informs both date estimation AND cultural marker detection), requires multiple API round-trips
+  2. "Single monolithic prompt with no presets" — wastes tokens on interactive queries that only need date estimation; "quick" preset saves ~80% on per-upload costs
+  3. "Client-side prompt assembly" — fragile, no schema validation, no preset management, harder to version
+- **10 extraction types**: date_estimation, face_analysis, location, cultural_markers, clothing_era, photo_technique, text_signage, group_composition, photo_condition, subject_ages
+- **Affects**: `rhodesli_ml/gemini_extraction.py` (EXTRACTION_PRESETS, build_extraction_prompt, get_active_extractions), `scripts/batch_analyze.py` (cost estimation, batch API stub)
+- **Tests**: `rhodesli_ml/tests/test_gemini_extraction.py` (16 tests — presets, prompt building, face coordinates, verified facts, schema)
+- **Breadcrumbs**: AD-102 (progressive refinement), AD-139 (Gemini 3.1 Pro), AD-142 (Photo Detective UX), PRD-015 v2, PRD-022
+
+### AD-144: Face Alignment Coordinate Bridging v2 — Integrated with Unified Extraction
+- **Date**: 2026-02-22 | **Session**: 61B
+- **Context**: PRD-015 v1 (Session 53 design) proposed feeding InsightFace bounding box coordinates TO Gemini to solve the face count mismatch problem (~40% of group photos). Session 61B built the unified extraction architecture (AD-143) which makes face alignment a built-in extraction type rather than a separate prompt variant.
+- **Decision**: Face alignment is the `face_analysis` extraction type in the unified prompt. When `face_coordinates` is provided to `build_extraction_prompt()`, the coordinates are injected into the face analysis section as labeled regions ("Face 0: bbox=[x1,y1,x2,y2]"). Gemini describes each labeled face, marks non-subjects as `is_subject: false`. This eliminates the need for a separate coordinate bridging pipeline — it's part of every "full" or "compare" preset extraction.
+- **What changed from v1**:
+  1. No separate "coordinate bridging prompt variant" — integrated into unified extraction
+  2. Face labels use 0-indexed integers (Face 0, 1, 2) not letters (A, B, C)
+  3. Schema is part of the unified JSON response, not a standalone format
+  4. Batch processing via `scripts/batch_analyze.py`, not a separate script
+  5. Cost is amortized across all extraction types in the unified call
+- **Rejected alternatives**:
+  1. "Separate coordinate bridging pipeline" (PRD-015 v1 approach) — duplicates prompt engineering, separate API cost, no cross-referencing with other extraction types
+  2. "Approach A: Gemini provides its own coordinates" — requires IoU matching, threshold tuning, EXIF coordinate misalignment (see PRD-015 v1 detailed analysis)
+- **Affects**: `rhodesli_ml/gemini_extraction.py` (_PROMPT_SECTIONS["face_analysis"], face_coordinates parameter), `rhodesli_ml/tests/test_gemini_extraction.py` (coordinate injection tests)
+- **Breadcrumbs**: PRD-015 v2, AD-143 (unified extraction), AD-101/139 (Gemini 3.1 Pro spatial reasoning)
+
+### AD-145: Similarity Calibration Strategy — Platt Scaling First, LoRA Later
+- **Date**: 2026-02-22 | **Session**: 61B
+- **Context**: Session 55 built a Siamese MLP (33K params) that improved F1@0.5 from 0.13 to 0.60 on heritage photo face matching. Question: what's the next step? Options ranged from simple score calibration to full LoRA fine-tuning of the InsightFace backbone.
+- **Decision**: Three-stage calibration ladder, stopping when results are sufficient:
+  - **Stage 1 — Platt scaling** on raw Euclidean distances using confirmed pairs as ground truth. Scikit-learn, no model retraining. Expected: better threshold selection, meaningful probability scores.
+  - **Stage 2 — Siamese MLP refinement** (current model). Proper train/val/test split with held-out identities. Hard negative mining. Expected: F1 0.60 → 0.70+.
+  - **Stage 3 — LoRA fine-tuning** of w600k_r50 backbone. Only pursue if Stage 1+2 combined F1 < 0.75. Requires re-embedding all 550+ faces. Expected: 5-15% improvement but high cost.
+- **Rejected alternatives**:
+  1. "Jump straight to LoRA" — insufficient labeled data for backbone fine-tuning (55 identities, ~1200 positive pairs); risk of catastrophic forgetting on general faces; re-embedding cost is high
+  2. "Stick with current calibration" — F1 0.60 leaves room for improvement; precision@0.5=98% is good but recall is low (too many missed matches)
+  3. "Train from scratch on heritage photos" — utterly insufficient data (need 100K+ images); existing pretrained embeddings are a strong foundation
+  4. "Multi-model ensemble" — complexity not justified at 550-face scale; single model with calibration is simpler and faster
+- **Success gate**: F1@0.5 ≥ 0.70, precision@0.5 ≥ 95%, no regression on 55 confirmed identities
+- **Affects**: Future — `rhodesli_ml/calibration/platt_scaling.py`, existing `rhodesli_ml/calibration/` module
+- **Breadcrumbs**: AD-123-128 (calibration pipeline), PRD-023 (LoRA research), ML-076 (ROADMAP)
+
+---
+
+## How to Add New Entries
+
+1. Add a new entry with AD-XXX format (next: AD-146)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
