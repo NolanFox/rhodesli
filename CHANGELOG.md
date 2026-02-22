@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.64.1] — 2026-02-22 (Session 61B)
+
+### Fixed
+- **P0 ENOSPC deploy crash**: Auto-backup pruning reordered to prune BEFORE creating new backup, max backups reduced 10->5, OSError handling added. Previous 2 deploys had FAILED status.
+
+### Added — ML: Unified Gemini Extraction Architecture (AD-143)
+- `rhodesli_ml/gemini_extraction.py`: configurable presets (full/quick/compare), 10 extraction types
+- Face coordinate injection for coordinate bridging (AD-144)
+- Verified facts injection for progressive refinement
+- `scripts/batch_analyze.py`: cost estimation + Batch API stub
+- 16 extraction tests + 4 auto-backup tests
+
+### Added — Documentation
+- PRD-015 v2: Face alignment integrated with unified extraction
+- PRD-023: LoRA/similarity calibration research — three-stage ladder
+- AD-143/144/145: Unified extraction, face alignment v2, calibration strategy
+- Self-assessment protocol (.claude/rules/self-assessment.md, HD-016)
+- UX evaluation protocol (.claude/rules/ux-evaluation.md)
+- 3 UX backlog items (UX-130/131/132) from production screenshot evaluation
+
+### Stats
+- ~3270 tests (20 new)
+- Session lineage: 60 -> 60B -> 61 -> 61B
+
 ## [v0.64.0] — 2026-02-22 (Session 61)
 
 ### Added — ML: Gemini 3.1 Pro + Enriched Prompt Wiring

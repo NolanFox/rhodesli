@@ -32,8 +32,8 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
-- [ ] Gemini unified extraction architecture — single API call with configurable presets (Session 61B)
-- [ ] PRD-015 v2: Face alignment via coordinate bridging (Session 61B)
+- [x] Gemini unified extraction architecture — AD-143, rhodesli_ml/gemini_extraction.py (Session 61B)
+- [x] PRD-015 v2: Face alignment via coordinate bridging — AD-144 (Session 61B)
 
 ### Near-Term
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
@@ -53,12 +53,12 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 61B: Verify, Optimize, Assess — IN PROGRESS (2026-02-22)
-- [-] Production verification of Session 61 features
-- [-] Gemini unified extraction architecture
-- [ ] Flash vs Pro comparison (pending approval)
-- [ ] PRD-015 face alignment v2, LoRA research PRD
-- [ ] Self-assessment protocol installation
+### Session 61B: Verify, Optimize, Assess — COMPLETE (2026-02-22)
+- [x] Production verification of Session 61 features (ENOSPC fix, smoke test, screenshots)
+- [x] Gemini unified extraction architecture (AD-143, 16 tests)
+- [x] Flash vs Pro comparison — deferred pending cost approval (docs/PENDING_APPROVALS.md)
+- [x] PRD-015 v2 face alignment + PRD-023 LoRA/calibration + AD-143/144/145
+- [x] Self-assessment protocol (HD-016, .claude/rules/self-assessment.md)
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates

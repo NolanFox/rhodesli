@@ -146,7 +146,9 @@ AD-137. See Session 60 log.
 - [ ] **ML-075: Batch Gemini Run on 271 Photos**: Run date estimation on all existing photos. Deferred from Session 52.
 - [ ] **ML-096: Run compare_models.py with --photos 20**: Flash vs Pro A/B comparison on 20 photos (~$0.62). Needs Nolan approval. (Session 61)
 - [ ] **ML-097: Run full 271-photo re-analysis with 3.1 Pro**: After ML-096 validates quality. Needs cost approval. (Session 61)
-- [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
+- [-] **PRD-015 v2**: Face alignment via coordinate bridging — design complete (AD-144), integrated with unified extraction (AD-143). Implementation TODO. Session 53 design → Session 61B update.
+- [x] **Gemini unified extraction architecture**: AD-143, rhodesli_ml/gemini_extraction.py, 16 tests. Session 61B.
+- [-] **PRD-023**: LoRA/calibration research — Platt scaling first, LoRA later (AD-145). Stage 1 (Platt) ready for implementation.
 - [x] **Progressive refinement**: Pipeline fully wired — enriched prompt now sent to Gemini. Session 60 (AD-138) + Session 61 (ML-090 fixed).
 - [ ] **UX-130**: Homepage visitor experience — non-admin landing page with CTAs (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-131**: Photo page admin tools below evidence — collapse behind toggle (P2). Source: Session 61B UX evaluation.

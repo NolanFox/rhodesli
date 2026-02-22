@@ -319,6 +319,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Data integrity report script + verification
 - ~50 new tests. ~3250 total.
 
+## Session 61B: Verify, Optimize, Assess (2026-02-22)
+- P0 ENOSPC deploy fix — auto_backup pruning reordered, max backups 10->5 (4 tests)
+- Production smoke test: all 9 pages verified, Session 61 features confirmed live
+- UX evaluation: 3 P2 issues (UX-130/131/132), 0 P1
+- Gemini unified extraction architecture (AD-143): 3 presets, 10 extraction types, 16 tests
+- PRD-015 v2: face alignment integrated with unified extraction (AD-144)
+- PRD-023: LoRA/calibration research — Platt scaling first (AD-145)
+- Self-assessment protocol installed (HD-016, .claude/rules/self-assessment.md)
+- Flash vs Pro comparison deferred pending cost approval
+- 20 new tests. ~3270 total.
+
 ---
 
 ## Release Version History
