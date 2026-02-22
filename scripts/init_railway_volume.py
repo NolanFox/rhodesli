@@ -147,14 +147,29 @@ def _auto_backup_volume(data_dir: Path) -> str | None:
     """Create a timestamped backup of all critical volume data files.
 
     Called before any sync operation to ensure recovery is always possible.
-    Keeps last 10 backups to prevent unbounded disk growth.
+    Keeps last 5 backups to prevent unbounded disk growth.
+    Prunes BEFORE creating new backup to avoid ENOSPC failures.
 
     Returns the backup directory path, or None if nothing to back up.
     """
     import datetime
 
     backup_root = data_dir / "auto_backups"
-    backup_root.mkdir(exist_ok=True)
+    try:
+        backup_root.mkdir(exist_ok=True)
+    except OSError:
+        print("[init] WARNING: Cannot create backup directory, skipping backup")
+        return None
+
+    # Prune old backups FIRST — keep last 5 (was 10, reduced to save space)
+    try:
+        existing = sorted([d for d in backup_root.iterdir() if d.is_dir()])
+        while len(existing) > 4:  # Keep 4 so new one makes 5
+            old = existing.pop(0)
+            shutil.rmtree(old)
+            print(f"[init] Pruned old backup: {old.name}")
+    except OSError as e:
+        print(f"[init] WARNING: Error pruning backups: {e}")
 
     ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     backup_dir = backup_root / ts
@@ -169,23 +184,19 @@ def _auto_backup_volume(data_dir: Path) -> str | None:
     for filename in files_to_backup:
         src = data_dir / filename
         if src.exists():
-            if not backup_dir.exists():
-                backup_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, backup_dir / filename)
-            backed_up += 1
+            try:
+                if not backup_dir.exists():
+                    backup_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, backup_dir / filename)
+                backed_up += 1
+            except OSError as e:
+                print(f"[init] WARNING: Failed to backup {filename}: {e}")
+                break
 
     if backed_up > 0:
         print(f"[init] Auto-backup: {backed_up} files saved to auto_backups/{ts}")
     else:
         return None
-
-    # Prune old backups — keep last 10
-    existing = sorted(backup_root.iterdir())
-    while len(existing) > 10:
-        old = existing.pop(0)
-        if old.is_dir():
-            shutil.rmtree(old)
-            print(f"[init] Pruned old backup: {old.name}")
 
     return str(backup_dir)
 
