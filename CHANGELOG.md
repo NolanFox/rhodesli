@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.58.0] — 2026-02-21
+
+### Added — Session 56: Landing Page Refresh + P1 UX Polish
+- **P1 UX Quick Wins (12 fixes)**: Merge direction indicator ("Merge → [Target Name]"), merged identity redirects (301), admin controls on /person/ page (Edit Name, Find Similar, View in Admin), Enter key submit in Name These Faces dropdown, "Create New" moved to top, Skip button in sequential mode, photo preview before upload on compare/estimate, auto-scroll to results, CTAs after estimate, enhanced loading indicators.
+- **Landing page feature cards (PRD-024)**: 2x3 responsive grid (Photos, People, Map, Timeline, Tree, Compare) with SVG icons and live stats. Dead code cleanup (removed duplicate landing_page() and _compute_landing_stats() functions). SKIPPED faces now included in "awaiting identification" count.
+- **Lazy loading (UX-007/UX-018)**: /photos page paginated to 24 per page with HTMX infinite scroll sentinel. /timeline shows smart initial decades (enough for ~20 photos) with lazy rest. New /api/photos/more and /api/timeline/more endpoints.
+- **Production UX audit**: All pages verified — photos, people, timeline, map, tree, person detail, landing, admin dashboard. Smoke test 11/11 PASS.
+- Test count: 3003 total (2631 app + 372 ML — 55 new tests)
+
 ## [v0.57.1] — 2026-02-21
 
 ### Added — Session 55b: ONNX Production Serving + ML Documentation

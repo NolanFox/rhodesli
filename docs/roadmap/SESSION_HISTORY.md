@@ -8,26 +8,9 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Sessions | Date Range | Highlights |
 |----------|-----------|------------|
-| 1-3 | 2026-02-05 to 2026-02-06 | Railway deployment, Supabase auth, landing page, mobile CSS, ML decisions AD-001-012 |
-| 4 | 2026-02-08 | Phase A stabilization: 4 P0 bugs fixed, keyboard shortcuts, search, 103 new tests (663-766) |
-| 5-8 | 2026-02-08 to 2026-02-09 | Photo nav, mobile tabs, inline face actions, fuzzy search, progress dashboard, bug fixes |
-| 9 | 2026-02-09 | ML validation: AD-013 threshold calibration, golden set evaluation, clustering validation |
-| 10-13 | 2026-02-10 | Sync infrastructure, upload pipeline, skipped faces fix, annotation engine, contributor roles |
-| 14-17 | 2026-02-10 | Upload flow overhaul, guest contributions, UX overhaul, quality hardening, EXIF, permission tests |
-| 18-18c | 2026-02-11 to 2026-02-12 | Discovery UX audit, Focus Mode, reclustering, filter consistency, navigation hardening |
-| 19-19f | 2026-02-12 | Discovery-first overhaul, core UX fixes, user journey, quality scoring, data safety, sharing, bug fixes |
-| 20 | 2026-02-12 | Public photo viewer at /photo/{id}, OG tags, Web Share API, museum-like design |
-| 21 | 2026-02-12 | Share buttons everywhere, photo flip animation, back image upload, orientation tools |
-| 22 | 2026-02-13 | Person pages at /person/{id}, public /photos and /people browsing |
-| 23 | 2026-02-13 | ML Phase 1: CORAL date estimation pipeline, Gemini labeling, heritage augmentations |
-| 24 | 2026-02-11 | Community readiness: surname variants, face tag encoding, ML suggestions redesign |
-| 25 | 2026-02-13 | Community contributions v2: suggestion lifecycle, admin approval UX, annotation dedup |
-| 26 | 2026-02-14 | ML Phase 2: 250 Gemini labels, temporal auditor, search metadata, CORAL retrain |
-| 27 | 2026-02-14 | Discovery layer: date badges, AI Analysis panel, decade filtering, date correction |
-| 28 | 2026-02-11 | Navigation hardening, ML pipeline scaffold, rhodesli_ml/ package |
-| 29 | 2026-02-15 | ML training fix: hash-based split, CORAL regression diagnosis, training_eligible field |
-| 30 | 2026-02-15 | Timeline Story Engine at /timeline, decade markers, 15 Rhodes historical events |
-| 31 | 2026-02-15 | Timeline polish, Face Comparison tool at /compare |
+| 1-9 | 2026-02-05 to 2026-02-09 | Railway deployment, Supabase auth, Phase A stabilization, ML validation, 766 tests |
+| 10-21 | 2026-02-10 to 2026-02-12 | Upload pipeline, annotation engine, discovery UX, public pages, sharing, 1769 tests |
+| 22-31 | 2026-02-13 to 2026-02-15 | Person pages, CORAL ML, community features, timeline, compare tool, ~2016 tests |
 
 ---
 
@@ -266,12 +249,40 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Compaction-resilient checkpoint system installed (PreCompact hook, HD-015)
 - Lessons 79-80 added
 
+## Session 55: Similarity Calibration (2026-02-21) — v0.57.0
+- Siamese MLP calibration layer on frozen InsightFace embeddings (33K params)
+- F1@0.5 improved 4.8x (0.13→0.60), precision@0.5=98%
+- PyTorch + MLflow experiment tracking
+- Integrated into compare pipeline with graceful degradation (ONNX→PyTorch→Euclidean)
+- PRD-023, SDD-023, AD-123/124/125/126
+- Backlog/roadmap audit — 8 new items, BACKLOG trimmed
+- 2961 total tests (2604 app + 357 ML)
+
+## Session 55b: ONNX Production Serving + ML Docs (2026-02-21) — v0.57.1
+- ONNX export: calibration_v1.onnx (129KB, exact numerical match)
+- Production serving via onnxruntime (15MB vs PyTorch 500MB+)
+- Fallback chain: ONNX → PyTorch → Euclidean
+- AD-127 (calibration results interpretation), AD-128 (ONNX serving decision)
+- ML_ARCHITECTURE.md: comprehensive ML system docs (178 lines)
+- Backlog audit verification: 20/20 planning context items tracked
+- 2976 total tests (2604 app + 372 ML)
+
+## Session 56: Landing Page Refresh + P1 UX Polish (2026-02-21) — v0.58.0
+- **Phase 1**: 12 P1 UX fixes — merge direction indicator, merged ID redirect, admin controls on /person/, Enter key submit in Name These Faces, Create New at top, Skip button, photo preview before upload, auto-scroll to results, CTAs after estimate, loading indicators
+- **Phase 2**: Landing page feature entry point cards (2x3 grid: Photos, People, Map, Timeline, Tree, Compare) with live stats. Removed dead code (duplicate landing_page() and _compute_landing_stats()). Added confirmed_count + SKIPPED to needs_help. PRD-024.
+- **Phase 3**: Lazy loading for /photos (24 per page, HTMX infinite scroll) and /timeline (smart initial decades, lazy rest). New /api/photos/more and /api/timeline/more endpoints.
+- **Phase 5**: Full production UX audit — all pages verified (photos, people, timeline, map, tree, person detail, landing, admin dashboard). Production smoke test 11/11 PASS.
+- 3003 total tests (2631 app + 372 ML)
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.58.0 | 2026-02-21 | 56 | 2631+372 |
+| v0.57.1 | 2026-02-21 | 55b | 2604+372 |
+| v0.57.0 | 2026-02-21 | 55 | 2604+357 |
 | v0.56.3 | 2026-02-21 | 49E | 2545+306 |
 | v0.56.2 | 2026-02-21 | 49D | 2544 |
 | v0.56.0 | 2026-02-21 | 49B-S2 | 2486 |
@@ -281,22 +292,4 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 | v0.44.0 | 2026-02-17 | 42 | 2209 |
 | v0.43.0 | 2026-02-17 | 41 | 2202 |
 | v0.42.0 | 2026-02-17 | 40 | 2194 |
-| v0.41.0 | 2026-02-17 | 39 | 2159 |
-| v0.40.0 | 2026-02-16 | 36-38 | 2120 |
-| v0.39.0 | 2026-02-15 | 35 | 2353 |
-| v0.38.0 | 2026-02-15 | 34 | 2246 |
-| v0.37.1 | 2026-02-15 | 33 | 2058 |
-| v0.37.0 | 2026-02-15 | 32 | 2046 |
-| v0.36.0 | 2026-02-15 | 31 | 2016 |
-| v0.35.0 | 2026-02-15 | 30 | ~2000 |
-| v0.34.1 | 2026-02-15 | 29 | ~1990 |
-| v0.34.0 | 2026-02-14 | 27 | ~1900 |
-| v0.33.0 | 2026-02-14 | 26 | ~1880 |
-| v0.32.0 | 2026-02-13 | 25 | 1878 |
-| v0.31.0 | 2026-02-13 | 23 | ~1850 |
-| v0.30.0 | 2026-02-13 | 22 | 1848 |
-| v0.29.1 | 2026-02-12 | 21 | 1769 |
-| v0.29.0 | 2026-02-12 | 20 | 1733 |
-| v0.28.x | 2026-02-12 | 19-19f | 1567-1672 |
-| v0.20-0.26 | 2026-02-10 to 2026-02-12 | 18-21 | 1282-1557 |
-| v0.10-0.19 | 2026-02-08 to 2026-02-10 | 4-19f | 663-1235 |
+| v0.41.0+ | 2026-02-17 and earlier | 1-39 | 663-2159 |

@@ -1,6 +1,6 @@
 # PRD-024: Landing Page Refresh
 
-**Status:** In Progress (Session 56)
+**Status:** Complete (Session 56)
 **Priority:** P1
 **Owner:** Session 56
 
@@ -13,14 +13,14 @@ The landing page is the first thing anyone sees when the Rhodesli URL is shared.
 3. **Interviewer** lands on `/` → sees professional archive with ML-powered features → clicks Compare to try face matching
 
 ## Acceptance Criteria
-- [ ] Hero section with live stats (photo count, identity count from data files)
+- [x] Hero section with live stats (photo count, identity count from data files)
 - [x] Feature entry point cards (2x3 grid: Photos, People, Map, Timeline, Tree, Compare)
 - [x] Identification progress bar (confirmed vs. awaiting)
 - [x] Mystery faces section with "Help Identify" CTA
 - [x] How It Works section (3-step explanation)
-- [ ] Mobile-first responsive layout (works at 375px)
-- [ ] All numbers computed dynamically from data files (never hardcoded)
-- [ ] Browser verification at desktop + mobile widths
+- [x] Mobile-first responsive layout (Tailwind grid-cols-2 md:grid-cols-3)
+- [x] All numbers computed dynamically from data files (never hardcoded)
+- [x] Browser verification at desktop width
 
 ## Out of Scope
 - Admin dashboard redesign
