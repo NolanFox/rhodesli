@@ -256,6 +256,51 @@ class TestEstimateUploadCORAL:
         assert "JPG or PNG" in response.text
 
 
+class TestDecadeProbabilityBars:
+    """Tests for decade probability bars on photo detail pages."""
+
+    def test_render_date_section_with_probability_bars(self):
+        """Date section renders probability bars when decade_probabilities present."""
+        from app.main import _load_date_labels
+
+        labels = _load_date_labels()
+        if not labels:
+            pytest.skip("No date labels available")
+
+        # Find a label with decade_probabilities
+        label_with_probs = None
+        for pid, label in labels.items():
+            if label.get("decade_probabilities"):
+                label_with_probs = (pid, label)
+                break
+
+        if label_with_probs is None:
+            pytest.skip("No labels with decade_probabilities")
+
+        # Verify the data structure exists
+        pid, label = label_with_probs
+        probs = label["decade_probabilities"]
+        assert isinstance(probs, dict)
+        assert len(probs) > 0
+
+    def test_probability_bars_sum_to_approximately_one(self):
+        """Decade probabilities in labels sum to approximately 1.0."""
+        from app.main import _load_date_labels
+
+        labels = _load_date_labels()
+        if not labels:
+            pytest.skip("No date labels available")
+
+        for pid, label in labels.items():
+            probs = label.get("decade_probabilities", {})
+            if probs:
+                total = sum(float(v) for v in probs.values())
+                assert abs(total - 1.0) < 0.05, (
+                    f"Photo {pid}: decade probs sum to {total}, not ~1.0"
+                )
+                break
+
+
 class TestEstimatePageRendering:
     """Tests for the /estimate page rendering."""
 

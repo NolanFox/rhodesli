@@ -1238,6 +1238,39 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             id=f"date-correction-form-{photo_id[:8]}",
             cls="hidden",
         )
+        # Decade probability distribution bars (from Gemini decade_probabilities)
+        decade_probs = label.get("decade_probabilities", {})
+        prob_bars_el = None
+        if decade_probs and isinstance(decade_probs, dict):
+            bars = []
+            for dec_str in sorted(decade_probs.keys()):
+                try:
+                    dec_val = int(dec_str)
+                    prob_val = float(decade_probs[dec_str])
+                except (ValueError, TypeError):
+                    continue
+                pct = prob_val * 100
+                bar_width = max(1, pct)
+                is_predicted = (dec_val == decade)
+                bar_color = "bg-amber-400" if is_predicted else "bg-slate-600"
+                text_cls = "text-amber-400 font-semibold" if is_predicted else "text-slate-500"
+                bars.append(
+                    Div(
+                        Span(f"{dec_val}s", cls=f"text-[10px] {text_cls} w-10 text-right mr-2 shrink-0"),
+                        Div(
+                            Div(cls=f"{bar_color} h-full rounded-r", style=f"width:{bar_width}%"),
+                            cls="flex-1 bg-slate-800 rounded h-2.5",
+                        ),
+                        Span(f"{pct:.0f}%", cls=f"text-[10px] {text_cls} w-8 ml-2 shrink-0"),
+                        cls="flex items-center",
+                    )
+                )
+            if bars:
+                prob_bars_el = Div(
+                    *bars, cls="flex flex-col gap-0.5 mt-3",
+                    data_testid="decade-probability-bars",
+                )
+
         date_content = Div(
             Div(
                 P(f"circa {best_year}" if best_year else f"{decade}s", cls="text-lg font-serif text-amber-200 mb-1 inline"),
@@ -1249,6 +1282,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                 Span(f"Range: {range_str}", cls="text-[11px] text-slate-500 ml-2") if range_str else None,
                 cls="flex items-center gap-2"
             ),
+            prob_bars_el,
             correction_form,
             id=f"date-section-{photo_id[:8]}",
         )
