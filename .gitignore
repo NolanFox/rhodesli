@@ -81,6 +81,7 @@ data/*
 !data/photo_locations.json
 !data/birth_year_estimates.json
 !data/ancestry_links.json
+!data/gedcom_match_review.csv
 
 # ML experiment tracking
 mlruns/
