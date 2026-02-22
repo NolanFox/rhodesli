@@ -11,7 +11,8 @@ All notable changes to this project will be documented in this file.
   - Auto-backup: saves all critical files to `auto_backups/<timestamp>/` before any sync (keeps last 10)
   - Per-file .bak timestamps (existing, preserved)
 - **Lesson 85**: 5th occurrence of deploy overwriting production data documented with prevention rules.
-- Test count: 3123+ total (21 new deploy safety gate tests)
+- **Session 59B follow-up**: Full cross-check verified all 49B data recovered (8/8 identities, 3/3 birth years). AD-135 Supabase migration plan for structural fix. DATA-001 recurring incident tracker. GEDCOM match review CSV now tracked. Email system diagnosed (code ready, needs RESEND_API_KEY). Bidirectional breadcrumbs on Lessons 69/78/85 and AD-134.
+- Test count: 3123 total (2704 app + 419 ML)
 
 ## [v0.61.0] — 2026-02-21
 

@@ -53,9 +53,12 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] **ML-070: MLflow Model Registry + Promotion Pipeline** — Session 58, v0.60.0, both ONNX models registered with @champion aliases, automated gate → register → alias → export pipeline (2026-02-21)
 - [x] **PRODUCT-001: Face Compare Standalone Tier 1** — Session 59, v0.61.0 (2026-02-21)
 
-### Next (After Immediate)
+### Next (PRIORITY — data safety)
+- [ ] **INFRA-001: Supabase Migration for User Data** — Session 59C (AD-135, DATA-001). Migrate user-entered data (confirmations, merges, annotations, birth years) to Supabase Postgres. Eliminates deploy data loss risk. See docs/session_context/session_59c_supabase_migration.md
+
+### Next (After Supabase Migration)
 - [x] CORAL date estimation → ONNX production serving (Session 57, v0.59.0, 2026-02-21)
-- [ ] OPS-001: Custom SMTP for branded email sender
+- [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
 
 ### Medium-Term
 - [ ] **EPIC: Interactive Upload UX with SSE Progress** — 2-3 session epic (AD-121, BACKLOG)
@@ -67,7 +70,6 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 ### Future
 - [ ] PRODUCT-003: NL Archive Query MVP — LangChain (AD-118)
 - [ ] PRODUCT-004: Historical Photo Date Estimator Standalone
-- [ ] BE-040–042: PostgreSQL migration
 - [ ] OPS-002: CI/CD pipeline
 - [ ] PRODUCT-005: Face Compare Tier 3 — product grade (post-employment)
 - [ ] GEN-001+: Multi-tenant architecture
@@ -135,6 +137,24 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Phase 5: Verification gate + docs — AD-131/132/133, CHANGELOG, ROADMAP (2026-02-21)
 - [x] 3102 total tests (2683 app + 419 ML)
 
+### Session 59B Follow-up: Verify Recovery, Commit, Sync, Cross-Check — COMPLETE
+- [x] Committed recovery + deploy safety gate (AD-134) + 21 tests (2026-02-21)
+- [x] Pushed to production, verified all 49B identities live (55 confirmed)
+- [x] Synced from production — 8 annotations pulled (5 new from production)
+- [x] Cross-checked all 8 identities + 3 birth years against session notes: 100% match
+- [x] GEDCOM data verified: 19 relationships, 33 ancestry links, CSV now tracked
+- [x] ML work verified: ONNX models intact, 419 ML tests pass
+- [x] AD-135 Supabase migration plan + DATA-001 recurring incident tracker
+- [x] Forward links on Lessons 69/78/85, backward link on AD-134
+- [x] Session 59C planning context created
+- [x] Email diagnosis: code ready but RESEND_API_KEY not set (no code fix needed)
+- [x] 3123 total tests (2704 app + 419 ML)
+
+### Session 59C: Supabase Migration — User Data Safety (NEXT PRIORITY)
+- [ ] Migrate user-entered data to Supabase Postgres (AD-135)
+- [ ] See docs/session_context/session_59c_supabase_migration.md
+- Blocks: All feature work until user data is safe
+
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging: "Moise's wedding in Havana"
 - Events connect photos, people, places, dates
@@ -142,6 +162,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.61.1 — Session 59B**: Emergency Recovery + Deploy Safety Gate. Recovered 9 identity confirmations, 3 birth years, 2 merges from Railway volume backup. Triple safety gate (AD-134). 21 deploy safety tests. Session 59B follow-up: full cross-check, AD-135 Supabase migration plan, DATA-001 recurring incident tracker, GEDCOM CSV tracked, email system diagnosed. Test count: 2704 app + 419 ML = 3123 total.
 - [x] 2026-02-21: **v0.61.0 — Session 59**: Face Compare Standalone. Museum-quality /facecompare page — upload a photo, detect faces, find matches with calibrated confidence, estimate decade. Three ML systems in one flow (InsightFace + Calibration + CORAL). Shareable result URLs. Bridge CTAs to full archive. No login required. Community-agnostic language for future expansion. AD-131/132/133. Test count: 2683 app + 419 ML = 3102 total.
 - [x] 2026-02-21: **v0.60.0 — Session 58**: MLflow Model Registry + Promotion Pipeline. Both ONNX models registered in MLflow with signatures, gate tags, and @champion aliases. Automated promotion script (promote_model.py): regression gate → register version → tag results → assign @champion if passed → copy ONNX to artifacts. AD-130. Session 57 audit confirmed CORAL conversion correct. Test count: 2649 app + 419 ML = 3068 total.
 - [x] 2026-02-21: **v0.59.0 — Session 57**: CORAL Date Estimation → Production. ONNX export of CORAL date model (16.5 MB, EfficientNet-B0, 11 decades). Production inference module with fallback chain (ONNX→PyTorch→None). /estimate endpoint uses local ML model as primary (instant, free). Gemini as supplementary. Decade probability bars on photo detail pages. Gatekeeper via existing correction UI. AD-129, PRD-025. Test count: 2649 app + 399 ML = 3048 total.
