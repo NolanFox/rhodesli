@@ -1436,7 +1436,30 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: rhodesli_ml/config/mlflow_config.py (new), rhodesli_ml/scripts/register_models.py (new), rhodesli_ml/scripts/promote_model.py (new)
 - **Tests**: rhodesli_ml/tests/test_mlflow_registry.py (12 tests), rhodesli_ml/tests/test_promote_model.py (8 tests)
 
-1. Add a new entry with AD-XXX format (next: AD-131)
+### AD-131: Standalone /facecompare Separate from /compare
+- **Date**: 2026-02-21 | **Session**: 59
+- **Context**: Need a viral entry point for face comparison that works for people who've never heard of Rhodesli.
+- **Decision**: New `/facecompare` route with standalone design (no archive nav), separate from the existing `/compare` (archive-integrated tool).
+- **Rationale**: `/compare` = "tool for residents" (users already in the archive). `/facecompare` = "front door for strangers" (entry point for discovery). Both coexist, sharing ML logic but with different UX goals.
+- **Rejected**: Separate service (code duplication, double infrastructure). Shared library extraction (premature — only one community exists). Modifying existing `/compare` (would compromise the archive-integrated UX).
+- **Affects**: app/main.py (new routes: /facecompare, /api/facecompare/upload, /api/facecompare/select, /facecompare/result/{uuid})
+- **Tests**: tests/test_facecompare.py (34 tests)
+
+### AD-132: Community-Agnostic Language in Compare UX
+- **Date**: 2026-02-21 | **Session**: 59
+- **Context**: The standalone compare tool should be reusable for other community archives.
+- **Decision**: Use "historical archive" not "Jews of Rhodes" in the compare UI. Collection name appears only in results: "Jews of Rhodes Community Archive".
+- **Rationale**: Enables future expansion to other communities without UI rewrite. A future dropdown can select which archive to search.
+- **Affects**: _fc_result_card(), _fc_results_section() in app/main.py
+
+### AD-133: Three ML Systems in One User Flow
+- **Date**: 2026-02-21 | **Session**: 59
+- **Context**: Sessions 55-58 built individual ML systems. Need to showcase them working together.
+- **Decision**: Single upload triggers all three: InsightFace (face detection + embeddings), similarity calibration (confidence tiers), CORAL (date estimation). Results show all three in a unified presentation.
+- **Rationale**: Portfolio impact — "Upload a photo and my system detects faces, finds matches with calibrated confidence, and estimates the decade — all local ONNX models on a $5/month server."
+- **Affects**: /api/facecompare/upload handler, _fc_results_section()
+
+1. Add a new entry with AD-XXX format (next: AD-134)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

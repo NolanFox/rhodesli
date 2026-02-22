@@ -51,7 +51,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] **ML-076: Similarity Calibration on Frozen Embeddings** — Session 55. F1@0.5 improved 4.8x (0.13→0.60). 33K param Siamese MLP + MLflow. (2026-02-21)
 - [x] Fix production UX issues — 12 bugs fixed (49D): 6 P0 + 6 P1, 35 new tests (2026-02-21)
 - [x] **ML-070: MLflow Model Registry + Promotion Pipeline** — Session 58, v0.60.0, both ONNX models registered with @champion aliases, automated gate → register → alias → export pipeline (2026-02-21)
-- [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
+- [x] **PRODUCT-001: Face Compare Standalone Tier 1** — Session 59, v0.61.0 (2026-02-21)
 
 ### Next (After Immediate)
 - [x] CORAL date estimation → ONNX production serving (Session 57, v0.59.0, 2026-02-21)
@@ -126,7 +126,14 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Phase 3: AD-130, README, CHANGELOG, verification gate (2026-02-21)
 - [x] 3068 total tests (2649 app + 419 ML)
 
-### Session 59: Face Compare Standalone Tier 1 (PRODUCT-001)
+### Session 59: Face Compare Standalone Tier 1 (PRODUCT-001) — COMPLETE
+- [x] Phase 0: Orient + checkpoint (2026-02-21)
+- [x] Phase 1: Museum-quality landing page at /facecompare — serif font, warm palette, no archive nav (2026-02-21)
+- [x] Phase 2: Upload flow + InsightFace face detection + CORAL date estimation + multi-face selector (2026-02-21)
+- [x] Phase 3: Results page with 3 ML systems — tiered matches, confidence, date bars, archive links (2026-02-21)
+- [x] Phase 4: Shareable results at /facecompare/result/{uuid} + bridge CTAs (2026-02-21)
+- [x] Phase 5: Verification gate + docs — AD-131/132/133, CHANGELOG, ROADMAP (2026-02-21)
+- [x] 3102 total tests (2683 app + 419 ML)
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging: "Moise's wedding in Havana"
@@ -135,6 +142,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.61.0 — Session 59**: Face Compare Standalone. Museum-quality /facecompare page — upload a photo, detect faces, find matches with calibrated confidence, estimate decade. Three ML systems in one flow (InsightFace + Calibration + CORAL). Shareable result URLs. Bridge CTAs to full archive. No login required. Community-agnostic language for future expansion. AD-131/132/133. Test count: 2683 app + 419 ML = 3102 total.
 - [x] 2026-02-21: **v0.60.0 — Session 58**: MLflow Model Registry + Promotion Pipeline. Both ONNX models registered in MLflow with signatures, gate tags, and @champion aliases. Automated promotion script (promote_model.py): regression gate → register version → tag results → assign @champion if passed → copy ONNX to artifacts. AD-130. Session 57 audit confirmed CORAL conversion correct. Test count: 2649 app + 419 ML = 3068 total.
 - [x] 2026-02-21: **v0.59.0 — Session 57**: CORAL Date Estimation → Production. ONNX export of CORAL date model (16.5 MB, EfficientNet-B0, 11 decades). Production inference module with fallback chain (ONNX→PyTorch→None). /estimate endpoint uses local ML model as primary (instant, free). Gemini as supplementary. Decade probability bars on photo detail pages. Gatekeeper via existing correction UI. AD-129, PRD-025. Test count: 2649 app + 399 ML = 3048 total.
 - [x] 2026-02-21: **v0.58.0 — Session 56**: Landing Page Refresh + P1 UX Polish. 12 P1 UX fixes (merge direction, admin controls, photo preview, loading indicators). Feature entry point cards (2x3 grid with live stats). Lazy loading for /photos (24/page infinite scroll) and /timeline (smart initial decades). Full production UX audit (all pages verified). PRD-024. Test count: 2631 app + 372 ML = 3003 total.

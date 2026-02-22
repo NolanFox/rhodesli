@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-80 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+84 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -88,6 +88,10 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 62 | Triage by actionability, not chronology |
 | 63 | Filters must be preserved across all navigation paths |
 | 64 | Toasts inside modals are invisible if z-index is wrong |
+| 81 | Separate /facecompare from /compare: "front door for strangers" vs "tool for residents" |
+| 82 | Community-agnostic language in ML tools enables future expansion to other archives |
+| 83 | FastHTML FT elements: use repr() not str() to get full HTML for testing |
+| 84 | Museum-quality design for ML demos — editorial feel beats developer utility |
 
 ## Data Safety & Registries — `tasks/lessons/data-lessons.md`
 

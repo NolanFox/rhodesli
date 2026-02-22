@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.61.0] — 2026-02-21
+
+### Added — Session 59: Face Compare Standalone
+- **Face Compare Standalone at /facecompare**: Upload a photo, find matches in the archive. No login required, museum-quality design with Cormorant Garamond serif headlines, warm sepia palette. Completely separate from the existing /compare (archive-integrated tool).
+- **Three ML systems in one flow**: InsightFace (face detection + embeddings), similarity calibration (calibrated confidence tiers), CORAL date estimation (decade probability bars). All running local ONNX models.
+- **Multi-face detection**: Upload a group photo, see all detected faces, select one for comparison. Single-face photos auto-compare.
+- **Tiered results**: Strong Match, Possible Match, Similar Features — with calibrated confidence percentages, archive links to person pages, and collection attribution.
+- **Shareable result URLs**: /facecompare/result/{uuid} — share comparison results via link or Web Share API. Results render without re-uploading.
+- **Bridge CTAs**: "Explore the full archive", "Upload to the archive", "Try another photo" — drawing strangers into the full Rhodesli experience.
+- **Date estimation on upload**: CORAL ONNX model estimates the photo's decade with probability distribution bars.
+- AD-131 (standalone /facecompare), AD-132 (community-agnostic language), AD-133 (three ML systems in one flow).
+- Test count: 3102 total (2683 app + 419 ML — 34 new tests)
+
 ## [v0.60.0] — 2026-02-21
 
 ### Added — Session 58: MLflow Model Registry + Promotion Pipeline
