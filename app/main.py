@@ -17237,19 +17237,40 @@ def public_photo_page(
             card_href = None
             card_title = None
 
+        # Quick-identify button for admin on unidentified faces
+        quick_id_btn = None
+        quick_id_area = None
+        if is_admin and not fi["is_identified"] and fi["face_id"]:
+            quick_id_btn = Button(
+                NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>'),
+                type="button",
+                cls="absolute top-1 right-1 p-1 bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10",
+                hx_get=f"/api/admin/quick-identify-form/{fi['face_id']}",
+                hx_target=f"#qid-{fi['face_id']}",
+                hx_swap="innerHTML",
+                title="Quick identify",
+                data_testid="quick-identify-btn",
+            )
+            quick_id_area = Div(id=f"qid-{fi['face_id']}", cls="w-full")
+
         card_inner = Div(
-            crop_el,
+            Div(
+                crop_el,
+                quick_id_btn,
+                cls="relative group" if quick_id_btn else "",
+            ) if quick_id_btn else crop_el,
             Div(
                 P(name_el, cls="text-sm font-medium text-white mt-2 text-center") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center"),
                 badge,
                 see_all_link,
                 cls="flex flex-col items-center"
             ),
+            quick_id_area,
             id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
-            cls=f"flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 hover:bg-slate-700/50 transition-colors",
+            cls=f"photo-face-card flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 hover:bg-slate-700/50 transition-colors",
         )
 
-        if card_href:
+        if card_href and not quick_id_btn:
             person_cards.append(
                 A(
                     card_inner,
@@ -17259,6 +17280,7 @@ def public_photo_page(
                 )
             )
         else:
+            # For admin cards with quick-identify, don't wrap in link (form inside link = invalid HTML)
             person_cards.append(card_inner)
 
     # --- Photo metadata line (with clickable collection link) ---
@@ -18578,6 +18600,70 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
         return (*photo_content, oob_toast)
     else:
         return toast(f'Named as "{name}"!', "success")
+
+
+@rt("/api/admin/quick-identify-form/{face_id}")
+def get(face_id: str, sess=None):
+    """Return inline identify form for a face (admin only).
+
+    Used on photo pages — clicking the pencil icon opens this form
+    inline next to the face card. Submits to /api/face/create-identity.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    # Get confirmed identity names for autocomplete suggestions
+    registry = load_registry()
+    confirmed = registry.list_identities(state=IdentityState.CONFIRMED)
+    name_suggestions = sorted(set(
+        ensure_utf8_display(i.get("name", ""))
+        for i in confirmed
+        if i.get("name") and not i["name"].startswith("Unidentified")
+    ))
+
+    # Datalist for autocomplete
+    datalist = Datalist(
+        *[Option(value=n) for n in name_suggestions[:50]],
+        id=f"names-{face_id}",
+    ) if name_suggestions else None
+
+    return Div(
+        Form(
+            Div(
+                Input(
+                    type="text", name="name", placeholder="Enter name...",
+                    list=f"names-{face_id}" if datalist else None,
+                    cls="bg-slate-700 text-white text-sm rounded-lg px-3 py-2 w-full border border-slate-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none",
+                    autofocus=True,
+                    data_testid="quick-identify-input",
+                ),
+                datalist if datalist else None,
+                cls="flex-1",
+            ),
+            Div(
+                Button(
+                    "Save",
+                    type="submit",
+                    cls="px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-500 transition-colors",
+                ),
+                Button(
+                    "Cancel",
+                    type="button",
+                    cls="px-3 py-2 text-slate-400 hover:text-white text-sm transition-colors",
+                    onclick=f"document.getElementById('qid-{face_id}').innerHTML='';",
+                ),
+                cls="flex gap-2 mt-2",
+            ),
+            Input(type="hidden", name="face_id", value=face_id),
+            hx_post="/api/face/create-identity",
+            hx_target="closest .photo-face-card",
+            hx_swap="outerHTML",
+            data_testid="quick-identify-form",
+        ),
+        id=f"qid-{face_id}",
+        cls="mt-2",
+    )
 
 
 @rt("/api/identity/{identity_id}/rejected")
