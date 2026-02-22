@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.58.0 · 3003 tests · 271 photos · 662 identities · 54 confirmed
+Current: v0.59.0 · 3048 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -53,7 +53,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [ ] **PRODUCT-001: Face Compare Standalone Tier 1** — quick win, shippable demo (AD-117)
 
 ### Next (After Immediate)
-- [ ] CORAL date estimation training — PyTorch portfolio centerpiece
+- [x] CORAL date estimation → ONNX production serving (Session 57, v0.59.0, 2026-02-21)
 - [ ] ML-070: MLflow integration — add to CORAL training script (AD-116)
 - [ ] OPS-001: Custom SMTP for branded email sender
 
@@ -111,7 +111,14 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - [x] Phase 5: Full production UX audit — all pages verified, smoke test 11/11 (2026-02-21)
 - [x] 3003 total tests (2631 app + 372 ML)
 
-### Session 57: CORAL Date Estimation Model
+### Session 57: CORAL Date Estimation → Production — COMPLETE
+- [x] Phase 1: ONNX export — date_estimation_v1.onnx (16.5 MB), validated 50/50 prediction match (2026-02-21)
+- [x] Phase 2: Production deployment — DateEstimationService, Dockerfile, health check (2026-02-21)
+- [x] Phase 3: /estimate endpoint — CORAL primary, Gemini supplementary, probability bars (2026-02-21)
+- [x] Phase 4: Photo viewer — decade probability bars on photo detail pages (2026-02-21)
+- [x] Phase 5-6: Verification gate + docs (2026-02-21)
+- [x] 3048 total tests (2649 app + 399 ML)
+
 ### Session 58: MLflow Integration + Experiment Dashboard
 ### Session 59: Face Compare Standalone Tier 1 (PRODUCT-001)
 
@@ -122,6 +129,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-21: **v0.59.0 — Session 57**: CORAL Date Estimation → Production. ONNX export of CORAL date model (16.5 MB, EfficientNet-B0, 11 decades). Production inference module with fallback chain (ONNX→PyTorch→None). /estimate endpoint uses local ML model as primary (instant, free). Gemini as supplementary. Decade probability bars on photo detail pages. Gatekeeper via existing correction UI. AD-129, PRD-025. Test count: 2649 app + 399 ML = 3048 total.
 - [x] 2026-02-21: **v0.58.0 — Session 56**: Landing Page Refresh + P1 UX Polish. 12 P1 UX fixes (merge direction, admin controls, photo preview, loading indicators). Feature entry point cards (2x3 grid with live stats). Lazy loading for /photos (24/page infinite scroll) and /timeline (smart initial decades). Full production UX audit (all pages verified). PRD-024. Test count: 2631 app + 372 ML = 3003 total.
 - [x] 2026-02-21: **v0.57.1 — Session 55b**: ONNX Production Serving + ML Docs. Calibration model exported to ONNX (129KB). Production now uses onnxruntime (15MB) vs PyTorch (500MB+). Fallback chain: ONNX→PyTorch→Euclidean. AD-127 (results interpretation), AD-128 (ONNX serving). ML_ARCHITECTURE.md (178 lines). Backlog audit: 20/20 items verified. Test count: 2604 app + 372 ML = 2976 total.
 - [x] 2026-02-21: **v0.57.0 — Session 55**: Similarity Calibration. Siamese MLP (33K params) on frozen InsightFace embeddings. F1@0.5 improved 4.8x (0.13→0.60), precision@0.5=98%. MLflow tracked. PRD-023, SDD-023, AD-123-126. Integrated into compare pipeline. Backlog audit (8 new items). Test count: 2604 app + 357 ML = 2961 total.

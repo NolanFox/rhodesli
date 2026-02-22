@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 28.0 — February 21, 2026
-**Status**: 2909 tests passing, v0.56.3, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
+**Version**: 29.0 — February 21, 2026
+**Status**: 3048 tests passing, v0.59.0, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,8 +40,10 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.56.3 — 2026-02-21)
+## Recent Sessions (v0.59.0 — 2026-02-21)
 
+- **Session 57** (v0.59.0): CORAL Date Estimation → Production. ONNX export (16.5 MB), /estimate uses local ML model (instant, free), decade probability bars on photo detail. 3048 total tests.
+- **Session 56** (v0.58.0): Landing Page Refresh + P1 UX Polish. 12 P1 fixes, feature cards, lazy loading. 3003 total tests.
 - **Session 49E** (v0.56.3): Stabilization. 130 test state-pollution failures fixed (ExitStack). All 49D fixes verified in production (10/10 PASS). 2909 total tests.
 - **Session 49D** (v0.56.2): 12 UX bugs fixed (6 P0 + 6 P1). Name These Faces, upload messaging, merge URL, birth year race condition. 35 new tests.
 - **Session 49B** (v0.56.1): Interactive review. 28 birth years accepted, GEDCOM import (33 matches), 67 UX issues compiled. 54 confirmed identities.

@@ -274,12 +274,21 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Phase 5**: Full production UX audit — all pages verified (photos, people, timeline, map, tree, person detail, landing, admin dashboard). Production smoke test 11/11 PASS.
 - 3003 total tests (2631 app + 372 ML)
 
+## Session 57: CORAL Date Estimation → Production (2026-02-21) — v0.59.0
+- **Phase 1**: ONNX export of CORAL date classifier (16.5 MB). EfficientNet-B0 backbone, 11 decades (1900s-2000s). Validated 50/50 prediction match. AD-129 (tolerance 0.05 for deep CNN). PRD-025.
+- **Phase 2**: Production deployment — DateEstimationService with fallback chain (ONNX→PyTorch→None). Dockerfile updated. Health check reports date_model status.
+- **Phase 3**: /estimate endpoint wired to CORAL model as primary (instant, free). Gemini as supplementary "Detailed AI Analysis". Probability distribution bars, confidence tiers, expected year display.
+- **Phase 4**: Decade probability bars on photo detail pages using existing Gemini decade_probabilities.
+- **Phase 5-6**: Verification gate + documentation. All tests pass.
+- 3048 total tests (2649 app + 399 ML)
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.59.0 | 2026-02-21 | 57 | 2649+399 |
 | v0.58.0 | 2026-02-21 | 56 | 2631+372 |
 | v0.57.1 | 2026-02-21 | 55b | 2604+372 |
 | v0.57.0 | 2026-02-21 | 55 | 2604+357 |

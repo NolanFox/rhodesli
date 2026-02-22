@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.59.0] — 2026-02-21
+
+### Added — Session 57: CORAL Date Estimation → Production
+- **ONNX export (AD-129)**: CORAL date estimation model (EfficientNet-B0, 4.3M params, 11 decades) exported to ONNX format (16.5 MB). Validated 50/50 decade prediction match between PyTorch and ONNX Runtime. Tolerance relaxed to 0.05 for deep CNN (vs 1e-5 for tiny MLP).
+- **Production inference module**: `rhodesli_ml/date_inference/` — ONNXDateEstimationInference with fallback chain (ONNX → PyTorch → None). ImageNet preprocessing, CORAL ordinal logits → probability conversion.
+- **/estimate endpoint upgrade**: Local CORAL model runs as primary date estimator (instant, free, no API call). Returns decade prediction, confidence tier, probability distribution bars, and expected year. Gemini shown as supplementary "Detailed AI Analysis".
+- **Photo detail date display**: Decade probability distribution bars on photo detail pages using existing Gemini decade_probabilities data.
+- **Gatekeeper pattern**: Existing date correction UI (pencil button + correction form) already implements admin review for ML date estimates — no new UI needed.
+- **Health check**: `/health` endpoint now reports date_model and calibration_model status.
+- PRD-025: Date Estimation Production deployment requirements.
+- Test count: 3048 total (2649 app + 399 ML — 45 new tests)
+
 ## [v0.58.0] — 2026-02-21
 
 ### Added — Session 56: Landing Page Refresh + P1 UX Polish
