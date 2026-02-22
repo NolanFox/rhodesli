@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.63.1] — 2026-02-22 (Session 60B)
+
+### Fixed
+- P0: Quick-identify CSS selector crash on legacy face IDs containing colons and spaces (e.g., `Image 968_compress:face0`). Added DOM ID sanitization — special chars → underscores for CSS selectors, URL-encode for API paths, preserve raw face_id in hidden form input.
+
+### Added
+- 2 regression tests for special character face ID handling
+- ML deep dive analysis document (`docs/session_logs/session_60b_ml_analysis.md`)
+- UX review document (`docs/session_logs/session_60b_ux_review.md`)
+- 12 new BACKLOG items from ML analysis + UX review (ML-090–095, UX-120–124, ARCH-001)
+
+### Stats
+- 2 new tests: 3192 total (2726 app + 466 ML)
+
 ## [v0.63.0] — 2026-02-22 (Session 60)
 
 ### Added — ML: Gemini Progressive Refinement

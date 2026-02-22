@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.63.0 · 3190 tests · 271 photos · 662 identities · 54 confirmed
+Current: v0.63.1 · 3192 tests · 271 photos · 662 identities · 54 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo
@@ -74,6 +74,15 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
+
+### Session 61: Progressive Refinement Completion + Community UX (suggested)
+Based on Session 60B analysis:
+- [ ] ML-090: Fix enriched prompt gap — send enriched prompt to Gemini in real mode
+- [ ] ML-091: Validate on top 3 photos ($0.10)
+- [ ] ML-094: Write AD-136/137/138 (referenced but never created)
+- [ ] UX-120: Help Identify mode for non-admin users (P1 — primary community use case)
+- [ ] UX-121: Contribution instructions page (/contribute)
+- Estimated: 1 session, ~$1.50 Gemini cost
 
 ### Session 49B: Interactive Review (requires Nolan) — COMPLETE
 - [x] Birth year bulk review — 31 estimates reviewed, 28 accepted (2026-02-20)
@@ -163,6 +172,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-22: **v0.63.1 — Session 60B**: Production Verification + ML Deep Dive + UX Review. Found+fixed P0 quick-identify CSS selector crash (legacy face IDs with colons/spaces break CSS selectors). ML analysis: progressive refinement pipeline 60% complete — enriched prompt built but never sent to Gemini in real mode. UX review: 7 friction points logged, top 5 improvements prioritized. 2 regression tests added. See `docs/session_logs/session_60b_*.md`. Test count: 2726 app + 466 ML = 3192 total.
 - [x] 2026-02-22: **v0.63.0 — Session 60**: Gemini Progressive Refinement + SSE Upload UX + Admin Unification. Three-act session: (1) ML — centralized Gemini config, API logging, progressive refinement pipeline (41 eligible photos with verified facts). (2) UX — SSE streaming upload with progressive stage indicators on /compare and /facecompare, client-side validation, timeout handling. (3) Admin — admin bar component on photo/person pages, quick-identify inline flow with autocomplete. AD-136/137/138. 96 new tests. Test count: 2724 app + 466 ML = 3190 total.
 - [x] 2026-02-22: **v0.62.0 — Session 59C**: Supabase Migration for User Data Safety. All user-entered data (confirmations, merges, annotations, birth years, relationships, GEDCOM matches) migrated to Supabase Postgres. 4 tables: identity_overrides (372), annotations (8), relationships (19), gedcom_matches (33). Dual-write pattern ensures every user action persists to both Supabase and JSON cache. Startup sync rebuilds JSON from Supabase on every deploy. DATA-001 (deploy data loss, 5 incidents) structurally resolved. AD-135. Test count: 2683 app + 419 ML = 3102 total.
 - [x] 2026-02-21: **v0.61.1 — Session 59B**: Emergency Recovery + Deploy Safety Gate. Recovered 9 identity confirmations, 3 birth years, 2 merges from Railway volume backup. Triple safety gate (AD-134). 21 deploy safety tests. Session 59B follow-up: full cross-check, AD-135 Supabase migration plan, DATA-001 recurring incident tracker, GEDCOM CSV tracked, email system diagnosed. Test count: 2704 app + 419 ML = 3123 total.

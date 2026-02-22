@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 30.0 — February 22, 2026
-**Status**: 3190 tests passing, v0.63.0, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
+**Version**: 31.0 — February 22, 2026
+**Status**: 3192 tests passing, v0.63.1, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,14 +40,37 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.63.0 — 2026-02-22)
+## Recent Sessions (v0.63.1 — 2026-02-22)
 
+- **Session 60B** (v0.63.1): Production Verification + ML Deep Dive + UX Review. Found+fixed P0 quick-identify CSS selector crash (legacy face IDs with colons/spaces). ML analysis: progressive refinement pipeline 60% complete (enriched prompt built but never sent to Gemini). UX review: 7 friction points, 5 improvement recommendations. See `docs/session_logs/session_60b_*.md`. 3192 total tests.
 - **Session 60** (v0.63.0): Gemini Progressive Refinement + SSE Upload UX + Admin Unification. Three-act session: centralized Gemini config (AD-136), API logging (AD-137), progressive refinement pipeline (AD-138), SSE streaming upload on /compare + /facecompare, admin bar, quick-identify inline flow. 96 new tests. 3190 total.
 - **Session 59C** (v0.62.0): Supabase Migration for User Data Safety. All user-entered data migrated to Postgres. DATA-001 structurally resolved (AD-135). 3102 total tests.
 - **Session 59/59B** (v0.61.0/v0.61.1): Face Compare Standalone Tier 1 + Emergency Recovery. Museum-quality /facecompare page (AD-131/132/133). Deploy safety gate (AD-134). 3123 total tests.
 - **Session 58** (v0.60.0): MLflow Model Registry + Promotion Pipeline (AD-130). 3068 total tests.
 - **Session 57** (v0.59.0): CORAL Date Estimation → Production. ONNX export (16.5 MB), /estimate uses local ML model (instant, free), decade probability bars on photo detail. 3048 total tests.
 - **Sessions 49B-56** (v0.55-0.58): Similarity calibration, ONNX serving, landing page refresh, UX fixes, GEDCOM import. See docs/roadmap/SESSION_HISTORY.md.
+
+---
+
+## Session 60B Findings (2026-02-22)
+
+### ML — Progressive Refinement Completion (P1)
+- [ ] **ML-090: Fix enriched prompt gap** — `run_refinement()` must send enriched prompt (with birth years, relationships) to Gemini, not use hardcoded prompt. ~30 min. See `docs/session_logs/session_60b_ml_analysis.md`.
+- [ ] **ML-091: Real 3-photo validation** — Run refinement on top photo (inbox_b5e8a89e_9, 19 facts, existing label 1950s, birth year math says 1940s). ~$0.10.
+- [ ] **ML-092: Results-to-web bridge** — Script/endpoint to merge refinement_results.json into date_labels.json for admin review. Currently no connection to web app.
+- [ ] **ML-093: Full 41-photo batch run** — After prompt gap fixed and validated. ~$1.31.
+- [ ] **ML-094: Write AD-136/137/138** — Referenced in code/docs/CHANGELOG but never written to ALGORITHMIC_DECISIONS.md.
+- [ ] **ML-095: CORAL retroactive run** — Run local model on all 271 photos, compare to Gemini labels. Free independent validation.
+
+### UX Improvements (from Production Review)
+- [ ] **UX-120: Help Identify mode for non-admin users (P1)** — Primary community use case requires admin intervention. Let logged-in users suggest names for unidentified faces → admin approval queue. See `docs/session_logs/session_60b_ux_review.md`.
+- [ ] **UX-121: Contribution instructions page (P2)** — /contribute page explaining: how to identify faces, submit photos, report errors. Community members arrive from Facebook links.
+- [ ] **UX-122: Person page family context (P2)** — 19 relationships exist in data but aren't visible. Show family connections, timeline of appearances.
+- [ ] **UX-123: Mobile photo overlay readability (P2)** — Photos with 12+ faces have overlapping labels. CSS media query for reduced label size or tap-to-show.
+- [ ] **UX-124: People page search/filter (P2)** — No search input on /people page.
+
+### Architecture
+- [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.
 
 ---
 
