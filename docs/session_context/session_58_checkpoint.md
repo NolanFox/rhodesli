@@ -6,7 +6,7 @@
 
 ## Phase Checklist
 - [x] Phase 0: Orient + checkpoint
-- [ ] Phase 0.5: Audit Session 57 deliverables
+- [x] Phase 0.5: Audit Session 57 deliverables (SOUND)
 - [ ] Phase 1: Model Registry setup + register both models
 - [ ] Phase 2: Promotion pipeline (promote_model.py)
 - [ ] Phase 3: Backfill + docs + verification gate
@@ -38,8 +38,36 @@
 The two experiment directories need to be consolidated under one tracking URI.
 Decision: Use `rhodesli_ml/mlruns` as the canonical URI. Move/register calibration runs there.
 
-## Session 57 Audit
-_(To be filled in Phase 0.5)_
+## Session 57 Audit (Phase 0.5)
+
+### CORAL probability conversion: CORRECT
+- Model outputs 10 ordinal logits → 11 decade probabilities (1900s-2000s)
+- `inference_onnx.py` implements standard CORAL: sigmoid → cumprobs → class probs
+- Probabilities sum to 1.0, expected year is reasonable
+- Both `/estimate` endpoint and photo detail pages use same conversion
+
+### Gatekeeper completeness: MINIMAL (acceptable)
+| Component | Expected | Found |
+|---|---|---|
+| ML estimates labeled "(unreviewed)" | Yes | No — birth year has this, dates do not |
+| Admin accept/correct/dismiss buttons | Yes | Partial — correct-date endpoint exists (pencil button) |
+| Public users never see unreviewed ML dates | Yes | N/A — dates only shown on /estimate upload, not on photo pages by default |
+| Corrections saved to feedback file | Yes | Yes — date_corrections.json referenced in code |
+| Probability bars on photo pages | Yes | Yes — decade_probability_bars from Gemini/label data |
+
+**Assessment:** The Gatekeeper for dates is simpler than for birth years — reuses the
+existing pencil/correction UI rather than a full proposal flow. This is adequate because
+date estimates are shown as supplementary info, not as primary metadata.
+
+### Gemini supplementary UX: CORRECT
+- Gemini runs automatically after CORAL (not user-triggered button)
+- But it's rendered as "Detailed AI Analysis" section, visually subordinate to CORAL
+- This is a reasonable simplification: Gemini adds evidence (fashion, tech cues)
+
+### Overall: SOUND — proceed to Phase 1
+No blocking issues. Minor gap: dates don't have "(unreviewed)" labels, but
+date estimates are only shown in /estimate results, not on photo metadata.
+Not worth a backlog item.
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
