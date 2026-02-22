@@ -15469,6 +15469,7 @@ def _call_gemini_date_estimate(image_bytes: bytes, suffix: str, api_key: str) ->
     """
     from google import genai
     from google.genai import types
+    from rhodesli_ml.gemini_config import GEMINI_MODEL
     import json as _json
 
     client = genai.Client(
@@ -15480,7 +15481,7 @@ def _call_gemini_date_estimate(image_bytes: bytes, suffix: str, api_key: str) ->
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.1-pro-preview",
+            model=GEMINI_MODEL,
             contents=[
                 types.Content(
                     parts=[

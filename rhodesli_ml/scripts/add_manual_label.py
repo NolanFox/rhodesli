@@ -256,8 +256,8 @@ def main():
     )
     parser.add_argument(
         "--model",
-        default="gemini-3-flash-preview",
-        help="Model name to record (default: gemini-3-flash-preview)",
+        default="manual",
+        help="Model name to record (default: manual)",
     )
     parser.add_argument(
         "--labels-path",

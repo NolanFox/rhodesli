@@ -3,17 +3,9 @@ import json
 import os
 from datetime import datetime, timezone
 
-COST_LOG = "rhodesli_ml/data/api_cost_log.json"
+from rhodesli_ml.gemini_config import MODEL_PRICING
 
-# Pricing per 1M tokens (update these when models change)
-MODEL_PRICING = {
-    "gemini-2.0-flash": {"input": 0.10, "output": 0.40},
-    "gemini-2.5-flash": {"input": 0.15, "output": 0.60},
-    "gemini-2.5-pro": {"input": 1.25, "output": 5.00},
-    "gemini-3-pro-preview": {"input": 2.00, "output": 12.00},
-    "gemini-3-flash-preview": {"input": 0.50, "output": 3.00},
-    "gemini-3.1-pro-preview": {"input": 2.00, "output": 12.00},
-}
+COST_LOG = "rhodesli_ml/data/api_cost_log.json"
 
 
 def estimate_cost(model: str, input_tokens: int, output_tokens: int) -> float:

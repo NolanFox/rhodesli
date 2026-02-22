@@ -34,35 +34,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Cost per photo estimates (input + output tokens)
-# Per photo: ~1,790 input tokens (image + prompt) + ~2,800 output tokens
-# (increased from ~2,000 due to rich metadata fields — AD-048)
-MODEL_COSTS = {
-    "gemini-3.1-pro-preview": {
-        "input_per_million": 2.00,
-        "output_per_million": 12.00,
-        "per_photo": 0.037,
-        "note": "RECOMMENDED — best vision, 77.1% ARC-AGI-2, improved bounding boxes (AD-101)",
-    },
-    "gemini-3-pro-preview": {
-        "input_per_million": 2.00,
-        "output_per_million": 12.00,
-        "per_photo": 0.037,
-        "note": "Previous best, SOTA vision reasoning",
-    },
-    "gemini-3-flash-preview": {
-        "input_per_million": 0.50,
-        "output_per_million": 3.00,
-        "per_photo": 0.010,
-        "note": "Free tier available, very good quality",
-    },
-    "gemini-2.5-flash": {
-        "input_per_million": 0.30,
-        "output_per_million": 2.50,
-        "per_photo": 0.008,
-        "note": "Stable, good price/performance",
-    },
-}
+# Cost per photo estimates — centralized in rhodesli_ml/config.py
+from rhodesli_ml.gemini_config import MODEL_PRICING as MODEL_COSTS, GEMINI_MODEL
 
 PROMPT = """You are a forensic photo analyst specializing in dating historical photographs
 from Sephardic Jewish communities, particularly from Rhodes (Dodecanese), Greece and
@@ -220,7 +193,7 @@ def load_existing_labels(path: str) -> dict:
     return {entry["photo_id"]: entry for entry in data.get("labels", [])}
 
 
-def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-preview",
+def call_gemini(image_path: str, api_key: str, model: str = None,
                 max_retries: int = 5) -> dict | None:
     """Call Gemini Vision API with a photo and return parsed structured response.
 
@@ -228,6 +201,8 @@ def call_gemini(image_path: str, api_key: str, model: str = "gemini-3-pro-previe
     Retries on 429 (rate limit) and 503 (overloaded) with exponential backoff.
     Returns the full structured evidence dict or None on failure.
     """
+    if model is None:
+        model = GEMINI_MODEL
     from google import genai
     from google.genai import types
 
@@ -397,9 +372,9 @@ def main():
         help="Output labels file",
     )
     parser.add_argument(
-        "--model", default="gemini-3-pro-preview",
+        "--model", default=GEMINI_MODEL,
         choices=list(MODEL_COSTS.keys()),
-        help="Gemini model to use (default: gemini-3-pro-preview)",
+        help=f"Gemini model to use (default: {GEMINI_MODEL})",
     )
     parser.add_argument(
         "--max-cost", type=float, default=5.00,
@@ -421,7 +396,7 @@ def main():
     print(f"To label: {len(to_label)}")
 
     # Cost estimate
-    cost_info = MODEL_COSTS.get(args.model, MODEL_COSTS["gemini-3-pro-preview"])
+    cost_info = MODEL_COSTS.get(args.model, MODEL_COSTS[GEMINI_MODEL])
     total_count = len(to_label) if args.batch_size == 0 else min(args.batch_size, len(to_label))
     estimated_cost = total_count * cost_info["per_photo"]
 

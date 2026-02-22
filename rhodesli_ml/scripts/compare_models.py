@@ -275,8 +275,9 @@ def print_summary(comparisons: list[dict], model_a: str, model_b: str,
 def main():
     parser = argparse.ArgumentParser(description="A/B compare two Gemini models")
     parser.add_argument("--photos", required=True, help="JSON file with list of photo filenames")
-    parser.add_argument("--model-a", default="gemini-3-pro-preview", help="First model")
-    parser.add_argument("--model-b", default="gemini-3-flash-preview", help="Second model")
+    from rhodesli_ml.gemini_config import GEMINI_MODEL, GEMINI_MODEL_FAST
+    parser.add_argument("--model-a", default=GEMINI_MODEL, help="First model")
+    parser.add_argument("--model-b", default=GEMINI_MODEL_FAST, help="Second model")
     parser.add_argument("--photo-dir", default="raw_photos", help="Directory containing photos")
     args = parser.parse_args()
 
@@ -292,8 +293,8 @@ def main():
     print(f"Photos: {len(photo_names)}")
     print(f"Cost limit: ${COST_HARD_LIMIT:.2f}")
 
-    cost_a_info = MODEL_COSTS.get(args.model_a, MODEL_COSTS["gemini-3-pro-preview"])
-    cost_b_info = MODEL_COSTS.get(args.model_b, MODEL_COSTS["gemini-3-flash-preview"])
+    cost_a_info = MODEL_COSTS.get(args.model_a, MODEL_COSTS[GEMINI_MODEL])
+    cost_b_info = MODEL_COSTS.get(args.model_b, MODEL_COSTS[GEMINI_MODEL_FAST])
     est_total = len(photo_names) * (cost_a_info["per_photo"] + cost_b_info["per_photo"])
     print(f"Estimated total cost: ${est_total:.2f}")
     print()
