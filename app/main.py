@@ -28,7 +28,7 @@ import numpy as np
 from fasthtml.common import *
 from PIL import Image
 from starlette.datastructures import UploadFile
-from starlette.responses import FileResponse, HTMLResponse, RedirectResponse
+from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, StreamingResponse
 
 # Add project root to path for imports
 project_root = Path(__file__).resolve().parent.parent
@@ -14005,15 +14005,29 @@ def get(face_id: str = "", sess=None):
             hx_swap="innerHTML show:#compare-results:top",
             hx_indicator="#upload-spinner",
             data_testid="upload-form",
+            onsubmit="if(typeof startProgressUpload==='function'){return startProgressUpload(this,'compare')}",
         ),
-        Div(id="upload-spinner", cls="htmx-indicator text-center py-8",
-            children=[
-                Div(
-                    NotStr('<svg class="animate-spin h-10 w-10 text-indigo-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>'),
-                    P("Analyzing your photo for faces...", cls="text-white font-medium mb-1"),
-                    P("This may take 10\u201330 seconds for group photos.", cls="text-slate-400 text-sm"),
-                ),
-            ]),
+        Div(
+            Div(
+                NotStr('<svg class="animate-spin h-10 w-10 text-indigo-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>'),
+                P("Analyzing your photo for faces...", cls="text-white font-medium mb-1"),
+                P("This may take 10\u201330 seconds for group photos.", cls="text-slate-400 text-sm"),
+            ),
+            id="upload-spinner", cls="htmx-indicator text-center py-8",
+        ),
+        Div(
+            Div(
+                _upload_stage_item("received", "Photo received", "pending"),
+                _upload_stage_item("detecting", "Detecting faces", "pending"),
+                _upload_stage_item("comparing", "Searching archive", "pending"),
+                _upload_stage_item("estimating", "Estimating date", "pending"),
+                _upload_stage_item("complete", "Analysis complete", "pending"),
+                cls="text-left max-w-xs mx-auto space-y-3",
+                id="stage-list",
+            ),
+            id="upload-progress", cls="hidden text-center py-6",
+            data_testid="upload-progress",
+        ),
         P("Your photo is used for matching. Sign in to contribute it to the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
         data_testid="upload-area",
@@ -14053,6 +14067,7 @@ def get(face_id: str = "", sess=None):
         Title("Compare Faces \u2014 Rhodesli Heritage Archive"),
         *compare_og,
         page_style,
+        NotStr(_upload_progress_script()),
         Main(
             Nav(
                 Div(
@@ -14205,6 +14220,139 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
         data_testid="compare-result",
         data_tier=tier.lower().replace(" ", "-"),
     )
+
+
+def _upload_stage_item(stage_id: str, label: str, status: str = "pending") -> object:
+    """Build a single stage indicator for progressive upload UI."""
+    icons = {
+        "pending": '<span class="text-slate-600 text-lg">○</span>',
+        "active": '<svg class="animate-spin h-5 w-5 text-indigo-400 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>',
+        "done": '<span class="text-green-400 text-lg">✓</span>',
+        "error": '<span class="text-red-400 text-lg">✗</span>',
+    }
+    text_cls = {
+        "pending": "text-slate-600",
+        "active": "text-white font-medium",
+        "done": "text-slate-300",
+        "error": "text-red-400",
+    }
+    return Div(
+        NotStr(icons.get(status, icons["pending"])),
+        Span(label, cls=f"ml-3 {text_cls.get(status, text_cls['pending'])}"),
+        Span("", cls="ml-auto text-xs text-slate-500", id=f"stage-detail-{stage_id}"),
+        cls="flex items-center",
+        id=f"stage-{stage_id}",
+        data_stage=stage_id,
+    )
+
+
+def _upload_progress_script() -> str:
+    """JavaScript for SSE-based progressive upload with stage indicators."""
+    return """
+<script>
+function startProgressUpload(form, flow) {
+    var formData = new FormData(form);
+    formData.append('flow', flow || 'compare');
+
+    // Show progress, hide spinner
+    var progress = document.getElementById('upload-progress');
+    var spinner = document.getElementById('upload-spinner');
+    var results = document.getElementById('compare-results') || document.getElementById('fc-results');
+    if (progress) progress.classList.remove('hidden');
+    if (spinner) spinner.classList.add('hidden');
+
+    // Disable submit button
+    var btn = form.querySelector('button[type="submit"]');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+
+    fetch('/api/upload/stream', {
+        method: 'POST',
+        body: formData
+    }).then(function(response) {
+        var reader = response.body.getReader();
+        var decoder = new TextDecoder();
+        var buffer = '';
+
+        function readChunk() {
+            reader.read().then(function(result) {
+                if (result.done) return;
+                buffer += decoder.decode(result.value, {stream: true});
+
+                var lines = buffer.split('\\n');
+                buffer = lines.pop(); // keep incomplete line
+
+                lines.forEach(function(line) {
+                    if (line.startsWith('data: ')) {
+                        try {
+                            var data = JSON.parse(line.substring(6));
+                            handleStageEvent(data, flow);
+                        } catch(e) {}
+                    }
+                });
+                readChunk();
+            });
+        }
+        readChunk();
+    }).catch(function(err) {
+        if (progress) progress.classList.add('hidden');
+        if (results) results.innerHTML = '<p class="text-red-400 text-center py-4">Connection error. Please try again.</p>';
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    });
+
+    return false; // prevent default form submission
+}
+
+function handleStageEvent(data, flow) {
+    var stageOrder = ['received', 'detecting', 'comparing', 'estimating', 'complete'];
+    var stageIdx = stageOrder.indexOf(data.stage);
+
+    // Mark completed stages
+    stageOrder.forEach(function(s, i) {
+        var el = document.getElementById('stage-' + s);
+        if (!el) return;
+        var icon = el.querySelector('span:first-child, svg');
+        var label = el.querySelector('span.ml-3');
+
+        if (data.stage === 'error') {
+            // Show error on current active stage
+            return;
+        }
+
+        if (i < stageIdx) {
+            // Completed
+            if (icon) icon.outerHTML = '<span class="text-green-400 text-lg">✓</span>';
+            if (label) label.className = 'ml-3 text-slate-300';
+        } else if (i === stageIdx) {
+            // Active / just completed
+            if (data.stage === s) {
+                if (icon) icon.outerHTML = '<span class="text-green-400 text-lg">✓</span>';
+                if (label) { label.className = 'ml-3 text-white font-medium'; label.textContent = data.message || label.textContent; }
+            }
+        }
+    });
+
+    // Update detail text
+    var detail = document.getElementById('stage-detail-' + data.stage);
+    if (detail && data.stage === 'detected') detail.textContent = data.detect_time ? data.detect_time + 's' : '';
+    if (detail && data.stage === 'compared') detail.textContent = data.compare_time ? data.compare_time + 's' : '';
+
+    // Handle completion — redirect to results
+    if (data.stage === 'complete' && data.redirect) {
+        setTimeout(function() { window.location.href = data.redirect; }, 500);
+    }
+
+    // Handle error
+    if (data.stage === 'error') {
+        var progress = document.getElementById('upload-progress');
+        if (progress) progress.classList.add('hidden');
+        var results = document.getElementById('compare-results') || document.getElementById('fc-results');
+        if (results) results.innerHTML = '<p class="text-amber-400 text-center py-4">' + (data.message || 'An error occurred.') + '</p>';
+        var btn = document.querySelector('button[type="submit"]');
+        if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
+}
+</script>
+"""
 
 
 def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -> object:
@@ -14649,6 +14797,193 @@ async def post(photo: UploadFile = None, sess=None):
     finally:
         tmp_path.unlink(missing_ok=True)
         ml_path.unlink(missing_ok=True)
+
+
+@rt("/api/upload/stream")
+async def post(request):
+    """SSE streaming endpoint for upload processing with progressive feedback.
+
+    Returns text/event-stream with stage events as processing completes.
+    Works for both /compare and /facecompare upload flows.
+    """
+    import time as _time
+    import json as _json
+    import tempfile
+
+    form = await request.form()
+    photo = form.get("photo")
+    flow = form.get("flow", "compare")  # "compare" or "facecompare"
+
+    async def event_generator():
+        t0 = _time.time()
+
+        def sse_event(data):
+            return f"data: {_json.dumps(data)}\n\n"
+
+        # --- Validation ---
+        if not photo:
+            yield sse_event({"stage": "error", "message": "No photo uploaded."})
+            return
+
+        from pathlib import Path as _Path
+        content = await photo.read()
+        original_filename = photo.filename or "upload.jpg"
+        suffix = _Path(original_filename).suffix.lower() or ".jpg"
+
+        if suffix not in (".jpg", ".jpeg", ".png", ".webp"):
+            yield sse_event({"stage": "error", "message": "Please upload a JPEG, PNG, or WebP image."})
+            return
+
+        if len(content) > 10 * 1024 * 1024:
+            yield sse_event({"stage": "error", "message": "File is too large (max 10 MB)."})
+            return
+
+        yield sse_event({"stage": "received", "message": "Photo received", "filename": original_filename})
+
+        # --- Check ML availability ---
+        has_insightface = False
+        try:
+            import cv2
+            from insightface.app import FaceAnalysis  # noqa: F401
+            from core.ingest_inbox import extract_faces_hybrid
+            has_insightface = True
+        except ImportError:
+            pass
+
+        if not has_insightface:
+            yield sse_event({"stage": "error", "message": "Face detection is being set up. Check back soon."})
+            return
+
+        # --- Face Detection ---
+        yield sse_event({"stage": "detecting", "message": "Detecting faces..."})
+
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+            tmp.write(content)
+            tmp_path = _Path(tmp.name)
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as ml_tmp:
+            ml_tmp.write(content)
+            ml_path = _Path(ml_tmp.name)
+
+        try:
+            # Resize for ML
+            img = cv2.imread(str(ml_path))
+            if img is not None:
+                h, w = img.shape[:2]
+                _ML_MAX_DIM = 640
+                if max(h, w) > _ML_MAX_DIM:
+                    scale = _ML_MAX_DIM / max(h, w)
+                    new_w, new_h = int(w * scale), int(h * scale)
+                    img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
+                    cv2.imwrite(str(ml_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+
+            t1 = _time.time()
+            faces, _, _ = extract_faces_hybrid(ml_path)
+            detect_time = _time.time() - t1
+
+            if not faces:
+                yield sse_event({"stage": "error", "message": "No faces detected. Try a clearer photo with visible faces."})
+                return
+
+            yield sse_event({
+                "stage": "detected",
+                "message": f"Found {len(faces)} face{'s' if len(faces) != 1 else ''}",
+                "face_count": len(faces),
+                "detect_time": round(detect_time, 2),
+            })
+
+            # --- Embedding Comparison ---
+            yield sse_event({"stage": "comparing", "message": "Searching archive..."})
+
+            t1 = _time.time()
+            query_embedding = faces[0]["mu"]
+            face_data = get_face_data()
+            registry = load_registry()
+            crop_files = get_crop_files()
+
+            from core.neighbors import find_similar_faces
+            results = find_similar_faces(
+                query_embedding, face_data, registry=registry, limit=20,
+            )
+            compare_time = _time.time() - t1
+
+            match_count = sum(1 for r in results if r.get("tier") in ("STRONG", "MODERATE"))
+            yield sse_event({
+                "stage": "compared",
+                "message": f"{match_count} potential match{'es' if match_count != 1 else ''} found",
+                "match_count": match_count,
+                "total_results": len(results),
+                "archive_size": len(face_data),
+                "compare_time": round(compare_time, 2),
+            })
+
+            # --- Date Estimation (if available) ---
+            date_estimate = None
+            try:
+                from rhodesli_ml.date_inference.service import DateEstimationService
+                date_svc = DateEstimationService()
+                if date_svc.is_available():
+                    yield sse_event({"stage": "estimating", "message": "Estimating photo date..."})
+                    date_result = date_svc.predict(str(tmp_path))
+                    if date_result:
+                        date_estimate = date_result.get("predicted_decade")
+                        yield sse_event({
+                            "stage": "estimated",
+                            "message": f"Estimated circa {date_estimate}s" if date_estimate else "Date estimation inconclusive",
+                            "decade": date_estimate,
+                        })
+            except Exception:
+                pass  # Date estimation is optional
+
+            # --- Save & Complete ---
+            yield sse_event({"stage": "saving", "message": "Saving results..."})
+
+            upload_id = _save_compare_upload(content, original_filename, faces, results)
+
+            # Save face embeddings for face selection
+            import pickle
+            from core.storage import can_write_r2, upload_bytes_to_r2
+            face_save_data = [
+                {"mu": f["mu"].tolist(),
+                 "bbox": f.get("bbox", [0,0,0,0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()}
+                for f in faces
+            ]
+            faces_pkl = pickle.dumps(face_save_data)
+            if can_write_r2():
+                upload_bytes_to_r2(f"uploads/compare/{upload_id}_faces.pkl", faces_pkl)
+            else:
+                upload_dir = _Path("uploads/compare")
+                upload_dir.mkdir(parents=True, exist_ok=True)
+                (upload_dir / f"{upload_id}_faces.pkl").write_bytes(faces_pkl)
+
+            total_time = _time.time() - t0
+
+            yield sse_event({
+                "stage": "complete",
+                "message": "Analysis complete",
+                "upload_id": upload_id,
+                "face_count": len(faces),
+                "match_count": match_count,
+                "total_results": len(results),
+                "date_estimate": date_estimate,
+                "total_time": round(total_time, 2),
+                "redirect": f"/compare/result/{upload_id}" if flow == "compare" else f"/facecompare/result/{upload_id}",
+            })
+
+        except Exception as e:
+            yield sse_event({"stage": "error", "message": f"Processing error: {str(e)}"})
+        finally:
+            tmp_path.unlink(missing_ok=True)
+            ml_path.unlink(missing_ok=True)
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @rt("/api/compare/upload/select")
