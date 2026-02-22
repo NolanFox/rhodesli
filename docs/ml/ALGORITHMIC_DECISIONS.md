@@ -1405,7 +1405,25 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: rhodesli_ml/calibration/inference.py (updated fallback chain), rhodesli_ml/calibration/inference_onnx.py (new), rhodesli_ml/calibration/export_onnx.py (new), rhodesli_ml/artifacts/calibration_v1.onnx (new)
 - **Tests**: rhodesli_ml/tests/test_calibration_onnx.py — 15 tests covering export, inference, fallback chain, numerical validation
 
-1. Add a new entry with AD-XXX format (next: AD-129)
+### AD-129: ONNX Export for CORAL Date Estimation Model
+
+- **Date**: 2026-02-21
+- **Session**: 57
+- **Status**: ACCEPTED
+- **Context**: The CORAL date estimation model (EfficientNet-B0 + ordinal head) is trained locally as a PyTorch Lightning checkpoint (52 MB). Following the proven pattern from AD-128 (calibration model), export to ONNX for production serving.
+- **Decision**: Export `DateEstimationModel` to ONNX via `torch.onnx.export()`. Input: (batch, 3, 224, 224) float32. Output: (batch, 10) ordinal logits. Serve with `onnxruntime.InferenceSession`.
+- **Model details**: Best checkpoint = epoch 26, val MAE = 0.36 decades, adjacent accuracy ~96%. ONNX artifact = 16.5 MB.
+- **Numerical validation**: 100 random samples, max logit diff = 3.4e-2. 50/50 decade predictions match exactly — logit diffs never change argmax.
+- **Tolerance rationale**: EfficientNet-B0 (4.3M params, deep BN+conv) accumulates more FP error than a 33K-param MLP. 0.034 on logits in [-5,5] = ~0.7% relative. Tolerance = 0.05.
+- **Preprocessing**: Resize(257) → CenterCrop(224) → /255 → ImageNet normalize. Must match val transforms.
+- **Rejected alternatives**:
+  1. Tighter tolerance (1e-5) — impossible for deep CNN ONNX. Standard: 1e-3 to 1e-1 for ResNet/EfficientNet.
+  2. Export backbone+head separately — unnecessary complexity.
+  3. TorchScript — still needs PyTorch runtime (500MB).
+- **Affects**: rhodesli_ml/scripts/export_date_onnx.py (new), rhodesli_ml/artifacts/date_estimation_v1.onnx (new)
+- **Tests**: rhodesli_ml/tests/test_date_export_onnx.py — 11 tests
+
+1. Add a new entry with AD-XXX format (next: AD-130)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
