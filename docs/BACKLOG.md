@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 31.0 — February 22, 2026
-**Status**: 3192 tests passing, v0.63.1, 271 photos, 54 confirmed identities, 662 total identities, 267 geocoded
+**Version**: 32.0 — February 22, 2026
+**Status**: ~3240 tests passing, v0.64.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,8 +40,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.63.1 — 2026-02-22)
+## Recent Sessions (v0.64.0 — 2026-02-22)
 
+- **Session 61** (v0.64.0): Gemini Photo Detective + Multi-Photo Compare + ML Iteration Loop. Fixed enriched prompt gap (ML-090), upgraded to Gemini 3.1 Pro (AD-139), MLflow tracking (AD-140), multi-photo compare upload 2-5 photos (AD-141, PRD-021), Photo Detective UX with evidence cards (AD-142, PRD-022), data integrity report script. ~50 new tests.
 - **Session 60B** (v0.63.1): Production Verification + ML Deep Dive + UX Review. Found+fixed P0 quick-identify CSS selector crash (legacy face IDs with colons/spaces). ML analysis: progressive refinement pipeline 60% complete (enriched prompt built but never sent to Gemini). UX review: 7 friction points, 5 improvement recommendations. See `docs/session_logs/session_60b_*.md`. 3192 total tests.
 - **Session 60** (v0.63.0): Gemini Progressive Refinement + SSE Upload UX + Admin Unification. Three-act session: centralized Gemini config (AD-136), API logging (AD-137), progressive refinement pipeline (AD-138), SSE streaming upload on /compare + /facecompare, admin bar, quick-identify inline flow. 96 new tests. 3190 total.
 - **Session 59C** (v0.62.0): Supabase Migration for User Data Safety. All user-entered data migrated to Postgres. DATA-001 structurally resolved (AD-135). 3102 total tests.
@@ -55,11 +56,11 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 ## Session 60B Findings (2026-02-22)
 
 ### ML — Progressive Refinement Completion (P1)
-- [ ] **ML-090: Fix enriched prompt gap** — `run_refinement()` must send enriched prompt (with birth years, relationships) to Gemini, not use hardcoded prompt. ~30 min. See `docs/session_logs/session_60b_ml_analysis.md`.
+- [x] **ML-090: Fix enriched prompt gap** — DONE (Session 61). `call_gemini()` now accepts `prompt` parameter, `run_refinement()` passes enriched prompt. AD-139.
 - [ ] **ML-091: Real 3-photo validation** — Run refinement on top photo (inbox_b5e8a89e_9, 19 facts, existing label 1950s, birth year math says 1940s). ~$0.10.
 - [ ] **ML-092: Results-to-web bridge** — Script/endpoint to merge refinement_results.json into date_labels.json for admin review. Currently no connection to web app.
 - [ ] **ML-093: Full 41-photo batch run** — After prompt gap fixed and validated. ~$1.31.
-- [ ] **ML-094: Write AD-136/137/138** — Referenced in code/docs/CHANGELOG but never written to ALGORITHMIC_DECISIONS.md.
+- [x] **ML-094: Write AD-136/137/138** — DONE (Session 61). AD-139-142 also added. See ALGORITHMIC_DECISIONS.md.
 - [ ] **ML-095: CORAL retroactive run** — Run local model on all 271 photos, compare to Gemini labels. Free independent validation.
 
 ### UX Improvements (from Production Review)
@@ -141,10 +142,12 @@ AD-137. See Session 60 log.
 
 ## Near-Term (3-5 Sessions)
 
-- [x] **Gemini 3.1 Pro integration**: Wired to Estimate upload (Session 52).
+- [x] **Gemini 3.1 Pro integration**: Wired to Estimate upload (Session 52). Updated to 3.1 Pro (Session 61, AD-139).
 - [ ] **ML-075: Batch Gemini Run on 271 Photos**: Run date estimation on all existing photos. Deferred from Session 52.
+- [ ] **ML-096: Run compare_models.py with --photos 20**: Flash vs Pro A/B comparison on 20 photos (~$0.62). Needs Nolan approval. (Session 61)
+- [ ] **ML-097: Run full 271-photo re-analysis with 3.1 Pro**: After ML-096 validates quality. Needs cost approval. (Session 61)
 - [ ] **PRD-015**: Face alignment via coordinate bridging (Session 53)
-- [x] **Progressive refinement**: Pipeline built with fact gathering, enriched prompts, comparison engine — Session 60 (AD-138). Needs real Gemini API run.
+- [x] **Progressive refinement**: Pipeline fully wired — enriched prompt now sent to Gemini. Session 60 (AD-138) + Session 61 (ML-090 fixed).
 - [ ] **FE-041**: "Help Identify" mode for non-admin users
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
 - [ ] **ROLE-006**: Email notifications for contributors
@@ -188,7 +191,7 @@ connection drop recovery. 24 tests. AD-121. See Session 60 log.
 
 Remaining from original epic (deferred):
 - [ ] Face-by-face progressive rendering + overlay animations
-- [ ] Multi-photo upload + compare/estimate view switching
+- [x] Multi-photo upload + compare/estimate view switching — DONE (Session 61, PRD-021)
 - [ ] asyncio.Queue for concurrent upload serialization
 
 ## Performance Chronicle Maintenance

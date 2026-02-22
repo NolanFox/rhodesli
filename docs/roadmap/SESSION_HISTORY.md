@@ -282,12 +282,56 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - **Phase 5-6**: Verification gate + documentation. All tests pass.
 - 3048 total tests (2649 app + 399 ML)
 
+## Session 58: MLflow Model Registry + Promotion Pipeline (2026-02-21) — v0.60.0
+- Both ONNX models registered in MLflow with signatures, gate tags, and @champion aliases
+- Automated promotion script (promote_model.py): regression gate → register → alias → export
+- AD-130. Session 57 audit confirmed CORAL conversion correct.
+- 3068 total tests (2649 app + 419 ML)
+
+## Session 59: Face Compare Standalone Tier 1 (2026-02-21) — v0.61.0
+- Museum-quality /facecompare page — upload → detect faces → find matches
+- Three ML systems: InsightFace + Calibration + CORAL
+- Shareable result URLs at /facecompare/result/{uuid}
+- Bridge CTAs to full archive. AD-131/132/133.
+- 3102 total tests (2683 app + 419 ML)
+
+## Session 59B/59C: Recovery + Supabase Migration (2026-02-21/22) — v0.61.1/v0.62.0
+- 59B: Emergency recovery + deploy safety gate (AD-134). 3123 tests.
+- 59C: Supabase migration — 4 tables (identity_overrides, annotations, relationships, gedcom_matches). Dual-write pattern. Startup sync. DATA-001 resolved (AD-135). 3102 tests.
+
+## Session 60: Gemini Progressive Refinement + SSE Upload (2026-02-22) — v0.63.0
+- Centralized Gemini config (AD-136), API logging (AD-137), progressive refinement pipeline (AD-138)
+- SSE streaming upload on /compare and /facecompare with stage indicators
+- Admin bar + quick-identify inline flow
+- 96 new tests. 3190 total.
+
+## Session 60B: Production Verification + ML Deep Dive (2026-02-22) — v0.63.1
+- Fixed P0 quick-identify CSS selector crash (legacy face IDs with colons/spaces)
+- ML analysis: enriched prompt built but never sent to Gemini (gap found)
+- UX review: 7 friction points, 12 new BACKLOG items
+- 3192 total tests (2726 app + 466 ML)
+
+## Session 61: Gemini Photo Detective + Multi-Photo Compare (2026-02-22) — v0.64.0
+- Fixed enriched prompt gap (ML-090): call_gemini() now accepts custom prompt
+- Upgraded to Gemini 3.1 Pro (AD-139) + MLflow tracking (AD-140)
+- Multi-photo compare upload for 2-5 photos (PRD-021, AD-141)
+- Photo Detective UX: evidence cards, model badges, refinement indicators (PRD-022, AD-142)
+- Data integrity report script + verification
+- ~50 new tests. ~3250 total.
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.64.0 | 2026-02-22 | 61 | ~2776+474 |
+| v0.63.1 | 2026-02-22 | 60B | 2726+466 |
+| v0.63.0 | 2026-02-22 | 60 | 2724+466 |
+| v0.62.0 | 2026-02-22 | 59C | 2683+419 |
+| v0.61.1 | 2026-02-21 | 59B | 2704+419 |
+| v0.61.0 | 2026-02-21 | 59 | 2683+419 |
+| v0.60.0 | 2026-02-21 | 58 | 2649+419 |
 | v0.59.0 | 2026-02-21 | 57 | 2649+399 |
 | v0.58.0 | 2026-02-21 | 56 | 2631+372 |
 | v0.57.1 | 2026-02-21 | 55b | 2604+372 |

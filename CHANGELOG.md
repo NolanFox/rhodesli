@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.64.0] — 2026-02-22 (Session 61)
+
+### Added — ML: Gemini 3.1 Pro + Enriched Prompt Wiring
+- Upgraded Gemini defaults: 3.1 Pro for detailed analysis, 3-flash for batch/realtime (AD-139)
+- **Fixed critical gap**: enriched prompt (with verified facts) now actually sent to Gemini — was being built but discarded (60B finding)
+- MLflow experiment tracking module (`rhodesli_ml/tracking.py`) for systematic model comparison (AD-140)
+- `--dry-run` flag on compare_models.py for cost preview
+
+### Added — Multi-Photo Compare Upload (PRD-021)
+- `/api/compare/upload-multiple` endpoint: upload 2-5 photos simultaneously (AD-141)
+- Cross-face matching: pairwise cosine similarity between faces from different uploaded photos
+- Per-photo archive matching: each photo's faces compared against the full archive
+- Multi-upload UI zone on /compare page with file validation
+
+### Added — Photo Detective UX (PRD-022)
+- Evidence card components: structured display of Gemini's dating evidence by category (AD-142)
+- Model badge: "Analyzed with Gemini 3.1-pro" visible to users
+- Progressive refinement badge: shows when estimate was refined with verified facts
+- Prominent date estimate badge on photo detail pages ("c. 1940s ± 5 years")
+- Photo Detective evidence integrated into AI Analysis section
+
+### Added — Data Storage Verification
+- `scripts/data_integrity_report.py`: cross-checks JSON files, Supabase tables, Gemini API logs
+- Dual-write audit verified: 4 Supabase tables in sync with JSON cache
+
+### Stats
+- 4 new AD entries: AD-139 (Gemini 3.1 Pro), AD-140 (MLflow), AD-141 (Multi-Photo), AD-142 (Photo Detective)
+- 2 new PRDs: PRD-021 (Multi-Photo Compare), PRD-022 (Photo Detective UX)
+- New tests: ~50 (19 Photo Detective + 8 Multi-Photo + 12 ML pipeline + 5 data integrity + others)
+
 ## [v0.63.1] — 2026-02-22 (Session 60B)
 
 ### Fixed

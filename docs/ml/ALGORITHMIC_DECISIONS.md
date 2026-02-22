@@ -1507,7 +1507,48 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
   - **27 new tests**: Supabase persistence + deploy safety regression tests
 - **Breadcrumbs**: AD-134, DATA-001, Lessons 43/56/69/78/85, docs/design/FUTURE_COMMUNITY.md, BACKLOG BE-040-042
 
-1. Add a new entry with AD-XXX format (next: AD-136)
+### AD-139: Gemini 3.1 Pro Model Upgrade
+- **Date**: 2026-02-22 | **Session**: 61
+- **Context**: Gemini 3.1 Pro released Feb 19, 2026 with improved reasoning capabilities. Our existing pipeline used gemini-2.5-pro-preview-05-06 for all vision analysis, which was both slower and less accurate on evidence extraction tasks.
+- **Decision**: Upgrade default from gemini-2.5-pro-preview-05-06 to gemini-3.1-pro-preview for detailed analysis (date estimation, evidence extraction, progressive refinement). Use gemini-3-flash for batch/realtime tasks (quick labeling, low-confidence re-checks).
+- **Rejected alternatives**:
+  1. "Use only Pro for everything" — cost prohibitive for batch labeling (~$0.05/photo vs ~$0.005/photo with Flash); batch runs of 250+ photos would exceed budget
+  2. "Use only Flash for everything" — quality insufficient for evidence analysis; Flash misses subtle fashion/technology cues that Pro catches, especially in degraded heritage photos
+- **Affects**: rhodesli_ml/gemini_config.py (default model strings, pricing table)
+- **Breadcrumbs**: AD-101 (original Gemini 3.1 Pro adoption), AD-051 (Flash labeling results)
+
+### AD-140: MLflow Experiment Tracking
+- **Date**: 2026-02-22 | **Session**: 61
+- **Context**: Need systematic model comparison across Flash vs Pro, different prompt versions, and progressive refinement stages. Ad-hoc logging in JSON files was not reproducible or queryable. MLflow already used for CORAL training (AD-116) and model registry (AD-130).
+- **Decision**: MLflow for local experiment tracking with file store at rhodesli_ml/mlruns/. Supabase-backed api_logger for persistent API call logs (model, prompt hash, latency, cost, result quality). Experiment runs track: model version, prompt version, input photo set, output quality metrics, cost.
+- **Rejected alternatives**:
+  1. "NotebookLM MCP" — fragile, single point of failure, no programmatic access
+  2. "LangChain" — overkill for our scale; adds massive dependency tree for what is essentially prompt → response → log
+  3. "Manual spreadsheets" — not reproducible, no programmatic querying, drift-prone
+- **Affects**: rhodesli_ml/tracking.py, rhodesli_ml/utils/api_logger.py
+- **Breadcrumbs**: AD-116 (MLflow integration strategy), AD-130 (model registry), AD-103 (API result logging)
+
+### AD-141: Multi-Photo Compare Architecture
+- **Date**: 2026-02-22 | **Session**: 61
+- **Context**: PRD-021 — users comparing family photos need batch upload. Current /compare page accepts a single photo. Community members (Jews of Rhodes Facebook group) frequently have 2-5 photos of the same person across decades and want to verify identity across all of them simultaneously.
+- **Decision**: Extend existing /compare page with /api/compare/upload-multiple endpoint accepting 2-5 photos. Cross-match all uploaded faces pairwise (are these the same person?), then compare each face against the full archive. Results page shows: intra-upload similarity matrix + per-face archive matches. Reuses existing InsightFace detection + calibration (AD-123) + CORAL date estimation (AD-129).
+- **Rejected alternatives**:
+  1. "Separate microservice" — code duplication of ML loading, deployment complexity, latency from network hops between services
+  2. "Single-photo only forever" — competitive gap vs other face comparison tools; users already ask for batch in community feedback
+- **Affects**: app/main.py (/api/compare/upload-multiple endpoint)
+- **Breadcrumbs**: AD-117 (Face Compare product architecture), AD-131 (standalone /facecompare), PRODUCT-001
+
+### AD-142: Photo Detective UX Pattern
+- **Date**: 2026-02-22 | **Session**: 61
+- **Context**: PRD-022 — Gemini's evidence analysis for date estimation is valuable but currently hidden in raw JSON responses. Users see only a year estimate without understanding the reasoning. The evidence (print technology, fashion details, environmental cues, technology markers) is what makes our tool trustworthy and educational.
+- **Decision**: Evidence card UI with category icons (Print, Fashion, Environment, Technology), strength badges (strong/moderate/weak), model badge showing which Gemini version produced the analysis, and progressive refinement indicator showing which pass generated each piece of evidence. Cards are collapsible, sorted by confidence, and link back to the specific image region when bounding box data is available.
+- **Rejected alternatives**:
+  1. "Simple year badge only" — hides the value Gemini provides; users cannot verify or learn from the estimate; reduces trust
+  2. "Full separate report page" — too heavy for inline use, fragments the UX by requiring navigation away from the photo; users want evidence alongside the photo, not on a separate page
+- **Affects**: app/main.py (_evidence_card, _detective_evidence_section, _progressive_refinement_badge, _build_photo_date_badge)
+- **Breadcrumbs**: AD-102 (progressive refinement), AD-094 (year estimation V1), AD-041 (evidence-first prompt architecture)
+
+1. Add a new entry with AD-XXX format (next: AD-143)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
