@@ -92,8 +92,11 @@ def load_annotations() -> list[dict]:
         return []
     with open(path) as f:
         data = json.load(f)
-    annotations = data.get("annotations", [])
-    return [a for a in annotations if a.get("status") == "approved"]
+    annotations = data.get("annotations", {})
+    # annotations can be a dict (keyed by ID) or a list
+    if isinstance(annotations, dict):
+        annotations = list(annotations.values())
+    return [a for a in annotations if isinstance(a, dict) and a.get("status") == "approved"]
 
 
 def gather_facts_for_photo(

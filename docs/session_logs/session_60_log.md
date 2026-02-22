@@ -9,10 +9,10 @@ Started: 2026-02-22T21:00:00Z
 - Pre-existing failures: 1 e2e (test_suggestion_lifecycle), 1 ML (test_early_stopping)
 
 ## ACT 1: ML — Gemini Progressive Refinement
-- [ ] Phase 0: Orient
-- [ ] Phase 1A: Gemini config centralization
-- [ ] Phase 1B: API logging infrastructure
-- [ ] Phase 1C: Progressive refinement script
+- [x] Phase 0: Orient — baseline v0.62.0, 3094 tests, session log created
+- [x] Phase 1A: Gemini config centralization — rhodesli_ml/gemini_config.py, 10 tests, all models updated
+- [x] Phase 1B: API logging infrastructure — api_logger.py, 17 tests, cost tracking + comparisons
+- [x] Phase 1C: Progressive refinement script — fact gathering, enriched prompts, comparison engine, 20 tests
 - [ ] Phase 1D: Evaluation + dry-run test
 
 ## ACT 2: UX — Upload SSE

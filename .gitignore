@@ -88,6 +88,7 @@ mlruns/
 rhodesli_ml/mlruns/
 rhodesli_ml/checkpoints/
 rhodesli_ml/data/api_logs/
+rhodesli_ml/data/refinement_results.json
 
 # Scientific Instrumentation Runtime
 logs/
