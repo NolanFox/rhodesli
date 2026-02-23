@@ -1,0 +1,1950 @@
+{
+  "model": "gemini-3.1-pro-preview",
+  "total_photos": 266,
+  "success": 122,
+  "errors": 144,
+  "skipped": 0,
+  "total_cost": 0.7496,
+  "results": [
+    {
+      "photo_id": "d4fd0727068369ec",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 14.3,
+      "input_tokens": 1695,
+      "output_tokens": 800,
+      "cost": 0.0101
+    },
+    {
+      "photo_id": "6f512d921837bc0c",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 9.5,
+      "input_tokens": 1609,
+      "output_tokens": 444,
+      "cost": 0.0065
+    },
+    {
+      "photo_id": "d2edd80e5cf9c308",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 6.3,
+      "input_tokens": 1594,
+      "output_tokens": 376,
+      "cost": 0.0058
+    },
+    {
+      "photo_id": "e7bf01dc576851b0",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.2,
+      "input_tokens": 1556,
+      "output_tokens": 199,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "2360df5bb36d25d0",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.8,
+      "input_tokens": 1542,
+      "output_tokens": 173,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "ab9cc3ebce2d510c",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.8,
+      "input_tokens": 1545,
+      "output_tokens": 189,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "b9f591a56e25b71a",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 9.0,
+      "input_tokens": 1688,
+      "output_tokens": 691,
+      "cost": 0.009
+    },
+    {
+      "photo_id": "6a62687aec225e39",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 11.7,
+      "input_tokens": 1657,
+      "output_tokens": 620,
+      "cost": 0.0083
+    },
+    {
+      "photo_id": "a718d5fc861cef12",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 7.5,
+      "input_tokens": 1582,
+      "output_tokens": 281,
+      "cost": 0.0048
+    },
+    {
+      "photo_id": "9af0e8f2d3ca3479",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 28.7,
+      "input_tokens": 1596,
+      "output_tokens": 307,
+      "cost": 0.0051
+    },
+    {
+      "photo_id": "499c2c0e37d27d22",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.4,
+      "input_tokens": 1552,
+      "output_tokens": 151,
+      "cost": 0.0034
+    },
+    {
+      "photo_id": "4be78d8c8cb1611d",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 8.4,
+      "input_tokens": 1599,
+      "output_tokens": 414,
+      "cost": 0.0061
+    },
+    {
+      "photo_id": "b9aa84ba4717fbc9",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 10.4,
+      "input_tokens": 1557,
+      "output_tokens": 229,
+      "cost": 0.0042
+    },
+    {
+      "photo_id": "fb02c461c554c830",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 9.0,
+      "input_tokens": 1538,
+      "output_tokens": 168,
+      "cost": 0.0036
+    },
+    {
+      "photo_id": "1135ba51e1bf5a1a",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 8.4,
+      "input_tokens": 1582,
+      "output_tokens": 299,
+      "cost": 0.005
+    },
+    {
+      "photo_id": "e4744bb6247f1174",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.0,
+      "input_tokens": 1570,
+      "output_tokens": 195,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "7911d4fdbf128d91",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.6,
+      "input_tokens": 1556,
+      "output_tokens": 176,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "ab10679b23dbdcf9",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 10.5,
+      "input_tokens": 1693,
+      "output_tokens": 734,
+      "cost": 0.0095
+    },
+    {
+      "photo_id": "3a317b0f99b0d2e0",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.0,
+      "input_tokens": 1577,
+      "output_tokens": 279,
+      "cost": 0.0048
+    },
+    {
+      "photo_id": "c99f4d6366aafd62",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.9,
+      "input_tokens": 1537,
+      "output_tokens": 177,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "84f57c7ea2ab2931",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 8.2,
+      "input_tokens": 1569,
+      "output_tokens": 254,
+      "cost": 0.0045
+    },
+    {
+      "photo_id": "a3e9117c543a8600",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 5.7,
+      "input_tokens": 1580,
+      "output_tokens": 306,
+      "cost": 0.005
+    },
+    {
+      "photo_id": "2e5836aeceae8c6d",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 9.7,
+      "input_tokens": 1695,
+      "output_tokens": 814,
+      "cost": 0.0103
+    },
+    {
+      "photo_id": "31dfdd1c087047ba",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.6,
+      "input_tokens": 1579,
+      "output_tokens": 311,
+      "cost": 0.0051
+    },
+    {
+      "photo_id": "a8a1730722a4cdeb",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.2,
+      "input_tokens": 1556,
+      "output_tokens": 177,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "60abad85a1fe454b",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 8.5,
+      "input_tokens": 1568,
+      "output_tokens": 269,
+      "cost": 0.0046
+    },
+    {
+      "photo_id": "2c611f120c15aa4a",
+      "status": "success",
+      "faces_detected": 7,
+      "faces_described": 7,
+      "elapsed": 17.2,
+      "input_tokens": 1715,
+      "output_tokens": 822,
+      "cost": 0.0104
+    },
+    {
+      "photo_id": "7d0344045ba73cba",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 8.0,
+      "input_tokens": 1582,
+      "output_tokens": 344,
+      "cost": 0.0054
+    },
+    {
+      "photo_id": "f9391021bf1f8bac",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.4,
+      "input_tokens": 1554,
+      "output_tokens": 175,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "f5b8639dd443d0b8",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 11.5,
+      "input_tokens": 1694,
+      "output_tokens": 770,
+      "cost": 0.0098
+    },
+    {
+      "photo_id": "4a9dee395e1150b2",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 8.9,
+      "input_tokens": 1596,
+      "output_tokens": 287,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "3e53fd3c015350c8",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 10.0,
+      "input_tokens": 1557,
+      "output_tokens": 236,
+      "cost": 0.0043
+    },
+    {
+      "photo_id": "64f868771ecbf5ee",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 11.4,
+      "input_tokens": 1575,
+      "output_tokens": 282,
+      "cost": 0.0048
+    },
+    {
+      "photo_id": "54f65d27507cd5f7",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.8,
+      "input_tokens": 1542,
+      "output_tokens": 206,
+      "cost": 0.004
+    },
+    {
+      "photo_id": "dcba1494381b12cb",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 8.1,
+      "input_tokens": 1666,
+      "output_tokens": 610,
+      "cost": 0.0082
+    },
+    {
+      "photo_id": "9411826ba358db3c",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "c17cf4916422570d",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.9,
+      "input_tokens": 1555,
+      "output_tokens": 183,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "7b5c587d31b33946",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 10.2,
+      "input_tokens": 1555,
+      "output_tokens": 170,
+      "cost": 0.0036
+    },
+    {
+      "photo_id": "8f6a6a0108f019cf",
+      "status": "success",
+      "faces_detected": 12,
+      "faces_described": 12,
+      "elapsed": 18.9,
+      "input_tokens": 1875,
+      "output_tokens": 1317,
+      "cost": 0.0155
+    },
+    {
+      "photo_id": "c4c77600075334b8",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 16.6,
+      "input_tokens": 1580,
+      "output_tokens": 286,
+      "cost": 0.0048
+    },
+    {
+      "photo_id": "41538ecb1c11bdd7",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.5,
+      "input_tokens": 1571,
+      "output_tokens": 291,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "81bf7f85ec9814bc",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "ff241a7e44f7d3c3",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 17.7,
+      "input_tokens": 1635,
+      "output_tokens": 529,
+      "cost": 0.0073
+    },
+    {
+      "photo_id": "f7d81507c3f769f7",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 7.2,
+      "input_tokens": 1567,
+      "output_tokens": 311,
+      "cost": 0.0051
+    },
+    {
+      "photo_id": "7be13af860ce7d10",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.5,
+      "input_tokens": 1544,
+      "output_tokens": 158,
+      "cost": 0.0035
+    },
+    {
+      "photo_id": "0b5246f5b77a9ccb",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 9.7,
+      "input_tokens": 1689,
+      "output_tokens": 721,
+      "cost": 0.0093
+    },
+    {
+      "photo_id": "6f325f11251d8ee4",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.7,
+      "input_tokens": 1553,
+      "output_tokens": 182,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "9777323400903885",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.4,
+      "input_tokens": 1543,
+      "output_tokens": 164,
+      "cost": 0.0036
+    },
+    {
+      "photo_id": "fde6b60713d00574",
+      "status": "success",
+      "faces_detected": 7,
+      "faces_described": 7,
+      "elapsed": 15.5,
+      "input_tokens": 1714,
+      "output_tokens": 816,
+      "cost": 0.0103
+    },
+    {
+      "photo_id": "1ee4ffdef6743ff4",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 7.9,
+      "input_tokens": 1543,
+      "output_tokens": 298,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "fb6a846971b30f4b",
+      "status": "success",
+      "faces_detected": 10,
+      "faces_described": 10,
+      "elapsed": 17.3,
+      "input_tokens": 1807,
+      "output_tokens": 1157,
+      "cost": 0.0138
+    },
+    {
+      "photo_id": "ca69d9decc37b0ec",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.1,
+      "input_tokens": 1550,
+      "output_tokens": 165,
+      "cost": 0.0036
+    },
+    {
+      "photo_id": "08d86bf1acab9f9a",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 7.0,
+      "input_tokens": 1597,
+      "output_tokens": 308,
+      "cost": 0.0051
+    },
+    {
+      "photo_id": "ea94c703087befcf",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 11.4,
+      "input_tokens": 1666,
+      "output_tokens": 656,
+      "cost": 0.0086
+    },
+    {
+      "photo_id": "8756231987a82363",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.0,
+      "input_tokens": 1553,
+      "output_tokens": 186,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "b77c7d6f977a6312",
+      "status": "success",
+      "faces_detected": 9,
+      "faces_described": 9,
+      "elapsed": 12.6,
+      "input_tokens": 1752,
+      "output_tokens": 1032,
+      "cost": 0.0125
+    },
+    {
+      "photo_id": "8e71cc351398f5dd",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.8,
+      "input_tokens": 1557,
+      "output_tokens": 174,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "53790673ee3b4327",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.8,
+      "input_tokens": 1557,
+      "output_tokens": 156,
+      "cost": 0.0035
+    },
+    {
+      "photo_id": "e160f3a93d7bcecf",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.6,
+      "input_tokens": 1528,
+      "output_tokens": 197,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "28f2bc39bebd4d03",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.3,
+      "input_tokens": 1578,
+      "output_tokens": 374,
+      "cost": 0.0057
+    },
+    {
+      "photo_id": "1709e18c986958ce",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 8.6,
+      "input_tokens": 1531,
+      "output_tokens": 161,
+      "cost": 0.0035
+    },
+    {
+      "photo_id": "9ea532a3b743c794",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.5,
+      "input_tokens": 1583,
+      "output_tokens": 258,
+      "cost": 0.0046
+    },
+    {
+      "photo_id": "ce622fde33ea3310",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 10.2,
+      "input_tokens": 1560,
+      "output_tokens": 338,
+      "cost": 0.0053
+    },
+    {
+      "photo_id": "7ed4d1d6eccb4aee",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 7.0,
+      "input_tokens": 1578,
+      "output_tokens": 294,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "0532f22050f5effc",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.6,
+      "input_tokens": 1555,
+      "output_tokens": 161,
+      "cost": 0.0036
+    },
+    {
+      "photo_id": "e9a9baa12f28d2f3",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.0,
+      "input_tokens": 1528,
+      "output_tokens": 186,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "ab0b7cce1a72f4e7",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 11.2,
+      "input_tokens": 1567,
+      "output_tokens": 302,
+      "cost": 0.005
+    },
+    {
+      "photo_id": "ba91ea699c0e600f",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 14.2,
+      "input_tokens": 1605,
+      "output_tokens": 474,
+      "cost": 0.0067
+    },
+    {
+      "photo_id": "f5c2780f2bc75c66",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.0,
+      "input_tokens": 1529,
+      "output_tokens": 173,
+      "cost": 0.0036
+    },
+    {
+      "photo_id": "e3d7ca72d447c2f9",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 9.7,
+      "input_tokens": 1656,
+      "output_tokens": 492,
+      "cost": 0.007
+    },
+    {
+      "photo_id": "6308a10b10e79218",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 8.8,
+      "input_tokens": 1538,
+      "output_tokens": 180,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "dc4f51100b0db521",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 9.6,
+      "input_tokens": 1664,
+      "output_tokens": 600,
+      "cost": 0.0081
+    },
+    {
+      "photo_id": "3dcca43bad885e54",
+      "status": "success",
+      "faces_detected": 14,
+      "faces_described": 14,
+      "elapsed": 21.5,
+      "input_tokens": 1936,
+      "output_tokens": 1509,
+      "cost": 0.0175
+    },
+    {
+      "photo_id": "6e0a7af357997e0e",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 8.1,
+      "input_tokens": 1577,
+      "output_tokens": 402,
+      "cost": 0.006
+    },
+    {
+      "photo_id": "3c46f63468d6c1d9",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 10.1,
+      "input_tokens": 1641,
+      "output_tokens": 519,
+      "cost": 0.0072
+    },
+    {
+      "photo_id": "cc6089cbeffca13c",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.3,
+      "input_tokens": 1567,
+      "output_tokens": 245,
+      "cost": 0.0044
+    },
+    {
+      "photo_id": "bc68c9c7ef41bf2a",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 8.6,
+      "input_tokens": 1643,
+      "output_tokens": 510,
+      "cost": 0.0072
+    },
+    {
+      "photo_id": "81579cea97208e5b",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 7.1,
+      "input_tokens": 1607,
+      "output_tokens": 397,
+      "cost": 0.006
+    },
+    {
+      "photo_id": "65f55ff7d895f263",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 8.3,
+      "input_tokens": 1586,
+      "output_tokens": 419,
+      "cost": 0.0062
+    },
+    {
+      "photo_id": "e26119047c9a622f",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 10.6,
+      "input_tokens": 1613,
+      "output_tokens": 427,
+      "cost": 0.0063
+    },
+    {
+      "photo_id": "f78e3b929c57afae",
+      "status": "success",
+      "faces_detected": 9,
+      "faces_described": 9,
+      "elapsed": 12.5,
+      "input_tokens": 1779,
+      "output_tokens": 970,
+      "cost": 0.0119
+    },
+    {
+      "photo_id": "65f48be2cf5be1d3",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.3,
+      "input_tokens": 1544,
+      "output_tokens": 176,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "662e24c4f38575ca",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.9,
+      "input_tokens": 1583,
+      "output_tokens": 292,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "24f86a7e3d1c7763",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.3,
+      "input_tokens": 1554,
+      "output_tokens": 191,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "f06cfb58b8492b2f",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.0,
+      "input_tokens": 1528,
+      "output_tokens": 188,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "f5a0ad7af7cd24f6",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.8,
+      "input_tokens": 1554,
+      "output_tokens": 261,
+      "cost": 0.0046
+    },
+    {
+      "photo_id": "dd309ce8e24188ea",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 9.9,
+      "input_tokens": 1531,
+      "output_tokens": 182,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "84b368177b8706d0",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.3,
+      "input_tokens": 1553,
+      "output_tokens": 156,
+      "cost": 0.0035
+    },
+    {
+      "photo_id": "a26eeaebbcd256c0",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 13.1,
+      "input_tokens": 1567,
+      "output_tokens": 296,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "60d2c5e29c9d644b",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 15.5,
+      "input_tokens": 1602,
+      "output_tokens": 519,
+      "cost": 0.0072
+    },
+    {
+      "photo_id": "c5c970f18ef21428",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 9.3,
+      "input_tokens": 1551,
+      "output_tokens": 192,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "122fc63b031d91ab",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.4,
+      "input_tokens": 1538,
+      "output_tokens": 323,
+      "cost": 0.0052
+    },
+    {
+      "photo_id": "746dd11e5b4d86a1",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 23.5,
+      "input_tokens": 1666,
+      "output_tokens": 553,
+      "cost": 0.0076
+    },
+    {
+      "photo_id": "100dc3f6749a979d",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.9,
+      "input_tokens": 1551,
+      "output_tokens": 181,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "e03cf80e5f5e4a60",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.0,
+      "input_tokens": 1537,
+      "output_tokens": 199,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "3c1e58ecdc27acb3",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.2,
+      "input_tokens": 1545,
+      "output_tokens": 154,
+      "cost": 0.0035
+    },
+    {
+      "photo_id": "d0c83b767f767210",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 6.6,
+      "input_tokens": 1625,
+      "output_tokens": 417,
+      "cost": 0.0062
+    },
+    {
+      "photo_id": "a5efdff51fd0c149",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 9.5,
+      "input_tokens": 1545,
+      "output_tokens": 179,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "c6924c729a4325de",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.7,
+      "input_tokens": 1555,
+      "output_tokens": 231,
+      "cost": 0.0043
+    },
+    {
+      "photo_id": "ee455a0d82b7d121",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 8.0,
+      "input_tokens": 1573,
+      "output_tokens": 291,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "77c988465f9c80db",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.2,
+      "input_tokens": 1557,
+      "output_tokens": 199,
+      "cost": 0.0039
+    },
+    {
+      "photo_id": "c374d449d2c3999a",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.3,
+      "input_tokens": 1571,
+      "output_tokens": 278,
+      "cost": 0.0047
+    },
+    {
+      "photo_id": "baec1b6c4e9c7af1",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 10.8,
+      "input_tokens": 1567,
+      "output_tokens": 343,
+      "cost": 0.0054
+    },
+    {
+      "photo_id": "a616aba825dda705",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.8,
+      "input_tokens": 1538,
+      "output_tokens": 173,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "45c6aea178e61779",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 19.6,
+      "input_tokens": 1556,
+      "output_tokens": 317,
+      "cost": 0.0051
+    },
+    {
+      "photo_id": "bb830f22e00d8dd3",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 11.8,
+      "input_tokens": 1656,
+      "output_tokens": 623,
+      "cost": 0.0083
+    },
+    {
+      "photo_id": "1269abe515a4aa1a",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 10.8,
+      "input_tokens": 1567,
+      "output_tokens": 303,
+      "cost": 0.005
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_0_603575867.895093",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 16.4,
+      "input_tokens": 1646,
+      "output_tokens": 637,
+      "cost": 0.0084
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 12.8,
+      "input_tokens": 1609,
+      "output_tokens": 417,
+      "cost": 0.0062
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_2_603575561.310480",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 10.7,
+      "input_tokens": 1564,
+      "output_tokens": 314,
+      "cost": 0.0051
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_3_603576015.208878",
+      "status": "success",
+      "faces_detected": 8,
+      "faces_described": 8,
+      "elapsed": 18.6,
+      "input_tokens": 1767,
+      "output_tokens": 886,
+      "cost": 0.0111
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_4_603569408.731013",
+      "status": "success",
+      "faces_detected": 8,
+      "faces_described": 8,
+      "elapsed": 13.7,
+      "input_tokens": 1735,
+      "output_tokens": 885,
+      "cost": 0.011
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_5_603576083.540241",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 29.0,
+      "input_tokens": 1713,
+      "output_tokens": 655,
+      "cost": 0.0087
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_6_603575393.720025",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.2,
+      "input_tokens": 1557,
+      "output_tokens": 303,
+      "cost": 0.005
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_7_603575318.516167",
+      "status": "success",
+      "faces_detected": 21,
+      "faces_described": 21,
+      "elapsed": 26.9,
+      "input_tokens": 2125,
+      "output_tokens": 2079,
+      "cost": 0.0234
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 11.4,
+      "input_tokens": 1609,
+      "output_tokens": 503,
+      "cost": 0.007
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_9_603575780.793224",
+      "status": "success",
+      "faces_detected": 8,
+      "faces_described": 8,
+      "elapsed": 11.1,
+      "input_tokens": 1726,
+      "output_tokens": 909,
+      "cost": 0.0112
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_10_603575654.056133",
+      "status": "success",
+      "faces_detected": 13,
+      "faces_described": 13,
+      "elapsed": 18.2,
+      "input_tokens": 1881,
+      "output_tokens": 1605,
+      "cost": 0.0184
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+      "status": "success",
+      "faces_detected": 8,
+      "faces_described": 8,
+      "elapsed": 11.8,
+      "input_tokens": 1717,
+      "output_tokens": 1017,
+      "cost": 0.0123
+    },
+    {
+      "photo_id": "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.2,
+      "input_tokens": 1534,
+      "output_tokens": 210,
+      "cost": 0.004
+    },
+    {
+      "photo_id": "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.4,
+      "input_tokens": 1533,
+      "output_tokens": 258,
+      "cost": 0.0045
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_0_596770996.415863",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.0,
+      "input_tokens": 1555,
+      "output_tokens": 171,
+      "cost": 0.0037
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_1_596771174.533589",
+      "status": "success",
+      "faces_detected": 5,
+      "faces_described": 5,
+      "elapsed": 10.3,
+      "input_tokens": 1643,
+      "output_tokens": 566,
+      "cost": 0.0077
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_2_596771023.203463",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_3_596770938.488977",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_4_596771234.564304",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_8_596771351.496458",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_13_596771481.064027",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_benatar-20260213_0_Sarina2",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.8,
+      "input_tokens": 1553,
+      "output_tokens": 206,
+      "cost": 0.004
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_0_lisa_galbraith_collection_520232999_10163302380404201_5510533636852598408_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_1_shaya_sadis_485912814_10171438847285346_8391034119885432541_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_2_rachel_soriano_children_giuseppe_lucia_496534630_24050403817877479_7606185349834125792_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_3_rhodes_jewish_historical_foundation_reina_cohen_solomon_varon_492228208_686565923760846_8126719111333170818_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_4_claude_benatar_collection_victor_haim_israel_470221346_10170605679340346_6478159606100860750_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_5_franz_capelluto_505761334_10172036095955346_4723800524101151919_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_6_eli_khoniu_282673358_53072697-826a-4b6b-85cb-bf2391a80a9d",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_9_josue_capeluto_513113308_10172171064820346_6554594099894590848_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_10_claude_benatar_collection_victor_haim_israel_470755436_10170730351010346_2281380443213894033_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_11_ezra_benatar_503903104_10171978773945346_3205903512026745916_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_12_claude_benatar_collection_victor_bohor_sabatai_soriano_494266545_10171704019995346_7718030381364654083_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_13_asher_touriel_489928848_10171601915310346_174675645702038176_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_14_eleonore_shemaria_489823683_10171556033925346_4592038961808734961_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_15_isaac_jack_levy_490471033_10171580010150346_8652748163613864274_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_16_salvator_alhadeff_499725582_10171862580705346_3624353994965917233_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_17_claude_benatar_collection_victor_rebecca_benun_495378497_10171755182615346_7145354360116540323_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_18_semah_franco_518799461_10172415321225346_553390149995775072_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_19_joseph_cadranel_505214480_10172010548560346_5999857223121759234_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_20_simon_israel_522630495_10172484677500346_3828197167749831184_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_21_franco_deborah_collection_90759681_10159522051093136_435921227580702720_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_22_lucia_capelluto_habib_498275359_1233261768810379_4357209370323640927_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_23_claude_benatar_collection_victor_bohor_sabatai_soriano_493676514_10171704021850346_928399224614360184_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_24_haim_capelouto_510959828_10172145589925346_8862535038558329501_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_25_michelle_benatar_collection_574580512_25573504628922842_9065160801283305527_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_26_alexandre_avzaradel_500228843_10171909257505346_1135908763900995647_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_27_abramo_hasson_558859823_25238428042408837_2500312373836705702_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_28_israel_sciarcon_484779897_10171460023595346_2373419148825336249_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_29_isaac_cohen_518155169_10172358921150346_7060006423942663426_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_30_estrea_sharhon_486447687_10171460023555346_6411241431060255791_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_31_jeanettte_swartz_collection_514422102_24127752060174481_4638287865555771213_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_32_shaya_sadis_486025159_10171438847095346_7650482810217649673_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_33_nissim_cohen_514260385_10172484649105346_1012667927291313717_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_34_victor_haim_israel_470223768_10170605604700346_845325848549514268_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_35_stephanie_asheck_collection_487203508_10108913187223408_5855827733343318019_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_36_claude_benatar_collection_victor_bohor_sabatai_soriano_493494123_10171704022265346_3458576509112524280_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_37_abner_bardavid_502531834_10171961392585346_6969844769030616197_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_38_masliah_alhadeff_498643123_10171847102790346_6237952123946428779_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_39_lucia_capelluto_habib_497858415_1233302348806321_3426812803112569023_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_40_claude_benatar_collection_558236101_10173095506980346_6815105064041797412_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_41_isaac_jack_levy_490364820_10171580008910346_2077570241570978282_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_42_semah_franco_518792830_10172415321110346_7216093349261673005_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_43_jeuda_levy_582624756_10231713094074414_2695414189522190305_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_44_claude_benatar_collection_victor_rebecca_benun_495644359_10171755169400346_7126191920610626702_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_45_uriel_galante_collection_605462785_801235796296562_8597033193125609967_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_46_regine_avzaradel_collection_549212451_9859892167446415_1826390117555685221_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_47_morris_touriel_491896701_10171631280295346_4599119104798936934_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_48_sabrina_amato_collection_494308190_2222706794827769_1080678848045832372_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_49_nissim_norman_sharhon_486691034_10171511418110346_7315513093554577752_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_50_Isaac_Cadranel_504301593_10171996110335346_3602126982357465160_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_51_rica_cohen_503614239_714602537623851_1764326801082873220_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_52_uriel_galante_collection_601470917_801235776296564_3035101916288114389_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_53_jacob_pasha_israel_69204176_10162214672025346_1240553526233399296_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_54_moise_avzaradel_499921838_10171922564260346_2601530220636189573_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_55_alexandre_cohen_518460207_10172307461230346_1388858436354168493_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_56_regine_franco_520871885_10172415321220346_1210714843706744221_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_57_nissim_cohen_laura_varon_moise_israel)536883890_10172712595625346_4702058667200825870_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_58_asher_touriel_486996980_10171601914685346_7482199189315238584_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_59_claude_benatar_collection_victor_bohor_sabatai_soriano_493684314_10171704024440346_5979171357513245894_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_60_david_israel_580557939_10173382345955346_3216565122124941196_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_61_albert_avzaradel_500229316_10171894354750346_6513195025686199669_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_62_david_franco_collection_497891606_2247317675665225_368797912673942421_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_63_leone_sidicaro_65243904_10161966778600346_8076688366654980096_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_64_jeanettte_swartz_collection_516169815_24127772290172458_9159603061597220280_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_66_semah_franco_520899987_10172415320650346_6397837077659007019_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_67_susanne_bass_collection_520287908_1237925664680452_8643817637167842650_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_68_susanne_bass_collection_499759411_1189741629498856_3109157178903791725_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_69_claude_benatar_collection_victor_haim_israel_470530454_10170605611025346_6025688954537884912_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_70_david_franco_collection_504896621_2270573480006311_8952402771580837356_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_71_claude_benatar_collection_victor_bohor_sabatai_soriano_494502427_10171704023185346_5893663062454819691_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_72_eliakim_cordoval_524605757_10172507723295346_6590705878333530417_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_73_rhodes_jewish_historical_foundation_collection_481054755_642374571513315_2077232265072962474_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_74_victor_haim_israel_470218882_10170605594885346_1330218943688170616_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_75_claude_benatar_collection_aslan_louie_notrica_492110450_10171661307470346_6127261380310076660_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_76_claude_benatar_collection_victor_rebecca_benun_495403500_10171755169865346_6018277602901061278_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_77_rahamin_raymond_sadis_481253010_10171438847375346_2532370090301041713_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_78_Haham_Joseph_Hai_Franco_Rachel_Capouya_Franco_505934782_10228693438389424_8835735934188338669_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_80_regine_franco_518960976_10172415321095346_1272581698574848909_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_81_claude_benatar_collection_victor_rebecca_benun_495017934_10171755168560346_2499124449399417544_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_82_joseph_touriel_492030538_10171631280470346_1164156250994293487_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_84_claude_benatar_collection_51010671_10161394962905346_4861693603711287296_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_85_claude_benatar_collection_602325880_10173673626010346_5396769815198644467_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_86_jeanettte_swartz_collection_516044673_24127787240170963_8438365531155717054_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_87_abner_hasson_519693871_10172446261730346_4741244115442601264_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_88_levi_miryam_collection_582213031_10231713270518825_3648509779269552098_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_89_claude_benatar_collection_aslan_louie_notrica_493224712_10171661109615346_4370590583194203149_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_90_claude_benatar_collection_victor_rebecca_benun_494926899_10171755190465346_7463334439317281158_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_92_ascher_t_capelouto_508014985_10172085972990346_6602167766352128966_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_93_sabrina_amato_collection_494049981_2222706804827768_4365323857728211254_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_94_rahamin_raymond_sadis_485365490_10171438847430346_8512062402864014866_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_95_perla_levy_alhadeff_519360099_10166406932052715_2530675645732869189_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_96_lucia_capelluto_habib_497623454_1233264532143436_6867586292734209390_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_97_claude_benatar_collection_victor_haim_israel_470223951_10170605632245346_7357681670912902825_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_98_eleonore_shemaria_486474068_10171556034980346_8907053379946085121_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_99_claude_benatar_collection_victor_rebecca_benun_495117150_10171755168940346_8068417958696098744_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_100_regine_avzaradel_collection_550882915_9859878947447737_338468120289304617_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_101_claude_benatar_collection_571277446_10173252883795346_8397002383747694084_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_102_uriel_galante_collection_605494321_801235802963228_782117642180107430_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_103_caden_sharhon_486780832_10171460023695346_788852106924365199_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_104_albert_angel_499725590_10171877447865346_8151957301761971413_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_105_claude_benatar_collection_558203138_10173095507180346_8300828577663964838_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_106_nissim_norman_sharhon_486209859_10171511418865346_7934755365074716806_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_107_debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_108_varon_and_cohen_family_536272743_10172712625745346_629403507426403422_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_109_alfred_aron_charhon_514107722_10172197066705346_4898226954282493936_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_110_claude_benatar_collection_victor_bohor_sabatai_soriano_493853728_10171704024405346_2509583181697338751_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_111_claude_benatar_collection_victor_haim_israel_470239310_10170605628145346_5283256967494305297_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_112_Michelle_Naftali_Menashe_611165363_10241027890419154_4676341286610368042_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_113_Eliechon_benatar_51122998_10161394623110346_5296034665579151360_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_115_joseph_mizrahi_490207265_10171556169875346_1086624264720940908_n",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    }
+  ]
+}
