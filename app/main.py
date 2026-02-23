@@ -9282,6 +9282,139 @@ async def post(photo_id: str, correction_year: int = None, sess=None):
     )
 
 
+# --- Face Alignment API (PRD-015 coordinate bridging) ---
+
+@rt("/api/face-alignment/{photo_id}")
+async def post(photo_id: str, sess=None):
+    """
+    Run Gemini face alignment for a specific photo.
+    Admin-only action (follows Gatekeeper pattern, Lesson 19).
+
+    1. Load photo from R2/local storage
+    2. Load InsightFace face detections from embeddings
+    3. Normalize EXIF orientation
+    4. Run coordinate bridging with Gemini
+    5. Store results
+    6. Return aligned descriptions
+    """
+    from starlette.responses import JSONResponse as _JSONResponse
+    from app.face_alignment import (
+        FaceDetection, cache_alignment, get_cached_alignment,
+        run_face_alignment, save_alignment_to_file,
+    )
+
+    admin_err = _check_admin(sess)
+    if admin_err:
+        return admin_err
+
+    # Load photo metadata
+    photo = get_photo_metadata(photo_id)
+    if not photo:
+        return _JSONResponse(
+            {"error": "Photo not found", "photo_id": photo_id},
+            status_code=404,
+        )
+
+    # Build FaceDetection objects from embeddings
+    faces = []
+    registry = load_registry()
+    for face_data in photo["faces"]:
+        identity = get_identity_for_face(registry, face_data["face_id"])
+        faces.append(FaceDetection(
+            face_id=face_data["face_id"],
+            bbox=face_data["bbox"],
+            face_index=face_data.get("face_index", 0),
+            det_score=face_data.get("det_score", 0),
+            quality=face_data.get("quality", 0),
+            identity_name=identity.get("name") if identity else None,
+        ))
+
+    if not faces:
+        return _JSONResponse(
+            {"error": "No faces detected in this photo", "photo_id": photo_id},
+            status_code=400,
+        )
+
+    # Load image bytes
+    image_bytes = _load_photo_bytes(photo_id, photo["filename"])
+    if not image_bytes:
+        return _JSONResponse(
+            {"error": "Could not load photo image", "photo_id": photo_id},
+            status_code=500,
+        )
+
+    # Run face alignment
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    result = await run_face_alignment(
+        photo_id=photo_id,
+        image_bytes=image_bytes,
+        faces=faces,
+        api_key=api_key,
+    )
+
+    if result.error:
+        return _JSONResponse(
+            {"error": result.error, "photo_id": photo_id},
+            status_code=500,
+        )
+
+    # Cache and save
+    cache_alignment(result)
+    try:
+        save_alignment_to_file(result, output_dir=data_path)
+    except Exception as e:
+        logging.warning(f"Failed to save alignment to file: {e}")
+
+    return _JSONResponse(result.to_dict())
+
+
+@rt("/api/face-alignment/{photo_id}")
+def get(photo_id: str):
+    """
+    Get stored face alignment results for a photo.
+    Returns cached results if available, null if not yet aligned.
+    Public endpoint (descriptions help with identification).
+    """
+    from starlette.responses import JSONResponse as _JSONResponse
+    from app.face_alignment import get_cached_alignment, load_alignments_from_file
+
+    # Check in-memory cache first
+    cached = get_cached_alignment(photo_id)
+    if cached:
+        return _JSONResponse(cached.to_dict())
+
+    # Check file storage
+    alignments = load_alignments_from_file(data_path)
+    if photo_id in alignments:
+        return _JSONResponse(alignments[photo_id])
+
+    return _JSONResponse(
+        {"status": "not_aligned", "photo_id": photo_id},
+        status_code=200,
+    )
+
+
+def _load_photo_bytes(photo_id: str, filename: str) -> bytes | None:
+    """Load photo image bytes from local filesystem or R2."""
+    # Try local filesystem first
+    local_path = Path("raw_photos") / filename
+    if local_path.exists():
+        return local_path.read_bytes()
+
+    # Try R2
+    r2_url = os.getenv("R2_PUBLIC_URL", "")
+    if r2_url:
+        try:
+            import urllib.request
+            url = f"{r2_url}/raw_photos/{urllib.parse.quote(filename)}"
+            with urllib.request.urlopen(url, timeout=15) as resp:
+                return resp.read()
+        except Exception as e:
+            logging.warning(f"Failed to load photo from R2: {e}")
+
+    return None
+
+
 def photo_view_content(
     photo_id: str,
     selected_face_id: str = None,
