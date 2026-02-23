@@ -1652,11 +1652,37 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `scripts/import_gedcom_supabase.py` (new), `rhodesli_ml/importers/gedcom_parser.py` (extended with life events)
 - **Breadcrumbs**: Session 61C planning context, AD-135 (Supabase migration)
 
+### AD-149: Isotonic Regression for Similarity Calibration
+- **Date**: 2026-02-23 | **Session**: 63
+- **Context**: Raw InsightFace cosine similarity (0-1) doesn't map linearly to P(same person). Heritage photos span decades — match scores range 0.11-0.98, with mean 0.54. Need calibrated probabilities for user-facing "85% match" display.
+- **Decision**: Isotonic regression (sklearn.IsotonicRegression) fit on 348 ground truth pairs (221 match, 127 non-match). Chose isotonic over logistic/Platt because it handles non-standard score distributions without assuming a functional form.
+- **Results**: AUC=0.9577. Threshold@90% precision: 0.268. Match scores above 0.3 map to ~100% probability (clean separation between match/non-match populations).
+- **Rejected**: Logistic regression (Platt scaling) — assumes sigmoid relationship, which may not hold for heritage photos with extreme age variance.
+- **Affects**: `rhodesli_ml/similarity_calibration.py` (new), `scripts/extract_calibration_pairs.py` (new)
+- **Breadcrumbs**: AD-145 Stage 1, Session 63 planning context
+
+### AD-150: Continuous Recalibration with Non-Match Spike Handling
+- **Date**: 2026-02-23 | **Session**: 63
+- **Context**: When "Not the same person" UX launches, explicit non-match pairs could spike 10-50x. Calibration curve will shift significantly. System must handle this gracefully.
+- **Decision**: Event hooks (on_face_merge, on_match_reject, on_identity_confirm) auto-insert calibration pairs. Recalibration triggers: >20 new pairs, class ratio shift >50%, model age >30 days. Safety: rate limit 1/hr, drift >0.1 flags for review, never retroactive.
+- **Rejected**: Manual recalibration only — too slow for active community use. Fully automatic without safety rails — dangerous during non-match spike.
+- **Affects**: `rhodesli_ml/recalibration_hooks.py` (new), `rhodesli_ml/similarity_calibration.py`
+- **Breadcrumbs**: Session 63 planning context §3
+
+### AD-151: GEDCOM Face Linking — Sephardic Surname Variant Matching
+- **Date**: 2026-02-23 | **Session**: 63
+- **Context**: Rhodesli's confirmed identities use various surname spellings (Capeluto/Capelluto/Capelouto/Capouano/Capuano). GEDCOM uses yet another variant. Need fuzzy matching that handles Sephardic naming conventions.
+- **Decision**: Surname variant clusters (hardcoded for known families) + given name scoring (exact=1.0, prefix=0.8, first-name=0.9). Auto-link at confidence >=0.8, review at 0.5-0.8.
+- **Results**: 39 auto-linked, 4 for review, 12 no match (out of 55 confirmed identities). 71% automatic linkage rate.
+- **Rejected**: Pure edit distance — fails on Sephardic transliterations (Capeluto→Capouano is distance 4 but same family). ML name matching — overkill for ~50 identities.
+- **Affects**: `scripts/link_faces_to_gedcom.py` (new), `gedcom_face_links` Supabase table
+- **Breadcrumbs**: Session 61C U2, AD-148
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-149)
+1. Add a new entry with AD-XXX format (next: AD-152)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

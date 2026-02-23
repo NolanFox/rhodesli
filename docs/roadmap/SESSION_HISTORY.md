@@ -350,12 +350,25 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - BACKLOG: 5 GEDCOM integration items added (GEDCOM-001 through GEDCOM-005)
 - Outcomes: docs/session_context/session_61c_outcomes.md
 
+## Session 63: Close the Gaps, Calibrate, Re-Run (2026-02-23) — v0.66.0
+- Deployed face alignment to Railway, verified on 3 real photos (100% success, $0.03)
+- GEDCOM Supabase tables created: gedcom_individuals (21,809), gedcom_events (40,140), gedcom_relationships (145,574), gedcom_face_links (61)
+- GEDCOM face linking with Sephardic surname variants (39 auto, 4 review, 12 no match)
+- Ground truth calibration pairs: 348 pairs (221 match, 127 non-match) from confirmed identities
+- Isotonic regression calibration: AUC=0.9577, threshold@90%=0.268, threshold@95%=0.269
+- Recalibration hooks: on_face_merge, on_match_reject, on_identity_confirm (event-driven with safety rails)
+- Batch face alignment pipeline (scripts/run_batch_alignment.py) — 5-photo validation passed, full run submitted
+- AD-149 (isotonic regression), AD-150 (continuous recalibration), AD-151 (GEDCOM face linking)
+- 29 new ML tests (12 calibration + 17 hooks). ~3402 total (2864 app + 538 ML).
+- Outcomes: docs/session_context/session_63_outcomes.md
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.66.0 | 2026-02-23 | 63 | ~2864+538 |
 | v0.65.0 | 2026-02-22 | 62 | ~2864+509 |
 | v0.64.0 | 2026-02-22 | 61 | ~2776+474 |
 | v0.63.1 | 2026-02-22 | 60B | 2726+466 |

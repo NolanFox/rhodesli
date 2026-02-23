@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 33.0 — February 22, 2026
-**Status**: ~3373 tests passing, v0.65.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
+**Version**: 34.0 — February 23, 2026
+**Status**: ~3402 tests passing, v0.66.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,8 +40,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.65.0 — 2026-02-22)
+## Recent Sessions (v0.66.0 — 2026-02-23)
 
+- **Session 63** (v0.66.0): Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals, 145,574 relationships). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.
 - **Session 62** (v0.65.0): PRD-015 Face Alignment via Coordinate Bridging. EXIF handler, coordinate bridging module (app/face_alignment.py), API endpoints (POST/GET /api/face-alignment/{photo_id}), photo page UI with per-face description cards. AD-146. 54 new tests. ~3373 total.
 - **Session 61** (v0.64.0): Gemini Photo Detective + Multi-Photo Compare + ML Iteration Loop. Fixed enriched prompt gap (ML-090), upgraded to Gemini 3.1 Pro (AD-139), MLflow tracking (AD-140), multi-photo compare upload 2-5 photos (AD-141, PRD-021), Photo Detective UX with evidence cards (AD-142, PRD-022), data integrity report script. ~50 new tests.
 - **Session 60B** (v0.63.1): Production Verification + ML Deep Dive + UX Review. Found+fixed P0 quick-identify CSS selector crash (legacy face IDs with colons/spaces). ML analysis: progressive refinement pipeline 60% complete (enriched prompt built but never sent to Gemini). UX review: 7 friction points, 5 improvement recommendations. See `docs/session_logs/session_60b_*.md`. 3192 total tests.
@@ -72,18 +73,24 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **UX-124: People page search/filter (P2)** — No search input on /people page.
 
 ### Face Alignment (Session 62)
-- [ ] **FA-001: Batch face alignment for all 271 photos** — ~$7.60 estimated. Needs user cost approval. See docs/PENDING_APPROVALS.md. Source: Session 62 prompt 6B.
+- [-] **FA-001: Batch face alignment for all 271 photos** — Running in Session 63. 5-photo validation passed. Source: Session 62 prompt 6B.
 - [ ] **FA-002: Face alignment + GEDCOM context integration** — Pass GEDCOM data (birth years, relationships) as additional_context to build_alignment_prompt(). Depends on 61C GEDCOM context builder results. Source: Session 62 prompt 6B.
 - [ ] **FA-003: Mobile UI refinement for face description cards** — Cards may overlap on small screens with many faces. Needs CSS media queries. Source: Session 62 prompt 6B.
 - [ ] **FA-004: Auto-trigger face alignment on new photo upload** — After upload + face detection, auto-run alignment if GEMINI_API_KEY available. Source: Session 62 prompt 6B.
-- [ ] **FA-005: Production test face alignment** — Run POST /api/face-alignment/{photo_id} on 3-5 real photos with GEMINI_API_KEY on Railway. Needs deploy first. Source: Session 62 Phase 5 deferred.
+- [x] **FA-005: Production test face alignment** — DONE (Session 63). 3 photos tested, 100% success, $0.03. Source: Session 62 Phase 5 deferred.
 
 ### GEDCOM Integration (Session 61C, AD-147/148)
-- [ ] **GEDCOM-001: Supabase GEDCOM tables via Dashboard SQL migration** — Create 4 tables: gedcom_individuals, gedcom_events, gedcom_relationships, gedcom_face_links. Schema for linking GEDCOM genealogical data to Rhodesli identities. Status: OPEN. Source: Session 61C, AD-147/148.
+- [x] **GEDCOM-001: Supabase GEDCOM tables** — DONE (Session 63). 4 tables created via psycopg2: gedcom_individuals (21,809), gedcom_events (40,140), gedcom_relationships (145,574), gedcom_face_links (61). Source: Session 61C, AD-147/148.
 - [ ] **GEDCOM-002: Admin GEDCOM link review UI** — Interface for linking identities to GEDCOM individuals. Admin can browse/search GEDCOM individuals and associate them with existing Rhodesli identity records. Status: OPEN. Source: Session 61C, AD-147/148.
 - [ ] **GEDCOM-003: GEDCOM enrichment in upload flow** — When a face is identified and has a GEDCOM link, show enriched analysis popup with genealogical context (birth year, relationships, life events). Status: OPEN. Source: Session 61C, AD-147/148.
 - [ ] **GEDCOM-004: "Analysis improved because..." UX feature** — Show users what GEDCOM context added vs visual-only analysis. Side-by-side or inline comparison of results with and without genealogical enrichment. Status: OPEN. Source: Session 61C, AD-147/148.
 - [ ] **GEDCOM-005: Batch re-analysis with GEDCOM enrichment** — Re-run all 271 photos with curated GEDCOM variant. Leverage linked GEDCOM data to improve date estimation and identity confidence across the full archive. Status: OPEN. Source: Session 61C, AD-147/148.
+
+### Similarity Calibration (Session 63, AD-149/150)
+- [ ] **CAL-001: Community "reject" UX** — Enable explicit non-match pair collection from admin/user rejections. Feeds recalibration hooks (AD-150). Critical for calibration model improvement. Source: Session 63 Phase 9.
+- [ ] **CAL-002: Active learning — surface uncertain pairs** — Find face pairs near the decision boundary (P(match) 0.4-0.6) and surface them for admin labeling. Maximizes information gain per label. Source: Session 63 Phase 9.
+- [ ] **CAL-003: Calibration drift monitoring dashboard** — Admin page showing calibration model version, AUC trend, threshold history, pair count growth. Alert on drift >0.1. Source: Session 63 Phase 9.
+- [ ] **CAL-004: Wire calibrated probabilities to compare UI** — Replace raw cosine similarity display with calibrated P(match) + confidence label (High/Medium/Low/Unlikely). Source: Session 63 AD-149.
 
 ### Architecture
 - [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.
@@ -163,7 +170,7 @@ AD-137. See Session 60 log.
 - [ ] **ML-097: Run full 271-photo re-analysis with 3.1 Pro**: After ML-096 validates quality. Needs cost approval. (Session 61)
 - [-] **PRD-015 v2**: Face alignment via coordinate bridging — design complete (AD-144), integrated with unified extraction (AD-143). Implementation TODO. Session 53 design → Session 61B update.
 - [x] **Gemini unified extraction architecture**: AD-143, rhodesli_ml/gemini_extraction.py, 16 tests. Session 61B.
-- [-] **PRD-023**: LoRA/calibration research — Platt scaling first, LoRA later (AD-145). Stage 1 (Platt) ready for implementation.
+- [x] **PRD-023 Stage 1**: Similarity calibration — isotonic regression (better than Platt). AUC=0.9577, 348 pairs. Session 63, AD-149. Stage 2 (LoRA) deferred.
 - [x] **Progressive refinement**: Pipeline fully wired — enriched prompt now sent to Gemini. Session 60 (AD-138) + Session 61 (ML-090 fixed).
 - [ ] **UX-130**: Homepage visitor experience — non-admin landing page with CTAs (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-131**: Photo page admin tools below evidence — collapse behind toggle (P2). Source: Session 61B UX evaluation.

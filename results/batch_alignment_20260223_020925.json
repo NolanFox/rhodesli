@@ -1,0 +1,60 @@
+{
+  "model": "gemini-3.1-pro-preview",
+  "total_photos": 5,
+  "success": 5,
+  "errors": 0,
+  "skipped": 0,
+  "total_cost": 0.0223,
+  "results": [
+    {
+      "photo_id": "a3d2695fe0804844",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 10.1,
+      "input_tokens": 1593,
+      "output_tokens": 393,
+      "cost": 0.0059
+    },
+    {
+      "photo_id": "a09088b188d5f4f5",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 4.8,
+      "input_tokens": 1554,
+      "output_tokens": 189,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "f50118e7db8d6ac5",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 5.6,
+      "input_tokens": 1583,
+      "output_tokens": 288,
+      "cost": 0.0049
+    },
+    {
+      "photo_id": "213d4dcc10a7745d",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.1,
+      "input_tokens": 1538,
+      "output_tokens": 192,
+      "cost": 0.0038
+    },
+    {
+      "photo_id": "2b0e354d49e51d29",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.1,
+      "input_tokens": 1551,
+      "output_tokens": 197,
+      "cost": 0.0039
+    }
+  ]
+}

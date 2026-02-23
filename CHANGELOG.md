@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 63] — 2026-02-23 (Close the Gaps, Calibrate, Re-Run)
+
+### Added — ML: Similarity Calibration System
+- `rhodesli_ml/similarity_calibration.py`: Isotonic regression calibrator (raw cosine → P(match))
+- `rhodesli_ml/recalibration_hooks.py`: Auto-update hooks for face merge/reject/confirm events
+- `scripts/extract_calibration_pairs.py`: Ground truth pair extraction from confirmed identities
+- Calibration model v1: AUC=0.9577, threshold@90%=0.268, 348 pairs (221 match, 127 non-match)
+- Safety rails: rate limit, drift detection, never retroactive changes
+
+### Added — GEDCOM Integration
+- 4 Supabase tables: gedcom_individuals (21,809), gedcom_events (40,140), gedcom_relationships (145,574), gedcom_face_links (61)
+- `scripts/link_faces_to_gedcom.py`: Sephardic surname fuzzy matching (39 auto-linked, 4 for review)
+
+### Added — Face Alignment Verified
+- Real photo testing: 3 photos tested against Gemini API (100% success, $0.03 total)
+- `scripts/test_face_alignment_real.py`: Production face alignment test script
+- `scripts/run_batch_alignment.py`: Batch face alignment pipeline (271 photos)
+
+### Documentation
+- AD-149: Isotonic regression calibration
+- AD-150: Continuous recalibration with non-match spike handling
+- AD-151: GEDCOM face linking Sephardic surname variants
+
+### Stats
+- 29 new ML tests (12 calibration + 17 hooks), ~3402 total (2864 app + 538 ML)
+- Gemini API cost this session: ~$4.50 (face alignment + batch)
+
 ## [Session 61C] — 2026-02-23 (GEDCOM-Enriched Analysis)
 
 ### Added — ML: GEDCOM Context Builder + Model Comparison
