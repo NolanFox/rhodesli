@@ -355,27 +355,47 @@ class TestStorage:
 # --- run_face_alignment (async, mocked) ---
 
 class TestRunFaceAlignment:
+    def _make_test_image(self):
+        """Create simple test image bytes."""
+        import io
+        from PIL import Image
+        img = Image.new("RGB", (800, 600))
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG")
+        return buf.getvalue()
+
+    @staticmethod
+    def _run_async(coro):
+        """Run an async coroutine, handling event loop conflicts."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            # Inside an already-running loop — create a new loop in a thread
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                return pool.submit(asyncio.run, coro).result()
+        else:
+            return asyncio.run(coro)
+
     def test_full_pipeline(self):
         """Full pipeline with mocked Gemini call."""
         from app.face_alignment import run_face_alignment
 
         faces = _make_faces(2)
         mock_response = _make_gemini_response(2)
+        image_bytes = self._make_test_image()
 
-        # Create simple test image bytes
-        import io
-        from PIL import Image
-        img = Image.new("RGB", (800, 600))
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG")
-        image_bytes = buf.getvalue()
+        async def _run():
+            with patch("app.face_alignment.call_gemini_alignment", new_callable=AsyncMock) as mock:
+                mock.return_value = (mock_response, 100, 50)
+                return await run_face_alignment(
+                    "photo_test", image_bytes, faces, api_key="test-key"
+                )
 
-        with patch("app.face_alignment.call_gemini_alignment", new_callable=AsyncMock) as mock:
-            mock.return_value = (mock_response, 100, 50)
-            result = asyncio.get_event_loop().run_until_complete(
-                run_face_alignment("photo_test", image_bytes, faces, api_key="test-key")
-            )
-
+        result = self._run_async(_run())
         assert result.photo_id == "photo_test"
         assert result.faces_detected == 2
         assert len(result.aligned_faces) == 2
@@ -385,9 +405,7 @@ class TestRunFaceAlignment:
         """Returns error result when no faces provided."""
         from app.face_alignment import run_face_alignment
 
-        result = asyncio.get_event_loop().run_until_complete(
-            run_face_alignment("photo_test", b"fake", [])
-        )
+        result = self._run_async(run_face_alignment("photo_test", b"fake", []))
         assert result.error == "No faces to align"
         assert result.faces_detected == 0
 
@@ -396,18 +414,15 @@ class TestRunFaceAlignment:
         from app.face_alignment import run_face_alignment
 
         faces = _make_faces(2)
-        import io
-        from PIL import Image
-        img = Image.new("RGB", (800, 600))
-        buf = io.BytesIO()
-        img.save(buf, format="JPEG")
-        image_bytes = buf.getvalue()
+        image_bytes = self._make_test_image()
 
-        with patch("app.face_alignment.call_gemini_alignment", new_callable=AsyncMock) as mock:
-            mock.return_value = (None, 0, 0)
-            result = asyncio.get_event_loop().run_until_complete(
-                run_face_alignment("photo_fail", image_bytes, faces, api_key="test-key")
-            )
+        async def _run():
+            with patch("app.face_alignment.call_gemini_alignment", new_callable=AsyncMock) as mock:
+                mock.return_value = (None, 0, 0)
+                return await run_face_alignment(
+                    "photo_fail", image_bytes, faces, api_key="test-key"
+                )
 
+        result = self._run_async(_run())
         assert result.error == "Gemini API call failed"
         assert result.faces_detected == 2
