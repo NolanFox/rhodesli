@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 64] — 2026-02-23 (Verify, Migrate, Harden)
+
+### Added — Harness Hardening
+- 5 Claude Code skills: session-run, deploy-verify, ml-pipeline, assess-session, build-prompt
+- 3 path-scoped rules: ml-development, data-layer, session-protocol
+- 3 hooks: pre-commit test gate, ML file edit reminder, completion notification
+- CLAUDE.md trimmed from 4922 → 1952 chars (domain rules moved to .claude/rules/)
+
+### Added — Supabase-First Data Layer (AD-152)
+- Face alignment migrated to Supabase (`face_gemini_alignments` table) with JSON fallback
+- `gemini_api_calls` tracking table — logs every Gemini API call (model, tokens, cost, status)
+- `save_alignment()` / `load_alignments()` Supabase-first functions
+- Migration script: `scripts/migrate_alignments_to_supabase.py`
+
+### Added — Combined Pipeline
+- `scripts/run_combined_pipeline.py`: alignment + GEDCOM context + retry support
+- Centralized model config: replaced hardcoded model strings with `GEMINI_MODEL`
+- API call logging wired into `call_gemini_alignment()` (success/error/rate-limit detection)
+- Rate limit detection with rpd/rpm/tpm classification
+
+### Added — Calibrated Scores + Recalibration
+- Calibrated match probability display in `neighbor_card()`: "85% match" via isotonic regression
+- Recalibration hooks wired into merge/reject/confirm endpoints
+- `_fire_recalibration_hook()`: best-effort, non-blocking, exception-safe
+
+### Documentation
+- AD-152: Supabase-first data layer + centralized Gemini pipeline
+- Data layer audit: `docs/session_context/session-64-audit.md`
+
+### Stats
+- ~50 new tests, ~3450 total (2906 app + 538 ML)
+- 127/271 photos aligned, 144 remaining (rate-limited, retry ready)
+- Retry command: `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`
+
 ## [Session 63] — 2026-02-23 (Close the Gaps, Calibrate, Re-Run)
 
 ### Added — ML: Similarity Calibration System

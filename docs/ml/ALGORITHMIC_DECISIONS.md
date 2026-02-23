@@ -1678,11 +1678,26 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `scripts/link_faces_to_gedcom.py` (new), `gedcom_face_links` Supabase table
 - **Breadcrumbs**: Session 61C U2, AD-148
 
+### AD-152: Supabase-First Data Layer + Centralized Gemini Pipeline
+- **Date**: 2026-02-23 | **Session**: 64
+- **Context**: Session 63 left face alignment data in JSON only, hardcoded model strings across 5+ files, no API call logging, recalibration hooks as dead code, and calibrated scores not wired to UI.
+- **Decision**: Multi-part architectural decision:
+  1. **Supabase-first data layer**: Face alignment data migrated to `face_gemini_alignments` table. Pattern: write to Supabase first, JSON as cache fallback. `save_alignment()` and `load_alignments()` try Supabase, fall back to JSON.
+  2. **Centralized model config**: All Gemini API calls use `GEMINI_MODEL` from `rhodesli_ml/gemini_config.py`. No hardcoded `"gemini-3.1-pro-preview"` in function defaults.
+  3. **API call logging**: Every `call_gemini_alignment()` logs to `gemini_api_calls` table via `log_gemini_call()` — photo_id, model, tokens, cost, latency, status (success/rate_limited/error), batch_id.
+  4. **Combined pipeline**: `scripts/run_combined_pipeline.py` merges face alignment + GEDCOM context injection. Supports `--retry-failed`, `--photo-ids`, `--no-gedcom`.
+  5. **Calibrated scores in UI**: `neighbor_card()` displays "85% match" via isotonic regression (AD-149) instead of raw threshold labels.
+  6. **Recalibration hooks wired**: Merge/reject/confirm endpoints fire `_fire_recalibration_hook()` (best-effort, non-blocking).
+- **Results**: 127/271 photos aligned (122 batch + 5 prior). 144 rate-limited, retry ready. ~50 new tests.
+- **Rejected**: Keep JSON as primary store — fragile, no concurrency, no query support. Per-file model config — leads to drift. Inline cost estimation — pricing changes break all callers.
+- **Affects**: `app/face_alignment.py`, `app/supabase_data.py`, `app/main.py`, `scripts/run_batch_alignment.py`, `scripts/run_combined_pipeline.py` (new), `scripts/sql/create_face_gemini_alignments.sql` (new), `scripts/sql/create_gemini_api_calls.sql` (new)
+- **Breadcrumbs**: AD-149 (calibration), AD-150 (recalibration), Session 64 context
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-152)
+1. Add a new entry with AD-XXX format (next: AD-153)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

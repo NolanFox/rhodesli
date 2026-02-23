@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 34.0 — February 23, 2026
-**Status**: ~3402 tests passing, v0.66.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
+**Version**: 35.0 — February 23, 2026
+**Status**: ~3450 tests passing, v0.67.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,8 +40,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.66.0 — 2026-02-23)
+## Recent Sessions (v0.67.0 — 2026-02-23)
 
+- **Session 64** (v0.67.0): Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.
 - **Session 63** (v0.66.0): Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals, 145,574 relationships). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.
 - **Session 62** (v0.65.0): PRD-015 Face Alignment via Coordinate Bridging. EXIF handler, coordinate bridging module (app/face_alignment.py), API endpoints (POST/GET /api/face-alignment/{photo_id}), photo page UI with per-face description cards. AD-146. 54 new tests. ~3373 total.
 - **Session 61** (v0.64.0): Gemini Photo Detective + Multi-Photo Compare + ML Iteration Loop. Fixed enriched prompt gap (ML-090), upgraded to Gemini 3.1 Pro (AD-139), MLflow tracking (AD-140), multi-photo compare upload 2-5 photos (AD-141, PRD-021), Photo Detective UX with evidence cards (AD-142, PRD-022), data integrity report script. ~50 new tests.
@@ -73,8 +74,8 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **UX-124: People page search/filter (P2)** — No search input on /people page.
 
 ### Face Alignment (Session 62)
-- [-] **FA-001: Batch face alignment for all 271 photos** — Running in Session 63. 5-photo validation passed. Source: Session 62 prompt 6B.
-- [ ] **FA-002: Face alignment + GEDCOM context integration** — Pass GEDCOM data (birth years, relationships) as additional_context to build_alignment_prompt(). Depends on 61C GEDCOM context builder results. Source: Session 62 prompt 6B.
+- [-] **FA-001: Batch face alignment for all 271 photos** — 127/271 aligned (Session 63/64). 144 rate-limited, retry ready: `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`
+- [x] **FA-002: Face alignment + GEDCOM context integration** — DONE (Session 64). Combined pipeline includes GEDCOM curated context. `scripts/run_combined_pipeline.py` with `--no-gedcom` flag to disable.
 - [ ] **FA-003: Mobile UI refinement for face description cards** — Cards may overlap on small screens with many faces. Needs CSS media queries. Source: Session 62 prompt 6B.
 - [ ] **FA-004: Auto-trigger face alignment on new photo upload** — After upload + face detection, auto-run alignment if GEMINI_API_KEY available. Source: Session 62 prompt 6B.
 - [x] **FA-005: Production test face alignment** — DONE (Session 63). 3 photos tested, 100% success, $0.03. Source: Session 62 Phase 5 deferred.
@@ -91,6 +92,11 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **CAL-002: Active learning — surface uncertain pairs** — Find face pairs near the decision boundary (P(match) 0.4-0.6) and surface them for admin labeling. Maximizes information gain per label. Source: Session 63 Phase 9.
 - [ ] **CAL-003: Calibration drift monitoring dashboard** — Admin page showing calibration model version, AUC trend, threshold history, pair count growth. Alert on drift >0.1. Source: Session 63 Phase 9.
 - [ ] **CAL-004: Wire calibrated probabilities to compare UI** — Replace raw cosine similarity display with calibrated P(match) + confidence label (High/Medium/Low/Unlikely). Source: Session 63 AD-149.
+
+### Data Layer (Session 64, AD-152)
+- [ ] **DATA-002: Create Supabase tables** — Run `scripts/sql/create_face_gemini_alignments.sql` and `scripts/sql/create_gemini_api_calls.sql` in Supabase. Required for Supabase-first data layer to function. Source: Session 64.
+- [ ] **DATA-003: Run alignment migration** — Execute `python scripts/migrate_alignments_to_supabase.py --execute` after tables created. Migrates 127 alignment records from JSON to Supabase. Source: Session 64.
+- [ ] **DATA-004: Retry 144 rate-limited photos** — Run `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`. Requires GEMINI_API_KEY. Estimated cost: ~$4 at $0.028/photo. Source: Session 64.
 
 ### Architecture
 - [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.

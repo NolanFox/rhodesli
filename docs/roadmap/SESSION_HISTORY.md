@@ -350,6 +350,20 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - BACKLOG: 5 GEDCOM integration items added (GEDCOM-001 through GEDCOM-005)
 - Outcomes: docs/session_context/session_61c_outcomes.md
 
+## Session 64: Verify, Migrate, Harden (2026-02-23) — v0.67.0
+- Harness hardening: 5 Claude Code skills, 3 path-scoped rules, 3 hooks
+- CLAUDE.md trimmed from 4922 → 1952 chars (domain rules → .claude/rules/)
+- Data layer audit: face alignment JSON-only, recalibration dead code, calibration not in UI
+- Face alignment migrated to Supabase (`face_gemini_alignments` table, JSON fallback)
+- `gemini_api_calls` tracking table — every Gemini call logged (model, tokens, cost, latency, status)
+- Centralized model config: all `call_gemini_alignment()` uses `GEMINI_MODEL` from config
+- Combined pipeline: `scripts/run_combined_pipeline.py` (alignment + GEDCOM + retry)
+- Calibrated scores wired to UI: `neighbor_card()` shows "85% match" via isotonic regression
+- Recalibration hooks wired into merge/reject/confirm endpoints
+- 127/271 photos aligned, 144 rate-limited (retry ready)
+- AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
+- Outstanding: 144 photo retry, Supabase table creation, migration script execution
+
 ## Session 63: Close the Gaps, Calibrate, Re-Run (2026-02-23) — v0.66.0
 - Deployed face alignment to Railway, verified on 3 real photos (100% success, $0.03)
 - GEDCOM Supabase tables created: gedcom_individuals (21,809), gedcom_events (40,140), gedcom_relationships (145,574), gedcom_face_links (61)
@@ -368,6 +382,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.67.0 | 2026-02-23 | 64 | ~2906+538 |
 | v0.66.0 | 2026-02-23 | 63 | ~2864+538 |
 | v0.65.0 | 2026-02-22 | 62 | ~2864+509 |
 | v0.64.0 | 2026-02-22 | 61 | ~2776+474 |
