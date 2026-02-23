@@ -294,7 +294,7 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Breadcrumbs:** Session 49B-Audit (skipped production verify), Session 54F
   (GET-only smoke tests), HD-013, CLAUDE.md Session Operations, post-deploy hook
 
-## HD-015: PreCompact Recovery Hook for Session Continuity
+## HD-017: PreCompact Recovery Hook for Session Continuity
 - **Date:** 2026-02-21
 - **Session:** 49E
 - **Trigger:** Context compaction loses critical session instructions (prompt
