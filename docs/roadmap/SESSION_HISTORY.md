@@ -364,6 +364,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 64b: Execute What 64 Deferred (2026-02-23) — v0.67.1
+- Supabase tables created: `face_gemini_alignments`, `gemini_api_calls` (SQL scripts from S64 executed)
+- 127 face alignments migrated from JSON to Supabase (0 failures)
+- GEDCOM context builder implemented: `_build_parsed_gedcom_from_supabase()` fully wired
+  - Reconstructs ParsedGedcom from Supabase (21,809 individuals, 6,680 families, 40K events)
+  - Fixed 3 bugs: column name (gedcom_xref→gedcom_id), pagination (1000→all), identities unwrapping
+- Dry-run on 3 strategic photos: Vida Capeluto (6/6 faces), group (14/14), GEDCOM-linked (3/3 +GEDCOM)
+- All API calls logged to gemini_api_calls (10 total from dry-runs)
+- Production verified: all 7 routes return 200, face cards rendering
+- AD-153 through AD-157. 8 new tests. ~3468 total (2930 app + 538 ML).
+
 ## Session 63: Close the Gaps, Calibrate, Re-Run (2026-02-23) — v0.66.0
 - Deployed face alignment to Railway, verified on 3 real photos (100% success, $0.03)
 - GEDCOM Supabase tables created: gedcom_individuals (21,809), gedcom_events (40,140), gedcom_relationships (145,574), gedcom_face_links (61)
@@ -382,6 +393,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.67.1 | 2026-02-23 | 64b | ~2930+538 |
 | v0.67.0 | 2026-02-23 | 64 | ~2906+538 |
 | v0.66.0 | 2026-02-23 | 63 | ~2864+538 |
 | v0.65.0 | 2026-02-22 | 62 | ~2864+509 |

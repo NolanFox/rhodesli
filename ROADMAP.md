@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.67.0 · ~3450 tests · 271 photos · 775 identities · 55 confirmed
+Current: v0.67.1 · ~3468 tests · 271 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -25,7 +25,7 @@ Current: v0.67.0 · ~3450 tests · 271 photos · 775 identities · 55 confirmed
 | **C: Annotation Engine** | COMPLETE | Full submit/review/approve workflow |
 | **D: ML Feedback** | ~90% complete | Remaining: ML-053 (multi-pass Gemini), FE-040-043 |
 | **E: Collaboration** | ~70% complete | Remaining: Help Identify mode, analytics, moderation |
-| **F: Scale & Generalize** | ~15% complete | Face alignment in Supabase. Remaining: full Postgres ML data, CI/CD, Sentry |
+| **F: Scale & Generalize** | ~20% complete | Face alignment + GEDCOM in Supabase, API logging. Remaining: full Postgres ML data, CI/CD, Sentry |
 
 For full feature checklists, see [docs/roadmap/FEATURE_STATUS.md](docs/roadmap/FEATURE_STATUS.md).
 For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMAP.md).
@@ -35,8 +35,6 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 ### Immediate
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
 - [ ] Retry 144 rate-limited photos: `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`
-- [ ] Create Supabase tables: `face_gemini_alignments`, `gemini_api_calls` (SQL scripts ready)
-- [ ] Run alignment migration: `python scripts/migrate_alignments_to_supabase.py --execute`
 
 ### Near-Term
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
@@ -55,11 +53,12 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 64: Verify, Migrate, Harden — COMPLETE (2026-02-23)
+### Session 64/64b: Verify, Migrate, Harden — COMPLETE (2026-02-23)
 - [x] Phase 0: Harness hardening (5 skills, 3 rules, 3 hooks, CLAUDE.md trim)
 - [x] Track A: Data layer audit, face alignment → Supabase, calibrated scores in UI, recalibration hooks wired
 - [x] Track B: gemini_api_calls table, centralized model config, combined pipeline, batch retry infrastructure
-- [x] AD-152 documented. ~50 new tests. ~3450 total.
+- [x] 64b: Supabase tables executed, 127 alignments migrated, GEDCOM builder implemented, dry-run validated
+- [x] AD-152 through AD-157. ~58 new tests. ~3468 total.
 - [ ] Deferred: 144 photos still rate-limited (retry ready with combined pipeline)
 
 ### Session 43: Life Events & Context Graph (deferred)
@@ -68,6 +67,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-23: **v0.67.1 — Session 64b**: Execute What 64 Deferred. Supabase tables created. 127 alignments migrated. GEDCOM context builder. Dry-run 3 photos. AD-153-157. 8 new tests. ~3468 total.
 - [x] 2026-02-23: **v0.67.0 — Session 64**: Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.
 - [x] 2026-02-23: **v0.66.0 — Session 63**: Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.
 - [x] 2026-02-23: **Session 61C**: GEDCOM-Enriched Analysis + Flash vs Pro. 3 models × 5 GEDCOM variants ($2.46). Verdict: Pro + curated optimal. AD-147/148. GEDCOM context builder (19 tests). Supabase import script.

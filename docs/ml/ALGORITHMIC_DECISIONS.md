@@ -1693,11 +1693,55 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `app/face_alignment.py`, `app/supabase_data.py`, `app/main.py`, `scripts/run_batch_alignment.py`, `scripts/run_combined_pipeline.py` (new), `scripts/sql/create_face_gemini_alignments.sql` (new), `scripts/sql/create_gemini_api_calls.sql` (new)
 - **Breadcrumbs**: AD-149 (calibration), AD-150 (recalibration), Session 64 context
 
+### AD-153: Gemini API Call Tracking Infrastructure
+- **Date**: 2026-02-23 | **Session**: 64b
+- **Context**: Session 63 showed cost discrepancy ($0.78 actual vs $2.50 expected). No way to determine which model was used per photo, or whether calls succeeded.
+- **Decision**: Every Gemini API call logged to `gemini_api_calls` Supabase table with: photo_id, model_used, call_type, tokens (prompt/completion/total), cost_usd, latency_ms, status (success/rate_limited/error), batch_id.
+- **Enables**: Cost analysis per model, rate limit detection, model drift tracking, batch auditing.
+- **Rejected**: In-memory logging only — lost on restart, not queryable. File-based logging — doesn't support concurrent access or web queries.
+- **Affects**: `app/face_alignment.py` (_log_call), `app/supabase_data.py` (log_gemini_call), `scripts/sql/create_gemini_api_calls.sql`
+- **Breadcrumbs**: Session 63 assessment concern #7, AD-152
+
+### AD-154: Face Alignment Storage Migration JSON → Supabase
+- **Date**: 2026-02-23 | **Session**: 64b
+- **Context**: Session 63 stored 127 face alignment results in `data/face_alignments.json`. Not queryable via API, not accessible on production, drifts from database.
+- **Decision**: `face_gemini_alignments` Supabase table is source of truth. JSON is cache-only. `load_alignments()` reads Supabase first, falls back to JSON. 127 records migrated successfully.
+- **Rejected**: Keep JSON as primary — no concurrency, no query support, can't access from web app on Railway.
+- **Affects**: `app/face_alignment.py` (load_alignments, save_alignment), `app/supabase_data.py`, `scripts/sql/create_face_gemini_alignments.sql`, `scripts/migrate_alignments_to_supabase.py`
+- **Breadcrumbs**: Session 63 concern #1, AD-135, AD-152
+
+### AD-155: GEDCOM Context Builder — Supabase to ParsedGedcom Reconstruction
+- **Date**: 2026-02-23 | **Session**: 64b
+- **Context**: Session 64 left `_build_parsed_gedcom_from_supabase()` as a stub returning None. Without it, the combined pipeline sent coordinates WITHOUT genealogical context, losing the winning combination from Session 61C.
+- **Decision**: Full reconstruction of `ParsedGedcom` object from Supabase tables (gedcom_individuals, gedcom_events, gedcom_relationships). Paginated loading (21,809 individuals, 40,140 events, 145K+ relationships). Reconstructs family units and all relationship methods (get_parents, get_spouses, get_children, get_siblings, get_marriages).
+- **Results**: Dry-run on 3 photos confirmed GEDCOM context appears in Gemini prompts. GEDCOM-linked photo shows `+GEDCOM` flag and `call_type=combined`.
+- **Bugs fixed**: (1) Column name: `gedcom_xref` → `gedcom_id`, (2) Supabase default 1000-row limit hit, (3) identities JSON envelope not unwrapped.
+- **Rejected**: Parse from .ged file on demand — 4.8s parse time, not acceptable. Load only linked individuals — loses family context needed for curated variant.
+- **Affects**: `scripts/run_combined_pipeline.py` (_build_parsed_gedcom_from_supabase, load_gedcom_data, build_gedcom_context)
+- **Breadcrumbs**: AD-147 (GEDCOM enrichment winner), AD-148 (Supabase tables), Session 61C
+
+### AD-156: Harness Architecture — Skills, Hooks, Rules
+- **Date**: 2026-02-23 | **Session**: 64
+- **Context**: CLAUDE.md was 4922 chars. Session prompts re-explained architecture every time. No reusable workflow knowledge.
+- **Decision**: Move repeatable workflow knowledge to `.claude/skills/` (5 skills), hard constraints to hooks (3 hooks), domain rules to `.claude/rules/` (3+ rule files). CLAUDE.md trimmed to 1952 chars — pointers only.
+- **Result**: Skills: session-run, deploy-verify, ml-pipeline, assess-session, build-prompt. Rules: ml-development, data-layer, session-protocol. Hooks: pre-commit test gate, ML file AD reminder, session completion notification.
+- **Rejected**: Keep everything in CLAUDE.md — too large for context. Per-session prompt templates — not reusable. External documentation only — not loaded into context.
+- **Breadcrumbs**: docs/HARNESS_DECISIONS.md, Session 64 context
+
+### AD-157: Gemini Batch API for Bulk Photo Processing
+- **Date**: 2026-02-23 | **Session**: 64/64b
+- **Context**: 144 photos rate-limited during Session 63 batch run. Synchronous calls hit RPM/RPD limits.
+- **Decision**: Use Gemini Batch API (50% discount, 24h SLO) for remaining 144+ photos. Cost: ~$2 batch vs ~$4 synchronous. Infrastructure ready via `scripts/run_combined_pipeline.py` with `--retry-failed` flag.
+- **Status**: Ready to execute. Awaiting next batch run session.
+- **Rejected**: Keep synchronous with higher delay — still hits daily limits. External queuing — unnecessary complexity.
+- **Affects**: `scripts/run_combined_pipeline.py`, `rhodesli_ml/gemini_config.py`
+- **Breadcrumbs**: Session 63 concern #2, AD-152
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-153)
+1. Add a new entry with AD-XXX format (next: AD-158)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
