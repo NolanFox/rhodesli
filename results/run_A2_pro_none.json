@@ -1,0 +1,3113 @@
+{
+  "model": "gemini-3.1-pro-preview",
+  "preset": "full",
+  "gedcom_variant": "none",
+  "photo_count": 20,
+  "total_cost": 0.4019,
+  "results": [
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Black and white photograph, likely a gelatin silver print, with a slightly soft focus typical of mid-20th century wedding photography.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Bride's dress features a sweetheart neckline, long sheer sleeves, and a full tulle skirt, characteristic of late 1940s to 1950s bridal fashion.",
+                "strength": "strong",
+                "suggested_range": [
+                  1945,
+                  1955
+                ]
+              },
+              {
+                "cue": "Men wearing white dinner jackets with dark trousers and bow ties, a popular formal summer or warm-climate style in the 1940s and 1950s.",
+                "strength": "strong",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              },
+              {
+                "cue": "Officiant wearing a light-colored suit with wide lapels, a patterned tie, and a straw boater or panama hat, typical of 1940s/50s summer wear.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1955
+                ]
+              },
+              {
+                "cue": "Women's hairstyles (short, curled) and the bridesmaid's/matron of honor's dress with a dark belt and light fabric suggest late 40s/early 50s.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1945,
+                  1955
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Outdoor or semi-outdoor setting with a corrugated roof, brick wall, and tropical/subtropical plants (gladiolus, palm fronds), suggesting a warm climate like Florida.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Microphone stand visible on the left, typical of mid-century public address systems.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "The fashion appears relatively current for the late 1940s or early 1950s, typical of American diaspora communities rather than lagging old-world styles.",
+          "estimated_decade": 1950,
+          "best_year_estimate": 1950,
+          "confidence": "high",
+          "probable_range": [
+            1947,
+            1953
+          ],
+          "decade_probabilities": {
+            "1940": 0.4,
+            "1950": 0.6
+          },
+          "reasoning_summary": "The bride's gown, the men's white dinner jackets, and the women's hairstyles strongly point to the post-WWII era, specifically the late 1940s to early 1950s. The setting suggests a warm climate diaspora community."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Man on far left wearing a white dinner jacket, dark bow tie, and a dark kippah (yarmulke)."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 15,
+            "gender": "female",
+            "description": "Young woman partially obscured behind the man on the left, looking towards the center."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Woman standing behind the microphone, wearing a dark patterned dress."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "The bride, wearing a white gown with a sweetheart neckline, veil, and holding a large bouquet."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 28,
+            "gender": "male",
+            "description": "The groom, wearing a white dinner jacket and dark bow tie."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Woman standing to the right of the groom, wearing a light-colored dress with a dark belt and gloves."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 35,
+            "gender": "male",
+            "description": "Man standing behind the woman in the light dress, wearing a light suit and bow tie."
+          },
+          {
+            "face_index": 7,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Officiant on the far right, wearing a light suit, tie, glasses, and a straw hat, reading from a document."
+          }
+        ],
+        "location": {
+          "place": "Likely Florida (Miami or Tampa) or similar warm US climate",
+          "confidence": "medium",
+          "evidence": "The combination of white dinner jackets, light suits, straw hat, and tropical foliage (palm fronds, gladiolus) in a semi-outdoor setting strongly suggests a warm-weather diaspora community in the US."
+        },
+        "cultural_markers": [
+          "Jewish wedding ceremony taking place under a Chuppah (wedding canopy), which appears to be a traditional embroidered cloth or tallit.",
+          "Man on the far left is wearing a kippah (yarmulke).",
+          "The officiant (likely a Rabbi) is reading from a document, possibly the Ketubah (marriage contract) or ceremony text."
+        ],
+        "clothing_notes": "The bridal party is dressed in formal mid-century attire. The men's white dinner jackets with dark trousers are classic summer formal wear. The bride's dress features a full tulle skirt and sheer sleeves typical of the late 40s/early 50s. The officiant's attire (light suit, straw hat) is notable for a religious figure, suggesting a less formal or very warm environment.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot or medium format wedding photography",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "ceremony",
+          "people_count": 8,
+          "arrangement": "Wedding party standing under and around a Chuppah during the ceremony. Bride and groom are central, flanked by family/attendants, with the officiant reading on the right."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "fading",
+            "loss of contrast",
+            "some surface wear or slight discoloration"
+          ]
+        },
+        "subject_ages": [
+          45,
+          15,
+          45,
+          25,
+          28,
+          40,
+          35,
+          60
+        ]
+      },
+      "input_tokens": 2179,
+      "output_tokens": 1857,
+      "cost": 0.026642,
+      "latency_seconds": 18.44,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Snapshot with white border, warm-toned black and white paper",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Man's narrow tie and narrow suit lapels",
+                "strength": "strong",
+                "suggested_range": [
+                  1960,
+                  1968
+                ]
+              },
+              {
+                "cue": "Woman's floral knee-length dress and white pumps",
+                "strength": "moderate",
+                "suggested_range": [
+                  1958,
+                  1965
+                ]
+              },
+              {
+                "cue": "Girl's plaid dress with wide belt and white ankle socks",
+                "strength": "strong",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Wrought iron scrollwork railing and patterned tile/terrazzo floor",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "While the man's suit is quite contemporary for the early 1960s, the overall conservative nature of the family's dress suggests they adopted mainstream styles but kept them modest, typical of diaspora communities.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1962,
+          "confidence": "high",
+          "probable_range": [
+            1960,
+            1965
+          ],
+          "decade_probabilities": {
+            "1950": 0.2,
+            "1960": 0.75,
+            "1970": 0.05
+          },
+          "reasoning_summary": "The man's narrow tie and lapels are strong indicators of the early 1960s. The women's dresses and hairstyles align perfectly with the late 1950s to early 1960s transition period."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 42,
+            "gender": "female",
+            "description": "Adult woman with short, dark, curly hair, wearing earrings and a pearl necklace."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 11,
+            "gender": "female",
+            "description": "Young girl with hair pulled up or back, wearing a pendant necklace."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 48,
+            "gender": "male",
+            "description": "Adult man with dark hair, receding hairline, clean-shaven."
+          }
+        ],
+        "location": {
+          "place": "Florida, USA (likely Miami or Tampa)",
+          "confidence": "medium",
+          "evidence": "Tropical broadleaf vegetation in the background, patterned tile or terrazzo flooring, and decorative wrought-iron porch railing are highly characteristic of mid-century Florida architecture where many Sephardic immigrants settled."
+        },
+        "cultural_markers": [
+          "Modest but formal family attire typical of mid-century Sephardic diaspora communities dressing up for a weekend, holiday, or special occasion."
+        ],
+        "clothing_notes": "The man is wearing a dark, single-breasted suit with narrow lapels and a thin dark tie, indicative of the 'Mad Men' era. The woman wears a modest, short-sleeved floral print dress with white pumps. The young girl wears a plaid dress with a prominent wide dark belt, white ankle socks, and white flat shoes.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 3,
+          "arrangement": "Standing family group posing for the camera; mother on the left, daughter in the center, father on the right."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "yellowing/warm color shift",
+            "minor surface wear"
+          ]
+        },
+        "subject_ages": [
+          42,
+          11,
+          48
+        ]
+      },
+      "input_tokens": 2207,
+      "output_tokens": 1150,
+      "cost": 0.018214,
+      "latency_seconds": 26.11,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Oval ceramic/porcelain photo plaque (photoceramic), typical of cemetery markers",
+                "strength": "strong",
+                "suggested_range": [
+                  1920,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "White collared shirt with a relatively narrow, patterned tie",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              },
+              {
+                "cue": "Short, slightly wavy hair, parted on the side",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1950
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Mounted on a light-colored, textured stone surface (likely marble or granite headstone)",
+                "strength": "strong",
+                "suggested_range": [
+                  1900,
+                  2000
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Black and white portrait reproduced onto a convex ceramic oval",
+                "strength": "strong",
+                "suggested_range": [
+                  1920,
+                  1970
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "The style of the tie and shirt is quite standard and could span several decades, but the specific look suggests the mid-20th century. Cemetery portraits often use older photos of the deceased.",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1945,
+          "confidence": "medium",
+          "probable_range": [
+            1935,
+            1955
+          ],
+          "decade_probabilities": {
+            "1920": 0.05,
+            "1930": 0.3,
+            "1940": 0.4,
+            "1950": 0.2,
+            "1960": 0.05
+          },
+          "reasoning_summary": "The image is a photoceramic plaque mounted on a stone surface, highly indicative of a cemetery monument. The subject's attire (white shirt, narrow patterned tie) and hairstyle suggest a portrait taken between the 1930s and 1950s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 35,
+            "gender": "male",
+            "description": "Adult male with dark, slightly wavy hair parted on the side. He has a broad face, dark eyes, and a slight smile."
+          }
+        ],
+        "location": {
+          "place": "Unknown Cemetery",
+          "confidence": "low",
+          "evidence": "The photo is mounted on what appears to be a stone monument, typical of cemetery markers, but there are no specific geographic identifiers."
+        },
+        "cultural_markers": [
+          "Cemetery photo plaque (common in Southern European, Catholic, and some Jewish traditions)"
+        ],
+        "clothing_notes": "The subject is wearing a light-colored (likely white) collared dress shirt and a medium-width tie with a subtle pattern (possibly a small check or weave).",
+        "photo_technique": {
+          "type": "photoceramic (enamel photograph)",
+          "format": "oval plaque",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "head and shoulders portrait of a single individual"
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "chipping around the edges of the ceramic plaque",
+            "some surface wear and slight fading of the image"
+          ]
+        },
+        "subject_ages": [
+          35
+        ]
+      },
+      "input_tokens": 2179,
+      "output_tokens": 1029,
+      "cost": 0.016706,
+      "latency_seconds": 10.46,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Halftone reproduction in a spiral-bound book",
+                "strength": "strong",
+                "suggested_range": [
+                  1999,
+                  1999
+                ]
+              },
+              {
+                "cue": "Original source photos appear to be late 19th/early 20th century studio portraits",
+                "strength": "moderate",
+                "suggested_range": [
+                  1890,
+                  1918
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Woman's high collar, elaborate hair piece/comb, light-colored patterned dress",
+                "strength": "moderate",
+                "suggested_range": [
+                  1890,
+                  1910
+                ]
+              },
+              {
+                "cue": "Man's fez (tarboush), high stiff collar, wide tie, dark suit",
+                "strength": "strong",
+                "suggested_range": [
+                  1890,
+                  1918
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "The fez was commonly worn by Jewish men in the Ottoman Empire until its collapse/the early 1920s. The woman's dress style is consistent with late Victorian/Edwardian eras, which persisted longer in provincial Ottoman areas like Rhodes.",
+          "estimated_decade": 1900,
+          "best_year_estimate": 1905,
+          "confidence": "medium",
+          "probable_range": [
+            1895,
+            1915
+          ],
+          "decade_probabilities": {
+            "1890": 0.2,
+            "1900": 0.5,
+            "1910": 0.3
+          },
+          "reasoning_summary": "The original photographs likely date between 1895 and 1915 based on the man's fez (Ottoman era) and the woman's high-collared dress and hair styling. The man died in 1918, providing a hard upper limit for his portrait."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Woman with dark hair styled up with an elaborate decorative comb or headpiece. She has dark eyes and is wearing a light-colored, high-collared dress with a pattern."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 40,
+            "gender": "male",
+            "description": "Man with a prominent mustache wearing a dark fez (tarboush). He has a high stiff collar, a wide tie, and a dark suit jacket."
+          }
+        ],
+        "location": {
+          "place": "Rhodes, Ottoman Empire (likely)",
+          "confidence": "medium",
+          "evidence": "The wearing of the fez by a Sephardic Jewish man strongly suggests the Ottoman Empire period (pre-1912 for Rhodes). The names are typical of Rhodeslis."
+        },
+        "cultural_markers": [
+          "Fez (tarboush) worn by the man, typical of Ottoman subjects including Jews prior to the empire's fall.",
+          "Sephardic surnames (Capouano, Mosafir)."
+        ],
+        "clothing_notes": "The man wears a fez, a high stiff white collar, a wide dark tie, and a dark suit jacket. The woman wears a light-colored dress with a high collar and a patterned or textured fabric, and a large decorative hair comb or headpiece.",
+        "photo_technique": {
+          "type": "halftone print (reproduction)",
+          "format": "book page",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "Capouano Family\nA FAMILY COLLECTION\n1999\nHanulah Mosafir\n(1873 - 1945)\nAbraham Capouano\n(1870 - 1918)",
+          "language": "English",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 2,
+          "arrangement": "Two separate individual portraits placed side-by-side for publication."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "halftone dot pattern visible from reproduction",
+            "loss of detail in highlights and shadows due to copying"
+          ]
+        },
+        "subject_ages": [
+          35,
+          40
+        ]
+      },
+      "input_tokens": 2181,
+      "output_tokens": 1169,
+      "cost": 0.01839,
+      "latency_seconds": 11.88,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Newspaper clipping",
+                "strength": "strong",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Bridal gown with long sleeves, V-neckline, voluminous skirt, and long train",
+                "strength": "strong",
+                "suggested_range": [
+                  1940,
+                  1950
+                ]
+              },
+              {
+                "cue": "Hairstyle of the bride (visible under veil)",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1950
+                ]
+              },
+              {
+                "cue": "Illustration of woman in advertisement with 1940s hairstyle",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1950
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Newspaper layout and typography",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Mention of 'Air Conditioned Beauty Salon' in advertisement",
+                "strength": "strong",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "This is a newspaper clipping from Montgomery, Alabama, not a photograph from Rhodes or an early immigrant community where cultural lag would be a significant factor.",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1947,
+          "confidence": "high",
+          "probable_range": [
+            1945,
+            1950
+          ],
+          "decade_probabilities": {
+            "1930": 0.1,
+            "1940": 0.8,
+            "1950": 0.1
+          },
+          "reasoning_summary": "The fashion of the wedding dress, the typography of the newspaper, and the mention of an 'Air Conditioned Beauty Salon' strongly suggest the late 1940s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 22,
+            "gender": "female",
+            "description": "Young woman, smiling, wearing a wedding veil and gown."
+          }
+        ],
+        "location": {
+          "place": "Montgomery, Alabama, USA",
+          "confidence": "high",
+          "evidence": "The newspaper is identified as 'THE MONTGOMERY ADVERTISER' and mentions 'Montgomery Fair'."
+        },
+        "cultural_markers": [
+          "Jewish wedding ceremony mentioned in text ('Temple Etz Ahayem', 'Rabbi Eugene Blachschleger', 'Temple Beth-Or')",
+          "Sephardic surnames (Capouya, Capouano, Hasson, Mussafer)"
+        ],
+        "clothing_notes": "The bride is wearing an original Tafet model created of bridal satin cut on princess lines with long sleeves ending in points over the hands. The neckline is V-shape caught on either side with pearl clips. The bodice is fitted into a softly gathered girdle. The voluminous skirt extends into a lengthy train. The full length veil of illusion is attached to a coronet of pearls and net.",
+        "photo_technique": {
+          "type": "halftone print (newspaper reproduction)",
+          "format": "newspaper clipping",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "THE MONTGOMERY ADVERTISER\nMiss Capouya And Mr. Capouano Wed\nMiss Selma Capouya became the bride of David Capouano at a fashionable ceremony which took place in the evening of June 8, at Temple Etz Ahayem. The ceremony was performed by Rabbi Eugene Blachschleger of Temple Beth-Or, and H. Ehrlich and Miss Martin Segall presented the nuptial music.\nThe ceremony took place under a canopy which had background of greenery. In the center were baskets filled with Ascension lilies and carnations. On either side were candelabra and white standard baskets filled with flowers. The front of the rostrum was outlined with baskets of flowers and ferns.\nThe bride wore an original Tafet model created of bridal satin cut on princess lines with long sleeves ending in points over the hands. The neckline was V-shape caught on either side with pearl clips. The bodice of the gown was fitted into a softly gathered girdle. The voluminous skirt extended into a lengthy train. The full length veil of illusion was attached to a coronet of pearls and net.\nMiss Rita Capouya, sister of the bride, was maid of honor and Mrs. Morris Capouano, the groom's sister-in-law, was the matron of honor. Both wore gowns developed of silk marquisette over taffeta foundations in nile yellow with heart-shape necklines and long bishop sleeves. The bodice was form-fitting softly gathered in a wide girdle effect. The extremely full skirts were finished with deep peplums. They each wore matching hats adorned with flowers.\nThe bridesmaids included Misses Amelia Capilouto, of Atlanta, Fortune Capouya, Marie Capilouto, Regina Rousso of Atlanta, Clara Capouano, Pat Capouya. They wore similar gowns as the maid of honor in nile green.\nMr. Capouano chose his brother, Morris Capouano, as best man. Groomsmen were Isaac Hasson, Dr. Morris N. Capouya, Al Capouano, Albert Capouya, Morris Nelon and Joe Mussafer of Atlanta, Ga.\nMrs. Isaac Capouya, mother of the bride, wearing a blue lace gown, led the bridal procession, followed by the maid of honor and matron of honor.\nThe bride entered with her father, Isaac Capouya, and they were met at the altar by the bridegroom and the best man.\nImmediately following the ceremony...\nIS RECENT BRIDE: Mrs. David Capouano, before her marriage which took place June 8, at Temple Etz Ahayem, was Miss Selma Capouya, the wedding being an event of interest to the wide circle of the friends of the bride and groom.\nGlorious Fourth Also Deadly;\nMONTGOMERY FAIR\nAIR CONDITIONED BEAUTY SALON\nIf You're Out in The Sun THEN...",
+          "language": "English",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "single subject standing, full length"
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "halftone pattern visible",
+            "low contrast",
+            "some text cut off"
+          ]
+        },
+        "subject_ages": [
+          22
+        ]
+      },
+      "input_tokens": 2204,
+      "output_tokens": 1676,
+      "cost": 0.024519999999999997,
+      "latency_seconds": 13.94,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": [
+        {
+          "date_estimation": {
+            "evidence": {
+              "print_format": [
+                {
+                  "cue": "Printed biographical text alongside a halftone portrait, typical of a directory, registry, or published book.",
+                  "strength": "strong",
+                  "suggested_range": [
+                    1938,
+                    1950
+                  ]
+                }
+              ],
+              "fashion": [
+                {
+                  "cue": "Man wearing a wide-brimmed sun hat (pith helmet or similar tropical style) and a light-colored collared shirt, typical of European colonial attire in Africa.",
+                  "strength": "moderate",
+                  "suggested_range": [
+                    1920,
+                    1950
+                  ]
+                }
+              ],
+              "environment": [
+                {
+                  "cue": "Tropical vegetation (palm fronds) visible in the background of the portrait.",
+                  "strength": "moderate",
+                  "suggested_range": [
+                    1920,
+                    1950
+                  ]
+                }
+              ],
+              "technology": [
+                {
+                  "cue": "Halftone printing process used for the photograph reproduction.",
+                  "strength": "moderate",
+                  "suggested_range": [
+                    1920,
+                    1960
+                  ]
+                }
+              ]
+            },
+            "cultural_lag_applied": false,
+            "cultural_lag_note": "Not applicable; this is a published document, and the fashion reflects colonial attire rather than traditional Sephardic dress.",
+            "estimated_decade": 1940,
+            "best_year_estimate": 1945,
+            "confidence": "high",
+            "probable_range": [
+              1938,
+              1950
+            ],
+            "decade_probabilities": {
+              "1930": 0.2,
+              "1940": 0.6,
+              "1950": 0.2
+            },
+            "reasoning_summary": "The text explicitly mentions events up to 1938 ('Depuis 1938...'), indicating the publication must date from 1938 or later. The style of the publication and the subject's age (born 1905, appearing in his late 30s or 40s) strongly suggest a date in the late 1930s or 1940s."
+          },
+          "face_analysis": [
+            {
+              "face_index": 0,
+              "estimated_age": 40,
+              "gender": "male",
+              "description": "Man with dark hair, wearing a wide-brimmed hat, looking directly at the camera with a slight smile. He appears to be in his late 30s or 40s."
+            }
+          ],
+          "location": {
+            "place": "Belgian Congo (based on text)",
+            "confidence": "high",
+            "evidence": "The text explicitly details his life and career in the 'Congo Belge', specifically mentioning Jadotville, Port Francqui, Kamina, and Mweka. The tropical background in the photo supports an African location."
+          },
+          "cultural_markers": [
+            "Colonial attire (tropical hat)",
+            "Biographical text detailing migration from Rhodes to the Belgian Congo, a common trajectory for Sephardic Jews from Rhodes in the early 20th century."
+          ],
+          "clothing_notes": "The subject is wearing a light-colored, open-collared shirt and a wide-brimmed sun hat, characteristic of European expatriates or colonists in tropical climates during the mid-20th century.",
+          "photo_technique": {
+            "type": "halftone print",
+            "format": "book or directory page",
+            "is_color": false,
+            "condition": "good"
+          },
+          "visible_text": {
+            "detected": true,
+            "text": "CAPELOUTO Ha\u00efm, David Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes le 25 mai 1905.\nIl y est employ\u00e9 de bureau jusqu'au moment de son d\u00e9part pour le Congo Belge. Arriv\u00e9 \u00e0 la Colonie par ses propres moyens, le 6 novembre 1926, il y est engag\u00e9 pendant 5 mois par la firme \u00ab Franco \u00bb, \u00e0 Jadotville, puis il s'y installe commer\u00e7ant \u00e0 son compte. En juin 1932 il cesse son commerce et entre au service de la firme \u00ab Alzraki \u00bb, \u00e0 Jadotville, puis il passe \u00e0 la maison \u00ab Amato Fres \u00bb o\u00f9 il reste jusqu'en juin 1938, ayant \u00e9t\u00e9 d\u00e9tach\u00e9 entretemps \u00e0 Port Francqui et Kamina. Depuis 1938, il s'est install\u00e9 commer\u00e7ant \u00e0 son compte \u00e0 Mweka.",
+            "language": "French",
+            "script": "Latin"
+          },
+          "group_composition": {
+            "type": "formal_portrait",
+            "people_count": 1,
+            "arrangement": "Single headshot portrait accompanying biographical text."
+          },
+          "condition": {
+            "overall": "good",
+            "issues": [
+              "halftone dot pattern visible",
+              "slight blurring"
+            ]
+          },
+          "subject_ages": [
+            40
+          ]
+        }
+      ],
+      "input_tokens": 2171,
+      "output_tokens": 1244,
+      "cost": 0.019270000000000002,
+      "latency_seconds": 16.37,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Warm-toned gelatin silver print with soft vignetting",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1930
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "High stiff white collar, wide patterned tie with tie pin, slicked-back hair with pomade",
+                "strength": "strong",
+                "suggested_range": [
+                  1915,
+                  1925
+                ]
+              },
+              {
+                "cue": "Multi-pointed pocket square and wide suit lapels",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1930
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Mottled studio backdrop",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1940
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Explicit handwritten date 'Agosto 1922'",
+                "strength": "strong",
+                "suggested_range": [
+                  1922,
+                  1922
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Not necessary due to explicit date written on the photograph.",
+          "estimated_decade": 1920,
+          "best_year_estimate": 1922,
+          "confidence": "high",
+          "probable_range": [
+            1922,
+            1922
+          ],
+          "decade_probabilities": {
+            "1910": 0.01,
+            "1920": 0.99
+          },
+          "reasoning_summary": "The photograph features a clear handwritten inscription dating it to August 1922, which perfectly aligns with the subject's era-specific fashion, including the high stiff collar and slicked hair."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 30,
+            "gender": "male",
+            "description": "Young adult male, dark slicked-back hair parted on the side, clean-shaven, prominent ears, serious expression."
+          }
+        ],
+        "location": {
+          "place": "Buenos Aires, Argentina",
+          "confidence": "high",
+          "evidence": "Handwritten inscription explicitly states 'Buenos Aires'."
+        },
+        "cultural_markers": [
+          "Ladino/Spanish inscription sent to family member",
+          "Common Sephardic name 'Estrella'",
+          "Evidence of Sephardic diaspora migration to South America (Buenos Aires)"
+        ],
+        "clothing_notes": "Dark wool suit with wide lapels, high stiff white collar, wide patterned tie with a prominent tie pin, multi-pointed white pocket square, and a small round lapel pin.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "studio portrait",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "A mi querida hermana Estrella de tu hermano Samuel. Agosto 1922 Buenos Aires",
+          "language": "Spanish/Ladino",
+          "script": "Latin cursive"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single male subject, head and shoulders portrait, angled slightly to the left, looking directly at the camera."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "surface scratches",
+            "fading",
+            "silver mirroring at edges",
+            "ink fading"
+          ]
+        },
+        "subject_ages": [
+          30
+        ]
+      },
+      "input_tokens": 2207,
+      "output_tokens": 952,
+      "cost": 0.015838,
+      "latency_seconds": 23.31,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Color snapshot print",
+                "strength": "strong",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Women's sleeveless patterned dresses, men's wide-collared shirts",
+                "strength": "strong",
+                "suggested_range": [
+                  1970,
+                  1979
+                ]
+              },
+              {
+                "cue": "Hairstyles (bouffant, short perms)",
+                "strength": "moderate",
+                "suggested_range": [
+                  1965,
+                  1975
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Interior dining setting with wood paneling and built-in shelving",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Color film photography, likely 35mm or Instamatic",
+                "strength": "strong",
+                "suggested_range": [
+                  1965,
+                  1985
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Fashion appears relatively contemporary for the 1970s.",
+          "estimated_decade": 1970,
+          "best_year_estimate": 1975,
+          "confidence": "high",
+          "probable_range": [
+            1970,
+            1979
+          ],
+          "decade_probabilities": {
+            "1960": 0.1,
+            "1970": 0.8,
+            "1980": 0.1
+          },
+          "reasoning_summary": "The color snapshot format, combined with the specific clothing styles (sleeveless patterned dresses, wide collars) and hairstyles, strongly points to the 1970s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 75,
+            "gender": "female",
+            "description": "Elderly woman seated on far left, wearing a blue patterned dress."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Older man seated, balding, wearing a light blue collared shirt."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 55,
+            "gender": "female",
+            "description": "Woman seated, wearing a sleeveless floral dress, holding a plate."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Man seated behind the woman in floral, wearing a white shirt."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 50,
+            "gender": "female",
+            "description": "Woman seated in center, wearing a sleeveless blue patterned dress."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 55,
+            "gender": "female",
+            "description": "Woman seated to the right, wearing a sleeveless patterned dress."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 30,
+            "gender": "male",
+            "description": "Younger man standing in back left, wearing a white shirt."
+          },
+          {
+            "face_index": 7,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Younger woman standing in back center, wearing a red and white striped top."
+          },
+          {
+            "face_index": 8,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Man standing in back right, wearing a white shirt."
+          },
+          {
+            "face_index": 9,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Older man seated on far right, wearing a white shirt."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "Interior dining room, no specific geographic markers visible."
+        },
+        "cultural_markers": [
+          "Large family gathering around a dining table"
+        ],
+        "clothing_notes": "Women are wearing sleeveless, patterned dresses typical of the 1960s/1970s. Men are wearing casual collared shirts, some with wide collars.",
+        "photo_technique": {
+          "type": "chromogenic print",
+          "format": "snapshot",
+          "is_color": true,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "LE\u00d3N GALANTE/GALANTI, REGINA BENVENISTE, RICCA BENVENISTE, ROBERTO GALANTI, CLARA FEL, ABRAHAM FEL",
+          "language": "Spanish/Ladino names",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 10,
+          "arrangement": "Large group seated and standing around a dining table."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight color shift/fading typical of older color prints"
+          ]
+        },
+        "subject_ages": [
+          75,
+          60,
+          55,
+          60,
+          50,
+          55,
+          30,
+          30,
+          60,
+          65
+        ]
+      },
+      "input_tokens": 2190,
+      "output_tokens": 1470,
+      "cost": 0.022019999999999998,
+      "latency_seconds": 18.82,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Studio portrait style with painted backdrop",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1930
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Women's dropped waist dresses and bobbed hair",
+                "strength": "strong",
+                "suggested_range": [
+                  1920,
+                  1929
+                ]
+              },
+              {
+                "cue": "Men's high stiff collars and narrow ties",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1925
+                ]
+              },
+              {
+                "cue": "Children's sailor collars and knee socks",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1930
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Studio setting, no specific geographic markers",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1940
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Soft focus, typical of early 20th-century portraiture",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1930
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion elements like the dropped waist and bobbed hair suggest the 1920s, but conservative studio portraiture in immigrant or traditional communities might lag slightly.",
+          "estimated_decade": 1920,
+          "best_year_estimate": 1925,
+          "confidence": "medium",
+          "probable_range": [
+            1920,
+            1930
+          ],
+          "decade_probabilities": {
+            "1910": 0.1,
+            "1920": 0.8,
+            "1930": 0.1
+          },
+          "reasoning_summary": "The combination of women's 1920s fashion (bobbed hair, dropped waists) with slightly older men's styles (stiff collars) strongly points to the mid-to-late 1920s, accounting for potential cultural lag in formal portraits."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "Standing far left, wearing a light-colored dress, dark hair."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Standing left, wearing a dark dress with a white collar, dark hair."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 8,
+            "gender": "female",
+            "description": "Seated far left, wearing a dark dress with a white collar, dark hair."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 22,
+            "gender": "female",
+            "description": "Standing behind seated woman, wearing a light-colored dress, dark hair."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Seated center, wearing a dark dress with a prominent white lace collar, dark hair."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 50,
+            "gender": "male",
+            "description": "Standing center back, wearing a dark suit, white shirt, and tie, mustache."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 14,
+            "gender": "female",
+            "description": "Standing right of center, wearing a dark dress with a white collar, dark hair."
+          },
+          {
+            "face_index": 7,
+            "estimated_age": 28,
+            "gender": "female",
+            "description": "Standing back right, wearing a light-colored dress and necklace, dark hair."
+          },
+          {
+            "face_index": 8,
+            "estimated_age": 10,
+            "gender": "male",
+            "description": "Standing right, wearing a light-colored suit with a sailor collar, light hair."
+          },
+          {
+            "face_index": 9,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Standing far right, wearing a dark dress or coat, dark hair."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "Studio backdrop provides no specific geographic clues."
+        },
+        "cultural_markers": [
+          "Formal studio portraiture typical of the era, potentially indicating a significant family event or immigration."
+        ],
+        "clothing_notes": "Women are wearing dresses with dropped waists and prominent white collars, typical of the 1920s. The man wears a formal suit with a stiff collar. Children are dressed in formal attire, including sailor collars.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "studio portrait",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 10,
+          "arrangement": "Large family group, arranged in two rows, with older members seated and younger members standing."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "fading",
+            "soft focus",
+            "some loss of detail in shadows"
+          ]
+        },
+        "subject_ages": [
+          25,
+          12,
+          8,
+          22,
+          45,
+          50,
+          14,
+          28,
+          10,
+          30
+        ]
+      },
+      "input_tokens": 2179,
+      "output_tokens": 1575,
+      "cost": 0.023258,
+      "latency_seconds": 13.54,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Black and white snapshot with white border, typical aspect ratio for mid-century consumer cameras",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Women's sleeveless shift dresses and bold floral prints",
+                "strength": "strong",
+                "suggested_range": [
+                  1960,
+                  1968
+                ]
+              },
+              {
+                "cue": "Cat-eye glasses worn by older woman in center",
+                "strength": "strong",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Men's narrow ties and fedora/panama hats",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Women's bouffant and short curled hairstyles",
+                "strength": "strong",
+                "suggested_range": [
+                  1960,
+                  1969
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Synagogue interior with painted Hebrew text and Star of David",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1990
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Direct flash photography causing harsh shadows on the wall behind the subjects",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "The fashion appears very current for the early-to-mid 1960s American style, suggesting this is likely a diaspora community (e.g., Florida) rather than a remote location with significant cultural lag.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1963,
+          "confidence": "high",
+          "probable_range": [
+            1960,
+            1966
+          ],
+          "decade_probabilities": {
+            "1940": 0.01,
+            "1950": 0.14,
+            "1960": 0.8,
+            "1970": 0.05
+          },
+          "reasoning_summary": "The combination of women's sleeveless shift dresses, bouffant hairstyles, cat-eye glasses, and men's narrow ties strongly points to the early to mid-1960s. The casual summer attire mixed with formal suits suggests a warm climate diaspora community."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Standing far left, wearing dark suit, white shirt, and dark sunglasses."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Standing left, wearing a white sleeveless dress, light hair."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Standing behind face 1, wearing a dark hat and suit."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 50,
+            "gender": "male",
+            "description": "Standing front left-center, wearing a dark suit, narrow tie, and glasses."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Standing behind face 3, wearing glasses and a light shirt."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Standing left-center, wearing a dark patterned sleeveless dress."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 40,
+            "gender": "male",
+            "description": "Standing behind face 5, wearing a light fedora hat."
+          },
+          {
+            "face_index": 7,
+            "estimated_age": 30,
+            "gender": "male",
+            "description": "Standing center-left, wearing a white shirt with open collar, dark trousers."
+          },
+          {
+            "face_index": 8,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Standing behind face 7, dark hair."
+          },
+          {
+            "face_index": 9,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Standing behind face 8, dark hair, looking forward."
+          },
+          {
+            "face_index": 10,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Standing center, wearing a dark suit jacket over an open-collared white shirt."
+          },
+          {
+            "face_index": 11,
+            "estimated_age": 50,
+            "gender": "female",
+            "description": "Standing behind face 10, wearing a light head covering or scarf."
+          },
+          {
+            "face_index": 12,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Standing behind face 11, dark hair."
+          },
+          {
+            "face_index": 13,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Standing back row center, wearing a dark fedora."
+          },
+          {
+            "face_index": 14,
+            "estimated_age": 50,
+            "gender": "male",
+            "description": "Standing prominent center, wearing a light-colored suit, tie, and straw panama hat."
+          },
+          {
+            "face_index": 15,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Standing behind face 14, dark hair."
+          },
+          {
+            "face_index": 16,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Standing back row, wearing a light fedora."
+          },
+          {
+            "face_index": 17,
+            "estimated_age": 65,
+            "gender": "female",
+            "description": "Standing center-right, older woman with white hair, wearing cat-eye glasses and a floral dress."
+          },
+          {
+            "face_index": 18,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Standing behind face 17, dark hair."
+          },
+          {
+            "face_index": 19,
+            "estimated_age": 50,
+            "gender": "male",
+            "description": "Standing back row, wearing a dark fedora."
+          },
+          {
+            "face_index": 20,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Standing behind face 17, wearing glasses."
+          },
+          {
+            "face_index": 21,
+            "estimated_age": 70,
+            "gender": "female",
+            "description": "Standing behind face 20, older woman with white hair."
+          },
+          {
+            "face_index": 22,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Standing right-center, wearing a dark sleeveless dress and a headscarf."
+          },
+          {
+            "face_index": 23,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Standing behind face 22, wearing glasses and a dark hat."
+          },
+          {
+            "face_index": 24,
+            "estimated_age": 50,
+            "gender": "female",
+            "description": "Standing back row right, light hair."
+          },
+          {
+            "face_index": 25,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Standing back row right, wearing a light hat."
+          },
+          {
+            "face_index": 26,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Standing right, wearing a dark suit, white shirt, and glasses."
+          },
+          {
+            "face_index": 27,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Standing behind face 26, dark hair."
+          },
+          {
+            "face_index": 28,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Standing back row far right, wearing a hat."
+          },
+          {
+            "face_index": 29,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Standing front right, wearing a light-colored sleeveless dress."
+          },
+          {
+            "face_index": 30,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Standing far right, wearing a light floral sleeveless dress."
+          },
+          {
+            "face_index": 31,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Standing far right edge, wearing a dark suit and a kippah."
+          },
+          {
+            "face_index": 32,
+            "estimated_age": 10,
+            "gender": "female",
+            "description": "Kneeling front left, wearing a white sleeveless top."
+          },
+          {
+            "face_index": 33,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Kneeling front center-left, wearing a white sleeveless top."
+          },
+          {
+            "face_index": 34,
+            "estimated_age": 8,
+            "gender": "male",
+            "description": "Sitting front center-right, wearing a striped t-shirt."
+          },
+          {
+            "face_index": 35,
+            "estimated_age": 10,
+            "gender": "male",
+            "description": "Sitting front right, wearing a white shirt and shorts."
+          }
+        ],
+        "location": {
+          "place": "Synagogue or Jewish Community Center, likely Florida (Miami/Tampa) or Israel",
+          "confidence": "medium",
+          "evidence": "Presence of Hebrew text and Star of David on the wall indicates a Jewish institutional setting. The warm-weather clothing (sleeveless dresses, panama hats) combined with 1960s American fashion strongly suggests a southern US diaspora community like Florida."
+        },
+        "cultural_markers": [
+          "Star of David (Magen David) painted on the wall",
+          "Hebrew inscriptions on the wall",
+          "Men wearing hats indoors (fedoras, panamas) serving as head coverings in a religious space",
+          "Man on far right wearing a visible kippah (yarmulke)"
+        ],
+        "clothing_notes": "The clothing is indicative of summer or warm-weather formal/semi-formal wear from the early 1960s. Women are predominantly wearing sleeveless shift or A-line dresses with floral patterns. Men are in a mix of dark and light suits, some with narrow ties and others with open collars. The presence of straw panama hats and fedoras worn indoors is notable.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "\u05d0\u05d2\u05d5\u05d3\u05ea... [Agudat...]",
+          "language": "Hebrew",
+          "script": "Hebrew square script"
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 36,
+          "arrangement": "Large multi-generational group arranged in three to four standing rows with four children kneeling or sitting in the front row."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor silvering in dark areas",
+            "soft focus on the edges"
+          ]
+        },
+        "subject_ages": [
+          55,
+          45,
+          65,
+          50,
+          60,
+          35,
+          40,
+          30,
+          35,
+          45,
+          45,
+          50,
+          40,
+          55,
+          50,
+          35,
+          60,
+          65,
+          40,
+          50,
+          45,
+          70,
+          40,
+          60,
+          50,
+          65,
+          55,
+          40,
+          60,
+          30,
+          35,
+          45,
+          10,
+          12,
+          8,
+          10
+        ]
+      },
+      "input_tokens": 2179,
+      "output_tokens": 2852,
+      "cost": 0.038582,
+      "latency_seconds": 57.46,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Square format color snapshot with white border, typical of Instamatic or similar consumer cameras",
+                "strength": "strong",
+                "suggested_range": [
+                  1965,
+                  1985
+                ]
+              },
+              {
+                "cue": "Color fading/shifting towards magenta/orange, common in 1970s color prints",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1985
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Woman's short, styled, slightly bouffant hair",
+                "strength": "moderate",
+                "suggested_range": [
+                  1965,
+                  1980
+                ]
+              },
+              {
+                "cue": "Simple dark short-sleeved dress with a contrasting collar/necklace",
+                "strength": "weak",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Wood-paneled or louvered folding doors/shutters",
+                "strength": "weak",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              },
+              {
+                "cue": "Gold/mustard colored drapes",
+                "strength": "moderate",
+                "suggested_range": [
+                  1965,
+                  1980
+                ]
+              },
+              {
+                "cue": "Formica or similar laminate table top in background",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Stackable plastic or ceramic mugs (blue and white, pink and white stripes)",
+                "strength": "strong",
+                "suggested_range": [
+                  1970,
+                  1985
+                ]
+              },
+              {
+                "cue": "Patterned paper plates or casual dinnerware",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1985
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "This appears to be a casual domestic scene in the US, likely not subject to significant cultural lag in terms of the household items and photo format.",
+          "estimated_decade": 1970,
+          "best_year_estimate": 1975,
+          "confidence": "high",
+          "probable_range": [
+            1972,
+            1982
+          ],
+          "decade_probabilities": {
+            "1960": 0.1,
+            "1970": 0.7,
+            "1980": 0.2
+          },
+          "reasoning_summary": "The square color snapshot format with a white border, the specific color degradation (magenta shift), the style of the coffee mugs, and the interior decor (gold drapes) strongly point to the 1970s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 65,
+            "gender": "female",
+            "description": "Older woman with short, styled grey/brown hair, looking down at her hands."
+          }
+        ],
+        "location": {
+          "place": "United States (likely New York or Florida diaspora community)",
+          "confidence": "medium",
+          "evidence": "Typical American middle-class interior decor and consumer goods (mugs, plates) from the 1970s."
+        },
+        "cultural_markers": [
+          "None explicitly visible, though the setting is consistent with a casual family gathering or meal in a diaspora home."
+        ],
+        "clothing_notes": "The woman is wearing a dark, short-sleeved dress with a red and white striped collar detail or undergarment visible at the neckline. She wears a gold pendant necklace and a gold bracelet.",
+        "photo_technique": {
+          "type": "chromogenic color print",
+          "format": "square snapshot",
+          "is_color": true,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 1,
+          "arrangement": "Single person standing at a table, engaged in an activity (folding a napkin or preparing food)."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "color fading/shifting (magenta cast)",
+            "slight blurring"
+          ]
+        },
+        "subject_ages": [
+          65
+        ]
+      },
+      "input_tokens": 2204,
+      "output_tokens": 1217,
+      "cost": 0.019011999999999998,
+      "latency_seconds": 13.95,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "2b0e354d49e51d29",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Black and white snapshot with white borders",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Child's sleeveless light-colored dress, dark shoes with light socks",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              },
+              {
+                "cue": "Short, curly hairstyle with a bow or clip",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "House with screened-in porch, brick foundation, and vertical siding",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1960
+                ]
+              }
+            ],
+            "technology": []
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Not strongly applicable here as this appears to be a casual snapshot, likely in the US given the architecture.",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1945,
+          "confidence": "medium",
+          "probable_range": [
+            1935,
+            1955
+          ],
+          "decade_probabilities": {
+            "1930": 0.3,
+            "1940": 0.5,
+            "1950": 0.2
+          },
+          "reasoning_summary": "The snapshot format, child's clothing, hairstyle, and the style of the house (screened porch, brick foundation) suggest a date between the late 1930s and early 1950s, likely in the US."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 4,
+            "gender": "female",
+            "description": "Young girl with dark, curly hair, looking directly at the camera."
+          }
+        ],
+        "location": {
+          "place": "United States (likely South or Midwest based on architecture)",
+          "confidence": "medium",
+          "evidence": "Wood-frame house with a brick foundation and a large screened-in porch, typical of American residential architecture in warmer climates."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "The child is wearing a light-colored, sleeveless dress, possibly a pinafore style, over a patterned blanket or cloth. She wears dark shoes and light-colored socks.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 1,
+          "arrangement": "Single child sitting on the grass near a tree."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "fading",
+            "scratches",
+            "creases near the bottom edge"
+          ]
+        },
+        "subject_ages": [
+          4
+        ]
+      },
+      "input_tokens": 2190,
+      "output_tokens": 870,
+      "cost": 0.01482,
+      "latency_seconds": 12.68,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "213d4dcc10a7745d",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Square format snapshot with white borders",
+                "strength": "strong",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Women's cardigans, knee-length skirts, and short, styled hair",
+                "strength": "strong",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Men's casual short-sleeve button-down shirts and high-waisted trousers",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1965
+                ]
+              },
+              {
+                "cue": "Young girl's dress with cardigan and cross-body purse",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Tropical/subtropical vegetation (palm trees) and flat grassy area",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Casual snapshot photography style",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "The clothing appears relatively contemporary for the late 1950s/early 1960s, suggesting a diaspora community (like Miami) rather than a lagging old-world style.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1960,
+          "confidence": "high",
+          "probable_range": [
+            1958,
+            1964
+          ],
+          "decade_probabilities": {
+            "1950": 0.3,
+            "1960": 0.7
+          },
+          "reasoning_summary": "The square snapshot format with white borders, combined with the casual 1950s/early 1960s fashion (cardigans, short-sleeve button-downs) and tropical setting, strongly points to circa 1960, likely in Florida."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Standing left, short dark hair, wearing a short-sleeve polo-style shirt."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 70,
+            "gender": "female",
+            "description": "Standing center-left, white hair, wearing a dark top and scarf."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Kneeling front-left, short dark wavy hair, wearing a cardigan and patterned skirt."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Standing center-right, balding with glasses, wearing a plaid short-sleeve shirt."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Kneeling front-right, hair pulled back, wearing a dress, cardigan, and cross-body purse."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 60,
+            "gender": "female",
+            "description": "Standing right, dark hair pulled back, wearing a cardigan over a plaid dress, arms crossed."
+          }
+        ],
+        "location": {
+          "place": "Miami or Tampa, Florida",
+          "confidence": "medium",
+          "evidence": "Palm trees, flat grassy lawn, and casual warm-weather clothing suggest a subtropical diaspora location like Florida."
+        },
+        "cultural_markers": [
+          "Multigenerational family gathering"
+        ],
+        "clothing_notes": "Casual mid-century American fashion. Men in short-sleeve shirts (polo and plaid button-down). Women wearing cardigans over dresses or skirts. The young girl has a cross-body box purse typical of the late 50s/early 60s.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 6,
+          "arrangement": "Four adults standing in the back, two younger females kneeling in the front."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "minor dust/scratches",
+            "slight fading"
+          ]
+        },
+        "subject_ages": [
+          55,
+          70,
+          35,
+          65,
+          12,
+          60
+        ]
+      },
+      "input_tokens": 2203,
+      "output_tokens": 1360,
+      "cost": 0.020726,
+      "latency_seconds": 12.99,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "b9f591a56e25b71a",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Square format snapshot with white border, typical of 126 or 127 film formats popular in the 1960s.",
+                "strength": "strong",
+                "suggested_range": [
+                  1960,
+                  1969
+                ]
+              },
+              {
+                "cue": "Date stamp on the right border 'MAY 62'",
+                "strength": "strong",
+                "suggested_range": [
+                  1962,
+                  1962
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Men's short-sleeved button-down shirts, high-waisted trousers, narrow belts.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Women's sleeveless dresses, bouffant hairstyles, cat-eye sunglasses.",
+                "strength": "strong",
+                "suggested_range": [
+                  1960,
+                  1965
+                ]
+              },
+              {
+                "cue": "Boy's short shorts and patterned short-sleeve shirt.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Girl's short shorts, t-shirt, and casual hairstyle.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1970
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Theme park setting with ornate Victorian-style architecture and fringed umbrellas, strongly resembling Disneyland's Main Street U.S.A. or a similar area.",
+                "strength": "strong",
+                "suggested_range": [
+                  1955,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Camera strap visible on the man on the left, indicating consumer photography.",
+                "strength": "weak",
+                "suggested_range": [
+                  1950,
+                  1980
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "The subjects appear to be wearing contemporary American fashion for a vacation setting; cultural lag is not a significant factor here.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1962,
+          "confidence": "high",
+          "probable_range": [
+            1962,
+            1962
+          ],
+          "decade_probabilities": {
+            "1950": 0.05,
+            "1960": 0.95
+          },
+          "reasoning_summary": "The photograph has a clear date stamp of 'MAY 62' on the border. The fashion, hairstyles, and theme park setting (likely Disneyland) perfectly align with this date."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Man with short hair, wearing glasses, smiling."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Woman with dark, styled hair, smiling, leaning in."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 7,
+            "gender": "male",
+            "description": "Young boy looking slightly away from the camera."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Older man with glasses, smiling broadly."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 60,
+            "gender": "female",
+            "description": "Older woman with styled hair, wearing cat-eye sunglasses."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Young girl smiling, holding items."
+          }
+        ],
+        "location": {
+          "place": "Disneyland, California (likely)",
+          "confidence": "medium",
+          "evidence": "The ornate Victorian-style building, fringed umbrellas, and wrought-iron fencing strongly suggest a theme park setting like Disneyland's Main Street U.S.A. or Plaza Inn area, which opened in 1955."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "Casual vacation attire typical of the early 1960s. Men in short-sleeve button-downs and slacks; women in sleeveless dresses/tops; children in shorts. Cat-eye sunglasses on the older woman are a strong era marker.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "MAY 62",
+          "language": "English",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 6,
+          "arrangement": "Multi-generational family group standing together for a posed snapshot in a public setting."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "minor scratches",
+            "dust spots"
+          ]
+        },
+        "subject_ages": [
+          45,
+          40,
+          7,
+          65,
+          60,
+          12
+        ]
+      },
+      "input_tokens": 2204,
+      "output_tokens": 1450,
+      "cost": 0.021807999999999998,
+      "latency_seconds": 14.92,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "2e5836aeceae8c6d",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Sepia-toned or warm-toned black and white print, typical of mid-20th century studio portraits.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Baby wearing a simple, light-colored smocked or gathered gown/dress, common for infants across many decades but style suggests mid-20th century.",
+                "strength": "weak",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              },
+              {
+                "cue": "Hair styled with a small tuft or curl on top, a common way to style infant hair.",
+                "strength": "weak",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Studio setting with satin or silk-like draped fabric background, typical of professional baby portraits.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Soft lighting and focus typical of professional studio photography of the era.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Infant clothing and studio portrait styles for babies are relatively universal and less subject to significant cultural lag compared to adult fashion.",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1945,
+          "confidence": "medium",
+          "probable_range": [
+            1935,
+            1955
+          ],
+          "decade_probabilities": {
+            "1930": 0.2,
+            "1940": 0.5,
+            "1950": 0.3
+          },
+          "reasoning_summary": "The warm tone of the print, the style of the baby's gown, and the use of draped satin in a studio setting suggest a date between the late 1930s and 1950s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 0,
+            "gender": "unknown",
+            "description": "Infant with dark hair styled in a small tuft on top, large dark eyes, looking slightly off-camera."
+          }
+        ],
+        "location": {
+          "place": "Unknown Studio",
+          "confidence": "low",
+          "evidence": "Generic studio backdrop with draped fabric provides no specific geographic clues."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "The infant is wearing a light-colored, possibly white, short-sleeved gown or dress with some gathering or smocking at the yoke.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "studio portrait",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single infant lying down on draped fabric."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor surface wear"
+          ]
+        },
+        "subject_ages": [
+          0
+        ]
+      },
+      "input_tokens": 2207,
+      "output_tokens": 950,
+      "cost": 0.015814,
+      "latency_seconds": 12.01,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "a8a1730722a4cdeb",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Color snapshot with typical 1970s/80s fading and color shift (reddish/orange cast)",
+                "strength": "strong",
+                "suggested_range": [
+                  1975,
+                  1985
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Woman's short, layered haircut and simple, loose-fitting top",
+                "strength": "moderate",
+                "suggested_range": [
+                  1978,
+                  1988
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Interior decor, wood paneling/cabinetry, patterned curtains",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1985
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Plastic high chair tray and clear plastic rattle toy",
+                "strength": "strong",
+                "suggested_range": [
+                  1975,
+                  1990
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Not applicable for this era/style of candid snapshot.",
+          "estimated_decade": 1980,
+          "best_year_estimate": 1982,
+          "confidence": "medium",
+          "probable_range": [
+            1978,
+            1986
+          ],
+          "decade_probabilities": {
+            "1970": 0.3,
+            "1980": 0.7
+          },
+          "reasoning_summary": "The color shift of the print, the woman's hairstyle, and the plastic baby items strongly suggest the late 1970s to early 1980s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 1,
+            "gender": "male",
+            "description": "Smiling infant sitting in a high chair."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Smiling woman with short, dark, layered hair looking at the infant."
+          }
+        ],
+        "location": {
+          "place": "Unknown interior (likely US based on context)",
+          "confidence": "low",
+          "evidence": "Generic domestic interior."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "Infant in a simple light-colored top. Woman wearing a light green, short-sleeved, loose-fitting top and a watch with a light-colored band.",
+        "photo_technique": {
+          "type": "chromogenic print",
+          "format": "snapshot",
+          "is_color": true,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 2,
+          "arrangement": "Mother interacting with baby in high chair"
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "color fading/shift (red cast)",
+            "dust spots",
+            "scratches"
+          ]
+        },
+        "subject_ages": [
+          1,
+          30
+        ]
+      },
+      "input_tokens": 2207,
+      "output_tokens": 881,
+      "cost": 0.014986,
+      "latency_seconds": 13.91,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "662e24c4f38575ca",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Cardboard mount with decorative border and patriotic USA eagle motif",
+                "strength": "strong",
+                "suggested_range": [
+                  1941,
+                  1945
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "US Army enlisted man's uniform (olive drab wool service coat, peaked cap with enlisted cap badge)",
+                "strength": "strong",
+                "suggested_range": [
+                  1941,
+                  1945
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Military uniforms do not exhibit cultural lag; they are strictly regulated by the issuing authority.",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1943,
+          "confidence": "high",
+          "probable_range": [
+            1943,
+            1943
+          ],
+          "decade_probabilities": {
+            "1940": 1
+          },
+          "reasoning_summary": "The photograph is explicitly dated '2/12/43' in the upper left corner. The subject is wearing a WWII-era US Army uniform, and the mount features a patriotic wartime design, confirming the handwritten date."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 20,
+            "gender": "male",
+            "description": "Young man with dark hair, wearing a military peaked cap, looking directly at the camera with a slight smile."
+          }
+        ],
+        "location": {
+          "place": "United States",
+          "confidence": "high",
+          "evidence": "US Army uniform and 'USA' patriotic mount."
+        },
+        "cultural_markers": [
+          "Patriotic wartime photo mount"
+        ],
+        "clothing_notes": "US Army enlisted man's olive drab wool service coat with brass buttons, light-colored shirt, dark tie, and peaked service cap with the enlisted US eagle badge.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "studio portrait in cardboard folder/mount",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "2/12/43\nUSA\nWith Love\nYour nephew\nPat M. Mezal",
+          "language": "English",
+          "script": "Latin (cursive and printed)"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Head and shoulders portrait of a single individual."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "minor edge wear on the mount",
+            "slight silver mirroring or fading in the dark areas of the print"
+          ]
+        },
+        "subject_ages": [
+          20
+        ]
+      },
+      "input_tokens": 2207,
+      "output_tokens": 769,
+      "cost": 0.013642000000000001,
+      "latency_seconds": 22.15,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "b9aa84ba4717fbc9",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Square format snapshot with white borders",
+                "strength": "strong",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Men's short-sleeve button-down shirts, high-waisted pleated trousers",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1965
+                ]
+              },
+              {
+                "cue": "Women's cat-eye sunglasses, bouffant/teased hair",
+                "strength": "strong",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Boy's patterned polo shirt and shorts",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Ornate Victorian-style architecture and fringed umbrellas, typical of Disneyland's Main Street U.S.A. or similar theme park",
+                "strength": "strong",
+                "suggested_range": [
+                  1955,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Camera worn around neck in leather case (likely 35mm rangefinder or similar)",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "This appears to be a vacation snapshot in a mainstream American setting (likely Disneyland), so cultural lag is less applicable here than in formal community portraits.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1962,
+          "confidence": "high",
+          "probable_range": [
+            1958,
+            1965
+          ],
+          "decade_probabilities": {
+            "1950": 0.3,
+            "1960": 0.7
+          },
+          "reasoning_summary": "The square snapshot format, cat-eye sunglasses, bouffant hairstyles, and men's casual wear strongly point to the late 1950s or early 1960s. The setting is highly indicative of a theme park like Disneyland (opened 1955)."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Older man wearing glasses, short-sleeve shirt, high-waisted trousers, holding a camera."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Younger woman with dark hair, smiling, standing behind the young boy."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 7,
+            "gender": "male",
+            "description": "Young boy in patterned polo shirt and shorts, standing in front."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Older man wearing glasses, plaid shirt, and a blazer, smiling broadly."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 55,
+            "gender": "female",
+            "description": "Older woman with teased/bouffant hair, wearing cat-eye sunglasses and a patterned dress."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Young girl with short curly hair, wearing a light t-shirt and shorts, holding a jacket or bag."
+          }
+        ],
+        "location": {
+          "place": "Disneyland (Main Street U.S.A. or Plaza Inn area), California, USA",
+          "confidence": "high",
+          "evidence": "The ornate Victorian-style building, wrought-iron railings, fringed umbrellas, and park benches are iconic features of Disneyland's Main Street U.S.A. or the Plaza Inn restaurant area."
+        },
+        "cultural_markers": [
+          "None explicitly visible; appears to be a typical American family vacation photo."
+        ],
+        "clothing_notes": "Men are wearing typical mid-century casual vacation wear (short-sleeve button-downs, high-waisted pleated pants, one blazer). Women show late 50s/early 60s trends with cat-eye sunglasses and bouffant hair. Children are in casual summer wear (polo, t-shirt, shorts).",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 6,
+          "arrangement": "Multi-generational family group standing together outdoors, posing for the camera."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "minor dust/scratches",
+            "slight fading"
+          ]
+        },
+        "subject_ages": [
+          55,
+          30,
+          7,
+          60,
+          55,
+          12
+        ]
+      },
+      "input_tokens": 2204,
+      "output_tokens": 1419,
+      "cost": 0.021435999999999997,
+      "latency_seconds": 13.88,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "d4fd0727068369ec",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Studio portrait with painted backdrop",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1930
+                ]
+              },
+              {
+                "cue": "Black and white gelatin silver print",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Young man's suit with high lapels, narrow tie, and slicked-back hair",
+                "strength": "strong",
+                "suggested_range": [
+                  1920,
+                  1935
+                ]
+              },
+              {
+                "cue": "Older woman's traditional head covering (kofya/yemeni style) and dark clothing",
+                "strength": "moderate",
+                "suggested_range": [
+                  1900,
+                  1940
+                ]
+              },
+              {
+                "cue": "Woman on right wearing a striped dress with a dropped waist or loose fit, typical of 1920s conservative styles",
+                "strength": "strong",
+                "suggested_range": [
+                  1920,
+                  1930
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Painted studio backdrop featuring classical arches and floral motifs",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1930
+                ]
+              }
+            ],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "The traditional dress of the older woman and the conservative style of the woman on the right suggest a lag behind mainstream Western fashion, typical of Sephardic communities in Rhodes or early immigrant communities.",
+          "estimated_decade": 1920,
+          "best_year_estimate": 1925,
+          "confidence": "medium",
+          "probable_range": [
+            1920,
+            1930
+          ],
+          "decade_probabilities": {
+            "1910": 0.1,
+            "1920": 0.7,
+            "1930": 0.2
+          },
+          "reasoning_summary": "The young man's suit and tie, along with the woman's striped dress, strongly point to the 1920s. The older woman's traditional attire and the painted studio backdrop are consistent with this era in a Sephardic context."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 22,
+            "gender": "male",
+            "description": "Young man with dark, slicked-back hair, wearing a dark suit and striped tie."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 75,
+            "gender": "female",
+            "description": "Elderly woman seated, wearing a traditional head covering and dark, heavy clothing."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Middle-aged woman standing, wearing a dark head covering and a striped, long-sleeved dress."
+          }
+        ],
+        "location": {
+          "place": "Rhodes, Greece (or immigrant community)",
+          "confidence": "medium",
+          "evidence": "The painted backdrop and traditional attire of the older woman are characteristic of studio portraits from Rhodes or early Sephardic immigrant communities."
+        },
+        "cultural_markers": [
+          "Traditional head covering (kofya/yemeni) worn by the elderly woman",
+          "Conservative, modest dress of the women",
+          "Formal studio portrait setting typical of the era"
+        ],
+        "clothing_notes": "The young man wears a modern (for the time) Western suit. The elderly woman wears traditional, likely Ottoman-influenced, Sephardic dress with a specific head covering. The middle-aged woman wears a transitional style: a Western-style striped dress but with a conservative cut and a head covering.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "studio portrait",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 3,
+          "arrangement": "Elderly woman seated in the center, flanked by a young man standing on the left and a middle-aged woman standing on the right."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "creases",
+            "scratches",
+            "silver mirroring (visible as lighter patches on dark areas)",
+            "fading"
+          ]
+        },
+        "subject_ages": [
+          22,
+          75,
+          45
+        ]
+      },
+      "input_tokens": 2222,
+      "output_tokens": 1258,
+      "cost": 0.019540000000000002,
+      "latency_seconds": 16.2,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "d0c83b767f767210",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Chromogenic color print with characteristic warm/magenta color shift",
+                "strength": "strong",
+                "suggested_range": [
+                  1970,
+                  1985
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Middle-parted long straight hair with slightly flipped ends",
+                "strength": "strong",
+                "suggested_range": [
+                  1972,
+                  1980
+                ]
+              },
+              {
+                "cue": "Full-band metal dental braces",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1989
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Heavy, carved wood paneling typical of mid-century to 1970s institutional or synagogue architecture",
+                "strength": "moderate",
+                "suggested_range": [
+                  1965,
+                  1985
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Indoor color flash photography",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1990
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Cultural lag is minimal here; the subject's grooming (braces, hairstyle) and the color film quality align closely with mainstream American trends of the 1970s, typical of established diaspora communities.",
+          "estimated_decade": 1970,
+          "best_year_estimate": 1976,
+          "confidence": "high",
+          "probable_range": [
+            1974,
+            1979
+          ],
+          "decade_probabilities": {
+            "1960": 0.05,
+            "1970": 0.85,
+            "1980": 0.1
+          },
+          "reasoning_summary": "The subject's hairstyle, the presence of full-band metal braces, the specific warm color shift of the photographic dye, and the wood-paneled background strongly point to the mid-to-late 1970s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 13,
+            "gender": "female",
+            "description": "Young female with brown eyes, long brown hair parted in the middle, wearing metal dental braces, smiling gently at the camera."
+          }
+        ],
+        "location": {
+          "place": "United States (likely New York or Florida diaspora community)",
+          "confidence": "medium",
+          "evidence": "Modern American orthodontics, 1970s American interior wood paneling, typical of US synagogue or institutional architecture of the era."
+        },
+        "cultural_markers": [
+          "White ceremonial robe with zipper, commonly used in mid-to-late 20th century American synagogues for B'nai Mitzvah or youth choirs",
+          "Holding a dark bound book, likely a Siddur (prayer book) or Chumash, indicating a religious milestone or ceremony"
+        ],
+        "clothing_notes": "Subject is wearing a white, V-neck ceremonial robe or gown with a visible front zipper. She is wearing a gold ring with a dark stone on her right ring finger.",
+        "photo_technique": {
+          "type": "chromogenic color print",
+          "format": "snapshot or studio portrait",
+          "is_color": true,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": "",
+          "language": "",
+          "script": ""
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single subject, waist-up, holding a book in front of a wood-paneled background."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "color shifting (warm/magenta cast typical of aging 1970s color film)",
+            "minor dust spots"
+          ]
+        },
+        "subject_ages": [
+          13
+        ]
+      },
+      "input_tokens": 2207,
+      "output_tokens": 1024,
+      "cost": 0.016702,
+      "latency_seconds": 24.75,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "9411826ba358db3c",
+      "gedcom_variant": "none",
+      "gedcom_context_tokens": 0
+    }
+  ]
+}

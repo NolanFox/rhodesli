@@ -1,0 +1,2483 @@
+{
+  "model": "gemini-2.0-flash",
+  "preset": "full",
+  "gedcom_variant": "curated",
+  "photo_count": 20,
+  "total_cost": 0.018,
+  "results": [
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print",
+                "strength": "strong",
+                "suggested_range": [
+                  1880,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Men's suits with bow ties",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              },
+              {
+                "cue": "Women's dresses with defined waists and modest necklines",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              },
+              {
+                "cue": "Bride's full-skirted gown and veil",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              },
+              {
+                "cue": "Man's straw boater hat",
+                "strength": "weak",
+                "suggested_range": [
+                  1920,
+                  1950
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Decorated wedding altar/chuppah",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Microphone stand",
+                "strength": "weak",
+                "suggested_range": [
+                  1920,
+                  1960
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.",
+          "estimated_decade": 1950,
+          "best_year_estimate": 1955,
+          "confidence": "medium",
+          "probable_range": [
+            1945,
+            1965
+          ],
+          "decade_probabilities": {
+            "1940": 0.2,
+            "1950": 0.6,
+            "1960": 0.2
+          },
+          "reasoning_summary": "The fashion and photographic style suggest a date in the 1950s, with consideration for cultural lag in Sephardic communities. The gelatin silver print is consistent with this period."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Man with dark hair, wearing a bow tie and white jacket."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a patterned dress."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "Bride with dark hair, wearing a veil and wedding gown."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Man with dark hair, wearing a bow tie and white jacket."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a light-colored dress."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 35,
+            "gender": "male",
+            "description": "Man with dark hair and glasses, wearing a bow tie and suit."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Man with light hair and glasses, wearing a hat and suit, holding papers."
+          }
+        ],
+        "location": {
+          "place": "Likely a studio in a Sephardic community in the United States (possibly Florida or New York)",
+          "confidence": "medium",
+          "evidence": "The presence of individuals with known ties to Sephardic communities in the US, combined with the studio backdrop, suggests a location within one of these communities."
+        },
+        "cultural_markers": [
+          "Sephardic formal attire",
+          "Wedding ceremony"
+        ],
+        "clothing_notes": "The men are wearing formal suits, some with bow ties. The women are wearing dresses appropriate for a formal occasion. The bride is wearing a traditional white wedding gown with a veil. The man on the right is wearing a straw boater hat, which was a popular accessory in the early to mid-20th century.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "ceremony",
+          "people_count": 7,
+          "arrangement": "Group photo of a wedding party, with the bride and groom in the center, flanked by family and officiant."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor discoloration"
+          ]
+        },
+        "subject_ages": [
+          45,
+          30,
+          25,
+          45,
+          40,
+          35,
+          55
+        ]
+      },
+      "input_tokens": 5062,
+      "output_tokens": 1429,
+      "cost": 0.0010777999999999999,
+      "latency_seconds": 10.61,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 420
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print on heavy stock",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Woman's floral dress, knee-length, with matching pumps",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1965
+                ]
+              },
+              {
+                "cue": "Girl's plaid dress with wide belt and white boots",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1970
+                ]
+              },
+              {
+                "cue": "Man's suit with narrow lapels and tie",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1970
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Stone tile flooring and wrought iron railing",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Black and white photography",
+                "strength": "weak",
+                "suggested_range": [
+                  1840,
+                  1970
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1964,
+          "confidence": "medium",
+          "probable_range": [
+            1959,
+            1969
+          ],
+          "decade_probabilities": {
+            "1950": 0.1,
+            "1960": 0.7,
+            "1970": 0.2
+          },
+          "reasoning_summary": "The fashion styles, particularly the woman's dress and the man's suit, suggest the 1960s. The gelatin silver print format is consistent with this timeframe. Given Betty Capeluto's age, this photo likely captures her around 1964."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Middle-aged woman with dark hair, wearing earrings and a necklace."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 11,
+            "gender": "female",
+            "description": "Young girl with dark hair pulled back, wearing a dress and belt."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 50,
+            "gender": "male",
+            "description": "Middle-aged man with dark hair, wearing a suit and tie."
+          }
+        ],
+        "location": {
+          "place": "Miami, Florida, USA",
+          "confidence": "low",
+          "evidence": "Given the genealogical data for Betty Capeluto, this photo was likely taken in Miami, Florida."
+        },
+        "cultural_markers": [
+          "Sephardic formal attire"
+        ],
+        "clothing_notes": "Woman in floral dress and pumps. Girl in plaid dress, wide belt, and white boots. Man in dark suit, white shirt, and patterned tie.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 3,
+          "arrangement": "Standing family group with parents and child."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          45,
+          11,
+          50
+        ]
+      },
+      "input_tokens": 4701,
+      "output_tokens": 1091,
+      "cost": 0.0009065,
+      "latency_seconds": 8.75,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 144
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Oval porcelain photograph mounted on a headstone.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Man's suit with tie, shirt collar style.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Rhodes and immigrant communities often lagged 5-15 years behind mainstream trends.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1925,
+            1940
+          ],
+          "decade_probabilities": {
+            "1920": 0.2,
+            "1930": 0.7,
+            "1940": 0.1
+          },
+          "reasoning_summary": "The fashion and print format suggest a date in the 1920s-1940s. Given the subject's death date of 1935, and the cultural lag, the best estimate is 1935."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 48,
+            "gender": "male",
+            "description": "Man with dark hair, wearing a shirt and tie."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No clear geographic markers are visible in the image."
+        },
+        "cultural_markers": [
+          "Formal attire",
+          "Headstone photograph"
+        ],
+        "clothing_notes": "Man wearing a light-colored shirt and a patterned tie.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "oval porcelain photograph",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "single subject portrait"
+        },
+        "condition": {
+          "overall": "good",
+          "issues": []
+        },
+        "subject_ages": [
+          48
+        ]
+      },
+      "input_tokens": 3186,
+      "output_tokens": 689,
+      "cost": 0.0005942,
+      "latency_seconds": 4.43,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 167
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Book cover with printed text and photographs",
+                "strength": "moderate",
+                "suggested_range": [
+                  1990,
+                  2000
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "The clothing styles of the individuals in the photographs suggest an earlier period, likely late 19th or early 20th century.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1890,
+                  1920
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Rhodes and immigrant communities often lagged 5-15 years behind mainstream styles.",
+          "estimated_decade": 1990,
+          "best_year_estimate": 1999,
+          "confidence": "medium",
+          "probable_range": [
+            1995,
+            2000
+          ],
+          "decade_probabilities": {
+            "1990": 0.9,
+            "2000": 0.1
+          },
+          "reasoning_summary": "The book cover indicates a publication date in 1999. The photographs inside are likely older, but the book itself was produced in the late 1990s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Woman with dark hair and eyes, wearing a head covering."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 48,
+            "gender": "male",
+            "description": "Man with a mustache, wearing a fez."
+          }
+        ],
+        "location": {
+          "place": "Rhodes, Greece",
+          "confidence": "low",
+          "evidence": "Based on genealogical context of Abraham Capouano."
+        },
+        "cultural_markers": [
+          "Sephardic family history",
+          "Formal attire reflecting late 19th/early 20th century styles"
+        ],
+        "clothing_notes": "The woman is wearing a high-necked blouse. The man is wearing a dark suit with a tie and a fez.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "book cover",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "Capouano Family\nA FAMILY COLLECTION\n1999\nHanulah Mosafir\n(1873 - 1945)\nAbraham Capouano\n(1870 - 1918)",
+          "language": "English",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 2,
+          "arrangement": "Two individual portraits side-by-side"
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading"
+          ]
+        },
+        "subject_ages": [
+          26,
+          48
+        ]
+      },
+      "input_tokens": 4590,
+      "output_tokens": 834,
+      "cost": 0.0007926000000000001,
+      "latency_seconds": 6.96,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 79
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Newspaper print quality",
+                "strength": "weak",
+                "suggested_range": [
+                  1920,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Wedding dress style with long sleeves and full skirt",
+                "strength": "moderate",
+                "suggested_range": [
+                  1935,
+                  1945
+                ]
+              },
+              {
+                "cue": "V-shape neckline",
+                "strength": "weak",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "N/A",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1941,
+          "confidence": "high",
+          "probable_range": [
+            1940,
+            1942
+          ],
+          "decade_probabilities": {
+            "1930": 0.1,
+            "1940": 0.8,
+            "1950": 0.1
+          },
+          "reasoning_summary": "The wedding dress style and the newspaper print quality suggest a date in the early 1940s. The genealogical data confirms the wedding date as June 8, 1941."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "Young woman with dark hair, wearing a wedding veil."
+          }
+        ],
+        "location": {
+          "place": "Montgomery, Alabama, USA",
+          "confidence": "high",
+          "evidence": "The newspaper is 'The Montgomery Advertiser', and the genealogical data indicates the wedding took place in Montgomery, Alabama."
+        },
+        "cultural_markers": [
+          "American wedding traditions",
+          "Newspaper announcement of wedding"
+        ],
+        "clothing_notes": "The bride is wearing a traditional wedding dress with long sleeves, a full skirt, and a veil. The dress appears to be made of satin or a similar material, and it is decorated with pearls and other embellishments.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "newspaper print",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "THE MONTGOMERY ADVERTISER\nMiss Capouya And\nMr. Capouano Wed\nIS RECENT BRIDE: Mrs. David Capouano, before her\nmarriage which took place June 8, at Temple Eta Ahayem,\nwas Miss Selma Capouya, \"the wedding being an event of\ninterest to the wide circle of the friends of the bride and\ngroom\nGlorious Fourth Also Deadly;\nMONTGOMERY FAIR\nAIR CONDITIONED BEAUTY SALON\nIF\nYou're\nOut in\nThe Sun",
+          "language": "en",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Solo portrait of the bride."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": []
+        },
+        "subject_ages": [
+          25
+        ]
+      },
+      "input_tokens": 2558,
+      "output_tokens": 889,
+      "cost": 0.0006114,
+      "latency_seconds": 6.36,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 94
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print",
+                "strength": "moderate",
+                "suggested_range": [
+                  1880,
+                  1950
+                ]
+              },
+              {
+                "cue": "Newspaper clipping",
+                "strength": "moderate",
+                "suggested_range": [
+                  1900,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Man's suit style",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1925,
+            1940
+          ],
+          "decade_probabilities": {
+            "1920": 0.1,
+            "1930": 0.7,
+            "1940": 0.2
+          },
+          "reasoning_summary": "The gelatin silver print and man's suit style suggest a date in the 1920s-1940s. The newspaper clipping format narrows it down further."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 35,
+            "gender": "male",
+            "description": "Man with dark hair, wearing a hat."
+          }
+        ],
+        "location": {
+          "place": "Likely Belgian Congo (now Democratic Republic of the Congo)",
+          "confidence": "medium",
+          "evidence": "Text mentions 'Congo Belge', Jadotville, Port Francqui, Kamina, and Mweka, all locations in the Belgian Congo."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "Man in the photo is wearing a hat and a light-colored shirt.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "newspaper clipping",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "CAPELOUTO Ha\u00efm. David Italien\nCommer\u00e7ant. N\u00e9 \u00e0 Rhodes le 25 mai 1905.\nIl y est employ\u00e9 de bureau jusqu'au moment\nde son d\u00e9part pour le Congo Belge Arriv\u00e9 \u00e0 la\nColonie par ses propres moyens, le 6 novembre\n1926, il y est engag\u00e9 pendant 5 mos par la fir-\nme Franco, \u00e0 Jadotville, puis \u00e0 s'y installe\ncommer\u00e7ant \u00e0 son compte En juin 1932 il cesse\nson commerce et entre au service de la firme\nAlzraki, \u00e0 Jadotville, puis il passe \u00e0 la mai-\nson Amato Fres o\u00f9 il reste jusqu'en juin 1938,\nayant \u00e9t\u00e9 d\u00e9tach\u00e9 entretemps \u00e0 Port Francqui\net Kamina Depuis 1938, il s'est install\u00e9 commer-\n\u00e7ant \u00e0 son compte \u00e0 Mweka.",
+          "language": "French",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Individual portrait"
+        },
+        "condition": {
+          "overall": "good",
+          "issues": []
+        },
+        "subject_ages": [
+          35
+        ]
+      },
+      "input_tokens": 3436,
+      "output_tokens": 929,
+      "cost": 0.0007152,
+      "latency_seconds": 7.34,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print on card stock",
+                "strength": "moderate",
+                "suggested_range": [
+                  1900,
+                  1940
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Man's three-piece suit with wide lapels and patterned tie",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              },
+              {
+                "cue": "Pocket square",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1950
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Rhodes and immigrant communities often lagged 5-15 years behind mainstream trends.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1925,
+            1940
+          ],
+          "decade_probabilities": {
+            "1920": 0.1,
+            "1930": 0.7,
+            "1940": 0.2
+          },
+          "reasoning_summary": "The gelatin silver print and the man's suit style suggest a date in the 1920s-1940s. Considering the cultural lag in Rhodes, the mid-1930s is a reasonable estimate."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 28,
+            "gender": "male",
+            "description": "Young man with dark hair, light skin, and a serious expression."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No clear geographic indicators are visible."
+        },
+        "cultural_markers": [
+          "Formal portrait style common in Sephardic communities",
+          "Handwritten inscription suggests a personal connection within the community"
+        ],
+        "clothing_notes": "Man is wearing a dark three-piece suit with a patterned tie and a white pocket square. He has a small pin on his lapel.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "cabinet card",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "A mi querida Estrella\nRecuerdo de Abril 1932\nSamuel J. Buaen",
+          "language": "Spanish",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single man in a studio setting"
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          28
+        ]
+      },
+      "input_tokens": 2920,
+      "output_tokens": 812,
+      "cost": 0.0006168,
+      "latency_seconds": 6.3,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Glossy print, likely machine-processed",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Floral dresses with A-line silhouettes",
+                "strength": "moderate",
+                "suggested_range": [
+                  1965,
+                  1975
+                ]
+              },
+              {
+                "cue": "Men's shirts with wide collars",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1980
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-10 years.",
+          "estimated_decade": 1970,
+          "best_year_estimate": 1973,
+          "confidence": "medium",
+          "probable_range": [
+            1968,
+            1978
+          ],
+          "decade_probabilities": {
+            "1960": 0.2,
+            "1970": 0.7,
+            "1980": 0.1
+          },
+          "reasoning_summary": "The fashion styles, particularly the women's dresses and men's shirts, suggest a date in the late 1960s to mid-1970s. The glossy print format is consistent with this timeframe."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 75,
+            "gender": "female",
+            "description": "Elderly woman with fair skin and light-colored hair."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Balding man with light skin and a serious expression."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 55,
+            "gender": "female",
+            "description": "Woman with dark hair and a floral dress."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Man with dark hair and a white shirt."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 50,
+            "gender": "female",
+            "description": "Woman with dark hair and a patterned dress."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 50,
+            "gender": "female",
+            "description": "Woman with dark hair and a patterned dress."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 35,
+            "gender": "male",
+            "description": "Man with dark hair."
+          },
+          {
+            "face_index": 7,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Woman with dark hair and a striped top."
+          },
+          {
+            "face_index": 8,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Man with dark hair and a mustache."
+          },
+          {
+            "face_index": 9,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Man with light skin and receding hairline."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No clear geographic markers are visible."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "Several women are wearing floral print dresses, which were popular in the 1970s. The men are wearing collared shirts, some with open collars.",
+        "photo_technique": {
+          "type": "color print",
+          "format": "snapshot",
+          "is_color": true,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "ROBERTO GALANTI\nCLARA FEL\nABRAHAM FEL\nLE\u00d3N GALANTE/GALANTI\nREGINA BENVENISTE\nRICCA BENVENISTE",
+          "language": "en",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 10,
+          "arrangement": "Group of people seated and standing around a table."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": []
+        },
+        "subject_ages": [
+          75,
+          60,
+          55,
+          65,
+          50,
+          50,
+          35,
+          30,
+          60,
+          65
+        ]
+      },
+      "input_tokens": 2920,
+      "output_tokens": 1279,
+      "cost": 0.0008036,
+      "latency_seconds": 8.21,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print on paper",
+                "strength": "moderate",
+                "suggested_range": [
+                  1890,
+                  1950
+                ]
+              },
+              {
+                "cue": "Cabinet card format",
+                "strength": "moderate",
+                "suggested_range": [
+                  1866,
+                  1920
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Formal attire: suits, dresses with high necklines and long sleeves",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1940
+                ]
+              },
+              {
+                "cue": "Hairstyles: Women's hair is styled in a way that was popular in the 1920s and 1930s.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              },
+              {
+                "cue": "Men's suit style and tie",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1940
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Studio backdrop",
+                "strength": "weak",
+                "suggested_range": [
+                  1880,
+                  1950
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Photographic quality and clarity",
+                "strength": "moderate",
+                "suggested_range": [
+                  1910,
+                  1940
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1930,
+          "confidence": "medium",
+          "probable_range": [
+            1920,
+            1940
+          ],
+          "decade_probabilities": {
+            "1910": 0.05,
+            "1920": 0.25,
+            "1930": 0.5,
+            "1940": 0.2
+          },
+          "reasoning_summary": "The combination of gelatin silver print, cabinet card format, and fashion styles suggests a date in the 1920s or 1930s, with consideration for cultural lag in Sephardic communities. The formal attire and studio setting are consistent with portraiture of that era."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 10,
+            "gender": "female",
+            "description": "Young girl with dark hair and eyes, wearing a dark dress."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 10,
+            "gender": "male",
+            "description": "Young boy with light hair and eyes, wearing a suit."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Woman with dark hair pulled back, wearing a dark dress with a white collar."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 10,
+            "gender": "female",
+            "description": "Young girl with dark hair and eyes, wearing a dark dress with a white collar."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 12,
+            "gender": "male",
+            "description": "Young boy with light hair and eyes, wearing a suit."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a dress."
+          },
+          {
+            "face_index": 6,
+            "estimated_age": 20,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a dress."
+          },
+          {
+            "face_index": 7,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Man with dark hair and a mustache, wearing a suit and tie."
+          },
+          {
+            "face_index": 8,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a dress."
+          },
+          {
+            "face_index": 9,
+            "estimated_age": 25,
+            "gender": "female",
+            "description": "Woman with light hair, wearing a dress."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "Studio backdrop provides no specific geographic clues."
+        },
+        "cultural_markers": [
+          "Sephardic family portrait",
+          "Formal attire typical of Sephardic communities for special occasions"
+        ],
+        "clothing_notes": "The man is wearing a dark three-piece suit with a tie and a pocket watch chain. The women are wearing dresses with high necklines and long sleeves. The children are wearing suits and dresses appropriate for the time period.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "cabinet card",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "A mi querida Estrella...",
+          "language": "Spanish",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 10,
+          "arrangement": "Formal family portrait with seated adults and children, and standing adults behind."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          8,
+          10,
+          40,
+          10,
+          12,
+          20,
+          25,
+          45,
+          25,
+          25
+        ]
+      },
+      "input_tokens": 2920,
+      "output_tokens": 1595,
+      "cost": 0.00093,
+      "latency_seconds": 10.16,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "raw_text": "{\n  \"date_estimation\": {\n    \"evidence\": {\n      \"print_format\": [\n        {\n          \"cue\": \"Black and white gelatin silver print\",\n          \"strength\": \"moderate\",\n          \"suggested_range\": [\n            1930,\n            1970\n          ]\n        }\n      ],\n      \"fashion\": [\n        {\n          \"cue\": \"Men's suits with wide lapels and fedoras\",\n          \"strength\": \"moderate\",\n          \"suggested_range\": [\n            1950,\n            1970\n          ]\n        },\n        {\n          \"cue\": \"Women's dresses with A-line silhouettes and floral prints\",\n          \"strength\": \"moderate\",\n          \"suggested_range\": [\n            1950,\n            1970\n          ]\n        },\n        {\n          \"cue\": \"Children's clothing styles\",\n          \"strength\": \"weak\",\n          \"suggested_range\": [\n            1950,\n            1970\n          ]\n        }\n      ],\n      \"environment\": [\n        {\n          \"cue\": \"Stone architecture and archway\",\n          \"strength\": \"weak\",\n          \"suggested_range\": [\n            1800,\n            1970\n          ]\n        }\n      ],\n      \"technology\": []\n    },\n    \"cultural_lag_applied\": true,\n    \"cultural_lag_note\": \"Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.\",\n    \"estimated_decade\": 1960,\n    \"best_year_estimate\": 1963,\n    \"confidence\": \"medium\",\n    \"probable_range\": [\n      1955,\n      1970\n    ],\n    \"decade_probabilities\": {\n      \"1950\": 0.3,\n      \"1960\": 0.6,\n      \"1970\": 0.1\n    },\n    \"reasoning_summary\": \"The fashion styles, particularly the men's suits and women's dresses, suggest a date in the 1960s. The black and white gelatin silver print is consistent with this timeframe. The stone architecture is not a strong dating signal.\"\n  },\n  \"face_analysis\": [\n    {\n      \"face_index\": 0,\n      \"estimated_age\": 55,\n      \"gender\": \"male\",\n      \"description\": \"Older man with glasses and dark suit.\"\n    },\n    {\n      \"face_index\": 1,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with short hair and light-colored dress.\"\n    },\n    {\n      \"face_index\": 2,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with glasses and dark suit.\"\n    },\n    {\n      \"face_index\": 3,\n      \"estimated_age\": 25,\n      \"gender\": \"female\",\n      \"description\": \"Young woman in patterned dress.\"\n    },\n    {\n      \"face_index\": 4,\n      \"estimated_age\": 28,\n      \"gender\": \"male\",\n      \"description\": \"Man in white shirt and dark pants.\"\n    },\n    {\n      \"face_index\": 5,\n      \"estimated_age\": 30,\n      \"gender\": \"male\",\n      \"description\": \"Man in dark suit and tie.\"\n    },\n    {\n      \"face_index\": 6,\n      \"estimated_age\": 50,\n      \"gender\": \"male\",\n      \"description\": \"Man in light-colored suit and hat.\"\n    },\n    {\n      \"face_index\": 7,\n      \"estimated_age\": 55,\n      \"gender\": \"female\",\n      \"description\": \"Woman with sunglasses and floral dress.\"\n    },\n    {\n      \"face_index\": 8,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with glasses and light-colored suit.\"\n    },\n    {\n      \"face_index\": 9,\n      \"estimated_age\": 25,\n      \"gender\": \"female\",\n      \"description\": \"Woman in white dress and scarf.\"\n    },\n    {\n      \"face_index\": 10,\n      \"estimated_age\": 25,\n      \"gender\": \"female\",\n      \"description\": \"Woman in white dress.\"\n    },\n    {\n      \"face_index\": 11,\n      \"estimated_age\": 8,\n      \"gender\": \"female\",\n      \"description\": \"Young girl in white dress.\"\n    },\n    {\n      \"face_index\": 12,\n      \"estimated_age\": 10,\n      \"gender\": \"female\",\n      \"description\": \"Young girl in white dress.\"\n    },\n    {\n      \"face_index\": 13,\n      \"estimated_age\": 10,\n      \"gender\": \"male\",\n      \"description\": \"Young boy in striped shirt.\"\n    },\n    {\n      \"face_index\": 14,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 15,\n      \"estimated_age\": 40,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 16,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 17,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 18,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 19,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 20,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 21,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 22,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 23,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 24,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 25,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 26,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 27,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 28,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 29,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 30,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 31,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 32,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 33,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 34,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 35,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 36,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 37,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 38,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 39,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 40,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 41,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 42,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 43,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 44,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 45,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 46,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 47,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 48,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 49,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 50,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 51,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 52,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 53,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 54,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 55,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 56,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 57,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 58,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 59,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 60,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 61,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 62,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 63,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 64,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 65,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 66,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 67,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 68,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 69,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 70,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 71,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 72,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 73,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 74,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 75,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 76,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 77,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 78,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 79,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 80,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 81,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 82,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 83,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 84,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 85,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 86,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 87,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 88,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 89,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 90,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 91,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 92,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 93,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 94,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 95,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 96,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 97,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 98,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 99,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 100,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 101,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 102,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 103,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 104,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 105,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 106,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 107,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 108,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 109,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 110,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 111,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 112,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 113,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 114,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 115,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 116,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 117,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 118,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 119,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 120,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 121,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 122,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 123,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 124,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 125,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 126,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 127,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 128,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 129,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 130,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 131,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 132,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 133,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 134,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 135,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 136,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 137,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 138,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 139,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 140,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 141,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 142,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 143,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 144,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 145,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 146,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 147,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 148,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 149,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 150,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 151,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 152,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 153,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 154,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 155,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 156,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 157,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 158,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 159,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 160,\n      \"estimated_age\": 60,\n      \"gender\": \"male\",\n      \"description\": \"Man with hat.\"\n    },\n    {\n      \"face_index\": 161,\n      \"estimated_age\": 50,\n      \"gender\": \"female\",\n      \"description\": \"Woman with dark hair.\"\n    },\n    {\n      \"face_index\": 162,\n      \"estimated_age\": 60,\n      ",
+        "parse_error": true
+      },
+      "input_tokens": 2404,
+      "output_tokens": 8192,
+      "cost": 0.0035172,
+      "latency_seconds": 41.93,
+      "model": "gemini-2.0-flash",
+      "photo_id": "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Square format color print",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Woman's dress style and hair",
+                "strength": "moderate",
+                "suggested_range": [
+                  1965,
+                  1975
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends.",
+          "estimated_decade": 1970,
+          "best_year_estimate": 1972,
+          "confidence": "medium",
+          "probable_range": [
+            1968,
+            1976
+          ],
+          "decade_probabilities": {
+            "1960": 0.2,
+            "1970": 0.7,
+            "1980": 0.1
+          },
+          "reasoning_summary": "The color print format and the woman's dress style and hair suggest a date in the late 1960s to mid 1970s. Considering cultural lag, the early 1970s is a reasonable estimate."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 55,
+            "gender": "female",
+            "description": "Older woman with short, curly gray hair."
+          }
+        ],
+        "location": {
+          "place": "Likely a home interior, possibly in the United States",
+          "confidence": "low",
+          "evidence": "Interior setting with window and curtains. No strong geographic markers."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "Woman is wearing a dark dress with a necklace. She also has a bracelet on her left wrist.",
+        "photo_technique": {
+          "type": "color print",
+          "format": "snapshot",
+          "is_color": true,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 1,
+          "arrangement": "Woman standing at a table setting."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": []
+        },
+        "subject_ages": [
+          55
+        ]
+      },
+      "input_tokens": 3694,
+      "output_tokens": 675,
+      "cost": 0.0006394,
+      "latency_seconds": 6.56,
+      "model": "gemini-2.0-flash",
+      "photo_id": "2b0e354d49e51d29",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print",
+                "strength": "moderate",
+                "suggested_range": [
+                  1880,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Simple dress style",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Porch and yard",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1950
+                ]
+              }
+            ],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1925,
+            1945
+          ],
+          "decade_probabilities": {
+            "1920": 0.1,
+            "1930": 0.6,
+            "1940": 0.3
+          },
+          "reasoning_summary": "The gelatin silver print process and the simple dress style suggest a date in the 1920s-1940s. Considering cultural lag, the best estimate is mid-1930s."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 5,
+            "gender": "female",
+            "description": "Young girl with dark curly hair."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No specific architectural or environmental cues to pinpoint location."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "The girl is wearing a simple light-colored dress and dark shoes.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 1,
+          "arrangement": "Single child seated outdoors."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "fading",
+            "scratches"
+          ]
+        },
+        "subject_ages": [
+          5
+        ]
+      },
+      "input_tokens": 3436,
+      "output_tokens": 718,
+      "cost": 0.0006307999999999999,
+      "latency_seconds": 5.06,
+      "model": "gemini-2.0-flash",
+      "photo_id": "213d4dcc10a7745d",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print with white borders",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Women's dresses and cardigans, men's collared shirts and trousers",
+                "strength": "moderate",
+                "suggested_range": [
+                  1950,
+                  1965
+                ]
+              },
+              {
+                "cue": "Conservative hairstyles and clothing styles",
+                "strength": "moderate",
+                "suggested_range": [
+                  1955,
+                  1970
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Palm trees and other subtropical vegetation",
+                "strength": "weak",
+                "suggested_range": [
+                  1940,
+                  1980
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Amateur snapshot aesthetic",
+                "strength": "weak",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion may lag 5-10 years behind mainstream trends in Sephardic communities.",
+          "estimated_decade": 1960,
+          "best_year_estimate": 1962,
+          "confidence": "medium",
+          "probable_range": [
+            1955,
+            1968
+          ],
+          "decade_probabilities": {
+            "1950": 0.3,
+            "1960": 0.6,
+            "1970": 0.1
+          },
+          "reasoning_summary": "The gelatin silver print and fashion styles suggest a date in the 1950s or 1960s. Considering the cultural lag, the early 1960s is a reasonable estimate."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 45,
+            "gender": "male",
+            "description": "Man with short dark hair, wearing a collared shirt."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 60,
+            "gender": "female",
+            "description": "Older woman with light hair, wearing a dark dress and scarf."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Older man with glasses, wearing a plaid shirt."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 40,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a cardigan and dress, arms crossed."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Woman kneeling, wearing a cardigan and dress, with a purse."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 20,
+            "gender": "female",
+            "description": "Young woman kneeling, wearing a cardigan and dress."
+          }
+        ],
+        "location": {
+          "place": "Miami, Florida",
+          "confidence": "medium",
+          "evidence": "Subtropical vegetation and general architectural style are consistent with Miami."
+        },
+        "cultural_markers": [
+          "Conservative dress styles common in Sephardic communities.",
+          "Family group portrait."
+        ],
+        "clothing_notes": "The women are wearing dresses and cardigans, typical of the era. The men are wearing collared shirts and trousers. The clothing is relatively modest and conservative.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 6,
+          "arrangement": "Group of people standing and kneeling in a yard."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading"
+          ]
+        },
+        "subject_ages": [
+          45,
+          60,
+          65,
+          40,
+          35,
+          20
+        ]
+      },
+      "input_tokens": 3694,
+      "output_tokens": 1181,
+      "cost": 0.0008418,
+      "latency_seconds": 8.56,
+      "model": "gemini-2.0-flash",
+      "photo_id": "b9f591a56e25b71a",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print on paper",
+                "strength": "moderate",
+                "suggested_range": [
+                  1880,
+                  1960
+                ]
+              },
+              {
+                "cue": "Bordered print",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1970
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Men's suits and hats",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              },
+              {
+                "cue": "Women's dresses and hairstyles",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              },
+              {
+                "cue": "Children's clothing styles",
+                "strength": "weak",
+                "suggested_range": [
+                  1950,
+                  1970
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Building architecture with ornate details",
+                "strength": "weak",
+                "suggested_range": [
+                  1880,
+                  1970
+                ]
+              },
+              {
+                "cue": "Outdoor setting with landscaping",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Camera quality and image resolution",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.",
+          "estimated_decade": 1950,
+          "best_year_estimate": 1955,
+          "confidence": "medium",
+          "probable_range": [
+            1945,
+            1965
+          ],
+          "decade_probabilities": {
+            "1930": 0.05,
+            "1940": 0.35,
+            "1950": 0.45,
+            "1960": 0.15
+          },
+          "reasoning_summary": "The fashion styles, particularly the men's suits and women's dresses, suggest a date in the 1940s or 1950s. The gelatin silver print format is consistent with this timeframe. Considering cultural lag, the mid-1950s is a reasonable estimate."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 60,
+            "gender": "male",
+            "description": "Older man with glasses and a cap, wearing a light-colored shirt and dark pants."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a light-colored top."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 65,
+            "gender": "male",
+            "description": "Older man with glasses, wearing a suit jacket."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 60,
+            "gender": "female",
+            "description": "Older woman with sunglasses, wearing a patterned dress."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 8,
+            "gender": "male",
+            "description": "Young boy wearing a patterned shirt and shorts."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Young girl wearing a light-colored shirt and shorts, holding a jacket or bag."
+          }
+        ],
+        "location": {
+          "place": "Likely a tourist location, possibly Disneyland",
+          "confidence": "low",
+          "evidence": "The architecture and landscaping suggest a well-maintained tourist destination. The style of the building and umbrellas is reminiscent of Disneyland's Main Street."
+        },
+        "cultural_markers": [
+          "Family photo with multiple generations",
+          "Formal attire for a family outing"
+        ],
+        "clothing_notes": "The men are wearing suits or dress pants with collared shirts. The women are wearing dresses or blouses with skirts. The children are wearing casual clothing appropriate for the time period.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "MAY",
+          "language": "English",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 6,
+          "arrangement": "Group of people standing together, likely a family."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          60,
+          35,
+          65,
+          60,
+          8,
+          12
+        ]
+      },
+      "input_tokens": 3694,
+      "output_tokens": 1393,
+      "cost": 0.0009266,
+      "latency_seconds": 9.3,
+      "model": "gemini-2.0-flash",
+      "photo_id": "2e5836aeceae8c6d",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Sepia-toned gelatin silver print",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Simple baby dress",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1950
+                ]
+              },
+              {
+                "cue": "Baby's hairstyle",
+                "strength": "weak",
+                "suggested_range": [
+                  1900,
+                  1950
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1925,
+            1945
+          ],
+          "decade_probabilities": {
+            "1920": 0.1,
+            "1930": 0.6,
+            "1940": 0.3
+          },
+          "reasoning_summary": "The sepia-toned gelatin silver print and the baby's simple dress suggest a date in the 1920s-1940s. Considering the cultural lag, the 1930s is the most probable decade."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 1,
+            "gender": "male",
+            "description": "Baby with dark hair and eyes."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No clear environmental cues."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "Baby is wearing a simple white dress.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single baby lying on a blanket."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": []
+        },
+        "subject_ages": [
+          1
+        ]
+      },
+      "input_tokens": 4468,
+      "output_tokens": 694,
+      "cost": 0.0007244,
+      "latency_seconds": 7.12,
+      "model": "gemini-2.0-flash",
+      "photo_id": "a8a1730722a4cdeb",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Color photograph",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1990
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Woman's hairstyle and clothing style",
+                "strength": "moderate",
+                "suggested_range": [
+                  1975,
+                  1985
+                ]
+              },
+              {
+                "cue": "Baby's simple clothing",
+                "strength": "weak",
+                "suggested_range": [
+                  1970,
+                  1990
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "N/A",
+          "estimated_decade": 1980,
+          "best_year_estimate": 1980,
+          "confidence": "medium",
+          "probable_range": [
+            1975,
+            1985
+          ],
+          "decade_probabilities": {
+            "1970": 0.2,
+            "1980": 0.7,
+            "1990": 0.1
+          },
+          "reasoning_summary": "The color print and the woman's hairstyle and clothing suggest a date in the late 1970s or early 1980s. The baby's clothing is less specific but consistent with this timeframe."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 1,
+            "gender": "male",
+            "description": "Baby with a round face and light hair."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 35,
+            "gender": "female",
+            "description": "Woman with dark, curly hair and a warm smile."
+          }
+        ],
+        "location": {
+          "place": "Likely a home interior, location unknown",
+          "confidence": "low",
+          "evidence": "Generic interior setting with furniture and household items."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "The woman is wearing a simple light-colored top. The baby is wearing a green shirt.",
+        "photo_technique": {
+          "type": "color print",
+          "format": "snapshot",
+          "is_color": true,
+          "condition": "fair"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "candid",
+          "people_count": 2,
+          "arrangement": "Mother and baby in a home setting."
+        },
+        "condition": {
+          "overall": "fair",
+          "issues": [
+            "fading",
+            "color cast"
+          ]
+        },
+        "subject_ages": [
+          1,
+          35
+        ]
+      },
+      "input_tokens": 4468,
+      "output_tokens": 775,
+      "cost": 0.0007568,
+      "latency_seconds": 6.37,
+      "model": "gemini-2.0-flash",
+      "photo_id": "662e24c4f38575ca",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Photo is mounted on card stock with decorative border.",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1950
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Military uniform style and cut.",
+                "strength": "strong",
+                "suggested_range": [
+                  1940,
+                  1945
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Not applicable in this case.",
+          "estimated_decade": 1940,
+          "best_year_estimate": 1943,
+          "confidence": "high",
+          "probable_range": [
+            1940,
+            1945
+          ],
+          "decade_probabilities": {
+            "1930": 0.1,
+            "1940": 0.85,
+            "1950": 0.05
+          },
+          "reasoning_summary": "The military uniform style and the date written on the photo suggest the early 1940s. The print format is consistent with this period."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 22,
+            "gender": "male",
+            "description": "Young man with dark hair, wearing a military uniform."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No clear geographic markers are visible."
+        },
+        "cultural_markers": [
+          "Formal military portrait"
+        ],
+        "clothing_notes": "Man is wearing a U.S. Army uniform with cap, tie, and jacket.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "mounted print",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": true,
+          "text": "2/12/43\nUSA\nWith Love\nyour nephew\nPat M. Mozal",
+          "language": "English",
+          "script": "Latin"
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single person portrait."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "minor edge wear"
+          ]
+        },
+        "subject_ages": [
+          22
+        ]
+      },
+      "input_tokens": 3436,
+      "output_tokens": 687,
+      "cost": 0.0006184000000000001,
+      "latency_seconds": 18.46,
+      "model": "gemini-2.0-flash",
+      "photo_id": "b9aa84ba4717fbc9",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Gelatin silver print with white border",
+                "strength": "moderate",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Men's high-waisted trousers and button-down shirts",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              },
+              {
+                "cue": "Women's dresses with modest hemlines",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              },
+              {
+                "cue": "Boy's short shorts and collared shirt",
+                "strength": "moderate",
+                "suggested_range": [
+                  1940,
+                  1960
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Architecture and landscaping suggest a park or tourist attraction",
+                "strength": "weak",
+                "suggested_range": [
+                  1930,
+                  1970
+                ]
+              }
+            ],
+            "technology": [
+              {
+                "cue": "Camera with flash attachment",
+                "strength": "weak",
+                "suggested_range": [
+                  1930,
+                  1960
+                ]
+              }
+            ]
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Not applicable in this case.",
+          "estimated_decade": 1950,
+          "best_year_estimate": 1955,
+          "confidence": "medium",
+          "probable_range": [
+            1945,
+            1965
+          ],
+          "decade_probabilities": {
+            "1940": 0.2,
+            "1950": 0.6,
+            "1960": 0.2
+          },
+          "reasoning_summary": "The fashion and print format suggest a date in the 1950s. The clothing styles and photographic technology are consistent with this period."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 55,
+            "gender": "male",
+            "description": "Older man with glasses, wearing a button-down shirt and trousers."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 30,
+            "gender": "female",
+            "description": "Woman with dark hair, wearing a light-colored top."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 50,
+            "gender": "male",
+            "description": "Older man with glasses, wearing a suit jacket and patterned shirt."
+          },
+          {
+            "face_index": 3,
+            "estimated_age": 50,
+            "gender": "female",
+            "description": "Woman with curly hair and sunglasses, wearing a patterned dress."
+          },
+          {
+            "face_index": 4,
+            "estimated_age": 8,
+            "gender": "male",
+            "description": "Young boy with short hair, wearing a collared shirt and shorts."
+          },
+          {
+            "face_index": 5,
+            "estimated_age": 12,
+            "gender": "female",
+            "description": "Young girl with curly hair, wearing a t-shirt and shorts."
+          }
+        ],
+        "location": {
+          "place": "Likely a tourist attraction, possibly Disneyland",
+          "confidence": "low",
+          "evidence": "The architecture and landscaping resemble a theme park setting. The parasols and building style are suggestive of a Main Street USA type area."
+        },
+        "cultural_markers": [],
+        "clothing_notes": "The clothing styles are typical of the mid-20th century. The men are wearing button-down shirts and trousers, while the women are wearing dresses. The children are wearing shorts and t-shirts or collared shirts.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "group_photo",
+          "people_count": 6,
+          "arrangement": "Group of people standing together in front of a building and parasols."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          55,
+          30,
+          50,
+          50,
+          8,
+          12
+        ]
+      },
+      "input_tokens": 3694,
+      "output_tokens": 1237,
+      "cost": 0.0008642,
+      "latency_seconds": 8.1,
+      "model": "gemini-2.0-flash",
+      "photo_id": "d4fd0727068369ec",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Cabinet card format",
+                "strength": "moderate",
+                "suggested_range": [
+                  1866,
+                  1920
+                ]
+              },
+              {
+                "cue": "Gelatin silver print",
+                "strength": "strong",
+                "suggested_range": [
+                  1880,
+                  1960
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Man's suit style with wide lapels and high-waisted trousers",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              },
+              {
+                "cue": "Woman's dress style with belted waist and modest neckline",
+                "strength": "moderate",
+                "suggested_range": [
+                  1920,
+                  1940
+                ]
+              },
+              {
+                "cue": "Older woman's head covering",
+                "strength": "weak",
+                "suggested_range": [
+                  1880,
+                  1950
+                ]
+              }
+            ],
+            "environment": [
+              {
+                "cue": "Studio backdrop with painted architectural and floral elements",
+                "strength": "weak",
+                "suggested_range": [
+                  1880,
+                  1940
+                ]
+              }
+            ],
+            "technology": []
+          },
+          "cultural_lag_applied": true,
+          "cultural_lag_note": "Fashion in Sephardic communities often lagged behind mainstream trends by 5-15 years.",
+          "estimated_decade": 1930,
+          "best_year_estimate": 1930,
+          "confidence": "medium",
+          "probable_range": [
+            1920,
+            1940
+          ],
+          "decade_probabilities": {
+            "1920": 0.25,
+            "1930": 0.55,
+            "1940": 0.2
+          },
+          "reasoning_summary": "The combination of the cabinet card format and gelatin silver print suggests a date range between 1880 and 1920. The fashion styles, particularly the man's suit, point towards the 1920s-1940s. Considering cultural lag, a date in the 1930s is most probable."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 22,
+            "gender": "male",
+            "description": "Young man with dark hair, wearing a suit."
+          },
+          {
+            "face_index": 1,
+            "estimated_age": 45,
+            "gender": "female",
+            "description": "Middle-aged woman with dark hair, wearing a dress."
+          },
+          {
+            "face_index": 2,
+            "estimated_age": 75,
+            "gender": "female",
+            "description": "Elderly woman wearing a head covering."
+          }
+        ],
+        "location": {
+          "place": "Rhodes, Greece",
+          "confidence": "low",
+          "evidence": "Studio backdrop is similar to those used by photographers in Rhodes. No strong evidence."
+        },
+        "cultural_markers": [
+          "Sephardic formal attire",
+          "Studio portrait common in Sephardic communities"
+        ],
+        "clothing_notes": "Man in dark three-piece suit with a striped tie. Woman in a striped dress with a belt. Elderly woman in a dark coat and head covering, with a light-colored dress underneath.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "cabinet card",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 3,
+          "arrangement": "Standing man and woman with seated elderly woman."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "slight fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          22,
+          45,
+          75
+        ]
+      },
+      "input_tokens": 4468,
+      "output_tokens": 1071,
+      "cost": 0.0008752,
+      "latency_seconds": 10.45,
+      "model": "gemini-2.0-flash",
+      "photo_id": "d0c83b767f767210",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "evidence": {
+            "print_format": [
+              {
+                "cue": "Glossy print with visible surface texture",
+                "strength": "moderate",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "fashion": [
+              {
+                "cue": "Hairstyle with feathered bangs and shoulder-length waves",
+                "strength": "moderate",
+                "suggested_range": [
+                  1970,
+                  1980
+                ]
+              },
+              {
+                "cue": "Simple white robe or gown with a zipper closure",
+                "strength": "weak",
+                "suggested_range": [
+                  1960,
+                  1980
+                ]
+              }
+            ],
+            "environment": [],
+            "technology": []
+          },
+          "cultural_lag_applied": false,
+          "cultural_lag_note": "Not applicable in this case.",
+          "estimated_decade": 1970,
+          "best_year_estimate": 1975,
+          "confidence": "medium",
+          "probable_range": [
+            1970,
+            1980
+          ],
+          "decade_probabilities": {
+            "1960": 0.1,
+            "1970": 0.7,
+            "1980": 0.2
+          },
+          "reasoning_summary": "The hairstyle and clothing style suggest the 1970s. The print format is consistent with this era."
+        },
+        "face_analysis": [
+          {
+            "face_index": 0,
+            "estimated_age": 14,
+            "gender": "female",
+            "description": "Young woman with dark hair, fair skin, and braces."
+          }
+        ],
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "evidence": "No clear geographic indicators are visible."
+        },
+        "cultural_markers": [
+          "Possible religious ceremony attire (white robe)",
+          "Book held may be a religious text"
+        ],
+        "clothing_notes": "White robe or gown with zipper closure. The person is holding a dark-colored book.",
+        "photo_technique": {
+          "type": "gelatin silver print",
+          "format": "snapshot",
+          "is_color": false,
+          "condition": "good"
+        },
+        "visible_text": {
+          "detected": false,
+          "text": null,
+          "language": null,
+          "script": null
+        },
+        "group_composition": {
+          "type": "formal_portrait",
+          "people_count": 1,
+          "arrangement": "Single person standing, holding a book."
+        },
+        "condition": {
+          "overall": "good",
+          "issues": [
+            "minor fading",
+            "minor scratches"
+          ]
+        },
+        "subject_ages": [
+          14
+        ]
+      },
+      "input_tokens": 2920,
+      "output_tokens": 732,
+      "cost": 0.0005848,
+      "latency_seconds": 6.2,
+      "model": "gemini-2.0-flash",
+      "photo_id": "9411826ba358db3c",
+      "gedcom_variant": "curated",
+      "gedcom_context_tokens": 0
+    }
+  ]
+}
