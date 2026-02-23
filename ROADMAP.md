@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.64.0 · ~3250 tests · 271 photos · 775 identities · 55 confirmed
+Current: v0.65.0 · ~3373 tests · 271 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -34,6 +34,9 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
 - [x] Gemini unified extraction architecture — AD-143, rhodesli_ml/gemini_extraction.py (Session 61B)
 - [x] PRD-015 v2: Face alignment via coordinate bridging — AD-144 (Session 61B)
+- [x] PRD-015 implementation: Face alignment end-to-end — AD-146 (Session 62)
+- [ ] Production test: Face alignment on real photos with GEMINI_API_KEY (needs deploy)
+- [ ] Batch face alignment for all 271 photos (~$7.60 estimated, needs approval)
 
 ### Near-Term
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
@@ -53,12 +56,12 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 61B: Verify, Optimize, Assess — COMPLETE (2026-02-22)
-- [x] Production verification of Session 61 features (ENOSPC fix, smoke test, screenshots)
-- [x] Gemini unified extraction architecture (AD-143, 16 tests)
-- [x] Flash vs Pro comparison — deferred pending cost approval (docs/PENDING_APPROVALS.md)
-- [x] PRD-015 v2 face alignment + PRD-023 LoRA/calibration + AD-143/144/145
-- [x] Self-assessment protocol (HD-016, .claude/rules/self-assessment.md)
+### Session 62: PRD-015 Face Alignment Implementation — COMPLETE (2026-02-22)
+- [x] EXIF orientation handler (app/exif_handler.py, 10 tests)
+- [x] Coordinate bridging module (app/face_alignment.py, 30 tests)
+- [x] API endpoints: POST/GET /api/face-alignment/{photo_id} (8 tests)
+- [x] Photo page UI: face description cards, mismatch warnings, admin trigger (6 tests)
+- [x] AD-146 documented. 54 new tests. ~3373 total.
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates
@@ -66,6 +69,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-22: **v0.65.0 — Session 62**: PRD-015 Face Alignment via Coordinate Bridging. EXIF handler, coordinate bridging module, API endpoints, photo page UI with per-face description cards. AD-146. 54 new tests. ~3373 total.
 - [x] 2026-02-22: **v0.64.0 — Session 61**: Gemini Photo Detective + Multi-Photo Compare. Fixed enriched prompt gap (ML-090). Gemini 3.1 Pro (AD-139). MLflow tracking (AD-140). Multi-photo compare (AD-141, PRD-021). Evidence cards UX (AD-142, PRD-022). ~3250 tests.
 - [x] 2026-02-22: **v0.63.0/v0.63.1 — Sessions 60/60B**: Gemini Progressive Refinement + SSE Upload + Production Verification. P0 CSS crash fix. 3192 tests.
 - [x] 2026-02-22: **v0.62.0 — Session 59C**: Supabase Migration for User Data Safety. DATA-001 structurally resolved. 3102 tests.

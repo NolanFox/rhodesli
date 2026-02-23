@@ -330,12 +330,22 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Flash vs Pro comparison deferred pending cost approval
 - 20 new tests. ~3270 total.
 
+## Session 62: PRD-015 Face Alignment Implementation (2026-02-22) — v0.65.0
+- EXIF orientation handler (app/exif_handler.py): normalize_orientation(), get_image_dimensions(), has_exif_orientation() — 10 tests
+- Coordinate bridging module (app/face_alignment.py): FaceDetection/AlignedFaceDescription/AlignmentResult dataclasses, format_faces_for_gemini(), build_alignment_prompt(), parse_alignment_response(), run_face_alignment(), JSON storage — 30 tests
+- API endpoints: POST /api/face-alignment/{photo_id} (admin-only trigger), GET /api/face-alignment/{photo_id} (cached results) — 8 tests
+- Photo page UI: per-face description cards (age, gender, clothing, features), mismatch warnings, admin trigger/re-run buttons — 6 tests
+- AD-146: Face Alignment Implementation Results
+- Real photo testing deferred to production (no GEMINI_API_KEY locally)
+- 54 new tests. ~3373 total (2864 app + 509 ML).
+
 ---
 
 ## Release Version History
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.65.0 | 2026-02-22 | 62 | ~2864+509 |
 | v0.64.0 | 2026-02-22 | 61 | ~2776+474 |
 | v0.63.1 | 2026-02-22 | 60B | 2726+466 |
 | v0.63.0 | 2026-02-22 | 60 | 2724+466 |

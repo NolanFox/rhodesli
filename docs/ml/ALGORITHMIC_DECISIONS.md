@@ -1593,11 +1593,32 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: Future — `rhodesli_ml/calibration/platt_scaling.py`, existing `rhodesli_ml/calibration/` module
 - **Breadcrumbs**: AD-123-128 (calibration pipeline), PRD-023 (LoRA research), ML-076 (ROADMAP)
 
+### AD-146: Face Alignment Implementation — Coordinate Bridging End-to-End
+- **Date**: 2026-02-22 | **Session**: 62
+- **Context**: PRD-015 v2 designed the coordinate bridging approach (Approach B) in Session 61B. Session 62 implements it end-to-end: EXIF handler, face alignment module, API endpoint, photo page UI.
+- **Decision**: Implemented Approach B (feed InsightFace coordinates TO Gemini) as a standalone `app/face_alignment.py` module with:
+  - FaceDetection/AlignedFaceDescription/AlignmentResult dataclasses
+  - format_faces_for_gemini() sorts faces left-to-right by x1, assigns 0-indexed labels
+  - build_alignment_prompt() builds full prompt with coordinate block + JSON schema
+  - parse_alignment_response() handles perfect match, partial match, Gemini-only faces
+  - EXIF orientation normalization ensures Gemini and InsightFace see same pixel layout
+  - JSON-based storage (data/face_alignments.json) with in-memory cache
+  - Admin-only POST /api/face-alignment/{photo_id} triggers per-photo alignment
+  - Public GET endpoint returns cached results
+  - Photo page UI shows per-face description cards with mismatch warnings
+- **Rejected alternatives**:
+  1. "Integrate into rhodesli_ml/gemini_extraction.py directly" — would mix app-level orchestration (image loading, auth checks, storage) into the ML extraction module. Better separation: extraction module builds prompts, app module orchestrates the pipeline.
+  2. "Store in Supabase only" — would require Supabase to be available for any alignment to work. JSON storage matches existing data patterns and degrades gracefully.
+  3. "Batch-only alignment" — no per-photo trigger. Admin needs ability to test individual photos before committing to batch re-run (~$7.60 for 271 photos).
+- **Results**: 54 new tests (10 EXIF + 30 alignment + 8 API + 6 UI). 3373 total tests passing. Real Gemini API testing deferred (no local API key; needs production verification).
+- **Affects**: `app/face_alignment.py` (new), `app/exif_handler.py` (new), `app/main.py` (API endpoints + UI section), tests/test_face_alignment*.py, tests/test_exif_handler.py
+- **Breadcrumbs**: AD-143 (unified extraction), AD-144 (coordinate bridging design), PRD-015 v2
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-146)
+1. Add a new entry with AD-XXX format (next: AD-147)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

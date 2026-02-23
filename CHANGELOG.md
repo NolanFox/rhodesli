@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.65.0] — 2026-02-22 (Session 62)
+
+### Added — PRD-015: Face Alignment via Coordinate Bridging (AD-146)
+- `app/face_alignment.py`: coordinate bridging module — FaceDetection, AlignedFaceDescription, AlignmentResult dataclasses, prompt formatting, response parsing, Gemini API wrapper, full pipeline orchestrator
+- `app/exif_handler.py`: EXIF orientation normalization — ensures Gemini and InsightFace see same pixel layout
+- POST `/api/face-alignment/{photo_id}`: admin-only endpoint triggers per-photo Gemini face analysis
+- GET `/api/face-alignment/{photo_id}`: public endpoint returns cached alignment results
+- Photo page "Face Analysis" section: per-face description cards (age, gender, clothing, position, features)
+- Mismatch warning UI when InsightFace/Gemini face counts differ
+- Admin "Run Face Analysis" trigger button + "Re-run Analysis" on existing results
+- JSON-based alignment storage (data/face_alignments.json) with in-memory cache
+
+### Stats
+- 54 new tests (10 EXIF + 30 alignment + 8 API + 6 UI)
+- Total: ~3373 tests passing
+- New files: app/face_alignment.py, app/exif_handler.py, tests/test_face_alignment.py, tests/test_face_alignment_api.py, tests/test_face_alignment_ui.py, tests/test_exif_handler.py
+- AD-146 documented
+
 ## [v0.64.1] — 2026-02-22 (Session 61B)
 
 ### Fixed
