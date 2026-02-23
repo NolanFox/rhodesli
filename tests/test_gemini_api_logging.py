@@ -1,0 +1,125 @@
+"""Tests for Gemini API call logging to Supabase (AD-152)."""
+
+from unittest.mock import MagicMock, patch
+
+
+class TestLogGeminiCall:
+    """Tests for log_gemini_call."""
+
+    def test_logs_successful_call(self):
+        """Creates record with all required fields."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+            result = log_gemini_call(
+                photo_id="test123",
+                model_used="gemini-3.1-pro-preview",
+                call_type="alignment",
+                prompt_tokens=1000,
+                completion_tokens=500,
+                cost_usd=0.028,
+                latency_ms=2500,
+                status="success",
+            )
+
+        assert result is True
+        mock_sb.table.assert_called_with("gemini_api_calls")
+        call_row = mock_sb.table.return_value.insert.call_args[0][0]
+        assert call_row["photo_id"] == "test123"
+        assert call_row["model_used"] == "gemini-3.1-pro-preview"
+        assert call_row["status"] == "success"
+
+    def test_logs_rate_limited_call(self):
+        """Rate-limited calls include rate_limit_type."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+            log_gemini_call(
+                photo_id="test456",
+                model_used="gemini-3.1-pro-preview",
+                call_type="combined",
+                status="rate_limited",
+                rate_limit_type="rpd",
+                error_message="429 Too Many Requests",
+            )
+
+        call_row = mock_sb.table.return_value.insert.call_args[0][0]
+        assert call_row["status"] == "rate_limited"
+        assert call_row["rate_limit_type"] == "rpd"
+
+    def test_returns_false_when_supabase_unavailable(self):
+        """Returns False when no Supabase client."""
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
+            from app.supabase_data import log_gemini_call
+            result = log_gemini_call("p1", "model", "type")
+
+        assert result is False
+
+    def test_handles_supabase_error(self):
+        """Returns False on Supabase exception."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.insert.return_value.execute.side_effect = Exception("fail")
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+            result = log_gemini_call("p1", "model", "type")
+
+        assert result is False
+
+    def test_defaults_status_to_success(self):
+        """Status defaults to 'success' when not specified."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+            log_gemini_call("p1", "model", "alignment")
+
+        call_row = mock_sb.table.return_value.insert.call_args[0][0]
+        assert call_row["status"] == "success"
+
+    def test_includes_batch_id(self):
+        """batch_id groups calls from same batch run."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.insert.return_value.execute.return_value = MagicMock()
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import log_gemini_call
+            log_gemini_call("p1", "model", "combined", batch_id="batch_20260223")
+
+        call_row = mock_sb.table.return_value.insert.call_args[0][0]
+        assert call_row["batch_id"] == "batch_20260223"
+
+
+class TestGetGeminiCallSummary:
+    """Tests for get_gemini_call_summary."""
+
+    def test_returns_summary(self):
+        """Returns aggregated call statistics."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.select.return_value.execute.return_value = MagicMock(
+            data=[
+                {"cost_usd": 0.028, "status": "success"},
+                {"cost_usd": 0.028, "status": "success"},
+                {"cost_usd": None, "status": "rate_limited"},
+            ]
+        )
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            from app.supabase_data import get_gemini_call_summary
+            result = get_gemini_call_summary()
+
+        assert result["total_calls"] == 3
+        assert result["total_cost_usd"] == 0.056
+        assert result["by_status"]["success"] == 2
+        assert result["by_status"]["rate_limited"] == 1
+
+    def test_returns_none_when_unavailable(self):
+        """Returns None when Supabase not configured."""
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
+            from app.supabase_data import get_gemini_call_summary
+            assert get_gemini_call_summary() is None

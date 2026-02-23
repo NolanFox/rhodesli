@@ -464,3 +464,77 @@ def count_face_alignments_in_supabase():
     except Exception as e:
         logger.warning(f"Supabase face alignment count failed: {e}")
         return None
+
+
+# =========================================================================
+# GEMINI API CALL LOGGING (AD-152)
+# =========================================================================
+
+def log_gemini_call(photo_id, model_used, call_type, **kwargs):
+    """Log a Gemini API call to Supabase for analysis.
+
+    Args:
+        photo_id: Photo being analyzed
+        model_used: Gemini model string
+        call_type: 'alignment', 'enrichment', 'combined', 'date_estimation'
+        **kwargs: Optional fields: prompt_tokens, completion_tokens, total_tokens,
+                  cost_usd, latency_ms, status, error_message, rate_limit_type,
+                  response_summary, gemini_config, batch_id
+
+    Returns True on success, False on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return False
+
+    row = {
+        'photo_id': photo_id,
+        'model_used': model_used,
+        'call_type': call_type,
+        'status': kwargs.get('status', 'success'),
+    }
+    # Add optional fields
+    for field in ['prompt_tokens', 'completion_tokens', 'total_tokens',
+                  'cost_usd', 'latency_ms', 'error_message', 'rate_limit_type',
+                  'response_summary', 'gemini_config', 'batch_id']:
+        if field in kwargs and kwargs[field] is not None:
+            row[field] = kwargs[field]
+
+    try:
+        sb.table('gemini_api_calls').insert(row).execute()
+        logger.debug(f"Logged Gemini call: {photo_id} ({call_type}, {model_used})")
+        return True
+    except Exception as e:
+        logger.warning(f"Supabase Gemini call log failed: {e}")
+        return False
+
+
+def get_gemini_call_summary(batch_id=None):
+    """Get summary of Gemini API calls. Returns dict or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        query = sb.table('gemini_api_calls').select('*')
+        if batch_id:
+            query = query.eq('batch_id', batch_id)
+        result = query.execute()
+
+        if not result.data:
+            return {"total_calls": 0, "total_cost": 0}
+
+        total_cost = sum(float(r.get('cost_usd', 0) or 0) for r in result.data)
+        by_status = {}
+        for r in result.data:
+            s = r.get('status', 'unknown')
+            by_status[s] = by_status.get(s, 0) + 1
+
+        return {
+            "total_calls": len(result.data),
+            "total_cost_usd": round(total_cost, 4),
+            "by_status": by_status,
+        }
+    except Exception as e:
+        logger.warning(f"Supabase Gemini call summary failed: {e}")
+        return None
