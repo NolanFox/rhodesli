@@ -6116,7 +6116,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     face_count = neighbor.get("face_count", 0)
     co_occurrence = neighbor.get("co_occurrence", 0)
 
-    # --- CALIBRATION: AD-013 Evidence-Based Thresholds (2026-02-09) ---
+    # --- CALIBRATION: AD-013 Evidence-Based Thresholds + AD-149 Isotonic ---
     if distance < MATCH_THRESHOLD_VERY_HIGH:
         similarity_class = "bg-emerald-500/30 text-emerald-300"
         similarity_label = "Very High"
@@ -6132,6 +6132,19 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     else:
         similarity_class = "bg-slate-600 text-slate-400"
         similarity_label = "Low"
+
+    # Calibrated probability (AD-149: isotonic regression)
+    calibrated_pct = None
+    try:
+        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
+        cal = SimilarityCalibrator()
+        # Convert Euclidean distance → cosine similarity: s = 1 - d²/2
+        cosine_sim = max(0.0, 1.0 - (distance ** 2) / 2.0)
+        prob = cal.predict(cosine_sim)
+        if prob is not None:
+            calibrated_pct = int(prob * 100)
+    except Exception:
+        pass  # Graceful degradation — show threshold labels only
     # -----------------------------------------------
 
     # Merge button -- role-aware: admin merges directly, contributor suggests
@@ -6206,7 +6219,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
         Div(checkbox,
             A(thumbnail_img, href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}", cls="flex-shrink-0 cursor-pointer hover:opacity-80", **{"_": nav_script}),
             Div(Div(A(name, href=f"/?section={neighbor_section}&view=browse#identity-{neighbor_id}", cls="font-medium text-slate-200 truncate hover:text-blue-400 hover:underline cursor-pointer", **{"_": nav_script}),
-                    Span(similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
+                    Span(f"{calibrated_pct}% match" if calibrated_pct is not None else similarity_label, cls=f"text-xs px-2 py-0.5 rounded ml-2 {similarity_class}"), cls="flex items-center"),
                 # EXPLAINABILITY: Distance + confidence gap (how much closer than next-best)
                 Div(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 ml-2 bg-slate-700 px-1 rounded"),
                     Span(f"+{confidence_gap}% gap", cls="text-xs font-data text-emerald-400/70 ml-1 bg-emerald-900/30 px-1 rounded") if confidence_gap > 0 else None,
@@ -9136,6 +9149,13 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             status_code=409,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    # AD-150: Fire recalibration hook (best-effort, non-blocking)
+    try:
+        anchor_ids = identity.get("anchor_ids", [])
+        _fire_recalibration_hook("confirm", identity_id, anchor_face_ids=anchor_ids)
+    except Exception:
+        pass  # Never block confirm on calibration
 
     # If from focus mode, return the next focus card
     if from_focus:
@@ -19572,6 +19592,12 @@ def post(source_id: str, target_id: str, sess=None):
     registry.reject_identity_pair(source_id, target_id, user_source="web")
     save_registry(registry)
 
+    # AD-150: Fire recalibration hook (best-effort, non-blocking)
+    try:
+        _fire_recalibration_hook("reject", source_id, target_id)
+    except Exception:
+        pass  # Never block reject on calibration
+
     # Log the action
     log_user_action(
         "REJECT_IDENTITY",
@@ -19801,6 +19827,12 @@ def post(target_id: str, source_id: str, source: str = "web",
     # Use the actual target/source from the result (may have been swapped)
     actual_target_id = result["target_id"]
     actual_source_id = result["source_id"]
+
+    # AD-150: Fire recalibration hook (best-effort, non-blocking)
+    try:
+        _fire_recalibration_hook("merge", actual_target_id, actual_source_id)
+    except Exception:
+        pass  # Never block merge on calibration
 
     # BE-006: Retarget annotations from source to target
     _merge_annotations(actual_source_id, actual_target_id)
@@ -24647,6 +24679,34 @@ def _merge_annotations(source_id: str, target_id: str):
     except Exception:
         # Non-critical — don't block the merge
         pass
+
+
+def _fire_recalibration_hook(action: str, id_a: str, id_b: str = None, anchor_face_ids: list = None):
+    """Fire recalibration hook after merge/reject/confirm (AD-150).
+
+    Best-effort: never blocks the primary action. Uses asyncio.run()
+    because route handlers are sync but hooks are async.
+    """
+    import asyncio
+
+    try:
+        from app.supabase_data import get_supabase_client
+        sb = get_supabase_client()
+        if not sb:
+            return
+
+        from rhodesli_ml.recalibration_hooks import (
+            on_face_merge, on_identity_confirm, on_match_reject,
+        )
+
+        if action == "merge" and id_b:
+            asyncio.run(on_face_merge(id_a, id_b, supabase_client=sb))
+        elif action == "reject" and id_b:
+            asyncio.run(on_match_reject(id_a, id_b, supabase_client=sb))
+        elif action == "confirm" and anchor_face_ids:
+            asyncio.run(on_identity_confirm(id_a, anchor_face_ids, supabase_client=sb))
+    except Exception as e:
+        logging.debug(f"Recalibration hook ({action}) non-critical failure: {e}")
 
 
 @rt("/api/annotations/submit")
