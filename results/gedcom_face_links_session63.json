@@ -1,0 +1,480 @@
+{
+  "auto_linked": [
+    {
+      "identity_id": "c93e5c13-791d-4c1c-84f3-07b5d616ed31",
+      "identity_name": "Abraham Almaleh",
+      "gedcom_id": "@I132127396296@",
+      "gedcom_name": "Abraham Almaleh",
+      "confidence": 1.0,
+      "birth_date": "15 Mar 1896",
+      "birth_place": "Island of Rhodes, Italy",
+      "alternatives": 1
+    },
+    {
+      "identity_id": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "identity_name": "Abraham Capuano",
+      "gedcom_id": "@I132452140319@",
+      "gedcom_name": "Abraham Capeluto",
+      "confidence": 1.0,
+      "birth_date": "1892",
+      "birth_place": "Bodrum, Turkey",
+      "alternatives": 3
+    },
+    {
+      "identity_id": "4a993942-2ed7-4cba-bb78-ada588853642",
+      "identity_name": "Albert Cohen",
+      "gedcom_id": "@I132138054104@",
+      "gedcom_name": "Albert Cohen",
+      "confidence": 1.0,
+      "birth_date": "07/09/1911",
+      "birth_place": "Buenos Aires, Buenos Aires, Argentina",
+      "alternatives": 1
+    },
+    {
+      "identity_id": "1547d786-4349-41ed-abb4-02e63b2ba313",
+      "identity_name": "Anita Capeluto Franco",
+      "gedcom_id": "@I132354753570@",
+      "gedcom_name": "Anita Louise Capouano",
+      "confidence": 0.93,
+      "birth_date": "abt 1943",
+      "birth_place": "Alabama",
+      "alternatives": 1
+    },
+    {
+      "identity_id": "c9bd1c83-ed11-4b55-8608-9aec1e51f446",
+      "identity_name": "Betty Capeluto",
+      "gedcom_id": "@I132153366424@",
+      "gedcom_name": "Betty Capeluto",
+      "confidence": 1.0,
+      "birth_date": "17 Sep 1953",
+      "birth_place": "Havana, Cuba",
+      "alternatives": 3
+    },
+    {
+      "identity_id": "609d7e34-38a3-4bdd-9879-35560b624bae",
+      "identity_name": "Betty Capeluto Fox",
+      "gedcom_id": "@I132153366424@",
+      "gedcom_name": "Betty Capeluto",
+      "confidence": 1.0,
+      "birth_date": "17 Sep 1953",
+      "birth_place": "Havana, Cuba",
+      "alternatives": 3
+    },
+    {
+      "identity_id": "b6d9ea5b-bf90-463a-bab3-682acac7753d",
+      "identity_name": "Big Leon Capeluto",
+      "gedcom_id": "@I132126987005@",
+      "gedcom_name": "Leon Capeluto",
+      "confidence": 1.0,
+      "birth_date": "24 June 1904",
+      "birth_place": "Milas, Mu\u011fla, T\u00fcrkiye",
+      "alternatives": 4
+    },
+    {
+      "identity_id": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "identity_name": "David Raymond Capouano",
+      "gedcom_id": "@I132127361002@",
+      "gedcom_name": "David Raymond Capouano",
+      "confidence": 1.0,
+      "birth_date": "14 Aug 1908",
+      "birth_place": "Rhodes Egeo, Italy",
+      "alternatives": 3
+    },
+    {
+      "identity_id": "58565113-b749-4f0f-a75b-994b725a1248",
+      "identity_name": "Esther Brenda Israel",
+      "gedcom_id": "@I132225314511@",
+      "gedcom_name": "Esther Brenda Israel",
+      "confidence": 1.0,
+      "birth_date": "11 Aug 1945",
+      "birth_place": "Los Angeles, California",
+      "alternatives": 21
+    },
+    {
+      "identity_id": "ec55b4e8-ac3c-4209-a273-e96f7f85659c",
+      "identity_name": "Esther Diana Taranto Capouano",
+      "gedcom_id": "@I132187609566@",
+      "gedcom_name": "Esther ( Estrea ) Capelluto",
+      "confidence": 0.93,
+      "birth_date": "Nov 11 1908",
+      "birth_place": "Rhodes, Dodecanese Islands, Aegean Sea, Greece",
+      "alternatives": 6
+    },
+    {
+      "identity_id": "9b41ba49-7cde-4f76-bc43-341e320db6a9",
+      "identity_name": "Isaac Capelouto",
+      "gedcom_id": "@I132177276507@",
+      "gedcom_name": "Isaac Capelluto",
+      "confidence": 1.0,
+      "birth_date": null,
+      "birth_place": null,
+      "alternatives": 14
+    },
+    {
+      "identity_id": "450ebd52-f768-4768-aa1b-3b24ea1c86b0",
+      "identity_name": "Isaac Franco",
+      "gedcom_id": "@I132617303179@",
+      "gedcom_name": "Isaac Franco",
+      "confidence": 1.0,
+      "birth_date": "1870",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 14
+    },
+    {
+      "identity_id": "ac3b43b2-3e74-4237-ab71-b8ded0f8bfda",
+      "identity_name": "Isaac Franco",
+      "gedcom_id": "@I132617303179@",
+      "gedcom_name": "Isaac Franco",
+      "confidence": 1.0,
+      "birth_date": "1870",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 14
+    },
+    {
+      "identity_id": "6f044a38-810e-4034-9a15-bc51fdc13d9b",
+      "identity_name": "Isaac Hazan",
+      "gedcom_id": "@I132544573620@",
+      "gedcom_name": "Isaac Hasson",
+      "confidence": 1.0,
+      "birth_date": "Abt. 1850",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 14
+    },
+    {
+      "identity_id": "8b98cc1a-026c-4663-b335-87b462a5d646",
+      "identity_name": "Isaac Louza",
+      "gedcom_id": "@I132127396651@",
+      "gedcom_name": "Isaac Louza",
+      "confidence": 1.0,
+      "birth_date": "24 Dec 1900",
+      "birth_place": "Turkey",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "5d9ba7e2-f3dd-430d-8576-552962c42d6f",
+      "identity_name": "Joya Habib Pizanti",
+      "gedcom_id": "@I132127758157@",
+      "gedcom_name": "Joya Habib",
+      "confidence": 0.86,
+      "birth_date": "Abt 1832",
+      "birth_place": "Turkey",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "35b997f8-7b9c-46a3-8070-78f0c57e48be",
+      "identity_name": "Laura Franco Capelluto",
+      "gedcom_id": "@I132598531079@",
+      "gedcom_name": "Laura Capeluto",
+      "confidence": 0.86,
+      "birth_date": "1910",
+      "birth_place": null,
+      "alternatives": 1
+    },
+    {
+      "identity_id": "b359fe11-62e8-4a4f-94ef-f4f7657deb2e",
+      "identity_name": "Leon Capeluto",
+      "gedcom_id": "@I132126987005@",
+      "gedcom_name": "Leon Capeluto",
+      "confidence": 1.0,
+      "birth_date": "24 June 1904",
+      "birth_place": "Milas, Mu\u011fla, T\u00fcrkiye",
+      "alternatives": 4
+    },
+    {
+      "identity_id": "5c8edaa6-ecee-4afa-86b5-b0136cbe86fa",
+      "identity_name": "Louis Pizante",
+      "gedcom_id": "@I132127398599@",
+      "gedcom_name": "Louis J Pizante",
+      "confidence": 0.86,
+      "birth_date": "abt 1903",
+      "birth_place": "Italy",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "a5c9d5d1-5739-413a-a18e-cdd3111ad26e",
+      "identity_name": "Luna Leonora Capuano Hazan",
+      "gedcom_id": "@I132764570914@",
+      "gedcom_name": "Luna \u201cLena\u201d Hasson",
+      "confidence": 0.93,
+      "birth_date": "15 Jan 1912",
+      "birth_place": "Rhodes, Italy",
+      "alternatives": 3
+    },
+    {
+      "identity_id": "6a97c774-f66d-4edc-9e55-699d958336fd",
+      "identity_name": "Mary Maria Capelouto Hasson",
+      "gedcom_id": "@I132138053336@",
+      "gedcom_name": "Mary Capelouto",
+      "confidence": 0.86,
+      "birth_date": "8 Aug 1915",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 17
+    },
+    {
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "identity_name": "Mathilda Capouano Capelouto",
+      "gedcom_id": "@I132423679471@",
+      "gedcom_name": "Mathi Capelluto",
+      "confidence": 0.86,
+      "birth_date": null,
+      "birth_place": null,
+      "alternatives": 6
+    },
+    {
+      "identity_id": "e955bef9-8456-4870-8642-9ff68554f707",
+      "identity_name": "Matilda Tillie Moussafer Louza",
+      "gedcom_id": "@I132127389671@",
+      "gedcom_name": "Matilda Mosafir",
+      "confidence": 0.86,
+      "birth_date": "11 Feb 1912",
+      "birth_place": "Turkey",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "925904af-af2c-49af-a721-e4b74a312182",
+      "identity_name": "Moise Capeluto",
+      "gedcom_id": "@I132423679451@",
+      "gedcom_name": "Moise Capelluto",
+      "confidence": 1.0,
+      "birth_date": null,
+      "birth_place": null,
+      "alternatives": 4
+    },
+    {
+      "identity_id": "a772360a-64f6-4daf-8312-fcc7586304a7",
+      "identity_name": "Morris Franco",
+      "gedcom_id": "@I132617299926@",
+      "gedcom_name": "Morris Franco",
+      "confidence": 1.0,
+      "birth_date": "abt 1937",
+      "birth_place": null,
+      "alternatives": 5
+    },
+    {
+      "identity_id": "553cb710-eb89-4fce-8169-8eb25dde285a",
+      "identity_name": "Morris Mazal",
+      "gedcom_id": "@I132225401842@",
+      "gedcom_name": "Morris Mazal",
+      "confidence": 1.0,
+      "birth_date": "abt 1917",
+      "birth_place": "New York",
+      "alternatives": 1
+    },
+    {
+      "identity_id": "ca49d1a0-2220-4eee-b43d-4e0fb1e6af60",
+      "identity_name": "Mose Capelluto",
+      "gedcom_id": "@I132549665656@",
+      "gedcom_name": "Mose ( Moshe Moise Mussani ) Capeluto",
+      "confidence": 0.86,
+      "birth_date": "7 Feb 1903",
+      "birth_place": "Antalya, Turkey",
+      "alternatives": 3
+    },
+    {
+      "identity_id": "9e5f05cf-0c28-42cf-aad1-d4c001f0c54a",
+      "identity_name": "Nace Capeluto",
+      "gedcom_id": "@I132127294810@",
+      "gedcom_name": "Nace Capeluto",
+      "confidence": 1.0,
+      "birth_date": "5 Apr 1933",
+      "birth_place": "Ashville, North Carolina, USA",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "cefe22e2-2aa9-4925-bd23-3fdf7b59f29e",
+      "identity_name": "Rachel Capouya Capuano",
+      "gedcom_id": "@I132359928230@",
+      "gedcom_name": "Rachel \"Rae\" Capelouto",
+      "confidence": 0.93,
+      "birth_date": "21 Sep 1932",
+      "birth_place": "Los Angeles",
+      "alternatives": 6
+    },
+    {
+      "identity_id": "475abda0-e3e7-4db8-8f62-61f6c0e05367",
+      "identity_name": "Rica Moussafer Pizante",
+      "gedcom_id": "@I132409975254@",
+      "gedcom_name": "Rica (Rita) Pizanti",
+      "confidence": 0.93,
+      "birth_date": "Abt 1926",
+      "birth_place": null,
+      "alternatives": 0
+    },
+    {
+      "identity_id": "ae0b181b-db55-4c3e-853d-0fdc904a1000",
+      "identity_name": "Roland Fox",
+      "gedcom_id": "@I132123770992@",
+      "gedcom_name": "Roland Fox",
+      "confidence": 1.0,
+      "birth_date": "12 May 1930",
+      "birth_place": "Dayton, Ohio",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "35f38086-bc81-412e-9470-93a3d04b40d5",
+      "identity_name": "Rosa Sedikaro",
+      "gedcom_id": "@I132127930083@",
+      "gedcom_name": "Rosa Sedikaro",
+      "confidence": 1.0,
+      "birth_date": "1909",
+      "birth_place": "Rhodes",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "cca5f7ff-8be3-4271-aa6d-bc3a2d90bb18",
+      "identity_name": "Selma Capeluto",
+      "gedcom_id": "@I132127294545@",
+      "gedcom_name": "Selma Capeluto",
+      "confidence": 1.0,
+      "birth_date": "27 June 1928",
+      "birth_place": "Asheville, Buncombe County, North Carolina, United States of America",
+      "alternatives": 0
+    },
+    {
+      "identity_id": "bc7f747d-c3a1-4df4-971e-5046a4192853",
+      "identity_name": "Selma Capouya Capouano",
+      "gedcom_id": "@I132127294545@",
+      "gedcom_name": "Selma Capeluto",
+      "confidence": 0.86,
+      "birth_date": "27 June 1928",
+      "birth_place": "Asheville, Buncombe County, North Carolina, United States of America",
+      "alternatives": 1
+    },
+    {
+      "identity_id": "5a72fba6-6a9f-4be5-bc2d-688a38de0555",
+      "identity_name": "Sol Sedikaro",
+      "gedcom_id": "@I132127930098@",
+      "gedcom_name": "Sol Sedikaro",
+      "confidence": 1.0,
+      "birth_date": "1910",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 1
+    },
+    {
+      "identity_id": "e1d3d662-ae1d-4bef-83d5-3076d53fd70e",
+      "identity_name": "Stella Hasson Surmani",
+      "gedcom_id": "@I132198383359@",
+      "gedcom_name": "Stella ( Esther ) Surmani",
+      "confidence": 0.93,
+      "birth_date": "12 Mar 1927",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 8
+    },
+    {
+      "identity_id": "7cba61d1-4aec-401a-b2ff-5142fb68ac36",
+      "identity_name": "Victor Capelluto",
+      "gedcom_id": "@I132127402616@",
+      "gedcom_name": "Victor Capelluto",
+      "confidence": 1.0,
+      "birth_date": "21 Jan 1906",
+      "birth_place": "Rhodes, Greece",
+      "alternatives": 6
+    },
+    {
+      "identity_id": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "identity_name": "Victoria Capuano Capeluto",
+      "gedcom_id": "@I132559758861@",
+      "gedcom_name": "Victoria ( Vida ) Capeluto",
+      "confidence": 0.93,
+      "birth_date": "1908",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 6
+    },
+    {
+      "identity_id": "2cf08b25-075c-41a8-a20d-d03686aafd06",
+      "identity_name": "Victoria Cukran Capeluto",
+      "gedcom_id": "@I132559758861@",
+      "gedcom_name": "Victoria ( Vida ) Capeluto",
+      "confidence": 0.93,
+      "birth_date": "1908",
+      "birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece",
+      "alternatives": 7
+    }
+  ],
+  "review_needed": [
+    {
+      "identity_id": "1549d2b4-5d1f-4b0d-8ef2-430087a76d67",
+      "identity_name": "Belle Franco",
+      "gedcom_id": "@I132520618095@",
+      "gedcom_name": "Bellina Franco",
+      "confidence": 0.65
+    },
+    {
+      "identity_id": "67e830ac-7ebb-4d66-9ab2-72204610bef9",
+      "identity_name": "Debbie Fox Schapiro",
+      "gedcom_id": "@I132127364927@",
+      "gedcom_name": "Deborah Lynn Fox",
+      "confidence": 0.65
+    },
+    {
+      "identity_id": "c9e959bf-a75e-4f5a-bc31-bd95bfe09314",
+      "identity_name": "Felicita Russo Capelluto",
+      "gedcom_id": "@I132127812029@",
+      "gedcom_name": "Felice \\ Felicie Russo",
+      "confidence": 0.65
+    },
+    {
+      "identity_id": "4f005632-a4e3-45d0-b60b-50a1adc99cb8",
+      "identity_name": "Marcos Capelluto",
+      "gedcom_id": "@I132618493636@",
+      "gedcom_name": "Mari ( Miriam ) Capeluto",
+      "confidence": 0.65
+    }
+  ],
+  "no_match": [
+    {
+      "identity_id": "35963375-7f31-482f-89da-908cf115aa61",
+      "name": "Abraham Moussafer"
+    },
+    {
+      "identity_id": "fa0152dd-a2eb-4044-b70b-fdb10a61d18b",
+      "name": "Arlene Kessler Capeluto"
+    },
+    {
+      "identity_id": "fd43c9dd-8558-4305-8bda-90c3f320daac",
+      "name": "Boulissa Pizanti Capeluto"
+    },
+    {
+      "identity_id": "bac7731a-a1d2-4350-b528-c11f1b947b3a",
+      "name": "Eleanore Cohen"
+    },
+    {
+      "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "name": "Hanula Mosafir Capuano"
+    },
+    {
+      "identity_id": "9dfc300a-1c86-460a-85df-e62c6781eb6d",
+      "name": "Herman Benson"
+    },
+    {
+      "identity_id": "d85b2279-caac-4e56-b572-5431c4be48e5",
+      "name": "Molly Benson"
+    },
+    {
+      "identity_id": "acefd033-e25a-4b1b-b66d-9f2c6b5731f3",
+      "name": "Rahamin Capeluto"
+    },
+    {
+      "identity_id": "e26383e0-ee4e-40bd-9f8a-e3ae87a9dfc5",
+      "name": "Ray Franco"
+    },
+    {
+      "identity_id": "be977acc-e56a-48a9-a9a3-200f302e330b",
+      "name": "Sheila Surmani"
+    },
+    {
+      "identity_id": "843aaa8e-6212-4a1b-93e7-753dc1262453",
+      "name": "Vida Capeluto"
+    },
+    {
+      "identity_id": "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
+      "name": "Zeb Capuano"
+    }
+  ],
+  "stats": {
+    "total_confirmed": 55,
+    "auto_linked": 39,
+    "review_needed": 4,
+    "no_match": 12
+  }
+}
