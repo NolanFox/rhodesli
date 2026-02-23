@@ -178,6 +178,7 @@ def build_extraction_prompt(
     exclude: list[str] | None = None,
     face_coordinates: list[dict] | None = None,
     verified_facts: dict | None = None,
+    gedcom_context: str | None = None,
 ) -> str:
     """Build a unified Gemini prompt that extracts all requested info in one call.
 
@@ -187,6 +188,7 @@ def build_extraction_prompt(
         exclude: Extraction types to disable from preset
         face_coordinates: InsightFace bounding box data for face_analysis
         verified_facts: Known facts (confirmed names, dates) for progressive refinement
+        gedcom_context: GEDCOM genealogical context string for identified people
 
     Returns:
         Structured prompt string requesting JSON response
@@ -218,6 +220,11 @@ def build_extraction_prompt(
             facts_section += f"- Additional context: {verified_facts['notes']}\n"
         facts_section += "\nUse these facts to improve your analysis accuracy.\n"
         sections.append(facts_section)
+
+    # Add GEDCOM genealogical context if provided
+    if gedcom_context:
+        sections.append(f"## Genealogical Context\n{gedcom_context}\n\n"
+                        "Use this genealogical data to improve date, location, and identity analysis.")
 
     # Add enabled extraction sections
     active_types = [k for k, v in config.items() if v]

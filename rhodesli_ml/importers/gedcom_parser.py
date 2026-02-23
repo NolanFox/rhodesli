@@ -391,6 +391,36 @@ def _parse_individual(element) -> GedcomIndividual:
                 raw_date=date_str,
             )
 
+    # Extract additional life events (RESI, OCCU, IMMI, EMIG, BURI, etc.)
+    events = []
+    _EVENT_TAGS = {"RESI": "residence", "OCCU": "occupation", "IMMI": "immigration",
+                   "EMIG": "emigration", "BURI": "burial", "EVEN": "event"}
+    for child in element.get_child_elements():
+        tag = child.get_tag()
+        if tag in _EVENT_TAGS:
+            date_str = ""
+            place_str = ""
+            description = ""
+            for sub in child.get_child_elements():
+                if sub.get_tag() == "DATE":
+                    date_str = sub.get_value()
+                elif sub.get_tag() == "PLAC":
+                    place_str = sub.get_value()
+                elif sub.get_tag() == "TYPE":
+                    description = sub.get_value()
+                elif sub.get_tag() == "NOTE":
+                    if not description:
+                        description = sub.get_value()
+            parsed_date = parse_gedcom_date(date_str) if date_str else None
+            if parsed_date or place_str or (tag == "OCCU"):
+                event = GedcomEvent(
+                    event_type=_EVENT_TAGS[tag],
+                    date=parsed_date,
+                    place=place_str if place_str else None,
+                    raw_date=date_str,
+                )
+                events.append(event)
+
     return GedcomIndividual(
         xref_id=xref_id,
         given_name=given_name,
@@ -399,6 +429,7 @@ def _parse_individual(element) -> GedcomIndividual:
         gender=gender,
         birth=birth_event,
         death=death_event,
+        events=events,
     )
 
 

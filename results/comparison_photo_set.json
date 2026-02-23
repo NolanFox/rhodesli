@@ -1,0 +1,153 @@
+{
+  "description": "20-photo comparison set for Flash vs Pro \u00d7 GEDCOM variants",
+  "session": "61C",
+  "categories": {
+    "gedcom_linked": "Confirmed IDs linked to GEDCOM (test enrichment)",
+    "confirmed_no_gedcom": "Confirmed IDs without GEDCOM link (control)",
+    "unconfirmed": "Unconfirmed faces (partial enrichment)",
+    "no_faces": "No identified faces (pure visual baseline)",
+    "visual_only": "All faces unconfirmed (visual analysis only)"
+  },
+  "photos": [
+    {
+      "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+      "filename": "603576167.481802.jpg",
+      "category": "gedcom_linked",
+      "face_count": 8,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+      "filename": "603569465.197279.jpg",
+      "category": "gedcom_linked",
+      "face_count": 3,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+      "filename": "grave_isaac_capeluto_90588193_133774507166.jpg",
+      "category": "gedcom_linked",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+      "filename": "Image_567.jpg",
+      "category": "gedcom_linked",
+      "face_count": 2,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "filename": "Wedding_of_David_Capouano_and_Selma_Capouya.jpeg",
+      "category": "gedcom_linked",
+      "face_count": 2,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n",
+      "filename": "haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n.jpg",
+      "category": "confirmed_no_gedcom",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_benatar-20260213b_0_472157630_10170853657825346_1042246886224871126_n",
+      "filename": "472157630_10170853657825346_1042246886224871126_n.jpg",
+      "category": "confirmed_no_gedcom",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n",
+      "filename": "uriel_galante_collection_601825639_801235769629898_4625925847908071870_n.jpg",
+      "category": "confirmed_no_gedcom",
+      "face_count": 10,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_5_Abraham_Rousso_family",
+      "filename": "Abraham_Rousso_family.jpg",
+      "category": "confirmed_no_gedcom",
+      "face_count": 10,
+      "file_exists": true
+    },
+    {
+      "photo_id": "inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n",
+      "filename": "stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n.jpg",
+      "category": "confirmed_no_gedcom",
+      "face_count": 40,
+      "file_exists": true
+    },
+    {
+      "photo_id": "2b0e354d49e51d29",
+      "filename": "Image 936_compress.jpg",
+      "category": "unconfirmed",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "213d4dcc10a7745d",
+      "filename": "Image 053_compress.jpg",
+      "category": "unconfirmed",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "b9f591a56e25b71a",
+      "filename": "Image 924_compress.jpg",
+      "category": "unconfirmed",
+      "face_count": 6,
+      "file_exists": true
+    },
+    {
+      "photo_id": "2e5836aeceae8c6d",
+      "filename": "Image 925_compress.jpg",
+      "category": "unconfirmed",
+      "face_count": 6,
+      "file_exists": true
+    },
+    {
+      "photo_id": "a8a1730722a4cdeb",
+      "filename": "Image 007_compress.jpg",
+      "category": "unconfirmed",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "662e24c4f38575ca",
+      "filename": "Image 005_compress.jpg",
+      "category": "visual_only",
+      "face_count": 2,
+      "file_exists": true
+    },
+    {
+      "photo_id": "b9aa84ba4717fbc9",
+      "filename": "Image 912_compress.jpg",
+      "category": "visual_only",
+      "face_count": 1,
+      "file_exists": true
+    },
+    {
+      "photo_id": "d4fd0727068369ec",
+      "filename": "Image 931_compress.jpg",
+      "category": "visual_only",
+      "face_count": 6,
+      "file_exists": true
+    },
+    {
+      "photo_id": "d0c83b767f767210",
+      "filename": "Image 003_compress.jpg",
+      "category": "visual_only",
+      "face_count": 3,
+      "file_exists": true
+    },
+    {
+      "photo_id": "9411826ba358db3c",
+      "filename": "Image 914_compress.jpg",
+      "category": "visual_only",
+      "face_count": 1,
+      "file_exists": true
+    }
+  ]
+}
