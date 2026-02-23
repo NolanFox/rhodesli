@@ -1436,6 +1436,188 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     )
 
 
+def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
+    """Build the face alignment description panel for a photo page.
+
+    Shows per-face Gemini descriptions (from PRD-015 coordinate bridging).
+    Returns None if no alignment data exists for this photo.
+    Admin users see a "Run Face Analysis" trigger button if not yet aligned.
+    """
+    from app.face_alignment import get_cached_alignment, load_alignments_from_file
+
+    # Check for existing alignment data
+    alignment = get_cached_alignment(photo_id)
+    if alignment is None:
+        alignments = load_alignments_from_file(data_path)
+        alignment = alignments.get(photo_id)
+
+    # Admin trigger button if no alignment exists
+    if alignment is None:
+        if not is_admin:
+            return None
+        return Div(
+            H3("Face Analysis", cls="text-lg font-serif font-bold text-white mb-2"),
+            P("No face descriptions available yet.", cls="text-slate-400 text-sm mb-2"),
+            Button(
+                "Run Face Analysis",
+                cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white "
+                    "rounded-lg transition-colors",
+                hx_post=f"/api/face-alignment/{photo_id}",
+                hx_target=f"#face-alignment-{photo_id[:8]}",
+                hx_swap="innerHTML",
+                hx_indicator=f"#face-alignment-spinner-{photo_id[:8]}",
+                type="button",
+            ),
+            Span(
+                cls=f"htmx-indicator ml-2 inline-block w-4 h-4 border-2 border-indigo-400 "
+                    "border-t-transparent rounded-full animate-spin",
+                id=f"face-alignment-spinner-{photo_id[:8]}",
+            ),
+            id=f"face-alignment-{photo_id[:8]}",
+            cls="px-4 sm:px-6 py-4 border-t border-slate-800/50",
+            data_testid="face-alignment-trigger",
+        )
+
+    # Render alignment results
+    # Handle both AlignmentResult objects and raw dicts
+    if isinstance(alignment, dict):
+        aligned_faces = alignment.get("aligned_faces", [])
+        faces_detected = alignment.get("faces_detected", 0)
+        faces_described = alignment.get("faces_described", 0)
+        gemini_only = alignment.get("gemini_only_faces", [])
+        scene_context = alignment.get("scene_context", "")
+        model_used = alignment.get("model_used", "")
+    else:
+        aligned_faces = [f if isinstance(f, dict) else {
+            "face_id": f.face_id, "estimated_age": f.estimated_age,
+            "gender": f.gender, "gemini_description": f.gemini_description,
+            "clothing": f.clothing, "position_in_photo": f.position_in_photo,
+            "identifying_features": f.identifying_features,
+            "identity_name": f.identity_name, "is_subject": f.is_subject,
+        } for f in alignment.aligned_faces]
+        faces_detected = alignment.faces_detected
+        faces_described = alignment.faces_described
+        gemini_only = alignment.gemini_only_faces
+        scene_context = alignment.scene_context
+        model_used = alignment.model_used
+
+    face_cards = []
+    for i, face in enumerate(aligned_faces):
+        is_subject = face.get("is_subject", True)
+        if not is_subject:
+            continue  # Skip non-subject faces in the display
+
+        name = face.get("identity_name") or "Unidentified"
+        age = face.get("estimated_age")
+        gender = face.get("gender", "")
+        clothing = face.get("clothing", "")
+        description = face.get("gemini_description", "")
+        position = face.get("position_in_photo", "")
+        features = face.get("identifying_features", "")
+
+        card_content = []
+        # Header: face index + identity name
+        header_text = f"Face {i}"
+        if name != "Unidentified":
+            header_text += f": {name}"
+        card_content.append(
+            P(header_text, cls="text-white font-medium text-sm mb-1")
+        )
+
+        # Demographics line
+        demo_parts = []
+        if age:
+            demo_parts.append(f"Age: ~{age}")
+        if gender:
+            demo_parts.append(gender.capitalize())
+        if demo_parts:
+            card_content.append(
+                P(" | ".join(demo_parts), cls="text-indigo-300 text-xs mb-1")
+            )
+
+        # Description
+        if description:
+            card_content.append(
+                P(description, cls="text-slate-300 text-xs mb-1")
+            )
+
+        # Clothing
+        if clothing:
+            card_content.append(
+                P(f"Attire: {clothing}", cls="text-slate-400 text-xs mb-1")
+            )
+
+        # Position + Features
+        if position:
+            card_content.append(
+                P(f"Position: {position}", cls="text-slate-500 text-xs")
+            )
+        if features:
+            card_content.append(
+                P(f"Features: {features}", cls="text-slate-500 text-xs italic")
+            )
+
+        face_cards.append(
+            Div(
+                *card_content,
+                cls="border border-indigo-500/30 bg-indigo-950/20 rounded-lg p-3",
+            )
+        )
+
+    # Mismatch warning
+    mismatch_warning = None
+    if faces_detected != faces_described:
+        mismatch_warning = Div(
+            P(
+                f"InsightFace detected {faces_detected} faces, "
+                f"Gemini described {faces_described}.",
+                cls="text-amber-300 text-xs"
+            ),
+            P(
+                f"{len(gemini_only)} additional face(s) seen by Gemini only."
+                if gemini_only else "",
+                cls="text-amber-400/70 text-xs"
+            ) if gemini_only else None,
+            cls="bg-amber-900/20 border border-amber-500/30 rounded px-3 py-2 mb-3",
+            data_testid="face-alignment-mismatch",
+        )
+
+    # Scene context
+    scene_el = None
+    if scene_context:
+        scene_el = P(
+            f"Scene: {scene_context}",
+            cls="text-slate-400 text-xs italic mb-3"
+        )
+
+    return Div(
+        H3("Face Analysis", cls="text-lg font-serif font-bold text-white mb-2"),
+        P(
+            f"Gemini coordinate bridging ({model_used})",
+            cls="text-indigo-400/70 text-[11px] mb-3"
+        ),
+        mismatch_warning,
+        scene_el,
+        Div(
+            *face_cards,
+            cls="grid gap-2 sm:grid-cols-2"
+        ) if face_cards else P("No subject faces described.", cls="text-slate-500 text-sm"),
+        # Re-run button for admin
+        Button(
+            "Re-run Analysis",
+            cls="mt-3 text-xs px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 "
+                "rounded transition-colors",
+            hx_post=f"/api/face-alignment/{photo_id}",
+            hx_target=f"#face-alignment-{photo_id[:8]}",
+            hx_swap="innerHTML",
+            type="button",
+        ) if is_admin else None,
+        id=f"face-alignment-{photo_id[:8]}",
+        cls="px-4 sm:px-6 py-4 border-t border-slate-800/50",
+        data_testid="face-alignment-results",
+    )
+
+
 def _render_date_badge_overlay(photo_id: str) -> Span:
     """Render a date badge overlay for a photo card. Returns None if no label."""
     date_text, date_conf, date_tooltip = _get_date_badge(photo_id)
@@ -9982,6 +10164,8 @@ def photo_view_content(
             _photo_annotations_section(photo_id, is_admin),
             # AI Analysis metadata panel (date estimate, scene, tags, evidence)
             _build_ai_analysis_section(photo_id, is_admin),
+            # Face alignment descriptions (PRD-015 coordinate bridging)
+            _build_face_alignment_section(photo_id, is_admin),
             cls="mt-4"
         ),
         nav_keyboard_script,
@@ -18312,6 +18496,8 @@ def public_photo_page(
 
             # AI Analysis panel (from date labels + search index)
             _build_ai_analysis_section(photo_id, is_admin),
+            # Face alignment descriptions (PRD-015 coordinate bridging)
+            _build_face_alignment_section(photo_id, is_admin),
 
             # Call to action — link to first unidentified face from this photo
             Section(
