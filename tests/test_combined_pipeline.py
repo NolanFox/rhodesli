@@ -290,16 +290,18 @@ class TestGedcomContextBuilder:
         ]
 
         mock_sb = MagicMock()
-        call_count = [0]
+        table_call_names = []
 
-        def mock_execute():
-            call_count[0] += 1
-            if call_count[0] == 1:  # events query
-                return MagicMock(data=[])
-            else:  # relationships query
-                return MagicMock(data=relationship_data)
+        def mock_table(name):
+            table_call_names.append(name)
+            mock_chain = MagicMock()
+            if name == "gedcom_events":
+                mock_chain.select.return_value.range.return_value.execute.return_value = MagicMock(data=[])
+            elif name == "gedcom_relationships":
+                mock_chain.select.return_value.range.return_value.execute.return_value = MagicMock(data=relationship_data)
+            return mock_chain
 
-        mock_sb.table.return_value.select.return_value.execute = mock_execute
+        mock_sb.table = mock_table
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
             import sys

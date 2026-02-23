@@ -137,12 +137,18 @@ def build_gedcom_context(photo_id: str, faces: list[FaceDetection],
 
     try:
         from rhodesli_ml.gedcom_context import build_photo_context
+        # build_photo_context expects the inner identities dict, not the
+        # full JSON envelope with schema_version/history keys
+        inner_identities = identities
+        if "identities" in identities and "schema_version" in identities:
+            inner_identities = identities["identities"]
+
         context = build_photo_context(
             photo_id=photo_id,
             identified_faces=identified_face_ids,
             parsed_gedcom=parsed_gedcom,
             gedcom_face_links=face_links,
-            identities=identities,
+            identities=inner_identities,
             variant="curated",
         )
         return context
@@ -168,23 +174,33 @@ def load_gedcom_data() -> dict | None:
         face_links = {}
         if links_resp and links_resp.data:
             for row in links_resp.data:
-                face_links[row["identity_id"]] = row["gedcom_xref"]
+                face_links[row["identity_id"]] = row["gedcom_id"]
 
         if not face_links:
             return None
 
-        # Load individuals
-        from rhodesli_ml.gedcom_parser import ParsedGedcom
-        indis_resp = sb.table("gedcom_individuals").select("*").execute()
-        if not indis_resp or not indis_resp.data:
+        # Load ALL individuals (Supabase default limit is 1000, we have 21,809)
+        all_individuals = []
+        page_size = 1000
+        offset = 0
+        while True:
+            indis_resp = sb.table("gedcom_individuals").select("*").range(offset, offset + page_size - 1).execute()
+            if not indis_resp or not indis_resp.data:
+                break
+            all_individuals.extend(indis_resp.data)
+            if len(indis_resp.data) < page_size:
+                break
+            offset += page_size
+
+        if not all_individuals:
             return None
 
         # Build a minimal parsed gedcom from Supabase data
         # This is a lightweight wrapper — full GEDCOM file not needed
-        logger.info(f"Loaded {len(face_links)} GEDCOM face links, {len(indis_resp.data)} individuals")
+        logger.info(f"Loaded {len(face_links)} GEDCOM face links, {len(all_individuals)} individuals")
         return {
             "face_links": face_links,
-            "parsed_gedcom": _build_parsed_gedcom_from_supabase(indis_resp.data),
+            "parsed_gedcom": _build_parsed_gedcom_from_supabase(all_individuals),
         }
     except Exception as e:
         logger.debug(f"GEDCOM data unavailable: {e}")
@@ -253,11 +269,19 @@ def _build_parsed_gedcom_from_supabase(individuals_data):
             family_as_child=[],
         )
 
-    # 2. Load events and attach to individuals
+    # 2. Load events and attach to individuals (paginated)
     try:
-        events_resp = sb.table("gedcom_events").select("*").execute()
-        if events_resp and events_resp.data:
-            for ev_row in events_resp.data:
+        all_events = []
+        offset = 0
+        while True:
+            events_resp = sb.table("gedcom_events").select("*").range(offset, offset + 999).execute()
+            if not events_resp or not events_resp.data:
+                break
+            all_events.extend(events_resp.data)
+            if len(events_resp.data) < 1000:
+                break
+            offset += 1000
+        for ev_row in all_events:
                 indi_xref = ev_row.get("gedcom_individual_id")
                 if indi_xref not in individuals:
                     continue
@@ -275,12 +299,20 @@ def _build_parsed_gedcom_from_supabase(individuals_data):
     except Exception as e:
         logger.debug(f"Failed to load GEDCOM events: {e}")
 
-    # 3. Load relationships and reconstruct families
+    # 3. Load relationships and reconstruct families (paginated)
     families = {}
     try:
-        rels_resp = sb.table("gedcom_relationships").select("*").execute()
-        if rels_resp and rels_resp.data:
-            for rel in rels_resp.data:
+        all_rels = []
+        offset = 0
+        while True:
+            rels_resp = sb.table("gedcom_relationships").select("*").range(offset, offset + 999).execute()
+            if not rels_resp or not rels_resp.data:
+                break
+            all_rels.extend(rels_resp.data)
+            if len(rels_resp.data) < 1000:
+                break
+            offset += 1000
+        for rel in all_rels:
                 indi_xref = rel["individual_gedcom_id"]
                 related_xref = rel["related_gedcom_id"]
                 rel_type = rel["relationship_type"]
@@ -422,6 +454,12 @@ def get_failed_photo_ids(results_file: Path) -> list[str]:
 
 
 async def main():
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
+
     parser = argparse.ArgumentParser(description="Combined Gemini photo processing pipeline")
     parser.add_argument('--limit', type=int, default=5, help='Max photos to process (default: 5 validation)')
     parser.add_argument('--execute', action='store_true', help='Process all eligible photos')
