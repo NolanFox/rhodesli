@@ -192,14 +192,166 @@ def load_gedcom_data() -> dict | None:
 
 
 def _build_parsed_gedcom_from_supabase(individuals_data):
-    """Build a minimal ParsedGedcom-like object from Supabase data.
+    """Build a ParsedGedcom object from Supabase table data.
 
-    Returns None if the data structure doesn't support it.
+    Reconstructs the full object graph (individuals + families + relationships)
+    from flat Supabase rows so that build_photo_context() can call methods like
+    get_parents(), get_spouses(), get_children(), get_siblings(), get_marriages().
+
+    Args:
+        individuals_data: List of dicts from gedcom_individuals table.
+
+    Returns:
+        ParsedGedcom object, or None on failure.
     """
-    # For now, return None — GEDCOM context requires full ParsedGedcom
-    # This will be wired when Supabase has full GEDCOM records
-    # The face_links alone are enough to know WHICH photos have GEDCOM connections
-    return None
+    if not individuals_data:
+        return None
+
+    from rhodesli_ml.importers.gedcom_parser import (
+        GedcomEvent,
+        GedcomFamily,
+        GedcomIndividual,
+        ParsedGedcom,
+        parse_gedcom_date,
+    )
+    from app.supabase_data import get_supabase_client
+
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    # 1. Build individuals dict from individuals_data
+    individuals = {}
+    for row in individuals_data:
+        xref = row["gedcom_id"]
+        birth_event = None
+        if row.get("birth_date") or row.get("birth_place"):
+            birth_event = GedcomEvent(
+                event_type="birth",
+                date=parse_gedcom_date(row.get("birth_date", "")),
+                place=row.get("birth_place"),
+                raw_date=row.get("birth_date", ""),
+            )
+        death_event = None
+        if row.get("death_date") or row.get("death_place"):
+            death_event = GedcomEvent(
+                event_type="death",
+                date=parse_gedcom_date(row.get("death_date", "")),
+                place=row.get("death_place"),
+                raw_date=row.get("death_date", ""),
+            )
+        individuals[xref] = GedcomIndividual(
+            xref_id=xref,
+            given_name=row.get("given_name", ""),
+            surname=row.get("surname", ""),
+            full_name=row.get("name", ""),
+            gender=row.get("gender", "U"),
+            birth=birth_event,
+            death=death_event,
+            events=[],
+            family_as_spouse=[],
+            family_as_child=[],
+        )
+
+    # 2. Load events and attach to individuals
+    try:
+        events_resp = sb.table("gedcom_events").select("*").execute()
+        if events_resp and events_resp.data:
+            for ev_row in events_resp.data:
+                indi_xref = ev_row.get("gedcom_individual_id")
+                if indi_xref not in individuals:
+                    continue
+                # Skip birth/death — already handled above
+                etype = ev_row.get("event_type", "")
+                if etype in ("birth", "death"):
+                    continue
+                event = GedcomEvent(
+                    event_type=etype,
+                    date=parse_gedcom_date(ev_row.get("raw_date", "") or ev_row.get("date", "")),
+                    place=ev_row.get("place"),
+                    raw_date=ev_row.get("raw_date", "") or ev_row.get("date", ""),
+                )
+                individuals[indi_xref].events.append(event)
+    except Exception as e:
+        logger.debug(f"Failed to load GEDCOM events: {e}")
+
+    # 3. Load relationships and reconstruct families
+    families = {}
+    try:
+        rels_resp = sb.table("gedcom_relationships").select("*").execute()
+        if rels_resp and rels_resp.data:
+            for rel in rels_resp.data:
+                indi_xref = rel["individual_gedcom_id"]
+                related_xref = rel["related_gedcom_id"]
+                rel_type = rel["relationship_type"]
+                fam_xref = rel.get("family_gedcom_id", "")
+
+                if not fam_xref:
+                    continue
+
+                # Ensure family exists
+                if fam_xref not in families:
+                    families[fam_xref] = GedcomFamily(xref_id=fam_xref)
+
+                fam = families[fam_xref]
+
+                if rel_type == "spouse":
+                    # indi_xref is a spouse in this family
+                    if indi_xref in individuals:
+                        indi = individuals[indi_xref]
+                        if fam_xref not in indi.family_as_spouse:
+                            indi.family_as_spouse.append(fam_xref)
+                        # Assign husband/wife based on gender
+                        gender = indi.gender
+                        if gender == "M" and not fam.husband_xref:
+                            fam.husband_xref = indi_xref
+                        elif gender == "F" and not fam.wife_xref:
+                            fam.wife_xref = indi_xref
+                        elif not fam.husband_xref:
+                            fam.husband_xref = indi_xref
+                        elif not fam.wife_xref:
+                            fam.wife_xref = indi_xref
+
+                elif rel_type == "child":
+                    # indi_xref is child, related_xref is parent
+                    if indi_xref in individuals:
+                        indi = individuals[indi_xref]
+                        if fam_xref not in indi.family_as_child:
+                            indi.family_as_child.append(fam_xref)
+                        if indi_xref not in fam.children_xrefs:
+                            fam.children_xrefs.append(indi_xref)
+
+                elif rel_type == "parent":
+                    # indi_xref is parent, related_xref is child
+                    if indi_xref in individuals:
+                        indi = individuals[indi_xref]
+                        if fam_xref not in indi.family_as_spouse:
+                            indi.family_as_spouse.append(fam_xref)
+                        gender = indi.gender
+                        if gender == "M" and not fam.husband_xref:
+                            fam.husband_xref = indi_xref
+                        elif gender == "F" and not fam.wife_xref:
+                            fam.wife_xref = indi_xref
+                        elif not fam.husband_xref:
+                            fam.husband_xref = indi_xref
+                        elif not fam.wife_xref:
+                            fam.wife_xref = indi_xref
+                    if related_xref in individuals:
+                        child = individuals[related_xref]
+                        if fam_xref not in child.family_as_child:
+                            child.family_as_child.append(fam_xref)
+                        if related_xref not in fam.children_xrefs:
+                            fam.children_xrefs.append(related_xref)
+
+    except Exception as e:
+        logger.debug(f"Failed to load GEDCOM relationships: {e}")
+
+    logger.info(f"Built ParsedGedcom from Supabase: {len(individuals)} individuals, {len(families)} families")
+    return ParsedGedcom(
+        individuals=individuals,
+        families=families,
+        source_file="supabase",
+    )
 
 
 async def process_photo(photo_id: str, photo_data: dict, identities: dict,
