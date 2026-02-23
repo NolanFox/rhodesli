@@ -263,8 +263,11 @@ def parse_alignment_response(
 async def call_gemini_alignment(
     image_bytes: bytes,
     prompt: str,
-    model: str = "gemini-3.1-pro-preview",
+    model: str | None = None,
     api_key: str | None = None,
+    photo_id: str | None = None,
+    call_type: str = "alignment",
+    batch_id: str | None = None,
 ) -> tuple[dict | None, int, int]:
     """
     Call Gemini API with image and alignment prompt.
@@ -273,12 +276,20 @@ async def call_gemini_alignment(
     Returns (None, 0, 0) on failure.
     """
     import os
+    import time as _time
+
+    from rhodesli_ml.gemini_config import GEMINI_MODEL
+
+    if model is None:
+        model = GEMINI_MODEL
+
     if api_key is None:
         api_key = os.getenv("GEMINI_API_KEY", "")
     if not api_key:
         logger.error("No GEMINI_API_KEY available")
         return None, 0, 0
 
+    start_ms = int(_time.time() * 1000)
     try:
         from google import genai
         from google.genai import types
@@ -306,6 +317,8 @@ async def call_gemini_alignment(
 
         text = response.text
         if not text:
+            _log_call(photo_id, model, call_type, 0, 0, 0, start_ms, "error",
+                       error_message="Empty response", batch_id=batch_id)
             return None, 0, 0
 
         parsed = json.loads(text)
@@ -317,11 +330,60 @@ async def call_gemini_alignment(
             input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0) or 0
             output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0) or 0
 
+        # Estimate cost
+        from rhodesli_ml.gemini_config import get_model_pricing
+        pricing = get_model_pricing(model)
+        cost = (input_tokens * pricing["input"] / 1_000_000) + (output_tokens * pricing["output"] / 1_000_000)
+
+        _log_call(photo_id, model, call_type, input_tokens, output_tokens, cost,
+                   start_ms, "success", batch_id=batch_id)
+
         return parsed, input_tokens, output_tokens
 
     except Exception as e:
+        error_msg = str(e)
+        status = "error"
+        rate_limit_type = None
+        if "429" in error_msg or "RESOURCE_EXHAUSTED" in error_msg:
+            status = "rate_limited"
+            if "per day" in error_msg.lower() or "rpd" in error_msg.lower():
+                rate_limit_type = "rpd"
+            elif "per minute" in error_msg.lower() or "rpm" in error_msg.lower():
+                rate_limit_type = "rpm"
+            else:
+                rate_limit_type = "unknown"
+
+        _log_call(photo_id, model, call_type, 0, 0, 0, start_ms, status,
+                   error_message=error_msg, rate_limit_type=rate_limit_type, batch_id=batch_id)
         logger.error(f"Gemini face alignment call failed: {e}")
         return None, 0, 0
+
+
+def _log_call(photo_id, model, call_type, prompt_tokens, completion_tokens,
+              cost_usd, start_ms, status, error_message=None,
+              rate_limit_type=None, batch_id=None):
+    """Best-effort log of Gemini API call to Supabase."""
+    import time as _time
+    if not photo_id:
+        return
+    try:
+        from app.supabase_data import log_gemini_call
+        latency_ms = int(_time.time() * 1000) - start_ms
+        log_gemini_call(
+            photo_id=photo_id,
+            model_used=model,
+            call_type=call_type,
+            prompt_tokens=prompt_tokens or None,
+            completion_tokens=completion_tokens or None,
+            cost_usd=cost_usd or None,
+            latency_ms=latency_ms,
+            status=status,
+            error_message=error_message,
+            rate_limit_type=rate_limit_type,
+            batch_id=batch_id,
+        )
+    except Exception:
+        pass  # Never block alignment on logging failure
 
 
 # --- Full pipeline ---
@@ -330,9 +392,11 @@ async def run_face_alignment(
     photo_id: str,
     image_bytes: bytes,
     faces: list[FaceDetection],
-    model: str = "gemini-3.1-pro-preview",
+    model: str | None = None,
     additional_context: str = "",
     api_key: str | None = None,
+    call_type: str = "alignment",
+    batch_id: str | None = None,
 ) -> AlignmentResult:
     """
     Full face alignment pipeline for one photo:
@@ -364,7 +428,8 @@ async def run_face_alignment(
 
     # Step 4: Call Gemini
     response_data, input_tokens, output_tokens = await call_gemini_alignment(
-        normalized_bytes, prompt, model=model, api_key=api_key
+        normalized_bytes, prompt, model=model, api_key=api_key,
+        photo_id=photo_id, call_type=call_type, batch_id=batch_id,
     )
 
     if response_data is None:
