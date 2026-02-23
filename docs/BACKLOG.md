@@ -78,6 +78,13 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **FA-004: Auto-trigger face alignment on new photo upload** — After upload + face detection, auto-run alignment if GEMINI_API_KEY available. Source: Session 62 prompt 6B.
 - [ ] **FA-005: Production test face alignment** — Run POST /api/face-alignment/{photo_id} on 3-5 real photos with GEMINI_API_KEY on Railway. Needs deploy first. Source: Session 62 Phase 5 deferred.
 
+### GEDCOM Integration (Session 61C, AD-147/148)
+- [ ] **GEDCOM-001: Supabase GEDCOM tables via Dashboard SQL migration** — Create 4 tables: gedcom_individuals, gedcom_events, gedcom_relationships, gedcom_face_links. Schema for linking GEDCOM genealogical data to Rhodesli identities. Status: OPEN. Source: Session 61C, AD-147/148.
+- [ ] **GEDCOM-002: Admin GEDCOM link review UI** — Interface for linking identities to GEDCOM individuals. Admin can browse/search GEDCOM individuals and associate them with existing Rhodesli identity records. Status: OPEN. Source: Session 61C, AD-147/148.
+- [ ] **GEDCOM-003: GEDCOM enrichment in upload flow** — When a face is identified and has a GEDCOM link, show enriched analysis popup with genealogical context (birth year, relationships, life events). Status: OPEN. Source: Session 61C, AD-147/148.
+- [ ] **GEDCOM-004: "Analysis improved because..." UX feature** — Show users what GEDCOM context added vs visual-only analysis. Side-by-side or inline comparison of results with and without genealogical enrichment. Status: OPEN. Source: Session 61C, AD-147/148.
+- [ ] **GEDCOM-005: Batch re-analysis with GEDCOM enrichment** — Re-run all 271 photos with curated GEDCOM variant. Leverage linked GEDCOM data to improve date estimation and identity confidence across the full archive. Status: OPEN. Source: Session 61C, AD-147/148.
+
 ### Architecture
 - [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.
 

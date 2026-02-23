@@ -42,7 +42,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [ ] FE-041: "Help Identify" mode for non-admin users
-- [ ] ML-096: Flash vs Pro comparison (20 photos, ~$0.62, needs approval)
+- [x] ML-096: Flash vs Pro + GEDCOM comparison (11 runs, $2.46, Session 61C)
 - [ ] Active learning pipeline
 
 ### Future
@@ -55,6 +55,13 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
+
+### Session 61C: GEDCOM-Enriched Analysis + Flash vs Pro — COMPLETE (2026-02-23)
+- [x] GEDCOM parser extended with life events (RESI, OCCU, IMMI, EMIG, BURI)
+- [x] 5-variant GEDCOM context builder (rhodesli_ml/gedcom_context.py, 19 tests)
+- [x] Supabase import script (tables not yet created)
+- [x] 11 comparison runs: 3 models × 5 GEDCOM variants, $2.46 spent
+- [x] Verdict: Pro + curated GEDCOM is optimal (AD-147, AD-148)
 
 ### Session 62: PRD-015 Face Alignment Implementation — COMPLETE (2026-02-22)
 - [x] EXIF orientation handler (app/exif_handler.py, 10 tests)
@@ -69,6 +76,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-23: **Session 61C**: GEDCOM-Enriched Analysis + Flash vs Pro. 3 models × 5 GEDCOM variants ($2.46). Verdict: Pro + curated optimal. AD-147/148. GEDCOM context builder (19 tests). Supabase import script.
 - [x] 2026-02-22: **v0.65.0 — Session 62**: PRD-015 Face Alignment via Coordinate Bridging. EXIF handler, coordinate bridging module, API endpoints, photo page UI with per-face description cards. AD-146. 54 new tests. ~3373 total.
 - [x] 2026-02-22: **v0.64.0 — Session 61**: Gemini Photo Detective + Multi-Photo Compare. Fixed enriched prompt gap (ML-090). Gemini 3.1 Pro (AD-139). MLflow tracking (AD-140). Multi-photo compare (AD-141, PRD-021). Evidence cards UX (AD-142, PRD-022). ~3250 tests.
 - [x] 2026-02-22: **v0.63.0/v0.63.1 — Sessions 60/60B**: Gemini Progressive Refinement + SSE Upload + Production Verification. P0 CSS crash fix. 3192 tests.

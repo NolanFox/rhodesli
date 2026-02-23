@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 61C] — 2026-02-23 (GEDCOM-Enriched Analysis)
+
+### Added — ML: GEDCOM Context Builder + Model Comparison
+- `rhodesli_ml/gedcom_context.py`: 5-variant GEDCOM context builder (none, full, curated, first_order, co_occurrence)
+- `scripts/compare_models.py`: Gemini model comparison driver with cost/token/latency tracking
+- `scripts/import_gedcom_supabase.py`: GEDCOM-to-Supabase import (4 tables, idempotent upsert)
+- Extended GEDCOM parser with RESI, OCCU, IMMI, EMIG, BURI event extraction
+- `gedcom_context` parameter added to `build_extraction_prompt()` in unified extraction
+
+### Research — 3-Model × 5-Variant Comparison ($2.46 / $10 budget)
+- 11 runs × 20 photos across gemini-2.0-flash, gemini-3-flash-preview, gemini-3.1-pro-preview
+- **Verdict**: Pro + curated GEDCOM is optimal ($0.02/photo, 0% error rate)
+- GEDCOM context transforms location vague → city-level in 4/5 cases
+- Date estimates narrow by 3-7 years with GEDCOM context
+- Flash-3-preview unreliable (13% 503 error rate)
+- AD-147 (GEDCOM enrichment results), AD-148 (GEDCOM storage architecture)
+
+### Stats
+- 19 new tests (GEDCOM context builder)
+- 11 comparison run result files in results/
+- Full report: results/gedcom_enrichment_comparison_report.md
+
 ## [v0.65.0] — 2026-02-22 (Session 62)
 
 ### Added — PRD-015: Face Alignment via Coordinate Bridging (AD-146)

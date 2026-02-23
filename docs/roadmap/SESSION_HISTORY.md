@@ -339,6 +339,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Real photo testing deferred to production (no GEMINI_API_KEY locally)
 - 54 new tests. ~3373 total (2864 app + 509 ML).
 
+## Session 61C: GEDCOM-Enriched Analysis + Flash vs Pro (2026-02-23)
+- Extended GEDCOM parser with RESI, OCCU, IMMI, EMIG, BURI life event extraction
+- 5-variant GEDCOM context builder (rhodesli_ml/gedcom_context.py): none, full, curated, first_order, co_occurrence — 19 tests
+- Supabase import script (scripts/import_gedcom_supabase.py) — tables not yet created
+- Model comparison driver (scripts/compare_models.py) with cost/token/latency tracking
+- 11 comparison runs: 3 models (gemini-2.0-flash, gemini-3-flash-preview, gemini-3.1-pro-preview) × 5 GEDCOM variants, $2.46 of $10 budget
+- **Verdict**: Pro + curated GEDCOM optimal ($0.02/photo, 0% errors, city-level location)
+- AD-147 (GEDCOM enrichment results), AD-148 (GEDCOM storage architecture)
+- BACKLOG: 5 GEDCOM integration items added (GEDCOM-001 through GEDCOM-005)
+- Outcomes: docs/session_context/session_61c_outcomes.md
+
 ---
 
 ## Release Version History
