@@ -1443,12 +1443,12 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
     Returns None if no alignment data exists for this photo.
     Admin users see a "Run Face Analysis" trigger button if not yet aligned.
     """
-    from app.face_alignment import get_cached_alignment, load_alignments_from_file
+    from app.face_alignment import get_cached_alignment, load_alignments
 
-    # Check for existing alignment data
+    # Check for existing alignment data (Supabase-first, AD-152)
     alignment = get_cached_alignment(photo_id)
     if alignment is None:
-        alignments = load_alignments_from_file(data_path)
+        alignments = load_alignments(data_path)
         alignment = alignments.get(photo_id)
 
     # Admin trigger button if no alignment exists
@@ -9482,7 +9482,7 @@ async def post(photo_id: str, sess=None):
     from starlette.responses import JSONResponse as _JSONResponse
     from app.face_alignment import (
         FaceDetection, cache_alignment, get_cached_alignment,
-        run_face_alignment, save_alignment_to_file,
+        run_face_alignment, save_alignment,
     )
 
     admin_err = _check_admin(sess)
@@ -9540,12 +9540,12 @@ async def post(photo_id: str, sess=None):
             status_code=500,
         )
 
-    # Cache and save
+    # Cache and save (Supabase-first, JSON fallback — AD-152)
     cache_alignment(result)
     try:
-        save_alignment_to_file(result, output_dir=data_path)
+        save_alignment(result, output_dir=data_path)
     except Exception as e:
-        logging.warning(f"Failed to save alignment to file: {e}")
+        logging.warning(f"Failed to save alignment: {e}")
 
     return _JSONResponse(result.to_dict())
 
@@ -9558,15 +9558,15 @@ def get(photo_id: str):
     Public endpoint (descriptions help with identification).
     """
     from starlette.responses import JSONResponse as _JSONResponse
-    from app.face_alignment import get_cached_alignment, load_alignments_from_file
+    from app.face_alignment import get_cached_alignment, load_alignments
 
     # Check in-memory cache first
     cached = get_cached_alignment(photo_id)
     if cached:
         return _JSONResponse(cached.to_dict())
 
-    # Check file storage
-    alignments = load_alignments_from_file(data_path)
+    # Check Supabase then JSON fallback
+    alignments = load_alignments(data_path)
     if photo_id in alignments:
         return _JSONResponse(alignments[photo_id])
 

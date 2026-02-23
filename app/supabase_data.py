@@ -367,3 +367,100 @@ def sync_from_supabase_on_startup(data_path):
         logger.info("Startup sync: no changes from Supabase")
 
     return changes_made
+
+
+# =========================================================================
+# FACE ALIGNMENT SYNC (AD-152: JSON → Supabase migration)
+# =========================================================================
+
+def save_face_alignment_to_supabase(photo_id, alignment_data, model_used=None, cost=None, tokens=None):
+    """Save face alignment result to Supabase.
+
+    Primary store for face alignment data (AD-152).
+    Returns True on success, False on failure (caller falls back to JSON).
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return False
+
+    row = {
+        'photo_id': photo_id,
+        'alignment_data': alignment_data,
+        'model_used': model_used,
+        'cost': cost,
+        'tokens_used': tokens,
+    }
+    # Remove None values so defaults apply
+    row = {k: v for k, v in row.items() if v is not None}
+
+    try:
+        sb.table('face_gemini_alignments').upsert(
+            row, on_conflict='photo_id'
+        ).execute()
+        logger.debug(f"Saved face alignment for {photo_id} to Supabase")
+        return True
+    except Exception as e:
+        logger.warning(f"Supabase face alignment save failed for {photo_id}: {e}")
+        return False
+
+
+def load_face_alignment_from_supabase(photo_id):
+    """Load face alignment for a single photo from Supabase.
+
+    Returns alignment_data dict or None.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table('face_gemini_alignments').select(
+            'alignment_data, model_used, cost, tokens_used'
+        ).eq('photo_id', photo_id).execute()
+        if result.data and len(result.data) > 0:
+            return result.data[0].get('alignment_data')
+        return None
+    except Exception as e:
+        logger.warning(f"Supabase face alignment load failed for {photo_id}: {e}")
+        return None
+
+
+def load_all_face_alignments_from_supabase():
+    """Load all face alignment results from Supabase.
+
+    Returns dict of {photo_id: alignment_data} or None on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table('face_gemini_alignments').select(
+            'photo_id, alignment_data'
+        ).execute()
+        if result.data:
+            return {
+                row['photo_id']: row['alignment_data']
+                for row in result.data
+                if row.get('alignment_data')
+            }
+        return {}
+    except Exception as e:
+        logger.warning(f"Supabase face alignment bulk load failed: {e}")
+        return None
+
+
+def count_face_alignments_in_supabase():
+    """Count face alignment records in Supabase. Returns int or None on failure."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table('face_gemini_alignments').select(
+            'photo_id', count='exact'
+        ).execute()
+        return result.count
+    except Exception as e:
+        logger.warning(f"Supabase face alignment count failed: {e}")
+        return None

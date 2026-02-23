@@ -386,7 +386,7 @@ async def run_face_alignment(
     return result
 
 
-# --- Storage (JSON-based, matching existing data patterns) ---
+# --- Storage (Supabase-first with JSON fallback, AD-152) ---
 
 _ALIGNMENT_CACHE: dict[str, AlignmentResult] = {}
 
@@ -401,8 +401,30 @@ def cache_alignment(result: AlignmentResult) -> None:
     _ALIGNMENT_CACHE[result.photo_id] = result
 
 
+def save_alignment(result: AlignmentResult, output_dir: str | Path = "data") -> bool:
+    """Save alignment result. Tries Supabase first, then JSON fallback.
+
+    Returns True if saved to Supabase, False if JSON-only.
+    """
+    from app.supabase_data import save_face_alignment_to_supabase
+
+    alignment_dict = result.to_dict()
+    saved_to_supabase = save_face_alignment_to_supabase(
+        photo_id=result.photo_id,
+        alignment_data=alignment_dict,
+        model_used=result.model_used,
+        cost=result.cost,
+        tokens=result.input_tokens + result.output_tokens if result.input_tokens and result.output_tokens else None,
+    )
+
+    # Always save to JSON as cache
+    save_alignment_to_file(result, output_dir)
+
+    return saved_to_supabase
+
+
 def save_alignment_to_file(result: AlignmentResult, output_dir: str | Path = "data") -> Path:
-    """Save alignment result to JSON file."""
+    """Save alignment result to JSON file (cache layer)."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -429,8 +451,23 @@ def save_alignment_to_file(result: AlignmentResult, output_dir: str | Path = "da
     return alignments_file
 
 
+def load_alignments(data_dir: str | Path = "data") -> dict[str, dict]:
+    """Load all alignment results. Tries Supabase first, falls back to JSON.
+
+    Returns dict of {photo_id: alignment_data_dict}.
+    """
+    from app.supabase_data import load_all_face_alignments_from_supabase
+
+    supabase_data = load_all_face_alignments_from_supabase()
+    if supabase_data is not None and len(supabase_data) > 0:
+        return supabase_data
+
+    # Fallback to JSON
+    return load_alignments_from_file(data_dir)
+
+
 def load_alignments_from_file(input_dir: str | Path = "data") -> dict[str, dict]:
-    """Load all alignment results from JSON file."""
+    """Load all alignment results from JSON file (cache/fallback)."""
     alignments_file = Path(input_dir) / "face_alignments.json"
     if not alignments_file.exists():
         return {}
