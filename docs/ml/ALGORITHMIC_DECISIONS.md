@@ -1616,9 +1616,47 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 
 ---
 
+### AD-147: GEDCOM-Enriched Analysis — Comparison Results
+- **Date**: 2026-02-23 | **Session**: 61C
+- **Context**: Does feeding genealogical (GEDCOM) data into Gemini photo analysis prompts improve date/location accuracy? Which enrichment level is optimal? Which model?
+- **Decision**: Use `gemini-3.1-pro-preview` + `curated` GEDCOM variant as default.
+  - Two-pass workflow: baseline (no GEDCOM) first, then enriched with curated context using baseline date estimate as window center.
+  - Cost: ~$0.04/photo for two-pass with Pro.
+- **Evidence**: 11 runs × 20 photos across 3 models × 5 GEDCOM variants ($2.46 total).
+  - GEDCOM context transforms location from vague → city-level in 4/5 cases
+  - Date estimates narrow by 3-7 years with GEDCOM context
+  - Confidence jumps from 60% "high" to 80-100% "high" with GEDCOM
+  - Token cost of GEDCOM context is negligible (80-800 tokens vs 2200+ total)
+  - **Flash 2.0 GEDCOM confusion bug**: misinterprets death dates as photo dates (year=1999 for ~1905 photo)
+  - **Flash-3-preview unreliable**: 13% failure rate (503 high demand)
+  - **Pro: 0 errors in 100 calls**
+- **Rejected alternatives**:
+  1. "Flash 2.0 for all runs" — 25x cheaper but misinterprets GEDCOM data, less detailed output
+  2. "Full GEDCOM (all events)" — no advantage over curated for identified photos, and includes irrelevant events
+  3. "co_occurrence variant" — no marginal improvement over first_order, same token cost
+  4. "first_order variant as default" — 2x token cost vs curated, marginal quality improvement
+- **Affects**: `rhodesli_ml/gedcom_context.py`, `rhodesli_ml/gemini_extraction.py`, `scripts/compare_models.py`
+- **Breadcrumbs**: AD-143 (unified extraction), results/gedcom_enrichment_comparison_report.md, Session 61C planning context
+
+### AD-148: GEDCOM Storage Architecture — Supabase Tables
+- **Date**: 2026-02-23 | **Session**: 61C
+- **Context**: GEDCOM data (21,809 individuals, 6,680 families, 12,449 events) needs persistent storage for web queries. Currently parsed on-demand from .ged file.
+- **Decision**: Store in Supabase Postgres (4 tables: gedcom_individuals, gedcom_events, gedcom_relationships, gedcom_face_links). Parse once, store, query fast.
+  - Import script: `scripts/import_gedcom_supabase.py` (idempotent, upsert on gedcom_id)
+  - Tables not yet created — needs SQL migration via Supabase Dashboard
+  - Face links stored separately to preserve identity→GEDCOM mapping
+- **Rejected alternatives**:
+  1. "Keep parsing from .ged file on every request" — 4.8s parse time, not acceptable for web
+  2. "Store as JSON file like other data" — works for offline but doesn't support web queries or joins
+  3. "Separate Postgres instance" — unnecessary, Supabase already in use for auth
+- **Affects**: `scripts/import_gedcom_supabase.py` (new), `rhodesli_ml/importers/gedcom_parser.py` (extended with life events)
+- **Breadcrumbs**: Session 61C planning context, AD-135 (Supabase migration)
+
+---
+
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-147)
+1. Add a new entry with AD-XXX format (next: AD-149)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
