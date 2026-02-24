@@ -20,7 +20,7 @@
         "matcher": "Bash",
         "hooks": [{
           "type": "command",
-          "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r .tool_input.command 2>/dev/null); if echo \"$CMD\" | grep -qE \"^git commit\"; then cd \"$CLAUDE_PROJECT_DIR\" && python -m pytest tests/ -x -q --ignore=tests/e2e/ 2>&1 | tail -5; fi'"
+          "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | jq -r .tool_input.command 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then cd \"$CLAUDE_PROJECT_DIR\" && python -m pytest tests/ -x -q --ignore=tests/e2e/ 2>&1 | tail -5; fi'"
         }]
       }
     ],

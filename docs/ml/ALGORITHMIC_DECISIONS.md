@@ -1729,13 +1729,14 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Breadcrumbs**: docs/HARNESS_DECISIONS.md, Session 64 context
 
 ### AD-157: Gemini Batch API for Bulk Photo Processing
-- **Date**: 2026-02-23 | **Session**: 64/64b
+- **Date**: 2026-02-23 | **Session**: 64/64b | **Updated**: 2026-02-23 (Session 65a — actual results)
 - **Context**: 144 photos rate-limited during Session 63 batch run. Synchronous calls hit RPM/RPD limits.
-- **Decision**: Use Gemini Batch API (50% discount, 24h SLO) for remaining 144+ photos. Cost: ~$2 batch vs ~$4 synchronous. Infrastructure ready via `scripts/run_combined_pipeline.py` with `--retry-failed` flag.
-- **Status**: Ready to execute. Awaiting next batch run session.
-- **Rejected**: Keep synchronous with higher delay — still hits daily limits. External queuing — unnecessary complexity.
+- **Original Decision**: Use Gemini Batch API (50% discount, 24h SLO) for remaining 144+ photos.
+- **Actual Result (Session 64d)**: Batch API was extremely slow (>20 min for 1 request, no results returned). Synchronous pipeline with retry completed 142 photos in ~20 min at $1.19 total ($0.0084/photo). Batch API cancelled in favor of sync retry.
+- **Revised Decision**: Batch API not worth it for <500 photos. Sync pipeline with `--retry-failed` is faster and cheaper than estimated. Reserve Batch API only for 500+ photo runs where 24h SLO is acceptable.
+- **Rejected**: Batch API for small batches — too slow, no cost benefit realized at this scale.
 - **Affects**: `scripts/run_combined_pipeline.py`, `rhodesli_ml/gemini_config.py`
-- **Breadcrumbs**: Session 63 concern #2, AD-152
+- **Breadcrumbs**: Session 63 concern #2, AD-152, Session 64d assessment
 
 ### AD-158: Session Roadmap — UX → Portfolio → LoRA Sequence
 - **Date**: 2026-02-23 | **Session**: 64c
