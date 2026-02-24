@@ -40,8 +40,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.69.0 — 2026-02-24)
+## Recent Sessions (v0.70.0 — 2026-02-24)
 
+- **Session 65c** (v0.70.0): Upload Fix (MANDATORY) + Verification Sweep + Harness. Root cause: subprocess OOM from double model loading (AD-161). Fix: thread shares hybrid models. All 3 upload surfaces verified in production. GEDCOM linking verified end-to-end (6/6 PASS). Harness: assessment mandate, prompt template, eval script. ~3475 tests.
 - **Session 65b** (v0.69.0): GEDCOM Linking UX + Enrichment Fix. Production verification (5/6 PASS). GEDCOM ↔ Identity linking with fuzzy Sephardic search (AD-160). Enrichment pipeline: first_order variant for full family context (AD-159 fix). API call logging: gemini_config + response_summary now populated. 28 new tests. 3521 total.
 - **Session 65a** (v0.68.0): Upload Fix + Compare Overhaul + UX Polish. Upload subprocess death detection + timeout. Two-photo face comparison (/compare/pair). Face overlay toggle. Prompt fidelity audit (AD-159). 24 new tests. ~3493 total.
 - **Session 64** (v0.67.0): Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.

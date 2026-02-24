@@ -1778,11 +1778,29 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `app/main.py` (search/link/unlink routes, confirm flow, person page), `gedcom_face_links` table
 - **Breadcrumbs**: `tests/test_gedcom_routes.py` (20 tests), Session 65b Phase 2
 
+### AD-161: Thread-Based Upload Processing — Shared Hybrid Models
+- **Date**: 2026-02-24 | **Session**: 65c
+- **Context**: Upload broken since Feb 23. Subprocess loaded full buffalo_l model (~300-500MB) in separate process alongside main app's hybrid models (~100-200MB), exceeding Railway's 512MB RAM. Session 65a added PID tracking (symptom fix). Session 65b skipped verification.
+- **Root Cause**: `subprocess.Popen("python -m core.ingest_inbox")` created a new process that loaded its own copy of buffalo_l FaceAnalysis. Main app already had hybrid models (det_500m + w600k_r50). Combined: 500-800MB > 512MB Railway limit → guaranteed OOM.
+- **Decision**: Replace subprocess with `threading.Thread`. Thread shares main process memory → uses already-loaded hybrid models via `prefer_hybrid=True` parameter → no double loading → no OOM. 5-minute timeout retained as safety net for stuck threads.
+- **Changes**:
+  1. Added `prefer_hybrid` parameter to `extract_faces()`, `process_single_image()`, `process_directory()`, `_process_zip_file()`
+  2. When `prefer_hybrid=True`, `extract_faces()` delegates to `extract_faces_hybrid()` if hybrid models available
+  3. Upload handler: `threading.Thread(target=_background_ingest, daemon=True)` replaces `subprocess.Popen`
+  4. Status poller: removed PID-based alive check, kept timeout-only detection
+  5. R2 crop upload: fixed to use `face_ids` from status file (was searching by identity UUID)
+  6. Admin pending upload approval: also converted from subprocess to thread
+- **Secondary Fix**: R2 crop upload searched for crops by `identity_id` (UUID) but crops are named by `face_id` (inbox_*). Added `face_ids` tracking to `write_status_file()` and all process functions.
+- **Production Evidence**: Upload with real face photo → "1 face extracted, 1 added to Inbox". Compare/pair → face detected. Estimate → date returned. All without OOM.
+- **Rejected Alternative**: Keep subprocess but load lighter model. Not viable — any separate process loading InsightFace models doubles memory.
+- **Affects**: `app/main.py` (upload handler, status poller, pending approval), `core/ingest_inbox.py` (prefer_hybrid parameter, face_ids tracking)
+- **Breadcrumbs**: `tests/test_session_65a_upload_fix.py` (rewritten for timeout-based detection), `tests/test_session_52_fixes.py` (updated for thread), SESSION_LOG.md
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-161)
+1. Add a new entry with AD-XXX format (next: AD-162)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

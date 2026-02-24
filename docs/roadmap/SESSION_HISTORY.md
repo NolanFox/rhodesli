@@ -364,6 +364,13 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 65c: Upload Fix (MANDATORY) + Verification Sweep + Harness (2026-02-24) — v0.70.0
+- **Upload fix (AD-161)**: Root cause: subprocess loaded full buffalo_l model (~300-500MB) in separate process, doubling memory with main app's hybrid models → OOM on Railway 512MB. Fix: replaced subprocess with background thread sharing main process's hybrid models via `prefer_hybrid=True`. R2 crop upload fix: was searching by identity UUID, now uses face_ids from status file.
+- **Production verification**: All 3 upload surfaces tested with authenticated sessions. /upload: "1 face extracted, 1 added to Inbox" (no OOM). /compare/pair: face detected. /estimate: date estimate returned.
+- **GEDCOM linking verification**: Search, link/unlink round-trip, auth guards, surname variants — 6/6 PASS.
+- **Harness enforcement**: Mandatory Session Outputs section in CLAUDE.md. Browser Verification Rule. Session prompt template. Self-evaluation script.
+- ~3475 tests (2937 app + 538 ML).
+
 ## Session 65b: GEDCOM Linking UX + Enrichment Pipeline Fix (2026-02-24) — v0.69.0
 - **Production verification**: Compare pair PASS, face overlay toggle PASS, share links PASS, navigation PASS, health PASS. Upload skipped (admin auth required).
 - **GEDCOM ↔ Identity linking (AD-160)**: Admin-only post-identification "Link to Family Tree" step. Fuzzy name search with Sephardic surname variants (Capeluto/Capuano/Capelluto etc.). In-memory cache of 21,809 GEDCOM individuals. Link saves to gedcom_face_links, auto-enriches birth/death. Unlink with soft delete. Person page shows link status.

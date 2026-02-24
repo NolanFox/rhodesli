@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 65c] — 2026-02-24 (Upload Fix + Verification Sweep + Harness)
+
+### Fixed — Upload Pipeline OOM (AD-161)
+- Root cause: subprocess loaded full buffalo_l model (~300-500MB) in separate process, doubling memory with main app's hybrid models → OOM on Railway 512MB
+- Fix: Replaced subprocess with background thread sharing main process's already-loaded hybrid models via `prefer_hybrid=True`
+- Added `prefer_hybrid` parameter to extract_faces, process_single_image, process_directory
+- Fixed R2 crop upload to use face_ids from status file (was searching by identity UUID)
+- Fixed admin pending upload approval to use thread instead of subprocess
+
+### Verified — All Upload Surfaces in Production
+- /upload with real face photo: "1 face extracted, 1 added to Inbox" — no OOM
+- /compare/pair upload: face detection succeeded with real photo
+- /estimate upload: date estimate returned
+- GEDCOM linking: search, link/unlink round-trip verified (6/6 tests PASS)
+
+### Added — Harness Enforcement
+- Mandatory Session Outputs section in CLAUDE.md
+- Browser Verification Rule in CLAUDE.md
+- Session prompt template: docs/templates/session-prompt-template.md
+- Self-evaluation script: scripts/session_assessment.sh
+
 ## [Session 65b] — 2026-02-24 (GEDCOM Linking UX + Enrichment Pipeline Fix)
 
 ### Verified — 65a Production Features
