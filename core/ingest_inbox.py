@@ -80,6 +80,15 @@ def write_status_file(
     inbox_dir.mkdir(parents=True, exist_ok=True)
     status_path = inbox_dir / f"{job_id}.status.json"
 
+    # Preserve fields from the initial status file (started_at, pid)
+    existing = {}
+    if status_path.exists():
+        try:
+            with open(status_path) as f:
+                existing = json.load(f)
+        except (json.JSONDecodeError, OSError):
+            pass
+
     data = {
         "job_id": job_id,
         "status": status,
@@ -87,6 +96,12 @@ def write_status_file(
         "identities_created": identities_created or [],
         "updated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+    # Carry forward started_at and pid from initial status
+    if "started_at" in existing:
+        data["started_at"] = existing["started_at"]
+    if "pid" in existing:
+        data["pid"] = existing["pid"]
 
     if error:
         data["error"] = error

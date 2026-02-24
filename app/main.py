@@ -22149,13 +22149,18 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
     log_path = inbox_dir / f"{job_id}.log"
     log_file = open(log_path, "w")
 
-    subprocess.Popen(
+    proc = subprocess.Popen(
         subprocess_args,
         cwd=project_root,
         env=subprocess_env,
         stdout=log_file,
         stderr=log_file,
     )
+
+    # Store PID so the status poller can detect subprocess death
+    initial_status["pid"] = proc.pid
+    with open(inbox_dir / f"{job_id}.status.json", "w") as _sf:
+        _json_upload.dump(initial_status, _sf)
 
     # Build initial status message
     file_count = len(saved_files)
@@ -22251,6 +22256,52 @@ def get(job_id: str):
         )
 
     if status["status"] == "processing":
+        # Check if the subprocess is still alive (detect OOM/crash)
+        pid = status.get("pid")
+        subprocess_dead = False
+        if pid:
+            try:
+                os.kill(pid, 0)  # Signal 0 = check if process exists
+            except (OSError, ProcessLookupError):
+                subprocess_dead = True
+
+        # Also check for overall timeout (5 min safety net)
+        from datetime import datetime as _dt_proc, timezone as _tz_proc
+        started_at = status.get("started_at", "")
+        try:
+            start_time = _dt_proc.fromisoformat(started_at)
+            elapsed_proc = (_dt_proc.now(_tz_proc.utc) - start_time).total_seconds()
+        except (ValueError, TypeError):
+            elapsed_proc = 0
+
+        if subprocess_dead or elapsed_proc > 300:
+            # Subprocess crashed or timed out — show error with log excerpt
+            log_path = data_path / "inbox" / f"{job_id}.log"
+            log_excerpt = ""
+            if log_path.exists():
+                try:
+                    log_text = log_path.read_text()
+                    log_excerpt = log_text[-500:] if len(log_text) > 500 else log_text
+                except Exception:
+                    log_excerpt = "(could not read log)"
+
+            reason = "The processing subprocess crashed (likely out of memory)." if subprocess_dead else "Processing timed out after 5 minutes."
+            elements = [
+                P("Processing failed.", cls="text-red-400 text-sm font-medium"),
+                P(reason, cls="text-slate-400 text-xs mt-1"),
+                P("Your photo was saved. An admin can process it later from the staging area.",
+                  cls="text-slate-400 text-xs mt-1"),
+            ]
+            if log_excerpt:
+                elements.append(
+                    Div(
+                        P("Log output:", cls="text-slate-500 text-xs mb-1"),
+                        Pre(log_excerpt, cls="text-xs text-red-300 bg-slate-900 p-2 rounded overflow-x-auto max-h-32"),
+                        cls="mt-2"
+                    )
+                )
+            return Div(*elements, cls="p-3 bg-red-900/20 border border-red-500/30 rounded")
+
         # Show real progress from job state
         total = status.get("total_files")
         succeeded = status.get("files_succeeded", 0)
