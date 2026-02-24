@@ -369,12 +369,14 @@ def _log_call(photo_id, model, call_type, prompt_tokens, completion_tokens,
     try:
         from app.supabase_data import log_gemini_call
         latency_ms = int(_time.time() * 1000) - start_ms
+        total = (prompt_tokens or 0) + (completion_tokens or 0)
         log_gemini_call(
             photo_id=photo_id,
             model_used=model,
             call_type=call_type,
             prompt_tokens=prompt_tokens or None,
             completion_tokens=completion_tokens or None,
+            total_tokens=total or None,
             cost_usd=cost_usd or None,
             latency_ms=latency_ms,
             status=status,
