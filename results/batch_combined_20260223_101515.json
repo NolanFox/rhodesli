@@ -1,0 +1,39 @@
+{
+  "batch_id": "batch_combined_20260223_101515",
+  "model": "gemini-2.5-flash",
+  "total_photos": 3,
+  "success": 2,
+  "errors": 1,
+  "skipped": 0,
+  "gedcom_enriched": 0,
+  "total_cost": 0.0016,
+  "results": [
+    {
+      "photo_id": "b9f591a56e25b71a",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "3dcca43bad885e54",
+      "status": "success",
+      "faces_detected": 14,
+      "faces_described": 14,
+      "elapsed": 25.4,
+      "input_tokens": 1102,
+      "output_tokens": 1737,
+      "cost": 0.0012,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 10.5,
+      "input_tokens": 775,
+      "output_tokens": 514,
+      "cost": 0.0004,
+      "has_gedcom": false
+    }
+  ]
+}

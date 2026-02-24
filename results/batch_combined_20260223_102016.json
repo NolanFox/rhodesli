@@ -1,0 +1,23 @@
+{
+  "batch_id": "batch_combined_20260223_102016",
+  "model": "gemini-2.5-flash",
+  "total_photos": 1,
+  "success": 1,
+  "errors": 0,
+  "skipped": 0,
+  "gedcom_enriched": 1,
+  "total_cost": 0.0004,
+  "results": [
+    {
+      "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 10.9,
+      "input_tokens": 844,
+      "output_tokens": 523,
+      "cost": 0.0004,
+      "has_gedcom": true
+    }
+  ]
+}
