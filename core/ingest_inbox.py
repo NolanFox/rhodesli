@@ -60,6 +60,7 @@ def write_status_file(
     files_failed: int = None,
     errors: list[dict] = None,
     current_file: str = None,
+    face_ids: list[str] = None,
 ) -> None:
     """
     Write job status to a JSON file.
@@ -117,6 +118,8 @@ def write_status_file(
         data["errors"] = errors
     if current_file:
         data["current_file"] = current_file
+    if face_ids:
+        data["face_ids"] = face_ids
 
     with open(status_path, "w") as f:
         json.dump(data, f, indent=2)
@@ -274,7 +277,7 @@ def get_hybrid_models():
     return _hybrid_detector, _hybrid_recognizer
 
 
-def extract_faces(filepath: Path) -> list[dict]:
+def extract_faces(filepath: Path, prefer_hybrid: bool = False) -> list[dict]:
     """
     Extract faces from an image using InsightFace.
 
@@ -282,10 +285,24 @@ def extract_faces(filepath: Path) -> list[dict]:
 
     Args:
         filepath: Path to image file
+        prefer_hybrid: If True, use hybrid models (det_500m + w600k_r50) when
+            available. This avoids loading the full buffalo_l model, which is
+            critical when running in-process on memory-constrained environments
+            like Railway (AD-161). Falls back to buffalo_l if hybrid unavailable.
 
     Returns:
-        List of PFE face dicts with mu, sigma_sq, bbox, etc.
+        Tuple of (faces list, image_width, image_height)
     """
+    # If hybrid models preferred and available, delegate (AD-161: avoids OOM)
+    if prefer_hybrid:
+        global _hybrid_detector, _hybrid_recognizer
+        if _hybrid_detector is not None and _hybrid_recognizer is not None:
+            return extract_faces_hybrid(filepath)
+        # Check if they can be loaded
+        det, rec = get_hybrid_models()
+        if det is not None and rec is not None:
+            return extract_faces_hybrid(filepath)
+
     # Defer heavy imports
     import cv2
     import numpy as np
@@ -471,6 +488,7 @@ def process_single_image(
     file_hash_path: Path = None,
     source: str = "",
     collection: str = "",
+    prefer_hybrid: bool = False,
 ) -> dict:
     """
     Process a single image file (internal helper).
@@ -524,7 +542,7 @@ def process_single_image(
             }
 
     # Extract faces
-    result = extract_faces(filepath)
+    result = extract_faces(filepath, prefer_hybrid=prefer_hybrid)
     if isinstance(result, tuple):
         faces, image_width, image_height = result
     else:
@@ -625,6 +643,7 @@ def process_single_image(
     return {
         "faces_extracted": len(faces),
         "identity_ids": identity_ids,
+        "face_ids": [f["face_id"] for f in faces],
     }
 
 
@@ -635,6 +654,7 @@ def process_uploaded_file(
     crops_dir: Path = None,
     source: str = "",
     collection: str = "",
+    prefer_hybrid: bool = False,
 ) -> dict:
     """
     Main entry point for processing an uploaded file.
@@ -686,6 +706,7 @@ def process_uploaded_file(
             file_hash_path=file_hash_path,
             source=source,
             collection=collection,
+            prefer_hybrid=prefer_hybrid,
         )
 
     # Single image processing
@@ -702,6 +723,7 @@ def process_uploaded_file(
             file_hash_path=file_hash_path,
             source=source,
             collection=collection,
+            prefer_hybrid=prefer_hybrid,
         )
 
         logger.info(f"Found {result['faces_extracted']} face(s)")
@@ -713,12 +735,14 @@ def process_uploaded_file(
             total_files=1,
             files_succeeded=1,
             files_failed=0,
+            face_ids=result.get("face_ids", []),
         )
 
         return {
             "status": "success",
             "faces_extracted": result["faces_extracted"],
             "identities_created": result["identity_ids"],
+            "face_ids": result.get("face_ids", []),
         }
 
     except Exception as e:
@@ -748,6 +772,7 @@ def _process_zip_file(
     file_hash_path: Path = None,
     source: str = "",
     collection: str = "",
+    prefer_hybrid: bool = False,
 ) -> dict:
     """
     Process a ZIP archive containing multiple images.
@@ -807,6 +832,7 @@ def _process_zip_file(
             # Track aggregated results
             total_faces = 0
             all_identity_ids = []
+            all_face_ids = []
             files_succeeded = 0
             files_failed = 0
             errors = []
@@ -846,10 +872,12 @@ def _process_zip_file(
                             file_hash_path=file_hash_path,
                             source=source,
                             collection=collection,
+                            prefer_hybrid=prefer_hybrid,
                         )
 
                         total_faces += result["faces_extracted"]
                         all_identity_ids.extend(result["identity_ids"])
+                        all_face_ids.extend(result.get("face_ids", []))
                         files_succeeded += 1
 
                         if result.get("skipped_duplicate"):
@@ -882,12 +910,14 @@ def _process_zip_file(
                 files_succeeded=files_succeeded,
                 files_failed=files_failed,
                 errors=errors if errors else None,
+                face_ids=all_face_ids,
             )
 
             return {
                 "status": final_status,
                 "faces_extracted": total_faces,
                 "identities_created": all_identity_ids,
+                "face_ids": all_face_ids,
                 "total_files": total_files,
                 "files_succeeded": files_succeeded,
                 "files_failed": files_failed,
@@ -923,6 +953,7 @@ def process_directory(
     crops_dir: Path = None,
     source: str = "",
     collection: str = "",
+    prefer_hybrid: bool = False,
 ) -> dict:
     """
     Process a directory of uploaded files (images and/or ZIPs).
@@ -1001,6 +1032,7 @@ def process_directory(
     # Track aggregated results
     total_faces = 0
     all_identity_ids = []
+    all_face_ids = []
     files_succeeded = 0
     files_failed = 0
     errors = []
@@ -1032,10 +1064,12 @@ def process_directory(
                 file_hash_path=file_hash_path,
                 source=source,
                 collection=collection,
+                prefer_hybrid=prefer_hybrid,
             )
 
             total_faces += result["faces_extracted"]
             all_identity_ids.extend(result["identity_ids"])
+            all_face_ids.extend(result.get("face_ids", []))
             files_succeeded += 1
             if result.get("skipped_duplicate"):
                 logger.info(f"  Skipped (duplicate)")
@@ -1091,10 +1125,12 @@ def process_directory(
                                 file_hash_path=file_hash_path,
                                 source=source,
                                 collection=collection,
+                                prefer_hybrid=prefer_hybrid,
                             )
 
                             total_faces += result["faces_extracted"]
                             all_identity_ids.extend(result["identity_ids"])
+                            all_face_ids.extend(result.get("face_ids", []))
                             files_succeeded += 1
                             if result.get("skipped_duplicate"):
                                 logger.info(f"  Skipped (duplicate)")
@@ -1135,12 +1171,14 @@ def process_directory(
         files_succeeded=files_succeeded,
         files_failed=files_failed,
         errors=errors if errors else None,
+        face_ids=all_face_ids,
     )
 
     return {
         "status": final_status,
         "faces_extracted": total_faces,
         "identities_created": all_identity_ids,
+        "face_ids": all_face_ids,
         "total_files": total_images,
         "files_succeeded": files_succeeded,
         "files_failed": files_failed,

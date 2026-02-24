@@ -566,16 +566,13 @@ class TestCloudReadyPipeline:
         source = inspect.getsource(main)
         assert "--crops-dir" in source
 
-    def test_upload_handler_passes_data_dir_to_subprocess(self):
-        """Upload handler passes --data-dir to ingest subprocess."""
+    def test_upload_handler_passes_data_dir_to_thread(self):
+        """Upload handler passes data_dir to background ingest thread (AD-161)."""
         import inspect
-        from app.main import app
-        # Read the upload route source to verify --data-dir is passed
-        # Find the POST handler for /api/upload
         from app import main as app_module
         source = inspect.getsource(app_module)
-        # The subprocess_args should include --data-dir
-        assert '"--data-dir"' in source or "'--data-dir'" in source
+        # The thread calls process_directory with data_dir=data_path
+        assert "data_dir=data_path" in source
 
     def test_status_handler_uploads_to_r2_on_success(self):
         """Upload status handler uploads files to R2 when processing completes."""

@@ -22617,40 +22617,17 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
             cls="p-3 bg-green-900/20 border border-green-500/30 rounded"
         )
 
-    # Processing enabled: spawn subprocess for ML processing
-    import os
-    import subprocess
+    # Processing enabled: run ML processing in background thread (AD-161).
+    # CRITICAL: Uses a thread (not subprocess) to share the already-loaded hybrid
+    # InsightFace models from the main process. A subprocess would load buffalo_l
+    # (~300-500MB) separately, causing OOM on Railway's 512MB container.
+    import threading
 
-    # INVARIANT: All subprocesses must run from PROJECT_ROOT with cwd AND PYTHONPATH set
-    subprocess_env = os.environ.copy()
-    # Explicitly set PYTHONPATH to ensure core imports work in all environments
-    existing_pythonpath = subprocess_env.get("PYTHONPATH", "")
-    if existing_pythonpath:
-        subprocess_env["PYTHONPATH"] = f"{project_root}{os.pathsep}{existing_pythonpath}"
-    else:
-        subprocess_env["PYTHONPATH"] = str(project_root)
-
-    # Build subprocess arguments
-    subprocess_args = [
-        sys.executable,
-        "-m",
-        "core.ingest_inbox",
-        "--directory",
-        str(job_dir),
-        "--job-id",
-        job_id,
-        "--data-dir",
-        str(data_path),
-    ]
-    if source:
-        subprocess_args.extend(["--source", source])
-    if collection:
-        subprocess_args.extend(["--collection", collection])
-
-    # Write initial status file so we can detect process death
     import json as _json_upload
     inbox_dir = data_path / "inbox"
     inbox_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write initial status file
     initial_status = {
         "status": "starting",
         "started_at": datetime.now(timezone.utc).isoformat(),
@@ -22661,22 +22638,51 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
     with open(inbox_dir / f"{job_id}.status.json", "w") as _sf:
         _json_upload.dump(initial_status, _sf)
 
-    # Log subprocess output to file for debugging (not DEVNULL)
-    log_path = inbox_dir / f"{job_id}.log"
-    log_file = open(log_path, "w")
+    def _background_ingest():
+        """Run face detection in background thread using shared hybrid models."""
+        import logging as _bg_logging
+        log_path = inbox_dir / f"{job_id}.log"
+        try:
+            # Redirect logging to file for debugging
+            file_handler = _bg_logging.FileHandler(str(log_path))
+            file_handler.setLevel(_bg_logging.INFO)
+            _bg_logging.getLogger("core.ingest_inbox").addHandler(file_handler)
 
-    proc = subprocess.Popen(
-        subprocess_args,
-        cwd=project_root,
-        env=subprocess_env,
-        stdout=log_file,
-        stderr=log_file,
-    )
+            from core.ingest_inbox import process_directory
+            process_directory(
+                directory=job_dir,
+                job_id=job_id,
+                data_dir=data_path,
+                source=source,
+                collection=collection,
+                prefer_hybrid=True,  # Use already-loaded hybrid models (AD-161)
+            )
+        except Exception as e:
+            # Write error to status file so the poller can show it
+            error_status = {
+                "job_id": job_id,
+                "status": "error",
+                "error": str(e),
+                "started_at": initial_status["started_at"],
+                "total_files": len(saved_files),
+                "files_succeeded": 0,
+                "files_failed": len(saved_files),
+            }
+            try:
+                with open(inbox_dir / f"{job_id}.status.json", "w") as _ef:
+                    _json_upload.dump(error_status, _ef)
+            except Exception:
+                pass
+            # Also log the traceback
+            import traceback
+            try:
+                with open(log_path, "a") as _lf:
+                    traceback.print_exc(file=_lf)
+            except Exception:
+                pass
 
-    # Store PID so the status poller can detect subprocess death
-    initial_status["pid"] = proc.pid
-    with open(inbox_dir / f"{job_id}.status.json", "w") as _sf:
-        _json_upload.dump(initial_status, _sf)
+    thread = threading.Thread(target=_background_ingest, daemon=True, name=f"ingest-{job_id}")
+    thread.start()
 
     # Build initial status message
     file_count = len(saved_files)
@@ -22772,16 +22778,7 @@ def get(job_id: str):
         )
 
     if status["status"] == "processing":
-        # Check if the subprocess is still alive (detect OOM/crash)
-        pid = status.get("pid")
-        subprocess_dead = False
-        if pid:
-            try:
-                os.kill(pid, 0)  # Signal 0 = check if process exists
-            except (OSError, ProcessLookupError):
-                subprocess_dead = True
-
-        # Also check for overall timeout (5 min safety net)
+        # Check for timeout (5 min safety net for stuck threads/processes)
         from datetime import datetime as _dt_proc, timezone as _tz_proc
         started_at = status.get("started_at", "")
         try:
@@ -22790,8 +22787,8 @@ def get(job_id: str):
         except (ValueError, TypeError):
             elapsed_proc = 0
 
-        if subprocess_dead or elapsed_proc > 300:
-            # Subprocess crashed or timed out — show error with log excerpt
+        if elapsed_proc > 300:
+            # Processing timed out — show error with log excerpt
             log_path = data_path / "inbox" / f"{job_id}.log"
             log_excerpt = ""
             if log_path.exists():
@@ -22801,7 +22798,7 @@ def get(job_id: str):
                 except Exception:
                     log_excerpt = "(could not read log)"
 
-            reason = "The processing subprocess crashed (likely out of memory)." if subprocess_dead else "Processing timed out after 5 minutes."
+            reason = "Processing timed out after 5 minutes."
             elements = [
                 P("Processing failed.", cls="text-red-400 text-sm font-medium"),
                 P(reason, cls="text-slate-400 text-xs mt-1"),
@@ -22935,13 +22932,13 @@ def get(job_id: str):
                         r2_count += 1
 
             # Upload new crop files (generated during ingest)
+            # Crops are named by face_id (e.g., inbox_abc123.jpg), not identity_id
             crops_dir = Path("app/static/crops")
             if crops_dir.exists():
-                # Find crops for faces created in this job
-                for iid in status.get("identities_created", []):
-                    for crop_path in crops_dir.glob(f"{iid}*"):
-                        ct = "image/jpeg"
-                        upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type=ct)
+                for fid in status.get("face_ids", []):
+                    crop_path = crops_dir / f"{fid}.jpg"
+                    if crop_path.exists():
+                        upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type="image/jpeg")
                         r2_count += 1
 
             # Mark as uploaded to prevent duplicate uploads on next poll
@@ -23382,38 +23379,40 @@ def post(job_id: str, sess=None):
             uploads_dir.parent.mkdir(parents=True, exist_ok=True)
             shutil.copytree(staging_dir, uploads_dir, dirs_exist_ok=True)
 
-            # Spawn processing subprocess (same as admin upload flow)
-            import os
-            import subprocess
-            subprocess_env = os.environ.copy()
-            existing_pythonpath = subprocess_env.get("PYTHONPATH", "")
-            if existing_pythonpath:
-                subprocess_env["PYTHONPATH"] = f"{project_root}{os.pathsep}{existing_pythonpath}"
-            else:
-                subprocess_env["PYTHONPATH"] = str(project_root)
+            # Run processing in background thread (AD-161: avoids OOM from subprocess)
+            import threading
 
             source = upload.get("source", "")
             upload_collection = upload.get("collection", "")
-            subprocess_args = [
-                sys.executable, "-m", "core.ingest_inbox",
-                "--directory", str(uploads_dir),
-                "--job-id", job_id,
-            ]
-            if source:
-                subprocess_args.extend(["--source", source])
-            if upload_collection:
-                subprocess_args.extend(["--collection", upload_collection])
 
-            # Log subprocess output to file for debugging (not DEVNULL — AD-120)
-            approve_log_path = uploads_dir / f"{job_id}.log"
-            approve_log_file = open(approve_log_path, "w")
-            subprocess.Popen(
-                subprocess_args,
-                cwd=project_root,
-                env=subprocess_env,
-                stdout=approve_log_file,
-                stderr=approve_log_file,
-            )
+            def _bg_approve_ingest():
+                import logging as _bg_logging
+                log_path = uploads_dir / f"{job_id}.log"
+                try:
+                    file_handler = _bg_logging.FileHandler(str(log_path))
+                    file_handler.setLevel(_bg_logging.INFO)
+                    _bg_logging.getLogger("core.ingest_inbox").addHandler(file_handler)
+
+                    from core.ingest_inbox import process_directory
+                    process_directory(
+                        directory=uploads_dir,
+                        job_id=job_id,
+                        data_dir=data_path,
+                        source=source,
+                        collection=upload_collection,
+                        prefer_hybrid=True,
+                    )
+                except Exception as e:
+                    import traceback
+                    try:
+                        with open(log_path, "a") as _lf:
+                            traceback.print_exc(file=_lf)
+                    except Exception:
+                        pass
+
+            threading.Thread(
+                target=_bg_approve_ingest, daemon=True, name=f"approve-{job_id}"
+            ).start()
 
     file_count = upload.get("file_count", len(upload.get("files", [])))
     return Div(
