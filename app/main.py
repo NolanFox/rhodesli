@@ -14561,6 +14561,9 @@ def get(face_id: str = "", sess=None):
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
                     P("Upload a photo to search our archive, or compare people already in the collection.",
                       cls="text-slate-400 text-sm"),
+                    P(A("Compare two photos side-by-side \u2192", href="/compare/pair",
+                        cls="text-indigo-400 hover:text-indigo-300 underline"),
+                      cls="text-sm mt-2"),
                     cls="max-w-4xl mx-auto px-6 pt-6 pb-6",
                 ),
             ),
@@ -16288,6 +16291,454 @@ def _progressive_refinement_badge(label: dict) -> object:
         f"Refined with {fact_count} verified fact{'s' if fact_count != 1 else ''}",
         cls="text-[10px] text-amber-300 bg-amber-900/30 px-2 py-1 rounded-full",
         data_testid="refinement-badge",
+    )
+
+
+# =============================================================================
+# TWO-PHOTO FACE COMPARISON — /compare/pair
+# =============================================================================
+
+
+@rt("/compare/pair")
+def get(sess=None):
+    """Two-photo face comparison — upload two photos, select a face in each,
+    and see how similar they are.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    nav_links = _public_nav_links(active="compare", user=user)
+
+    page_style = Style("""
+        html, body { margin: 0; }
+        body { background-color: #0f172a; }
+        .panel-upload { min-height: 14rem; }
+        .face-thumb { cursor: pointer; transition: all 0.15s ease; }
+        .face-thumb:hover { transform: scale(1.05); }
+        .face-thumb.selected { ring: 2px; }
+        @media (max-width: 767px) { .pair-grid { flex-direction: column; } }
+    """)
+
+    pair_script = Script("""
+    (function(){
+        var stateA = null, stateB = null;
+        window.selectPairFace = function(panel, uploadId, faceIdx, el) {
+            // Deselect all in this panel
+            document.querySelectorAll('#panel-' + panel + ' .face-thumb').forEach(function(t) {
+                t.classList.remove('ring-2', 'ring-amber-400');
+            });
+            el.classList.add('ring-2', 'ring-amber-400');
+            if (panel === 'a') stateA = {uploadId: uploadId, faceIdx: faceIdx};
+            else stateB = {uploadId: uploadId, faceIdx: faceIdx};
+            // Enable compare button if both selected
+            var btn = document.getElementById('pair-compare-btn');
+            if (stateA && stateB) {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.classList.add('hover:bg-indigo-500');
+            }
+        };
+        window.runPairCompare = function() {
+            if (!stateA || !stateB) return;
+            var btn = document.getElementById('pair-compare-btn');
+            btn.textContent = 'Comparing...';
+            btn.disabled = true;
+            fetch('/api/compare/pair/match', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'upload_a=' + stateA.uploadId + '&face_a=' + stateA.faceIdx
+                    + '&upload_b=' + stateB.uploadId + '&face_b=' + stateB.faceIdx
+            })
+            .then(function(r) { return r.text(); })
+            .then(function(html) {
+                document.getElementById('pair-result').innerHTML = html;
+                document.getElementById('pair-result').scrollIntoView({behavior: 'smooth'});
+                btn.textContent = 'Compare Selected Faces';
+                btn.disabled = false;
+            })
+            .catch(function(e) {
+                document.getElementById('pair-result').innerHTML =
+                    '<p class="text-red-400 text-sm">Error: ' + e.message + '</p>';
+                btn.textContent = 'Compare Selected Faces';
+                btn.disabled = false;
+            });
+        };
+    })();
+    """)
+
+    def _pair_panel(panel_id: str, label: str) -> object:
+        return Div(
+            H3(label, cls="text-sm font-medium text-slate-400 mb-3 text-center"),
+            Form(
+                Div(
+                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    P("Drop a photo or click to upload", cls="text-slate-400 text-sm"),
+                    P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs mt-1"),
+                    Input(type="file", name="photo", accept="image/jpeg,image/png,image/webp",
+                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer"),
+                    Hidden(name="panel", value=panel_id),
+                    cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-6 text-center transition-colors cursor-pointer panel-upload",
+                ),
+                hx_post="/api/compare/pair/upload",
+                hx_encoding="multipart/form-data",
+                hx_target=f"#panel-{panel_id}",
+                hx_swap="innerHTML",
+                data_testid=f"pair-upload-{panel_id}",
+            ),
+            id=f"panel-{panel_id}",
+            cls="flex-1 min-w-[280px] bg-slate-800/50 rounded-xl p-4",
+            data_testid=f"pair-panel-{panel_id}",
+        )
+
+    return (
+        Title("Compare Two Photos \u2014 Rhodesli Heritage Archive"),
+        *og_tags(
+            "Compare Two Photos \u2014 Rhodesli Heritage Archive",
+            "Upload two photos and compare faces side-by-side",
+            canonical_url="/compare/pair",
+        ),
+        page_style,
+        pair_script,
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="flex items-center gap-3 sm:gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            Section(
+                Div(
+                    H1("Compare Two Photos", cls="text-3xl font-serif font-bold text-white mb-2"),
+                    P("Upload two photos, select a face in each, and see how similar they are.",
+                      cls="text-slate-400 text-sm"),
+                    P(A("\u2190 Back to Compare", href="/compare",
+                        cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                      cls="mt-2"),
+                    cls="max-w-5xl mx-auto px-6 pt-6 pb-4",
+                ),
+            ),
+            Section(
+                Div(
+                    Div(
+                        _pair_panel("a", "Photo A"),
+                        Div(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>'),
+                            cls="flex items-center justify-center px-2 py-8 sm:py-0",
+                        ),
+                        _pair_panel("b", "Photo B"),
+                        cls="flex gap-4 pair-grid",
+                    ),
+                    Button(
+                        "Compare Selected Faces",
+                        id="pair-compare-btn",
+                        onclick="runPairCompare()",
+                        disabled=True,
+                        cls="mt-6 w-full px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl opacity-50 cursor-not-allowed transition-colors",
+                        data_testid="pair-compare-btn",
+                    ),
+                    P("Select one face in each photo, then click Compare.", cls="text-xs text-slate-500 text-center mt-2"),
+                    cls="max-w-5xl mx-auto px-6",
+                ),
+            ),
+            Section(
+                Div(id="pair-result", cls="max-w-5xl mx-auto px-6 py-4",
+                    data_testid="pair-result"),
+            ),
+            Div(
+                Div(
+                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
+                ),
+                cls="py-8 border-t border-slate-800",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/api/compare/pair/upload")
+async def post(request):
+    """Handle photo upload for two-photo pair comparison.
+
+    Detects faces in the uploaded photo and returns face thumbnails
+    for user selection.
+    """
+    import time as _time
+    import tempfile
+
+    form = await request.form()
+    photo = form.get("photo")
+    panel = form.get("panel", "a")
+
+    if not photo:
+        return Div(P("No photo uploaded.", cls="text-red-400 text-sm"),
+                   id=f"panel-{panel}")
+
+    content = await photo.read()
+    original_filename = photo.filename or "upload.jpg"
+    suffix = Path(original_filename).suffix.lower() or ".jpg"
+
+    if suffix not in (".jpg", ".jpeg", ".png", ".webp"):
+        return Div(
+            P("Please upload a JPEG, PNG, or WebP image.", cls="text-red-400 text-sm"),
+            id=f"panel-{panel}",
+        )
+
+    if len(content) > 10 * 1024 * 1024:
+        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-sm"),
+                   id=f"panel-{panel}")
+
+    # Check ML availability
+    has_ml = False
+    try:
+        import cv2
+        from insightface.app import FaceAnalysis  # noqa: F401
+        from core.ingest_inbox import extract_faces_hybrid
+        has_ml = True
+    except ImportError:
+        pass
+
+    if not has_ml:
+        return Div(
+            P("Face detection is not available on this server.", cls="text-amber-400 text-sm"),
+            id=f"panel-{panel}",
+        )
+
+    # Detect faces
+    import cv2
+    from core.ingest_inbox import extract_faces_hybrid
+
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+        tmp.write(content)
+        tmp_path = Path(tmp.name)
+
+    try:
+        # Resize for ML
+        img = cv2.imread(str(tmp_path))
+        if img is not None:
+            h, w = img.shape[:2]
+            _MAX_DIM = 1024
+            if max(h, w) > _MAX_DIM:
+                scale = _MAX_DIM / max(h, w)
+                img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_AREA)
+                cv2.imwrite(str(tmp_path), img, [cv2.IMWRITE_JPEG_QUALITY, 90])
+
+        faces, _, _ = extract_faces_hybrid(tmp_path)
+
+        if not faces:
+            return Div(
+                H3(f"Photo {panel.upper()}", cls="text-sm font-medium text-slate-400 mb-3 text-center"),
+                P("No faces detected. Try a clearer photo.", cls="text-amber-400 text-sm text-center"),
+                id=f"panel-{panel}",
+                cls="flex-1 min-w-[280px] bg-slate-800/50 rounded-xl p-4",
+            )
+
+        # Save upload and face data for later comparison
+        upload_id = _generate_result_id()
+
+        # Save the image for display
+        from core.storage import can_write_r2, upload_bytes_to_r2
+        img_key = f"uploads/compare/{upload_id}{suffix}"
+        if can_write_r2():
+            upload_bytes_to_r2(img_key, content)
+        else:
+            upload_dir = Path("uploads/compare")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            (upload_dir / f"{upload_id}{suffix}").write_bytes(content)
+
+        # Save face embeddings
+        import pickle
+        face_save_data = [
+            {"mu": f["mu"].tolist(),
+             "bbox": f.get("bbox", [0, 0, 0, 0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()}
+            for f in faces
+        ]
+        faces_pkl = pickle.dumps(face_save_data)
+        if can_write_r2():
+            upload_bytes_to_r2(f"uploads/compare/{upload_id}_faces.pkl", faces_pkl)
+        else:
+            upload_dir = Path("uploads/compare")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            (upload_dir / f"{upload_id}_faces.pkl").write_bytes(faces_pkl)
+
+        # Generate face crop thumbnails
+        face_thumbs = []
+        for i, face in enumerate(faces):
+            bbox = face.get("bbox", [0, 0, 0, 0])
+            if hasattr(bbox, 'tolist'):
+                bbox = bbox.tolist()
+            # Crop face from original image for thumbnail
+            orig_img = cv2.imread(str(tmp_path))
+            if orig_img is not None:
+                oh, ow = orig_img.shape[:2]
+                x1 = max(0, int(bbox[0]))
+                y1 = max(0, int(bbox[1]))
+                x2 = min(ow, int(bbox[2]))
+                y2 = min(oh, int(bbox[3]))
+                if x2 > x1 and y2 > y1:
+                    crop = orig_img[y1:y2, x1:x2]
+                    _, buf = cv2.imencode('.jpg', crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                    crop_key = f"uploads/compare/{upload_id}_face{i}.jpg"
+                    if can_write_r2():
+                        upload_bytes_to_r2(crop_key, buf.tobytes())
+                    else:
+                        (upload_dir / f"{upload_id}_face{i}.jpg").write_bytes(buf.tobytes())
+
+        # Build face selector UI
+        from core.storage import get_upload_url
+        image_url = get_upload_url(img_key)
+
+        face_elements = []
+        for i in range(len(faces)):
+            crop_url = get_upload_url(f"uploads/compare/{upload_id}_face{i}.jpg")
+            face_elements.append(
+                Div(
+                    Img(src=crop_url, cls="w-16 h-16 rounded-lg object-cover"),
+                    P(f"Face {i + 1}", cls="text-[10px] text-slate-400 mt-1 text-center"),
+                    cls="face-thumb p-1 rounded-lg hover:bg-slate-600/50",
+                    onclick=f"selectPairFace('{panel}','{upload_id}',{i},this)",
+                    data_testid=f"pair-face-{panel}-{i}",
+                )
+            )
+
+        return Div(
+            H3(f"Photo {panel.upper()}", cls="text-sm font-medium text-slate-400 mb-3 text-center"),
+            Div(
+                Img(src=image_url, cls="max-h-40 rounded-lg mx-auto border border-slate-600"),
+                cls="mb-3",
+            ),
+            P(f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected \u2014 select one:",
+              cls="text-xs text-slate-400 mb-2 text-center"),
+            Div(*face_elements, cls="flex flex-wrap gap-2 justify-center"),
+            id=f"panel-{panel}",
+            cls="flex-1 min-w-[280px] bg-slate-800/50 rounded-xl p-4",
+        )
+
+    except Exception as e:
+        return Div(
+            H3(f"Photo {panel.upper()}", cls="text-sm font-medium text-slate-400 mb-3 text-center"),
+            P(f"Error: {str(e)}", cls="text-red-400 text-sm text-center"),
+            id=f"panel-{panel}",
+            cls="flex-1 min-w-[280px] bg-slate-800/50 rounded-xl p-4",
+        )
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+
+@rt("/api/compare/pair/match")
+def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 0):
+    """Compute similarity between two selected faces from different uploads."""
+    import pickle
+    import numpy as np
+    from core.storage import can_write_r2, download_bytes_from_r2, get_upload_url
+
+    if not upload_a or not upload_b:
+        return Div(P("Both photos must have a face selected.", cls="text-red-400 text-sm"))
+
+    # Load face embeddings for both uploads
+    def _load_faces(uid):
+        data = None
+        if can_write_r2():
+            data = download_bytes_from_r2(f"uploads/compare/{uid}_faces.pkl")
+        if data is None:
+            local = Path("uploads/compare") / f"{uid}_faces.pkl"
+            if local.exists():
+                data = local.read_bytes()
+        if data:
+            return pickle.loads(data)
+        return None
+
+    faces_a = _load_faces(upload_a)
+    faces_b = _load_faces(upload_b)
+
+    if not faces_a or not faces_b:
+        return Div(P("Could not load face data. Please re-upload.", cls="text-red-400 text-sm"))
+
+    if face_a >= len(faces_a) or face_b >= len(faces_b):
+        return Div(P("Invalid face selection.", cls="text-red-400 text-sm"))
+
+    # Compute cosine similarity
+    mu_a = np.array(faces_a[face_a]["mu"])
+    mu_b = np.array(faces_b[face_b]["mu"])
+    # Euclidean distance
+    distance = float(np.linalg.norm(mu_a - mu_b))
+    # Convert to cosine similarity: s = 1 - d²/2
+    cosine_sim = max(0.0, 1.0 - (distance ** 2) / 2.0)
+    # Simple confidence percentage
+    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+
+    # Try calibrated score (AD-149: isotonic regression)
+    calibrated_pct = None
+    try:
+        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
+        cal = SimilarityCalibrator()
+        prob = cal.predict(cosine_sim)
+        if prob is not None:
+            calibrated_pct = int(prob * 100)
+    except Exception:
+        pass
+
+    display_pct = calibrated_pct if calibrated_pct is not None else confidence_pct
+
+    # Determine confidence label and colors
+    if display_pct >= 85:
+        label, badge_cls, bar_color = "Very Likely Match", "text-green-400 border-green-500/30 bg-green-900/20", "bg-green-500"
+    elif display_pct >= 70:
+        label, badge_cls, bar_color = "Strong Match", "text-blue-400 border-blue-500/30 bg-blue-900/20", "bg-blue-500"
+    elif display_pct >= 50:
+        label, badge_cls, bar_color = "Possible Match", "text-amber-400 border-amber-500/30 bg-amber-900/20", "bg-amber-500"
+    else:
+        label, badge_cls, bar_color = "Unlikely Match", "text-slate-400 border-slate-500/30 bg-slate-800", "bg-slate-500"
+
+    # Face crop URLs
+    crop_a_url = get_upload_url(f"uploads/compare/{upload_a}_face{face_a}.jpg")
+    crop_b_url = get_upload_url(f"uploads/compare/{upload_b}_face{face_b}.jpg")
+
+    return Div(
+        Div(
+            H3("Comparison Result", cls="text-lg font-serif text-white mb-4 text-center"),
+            # Side-by-side face crops
+            Div(
+                Div(
+                    Img(src=crop_a_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-slate-600"),
+                    P("Photo A", cls="text-xs text-slate-400 mt-2"),
+                    cls="flex flex-col items-center",
+                ),
+                Div(
+                    Span(f"{display_pct}%", cls="text-2xl font-bold text-white"),
+                    Span(label, cls=f"text-xs font-medium px-2 py-1 rounded border mt-1 {badge_cls}"),
+                    cls="flex flex-col items-center justify-center px-6",
+                ),
+                Div(
+                    Img(src=crop_b_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-slate-600"),
+                    P("Photo B", cls="text-xs text-slate-400 mt-2"),
+                    cls="flex flex-col items-center",
+                ),
+                cls="flex items-center justify-center gap-4 mb-6",
+            ),
+            # Confidence bar
+            Div(
+                Div(cls=f"{bar_color} h-2 rounded-full transition-all", style=f"width: {display_pct}%"),
+                cls="w-full max-w-xs mx-auto bg-slate-700 rounded-full h-2 mb-4",
+            ),
+            # Technical details (small print)
+            Div(
+                P(f"Euclidean distance: {distance:.3f}", cls="text-[10px] text-slate-600"),
+                P(f"Cosine similarity: {cosine_sim:.4f}", cls="text-[10px] text-slate-600"),
+                P(f"{'Calibrated' if calibrated_pct is not None else 'Estimated'} confidence",
+                  cls="text-[10px] text-slate-600"),
+                cls="text-center",
+            ),
+            Button(
+                "Compare Another Pair",
+                onclick="window.location.reload()",
+                cls="mt-4 px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm",
+            ),
+            cls="text-center",
+        ),
+        cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto mt-4",
+        data_testid="pair-comparison-result",
     )
 
 
