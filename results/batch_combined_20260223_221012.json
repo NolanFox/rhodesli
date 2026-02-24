@@ -1,0 +1,110 @@
+{
+  "batch_id": "batch_combined_20260223_221012",
+  "model": "gemini-3.1-pro-preview",
+  "total_photos": 10,
+  "success": 8,
+  "errors": 2,
+  "skipped": 0,
+  "gedcom_enriched": 1,
+  "total_cost": 0.0782,
+  "results": [
+    {
+      "photo_id": "9411826ba358db3c",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "81bf7f85ec9814bc",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_2_596771023.203463",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.0,
+      "input_tokens": 1528,
+      "output_tokens": 176,
+      "cost": 0.0052,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_3_596770938.488977",
+      "status": "success",
+      "faces_detected": 14,
+      "faces_described": 14,
+      "elapsed": 18.0,
+      "input_tokens": 1919,
+      "output_tokens": 1535,
+      "cost": 0.0223,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_4_596771234.564304",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.8,
+      "input_tokens": 1557,
+      "output_tokens": 300,
+      "cost": 0.0067,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.9,
+      "input_tokens": 1575,
+      "output_tokens": 294,
+      "cost": 0.0067,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 42.1,
+      "input_tokens": 1527,
+      "output_tokens": 186,
+      "cost": 0.0053,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 8.0,
+      "input_tokens": 1920,
+      "output_tokens": 498,
+      "cost": 0.0098,
+      "has_gedcom": true
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_8_596771351.496458",
+      "status": "success",
+      "faces_detected": 2,
+      "faces_described": 2,
+      "elapsed": 6.9,
+      "input_tokens": 1556,
+      "output_tokens": 288,
+      "cost": 0.0066,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+      "status": "success",
+      "faces_detected": 8,
+      "faces_described": 8,
+      "elapsed": 13.4,
+      "input_tokens": 1723,
+      "output_tokens": 1012,
+      "cost": 0.0156,
+      "has_gedcom": false
+    }
+  ]
+}

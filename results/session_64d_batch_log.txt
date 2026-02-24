@@ -1,0 +1,1044 @@
+INFO: Total photos: 271
+INFO: Photos with faces: 271
+INFO: After skipping aligned: 136 (skipped 135)
+INFO: Supabase client initialized
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_face_links?select=%2A "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=0&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=1000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=2000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=3000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=4000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=5000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=6000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=7000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=8000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=9000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=10000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=11000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=12000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=13000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=14000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=15000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=16000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=17000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=18000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=19000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=20000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_individuals?select=%2A&offset=21000&limit=1000 "HTTP/2 200 OK"
+INFO: Loaded 46 GEDCOM face links, 21809 individuals
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=0&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=1000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=2000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=3000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=4000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=5000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=6000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=7000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=8000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=9000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=10000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=11000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=12000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=13000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=14000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=15000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=16000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=17000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=18000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=19000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=20000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=21000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=22000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=23000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=24000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=25000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=26000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=27000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=28000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=29000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=30000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=31000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=32000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=33000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=34000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=35000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=36000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=37000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=38000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=39000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_events?select=%2A&offset=40000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=0&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=1000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=2000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=3000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=4000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=5000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=6000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=7000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=8000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=9000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=10000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=11000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=12000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=13000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=14000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=15000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=16000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=17000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=18000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=19000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=20000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=21000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=22000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=23000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=24000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=25000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=26000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=27000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=28000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=29000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=30000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=31000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=32000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=33000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=34000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=35000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=36000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=37000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=38000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=39000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=40000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=41000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=42000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=43000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=44000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=45000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=46000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=47000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=48000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=49000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=50000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=51000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=52000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=53000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=54000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=55000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=56000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=57000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=58000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=59000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=60000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=61000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=62000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=63000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=64000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=65000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=66000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=67000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=68000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=69000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=70000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=71000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=72000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=73000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=74000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=75000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=76000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=77000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=78000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=79000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=80000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=81000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=82000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=83000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=84000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=85000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=86000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=87000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=88000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=89000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=90000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=91000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=92000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=93000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=94000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=95000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=96000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=97000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=98000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=99000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=100000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=101000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=102000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=103000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=104000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=105000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=106000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=107000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=108000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=109000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=110000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=111000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=112000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=113000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=114000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=115000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=116000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=117000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=118000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=119000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=120000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=121000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=122000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=123000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=124000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=125000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=126000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=127000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=128000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=129000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=130000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=131000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=132000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=133000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=134000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=135000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=136000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=137000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=138000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=139000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=140000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=141000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=142000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=143000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=144000&limit=1000 "HTTP/2 200 OK"
+INFO: HTTP Request: GET https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gedcom_relationships?select=%2A&offset=145000&limit=1000 "HTTP/2 200 OK"
+INFO: Built ParsedGedcom from Supabase: 21809 individuals, 6680 families
+INFO: GEDCOM context enabled (46 linked identities)
+INFO: Processing 136 photos with gemini-3.1-pro-preview
+INFO: Batch ID: batch_combined_20260223_221339
+INFO: [1/136] 9411826ba358db3c (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+ERROR:   !! Error: Gemini API call failed
+INFO: [2/136] 81bf7f85ec9814bc (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 500 Internal Server Error"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+ERROR: Gemini face alignment call failed: 500 INTERNAL. {'error': {'code': 500, 'message': 'Internal error encountered.', 'status': 'INTERNAL'}}
+ERROR:   !! Error: Gemini API call failed
+INFO: [3/136] inbox_staged-20260210-182610_12_Image_567 (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0072, 7.1s +GEDCOM
+INFO: [4/136] inbox_staged-20260210-182610_13_596771481.064027 (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0081, 7.0s
+INFO: [5/136] inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166 (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 4.7s +GEDCOM
+INFO: [6/136] inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.7s +GEDCOM
+INFO: [7/136] inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0053, 8.8s +GEDCOM
+INFO: [8/136] inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.2s +GEDCOM
+INFO: [9/136] inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 6.2s +GEDCOM
+INFO: [10/136] inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 5.9s +GEDCOM
+INFO: [11/136] inbox_ancestry-20260210_5_Abraham_Rousso_family (10 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 10/10 faces, $0.0165, 13.8s
+INFO: [12/136] inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0061, 5.8s +GEDCOM
+INFO: [13/136] inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 8.3s +GEDCOM
+INFO: [14/136] inbox_ancestry-20260210_8_abraham_almaleh_517958956_10172333855565346_6983007175757830190_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0054, 11.6s +GEDCOM
+INFO: [15/136] inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0067, 5.3s +GEDCOM
+INFO: [16/136] inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0074, 10.0s +GEDCOM
+INFO: [17/136] inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_ (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0059, 4.8s +GEDCOM
+INFO: [18/136] inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 5.6s +GEDCOM
+INFO: [19/136] inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0088, 6.4s +GEDCOM
+INFO: [20/136] inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0057, 5.3s +GEDCOM
+INFO: [21/136] inbox_facebook-20260210_3_eshter_diana_taranto_capouano_516849846_10172371267160346_7443027495861560771_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.8s
+INFO: [22/136] inbox_benatar-20260213_0_Sarina2 (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0083, 7.7s
+INFO: [23/136] inbox_community-batch-20260214_0_lisa_galbraith_collection_520232999_10163302380404201_5510533636852598408_n (18 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 18/18 faces, $0.0280, 20.9s
+INFO: [24/136] inbox_community-batch-20260214_1_shaya_sadis_485912814_10171438847285346_8391034119885432541_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.1s
+INFO: [25/136] inbox_community-batch-20260214_2_rachel_soriano_children_giuseppe_lucia_496534630_24050403817877479_7606185349834125792_n (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0088, 7.2s
+INFO: [26/136] inbox_community-batch-20260214_3_rhodes_jewish_historical_foundation_reina_cohen_solomon_varon_492228208_686565923760846_8126719111333170818_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0116, 8.3s
+INFO: [27/136] inbox_community-batch-20260214_4_claude_benatar_collection_victor_haim_israel_470221346_10170605679340346_6478159606100860750_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0059, 6.0s
+INFO: [28/136] inbox_community-batch-20260214_5_franz_capelluto_505761334_10172036095955346_4723800524101151919_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0066, 5.7s
+INFO: [29/136] inbox_community-batch-20260214_6_eli_khoniu_282673358_53072697-826a-4b6b-85cb-bf2391a80a9d (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 4.7s
+INFO: [30/136] inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n (12 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 12/12 faces, $0.0205, 19.4s +GEDCOM
+INFO: [31/136] inbox_community-batch-20260214_8_haim_david_capelouto_493803042_10172102615365346_5058438640587221514_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 6.2s
+INFO: [32/136] inbox_community-batch-20260214_9_josue_capeluto_513113308_10172171064820346_6554594099894590848_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 6.5s
+INFO: [33/136] inbox_community-batch-20260214_10_claude_benatar_collection_victor_haim_israel_470755436_10170730351010346_2281380443213894033_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0070, 7.2s
+INFO: [34/136] inbox_community-batch-20260214_11_ezra_benatar_503903104_10171978773945346_3205903512026745916_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0064, 6.8s
+INFO: [35/136] inbox_community-batch-20260214_12_claude_benatar_collection_victor_bohor_sabatai_soriano_494266545_10171704019995346_7718030381364654083_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 6.0s
+INFO: [36/136] inbox_community-batch-20260214_13_asher_touriel_489928848_10171601915310346_174675645702038176_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 4.9s
+INFO: [37/136] inbox_community-batch-20260214_14_eleonore_shemaria_489823683_10171556033925346_4592038961808734961_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.2s
+INFO: [38/136] inbox_community-batch-20260214_15_isaac_jack_levy_490471033_10171580010150346_8652748163613864274_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.0s
+INFO: [39/136] inbox_community-batch-20260214_16_salvator_alhadeff_499725582_10171862580705346_3624353994965917233_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0053, 4.8s
+INFO: [40/136] inbox_community-batch-20260214_17_claude_benatar_collection_victor_rebecca_benun_495378497_10171755182615346_7145354360116540323_n (4 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 4/4 faces, $0.0106, 8.4s
+INFO: [41/136] inbox_community-batch-20260214_18_semah_franco_518799461_10172415321225346_553390149995775072_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.2s
+INFO: [42/136] inbox_community-batch-20260214_19_joseph_cadranel_505214480_10172010548560346_5999857223121759234_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0065, 6.9s
+INFO: [43/136] inbox_community-batch-20260214_20_simon_israel_522630495_10172484677500346_3828197167749831184_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.7s
+INFO: [44/136] inbox_community-batch-20260214_21_franco_deborah_collection_90759681_10159522051093136_435921227580702720_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0138, 9.8s
+INFO: [45/136] inbox_community-batch-20260214_22_lucia_capelluto_habib_498275359_1233261768810379_4357209370323640927_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0054, 5.5s
+INFO: [46/136] inbox_community-batch-20260214_23_claude_benatar_collection_victor_bohor_sabatai_soriano_493676514_10171704021850346_928399224614360184_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 5.4s
+INFO: [47/136] inbox_community-batch-20260214_24_haim_capelouto_510959828_10172145589925346_8862535038558329501_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0064, 6.4s
+INFO: [48/136] inbox_community-batch-20260214_25_michelle_benatar_collection_574580512_25573504628922842_9065160801283305527_n (5 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 5/5 faces, $0.0102, 9.2s
+INFO: [49/136] inbox_community-batch-20260214_26_alexandre_avzaradel_500228843_10171909257505346_1135908763900995647_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 4.1s
+INFO: [50/136] inbox_community-batch-20260214_27_abramo_hasson_558859823_25238428042408837_2500312373836705702_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.2s
+INFO: [51/136] inbox_community-batch-20260214_28_israel_sciarcon_484779897_10171460023595346_2373419148825336249_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.0s
+INFO: [52/136] inbox_community-batch-20260214_29_isaac_cohen_518155169_10172358921150346_7060006423942663426_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.6s
+INFO: [53/136] inbox_community-batch-20260214_30_estrea_sharhon_486447687_10171460023555346_6411241431060255791_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0053, 6.3s
+INFO: [54/136] inbox_community-batch-20260214_31_jeanettte_swartz_collection_514422102_24127752060174481_4638287865555771213_n (10 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 10/10 faces, $0.0165, 12.2s
+INFO: [55/136] inbox_community-batch-20260214_32_shaya_sadis_486025159_10171438847095346_7650482810217649673_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.0s
+INFO: [56/136] inbox_community-batch-20260214_33_nissim_cohen_514260385_10172484649105346_1012667927291313717_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.7s
+INFO: [57/136] inbox_community-batch-20260214_34_victor_haim_israel_470223768_10170605604700346_845325848549514268_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.6s
+INFO: [58/136] inbox_community-batch-20260214_35_stephanie_asheck_collection_487203508_10108913187223408_5855827733343318019_n (11 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 11/11 faces, $0.0179, 14.8s
+INFO: [59/136] inbox_community-batch-20260214_36_claude_benatar_collection_victor_bohor_sabatai_soriano_493494123_10171704022265346_3458576509112524280_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 4.7s
+INFO: [60/136] inbox_community-batch-20260214_37_abner_bardavid_502531834_10171961392585346_6969844769030616197_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 6.4s
+INFO: [61/136] inbox_community-batch-20260214_38_masliah_alhadeff_498643123_10171847102790346_6237952123946428779_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.8s
+INFO: [62/136] inbox_community-batch-20260214_39_lucia_capelluto_habib_497858415_1233302348806321_3426812803112569023_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 5.5s
+INFO: [63/136] inbox_community-batch-20260214_40_claude_benatar_collection_558236101_10173095506980346_6815105064041797412_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0116, 12.9s
+INFO: [64/136] inbox_community-batch-20260214_41_isaac_jack_levy_490364820_10171580008910346_2077570241570978282_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.4s
+INFO: [65/136] inbox_community-batch-20260214_42_semah_franco_518792830_10172415321110346_7216093349261673005_n (4 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 4/4 faces, $0.0093, 9.3s
+INFO: [66/136] inbox_community-batch-20260214_43_jeuda_levy_582624756_10231713094074414_2695414189522190305_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0119, 11.4s
+INFO: [67/136] inbox_community-batch-20260214_44_claude_benatar_collection_victor_rebecca_benun_495644359_10171755169400346_7126191920610626702_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 6.3s
+INFO: [68/136] inbox_community-batch-20260214_45_uriel_galante_collection_605462785_801235796296562_8597033193125609967_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0141, 10.4s
+INFO: [69/136] inbox_community-batch-20260214_46_regine_avzaradel_collection_549212451_9859892167446415_1826390117555685221_n (5 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 5/5 faces, $0.0101, 8.4s
+INFO: [70/136] inbox_community-batch-20260214_47_morris_touriel_491896701_10171631280295346_4599119104798936934_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 4.7s
+INFO: [71/136] inbox_community-batch-20260214_48_sabrina_amato_collection_494308190_2222706794827769_1080678848045832372_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0142, 12.3s
+INFO: [72/136] inbox_community-batch-20260214_49_nissim_norman_sharhon_486691034_10171511418110346_7315513093554577752_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.7s
+INFO: [73/136] inbox_community-batch-20260214_50_Isaac_Cadranel_504301593_10171996110335346_3602126982357465160_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.8s
+INFO: [74/136] inbox_community-batch-20260214_51_rica_cohen_503614239_714602537623851_1764326801082873220_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0056, 5.9s
+INFO: [75/136] inbox_community-batch-20260214_52_uriel_galante_collection_601470917_801235776296564_3035101916288114389_n (4 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 4/4 faces, $0.0098, 8.0s
+INFO: [76/136] inbox_community-batch-20260214_53_jacob_pasha_israel_69204176_10162214672025346_1240553526233399296_n (9 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 9/9 faces, $0.0164, 28.0s
+INFO: [77/136] inbox_community-batch-20260214_54_moise_avzaradel_499921838_10171922564260346_2601530220636189573_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0049, 10.2s
+INFO: [78/136] inbox_community-batch-20260214_55_alexandre_cohen_518460207_10172307461230346_1388858436354168493_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 5.7s
+INFO: [79/136] inbox_community-batch-20260214_56_regine_franco_520871885_10172415321220346_1210714843706744221_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.1s
+INFO: [80/136] inbox_community-batch-20260214_57_nissim_cohen_laura_varon_moise_israel)536883890_10172712595625346_4702058667200825870_n (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0076, 6.4s
+INFO: [81/136] inbox_community-batch-20260214_58_asher_touriel_486996980_10171601914685346_7482199189315238584_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.7s
+INFO: [82/136] inbox_community-batch-20260214_59_claude_benatar_collection_victor_bohor_sabatai_soriano_493684314_10171704024440346_5979171357513245894_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.9s
+INFO: [83/136] inbox_community-batch-20260214_60_david_israel_580557939_10173382345955346_3216565122124941196_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.2s
+INFO: [84/136] inbox_community-batch-20260214_61_albert_avzaradel_500229316_10171894354750346_6513195025686199669_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 4.2s
+INFO: [85/136] inbox_community-batch-20260214_62_david_franco_collection_497891606_2247317675665225_368797912673942421_n (7 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 7/7 faces, $0.0132, 9.5s
+INFO: [86/136] inbox_community-batch-20260214_63_leone_sidicaro_65243904_10161966778600346_8076688366654980096_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.2s
+INFO: [87/136] inbox_community-batch-20260214_64_jeanettte_swartz_collection_516169815_24127772290172458_9159603061597220280_n (4 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 4/4 faces, $0.0096, 7.5s
+INFO: [88/136] inbox_community-batch-20260214_66_semah_franco_520899987_10172415320650346_6397837077659007019_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0053, 4.6s
+INFO: [89/136] inbox_community-batch-20260214_67_susanne_bass_collection_520287908_1237925664680452_8643817637167842650_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0122, 8.8s
+INFO: [90/136] inbox_community-batch-20260214_68_susanne_bass_collection_499759411_1189741629498856_3109157178903791725_n (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0077, 6.2s
+INFO: [91/136] inbox_community-batch-20260214_69_claude_benatar_collection_victor_haim_israel_470530454_10170605611025346_6025688954537884912_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 4.7s
+INFO: [92/136] inbox_community-batch-20260214_70_david_franco_collection_504896621_2270573480006311_8952402771580837356_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0119, 10.7s
+INFO: [93/136] inbox_community-batch-20260214_71_claude_benatar_collection_victor_bohor_sabatai_soriano_494502427_10171704023185346_5893663062454819691_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 4.6s
+INFO: [94/136] inbox_community-batch-20260214_72_eliakim_cordoval_524605757_10172507723295346_6590705878333530417_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0054, 7.0s
+INFO: [95/136] inbox_community-batch-20260214_73_rhodes_jewish_historical_foundation_collection_481054755_642374571513315_2077232265072962474_n (15 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 15/15 faces, $0.0224, 18.3s
+INFO: [96/136] inbox_community-batch-20260214_74_victor_haim_israel_470218882_10170605594885346_1330218943688170616_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.3s
+INFO: [97/136] inbox_community-batch-20260214_75_claude_benatar_collection_aslan_louie_notrica_492110450_10171661307470346_6127261380310076660_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0069, 5.7s
+INFO: [98/136] inbox_community-batch-20260214_76_claude_benatar_collection_victor_rebecca_benun_495403500_10171755169865346_6018277602901061278_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 5.1s
+INFO: [99/136] inbox_community-batch-20260214_77_rahamin_raymond_sadis_481253010_10171438847375346_2532370090301041713_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.4s
+INFO: [100/136] inbox_community-batch-20260214_78_Haham_Joseph_Hai_Franco_Rachel_Capouya_Franco_505934782_10228693438389424_8835735934188338669_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0067, 5.4s
+INFO: [101/136] inbox_community-batch-20260214_80_regine_franco_518960976_10172415321095346_1272581698574848909_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0053, 5.5s
+INFO: [102/136] inbox_community-batch-20260214_81_claude_benatar_collection_victor_rebecca_benun_495017934_10171755168560346_2499124449399417544_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 4.8s
+INFO: [103/136] inbox_community-batch-20260214_82_joseph_touriel_492030538_10171631280470346_1164156250994293487_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.3s
+INFO: [104/136] inbox_community-batch-20260214_83_stella_benun_pic_1963_611621935_1962577644337496_2585072900473128512_n (40 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 40/40 faces, $0.0516, 33.3s
+INFO: [105/136] inbox_community-batch-20260214_84_claude_benatar_collection_51010671_10161394962905346_4861693603711287296_n (5 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 5/5 faces, $0.0110, 8.0s
+INFO: [106/136] inbox_community-batch-20260214_85_claude_benatar_collection_602325880_10173673626010346_5396769815198644467_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0150, 15.1s
+INFO: [107/136] inbox_community-batch-20260214_86_jeanettte_swartz_collection_516044673_24127787240170963_8438365531155717054_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 7.2s
+INFO: [108/136] inbox_community-batch-20260214_87_abner_hasson_519693871_10172446261730346_4741244115442601264_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 4.5s
+INFO: [109/136] inbox_community-batch-20260214_88_levi_miryam_collection_582213031_10231713270518825_3648509779269552098_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0147, 15.3s
+INFO: [110/136] inbox_community-batch-20260214_89_claude_benatar_collection_aslan_louie_notrica_493224712_10171661109615346_4370590583194203149_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 4.8s
+INFO: [111/136] inbox_community-batch-20260214_90_claude_benatar_collection_victor_rebecca_benun_494926899_10171755190465346_7463334439317281158_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0152, 11.6s
+INFO: [112/136] inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n (4 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 4/4 faces, $0.0092, 7.3s
+INFO: [113/136] inbox_community-batch-20260214_92_ascher_t_capelouto_508014985_10172085972990346_6602167766352128966_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 5.2s
+INFO: [114/136] inbox_community-batch-20260214_93_sabrina_amato_collection_494049981_2222706804827768_4365323857728211254_n (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0078, 11.6s
+INFO: [115/136] inbox_community-batch-20260214_94_rahamin_raymond_sadis_485365490_10171438847430346_8512062402864014866_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.6s
+INFO: [116/136] inbox_community-batch-20260214_95_perla_levy_alhadeff_519360099_10166406932052715_2530675645732869189_n (7 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 7/7 faces, $0.0132, 9.3s
+INFO: [117/136] inbox_community-batch-20260214_96_lucia_capelluto_habib_497623454_1233264532143436_6867586292734209390_n (3 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 3/3 faces, $0.0082, 6.7s
+INFO: [118/136] inbox_community-batch-20260214_97_claude_benatar_collection_victor_haim_israel_470223951_10170605632245346_7357681670912902825_n (7 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 7/7 faces, $0.0132, 10.8s
+INFO: [119/136] inbox_community-batch-20260214_98_eleonore_shemaria_486474068_10171556034980346_8907053379946085121_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0054, 5.1s
+INFO: [120/136] inbox_community-batch-20260214_99_claude_benatar_collection_victor_rebecca_benun_495117150_10171755168940346_8068417958696098744_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.7s
+INFO: [121/136] inbox_community-batch-20260214_100_regine_avzaradel_collection_550882915_9859878947447737_338468120289304617_n (8 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 8/8 faces, $0.0137, 9.8s
+INFO: [122/136] inbox_community-batch-20260214_101_claude_benatar_collection_571277446_10173252883795346_8397002383747694084_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0053, 5.4s
+INFO: [123/136] inbox_community-batch-20260214_102_uriel_galante_collection_605494321_801235802963228_782117642180107430_n (2 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 2/2 faces, $0.0062, 11.9s
+INFO: [124/136] inbox_community-batch-20260214_103_caden_sharhon_486780832_10171460023695346_788852106924365199_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 5.2s
+INFO: [125/136] inbox_community-batch-20260214_104_albert_angel_499725590_10171877447865346_8151957301761971413_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0052, 6.1s
+INFO: [126/136] inbox_community-batch-20260214_105_claude_benatar_collection_558203138_10173095507180346_8300828577663964838_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 5.3s
+INFO: [127/136] inbox_community-batch-20260214_106_nissim_norman_sharhon_486209859_10171511418865346_7934755365074716806_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 5.7s
+INFO: [128/136] inbox_community-batch-20260214_107_debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n (16 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 16/16 faces, $0.0247, 18.6s
+INFO: [129/136] inbox_community-batch-20260214_108_varon_and_cohen_family_536272743_10172712625745346_629403507426403422_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0115, 9.4s
+INFO: [130/136] inbox_community-batch-20260214_109_alfred_aron_charhon_514107722_10172197066705346_4898226954282493936_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0050, 4.7s
+INFO: [131/136] inbox_community-batch-20260214_110_claude_benatar_collection_victor_bohor_sabatai_soriano_493853728_10171704024405346_2509583181697338751_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0055, 6.0s
+INFO: [132/136] inbox_community-batch-20260214_111_claude_benatar_collection_victor_haim_israel_470239310_10170605628145346_5283256967494305297_n (5 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 5/5 faces, $0.0107, 10.1s
+INFO: [133/136] inbox_community-batch-20260214_112_Michelle_Naftali_Menashe_611165363_10241027890419154_4676341286610368042_n (1 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 1/1 faces, $0.0051, 5.2s
+INFO: [134/136] inbox_community-batch-20260214_113_Eliechon_benatar_51122998_10161394623110346_5296034665579151360_n (6 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 6/6 faces, $0.0129, 11.3s
+INFO: [135/136] inbox_community-batch-20260214_114_uriel_galante_collection_601825639_801235769629898_4625925847908071870_n (10 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 10/10 faces, $0.0176, 14.1s
+INFO: [136/136] inbox_community-batch-20260214_115_joseph_mizrahi_490207265_10171556169875346_1086624264720940908_n (7 faces)
+INFO: AFC is enabled with max remote calls: 10.
+INFO: HTTP Request: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent "HTTP/1.1 200 OK"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/gemini_api_calls "HTTP/2 201 Created"
+INFO: HTTP Request: POST https://fvynibivlphxwfowzkjl.supabase.co/rest/v1/face_gemini_alignments?on_conflict=photo_id "HTTP/2 201 Created"
+INFO:   OK 7/7 faces, $0.0139, 11.3s
+INFO: 
+============================================================
+INFO: BATCH COMPLETE — batch_combined_20260223_221339
+INFO: ============================================================
+INFO: Success: 134/136
+INFO: Errors: 2
+INFO: Skipped: 0
+INFO: GEDCOM-enriched: 17
+INFO: Total cost: $1.1085
+INFO: Results saved to /Users/nolanfox/rhodesli/results/batch_combined_20260223_221339.json
