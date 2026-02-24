@@ -38,3 +38,21 @@
 
 #### Phase 1 VERDICT: PASS
 Upload fixed across 3 sessions: 65a (PID tracking), 65c (RAM/OOM fix), 65d (disk space cleanup).
+
+### Phase 2: GEDCOM Temporal Versioning (AD-163)
+- [x] Schema design: `gedcom_versions`, `gedcom_change_log`, `gedcom_enrichment_queue` tables
+- [x] Migration script: `scripts/supabase_migration_002_gedcom_versioning.sql`
+- [x] Added `version_id`, `superseded_by`, `is_current` to existing GEDCOM tables
+- [x] `current_gedcom_individuals` view for app queries (is_current=TRUE)
+- [x] Import pipeline: `scripts/import_gedcom_version.py` — versioned import with diff detection
+  - Hash-based dedup (same file = no-op)
+  - Field-level change detection for individuals
+  - Change log tracking (added/modified/removed)
+  - Re-enrichment queue for modified linked individuals (Gatekeeper pattern)
+  - Multi-community ready via community_id
+- [x] App updated: GEDCOM search reads from `current_gedcom_individuals` view
+- [x] 20 new tests in tests/test_gedcom_versioning.py
+- [x] AD-163 logged with full provenance
+
+#### Phase 2 VERDICT: PASS
+Migration ready to run. Import script tested. Views wired to app.

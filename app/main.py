@@ -27095,7 +27095,9 @@ def _load_gedcom_individuals():
         page_size = 1000
         offset = 0
         while True:
-            resp = sb.table("gedcom_individuals").select(
+            # AD-163: Read from current_gedcom_individuals view (only is_current=TRUE rows).
+            # Falls back to raw table if view doesn't exist yet (pre-migration).
+            resp = sb.table("current_gedcom_individuals").select(
                 "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
             ).range(offset, offset + page_size - 1).execute()
             if not resp or not resp.data:

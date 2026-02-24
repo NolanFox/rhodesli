@@ -1796,11 +1796,44 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `app/main.py` (upload handler, status poller, pending approval), `core/ingest_inbox.py` (prefer_hybrid parameter, face_ids tracking)
 - **Breadcrumbs**: `tests/test_session_65a_upload_fix.py` (rewritten for timeout-based detection), `tests/test_session_52_fixes.py` (updated for thread), SESSION_LOG.md
 
+### AD-162: Disk Space Cleanup — Temp Files, Backups, Docker Image
+- **Date**: 2026-02-24 | **Session**: 65d
+- **Context**: Upload returned Errno 28 (No space left on device) on Railway. RAM fix (AD-161) worked, but disk was full.
+- **Root Cause**: Docker image bundled 393MB of unnecessary backup files from `data/backups/`. Push endpoint created unbounded `.bak.{timestamp}` files. No staging/inbox cleanup after upload processing.
+- **Decision**: Multi-layer disk cleanup — Docker image reduction, startup cleanup, runtime pruning, health monitoring.
+- **Fixes**:
+  1. `.dockerignore`: exclude `data/backups/`, `data/auto_backups/`, `data/staging/`, `raw_photos/` (~400MB savings)
+  2. `_startup_disk_cleanup()`: removes stale staging dirs (>1hr), old inbox files (>24hr), `.tmp` files
+  3. `_prune_bak_files()`: keeps only 3 most recent `.bak` files per type, runs at startup + after push
+  4. `_background_ingest` `finally` block: removes staging dir after upload processing
+  5. Health endpoint `/health` reports `disk.total_mb`, `disk.free_mb`, `disk.used_pct`
+  6. Startup logs disk usage, warns if <200MB free
+- **Production Evidence**: Health shows 1.6TB free (45.2% used). All 3 upload surfaces verified working in browser.
+- **Previous**: 65a (PID tracking), 65c (RAM/OOM fix via thread), 65d (disk space)
+- **Affects**: `app/main.py` (startup, health, push endpoint, upload), `.dockerignore`
+- **Tests**: `tests/test_session_65d_disk_cleanup.py` (10 tests)
+
+### AD-163: GEDCOM Temporal Versioning — Change Tracking and Re-Enrichment Queue
+- **Date**: 2026-02-24 | **Session**: 65d
+- **Context**: When Nolan updates Ancestry and re-exports GEDCOM, the system needs to merge changes without losing history.
+- **Decision**: Temporal versioning — every import creates a new version. Old data never deleted, only superseded. App reads "current" state via Postgres views.
+- **Schema**:
+  1. `gedcom_versions`: version metadata per import (community_id, source_hash for dedup)
+  2. `gedcom_individuals/events/relationships`: added `version_id`, `superseded_by`, `is_current` columns
+  3. `gedcom_change_log`: field-level change tracking between versions
+  4. `gedcom_enrichment_queue`: photos needing re-enrichment after GEDCOM changes (Gatekeeper pattern)
+  5. `current_gedcom_individuals` view: always shows latest state (is_current=TRUE)
+- **Import Flow**: Parse → hash file (skip if duplicate) → diff against current → insert/supersede/mark-removed → log changes → queue enrichments
+- **Multi-Community Ready**: `community_id` field enables separate version chains per community
+- **Rejected**: Overwrite-on-import (loses history), soft-delete without version chain (can't track what changed when)
+- **Affects**: `scripts/import_gedcom_version.py`, `scripts/supabase_migration_002_gedcom_versioning.sql`, `app/main.py` (reads from view)
+- **Tests**: `tests/test_gedcom_versioning.py` (20 tests)
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-162)
+1. Add a new entry with AD-XXX format (next: AD-164)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
