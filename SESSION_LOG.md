@@ -12,12 +12,13 @@
 - Prompt fidelity: only 12.5% of Gemini calls got GEDCOM context (~106 tokens, should be 400-1000)
 
 ### Phase 1: Production Verification
-- Upload: [PENDING]
-- Compare pair: [PENDING]
-- Face overlay toggle: [PENDING]
-- Share links: [PENDING]
-- Navigation: [PENDING]
-- Screenshots saved to: docs/screenshots/session-65b/
+- Upload: SKIP — requires admin auth, cannot test via Playwright without credentials. Page returns 401 correctly.
+- Compare pair: PASS — /compare/pair loads, two-panel layout renders with upload zones, "Compare Selected Faces" button present
+- Face overlay toggle: PASS — "Show Faces" button visible on photo pages, click toggles to "Hide Faces" with bounding boxes + legend
+- Share links: PASS — Share button on person pages and photo pages
+- Navigation: PASS — People → Person → Photo → back all work bidirectionally
+- Health: PASS — /health returns 200 with 662 identities, 271 photos, ML pipeline ready
+- Screenshots saved to: docs/screenshots/session-65b/ (6 screenshots)
 
 ### Phase 2: GEDCOM ↔ Identity Linking
 - [PENDING]
