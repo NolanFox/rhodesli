@@ -43,9 +43,9 @@ class TestFaceAlignmentSupabaseSave:
         assert result is False
 
     def test_returns_false_on_supabase_error(self):
-        """Returns False on Supabase exception (degraded mode)."""
+        """Returns False on Supabase network exception (degraded mode)."""
         mock_sb = MagicMock()
-        mock_sb.table.return_value.upsert.return_value.execute.side_effect = Exception("timeout")
+        mock_sb.table.return_value.upsert.return_value.execute.side_effect = ConnectionError("timeout")
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
             from app.supabase_data import save_face_alignment_to_supabase

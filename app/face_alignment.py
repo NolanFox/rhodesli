@@ -382,8 +382,8 @@ def _log_call(photo_id, model, call_type, prompt_tokens, completion_tokens,
             rate_limit_type=rate_limit_type,
             batch_id=batch_id,
         )
-    except Exception:
-        pass  # Never block alignment on logging failure
+    except Exception as e:
+        logger.debug(f"Gemini call logging failed (non-blocking): {e}")
 
 
 # --- Full pipeline ---

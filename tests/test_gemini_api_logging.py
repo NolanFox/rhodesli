@@ -60,9 +60,9 @@ class TestLogGeminiCall:
         assert result is False
 
     def test_handles_supabase_error(self):
-        """Returns False on Supabase exception."""
+        """Returns False on Supabase network exception."""
         mock_sb = MagicMock()
-        mock_sb.table.return_value.insert.return_value.execute.side_effect = Exception("fail")
+        mock_sb.table.return_value.insert.return_value.execute.side_effect = ConnectionError("fail")
 
         with patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
             from app.supabase_data import log_gemini_call

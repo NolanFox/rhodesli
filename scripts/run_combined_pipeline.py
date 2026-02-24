@@ -22,11 +22,21 @@ import logging
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
 import numpy as np
+
+# Supabase/network exception types for narrowed exception handling.
+# Schema bugs (KeyError, AttributeError) intentionally NOT caught.
+try:
+    import httpx
+    from postgrest.exceptions import APIError as PostgRESTError
+    _SUPABASE_ERRORS = (httpx.HTTPError, PostgRESTError, ConnectionError, TimeoutError, OSError)
+except ImportError:
+    _SUPABASE_ERRORS = (ConnectionError, TimeoutError, OSError)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -54,7 +64,7 @@ def load_photo_bytes(photo_path: str) -> bytes | None:
         try:
             with urllib.request.urlopen(url, timeout=30) as resp:
                 return resp.read()
-        except Exception as e:
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
             logger.warning(f"R2 load failed for {filename}: {e}")
 
     return None
@@ -137,24 +147,25 @@ def build_gedcom_context(photo_id: str, faces: list[FaceDetection],
 
     try:
         from rhodesli_ml.gedcom_context import build_photo_context
-        # build_photo_context expects the inner identities dict, not the
-        # full JSON envelope with schema_version/history keys
-        inner_identities = identities
-        if "identities" in identities and "schema_version" in identities:
-            inner_identities = identities["identities"]
-
-        context = build_photo_context(
-            photo_id=photo_id,
-            identified_faces=identified_face_ids,
-            parsed_gedcom=parsed_gedcom,
-            gedcom_face_links=face_links,
-            identities=inner_identities,
-            variant="curated",
-        )
-        return context
-    except Exception as e:
-        logger.debug(f"GEDCOM context build failed for {photo_id}: {e}")
+    except ImportError as e:
+        logger.warning(f"GEDCOM context module not available: {e}")
         return ""
+
+    # build_photo_context expects the inner identities dict, not the
+    # full JSON envelope with schema_version/history keys
+    inner_identities = identities
+    if "identities" in identities and "schema_version" in identities:
+        inner_identities = identities["identities"]
+
+    context = build_photo_context(
+        photo_id=photo_id,
+        identified_faces=identified_face_ids,
+        parsed_gedcom=parsed_gedcom,
+        gedcom_face_links=face_links,
+        identities=inner_identities,
+        variant="curated",
+    )
+    return context
 
 
 def load_gedcom_data() -> dict | None:
@@ -202,8 +213,8 @@ def load_gedcom_data() -> dict | None:
             "face_links": face_links,
             "parsed_gedcom": _build_parsed_gedcom_from_supabase(all_individuals),
         }
-    except Exception as e:
-        logger.debug(f"GEDCOM data unavailable: {e}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"GEDCOM data unavailable (network/API): {e}")
         return None
 
 
@@ -296,8 +307,8 @@ def _build_parsed_gedcom_from_supabase(individuals_data):
                     raw_date=ev_row.get("raw_date", "") or ev_row.get("date", ""),
                 )
                 individuals[indi_xref].events.append(event)
-    except Exception as e:
-        logger.debug(f"Failed to load GEDCOM events: {e}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Failed to load GEDCOM events (network/API): {e}")
 
     # 3. Load relationships and reconstruct families (paginated)
     families = {}
@@ -375,8 +386,8 @@ def _build_parsed_gedcom_from_supabase(individuals_data):
                         if related_xref not in fam.children_xrefs:
                             fam.children_xrefs.append(related_xref)
 
-    except Exception as e:
-        logger.debug(f"Failed to load GEDCOM relationships: {e}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Failed to load GEDCOM relationships (network/API): {e}")
 
     logger.info(f"Built ParsedGedcom from Supabase: {len(individuals)} individuals, {len(families)} families")
     return ParsedGedcom(
@@ -417,6 +428,8 @@ async def process_photo(photo_id: str, photo_data: dict, identities: dict,
             batch_id=batch_id,
         )
     except Exception as e:
+        # Keep broad here: Gemini API can throw many error types.
+        # The narrowing is in the data-loading functions above.
         return {"photo_id": photo_id, "status": "error", "reason": str(e)}
 
     elapsed = time.time() - start

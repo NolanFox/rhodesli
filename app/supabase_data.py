@@ -17,6 +17,15 @@ import json
 import logging
 import os
 
+# Narrow exception types for Supabase operations.
+# Schema bugs (KeyError, AttributeError) intentionally NOT caught.
+try:
+    import httpx
+    from postgrest.exceptions import APIError as PostgRESTError
+    _SUPABASE_ERRORS = (httpx.HTTPError, PostgRESTError, ConnectionError, TimeoutError, OSError)
+except ImportError:
+    _SUPABASE_ERRORS = (ConnectionError, TimeoutError, OSError)
+
 logger = logging.getLogger(__name__)
 
 # Module-level client cache
@@ -399,7 +408,7 @@ def save_face_alignment_to_supabase(photo_id, alignment_data, model_used=None, c
         ).execute()
         logger.debug(f"Saved face alignment for {photo_id} to Supabase")
         return True
-    except Exception as e:
+    except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment save failed for {photo_id}: {e}")
         return False
 
@@ -420,7 +429,7 @@ def load_face_alignment_from_supabase(photo_id):
         if result.data and len(result.data) > 0:
             return result.data[0].get('alignment_data')
         return None
-    except Exception as e:
+    except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment load failed for {photo_id}: {e}")
         return None
 
@@ -445,7 +454,7 @@ def load_all_face_alignments_from_supabase():
                 if row.get('alignment_data')
             }
         return {}
-    except Exception as e:
+    except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment bulk load failed: {e}")
         return None
 
@@ -461,7 +470,7 @@ def count_face_alignments_in_supabase():
             'photo_id', count='exact'
         ).execute()
         return result.count
-    except Exception as e:
+    except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment count failed: {e}")
         return None
 
@@ -504,7 +513,7 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
         sb.table('gemini_api_calls').insert(row).execute()
         logger.debug(f"Logged Gemini call: {photo_id} ({call_type}, {model_used})")
         return True
-    except Exception as e:
+    except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase Gemini call log failed: {e}")
         return False
 
@@ -535,6 +544,6 @@ def get_gemini_call_summary(batch_id=None):
             "total_cost_usd": round(total_cost, 4),
             "by_status": by_status,
         }
-    except Exception as e:
+    except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase Gemini call summary failed: {e}")
         return None
