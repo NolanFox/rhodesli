@@ -44,7 +44,7 @@ See `.claude/skills/deploy-verify.md` — Deploy + production smoke test
 ## Mandatory Session Outputs
 Every session MUST produce before final commit:
 1. `docs/assessments/session-NNx-assessment.md` — Self-evaluation of every phase
-2. Updated `SESSION_LOG.md` — Running log of work performed
+2. Updated `SESSION_LOG.md` — Running log (archived to `docs/session_logs/` at session end)
 3. Updated `ALGORITHMIC_DECISIONS.md` — All decisions with provenance
 4. Updated `CHANGELOG.md`, `ROADMAP.md`, `BACKLOG.md`
 
