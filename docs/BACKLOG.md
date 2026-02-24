@@ -181,7 +181,9 @@ AD-137. See Session 60 log.
 - [ ] **UX-130**: Homepage visitor experience — non-admin landing page with CTAs (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-131**: Photo page admin tools below evidence — collapse behind toggle (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-132**: Homepage "Compare a Face" CTA for non-admin visitors (P2). Source: Session 61B UX evaluation.
-- [ ] **FE-041**: "Help Identify" mode for non-admin users
+- [ ] **FE-041**: "Help Identify" mode for non-admin users — Session 65 priority. Community identifications generate LoRA training data.
+- [ ] **DOC-001**: Portfolio documentation — Technical writeup of ML pipeline (InsightFace → CORAL → isotonic calibration → Gemini alignment → GEDCOM enrichment). Session 66. AD-158.
+- [ ] **ML-070**: LoRA fine-tuning — Fine-tune InsightFace final layers on confirmed identity pairs. Needs 50-100+ confirmed pairs. Stage 2 of PRD-023. Session 67+. AD-158.
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
 - [ ] **ROLE-006**: Email notifications for contributors
 - [ ] **ML-053**: Multi-pass Gemini for low-confidence re-labeling

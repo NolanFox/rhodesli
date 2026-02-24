@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 64c: Concerns Resolution + Harness Validation (2026-02-23)
+- Harness validation: 4 hooks, 6 skills, 39 rules audited. Pre-commit hook regex bug found (^git commit misses chained commands).
+- Exception narrowing: 12 `except Exception` handlers replaced with specific `_SUPABASE_ERRORS` in GEDCOM loading, face alignment, and Gemini logging paths. Schema bugs (KeyError, AttributeError) now crash loudly.
+- API cost tracking verified: 10 rows in gemini_api_calls table, cost_usd populated ($0.0004-$0.0012/call). Fixed missing total_tokens field.
+- Calibrated scores verified end-to-end: neighbor cards (SimilarityCalibrator), compare upload (calibrated_similarity_batch), result cards (confidence_pct → tier labels).
+- Roadmap updated: Sessions 65-67 planned (UX → Portfolio → LoRA). AD-158 documents sequencing rationale.
+- +4 new tests. ~3472 total (2884 app + 538 ML).
+
 ## Session 64b: Execute What 64 Deferred (2026-02-23) — v0.67.1
 - Supabase tables created: `face_gemini_alignments`, `gemini_api_calls` (SQL scripts from S64 executed)
 - 127 face alignments migrated from JSON to Supabase (0 failures)

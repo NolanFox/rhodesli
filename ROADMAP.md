@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.67.1 · ~3468 tests · 271 photos · 775 identities · 55 confirmed
+Current: v0.67.1 · ~3472 tests · 271 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -53,13 +53,27 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 64/64b: Verify, Migrate, Harden — COMPLETE (2026-02-23)
-- [x] Phase 0: Harness hardening (5 skills, 3 rules, 3 hooks, CLAUDE.md trim)
-- [x] Track A: Data layer audit, face alignment → Supabase, calibrated scores in UI, recalibration hooks wired
-- [x] Track B: gemini_api_calls table, centralized model config, combined pipeline, batch retry infrastructure
-- [x] 64b: Supabase tables executed, 127 alignments migrated, GEDCOM builder implemented, dry-run validated
-- [x] AD-152 through AD-157. ~58 new tests. ~3468 total.
-- [ ] Deferred: 144 photos still rate-limited (retry ready with combined pipeline)
+### Session 64c/64d: Concerns Resolution + Batch Photos — IN PROGRESS (2026-02-23)
+- [x] 64c: Harness validation, exception narrowing, API cost verification, calibrated scores verification
+- [ ] 64d: Retry 144 rate-limited photos with combined pipeline (parallel session)
+
+### Session 65: UX Walkthrough + Help Identify
+- Nolan conducts end-to-end product walkthrough, documents findings
+- FE-041: Help Identify mode for non-admin users
+- Address UX issues from walkthrough
+- Prerequisite for LoRA: community identifications generate training data
+
+### Session 66: Portfolio Documentation + LoRA Prep
+- Technical writeup of ML pipeline for interview portfolio
+- Document: InsightFace → CORAL → isotonic calibration → Gemini alignment → GEDCOM enrichment
+- LoRA training data audit: count confirmed pairs, assess readiness
+- LoRA implementation plan: contrastive loss, layer selection, ONNX export
+
+### Session 67+: LoRA Fine-Tuning
+- Fine-tune InsightFace final layers on confirmed identity pairs
+- Active learning + regression gate architecture
+- Recalibrate isotonic regression on new embedding space
+- A/B comparison: pre-LoRA vs post-LoRA similarity scores
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates
@@ -67,6 +81,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-23: **Session 64c**: Concerns Resolution. Harness validation (4 hooks, 6 skills, 39 rules audited). Exception narrowing (12 handlers narrowed). API cost tracking verified. Calibrated scores verified end-to-end. AD-158. +4 new tests. ~3472 total.
 - [x] 2026-02-23: **v0.67.1 — Session 64b**: Execute What 64 Deferred. Supabase tables created. 127 alignments migrated. GEDCOM context builder. Dry-run 3 photos. AD-153-157. 8 new tests. ~3468 total.
 - [x] 2026-02-23: **v0.67.0 — Session 64**: Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.
 - [x] 2026-02-23: **v0.66.0 — Session 63**: Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.

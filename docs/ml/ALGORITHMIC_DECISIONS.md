@@ -1737,11 +1737,23 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `scripts/run_combined_pipeline.py`, `rhodesli_ml/gemini_config.py`
 - **Breadcrumbs**: Session 63 concern #2, AD-152
 
+### AD-158: Session Roadmap — UX → Portfolio → LoRA Sequence
+- **Date**: 2026-02-23 | **Session**: 64c
+- **Context**: Three major workstreams remain: (1) UX polish + Help Identify mode, (2) portfolio documentation for job search, (3) LoRA fine-tuning. Need to sequence them correctly.
+- **Decision**: Session 65 = UX walkthrough + Help Identify, Session 66 = portfolio documentation + LoRA prep, Session 67+ = LoRA fine-tuning.
+- **Rationale**:
+  - **UX first**: Community identifications from Help Identify mode generate confirmed pairs needed for LoRA training data. Currently at 55 confirmed identities — need 100+ for meaningful fine-tuning.
+  - **Portfolio before LoRA**: Job search is active. ML pipeline (InsightFace → CORAL → isotonic calibration → Gemini alignment → GEDCOM enrichment) is already interview-worthy. Documenting it has immediate career value.
+  - **LoRA last**: Requires 50-100+ confirmed pairs minimum. Benefits from all upstream improvements being stable. Needs recalibration of the entire similarity pipeline post-fine-tuning.
+- **Rejected**: LoRA first — insufficient training pairs. Portfolio first — UX improvements generate data that makes the portfolio stronger.
+- **Affects**: ROADMAP.md (session planning), BACKLOG.md (FE-041 priority)
+- **Breadcrumbs**: Session 64c, PRD-023 Stage 2
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-158)
+1. Add a new entry with AD-XXX format (next: AD-159)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
