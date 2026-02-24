@@ -1750,25 +1750,39 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: ROADMAP.md (session planning), BACKLOG.md (FE-041 priority)
 - **Breadcrumbs**: Session 64c, PRD-023 Stage 2
 
-### AD-159: Prompt Fidelity Audit — 64d GEDCOM Enrichment Verified
-- **Date**: 2026-02-23 | **Session**: 65a
-- **Context**: Session 64d ran 136 Gemini alignment calls. Investigation needed to confirm GEDCOM genealogical context was actually included in prompts.
-- **Decision**: GEDCOM context IS being injected correctly for photos with confirmed+linked identities. 17/136 (12.5%) calls received GEDCOM enrichment. This is expected given the current state of identity confirmations.
-- **Findings**:
-  - `call_type="combined"`: 17 calls (GEDCOM present). `call_type="alignment"`: 119 calls (no GEDCOM).
-  - GEDCOM adds ~106 tokens/call for 1-face photos (range: 32-338 tokens).
-  - Token variation primarily driven by face count (~25 tokens/additional face), not GEDCOM.
-  - 46/55 confirmed identities have GEDCOM links. Low enrichment % because most batch photos lacked confirmed identity assignments.
-  - `gemini_config` and `response_summary` fields are NULL for all records — pipeline doesn't persist these.
-- **Recommendation**: Log actual prompt text (or hash + parameters) in `gemini_config` for future auditability.
+### AD-159: Prompt Fidelity Audit — 64d GEDCOM Enrichment Verified + Fixed
+- **Date**: 2026-02-23 (audit), 2026-02-24 (fix) | **Sessions**: 65a, 65b
+- **Context**: Session 64d ran 136 Gemini alignment calls. Investigation found GEDCOM context too thin (~106 tokens vs 400-1000 target).
+- **Root Cause**: Pipeline used `variant="curated"` which only includes the person's own birth/death/events/marriages. Does NOT include parents, spouses, children, siblings — the key disambiguating context.
+- **Fix (Session 65b)**:
+  1. Changed default variant from `"curated"` to `"first_order"` — now includes parents, spouses, children, siblings.
+  2. Added `gemini_config` and `response_summary` fields to API call logging. Previously NULL for all records.
+  3. Added `gedcom_token_count` and `enrichment_level` (full/partial/thin/none) tracking per call.
+  4. Logging in `build_gedcom_context()` reports token count and enrichment level per photo.
+- **Original Findings (65a)**:
+  - 17/136 (12.5%) calls received GEDCOM enrichment — correct, reflects confirmed+linked identities.
+  - GEDCOM added only ~106 tokens with "curated" variant. With "first_order", expect 400-1000+ tokens.
+  - 46/55 confirmed identities have GEDCOM links.
+- **Rejected Alternative**: `"co_occurrence"` variant (includes people sharing any photo). Too expensive for routine pipeline use — save for targeted re-analysis.
 - **Affects**: `scripts/run_combined_pipeline.py`, `app/face_alignment.py`, `gemini_api_calls` table
-- **Breadcrumbs**: `docs/analysis/prompt_fidelity_64d.md`, AD-152, AD-146
+- **Breadcrumbs**: `docs/analysis/prompt_fidelity_64d.md`, AD-152, AD-146, Session 65b
+
+### AD-160: GEDCOM ↔ Identity Linking — Admin-Only Post-Identification Step
+- **Date**: 2026-02-24 | **Session**: 65b
+- **Context**: Linking photo identities to GEDCOM records required direct database inserts via Claude Code. Needed an in-app UX for admins.
+- **Decision**: Admin-only GEDCOM linking step after identity confirmation. Fuzzy name search on in-memory GEDCOM cache (21,809 individuals). Sephardic surname variant matching (Capeluto/Capuano/Capelluto etc.).
+- **UX Flow**: Confirm identity → "Link to Family Tree" panel → auto-search by name → click to link → auto-enrich birth/death from GEDCOM → success feedback. "No match — skip" always available.
+- **Data Model**: Uses existing `gedcom_face_links` table. Maps `identity_id` → `gedcom_id`. Soft-delete unlink (sets `unlinked_at`). Confidence=1.0 for admin links.
+- **Auto-enrichment**: On link, copies birth_year and death_year from GEDCOM individual to identity record (additive only, never overwrites existing data).
+- **Rejected Alternative**: Real-time Supabase queries per search. Too slow for interactive UX — cache all 21,809 individuals in memory instead.
+- **Affects**: `app/main.py` (search/link/unlink routes, confirm flow, person page), `gedcom_face_links` table
+- **Breadcrumbs**: `tests/test_gedcom_routes.py` (20 tests), Session 65b Phase 2
 
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-160)
+1. Add a new entry with AD-XXX format (next: AD-161)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

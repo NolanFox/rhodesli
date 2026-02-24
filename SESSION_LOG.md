@@ -21,10 +21,26 @@
 - Screenshots saved to: docs/screenshots/session-65b/ (6 screenshots)
 
 ### Phase 2: GEDCOM ↔ Identity Linking
-- [PENDING]
+- [x] 2A: Audited current state — GEDCOM individuals in Supabase (21,809), gedcom_face_links table exists, existing confirm/match flow understood
+- [x] 2B: Built GEDCOM search API — GET /api/gedcom/search with fuzzy matching, Sephardic surname variants, case-insensitive
+- [x] 2C: Built GEDCOM link step — appears after identity confirmation, auto-searches with identity name
+- [x] 2D: Built link/unlink API — POST /api/gedcom/link (saves to Supabase, auto-enriches birth/death), POST /api/gedcom/unlink (soft delete)
+- [x] 2E: Person page GEDCOM section — shows link status for admins, unlink button, or link panel if not linked
+- [x] 2F: 20 new tests — search API, link/unlink, permissions, enrichment, surname variants
+- Tests: 2975 app + 538 ML = 3513 total (all pass)
 
 ### Phase 3: GEDCOM Enrichment Pipeline Fix
-- [PENDING]
+- [x] 3A: Traced enrichment code path — build_gedcom_context() → build_photo_context() → _build_person_context()
+- Root cause: `variant="curated"` only includes person's own data (birth/death/events/marriages). Does NOT include parents/spouses/children/siblings.
+- [x] 3B: Fixed variant to "first_order" — now includes full family context (parents, spouses, children, siblings)
+- Expected token improvement: ~106 tokens → 400-1000+ tokens per enriched photo
+- [x] 3C: Fixed API call logging — gemini_config and response_summary fields now populated
+  - gemini_config: model, call_type, gedcom_token_count, enrichment_level, temperature
+  - response_summary: faces_described, additional_faces, has_scene_context, output_tokens
+  - enrichment_level categories: full (400+), partial (100-399), thin (<100), none (0)
+- [x] 3D: 8 new tests — first_order variant, token counting, gemini_config/response_summary logging, enrichment params
+- [x] Updated AD-159 with fix details, added AD-160 for GEDCOM linking
+- Tests: 2983 app + 538 ML = 3521 total (all pass)
 
 ### Phase 4: Docs Sync + Session Close
 - [PENDING]

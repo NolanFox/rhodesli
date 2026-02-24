@@ -405,3 +405,200 @@ class TestGedcomContextBuilder:
 
         faces = [FaceDetection(face_id="face1", bbox=[0, 0, 50, 50], face_index=0)]
         assert build_gedcom_context("p1", faces, {}, None) == ""
+
+    def test_build_gedcom_context_uses_first_order_variant(self):
+        """build_gedcom_context uses first_order variant for family context (AD-159 fix)."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        from run_combined_pipeline import build_gedcom_context
+        from app.face_alignment import FaceDetection
+        from rhodesli_ml.importers.gedcom_parser import (
+            GedcomEvent, GedcomIndividual, GedcomFamily, ParsedGedcom, ParsedDate,
+        )
+
+        # Build a family: Vida (child) -> parents Isaac and Sarah
+        vida = GedcomIndividual(
+            xref_id="@I1@", full_name="Vida Capeluto",
+            given_name="Vida", surname="Capeluto", gender="F",
+            birth=GedcomEvent(event_type="birth", date=ParsedDate(year=1920, raw="1920"),
+                              place="Rhodes", raw_date="1920"),
+            family_as_child=["@F1@"],
+        )
+        isaac = GedcomIndividual(
+            xref_id="@I2@", full_name="Isaac Capeluto",
+            given_name="Isaac", surname="Capeluto", gender="M",
+            birth=GedcomEvent(event_type="birth", date=ParsedDate(year=1890, raw="1890"),
+                              place="Rhodes", raw_date="1890"),
+            family_as_spouse=["@F1@"],
+        )
+        sarah = GedcomIndividual(
+            xref_id="@I3@", full_name="Sarah Israel",
+            given_name="Sarah", surname="Israel", gender="F",
+            birth=GedcomEvent(event_type="birth", date=ParsedDate(year=1895, raw="1895"),
+                              place="Rhodes", raw_date="1895"),
+            family_as_spouse=["@F1@"],
+        )
+        family = GedcomFamily(
+            xref_id="@F1@", husband_xref="@I2@", wife_xref="@I3@",
+            children_xrefs=["@I1@"],
+        )
+
+        parsed_gedcom = ParsedGedcom(
+            individuals={"@I1@": vida, "@I2@": isaac, "@I3@": sarah},
+            families={"@F1@": family},
+            source_file="test",
+        )
+        gedcom_data = {
+            "parsed_gedcom": parsed_gedcom,
+            "face_links": {"identity-1": "@I1@"},
+        }
+        faces = [
+            FaceDetection(face_id="face1", bbox=[10, 10, 100, 100],
+                          face_index=0, identity_name="Vida Capeluto"),
+        ]
+        identities = {
+            "identity-1": {
+                "name": "Vida Capeluto", "state": "CONFIRMED",
+                "anchor_ids": ["face1"], "candidate_ids": [],
+            }
+        }
+
+        context = build_gedcom_context("photo1", faces, identities, gedcom_data)
+        # first_order includes family members
+        assert "Vida Capeluto" in context
+        assert "Parent: Isaac Capeluto" in context
+        assert "Parent: Sarah Israel" in context
+
+    def test_build_gedcom_context_token_count_logged(self):
+        """build_gedcom_context logs token count for enriched photos."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        from run_combined_pipeline import build_gedcom_context
+        from app.face_alignment import FaceDetection
+        from rhodesli_ml.importers.gedcom_parser import (
+            GedcomEvent, GedcomIndividual, ParsedGedcom, ParsedDate,
+        )
+
+        parsed_gedcom = ParsedGedcom(
+            individuals={
+                "@I1@": GedcomIndividual(
+                    xref_id="@I1@", full_name="Vida Capeluto",
+                    given_name="Vida", surname="Capeluto", gender="F",
+                    birth=GedcomEvent(event_type="birth",
+                                      date=ParsedDate(year=1895, raw="1895"),
+                                      place="Rhodes", raw_date="1895"),
+                ),
+            },
+            families={},
+            source_file="test",
+        )
+        gedcom_data = {
+            "parsed_gedcom": parsed_gedcom,
+            "face_links": {"identity-1": "@I1@"},
+        }
+        faces = [
+            FaceDetection(face_id="face1", bbox=[10, 10, 100, 100],
+                          face_index=0, identity_name="Vida Capeluto"),
+        ]
+        identities = {
+            "identity-1": {
+                "name": "Vida Capeluto", "state": "CONFIRMED",
+                "anchor_ids": ["face1"], "candidate_ids": [],
+            }
+        }
+
+        context = build_gedcom_context("photo1", faces, identities, gedcom_data)
+        assert len(context) > 0
+        # Token estimation
+        from rhodesli_ml.gedcom_context import estimate_context_tokens
+        tokens = estimate_context_tokens(context)
+        assert tokens > 0
+
+
+class TestGeminiConfigLogging:
+    """Tests for gemini_config and response_summary logging (AD-159 fix)."""
+
+    def test_log_call_passes_gemini_config(self):
+        """_log_call forwards gemini_config to log_gemini_call."""
+        mock_log = MagicMock()
+        with patch("app.supabase_data.log_gemini_call", mock_log):
+            from app.face_alignment import _log_call
+            _log_call(
+                photo_id="test123",
+                model="gemini-3.1-pro-preview",
+                call_type="combined",
+                prompt_tokens=1500,
+                completion_tokens=500,
+                cost_usd=0.028,
+                start_ms=1000000,
+                status="success",
+                gemini_config='{"model": "gemini-3.1-pro-preview", "gedcom_token_count": 450}',
+            )
+        mock_log.assert_called_once()
+        kwargs = mock_log.call_args[1]
+        assert kwargs["gemini_config"] is not None
+        assert "gedcom_token_count" in kwargs["gemini_config"]
+
+    def test_log_call_passes_response_summary(self):
+        """_log_call forwards response_summary to log_gemini_call."""
+        mock_log = MagicMock()
+        with patch("app.supabase_data.log_gemini_call", mock_log):
+            from app.face_alignment import _log_call
+            _log_call(
+                photo_id="test123",
+                model="gemini-3.1-pro-preview",
+                call_type="alignment",
+                prompt_tokens=1000,
+                completion_tokens=300,
+                cost_usd=0.02,
+                start_ms=1000000,
+                status="success",
+                response_summary='{"faces_described": 3}',
+            )
+        kwargs = mock_log.call_args[1]
+        assert kwargs["response_summary"] is not None
+        assert "faces_described" in kwargs["response_summary"]
+
+    def test_call_gemini_alignment_accepts_enrichment_params(self):
+        """call_gemini_alignment accepts gedcom_token_count and enrichment_level."""
+        import inspect
+        from app.face_alignment import call_gemini_alignment
+        sig = inspect.signature(call_gemini_alignment)
+        assert "gedcom_token_count" in sig.parameters
+        assert "enrichment_level" in sig.parameters
+
+    def test_run_face_alignment_accepts_enrichment_params(self):
+        """run_face_alignment accepts gedcom_token_count and enrichment_level."""
+        import inspect
+        from app.face_alignment import run_face_alignment
+        sig = inspect.signature(run_face_alignment)
+        assert "gedcom_token_count" in sig.parameters
+        assert "enrichment_level" in sig.parameters
+
+    def test_enrichment_level_categories(self):
+        """Enrichment level categories: full (400+), partial (100-399), thin (<100)."""
+        from rhodesli_ml.gedcom_context import estimate_context_tokens
+
+        # Full: 400+ tokens = 1600+ chars
+        assert estimate_context_tokens("x" * 1600) >= 400
+        # Partial: 100-399 tokens = 400-1596 chars
+        assert 100 <= estimate_context_tokens("x" * 600) < 400
+        # Thin: <100 tokens = <400 chars
+        assert estimate_context_tokens("x" * 200) < 100
+
+    def test_photos_without_gedcom_get_no_enrichment(self):
+        """Photos with no GEDCOM links get enrichment_level='none'."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+        from run_combined_pipeline import build_gedcom_context
+        from app.face_alignment import FaceDetection
+
+        faces = [FaceDetection(face_id="face1", bbox=[0, 0, 50, 50], face_index=0)]
+        identities = {"id1": {"anchor_ids": ["face1"], "candidate_ids": []}}
+        gedcom_data = {"parsed_gedcom": None, "face_links": {}}
+        context = build_gedcom_context("p1", faces, identities, gedcom_data)
+        assert context == ""
+        # When context is empty, enrichment_level should be "none"

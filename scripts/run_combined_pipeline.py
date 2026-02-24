@@ -163,8 +163,15 @@ def build_gedcom_context(photo_id: str, faces: list[FaceDetection],
         parsed_gedcom=parsed_gedcom,
         gedcom_face_links=face_links,
         identities=inner_identities,
-        variant="curated",
+        variant="first_order",
     )
+
+    if context:
+        from rhodesli_ml.gedcom_context import estimate_context_tokens
+        token_count = estimate_context_tokens(context)
+        enrichment_level = "full" if token_count >= 400 else "partial" if token_count >= 100 else "thin"
+        logger.info(f"Photo {photo_id}: GEDCOM context {token_count} tokens ({enrichment_level})")
+
     return context
 
 
@@ -415,6 +422,14 @@ async def process_photo(photo_id: str, photo_data: dict, identities: dict,
     additional_context = build_gedcom_context(photo_id, faces, identities, gedcom_data)
     has_gedcom = bool(additional_context)
 
+    # Calculate enrichment metrics for logging
+    gedcom_token_count = 0
+    enrichment_level = "none"
+    if has_gedcom:
+        from rhodesli_ml.gedcom_context import estimate_context_tokens
+        gedcom_token_count = estimate_context_tokens(additional_context)
+        enrichment_level = "full" if gedcom_token_count >= 400 else "partial" if gedcom_token_count >= 100 else "thin"
+
     # Run alignment with GEDCOM context
     start = time.time()
     try:
@@ -426,6 +441,8 @@ async def process_photo(photo_id: str, photo_data: dict, identities: dict,
             additional_context=additional_context,
             call_type="combined" if has_gedcom else "alignment",
             batch_id=batch_id,
+            gedcom_token_count=gedcom_token_count,
+            enrichment_level=enrichment_level,
         )
     except Exception as e:
         # Keep broad here: Gemini API can throw many error types.
