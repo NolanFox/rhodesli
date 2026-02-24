@@ -29,3 +29,20 @@
   - write_status_file() preserves started_at + pid across updates
 - [x] 1C: Tests — 8 new tests covering death detection, timeout, alive-check, log display
 - [x] Pushed to production
+
+## Phase 2: Compare Face Overhaul
+- [x] 2A: New route GET /compare/pair — two-panel layout with upload zones
+- [x] 2B: POST /api/compare/pair/upload — face detection, crop generation, face selector UI
+- [x] 2C: POST /api/compare/pair/match — cosine similarity with calibrated confidence tiers
+- [x] 2D: Link from main /compare page to /compare/pair
+- [x] 2E: 11 new tests covering page, uploads, math
+- [x] Pushed to production
+
+## Phase 3: Prompt Fidelity Investigation
+- [x] 3A: Queried gemini_api_calls — 136 calls in 64d batch
+- [x] 3B: Call type distribution: 119 alignment + 17 combined (GEDCOM-enriched)
+- [x] 3C: Token analysis: GEDCOM adds ~106 tokens/call for 1-face photos
+- [x] 3D: Token variation driven by face count (~25 tokens/face), not GEDCOM
+- [x] 3E: gemini_config/response_summary NULL for all records — gap in logging
+- [x] 3F: Findings written to docs/analysis/prompt_fidelity_64d.md
+- [x] 3G: AD-159 created with findings and recommendations

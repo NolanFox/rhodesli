@@ -1750,11 +1750,25 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: ROADMAP.md (session planning), BACKLOG.md (FE-041 priority)
 - **Breadcrumbs**: Session 64c, PRD-023 Stage 2
 
+### AD-159: Prompt Fidelity Audit — 64d GEDCOM Enrichment Verified
+- **Date**: 2026-02-23 | **Session**: 65a
+- **Context**: Session 64d ran 136 Gemini alignment calls. Investigation needed to confirm GEDCOM genealogical context was actually included in prompts.
+- **Decision**: GEDCOM context IS being injected correctly for photos with confirmed+linked identities. 17/136 (12.5%) calls received GEDCOM enrichment. This is expected given the current state of identity confirmations.
+- **Findings**:
+  - `call_type="combined"`: 17 calls (GEDCOM present). `call_type="alignment"`: 119 calls (no GEDCOM).
+  - GEDCOM adds ~106 tokens/call for 1-face photos (range: 32-338 tokens).
+  - Token variation primarily driven by face count (~25 tokens/additional face), not GEDCOM.
+  - 46/55 confirmed identities have GEDCOM links. Low enrichment % because most batch photos lacked confirmed identity assignments.
+  - `gemini_config` and `response_summary` fields are NULL for all records — pipeline doesn't persist these.
+- **Recommendation**: Log actual prompt text (or hash + parameters) in `gemini_config` for future auditability.
+- **Affects**: `scripts/run_combined_pipeline.py`, `app/face_alignment.py`, `gemini_api_calls` table
+- **Breadcrumbs**: `docs/analysis/prompt_fidelity_64d.md`, AD-152, AD-146
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-159)
+1. Add a new entry with AD-XXX format (next: AD-160)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
