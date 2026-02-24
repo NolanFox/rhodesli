@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 65a: Upload Fix + Compare Overhaul + UX Polish (2026-02-23) — v0.68.0
+- **Upload fix (CRITICAL)**: Subprocess death detection via PID tracking + 5-min timeout for "processing" state. Error shows crash log excerpt, reassures user photo is saved. `write_status_file()` preserves started_at/pid.
+- **Two-photo compare** (/compare/pair): New feature with face detection, face selection, cosine similarity with calibrated confidence tiers. Three new routes.
+- **Prompt fidelity audit** (AD-159): 17/136 (12.5%) 64d Gemini calls received GEDCOM context (~106 tokens). Token variation primarily driven by face count. `gemini_config` field not populated — gap in logging.
+- **Face overlay toggle**: Show/Hide Faces button on photo viewer + public page. Admin default ON, non-admin OFF.
+- **Navigation audit**: All critical paths bidirectional (Photo ↔ Person ↔ Collection).
+- 24 new tests. ~3493 total (2956 app + 537 ML).
+
 ## Session 64c: Concerns Resolution + Harness Validation (2026-02-23)
 - Harness validation: 4 hooks, 6 skills, 39 rules audited. Pre-commit hook regex bug found (^git commit misses chained commands).
 - Exception narrowing: 12 `except Exception` handlers replaced with specific `_SUPABASE_ERRORS` in GEDCOM loading, face alignment, and Gemini logging paths. Schema bugs (KeyError, AttributeError) now crash loudly.
@@ -401,6 +409,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.68.0 | 2026-02-23 | 65a | ~2956+537 |
 | v0.67.1 | 2026-02-23 | 64b | ~2930+538 |
 | v0.67.0 | 2026-02-23 | 64 | ~2906+538 |
 | v0.66.0 | 2026-02-23 | 63 | ~2864+538 |

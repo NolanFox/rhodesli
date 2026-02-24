@@ -58,3 +58,21 @@
   - Photo → Person (face overlay click), Person → Photo (gallery), Collection → Photo (grid cards)
   - Public photo page has collection links, prev/next carousel, share button
 - [x] 4D: 5 new UX tests
+
+## Phase 5: Docs Sync + Session Close
+- [x] 5A: CHANGELOG.md — v0.68.0 entry with all session work
+- [x] 5B: ROADMAP.md — version/test count updated, session 65a in Recently Completed
+- [x] 5C: BACKLOG.md — version updated
+- [x] 5D: ALGORITHMIC_DECISIONS.md — AD-159 verified with full provenance
+- [x] 5E: SESSION_HISTORY.md — Session 65a entry + version table
+- [x] 5F: Verification gate — all checks PASS
+
+## Session 65a Complete
+- Phases completed: 0, 1, 2, 3, 4, 5 (all 6)
+- Commits: 6 (orient, upload fix, compare, prompt fidelity, UX, docs)
+- Tests: 2956 app + 537 ML = ~3493 total
+- Upload: FIXED (subprocess death detection + timeout)
+- Compare: OVERHAULED (two-photo pair comparison)
+- Prompt fidelity: VERIFIED (12.5% GEDCOM-enriched, ~106 tokens delta)
+- UX: Face overlay toggle (admin ON, non-admin OFF)
+- Deploy: Ready to push

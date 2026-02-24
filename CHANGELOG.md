@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 65a] — 2026-02-23 (Upload Fix + Compare Overhaul + UX Polish)
+
+### Fixed — Upload Pipeline (CRITICAL)
+- Upload progress bar no longer freezes at "Processing 0/1 (0%)" when subprocess crashes
+- Added PID tracking: status file stores subprocess PID for alive-check
+- Added 5-minute timeout for "processing" state (was infinite)
+- Subprocess death detected via `os.kill(pid, 0)` — shows crash error with log excerpt
+- Error message reassures user their photo was saved in staging
+- `write_status_file()` preserves `started_at` and `pid` across updates
+
+### Added — Two-Photo Face Comparison (/compare/pair)
+- New route: `/compare/pair` with two-panel upload layout
+- Face detection on uploaded photos with face selection UI
+- Cosine similarity scoring with calibrated confidence tiers
+- Result card with side-by-side crops and confidence labels
+- Link from main `/compare` page to pair comparison
+
+### Added — Face Overlay Toggle (UX)
+- Toggle button on photo viewer and public photo page: "Show/Hide Faces"
+- Admin default: overlays ON. Non-admin: overlays OFF (cleaner photo viewing)
+- Legend toggles with overlays. Uses data-action event delegation.
+
+### Investigated — Prompt Fidelity (AD-159)
+- 64d Gemini batch: 17/136 (12.5%) received GEDCOM context
+- GEDCOM adds ~106 tokens/call. Token variation mainly driven by face count.
+- `gemini_config` field not populated — recommended logging improvement.
+
+### Stats
+- 24 new tests, ~2956 app + ~537 ML = ~3493 total
+- Upload: FIXED. Compare: OVERHAULED. Prompt fidelity: VERIFIED.
+
 ## [Session 64] — 2026-02-23 (Verify, Migrate, Harden)
 
 ### Added — Harness Hardening

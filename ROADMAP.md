@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.67.1 · ~3472 tests · 271 photos · 775 identities · 55 confirmed
+Current: v0.68.0 · ~3493 tests · 271 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -53,15 +53,10 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 64c/64d: Concerns Resolution + Batch Photos — IN PROGRESS (2026-02-23)
-- [x] 64c: Harness validation, exception narrowing, API cost verification, calibrated scores verification
-- [ ] 64d: Retry 144 rate-limited photos with combined pipeline (parallel session)
-
-### Session 65: UX Walkthrough + Help Identify
-- Nolan conducts end-to-end product walkthrough, documents findings
-- FE-041: Help Identify mode for non-admin users
-- Address UX issues from walkthrough
-- Prerequisite for LoRA: community identifications generate training data
+### Session 65b: GEDCOM-Identity Linking UX
+- FE-041 extension: Help Identify mode for non-admin users
+- GEDCOM data visible on person pages
+- Community contribution flow improvements
 
 ### Session 66: Portfolio Documentation + LoRA Prep
 - Technical writeup of ML pipeline for interview portfolio
@@ -82,6 +77,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 ## Recently Completed
 
 - [x] 2026-02-23: **Session 64c**: Concerns Resolution. Harness validation (4 hooks, 6 skills, 39 rules audited). Exception narrowing (12 handlers narrowed). API cost tracking verified. Calibrated scores verified end-to-end. AD-158. +4 new tests. ~3472 total.
+- [x] 2026-02-23: **v0.68.0 — Session 65a**: Upload Fix + Compare Overhaul + UX Polish. Upload subprocess death detection + timeout. Two-photo face comparison (/compare/pair). Face overlay toggle (admin ON, non-admin OFF). Prompt fidelity audit (AD-159). 24 new tests. ~3493 total.
 - [x] 2026-02-23: **v0.67.1 — Session 64b**: Execute What 64 Deferred. Supabase tables created. 127 alignments migrated. GEDCOM context builder. Dry-run 3 photos. AD-153-157. 8 new tests. ~3468 total.
 - [x] 2026-02-23: **v0.67.0 — Session 64**: Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.
 - [x] 2026-02-23: **v0.66.0 — Session 63**: Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.
