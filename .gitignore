@@ -101,3 +101,6 @@ test_photos_session_54/
 
 # Browser test screenshots
 docs/ux_audit/session_findings/screenshots/
+
+# Claude Code worktrees
+.claude/worktrees/

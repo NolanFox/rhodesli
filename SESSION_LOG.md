@@ -23,3 +23,28 @@
 - Status breakdown: 17 Complete, 4 Recovered, 14 Stub, 8 Missing, 1 Planned
 
 #### Phase 0 VERDICT: PASS
+
+### Phase 1: Subagents + Infrastructure
+#### 1A: Created 7 Subagents in .claude/agents/
+- [x] ux-reviewer.md — Senior UX designer reviewing screenshots
+- [x] session-evaluator.md — Post-session evaluator replicating Nolan's review
+- [x] fix-prompt-writer.md — Writes b-session prompts for fix-up concerns
+- [x] design-check.md — Pre-implementation PRD/SDD check (advisory)
+- [x] parallel-optimizer.md — Reviews prompts for parallelization opportunities
+- [x] merge-resolver.md — Merges parallel worktree branches to main
+- [x] enrichment-worker.md — Runs enrichment pipeline validation in isolated worktree
+
+#### 1B: GEDCOM Migration on Production Supabase
+- [x] Ran supabase_migration_002_gedcom_versioning.sql via Supabase SQL Editor
+- [x] Tables created: gedcom_versions, gedcom_change_log, gedcom_enrichment_queue
+- [x] Views created: current_gedcom_individuals, current_gedcom_events, current_gedcom_relationships
+- [x] Verified: 0 versions, 21809 current individuals, 0 change log, 0 pending enrichments
+
+#### 1C: Stop Hook Verified
+- [x] .claude/settings.json has Stop hook → bash .claude/hooks/post-session-eval.sh
+- [x] Hook checks: assessment file, phase verdicts, /compact detection, macOS notification
+
+#### 1D: Worktree Support
+- [x] Added .claude/worktrees/ to .gitignore
+
+#### Phase 1 VERDICT: PASS
