@@ -364,6 +364,12 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 65d: Disk Space Fix + GEDCOM Versioning + Harness (2026-02-24) — v0.71.0
+- **Disk space fix (AD-162)**: Root cause: Docker image bundled 393MB of unnecessary backup files, push endpoint created unbounded .bak files, no staging cleanup. Fix: .dockerignore excludes ~400MB, startup cleanup, backup pruning (keep 3), upload finally block, health endpoint reports disk space. All 3 uploads verified in Chrome browser (admin logged in).
+- **GEDCOM temporal versioning (AD-163)**: gedcom_versions table with SHA256 dedup. version_id/superseded_by/is_current columns on existing tables. gedcom_change_log for field-level diffs. gedcom_enrichment_queue for Gatekeeper-pattern re-enrichment. current_gedcom_individuals view. Versioned import script with diff detection. Multi-community ready.
+- **Harness**: Post-session eval Stop hook. Enhanced session_assessment.sh with 8 check categories. CLAUDE.md: /clear rule, /compact ban.
+- 30 new tests (10 disk cleanup + 20 GEDCOM versioning). ~3553 total (3015 app + 538 ML).
+
 ## Session 65c: Upload Fix (MANDATORY) + Verification Sweep + Harness (2026-02-24) — v0.70.0
 - **Upload fix (AD-161)**: Root cause: subprocess loaded full buffalo_l model (~300-500MB) in separate process, doubling memory with main app's hybrid models → OOM on Railway 512MB. Fix: replaced subprocess with background thread sharing main process's hybrid models via `prefer_hybrid=True`. R2 crop upload fix: was searching by identity UUID, now uses face_ids from status file.
 - **Production verification**: All 3 upload surfaces tested with authenticated sessions. /upload: "1 face extracted, 1 added to Inbox" (no OOM). /compare/pair: face detected. /estimate: date estimate returned.

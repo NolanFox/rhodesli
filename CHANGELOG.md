@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 65d] — 2026-02-24 (Disk Space Fix + GEDCOM Versioning + Harness)
+
+### Fixed — Disk Space Exhaustion (AD-162)
+- Root cause: Docker image bundled 393MB of unnecessary backup files, push endpoint created unbounded .bak files, no staging cleanup
+- .dockerignore excludes data/backups/, raw_photos/ (~400MB image savings)
+- Startup cleanup: removes stale staging dirs, old inbox files, .tmp files
+- Backup pruning: keeps only 3 most recent .bak files per type
+- Upload `finally` block: cleans staging dir after processing
+- Health endpoint reports disk space (total_mb, free_mb, used_pct)
+- All 3 upload surfaces verified in Chrome browser (admin logged in)
+
+### Added — GEDCOM Temporal Versioning (AD-163)
+- gedcom_versions table: tracks each import with SHA256 dedup
+- version_id/superseded_by/is_current columns on existing GEDCOM tables
+- gedcom_change_log: field-level change tracking between versions
+- gedcom_enrichment_queue: Gatekeeper-pattern re-enrichment for GEDCOM changes
+- current_gedcom_individuals view: app queries read current state only
+- Versioned import script with diff detection (added/modified/removed/unchanged)
+- Multi-community ready via community_id field
+
+### Added — Self-Improving Harness
+- Post-session eval Stop hook: checks assessment file, warns on /compact usage
+- Enhanced session_assessment.sh: 8 check categories, non-zero exit on failures
+- CLAUDE.md: /clear rule, /compact ban, current_session.txt, stop hook
+- 30 new tests (10 disk cleanup + 20 GEDCOM versioning)
+
 ## [Session 65c] — 2026-02-24 (Upload Fix + Verification Sweep + Harness)
 
 ### Fixed — Upload Pipeline OOM (AD-161)

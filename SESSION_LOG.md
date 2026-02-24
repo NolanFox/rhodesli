@@ -72,3 +72,12 @@ Migration ready to run. Import script tested. Views wired to app.
 - [x] CLAUDE.md at 62 lines (under 80 limit)
 
 #### Phase 3 VERDICT: PASS
+
+### Phase 4: Docs Sync
+- [x] CHANGELOG.md — 65d entry: disk space fix, GEDCOM versioning, harness
+- [x] ROADMAP.md — v0.71.0, ~3553 tests, 65d in Recently Completed
+- [x] BACKLOG.md — 65d entry, GEDCOM-006 marked DONE
+- [x] SESSION_HISTORY.md — 65d entry (verified before ROADMAP trim per Lesson 77)
+- [x] AD-162 and AD-163 logged in ALGORITHMIC_DECISIONS.md
+
+#### Phase 4 VERDICT: PASS
