@@ -8987,6 +8987,20 @@ def get(section: str = None, view: str = "focus", current: str = None,
                     return;
                 }
 
+                // Toggle face overlay visibility
+                if (action === 'toggle-face-overlays') {
+                    var overlays = document.querySelectorAll('.face-overlay');
+                    var legend = document.getElementById('face-overlay-legend');
+                    var isHidden = btn.getAttribute('data-overlays-hidden') === 'true';
+                    overlays.forEach(function(el) {
+                        el.style.display = isHidden ? '' : 'none';
+                    });
+                    if (legend) legend.style.display = isHidden ? '' : 'none';
+                    btn.setAttribute('data-overlays-hidden', isHidden ? 'false' : 'true');
+                    btn.textContent = isHidden ? 'Hide Faces' : 'Show Faces';
+                    return;
+                }
+
                 // Photo modal prev/next (Photos grid browsing)
                 if (action === 'photo-nav-prev' || action === 'photo-nav-next') {
                     e.preventDefault();
@@ -9953,6 +9967,9 @@ def photo_view_content(
             if is_seq_active:
                 seq_highlight = " ring-2 ring-indigo-400 ring-offset-1 ring-offset-black/50"
 
+            _overlay_style = f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;"
+            if not is_admin:
+                _overlay_style += " display: none;"
             overlay = Div(
                 hover_tooltip,
                 name_label,
@@ -9960,7 +9977,7 @@ def photo_view_content(
                 quick_actions,
                 tag_dropdown,
                 cls=f"{overlay_classes}{seq_highlight} group",
-                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+                style=_overlay_style,
                 title=display_name,
                 data_face_id=face_id,
                 data_identity_id=identity_id or "",
@@ -10118,7 +10135,9 @@ def photo_view_content(
                 Span("Help Identify", cls="text-slate-400 mr-2"),
                 Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-slate-400 mr-0.5"),
                 Span("New", cls="text-slate-400"),
-                cls="absolute bottom-1 right-1 bg-black/60 rounded px-2 py-0.5 flex items-center gap-0.5 text-[10px]",
+                cls="absolute bottom-1 right-1 bg-black/60 rounded px-2 py-0.5 flex items-center gap-0.5 text-[10px] face-overlay-legend",
+                id="face-overlay-legend",
+                style="" if is_admin else "display: none;",
             ) if face_overlays else None,
             nav_prev,
             nav_next,
@@ -10133,6 +10152,14 @@ def photo_view_content(
                 ),
                 nav_counter,
                 Span(
+                    Button(
+                        "Hide Faces" if is_admin else "Show Faces",
+                        cls="text-xs text-slate-400 hover:text-slate-200 transition-colors",
+                        type="button",
+                        data_action="toggle-face-overlays",
+                        id="face-overlay-toggle",
+                        data_overlays_hidden="false" if is_admin else "true",
+                    ) if face_overlays else None,
                     share_button(photo_id, style="link", label="Share"),
                     A(
                         "Open",
@@ -18396,17 +18423,19 @@ def public_photo_page(
             else:
                 click_href = None
 
+            _pub_overlay_base = f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;"
+            _pub_overlay_style = _pub_overlay_base + (" display: block;" if is_admin else " display: none;")
             overlay_inner = A(
                 name_el,
                 href=click_href,
                 cls=overlay_cls,
-                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%; display: block;",
+                style=_pub_overlay_style,
                 title=fi["display_name"],
                 id=f"overlay-{fi['identity_id']}" if fi["identity_id"] else None,
             ) if click_href else Div(
                 name_el,
                 cls=overlay_cls,
-                style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
+                style=_pub_overlay_base + ("" if is_admin else " display: none;"),
                 title=fi["display_name"],
             )
             overlay = overlay_inner
@@ -18739,7 +18768,9 @@ def public_photo_page(
                                     Span("Identified", cls="text-slate-300 mr-3"),
                                     Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-dashed border-amber-400 mr-1"),
                                     Span("Unidentified", cls="text-slate-300"),
-                                    cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm",
+                                    cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public",
+                                    id="face-overlay-legend-public",
+                                    style="" if is_admin else "display: none;",
                                 ) if face_overlays else None,
                                 cls="photo-flip-front relative" if has_back else "relative",
                             ),
@@ -18796,6 +18827,14 @@ def public_photo_page(
                             data_share_text=og_description,
                             data_share_url=og_page_url,
                         ),
+                        Button(
+                            "Show Faces" if not is_admin else "Hide Faces",
+                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors",
+                            type="button",
+                            data_action="toggle-face-overlays-public",
+                            id="face-overlay-toggle-public",
+                            data_overlays_hidden="false" if is_admin else "true",
+                        ) if face_overlays else None,
                         A(
                             NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>'),
                             "Download",
@@ -19033,6 +19072,19 @@ def public_photo_page(
                         if (textEl) {
                             textEl.textContent = inner.classList.contains('is-flipped') ? 'View Front' : 'Turn Over';
                         }
+                        return;
+                    }
+                    var toggleBtn = e.target.closest('[data-action="toggle-face-overlays-public"]');
+                    if (toggleBtn) {
+                        var overlays = document.querySelectorAll('.face-overlay-box');
+                        var legend = document.getElementById('face-overlay-legend-public');
+                        var isHidden = toggleBtn.getAttribute('data-overlays-hidden') === 'true';
+                        overlays.forEach(function(el) {
+                            el.style.display = isHidden ? 'block' : 'none';
+                        });
+                        if (legend) legend.style.display = isHidden ? '' : 'none';
+                        toggleBtn.setAttribute('data-overlays-hidden', isHidden ? 'false' : 'true');
+                        toggleBtn.textContent = isHidden ? 'Hide Faces' : 'Show Faces';
                         return;
                     }
                 });

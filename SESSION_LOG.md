@@ -46,3 +46,15 @@
 - [x] 3E: gemini_config/response_summary NULL for all records — gap in logging
 - [x] 3F: Findings written to docs/analysis/prompt_fidelity_64d.md
 - [x] 3G: AD-159 created with findings and recommendations
+
+## Phase 4: UX Quick Wins
+- [x] 4A: Face overlay toggle — button on photo viewer + public photo page
+  - Admin default: overlays ON ("Hide Faces" button)
+  - Non-admin default: overlays OFF ("Show Faces" button)
+  - Uses data-action event delegation (Lesson 39)
+  - Legend also toggles with overlays
+- [x] 4B: Share links — already exist on person pages (share_button with clipboard copy + toast)
+- [x] 4C: Cross-page navigation audit — all critical paths bidirectional
+  - Photo → Person (face overlay click), Person → Photo (gallery), Collection → Photo (grid cards)
+  - Public photo page has collection links, prev/next carousel, share button
+- [x] 4D: 5 new UX tests
