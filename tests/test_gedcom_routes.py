@@ -223,3 +223,211 @@ class TestGedcomPermissions:
     def test_skip_requires_admin(self, anon_client):
         resp = anon_client.post("/admin/gedcom/skip/@I1@")
         assert resp.status_code in (401, 403)
+
+
+# --- Session 65b: GEDCOM Search & Linking API (AD-160) ---
+
+
+SAMPLE_GEDCOM_INDIVIDUALS = [
+    {"gedcom_id": "@I1@", "name": "Leon Capeluto", "given_name": "Leon", "surname": "Capeluto",
+     "gender": "M", "birth_date": "1903", "birth_place": "Rhodes, Greece",
+     "death_date": "1982", "death_place": "Tampa, Florida"},
+    {"gedcom_id": "@I2@", "name": "Victoria Capuano", "given_name": "Victoria", "surname": "Capuano",
+     "gender": "F", "birth_date": "1908", "birth_place": "Rhodes",
+     "death_date": "1990", "death_place": ""},
+    {"gedcom_id": "@I3@", "name": "Moise Capeluto", "given_name": "Moise", "surname": "Capeluto",
+     "gender": "M", "birth_date": "1904", "birth_place": "Rhodes",
+     "death_date": "", "death_place": ""},
+    {"gedcom_id": "@I4@", "name": "Isaac Israel", "given_name": "Isaac", "surname": "Israel",
+     "gender": "M", "birth_date": "1880", "birth_place": "",
+     "death_date": "1945", "death_place": ""},
+    {"gedcom_id": "@I5@", "name": "Selma Capouya", "given_name": "Selma", "surname": "Capouya",
+     "gender": "F", "birth_date": "", "birth_place": "",
+     "death_date": "", "death_place": ""},
+]
+
+
+class TestGedcomSearchAPI:
+    """Tests for GET /api/gedcom/search (AD-160)."""
+
+    def test_search_returns_results(self, admin_client):
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "Leon Capeluto" in resp.text
+
+    def test_search_case_insensitive(self, admin_client):
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=leon capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "Leon Capeluto" in resp.text
+
+    def test_search_no_match(self, admin_client):
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=Nonexistent Person&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "No matches found" in resp.text
+
+    def test_search_empty_query(self, admin_client):
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "No matches found" in resp.text
+
+    def test_search_surname_variant(self, admin_client):
+        """Sephardic name variants: Capuano should match Capeluto."""
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=Victoria Capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            # Should find Victoria Capuano (variant of Capeluto)
+            assert "Victoria Capuano" in resp.text
+
+    def test_search_requires_admin(self, anon_client):
+        resp = anon_client.get("/api/gedcom/search?q=test")
+        assert resp.status_code in (401, 403)
+
+    def test_search_shows_birth_death_years(self, admin_client):
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "1903" in resp.text
+            assert "1982" in resp.text
+
+
+class TestGedcomLinkAPI:
+    """Tests for POST /api/gedcom/link and /api/gedcom/unlink (AD-160)."""
+
+    def test_link_saves_to_supabase(self, admin_client):
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.upsert.return_value.execute.return_value = MagicMock()
+        mock_registry = MagicMock()
+
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main.save_registry"), \
+             patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            resp = admin_client.post(
+                "/api/gedcom/link",
+                data={"identity_id": "test-id", "gedcom_id": "@I1@"},
+            )
+            assert resp.status_code == 200
+            assert "Linked to Family Tree" in resp.text
+
+            # Verify Supabase was called
+            mock_sb.table.assert_called_with("gedcom_face_links")
+
+    def test_link_enriches_identity(self, admin_client):
+        """Linking should set birth/death year on the identity."""
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.upsert.return_value.execute.return_value = MagicMock()
+        mock_registry = MagicMock()
+
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main.save_registry"), \
+             patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            resp = admin_client.post(
+                "/api/gedcom/link",
+                data={"identity_id": "test-id", "gedcom_id": "@I1@"},
+            )
+            assert resp.status_code == 200
+            # Verify birth/death enrichment
+            mock_registry.set_metadata.assert_called_once()
+            metadata = mock_registry.set_metadata.call_args[0][1]
+            assert metadata.get("birth_year") == 1903
+            assert metadata.get("death_year") == 1982
+
+    def test_link_requires_admin(self, anon_client):
+        resp = anon_client.post("/api/gedcom/link", data={"identity_id": "x", "gedcom_id": "y"})
+        assert resp.status_code in (401, 403)
+
+    def test_link_missing_params(self, admin_client):
+        resp = admin_client.post("/api/gedcom/link", data={})
+        assert resp.status_code == 400
+
+    def test_unlink_requires_admin(self, anon_client):
+        resp = anon_client.post("/api/gedcom/unlink", data={"identity_id": "x"})
+        assert resp.status_code in (401, 403)
+
+    def test_unlink_deletes_from_supabase(self, admin_client):
+        mock_sb = MagicMock()
+        mock_sb.table.return_value.delete.return_value.eq.return_value.execute.return_value = MagicMock()
+        mock_registry = MagicMock()
+        mock_registry.get_identity.return_value = {"identity_id": "test-id", "name": "Test Person"}
+
+        with patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main._gedcom_face_links_cache", None), \
+             patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+            resp = admin_client.post(
+                "/api/gedcom/unlink",
+                data={"identity_id": "test-id", "gedcom_id": "@I1@"},
+            )
+            assert resp.status_code == 200
+            # Should return the link panel for re-linking
+            assert "Link to Family Tree" in resp.text
+
+    def test_confirm_shows_gedcom_panel(self, admin_client, tmp_path):
+        """After confirming an identity, GEDCOM link panel should appear."""
+        mock_registry = MagicMock()
+        identity = {
+            "identity_id": "test-id",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "version_id": 1,
+            "anchor_ids": [],
+        }
+        mock_registry.get_identity.return_value = identity
+        mock_registry.confirm_identity.return_value = None
+
+        with patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main.save_registry"), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._load_gedcom_face_links", return_value={}), \
+             patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            resp = admin_client.post("/confirm/test-id")
+            assert resp.status_code == 200
+            assert "Link to Family Tree" in resp.text
+            assert "Leon Capeluto" in resp.text
+
+
+class TestSearchGedcomFunction:
+    """Unit tests for _search_gedcom_individuals."""
+
+    def test_exact_match_scores_highest(self):
+        from app.main import _search_gedcom_individuals
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            results = _search_gedcom_individuals("Leon Capeluto")
+            assert len(results) > 0
+            assert results[0]["xref_id"] == "@I1@"
+            assert results[0]["score"] == 1.0
+
+    def test_partial_match(self):
+        from app.main import _search_gedcom_individuals
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            results = _search_gedcom_individuals("Capeluto")
+            assert len(results) >= 2  # Leon + Moise
+
+    def test_surname_variant(self):
+        from app.main import _search_gedcom_individuals
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            results = _search_gedcom_individuals("Victoria Capeluto")
+            # Should find Victoria Capuano via surname variant
+            xrefs = [r["xref_id"] for r in results]
+            assert "@I2@" in xrefs
+
+    def test_empty_query_returns_empty(self):
+        from app.main import _search_gedcom_individuals
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            assert _search_gedcom_individuals("") == []
+            assert _search_gedcom_individuals("a") == []
+
+    def test_no_match_returns_empty(self):
+        from app.main import _search_gedcom_individuals
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            assert _search_gedcom_individuals("Zzzzz Nonexistent") == []
