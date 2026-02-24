@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.68.0 · ~3493 tests · 271 photos · 775 identities · 55 confirmed
+Current: v0.69.0 · ~3521 tests · 271 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -13,7 +13,8 @@ Current: v0.68.0 · ~3493 tests · 271 photos · 775 identities · 55 confirmed
 - Community sharing live on Jews of Rhodes Facebook group (~2,000 members)
 - Gemini 3.1 Pro wired to Estimate (AD-139) — progressive refinement designed (AD-102)
 - **Similarity calibration live**: isotonic regression, AUC=0.9577, calibrated scores in UI (AD-149/152)
-- **API call logging**: Every Gemini call tracked in gemini_api_calls table (AD-152)
+- **API call logging**: Every Gemini call tracked in gemini_api_calls table (AD-152). gemini_config + response_summary now populated (AD-159 fix).
+- **GEDCOM linking**: Admin can link identities to GEDCOM records via in-app search (AD-160)
 - **Railway volume space** — auto_backups pruned to 5 (was 10), ENOSPC fixed in Session 61B
 
 ## Phase Summary
@@ -53,22 +54,16 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 65b: GEDCOM-Identity Linking UX
-- FE-041 extension: Help Identify mode for non-admin users
-- GEDCOM data visible on person pages
-- Community contribution flow improvements
-
-### Session 66: Portfolio Documentation + LoRA Prep
+### Session 66: Re-Run Enriched Pipeline + Portfolio Docs
+- Re-run combined pipeline on 10-20 photo sample with first_order GEDCOM context
+- Verify token counts reach 400-1000 range (AD-159 fix validation)
+- Retry 144 rate-limited photos from Session 64d batch
 - Technical writeup of ML pipeline for interview portfolio
-- Document: InsightFace → CORAL → isotonic calibration → Gemini alignment → GEDCOM enrichment
-- LoRA training data audit: count confirmed pairs, assess readiness
-- LoRA implementation plan: contrastive loss, layer selection, ONNX export
 
-### Session 67+: LoRA Fine-Tuning
+### Session 67: LoRA Prep + Fine-Tuning
+- LoRA training data audit: count confirmed pairs, assess readiness
 - Fine-tune InsightFace final layers on confirmed identity pairs
-- Active learning + regression gate architecture
 - Recalibrate isotonic regression on new embedding space
-- A/B comparison: pre-LoRA vs post-LoRA similarity scores
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates
@@ -76,6 +71,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-24: **v0.69.0 — Session 65b**: GEDCOM Linking UX + Enrichment Fix. Production verification (5/6 PASS). GEDCOM ↔ Identity linking with fuzzy search (AD-160). Enrichment pipeline fix: first_order variant for full family context (AD-159). API call logging: gemini_config + response_summary populated. 28 new tests. ~3521 total.
 - [x] 2026-02-23: **Session 64c**: Concerns Resolution. Harness validation (4 hooks, 6 skills, 39 rules audited). Exception narrowing (12 handlers narrowed). API cost tracking verified. Calibrated scores verified end-to-end. AD-158. +4 new tests. ~3472 total.
 - [x] 2026-02-23: **v0.68.0 — Session 65a**: Upload Fix + Compare Overhaul + UX Polish. Upload subprocess death detection + timeout. Two-photo face comparison (/compare/pair). Face overlay toggle (admin ON, non-admin OFF). Prompt fidelity audit (AD-159). 24 new tests. ~3493 total.
 - [x] 2026-02-23: **v0.67.1 — Session 64b**: Execute What 64 Deferred. Supabase tables created. 127 alignments migrated. GEDCOM context builder. Dry-run 3 photos. AD-153-157. 8 new tests. ~3468 total.

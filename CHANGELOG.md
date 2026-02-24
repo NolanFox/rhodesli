@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 65b] — 2026-02-24 (GEDCOM Linking UX + Enrichment Pipeline Fix)
+
+### Verified — 65a Production Features
+- Compare pair (/compare/pair): PASS — two-panel layout, upload zones render correctly
+- Face overlay toggle: PASS — Show/Hide Faces button toggles bounding boxes + legend
+- Share links: PASS — Share button on person and photo pages
+- Navigation: PASS — bidirectional People → Person → Photo flow
+- Health: PASS — /health 200 with 662 identities, 271 photos, ML pipeline ready
+- Upload: SKIPPED (requires admin auth, page returns 401 correctly)
+
+### Added — GEDCOM ↔ Identity Linking (AD-160)
+- Admin-only "Link to Family Tree" step after identity confirmation
+- Fuzzy GEDCOM search with Sephardic surname variants (Capeluto/Capuano/Capelluto etc.)
+- In-memory cache of 21,809 GEDCOM individuals for instant search
+- Link/unlink APIs: POST /api/gedcom/link (auto-enriches birth/death), POST /api/gedcom/unlink (soft delete)
+- Person page shows GEDCOM link status for admins with unlink option
+- Search API: GET /api/gedcom/search with scoring (exact > partial > surname variant)
+- 20 new tests for search, link/unlink, permissions, enrichment, surname variants
+
+### Fixed — GEDCOM Enrichment Pipeline (AD-159 update)
+- Root cause: `variant="curated"` only included person's own data (~106 tokens)
+- Fix: Changed to `variant="first_order"` — includes parents, spouses, children, siblings (400-1000+ tokens)
+- `gemini_config` field now populated: model, call_type, gedcom_token_count, enrichment_level
+- `response_summary` field now populated: faces_described, additional_faces, scene_context
+- Enrichment level tracking: full (400+), partial (100-399), thin (<100), none
+- 8 new tests for enrichment variant, token counting, config/summary logging
+
+### Stats
+- 28 new tests, 2983 app + 538 ML = 3521 total
+- Production verification: 5/6 PASS (upload skipped)
+- AD entries: AD-159 updated, AD-160 added
+
 ## [Session 65a] — 2026-02-23 (Upload Fix + Compare Overhaul + UX Polish)
 
 ### Fixed — Upload Pipeline (CRITICAL)

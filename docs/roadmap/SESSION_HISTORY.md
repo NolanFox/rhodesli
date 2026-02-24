@@ -364,6 +364,12 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 65b: GEDCOM Linking UX + Enrichment Pipeline Fix (2026-02-24) — v0.69.0
+- **Production verification**: Compare pair PASS, face overlay toggle PASS, share links PASS, navigation PASS, health PASS. Upload skipped (admin auth required).
+- **GEDCOM ↔ Identity linking (AD-160)**: Admin-only post-identification "Link to Family Tree" step. Fuzzy name search with Sephardic surname variants (Capeluto/Capuano/Capelluto etc.). In-memory cache of 21,809 GEDCOM individuals. Link saves to gedcom_face_links, auto-enriches birth/death. Unlink with soft delete. Person page shows link status.
+- **Enrichment pipeline fix (AD-159 update)**: Root cause: `variant="curated"` only included person's own data (~106 tokens). Changed to `variant="first_order"` for parents/spouses/children/siblings (400-1000+ tokens). gemini_config and response_summary fields now populated in API call logging. Enrichment level tracking (full/partial/thin/none).
+- 28 new tests. 3521 total (2983 app + 538 ML).
+
 ## Session 65a: Upload Fix + Compare Overhaul + UX Polish (2026-02-23) — v0.68.0
 - **Upload fix (CRITICAL)**: Subprocess death detection via PID tracking + 5-min timeout for "processing" state. Error shows crash log excerpt, reassures user photo is saved. `write_status_file()` preserves started_at/pid.
 - **Two-photo compare** (/compare/pair): New feature with face detection, face selection, cosine similarity with calibrated confidence tiers. Three new routes.

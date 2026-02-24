@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 36.0 — February 23, 2026
-**Status**: ~3493 tests passing, v0.68.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
+**Version**: 37.0 — February 24, 2026
+**Status**: ~3521 tests passing, v0.69.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -40,8 +40,10 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.67.0 — 2026-02-23)
+## Recent Sessions (v0.69.0 — 2026-02-24)
 
+- **Session 65b** (v0.69.0): GEDCOM Linking UX + Enrichment Fix. Production verification (5/6 PASS). GEDCOM ↔ Identity linking with fuzzy Sephardic search (AD-160). Enrichment pipeline: first_order variant for full family context (AD-159 fix). API call logging: gemini_config + response_summary now populated. 28 new tests. 3521 total.
+- **Session 65a** (v0.68.0): Upload Fix + Compare Overhaul + UX Polish. Upload subprocess death detection + timeout. Two-photo face comparison (/compare/pair). Face overlay toggle. Prompt fidelity audit (AD-159). 24 new tests. ~3493 total.
 - **Session 64** (v0.67.0): Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.
 - **Session 63** (v0.66.0): Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals, 145,574 relationships). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.
 - **Session 62** (v0.65.0): PRD-015 Face Alignment via Coordinate Bridging. EXIF handler, coordinate bridging module (app/face_alignment.py), API endpoints (POST/GET /api/face-alignment/{photo_id}), photo page UI with per-face description cards. AD-146. 54 new tests. ~3373 total.
@@ -82,10 +84,10 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ### GEDCOM Integration (Session 61C, AD-147/148)
 - [x] **GEDCOM-001: Supabase GEDCOM tables** — DONE (Session 63). 4 tables created via psycopg2: gedcom_individuals (21,809), gedcom_events (40,140), gedcom_relationships (145,574), gedcom_face_links (61). Source: Session 61C, AD-147/148.
-- [ ] **GEDCOM-002: Admin GEDCOM link review UI** — Interface for linking identities to GEDCOM individuals. Admin can browse/search GEDCOM individuals and associate them with existing Rhodesli identity records. Status: OPEN. Source: Session 61C, AD-147/148.
+- [x] **GEDCOM-002: Admin GEDCOM link review UI** — DONE (Session 65b). Fuzzy search with Sephardic surname variants. Auto-enriches birth/death on link. Unlink with soft delete. AD-160.
 - [ ] **GEDCOM-003: GEDCOM enrichment in upload flow** — When a face is identified and has a GEDCOM link, show enriched analysis popup with genealogical context (birth year, relationships, life events). Status: OPEN. Source: Session 61C, AD-147/148.
 - [ ] **GEDCOM-004: "Analysis improved because..." UX feature** — Show users what GEDCOM context added vs visual-only analysis. Side-by-side or inline comparison of results with and without genealogical enrichment. Status: OPEN. Source: Session 61C, AD-147/148.
-- [ ] **GEDCOM-005: Batch re-analysis with GEDCOM enrichment** — Re-run all 271 photos with curated GEDCOM variant. Leverage linked GEDCOM data to improve date estimation and identity confidence across the full archive. Status: OPEN. Source: Session 61C, AD-147/148.
+- [ ] **GEDCOM-005: Batch re-analysis with GEDCOM enrichment** — Re-run all 271 photos with first_order GEDCOM variant (fixed from curated in Session 65b). Leverage linked GEDCOM data to improve date estimation and identity confidence. Status: OPEN, pipeline fix shipped. Source: Session 61C, AD-147/148, AD-159.
 
 ### Similarity Calibration (Session 63, AD-149/150)
 - [ ] **CAL-001: Community "reject" UX** — Enable explicit non-match pair collection from admin/user rejections. Feeds recalibration hooks (AD-150). Critical for calibration model improvement. Source: Session 63 Phase 9.

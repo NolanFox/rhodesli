@@ -43,4 +43,18 @@
 - Tests: 2983 app + 538 ML = 3521 total (all pass)
 
 ### Phase 4: Docs Sync + Session Close
-- [PENDING]
+- [x] CHANGELOG.md: Session 65b entry added
+- [x] ROADMAP.md: Version bumped v0.69.0, 3521 tests, 65b completed, sessions 66-67 planned
+- [x] BACKLOG.md: Version bumped, GEDCOM-002 marked DONE, GEDCOM-005 updated with pipeline fix note
+- [x] SESSION_HISTORY.md: Session 65b entry added
+- [x] ALGORITHMIC_DECISIONS.md: AD-159 updated with fix, AD-160 added for GEDCOM linking
+- [x] Verification gate: PASS (screenshots exist, GEDCOM APIs exist, enrichment fix verified)
+- Tests: 2983 app + 538 ML = 3521 total (28 new this session)
+
+## Session 65b Complete
+- Phases completed: 0 (Orient), 1 (Production Verification), 2 (GEDCOM Linking), 3 (Enrichment Fix), 4 (Docs)
+- Commits: 5
+- Tests: 3521 total (28 new)
+- Production verification: 5/6 PASS (upload skipped — admin auth)
+- GEDCOM linking: SHIPPED (AD-160)
+- Enrichment fix: SHIPPED (AD-159 update)
