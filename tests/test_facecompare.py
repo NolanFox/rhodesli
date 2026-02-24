@@ -227,6 +227,48 @@ class TestFaceCompareResults:
             )
             assert card is None
 
+    def test_result_card_shows_percentage_not_raw_float(self):
+        """Verify compare results show '90%' not '0.73 similarity' (AD-149 calibration)."""
+        from app.main import _fc_result_card
+
+        with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
+             patch("app.main.get_photo_id_for_face", return_value="photo1"):
+            card = _fc_result_card(
+                {"face_id": "f1", "distance": 0.8, "tier": "STRONG MATCH",
+                 "confidence_pct": 90, "identity_name": "Test Person", "state": "CONFIRMED",
+                 "identity_id": "id1"},
+                set(), 0,
+            )
+            html = repr(card)
+            # Must show percentage format
+            assert "90%" in html
+            # Must NOT show raw distance as the main label
+            assert "0.8 similarity" not in html
+            assert "0.80 similarity" not in html
+
+    def test_result_card_shows_calibrated_confidence_labels(self):
+        """Verify confidence labels use calibrated thresholds (AD-091)."""
+        from app.main import _fc_result_card
+
+        # _fc_result_card uses "Some similarity" for <50 (museum-quality UX)
+        test_cases = [
+            (90, "Very likely same person"),
+            (75, "Strong match"),
+            (55, "Possible match"),
+            (30, "Some similarity"),
+        ]
+        for pct, expected_label in test_cases:
+            with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
+                 patch("app.main.get_photo_id_for_face", return_value="photo1"):
+                card = _fc_result_card(
+                    {"face_id": "f1", "distance": 1.0, "tier": "STRONG MATCH",
+                     "confidence_pct": pct, "identity_name": "Test", "state": "CONFIRMED",
+                     "identity_id": "id1"},
+                    set(), 0,
+                )
+                html = repr(card)
+                assert expected_label in html, f"Expected '{expected_label}' for {pct}%, got: {html[:200]}"
+
     def test_results_section_empty_state(self):
         """Results section shows empty state when no matches."""
         from app.main import _fc_results_section
