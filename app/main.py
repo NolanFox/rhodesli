@@ -272,7 +272,7 @@ app, rt = fast_app(
 # --- INSTRUMENTATION LIFECYCLE HOOKS ---
 @app.on_event("startup")
 async def startup_event():
-    """Initialize required directories, sync from Supabase, and log start."""
+    """Initialize required directories, sync from Supabase, clean temp files, and log start."""
     # Deployment safety: ensure all required directories exist
     required_dirs = [
         data_path / "staging",
@@ -283,6 +283,9 @@ async def startup_event():
     ]
     for dir_path in required_dirs:
         dir_path.mkdir(parents=True, exist_ok=True)
+
+    # AD-162: Clean up temp files from previous runs to prevent disk exhaustion.
+    _startup_disk_cleanup(data_path)
 
     # AD-135: Sync user data from Supabase on startup.
     # This ensures deploys can never lose user-entered data —
@@ -297,6 +300,77 @@ async def startup_event():
         "action": "server_start",
         "timestamp_utc": datetime.utcnow().isoformat()
     }, actor="system")
+
+
+def _startup_disk_cleanup(base_path: Path):
+    """Clean stale temp files and prune old backups at startup (AD-162).
+
+    Removes:
+    - Staging directories older than 1 hour (incomplete uploads)
+    - Stale .status.json and .log files in inbox/ older than 24 hours
+    - Old .bak files (keep most recent 3 per type)
+    - .tmp files left from atomic writes
+
+    Logs disk usage for monitoring.
+    """
+    import time
+    now = time.time()
+
+    # Log disk usage
+    try:
+        import shutil as _shutil_disk
+        total, used, free = _shutil_disk.disk_usage("/")
+        free_mb = free / (1024 * 1024)
+        used_pct = (used / total) * 100
+        logging.info(f"Disk usage at startup: {used_pct:.1f}% used, {free_mb:.0f}MB free")
+        if free_mb < 200:
+            logging.warning(f"LOW DISK SPACE: only {free_mb:.0f}MB free!")
+    except Exception:
+        pass
+
+    cleaned = 0
+
+    # Clean stale staging directories (older than 1 hour)
+    staging_dir = base_path / "staging"
+    if staging_dir.exists():
+        for item in list(staging_dir.iterdir()):
+            try:
+                age = now - item.stat().st_mtime
+                if age > 3600:  # 1 hour
+                    if item.is_dir():
+                        import shutil
+                        shutil.rmtree(item, ignore_errors=True)
+                    else:
+                        item.unlink(missing_ok=True)
+                    cleaned += 1
+            except OSError:
+                pass
+
+    # Clean stale inbox status/log files (older than 24 hours)
+    inbox_dir = base_path / "inbox"
+    if inbox_dir.exists():
+        for item in list(inbox_dir.iterdir()):
+            try:
+                if item.suffix in (".json", ".log") and (now - item.stat().st_mtime) > 86400:
+                    item.unlink(missing_ok=True)
+                    cleaned += 1
+            except OSError:
+                pass
+
+    # Clean .tmp files from atomic writes
+    for item in list(base_path.iterdir()):
+        try:
+            if item.suffix == ".tmp" and item.is_file():
+                item.unlink(missing_ok=True)
+                cleaned += 1
+        except OSError:
+            pass
+
+    # Prune old .bak files
+    _prune_bak_files(base_path, max_keep=3)
+
+    if cleaned > 0:
+        logging.info(f"Startup cleanup: removed {cleaned} stale temp files")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -7146,6 +7220,19 @@ def health():
     except ImportError:
         pass
 
+    # AD-162: Report disk space in health check for monitoring
+    disk_info = {}
+    try:
+        import shutil as _shutil_health
+        total, used, free = _shutil_health.disk_usage("/")
+        disk_info = {
+            "total_mb": round(total / (1024 * 1024)),
+            "free_mb": round(free / (1024 * 1024)),
+            "used_pct": round((used / total) * 100, 1),
+        }
+    except Exception:
+        disk_info = {"error": "unavailable"}
+
     return {
         "status": "ok",
         "identities": len(registry.list_identities()),
@@ -7155,6 +7242,7 @@ def health():
         "date_model": date_model_status,
         "calibration_model": calibration_status,
         "supabase": _ping_supabase(),
+        "disk": disk_info,
     }
 
 
@@ -22680,6 +22768,15 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
                     traceback.print_exc(file=_lf)
             except Exception:
                 pass
+        finally:
+            # AD-162: Always clean up staging directory to prevent disk exhaustion.
+            # The processing thread copies needed files; staging is no longer needed.
+            import shutil as _shutil_cleanup
+            try:
+                if job_dir.exists():
+                    _shutil_cleanup.rmtree(job_dir, ignore_errors=True)
+            except Exception:
+                pass
 
     thread = threading.Thread(target=_background_ingest, daemon=True, name=f"ingest-{job_id}")
     thread.start()
@@ -28055,7 +28152,30 @@ async def post(request):
     _photo_locations_cache = None
     _comparison_results_cache = None
 
+    # Prune old .bak files to prevent unbounded disk growth (AD-162).
+    # Keep at most 3 of each type (identities, photo_index, annotations).
+    _prune_bak_files(data_path)
+
     return {"status": "ok", "results": results, "timestamp": ts}
+
+
+def _prune_bak_files(directory: Path, max_keep: int = 3):
+    """Remove old .bak.{timestamp} files, keeping only the most recent max_keep of each type."""
+    from collections import defaultdict
+    bak_files = defaultdict(list)
+    for f in directory.iterdir():
+        if ".bak." in f.name and f.is_file():
+            # Group by base name (e.g., "identities.json" from "identities.json.bak.123")
+            base = f.name.split(".bak.")[0]
+            bak_files[base].append(f)
+    for base, files in bak_files.items():
+        files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        for old_file in files[max_keep:]:
+            try:
+                old_file.unlink()
+                logging.info(f"Pruned old backup: {old_file.name}")
+            except OSError:
+                pass
 
 
 # =============================================================================

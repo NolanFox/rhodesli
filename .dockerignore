@@ -50,6 +50,24 @@ rhodesli_ml/mlruns/
 rhodesli_ml/tests/
 rhodesli_ml/notebooks/
 
-# Note: data/ and raw_photos/ are NOT ignored here
-# They are bundled into the image for first-run initialization
-# After first deploy, the Railway volume takes over
+# Exclude backup/temp files from data bundle (saves ~400MB in image)
+data/backups/
+data/auto_backups/
+data/cleanup_backups/
+data/staging/
+data/inbox/
+data/*.bak*
+data/*.preflight
+data/comparison_results.json
+
+# Raw photos are served from R2, not bundled
+raw_photos/
+
+# Local-only directories
+data_backup_*/
+test_photos_*/
+uploads/
+results/
+mlruns/
+logs/
+evaluation/
