@@ -56,3 +56,19 @@ Upload fixed across 3 sessions: 65a (PID tracking), 65c (RAM/OOM fix), 65d (disk
 
 #### Phase 2 VERDICT: PASS
 Migration ready to run. Import script tested. Views wired to app.
+
+### Phase 3: Self-Improving Harness
+- [x] Created `.claude/hooks/post-session-eval.sh` — Stop hook checks assessment file, warns on /compact
+- [x] Updated `.claude/settings.json` — Stop hook triggers post-session eval
+- [x] Enhanced `scripts/session_assessment.sh` — 8 check categories, non-zero exit on critical failures
+  - Mandatory outputs (assessment, session log, changelog, roadmap)
+  - Screenshots check
+  - Context management (/compact detection, current_session.txt)
+  - Both test suites
+  - Doc size limits
+  - AD entries
+  - Prompt phase tracking
+- [x] Updated CLAUDE.md — /clear rule, /compact ban, current_session.txt, stop hook
+- [x] CLAUDE.md at 62 lines (under 80 limit)
+
+#### Phase 3 VERDICT: PASS

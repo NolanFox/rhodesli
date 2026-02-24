@@ -36,7 +36,8 @@
     "Stop": [{
       "hooks": [{
         "type": "command",
-        "command": "osascript -e 'display notification \"Claude Code session completed\" with title \"Rhodesli\"' 2>/dev/null; exit 0"
+        "command": "bash .claude/hooks/post-session-eval.sh",
+        "timeout": 15
       }]
     }]
   }

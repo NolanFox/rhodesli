@@ -36,6 +36,9 @@ See `.claude/skills/deploy-verify.md` — Deploy + production smoke test
 ## Workflow
 1. Read `tasks/lessons.md` + `tasks/todo.md` at session start
 2. Commit after every sub-task (conventional commits)
+3. Use /clear between phases (NEVER /compact — lossy, causes instruction amnesia)
+4. Set `.claude/current_session.txt` at session start
+5. Post-session eval hook runs automatically at stop
 @tasks/lessons.md for past mistakes and prevention rules
 
 ## Mandatory Session Outputs
