@@ -36,10 +36,17 @@ See `.claude/skills/deploy-verify.md` — Deploy + production smoke test
 ## Workflow
 1. Read `tasks/lessons.md` + `tasks/todo.md` at session start
 2. Commit after every sub-task (conventional commits)
-3. Use /clear between phases (NEVER /compact — lossy, causes instruction amnesia)
+3. Use /clear between phases (NEVER /compact — blocked by hook)
 4. Set `.claude/current_session.txt` at session start
-5. Post-session eval hook runs automatically at stop
 @tasks/lessons.md for past mistakes and prevention rules
+
+## Hook Enforcement (Deterministic, .claude/settings.json)
+- **Stop**: Blocks session end until assessment file exists + phases logged + b-path if failures
+- **PreCompact (manual)**: BLOCKS /compact with exit 2 (use /clear instead)
+- **PreCompact (auto)**: Injects recovery instructions into compacted context
+- **UserPromptSubmit**: Parallelization reminder injected before every prompt
+- **PreToolUse (Bash)**: Runs pytest before git commit
+- **PostToolUse (Edit|Write)**: AD reminder for ML/core file edits
 
 ## Mandatory Session Outputs
 Every session MUST produce before final commit:

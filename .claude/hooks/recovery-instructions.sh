@@ -1,14 +1,15 @@
 #!/bin/bash
 # Inject recovery instructions into compacted session context.
-# This fires BEFORE compaction, adding context that survives the compression.
+# Fires BEFORE auto-compaction, adding context that survives compression.
 
 INPUT=$(cat)
+SESSION_ID=$(cat "$CLAUDE_PROJECT_DIR/.claude/current_session.txt" 2>/dev/null | tr -d '[:space:]' || echo "unknown")
 
-cat <<'EOF'
+cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "PreCompact",
-    "additionalContext": "POST-COMPACTION RECOVERY: You are in Session 55 of the Rhodesli project (Similarity Calibration + Backlog Audit). Read docs/prompts/session_55_prompt.md for full session instructions. Read docs/session_context/session_55_checkpoint.md for current progress. Read docs/session_context/session_55_planning_context.md for strategic context. Resume from the phase listed in the checkpoint file. RULES: commit per phase, run BOTH test suites (pytest tests/ AND pytest rhodesli_ml/tests/), deploy via git push, verify with railway logs, PRD+SDD before code, MLflow tracks everything, no doc over 300 lines."
+    "additionalContext": "POST-COMPACTION RECOVERY: You are in Session ${SESSION_ID} of the Rhodesli project. Read docs/prompts/session-${SESSION_ID}-prompt.md for full session instructions. Read SESSION_LOG.md for current progress. Resume from the next unchecked phase. RULES: commit per phase, run BOTH test suites (pytest tests/ AND pytest rhodesli_ml/tests/), deploy via git push, no doc over 300 lines, /clear between phases NEVER /compact."
   }
 }
 EOF

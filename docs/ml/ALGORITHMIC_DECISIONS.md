@@ -1853,11 +1853,27 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `app/main.py` (`_background_ingest`, `/upload/status/{job_id}`)
 - **Tests**: `tests/test_upload_cache_invalidation.py`
 
+### AD-166: Hook-Enforced Harness — Deterministic Session Quality Gates
+- **Date**: 2026-02-25 | **Session**: 67
+- **Context**: 7 subagent files created across sessions 65d-66 (ux-reviewer, session-evaluator, fix-prompt-writer, etc.) but ZERO were ever invoked. Subagents are suggestions — Claude consistently chose not to use them. Hooks are enforcement.
+- **Decision**: Replace informational-only hooks with blocking enforcement hooks in `.claude/settings.json`:
+  - **Stop hook**: Command hook reads `current_session.txt`, checks assessment file exists, phase verdicts in SESSION_LOG.md, screenshots have UX review, b-path exists if failures. Blocks via `{"decision": "block"}` if missing. `stop_hook_active` prevents infinite loops.
+  - **PreCompact (manual)**: Exit code 2 blocks `/compact` — use `/clear` instead.
+  - **PreCompact (auto)**: Injects recovery instructions with session-specific context.
+  - **UserPromptSubmit**: Injects parallelization reminder before every prompt.
+  - **PreToolUse (Bash)**: Runs pytest before any `git commit`.
+  - **PostToolUse (Edit|Write)**: Warns to update AD when editing ML/core files.
+- **Rejected**: (a) Agent-type Stop hook — fires every response, too expensive (spawns LLM subagent per turn). (b) Prompt-type UX review hook — prompt hooks cannot read files, can't check screenshot directories. (c) Keeping subagent-only approach — 3 sessions proved LLM voluntarily ignores them.
+- **Key insight**: Hooks that use `exit 2` or `{"decision": "block"}` are DETERMINISTIC. No LLM involved in the enforcement decision. The check is code, not inference.
+- **Caveat**: PreCompact "Can Block?" is listed as No in Claude Code docs. The `exit 2` approach may or may not work — testing in Phase 2.
+- **Affects**: `.claude/settings.json`, `.claude/hooks/session-stop-gate.sh`, `.claude/hooks/recovery-instructions.sh`
+- **Tests**: Manual verification in Phase 2 of session 67.
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-166)
+1. Add a new entry with AD-XXX format (next: AD-167)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
