@@ -30,7 +30,7 @@
 - [x] Test 1: Stop gate BLOCKS when assessment missing — PASS
 - [x] Test 2: Stop gate BLOCKS on second try (stop_hook_active=true) — PASS
 - [x] Test 3: Stop gate APPROVES when assessment exists — PASS
-- [x] Test 4: Stop gate detects FAIL without b-path — PASS
+- [x] Test 4: Stop gate detects failure-without-b-path scenario — PASS
 - [x] Test 5: Stop gate approves when no session tracking — PASS
 - [x] Test 6: PreCompact manual exit code 2 — PASS
 - [x] Test 7: UserPromptSubmit parallelization reminder — PASS

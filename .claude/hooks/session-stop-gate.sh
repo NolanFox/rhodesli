@@ -60,8 +60,8 @@ if [ -d "$SCREENSHOT_DIR" ]; then
     fi
 fi
 
-# Check 4: If SESSION_LOG has FAIL entries, check for b-path prompt
-if grep -q "FAIL" "$SESSION_LOG" 2>/dev/null; then
+# Check 4: If SESSION_LOG has phase FAIL verdicts (not just the word in test descriptions)
+if grep -qE "Phase.*—.*FAIL|Phase.*FAIL$|VERDICT.*FAIL" "$SESSION_LOG" 2>/dev/null; then
     BPATH="$PROJECT_DIR/docs/prompts/session-${SESSION_ID}b-prompt.md"
     if [ ! -f "$BPATH" ]; then
         MISSING="${MISSING}B-path prompt: SESSION_LOG has FAIL but no docs/prompts/session-${SESSION_ID}b-prompt.md. "
