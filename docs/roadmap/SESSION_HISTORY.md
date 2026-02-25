@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 66: Parallel Worktrees + Enrichment Validation + GEDCOM Admin + Portfolio (2026-02-24) — v0.72.0
+- **Harness overhaul**: 7 subagent definitions (.claude/agents/). Session log archival: renamed 21 files, recovered 4 from git, created INDEX.md with analytics. First successful parallel worktree execution with 3 simultaneous subagents.
+- **GEDCOM admin UI (AD-164)**: Enhanced /admin/gedcom with Supabase-backed version management. Version info panel, upload/preview/apply/cancel flow, version history, re-enrichment queue counter. 25 new tests.
+- **Enrichment validation**: Added --dry-run mode to run_combined_pipeline.py. Fixed _find_identity_for_face() to prefer CONFIRMED over INBOX identities. Validated enriched prompts reach 400-3700+ GEDCOM tokens (AD-159 confirmed). 5 real Gemini API calls ($0.06).
+- **Portfolio**: docs/portfolio/ml_pipeline_writeup.md — 134-line technical writeup for interview use.
+- **Infrastructure**: GEDCOM versioning migration on production Supabase. .claude/worktrees/ support.
+- 25 new tests. ~3578 total (3040 app + 538 ML).
+
 ## Session 65d: Disk Space Fix + GEDCOM Versioning + Harness (2026-02-24) — v0.71.0
 - **Disk space fix (AD-162)**: Root cause: Docker image bundled 393MB of unnecessary backup files, push endpoint created unbounded .bak files, no staging cleanup. Fix: .dockerignore excludes ~400MB, startup cleanup, backup pruning (keep 3), upload finally block, health endpoint reports disk space. All 3 uploads verified in Chrome browser (admin logged in).
 - **GEDCOM temporal versioning (AD-163)**: gedcom_versions table with SHA256 dedup. version_id/superseded_by/is_current columns on existing tables. gedcom_change_log for field-level diffs. gedcom_enrichment_queue for Gatekeeper-pattern re-enrichment. current_gedcom_individuals view. Versioned import script with diff detection. Multi-community ready.
@@ -428,6 +436,10 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.72.0 | 2026-02-24 | 66 | 3040+538 |
+| v0.71.0 | 2026-02-24 | 65d | 3015+538 |
+| v0.70.0 | 2026-02-24 | 65c | 2937+538 |
+| v0.69.0 | 2026-02-24 | 65b | 2983+538 |
 | v0.68.0 | 2026-02-23 | 65a | ~2956+537 |
 | v0.67.1 | 2026-02-23 | 64b | ~2930+538 |
 | v0.67.0 | 2026-02-23 | 64 | ~2906+538 |

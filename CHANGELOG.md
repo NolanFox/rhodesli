@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Session 66] — 2026-02-24 (Parallel Worktrees, Enrichment Validation, GEDCOM Admin, Portfolio)
+
+### Added — Harness Subagents & Parallel Execution
+- 7 subagent definitions in .claude/agents/ (ux-reviewer, session-evaluator, fix-prompt-writer, design-check, parallel-optimizer, merge-resolver, enrichment-worker)
+- First successful parallel worktree execution: 3 subagents spawned simultaneously, all completed, merged cleanly
+- Session log archival system: renamed 21 files, recovered 4 from git, created INDEX.md with analytics
+
+### Added — GEDCOM Admin UI (AD-164)
+- Enhanced /admin/gedcom with Supabase-backed version management
+- Version info panel showing current GEDCOM version, individual/family counts
+- Upload/preview/apply/cancel flow with diff summary (Gatekeeper pattern)
+- Version history table and re-enrichment queue counter
+- 25 new tests in tests/test_gedcom_admin.py
+
+### Fixed — Enrichment Pipeline Validation
+- Added --dry-run mode to run_combined_pipeline.py for token counting without API calls
+- Fixed _find_identity_for_face() to prefer CONFIRMED identities over INBOX (was returning wrong identity)
+- Validated: enriched prompts reach 400-3700+ GEDCOM tokens (AD-159 confirmed)
+- 5 real Gemini API calls verified ($0.06 total), all logged to gemini_api_calls table
+
+### Added — Portfolio Documentation
+- docs/portfolio/ml_pipeline_writeup.md: 134-line technical writeup for interview portfolio
+- Covers face detection, calibration (AUC 0.9577), GEDCOM enrichment, human-in-the-loop architecture
+
+### Infrastructure
+- GEDCOM versioning migration run on production Supabase (tables + views + RLS)
+- .claude/worktrees/ added to .gitignore for worktree isolation
+- 25 new tests (3578 total: 3040 app + 538 ML)
+
 ## [Session 65d] — 2026-02-24 (Disk Space Fix + GEDCOM Versioning + Harness)
 
 ### Fixed — Disk Space Exhaustion (AD-162)

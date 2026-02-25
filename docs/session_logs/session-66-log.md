@@ -88,20 +88,3 @@
 - Note: Version still shows v0.65.0 (hardcoded in app, not auto-incremented)
 
 #### Phase 4+5 VERDICT: PASS
-
-### Phase 6: Docs Sync + Auto-Evaluation
-- [x] CHANGELOG.md updated with Session 66 entry
-- [x] ROADMAP.md updated: v0.72.0, 3578 tests, Session 66 in recently completed
-- [x] Assessment written: docs/assessments/session-66-assessment.md
-- [x] Session log archived: docs/session_logs/session-66-log.md
-- [x] All phases PASS
-
-#### Phase 6 VERDICT: PASS
-
-### Session 66 Summary
-- Version: v0.72.0
-- Tests: 3578 (3040 app + 538 ML)
-- New features: GEDCOM admin UI (AD-164), enrichment dry-run, portfolio writeup
-- Bug fixes: identity priority in _find_identity_for_face()
-- Infrastructure: 7 subagents, session log archival, GEDCOM migration, parallel worktrees
-- All 6 phases: PASS

@@ -50,7 +50,7 @@
 | 65B | 2026-02-24 | [recovered](session-65b-log-recovered.md) | - | [prompt](../prompts/session-65b-prompt.md) | [ctx](../session_context/session-65b-context.md) | Recovered |
 | 65C | 2026-02-24 | [recovered](session-65c-log-recovered.md) | [assess](../assessments/session-65c-assessment.md) | [prompt](../prompts/session-65c-prompt.md) | [ctx](../session_context/session-65c-context.md) | Recovered |
 | 65D | 2026-02-24 | [log](session-65d-log.md) | [assess](../assessments/session-65d-assessment.md) | [prompt](../prompts/session-65d-prompt.md) | [ctx](../session_context/session-65d-context.md) | Complete |
-| 66 | 2026-02-24 | - | - | [prompt](../prompts/session-66-prompt.md) | [ctx](../session_context/session-66-context.md) | Planned |
+| 66 | 2026-02-24 | [log](session-66-log.md) | [assess](../assessments/session-66-assessment.md) | [prompt](../prompts/session-66-prompt.md) | [ctx](../session_context/session-66-context.md) | Complete |
 
 ## B-Path Analysis
 
@@ -71,11 +71,11 @@ the original session scope was completed, blocked, or required follow-up work.
 
 ## Session Analytics
 - **Total sessions tracked:** 44 (47B through 66)
-- **Complete** (has log): 17
+- **Complete** (has log): 18
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14
-- **Missing** (limited/no artifacts in session_logs/): 8 (54, 54B, 54C, 54D, 54E, 54F, 55B, 66)
-- **Planned:** 1 (66)
+- **Missing** (limited/no artifacts in session_logs/): 7 (54, 54B, 54C, 54D, 54E, 54F, 55B)
+- **Planned:** 0
 - **Sessions with b-paths:** 9 (49, 51, 54, 55, 59, 60, 61, 64, 65)
 - **Total b-path branches:** 23
 - **Gap period:** Sessions 53-55B had weakest archival coverage
