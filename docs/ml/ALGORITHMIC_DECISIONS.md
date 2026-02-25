@@ -1880,11 +1880,34 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `.claude/settings.json`, `.claude/hooks/session-stop-gate.py` (new), `.claude/hooks/post-compact-recovery.sh` (new)
 - **Tests**: 4 scenarios verified — no assessment (block), with assessment (approve), FAIL without b-path (block), screenshots without UX review (block).
 
+### AD-168: BUG-1 Create Identity 500 Error — Missing user_source Parameter
+- **Date**: 2026-02-25 | **Session**: 69
+- **Context**: Dogfooding found "Create [Name]" in tag dropdown silently fails. HTMX shows nothing (500 errors not rendered). Railway logs revealed: `TypeError: IdentityRegistry.rename_identity() missing 1 required positional argument: 'user_source'`.
+- **Root cause**: `rename_identity()` at line 20006 was called with only `(identity_id, name)` but the method signature requires `(identity_id, name, user_source)`. Other callers (line 21339, 23998) correctly pass `user_source="web"`.
+- **Fix**: Added `user_source="face_tag"` to the call. Added try/except for `KeyError`/`ValueError` returning a user-visible error toast instead of 500.
+- **Secondary fix**: Hyperscript parse error on tag search input — `if firstBtn click firstBtn` needed `end` keyword per Hyperscript syntax.
+- **Rejected**: (a) Making `user_source` optional with default — provenance tracking is a core invariant (AD-006), all callers should be explicit. (b) Client-side error handling only — the root cause was server-side.
+- **Affects**: `app/main.py` (create-identity route, tag search input hyperscript)
+- **Tests**: `test_create_identity_passes_user_source` — verifies `user_source="face_tag"` is passed and `confirm_identity` is called.
+
+### AD-169: Gatekeeper Pattern Confirmation — Clustering Intentionally Offline
+- **Date**: 2026-02-25 | **Session**: 69
+- **Context**: Dogfooding found new faces appear as "Unidentified Person 768" with no cluster assignment. Similar Identities shows matches (Big Leon Capeluto at Dist: 0.91). Question: is auto-clustering broken or by design?
+- **Decision**: CONFIRMED BY DESIGN. The Gatekeeper pattern (AD-006, AD-001) intentionally separates upload from clustering:
+  - Stage 1 (Upload): Face detection → INBOX identities (no matching)
+  - Stage 2 (Offline): `cluster_new_faces.py --execute` → generate proposals
+  - Stage 3 (Review): Admin reviews proposals → confirms/rejects
+  - `cluster_new_faces.py` header explicitly states "NEVER auto-merges"
+  - AD-110 Serving Path Contract: web requests NEVER run heavy ML
+- **UX gap identified**: High-confidence matches aren't surfaced prominently. Discovery notification system (Session 69 Phase 4) addresses this.
+- **Rejected**: Auto-clustering on upload — violates AD-110 (no heavy ML in web requests) and Gatekeeper principle (human must review before assignment).
+- **Affects**: No code changes. Documentation only.
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-168)
+1. Add a new entry with AD-XXX format (next: AD-170)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
