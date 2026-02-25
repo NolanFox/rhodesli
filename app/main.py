@@ -18704,8 +18704,40 @@ def public_photo_page(
             Meta(property="og:image:height", content=str(height)),
         )
 
-    # Navigation
-    nav_links = _public_nav_links(active="", user=user)
+    # Navigation — use _public_page_nav for mobile hamburger support (UX-103)
+    nav_links = _public_nav_links(active="photos", user=user)
+
+    # Build compact metadata overlay for the photo hero (UX-103)
+    # Shows date estimate, face count, and collection on the photo itself
+    date_text_overlay, date_conf_overlay, _ = _get_date_badge(photo_id)
+    overlay_meta_parts = []
+    if date_text_overlay:
+        overlay_meta_parts.append(
+            Span(date_text_overlay, cls="text-amber-200 font-serif",
+                 data_testid="photo-overlay-date")
+        )
+    if total_faces > 0:
+        face_summary = f"{identified_count}/{total_faces} identified"
+        overlay_meta_parts.append(
+            Span(face_summary, cls="text-slate-200",
+                 data_testid="photo-overlay-faces")
+        )
+    if collection_name:
+        overlay_meta_parts.append(
+            Span(collection_name, cls="text-slate-300",
+                 data_testid="photo-overlay-collection")
+        )
+    # Build interleaved list with dot separators
+    _interleaved_meta = []
+    for i, part in enumerate(overlay_meta_parts):
+        _interleaved_meta.append(part)
+        if i < len(overlay_meta_parts) - 1:
+            _interleaved_meta.append(Span(" \u00b7 ", cls="text-slate-500"))
+    photo_metadata_overlay = Div(
+        *_interleaved_meta,
+        cls="absolute bottom-3 left-3 bg-black/70 rounded-lg px-3 py-1.5 text-xs backdrop-blur-sm z-[5] opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity",
+        data_testid="photo-metadata-overlay",
+    ) if overlay_meta_parts else None
 
     page_style = Style("""
         html, body { margin: 0; }
@@ -18832,21 +18864,32 @@ def public_photo_page(
         *og_meta_tags,
         page_style,
         Main(
-            # Top navigation bar
-            Nav(
-                Div(
-                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
-                    Div(
-                        *nav_links,
-                        A("Explore More Photos", href="/photos",
-                          cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-4"),
-                        cls="hidden sm:flex items-center gap-6"
-                    ),
-                    cls="max-w-5xl mx-auto px-6 flex items-center justify-between h-16"
-                ),
-                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50"
-            ),
+            # Top navigation bar — uses _public_page_nav for mobile hamburger (UX-103)
+            _public_page_nav(nav_links, active="photos", user=user,
+                             include_admin_bar=False),
             _admin_bar(user),
+
+            # Breadcrumb bar — back navigation (UX-103: eliminates dead-end)
+            Div(
+                Div(
+                    A(
+                        NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>'),
+                        "Back to Photos",
+                        href="/photos",
+                        cls="text-slate-400 hover:text-white text-sm transition-colors",
+                        data_testid="back-to-photos",
+                    ),
+                    Span(" / ", cls="text-slate-600 mx-2") if collection_name else None,
+                    A(
+                        collection_name,
+                        href=f"/collection/{_collection_slug(collection_name)}",
+                        cls="text-slate-400 hover:text-indigo-300 text-sm transition-colors",
+                    ) if collection_name else None,
+                    cls="max-w-[900px] mx-auto flex items-center",
+                ),
+                cls="px-4 sm:px-6 pt-4 pb-1",
+                data_testid="photo-breadcrumb",
+            ),
 
             # Hero photo section
             Section(
@@ -18863,6 +18906,8 @@ def public_photo_page(
                                     style=f"transform: {front_css_transform}; filter: {front_css_filter};" if (front_css_transform or front_css_filter) else None,
                                 ),
                                 *face_overlays,
+                                # Metadata overlay — date, face count, collection (UX-103)
+                                photo_metadata_overlay,
                                 # Overlay legend
                                 Div(
                                     Span(cls="inline-block w-2.5 h-2.5 rounded-sm border-2 border-emerald-400 mr-1"),
@@ -18873,7 +18918,7 @@ def public_photo_page(
                                     id="face-overlay-legend-public",
                                     style="" if is_admin else "display: none;",
                                 ) if face_overlays else None,
-                                cls="photo-flip-front relative" if has_back else "relative",
+                                cls="photo-flip-front relative group" if has_back else "relative group",
                             ),
                             # Back side (only rendered if back image exists)
                             Div(
