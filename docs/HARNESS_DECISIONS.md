@@ -343,3 +343,37 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   feature actually work?"
 - **Breadcrumbs:** .claude/rules/self-assessment.md, .claude/rules/ux-evaluation.md,
   HD-003 (verification gate), CLAUDE.md (Session End line)
+
+## HD-018: Tiered Regression Checklist (Smoke vs Full)
+- **Date:** 2026-02-25
+- **Session:** 69 (planning)
+- **Trigger:** Session 68 Phase 1 ran a 15-item regression checklist that took
+  significant time. Most sessions only need to verify critical items, not every
+  harness feature. Full regression should run only when harness files change.
+- **Decision:** Two tiers of regression testing:
+
+  **Smoke Test (5 items) — run every session:**
+  1. Stop hook blocks when assessment missing (item #1)
+  2. Stop hook approves when assessment exists (item #2)
+  3. Tests pass (item #15 — test count >= previous session)
+  4. Session log archival works (item #9)
+  5. PreToolUse test-before-commit fires (item #6)
+
+  **Full Regression (15 items) — run when harness changes:**
+  Items 1-15 from Session 68 context Part 2 checklist. Includes all
+  smoke items plus: PreCompact warning (#3), recovery injection (#4),
+  parallelization reminder (#5), AD reminder (#7), upload pipeline (#8),
+  ux-reviewer (#10), session-evaluator (#11), fix-prompt-writer (#12),
+  run_session.sh (#13), GEDCOM admin UI (#14).
+
+- **When to run full regression:**
+  - Session modifies `.claude/hooks/`, `.claude/settings.json`, or `.claude/agents/`
+  - Session modifies `scripts/run_session.sh`
+  - Every 5th session (periodic verification)
+- **Alternatives rejected:**
+  - Always full: wastes 15-20 min on non-harness sessions
+  - No regression: harness drift goes undetected (Session 67 found this)
+  - Automated test suite for hooks: desirable long-term but hooks are
+    shell/Python scripts that require specific stdin/env setup
+- **Breadcrumbs:** docs/session_context/session-68-context.md (Part 2),
+  docs/session_logs/session-68-log.md (Phase 1 results)
