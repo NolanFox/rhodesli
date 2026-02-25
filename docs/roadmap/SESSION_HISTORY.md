@@ -364,6 +364,12 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 66b: Upload Silent Data Loss Fix (2026-02-25) — v0.72.1
+- **CRITICAL FIX (AD-165)**: Upload showed "3 faces extracted, 3 added to Inbox" but data never appeared in UI. Root cause: TWO bugs — (1) background thread wrote to disk but never invalidated in-memory caches (_photo_cache, _face_data_cache, _face_to_photo_cache, _photo_registry_cache, _photo_id_aliases), (2) R2 upload ran in status polling endpoint after background thread deleted staging directory.
+- **Fix**: Moved R2 upload inside background thread (before staging cleanup). Added cache invalidation (all 5 caches → None) after successful processing. Added embeddings.npy safety gate to init_railway_volume.py.
+- **Production verified**: Uploaded leon_and_nace_capeluto_kiddyland.jpeg via Playwright. "2 faces extracted, 2 added to Inbox". Sidebar counts updated immediately (New Matches 407→409, Photos 271→272). This was the 5th session attempting this fix — finally verified end-to-end.
+- 10 new tests (7 cache invalidation + 3 embeddings safety gate). ~3588 total (3050 app + 538 ML).
+
 ## Session 66: Parallel Worktrees + Enrichment Validation + GEDCOM Admin + Portfolio (2026-02-24) — v0.72.0
 - **Harness overhaul**: 7 subagent definitions (.claude/agents/). Session log archival: renamed 21 files, recovered 4 from git, created INDEX.md with analytics. First successful parallel worktree execution with 3 simultaneous subagents.
 - **GEDCOM admin UI (AD-164)**: Enhanced /admin/gedcom with Supabase-backed version management. Version info panel, upload/preview/apply/cancel flow, version history, re-enrichment queue counter. 25 new tests.
