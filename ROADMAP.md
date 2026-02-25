@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.72.0 · ~3578 tests · 271 photos · 775 identities · 55 confirmed
+Current: v0.72.1 · ~3588 tests · 272 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -65,6 +65,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-25: **v0.72.1 — Session 66b**: CRITICAL Upload Fix. Root cause: cache staleness + R2 upload race (AD-165). Background thread now does R2 upload + cache invalidation. embeddings.npy safety gate added. Verified in production: 2 faces uploaded, sidebar counts updated immediately. 10 new tests. ~3588 total.
 - [x] 2026-02-24: **v0.72.0 — Session 66**: Parallel Worktrees + Enrichment Validation + GEDCOM Admin + Portfolio. First parallel worktree execution (3 subagents). 7 harness subagents. Session log archival (INDEX.md). GEDCOM admin UI with version management (AD-164). Enrichment validation: identity priority bug fix, 400-3700 GEDCOM tokens confirmed. Portfolio writeup. 25 new tests. ~3578 total.
 - [x] 2026-02-24: **v0.71.0 — Session 65d**: Disk Space Fix + GEDCOM Versioning + Harness. Disk: .dockerignore saves ~400MB, startup cleanup, backup pruning (AD-162). All 3 uploads verified in Chrome browser. GEDCOM temporal versioning: version tracking, field-level diffs, enrichment queue, current_* views (AD-163). Stop hook + enhanced eval script. ~3553 tests.
 - [x] 2026-02-24: **v0.70.0 — Session 65c**: Upload Fix (MANDATORY) + Verification Sweep + Harness. Root cause: subprocess OOM from double model loading. Fix: thread shares hybrid models (AD-161). All 3 upload surfaces verified in production. GEDCOM linking verified end-to-end. Harness: assessment mandate, prompt template, eval script. ~3475 tests.

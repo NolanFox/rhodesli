@@ -2,7 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Session 66] — 2026-02-24 (Parallel Worktrees, Enrichment Validation, GEDCOM Admin, Portfolio)
+## [v0.72.1] — 2026-02-25 (Session 66b: Upload Silent Data Loss Fix)
+
+### Fixed — CRITICAL: Upload Silent Data Loss (AD-165)
+- Root cause: TWO bugs working together — cache staleness + R2 upload race condition
+- Bug 1: Background upload thread wrote data to disk but never invalidated in-memory caches (`_photo_cache`, `_face_data_cache`, `_face_to_photo_cache`, `_photo_registry_cache`, `_photo_id_aliases`). Sidebar and photo grid served stale data.
+- Bug 2: R2 upload happened in status polling endpoint AFTER background thread deleted staging directory. Photos returned 404 on R2.
+- Fix: Moved R2 upload inside background thread (before staging cleanup), added cache invalidation after successful processing
+- Added embeddings.npy safety gate to init_railway_volume.py — prevents deploy from overwriting upload-added embeddings
+
+### Verified in Production
+- Uploaded leon_and_nace_capeluto_kiddyland.jpeg via Playwright
+- Result: "2 faces extracted, 2 added to Inbox"
+- Sidebar counts updated immediately: New Matches 407→409, Photos 271→272
+- Cache invalidation confirmed working across browser sessions
+
+### Tests
+- 10 new tests (7 cache invalidation + 3 embeddings safety gate)
+- 3588 total tests (3050 app + 538 ML)
+
+## [v0.72.0] — 2026-02-24 (Session 66: Parallel Worktrees, Enrichment Validation, GEDCOM Admin, Portfolio)
 
 ### Added — Harness Subagents & Parallel Execution
 - 7 subagent definitions in .claude/agents/ (ux-reviewer, session-evaluator, fix-prompt-writer, design-check, parallel-optimizer, merge-resolver, enrichment-worker)

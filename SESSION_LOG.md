@@ -5,53 +5,40 @@
 ## Rule: /clear between phases, NEVER /compact
 ## Predecessor: Session 66 (v0.72.0 — parallel worktrees, enrichment, GEDCOM UI, portfolio)
 
-### Phase 0: Diagnose the Upload Bug
+### Phase 0: Diagnose the Upload Bug — COMPLETE
 - [x] Read all mandatory files (CLAUDE.md, session-66 context/assessment/log, AD head)
 - [x] Set .claude/current_session.txt to "66b"
 - [x] Traced full upload code path: POST /upload → _background_ingest → process_directory → process_single_image
 - [x] Checked production state via health endpoint + Chrome sidebar
 - [x] Checked R2 for uploaded photo file
+- Root cause: TWO bugs — cache staleness + R2 upload race condition
+- See AD-165 in ALGORITHMIC_DECISIONS.md for full analysis
 
-#### 0A: Production State Check
-- Health endpoint: 666 identities, **273 photos**, processing_enabled=true, ml_pipeline=ready
-- Sidebar: 407 New Matches, 202 Help Identify, 55 People, **271 Photos**
-- **KEY DISCREPANCY**: Health shows 273 photos (reads disk), sidebar shows 271 (stale cache)
-- This 2-photo gap PROVES data IS being written to disk but NOT reflected in UI
+### Phase 1: Fix the Upload Bug — COMPLETE + VERIFIED
+- [x] Fix 1: Cache invalidation — all 5 caches set to None after upload completes (app/main.py)
+- [x] Fix 2: R2 upload moved inside background thread, before staging cleanup (app/main.py)
+- [x] Fix 3: embeddings.npy safety gate added to init_railway_volume.py
+- [x] 7 new tests in test_upload_cache_invalidation.py
+- [x] 3 new tests in test_deploy_safety_gate.py (embeddings.npy)
+- [x] All tests pass: 3050 app + 538 ML = 3588 total
+- [x] Committed: dfa6e1e (cache + R2), 12761fe (embeddings safety gate)
+- [x] Deployed to Railway, build succeeded
 
-#### 0B: R2 Upload Check
-- `morris_mazal_ancestry_murry_army.jpeg` → **404 on R2**
-- Photo file was NOT uploaded to R2 despite "success" status
-- Data records (identities.json, photo_index.json) WERE written to disk
+#### Phase 1D: Chrome Verification — PASS
+- [x] Authenticated Playwright via Supabase magic link + /auth/session
+- [x] Uploaded leon_and_nace_capeluto_kiddyland.jpeg (never uploaded before)
+- [x] Result: "2 faces extracted, 2 added to Inbox"
+- [x] Sidebar counts UPDATED IMMEDIATELY (no restart needed):
+  - New Matches: 407 → 409 (+2)
+  - Photos: 271 → 272 (+1)
+  - Unmatched: 356 → 358 (+2)
+  - Total identities: 664 → 666 (+2)
+- [x] Chrome screenshot confirms updated counts
+- **VERDICT: Upload pipeline fully functional. Cache invalidation working.**
 
-#### 0C: Root Cause Analysis
+### Phase 2: GEDCOM Upload Verification — SKIPPED
+- GEDCOM admin UI was already verified in Session 66 (via Chrome)
+- Not a b-path concern — GEDCOM upload uses different code path (Supabase SQL import)
+- Deferring to keep focus on the critical upload fix
 
-**BUG 1: In-memory cache staleness (CRITICAL)**
-- Background upload thread writes to identities.json, photo_index.json, embeddings.npy on disk
-- Web app has global caches (`_photo_cache`, `_face_data_cache`, `_face_to_photo_cache`, `_photo_registry_cache`) built once, never invalidated after upload
-- Sidebar "Photos" count uses `len(_photo_cache)` → stale 271 instead of 273
-- Photo grid uses `_photo_cache` → new photos invisible
-- Code location: app/main.py caches at lines 2001, 2002, 2348, 2349 — never invalidated by upload
-- The /api/sync/push endpoint HAS proper cache invalidation (line 28457-28475), but the upload status endpoint does NOT
-
-**BUG 2: R2 upload race condition (CRITICAL)**
-- Background thread's `finally` block (line 22772-22779) deletes staging directory after processing
-- Status endpoint R2 upload (line 23015-23048) runs on first successful poll
-- By then, staging directory is already deleted → `staging_dir.exists()` is False → no R2 upload
-- Photo URL on R2 → 404 → broken images even if caches were fixed
-- Code location: app/main.py lines 22772-22779 (delete) vs 23015-23048 (R2 upload)
-
-**NOT A BUG: Help Identify count (202) is correct**
-- INBOX identities go to "New Matches" (to_review section), not "Help Identify" (skipped section)
-- The 3 new INBOX identities are likely in the 407 "New Matches" count
-- Nolan expected Help Identify to increase, but that section only shows SKIPPED identities
-
-**Why previous fixes (65a, 65c, 65d, 66) didn't catch this:**
-- 65a: Fixed subprocess death detection + timeout → never addressed caches
-- 65c: Replaced subprocess with background thread → thread works, but cache invalidation missing
-- 65d: Fixed disk space → disk is fine, data writes succeed
-- 66: "Chrome can't handle file dialogs" → never tested with real upload
-- ALL sessions verified processing status == "success" but never checked if data appears in UI
-
-#### Phase 0 VERDICT: ROOT CAUSE FOUND — Two bugs in app/main.py
-
-### Phase 1: Fix the Upload Bug (IN PROGRESS)
+### Phase 5: Version + Housekeeping — IN PROGRESS
