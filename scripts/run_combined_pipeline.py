@@ -474,6 +474,52 @@ async def process_photo(photo_id: str, photo_data: dict, identities: dict,
     }
 
 
+def dry_run_photo(photo_id: str, photo_data: dict, identities: dict,
+                   embeddings, gedcom_data: dict | None = None) -> dict:
+    """Build prompt for a photo without calling Gemini API.
+
+    Returns prompt text, token counts, and enrichment metadata.
+    """
+    from app.face_alignment import build_alignment_prompt
+
+    faces = build_faces_for_photo(photo_data, identities, embeddings)
+    if not faces:
+        return {"photo_id": photo_id, "status": "skipped", "reason": "no faces with bboxes"}
+
+    additional_context = build_gedcom_context(photo_id, faces, identities, gedcom_data)
+    has_gedcom = bool(additional_context)
+
+    gedcom_token_count = 0
+    enrichment_level = "none"
+    if has_gedcom:
+        from rhodesli_ml.gedcom_context import estimate_context_tokens
+        gedcom_token_count = estimate_context_tokens(additional_context)
+        enrichment_level = "full" if gedcom_token_count >= 400 else "partial" if gedcom_token_count >= 100 else "thin"
+
+    prompt = build_alignment_prompt(faces, additional_context)
+    prompt_token_count = len(prompt) // 4  # rough estimate
+
+    # Get identity names for faces
+    face_names = []
+    for f in faces:
+        if f.identity_name:
+            face_names.append(f"{f.face_id} -> {f.identity_name}")
+
+    return {
+        "photo_id": photo_id,
+        "status": "dry_run",
+        "faces_count": len(faces),
+        "has_gedcom": has_gedcom,
+        "gedcom_token_count": gedcom_token_count,
+        "enrichment_level": enrichment_level,
+        "prompt_token_count": prompt_token_count,
+        "prompt_text": prompt,
+        "gedcom_context": additional_context,
+        "identified_faces": face_names,
+        "photo_path": photo_data.get("path", ""),
+    }
+
+
 def get_failed_photo_ids(results_file: Path) -> list[str]:
     """Extract photo IDs that failed from a previous batch result."""
     if not results_file.exists():
@@ -500,15 +546,17 @@ async def main():
     parser.add_argument('--photo-ids', nargs='+', help='Specific photo IDs to process')
     parser.add_argument('--gedcom', action='store_true', default=True, help='Include GEDCOM context (default: on)')
     parser.add_argument('--no-gedcom', action='store_true', help='Disable GEDCOM context')
+    parser.add_argument('--dry-run', action='store_true', help='Build prompts and log token counts without calling Gemini API')
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
-    # Check API key
-    api_key = os.getenv("GEMINI_API_KEY", "")
-    if not api_key:
-        logger.error("GEMINI_API_KEY not set")
-        sys.exit(1)
+    # Check API key (not needed for dry-run)
+    if not args.dry_run:
+        api_key = os.getenv("GEMINI_API_KEY", "")
+        if not api_key:
+            logger.error("GEMINI_API_KEY not set")
+            sys.exit(1)
 
     # Load data
     with open(PROJECT_ROOT / "data" / "photo_index.json") as f:
@@ -555,10 +603,12 @@ async def main():
         else:
             logger.info("GEDCOM context: not available (alignment-only mode)")
 
-    logger.info(f"Processing {len(photo_list)} photos with {args.model}")
+    mode = "DRY-RUN" if args.dry_run else "LIVE"
+    logger.info(f"Processing {len(photo_list)} photos with {args.model} ({mode})")
 
     # Generate batch ID
-    batch_id = f"batch_combined_{time.strftime('%Y%m%d_%H%M%S')}"
+    prefix = "batch_dryrun" if args.dry_run else "batch_combined"
+    batch_id = f"{prefix}_{time.strftime('%Y%m%d_%H%M%S')}"
     logger.info(f"Batch ID: {batch_id}")
 
     # Process
@@ -571,11 +621,28 @@ async def main():
 
     for i, (pid, pdata) in enumerate(photo_list):
         logger.info(f"[{i+1}/{len(photo_list)}] {pid} ({len(pdata.get('face_ids', []))} faces)")
-        result = await process_photo(pid, pdata, identities, embeddings, args.model,
-                                     batch_id=batch_id, gedcom_data=gedcom_data)
+
+        if args.dry_run:
+            result = dry_run_photo(pid, pdata, identities, embeddings,
+                                   gedcom_data=gedcom_data)
+        else:
+            result = await process_photo(pid, pdata, identities, embeddings, args.model,
+                                         batch_id=batch_id, gedcom_data=gedcom_data)
+
         results.append(result)
 
-        if result["status"] == "success":
+        if result["status"] == "dry_run":
+            success += 1
+            gedcom_flag = " +GEDCOM" if result.get("has_gedcom") else ""
+            if result.get("has_gedcom"):
+                gedcom_enriched += 1
+            logger.info(f"  PROMPT: {result['prompt_token_count']} tokens, "
+                        f"GEDCOM: {result['gedcom_token_count']} tokens "
+                        f"({result['enrichment_level']}){gedcom_flag}")
+            if result.get("identified_faces"):
+                for fn in result["identified_faces"]:
+                    logger.info(f"    {fn}")
+        elif result["status"] == "success":
             success += 1
             total_cost += result.get("cost", 0)
             gedcom_flag = " +GEDCOM" if result.get("has_gedcom") else ""
@@ -590,35 +657,59 @@ async def main():
             errors += 1
             logger.error(f"  !! Error: {result['reason']}")
 
-        # Rate limit
-        if i < len(photo_list) - 1:
+        # Rate limit (only for live calls)
+        if not args.dry_run and i < len(photo_list) - 1:
             await asyncio.sleep(args.delay)
 
     # Summary
     logger.info(f"\n{'='*60}")
-    logger.info(f"BATCH COMPLETE — {batch_id}")
+    logger.info(f"BATCH COMPLETE ({mode}) — {batch_id}")
     logger.info(f"{'='*60}")
     logger.info(f"Success: {success}/{len(photo_list)}")
     logger.info(f"Errors: {errors}")
     logger.info(f"Skipped: {skipped}")
     logger.info(f"GEDCOM-enriched: {gedcom_enriched}")
-    logger.info(f"Total cost: ${total_cost:.4f}")
+    if not args.dry_run:
+        logger.info(f"Total cost: ${total_cost:.4f}")
 
-    # Save results
+    # Save results (strip prompt_text for non-dry-run to keep file size down)
     output_dir = PROJECT_ROOT / "results"
     output_dir.mkdir(exist_ok=True)
     output = output_dir / f"{batch_id}.json"
+
+    save_results = results
+    if args.dry_run:
+        # For dry-run, save prompts to separate file and keep summary in main
+        prompts_output = output_dir / f"{batch_id}_prompts.json"
+        prompts_data = {}
+        for r in results:
+            if r.get("prompt_text"):
+                prompts_data[r["photo_id"]] = {
+                    "prompt_text": r["prompt_text"],
+                    "gedcom_context": r.get("gedcom_context", ""),
+                }
+        with open(prompts_output, "w") as f:
+            json.dump(prompts_data, f, indent=2)
+        logger.info(f"Prompts saved to {prompts_output}")
+
+        # Strip large text from summary results
+        save_results = []
+        for r in results:
+            summary = {k: v for k, v in r.items() if k not in ("prompt_text", "gedcom_context")}
+            save_results.append(summary)
+
     with open(output, "w") as f:
         json.dump({
             "batch_id": batch_id,
             "model": args.model,
+            "mode": mode.lower(),
             "total_photos": len(photo_list),
             "success": success,
             "errors": errors,
             "skipped": skipped,
             "gedcom_enriched": gedcom_enriched,
-            "total_cost": round(total_cost, 4),
-            "results": results,
+            "total_cost": round(total_cost, 4) if not args.dry_run else 0,
+            "results": save_results,
         }, f, indent=2)
     logger.info(f"Results saved to {output}")
 

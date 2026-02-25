@@ -1,43 +1,35 @@
-# Session 66 Results: Portfolio ML Pipeline Writeup
+# Session 66 Worktree Results (Combined)
 
-## What Was Done
+## Subagent A: Enrichment Pipeline Validation
 
-Created a portfolio-quality technical writeup of the Rhodesli ML pipeline for interview use. The document covers the full system: face detection, similarity calibration, date estimation, Gemini alignment with GEDCOM enrichment, and the human-in-the-loop feedback architecture.
+### What Was Done
 
-## Files Changed
+1. **Dry-Run Mode Added** to `scripts/run_combined_pipeline.py` — builds prompts and logs token counts without calling Gemini API
+2. **Dry-Run on 10 Photos** (5 GEDCOM-linked, 5 unlinked):
+   - Bare prompts: 419-461 tokens | Enriched: 592-4,200 tokens | GEDCOM context alone: 158-3,717 tokens
+   - 4 of 5 enriched photos reach 400+ tokens, confirming AD-159
+3. **5 Real Gemini API Calls** — total cost $0.06, all logged to gemini_api_calls table
+4. **Bug Fix**: `_find_identity_for_face()` returned INBOX identities instead of CONFIRMED — fixed to prefer CONFIRMED state
 
-| File | Action | Description |
-|------|--------|-------------|
-| `docs/portfolio/ml_pipeline_writeup.md` | Created | 134-line technical writeup of the ML pipeline |
-| `RESULTS.md` | Created | This summary file |
+| File | Change |
+|------|--------|
+| `scripts/run_combined_pipeline.py` | Added `--dry-run` flag |
+| `rhodesli_ml/gedcom_context.py` | Fixed identity priority bug |
+| `docs/analysis/enrichment_validation_66.md` | Full validation report |
 
-## Source Files Read (Not Modified)
+## Subagent B: Portfolio ML Pipeline Writeup
 
-- `docs/ml/ALGORITHMIC_DECISIONS.md` -- All 163 ML decisions (AD-001 through AD-163)
-- `rhodesli_ml/gedcom_context.py` -- GEDCOM context builder (5 enrichment variants)
-- `rhodesli_ml/gemini_config.py` -- Centralized model config and pricing
-- `rhodesli_ml/gemini_extraction.py` -- Unified extraction prompt architecture
-- `rhodesli_ml/similarity_calibration.py` -- Isotonic regression calibrator (AUC 0.9577)
-- `rhodesli_ml/calibration/model.py` -- Siamese MLP (32K params)
-- `rhodesli_ml/calibration/inference.py` -- ONNX/PyTorch dual-backend inference
-- `rhodesli_ml/utils/api_logger.py` -- Full API call cost tracking
-- `rhodesli_ml/training/train_date.py` -- CORAL ordinal regression training
-- `core/neighbors.py` -- Face similarity search (multi-anchor, single-linkage)
-- `core/clustering.py` -- Agglomerative clustering with MLS + temporal priors
-- `core/temporal.py` -- CLIP-based era classification, Bayesian penalties
-- `core/grouping.py` -- Union-Find face grouping
-- `scripts/run_combined_pipeline.py` -- Combined Gemini processing pipeline
-- `results/batch_combined_20260223_221339.json` -- Batch results (134/136 success)
-- `results/batch_alignment_20260223_023456.json` -- Earlier batch (122/266, 144 rate-limited)
-- `results/gedcom_enrichment_comparison_report.md` -- 3-model x 5-variant comparison
-- `results/calibration_pairs_session63.json` -- 348 calibration pairs
+Created `docs/portfolio/ml_pipeline_writeup.md` (134 lines) — technical writeup of the full ML pipeline for interview portfolio. Covers face detection, similarity calibration (AUC 0.9577), date estimation (CORAL), Gemini alignment with GEDCOM enrichment, and human-in-the-loop architecture.
 
-## Key Numbers in the Writeup
+## Subagent C: GEDCOM Admin UI
 
-- 271 photos, 775 faces, 55 confirmed identities
-- AUC 0.9577 (isotonic similarity calibration)
-- 269/271 photos aligned via Gemini ($1.86 total)
-- ~$0.008 per photo (Gemini 3.1 Pro)
-- 21,809 GEDCOM individuals imported to Supabase
-- ~3,553 tests across two test suites
-- 163 algorithmic decisions documented (AD-NNN format)
+Enhanced `/admin/gedcom` with version management UI (AD-164):
+- Version info panel, version history, re-enrichment queue display
+- Upload/preview/apply/cancel flow for GEDCOM updates
+- 25 tests in `tests/test_gedcom_admin.py`
+
+| File | Change |
+|------|--------|
+| `app/main.py` | +333 lines for GEDCOM admin routes |
+| `docs/ml/ALGORITHMIC_DECISIONS.md` | AD-164 entry |
+| `tests/test_gedcom_admin.py` | 25 tests (286 lines) |
