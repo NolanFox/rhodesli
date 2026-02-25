@@ -364,6 +364,13 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 67: Hook Enforcement System (2026-02-25) — v0.73.0
+- **Hook enforcement (AD-166)**: Replaced informational-only hooks with blocking enforcement. Stop hook blocks session end until assessment file exists, phase verdicts logged, screenshots reviewed, b-path written if failures. PreCompact (manual) blocks /compact via exit 2. UserPromptSubmit injects parallelization reminder. All hooks use python3 (jq not installed).
+- **Deferred subagent invocations**: ux-reviewer reviewed 6 session-65b screenshots (8 new issues: 1 P1, 4 P2, 3 P3). session-evaluator independently evaluated session 66 (Phases 4/5/6 PARTIAL vs self-assessed PASS). Enrichment validation confirmed.
+- **/clear investigation**: /clear is interactive-only, doesn't work in -p mode. Created scripts/run_session.sh for headless phase-splitting with true context isolation.
+- **UX issues added**: UX-103 (P1, full-bleed photo dead end), UX-104-107 (P2, compare button, Help Identify CTA, phrasing, badge tooltip).
+- No app code changed — harness/docs session. ~3588 tests (unchanged).
+
 ## Session 66b: Upload Silent Data Loss Fix (2026-02-25) — v0.72.1
 - **CRITICAL FIX (AD-165)**: Upload showed "3 faces extracted, 3 added to Inbox" but data never appeared in UI. Root cause: TWO bugs — (1) background thread wrote to disk but never invalidated in-memory caches (_photo_cache, _face_data_cache, _face_to_photo_cache, _photo_registry_cache, _photo_id_aliases), (2) R2 upload ran in status polling endpoint after background thread deleted staging directory.
 - **Fix**: Moved R2 upload inside background thread (before staging cleanup). Added cache invalidation (all 5 caches → None) after successful processing. Added embeddings.npy safety gate to init_railway_volume.py.

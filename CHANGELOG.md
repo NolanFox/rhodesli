@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.73.0] — 2026-02-25 (Session 67: Hook Enforcement System)
+
+### Added — Hook-Enforced Harness (AD-166)
+- Stop hook (`session-stop-gate.sh`): Blocks session end until assessment exists, phases logged, screenshots reviewed, b-path written if failures. Uses `stop_hook_active` to prevent infinite loops.
+- PreCompact hook (manual): Blocks `/compact` via exit code 2 — use `/clear` instead.
+- PreCompact hook (auto): Injects session-specific recovery context into compacted context.
+- UserPromptSubmit hook: Injects parallelization reminder before every prompt.
+- PreToolUse + PostToolUse: Existing test-before-commit and AD reminder preserved.
+- All hooks use python3 for JSON parsing (jq not installed).
+
+### Added — Session Runner
+- `scripts/run_session.sh`: Phase-splitting runner for headless (-p) mode with true context isolation.
+- Each phase runs as independent `claude -p` call with fresh context window.
+- `/clear` investigation: documented as interactive-only, not available in pipe mode.
+
+### Fixed — Recovery Instructions
+- `recovery-instructions.sh` now session-agnostic (was hardcoded to session 55).
+
+### Deferred Subagent Invocations (from sessions 66/66b)
+- ux-reviewer: Reviewed 6 screenshots from session 65b. Found 8 new issues (1 P1, 4 P2, 3 P3).
+- session-evaluator: Independent evaluation of session 66. Found Phases 4/5/6 were PARTIAL (self-assessment rated all PASS).
+- enrichment validation: Confirmed GEDCOM tokens 400-3700+, family names in Gemini output.
+
+### Tests
+- 3002 app tests passing (unchanged — this session is harness/docs only)
+- Hook test scenarios: 8/8 passing (stop gate, PreCompact, UserPromptSubmit, recovery)
+
 ## [v0.72.1] — 2026-02-25 (Session 66b: Upload Silent Data Loss Fix)
 
 ### Fixed — CRITICAL: Upload Silent Data Loss (AD-165)

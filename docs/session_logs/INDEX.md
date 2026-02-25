@@ -52,6 +52,7 @@
 | 65D | 2026-02-24 | [log](session-65d-log.md) | [assess](../assessments/session-65d-assessment.md) | [prompt](../prompts/session-65d-prompt.md) | [ctx](../session_context/session-65d-context.md) | Complete |
 | 66 | 2026-02-24 | [log](session-66-log.md) | [assess](../assessments/session-66-assessment.md) | [prompt](../prompts/session-66-prompt.md) | [ctx](../session_context/session-66-context.md) | Complete |
 | 66B | 2026-02-25 | [log](session-66b-log.md) | [assess](../assessments/session-66b-assessment.md) | [prompt](../prompts/session-66b-prompt.md) | [ctx](../session_context/session-66b-context.md) | Complete |
+| 67 | 2026-02-25 | [log](session-67-log.md) | [assess](../assessments/session-67-assessment.md) | [prompt](../prompts/session-67-prompt.md) | [ctx](../session_context/session-67-context.md) | Complete |
 
 ## B-Path Analysis
 
@@ -72,7 +73,7 @@ the original session scope was completed, blocked, or required follow-up work.
 | 66 | Yes (B) | Critical fix | 66B=upload silent data loss fix (cache + R2 race) |
 
 ## Session Analytics
-- **Total sessions tracked:** 45 (47B through 66B)
+- **Total sessions tracked:** 46 (47B through 67)
 - **Complete** (has log): 18
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14

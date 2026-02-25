@@ -20,6 +20,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - ~~**UX-044/052**: Compare/Estimate upload messaging~~ FIXED (Session 49D/49E)
 
 ### P1 — Significant Friction
+- **UX-103**: Full-bleed photo view has no CTAs, overlays, or metadata (Session 67 UX review)
 - **UX-037-038**: Merge direction unintuitive + operations on merged-away IDs return 200 silently
 - **UX-039**: No admin controls on /person/ page (no rename/confirm/merge)
 - **UX-042**: /identify/{id} shareable page has no link to source photo (critical for community onboarding)
@@ -28,6 +29,12 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **UX-080**: 404 page unstyled — Tailwind not loading
 - **UX-081**: About page missing navbar
 - **UX-092**: Birth year Save Edit race condition (click interference)
+
+### P2 — From Session 67 UX Review
+- **UX-104**: Compare "Compare Selected Faces" button not disabled before prerequisites met
+- **UX-105**: Missing "Help Identify" CTA for photos with all-unidentified faces
+- **UX-106**: Inconsistent contribution CTA phrasing ("Do you know?" vs "Can you help?")
+- **UX-107**: "Identified" badge on person page has no tooltip or explanation
 
 ### Deferred from Earlier Audits (Medium/Low)
 - **M2**: Compare file input lacks preview feedback
