@@ -1,35 +1,47 @@
-# Session 66 Worktree Results (Combined)
+# LoRA Training Data Audit Results
 
-## Subagent A: Enrichment Pipeline Validation
+**Date:** 2026-02-25
+**Full report:** `docs/analysis/lora_training_data_audit.md`
 
-### What Was Done
+## Summary
 
-1. **Dry-Run Mode Added** to `scripts/run_combined_pipeline.py` — builds prompts and logs token counts without calling Gemini API
-2. **Dry-Run on 10 Photos** (5 GEDCOM-linked, 5 unlinked):
-   - Bare prompts: 419-461 tokens | Enriched: 592-4,200 tokens | GEDCOM context alone: 158-3,717 tokens
-   - 4 of 5 enriched photos reach 400+ tokens, confirming AD-159
-3. **5 Real Gemini API Calls** — total cost $0.06, all logged to gemini_api_calls table
-4. **Bug Fix**: `_find_identity_for_face()` returned INBOX identities instead of CONFIRMED — fixed to prefer CONFIRMED state
+| Metric | Value |
+|--------|-------|
+| Total identity records | 775 (662 active, 113 merged) |
+| Confirmed identities | 54 (8 with 2+ anchors) |
+| Total anchor faces | 573 |
+| Same-identity positive pairs | **221** |
+| Cross-identity negative pairs | **3,033** |
+| Embedding quality (confirmed) | 100% in medium band (17.9-27.9) |
+| Missing embeddings | 0 |
+| Class imbalance (Gini) | 0.505 (moderate) |
 
-| File | Change |
-|------|--------|
-| `scripts/run_combined_pipeline.py` | Added `--dry-run` flag |
-| `rhodesli_ml/gedcom_context.py` | Fixed identity priority bug |
-| `docs/analysis/enrichment_validation_66.md` | Full validation report |
+## Verdict: MARGINAL -- Proceed with Caution
 
-## Subagent B: Portfolio ML Pipeline Writeup
+The dataset **meets minimum thresholds** (100+ positive, 100+ negative) but falls
+short of ideal (500+) on positive pairs. Three identities (Big Leon, Moise,
+Victoria Cukran) contribute 80% of positive pairs.
 
-Created `docs/portfolio/ml_pipeline_writeup.md` (134 lines) — technical writeup of the full ML pipeline for interview portfolio. Covers face detection, similarity calibration (AUC 0.9577), date estimation (CORAL), Gemini alignment with GEDCOM enrichment, and human-in-the-loop architecture.
+## Key Findings
 
-## Subagent C: GEDCOM Admin UI
+1. **221 positive pairs** from 8 multi-anchor identities, all from unique photos.
+2. **3,033 negative pairs** (251 explicit + 2,782 cross-identity) -- strong.
+3. **PFE embeddings** (mu + sigma_sq, 512-dim) -- uncertainty estimates available
+   for weighted contrastive loss.
+4. **Class imbalance** is the primary risk -- pair sampling strategy needed.
 
-Enhanced `/admin/gedcom` with version management UI (AD-164):
-- Version info panel, version history, re-enrichment queue display
-- Upload/preview/apply/cancel flow for GEDCOM updates
-- 25 tests in `tests/test_gedcom_admin.py`
+## Recommendations Before Training
 
-| File | Change |
-|------|--------|
-| `app/main.py` | +333 lines for GEDCOM admin routes |
-| `docs/ml/ALGORITHMIC_DECISIONS.md` | AD-164 entry |
-| `tests/test_gedcom_admin.py` | 25 tests (286 lines) |
+1. **Admin review priority**: Confirm candidates for Victor Capelluto (+28 pairs),
+   Vida Capeluto (+105 pairs), Big Leon candidates (+up to 300 pairs).
+2. Use inverse-frequency pair sampling and per-identity pair caps (20-25).
+3. Freeze all but final 2-3 InsightFace blocks.
+4. Recalibrate isotonic regression after training.
+
+## Quick-Win Actions (Admin Review)
+
+Confirming candidates for just 3 identities could boost positive pairs from
+221 to ~500+, crossing the ideal threshold:
+- Vida Capeluto: 15 candidates -> +105 pairs
+- Big Leon Capeluto: 12 candidates -> +up to 300 pairs
+- Victor Capelluto: 7 candidates -> +28 pairs
