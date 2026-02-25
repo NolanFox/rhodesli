@@ -1,0 +1,39 @@
+{
+  "batch_id": "batch_combined_20260224_114350",
+  "model": "gemini-3.1-pro-preview",
+  "total_photos": 3,
+  "success": 2,
+  "errors": 1,
+  "skipped": 0,
+  "gedcom_enriched": 0,
+  "total_cost": 0.0132,
+  "results": [
+    {
+      "photo_id": "a3d2695fe0804844",
+      "status": "success",
+      "faces_detected": 3,
+      "faces_described": 3,
+      "elapsed": 36.6,
+      "input_tokens": 1593,
+      "output_tokens": 391,
+      "cost": 0.0079,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "a09088b188d5f4f5",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 56.5,
+      "input_tokens": 1554,
+      "output_tokens": 186,
+      "cost": 0.0053,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "f50118e7db8d6ac5",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    }
+  ]
+}
