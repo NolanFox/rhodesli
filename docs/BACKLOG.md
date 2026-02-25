@@ -311,6 +311,7 @@ PostgreSQL migration, CI/CD, model evaluation, multi-tenant.
 - [ ] HARNESS-001: Evaluate Ralph Wiggum for overnight runs after 3+ sessions with verification gate (see HD-001)
 - [ ] HARNESS-002: Consider native Tasks system for sessions with independent phases (see HD-001)
 - [ ] HARNESS-003: Build session log analyzer script for docs/session_logs/*.md patterns (see HD-005)
+- [ ] HARNESS-004: `run_session.sh` — manual test only, not a numbered session phase. Script splits prompts at `## PHASE` markers and runs each as separate `claude -p` invocations. Cannot be tested from within a Claude session (nested `claude -p` not supported). Session 67 Phase 5 created it, Session 68 Phase 5 confirmed it cannot run inside Claude. Needs manual validation outside a session. See `scripts/run_session.sh`, HD-018.
 
 ---
 
