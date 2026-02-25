@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash .claude/hooks/session-stop-gate.sh",
+            "command": "python3 .claude/hooks/session-stop-gate.py",
             "timeout": 30
           }
         ]
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'BLOCKED: /compact is BANNED in Rhodesli. Use /clear instead. /compact is lossy and causes instruction amnesia.' >&2 && exit 2",
+            "command": "echo 'WARNING: /compact is BANNED in Rhodesli. Use /clear instead. /compact is lossy and causes instruction amnesia. This will be logged as a RED FLAG in session assessment.' >&2 && exit 0",
             "timeout": 5
           }
         ]
@@ -53,6 +53,18 @@
           {
             "type": "command",
             "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then cd \"$CLAUDE_PROJECT_DIR\" && source venv/bin/activate && python -m pytest tests/ -x -q --ignore=tests/e2e/ 2>&1 | tail -5; fi'"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-compact-recovery.sh\"",
+            "timeout": 15
           }
         ]
       }

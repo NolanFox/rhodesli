@@ -37,3 +37,15 @@ Notes:
 - 7 subagents confirmed: ux-reviewer, session-evaluator, fix-prompt-writer, design-check, parallel-optimizer, merge-resolver, enrichment-worker
 - Health endpoint is at /health not /api/health (production root returns 200)
 - PreCompact exit 2 confirmed: does NOT block compaction (matches research)
+
+### Phase 2: Upgrade Hooks — COMPLETE
+- [x] 2A: Python stop gate (.claude/hooks/session-stop-gate.py)
+  - Structural regex: only matches FAIL in phase header lines, not arbitrary text
+  - 4 test scenarios all pass: no assessment (block), with assessment (approve), FAIL without b-path (block), screenshots without UX review (block)
+  - settings.json updated to call python3 instead of bash
+- [x] 2B: PreCompact recovery strategy
+  - Manual: changed from exit 2 (doesn't block) to exit 0 with loud warning
+  - Created post-compact-recovery.sh: re-injects CLAUDE.md, prompt, SESSION_LOG after compaction
+  - SessionStart hook registered with "compact" matcher
+- [x] 2C: CLAUDE.md updated (hook section rewritten, 71 lines, under 80)
+- [x] AD-167 written: Python stop gate + PreCompact recovery strategy

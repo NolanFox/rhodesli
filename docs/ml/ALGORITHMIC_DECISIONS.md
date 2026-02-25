@@ -1869,11 +1869,22 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `.claude/settings.json`, `.claude/hooks/session-stop-gate.sh`, `.claude/hooks/recovery-instructions.sh`
 - **Tests**: Manual verification in Phase 2 of session 67.
 
+### AD-167: Hook Upgrade — Python Stop Gate, PreCompact Recovery Strategy
+- **Date**: 2026-02-25 | **Session**: 68
+- **Context**: Session 67's bash stop gate used grep patterns which caused false positive (matched "FAIL" in test description text). PreCompact `exit 2` confirmed to NOT block compaction per Claude Code docs.
+- **Decision**: Two upgrades:
+  1. **Python stop gate** (`.claude/hooks/session-stop-gate.py`): Replaces bash grep with structural regex that only matches FAIL in phase header lines (`^###?\s+Phase\s+\d+.*?FAIL`). Avoids false positives from FAIL appearing in arbitrary text content.
+  2. **PreCompact recovery strategy**: Since `exit 2` cannot block compaction, changed approach — PreCompact manual now warns (exit 0) instead of false blocking (exit 2). Added `SessionStart` hook with "compact" matcher that re-injects all context from disk after compaction occurs.
+- **Rejected**: (a) Keeping bash grep — already produced false positive. (b) Agent-type stop hook — fires every turn, too expensive. (c) Doing nothing about PreCompact — leaving broken exit 2 is misleading.
+- **Key insight**: /compact cannot be mechanically blocked. The ban is enforced by convention (CLAUDE.md rule) + assessment RED FLAG (session-evaluator checks).
+- **Affects**: `.claude/settings.json`, `.claude/hooks/session-stop-gate.py` (new), `.claude/hooks/post-compact-recovery.sh` (new)
+- **Tests**: 4 scenarios verified — no assessment (block), with assessment (approve), FAIL without b-path (block), screenshots without UX review (block).
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-167)
+1. Add a new entry with AD-XXX format (next: AD-168)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

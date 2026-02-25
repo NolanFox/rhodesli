@@ -41,12 +41,13 @@ See `.claude/skills/deploy-verify.md` — Deploy + production smoke test
 @tasks/lessons.md for past mistakes and prevention rules
 
 ## Hook Enforcement (Deterministic, .claude/settings.json)
-- **Stop**: Blocks session end until assessment file exists + phases logged + b-path if failures
-- **PreCompact (manual)**: BLOCKS /compact with exit 2 (use /clear instead)
-- **PreCompact (auto)**: Injects recovery instructions into compacted context
+- **Stop (Python)**: Blocks session end until: assessment exists, phases logged, b-path for failures, UX review if screenshots exist
+- **PreCompact (manual)**: Warning + transcript backup (CANNOT block — confirmed)
+- **PreCompact (auto) / SessionStart (compact)**: Re-injects all context from disk after compaction
 - **UserPromptSubmit**: Parallelization reminder injected before every prompt
 - **PreToolUse (Bash)**: Runs pytest before git commit
 - **PostToolUse (Edit|Write)**: AD reminder for ML/core file edits
+NOTE: /compact banned by convention (CLAUDE.md rule + assessment RED FLAG). Cannot be mechanically blocked.
 
 ## Mandatory Session Outputs
 Every session MUST produce before final commit:
