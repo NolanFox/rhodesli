@@ -72,6 +72,21 @@ class TestCreateIdentityFromTag:
         response = client.post("/api/face/create-identity?face_id=test&name=  ")
         assert response.status_code == 400
 
+    def test_create_identity_passes_user_source(self, client):
+        """BUG-1 regression: rename_identity must receive user_source parameter."""
+        from unittest.mock import MagicMock
+        registry = MagicMock()
+        source_identity = {"identity_id": "id-abc", "name": "Unidentified Person 1", "state": "INBOX"}
+        registry.get_identity.return_value = source_identity
+        with patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_identity_for_face", return_value=source_identity), \
+             patch("app.main.save_registry"), \
+             patch("app.main.get_photo_id_for_face", return_value=None):
+            response = client.post("/api/face/create-identity?face_id=face-1&name=Sol%20Menashe")
+            assert response.status_code == 200
+            registry.rename_identity.assert_called_once_with("id-abc", "Sol Menashe", user_source="face_tag")
+            registry.confirm_identity.assert_called_once_with("id-abc", user_source="face_tag")
+
 
 class TestKeyboardShortcuts:
     """Focus mode includes keyboard shortcut support."""

@@ -9923,7 +9923,7 @@ def photo_view_content(
             _enter_handler = (
                 f"on keydown[key=='Enter'] halt the event "
                 f"then set firstBtn to first <button/> in #{tag_results_id} "
-                f"then if firstBtn click firstBtn"
+                f"then if firstBtn click firstBtn end"
             )
             _focus_handler = "on load focus() me" if is_seq_active else ""
             _hyperscript_val = f"{_enter_handler} {_focus_handler}".strip()
@@ -19084,7 +19084,8 @@ def public_photo_page(
                                 Input(type="text", name="collection",
                                       value=photo.get("collection", ""),
                                       cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48",
-                                      list="photo-collections"),
+                                      list="photo-collections",
+                                      onfocus="this.select()"),
                                 Button("Save", type="submit",
                                        cls="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded ml-1"),
                                 Div(id=f"collection-status-{photo_id}", cls="inline ml-1"),
@@ -20003,7 +20004,14 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
         )
 
     identity_id = source_identity["identity_id"]
-    registry.rename_identity(identity_id, name)
+    try:
+        registry.rename_identity(identity_id, name, user_source="face_tag")
+    except (KeyError, ValueError) as e:
+        return Response(
+            to_xml(toast(f"Could not rename: {e}", "error")),
+            status_code=400,
+            headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
+        )
     # Auto-confirm when naming from tag dropdown (tagging = "this IS that person")
     current_state = source_identity.get("state", "INBOX")
     if current_state in ("INBOX", "PROPOSED", "SKIPPED"):
