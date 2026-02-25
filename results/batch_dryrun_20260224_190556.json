@@ -1,0 +1,142 @@
+{
+  "batch_id": "batch_dryrun_20260224_190556",
+  "model": "gemini-3.1-pro-preview",
+  "mode": "dry-run",
+  "total_photos": 10,
+  "success": 10,
+  "errors": 0,
+  "skipped": 0,
+  "gedcom_enriched": 5,
+  "total_cost": 0,
+  "results": [
+    {
+      "photo_id": "a09088b188d5f4f5",
+      "status": "dry_run",
+      "faces_count": 1,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 419,
+      "identified_faces": [],
+      "photo_path": "Image 054_compress.jpg"
+    },
+    {
+      "photo_id": "f50118e7db8d6ac5",
+      "status": "dry_run",
+      "faces_count": 2,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 427,
+      "identified_faces": [],
+      "photo_path": "Image 006_compress.jpg"
+    },
+    {
+      "photo_id": "213d4dcc10a7745d",
+      "status": "dry_run",
+      "faces_count": 1,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 419,
+      "identified_faces": [],
+      "photo_path": "Image 053_compress.jpg"
+    },
+    {
+      "photo_id": "2b0e354d49e51d29",
+      "status": "dry_run",
+      "faces_count": 1,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 419,
+      "identified_faces": [],
+      "photo_path": "Image 936_compress.jpg"
+    },
+    {
+      "photo_id": "d4fd0727068369ec",
+      "status": "dry_run",
+      "faces_count": 6,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 461,
+      "identified_faces": [],
+      "photo_path": "Image 931_compress.jpg"
+    },
+    {
+      "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+      "status": "dry_run",
+      "faces_count": 8,
+      "has_gedcom": true,
+      "gedcom_token_count": 1414,
+      "enrichment_level": "full",
+      "prompt_token_count": 1896,
+      "identified_faces": [
+        "inbox_209af5bffddc -> Victoria Capuano Capeluto",
+        "inbox_41be72d02213 -> Victoria Cukran Capeluto",
+        "inbox_acff04fd8c48 -> Big Leon Capeluto",
+        "inbox_f554b2a8d0fb -> Moise Capeluto"
+      ],
+      "photo_path": "data/uploads/b5e8a89e/603576167.481802.jpg"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+      "status": "dry_run",
+      "faces_count": 4,
+      "has_gedcom": true,
+      "gedcom_token_count": 2874,
+      "enrichment_level": "full",
+      "prompt_token_count": 3324,
+      "identified_faces": [
+        "inbox_22d81a2ed078 -> Betty Capeluto Fox",
+        "inbox_7a6bee77eb84 -> Debbie Fox Schapiro",
+        "inbox_de6c29f39e6d -> Big Leon Capeluto",
+        "inbox_de99078f4995 -> Victoria Capuano Capeluto"
+      ],
+      "photo_path": "raw_photos/596771420.719238.jpg"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+      "status": "dry_run",
+      "faces_count": 8,
+      "has_gedcom": true,
+      "gedcom_token_count": 3717,
+      "enrichment_level": "full",
+      "prompt_token_count": 4200,
+      "identified_faces": [
+        "inbox_251a55eeaedc -> Victoria Capuano Capeluto",
+        "inbox_3b59588cdc20 -> Big Leon Capeluto",
+        "inbox_441f60c145fb -> Selma Capeluto"
+      ],
+      "photo_path": "raw_photos/596771054.717436.jpg"
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+      "status": "dry_run",
+      "faces_count": 2,
+      "has_gedcom": true,
+      "gedcom_token_count": 158,
+      "enrichment_level": "partial",
+      "prompt_token_count": 592,
+      "identified_faces": [
+        "inbox_08cde0472d2f -> Abraham Capuano",
+        "inbox_0b5fd3625bbe -> Hanula Mosafir Capuano"
+      ],
+      "photo_path": "raw_photos/Image_567.jpg"
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "status": "dry_run",
+      "faces_count": 2,
+      "has_gedcom": true,
+      "gedcom_token_count": 2489,
+      "enrichment_level": "full",
+      "prompt_token_count": 2921,
+      "identified_faces": [
+        "inbox_88ecd8c22c6d -> Selma Capouya Capouano"
+      ],
+      "photo_path": "raw_photos/pending/batch_ancestry/Wedding_of_David_Capouano_and_Selma_Capouya.jpeg"
+    }
+  ]
+}

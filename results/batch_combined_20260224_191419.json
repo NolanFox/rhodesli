@@ -1,0 +1,62 @@
+{
+  "batch_id": "batch_combined_20260224_191419",
+  "model": "gemini-3.1-pro-preview",
+  "mode": "live",
+  "total_photos": 5,
+  "success": 4,
+  "errors": 1,
+  "skipped": 0,
+  "gedcom_enriched": 2,
+  "total_cost": 0.0603,
+  "results": [
+    {
+      "photo_id": "a09088b188d5f4f5",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 7.2,
+      "input_tokens": 1554,
+      "output_tokens": 199,
+      "cost": 0.0055,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "d4fd0727068369ec",
+      "status": "success",
+      "faces_detected": 6,
+      "faces_described": 6,
+      "elapsed": 11.4,
+      "input_tokens": 1695,
+      "output_tokens": 712,
+      "cost": 0.0119,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+      "status": "success",
+      "faces_detected": 4,
+      "faces_described": 4,
+      "elapsed": 14.3,
+      "input_tokens": 5795,
+      "output_tokens": 464,
+      "cost": 0.0172,
+      "has_gedcom": true
+    },
+    {
+      "photo_id": "inbox_staged-20260210-182610_11_596771054.717436",
+      "status": "success",
+      "faces_detected": 8,
+      "faces_described": 8,
+      "elapsed": 14.2,
+      "input_tokens": 7001,
+      "output_tokens": 977,
+      "cost": 0.0257,
+      "has_gedcom": true
+    },
+    {
+      "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    }
+  ]
+}

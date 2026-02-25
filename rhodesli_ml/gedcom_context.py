@@ -206,13 +206,21 @@ def _filter_events_by_date(events, photo_date, window=15):
 
 
 def _find_identity_for_face(face_id, identities):
-    """Find which identity a face belongs to."""
+    """Find which identity a face belongs to.
+
+    Prefers CONFIRMED identities over PROPOSED/INBOX, since a face_id
+    may appear in multiple identities (e.g., INBOX + CONFIRMED).
+    """
+    fallback = None
     for identity_id, data in identities.items():
         anchor_ids = data.get("anchor_ids", [])
         candidate_ids = data.get("candidate_ids", [])
         if face_id in anchor_ids or face_id in candidate_ids:
-            return identity_id
-    return None
+            if data.get("state") == "CONFIRMED":
+                return identity_id
+            if fallback is None:
+                fallback = identity_id
+    return fallback
 
 
 def _get_co_occurring_people(identified_faces, identities, photo_index,
