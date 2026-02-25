@@ -49,3 +49,16 @@ Notes:
   - SessionStart hook registered with "compact" matcher
 - [x] 2C: CLAUDE.md updated (hook section rewritten, 71 lines, under 80)
 - [x] AD-167 written: Python stop gate + PreCompact recovery strategy
+
+### Phase 3: Parallel Execution — COMPLETE
+Three worktree-isolated subagents spawned and completed:
+- **Subagent A** (UX-103): Back nav + metadata overlay + mobile menu. 14 new tests, 3 updated. All pass.
+- **Subagent B** (LoRA audit): 221 positive pairs, 3033 negatives. MARGINAL readiness — need admin review of 3 identities for 500+.
+- **Subagent C** (Photo retry): 142/144 already retried ($2.04). 2 permanently blocked by Gemini child safety content filter. No additional spend needed.
+
+### Phase 4: Merge + Browser Verify — COMPLETE
+- [x] Merged LoRA audit (fast-forward, clean)
+- [x] Merged photo retry (RESULTS.md conflict resolved)
+- [x] Merged UX-103 (RESULTS.md conflict resolved, app/main.py + tests merged clean)
+- [x] Full test suite: 3064 passed, 12 skipped (up from 3050 — 14 new UX-103 tests)
+- [x] Worktrees cleaned up, branches deleted
