@@ -166,6 +166,50 @@ class TestIsVolumeUserModified:
         with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
             assert _is_volume_user_modified(mock_volume, "identities.json") is False
 
+    def test_blocks_embeddings_more_entries(self, mock_volume, mock_bundle):
+        """AD-165: embeddings.npy must be protected when volume has more entries."""
+        import numpy as np
+        from scripts.init_railway_volume import _is_volume_user_modified
+
+        # Volume: 550 entries (upload added new faces)
+        volume_embeddings = np.array([{"filename": f"img_{i}.jpg"} for i in range(550)], dtype=object)
+        np.save(str(mock_volume / "embeddings.npy"), volume_embeddings)
+
+        # Bundle: 547 entries (stale deploy data)
+        bundle_embeddings = np.array([{"filename": f"img_{i}.jpg"} for i in range(547)], dtype=object)
+        np.save(str(mock_bundle / "embeddings.npy"), bundle_embeddings)
+
+        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
+            assert _is_volume_user_modified(mock_volume, "embeddings.npy") is True
+
+    def test_allows_embeddings_fewer_entries(self, mock_volume, mock_bundle):
+        """AD-165: embeddings.npy can be overwritten when bundle has more entries."""
+        import numpy as np
+        from scripts.init_railway_volume import _is_volume_user_modified
+
+        # Volume: 547 entries
+        volume_embeddings = np.array([{"filename": f"img_{i}.jpg"} for i in range(547)], dtype=object)
+        np.save(str(mock_volume / "embeddings.npy"), volume_embeddings)
+
+        # Bundle: 550 entries (pipeline generated more)
+        bundle_embeddings = np.array([{"filename": f"img_{i}.jpg"} for i in range(550)], dtype=object)
+        np.save(str(mock_bundle / "embeddings.npy"), bundle_embeddings)
+
+        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
+            assert _is_volume_user_modified(mock_volume, "embeddings.npy") is False
+
+    def test_allows_embeddings_equal_entries(self, mock_volume, mock_bundle):
+        """AD-165: embeddings.npy can be overwritten when counts are equal."""
+        import numpy as np
+        from scripts.init_railway_volume import _is_volume_user_modified
+
+        entries = np.array([{"filename": f"img_{i}.jpg"} for i in range(547)], dtype=object)
+        np.save(str(mock_volume / "embeddings.npy"), entries)
+        np.save(str(mock_bundle / "embeddings.npy"), entries)
+
+        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
+            assert _is_volume_user_modified(mock_volume, "embeddings.npy") is False
+
 
 class TestAutoBackupVolume:
     """Tests for _auto_backup_volume — pre-sync backup."""

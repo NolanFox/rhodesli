@@ -222,6 +222,7 @@ def _is_volume_user_modified(data_dir: Path, filename: str) -> bool:
 
     For identities.json: volume has MORE confirmed identities than bundle.
     For photo_index.json: volume has MORE photos than bundle.
+    For embeddings.npy: volume has MORE entries than bundle (AD-165).
     For other files: always returns False (safe to overwrite).
     """
     import json
@@ -256,6 +257,24 @@ def _is_volume_user_modified(data_dir: Path, filename: str) -> bool:
                     f"[init] SAFETY GATE: Volume {filename} has {v_count} "
                     f"photos but bundle only has {b_count}. "
                     f"Refusing to overwrite — volume has user modifications."
+                )
+                return True
+        except Exception:
+            pass
+
+    elif filename == "embeddings.npy":
+        # AD-165: embeddings.npy had NO safety gate — every deploy overwrote it,
+        # destroying any embeddings added by the upload pipeline. Compare entry
+        # count: if volume has more entries, it has upload data we must preserve.
+        try:
+            import numpy as np
+            v_entries = len(np.load(str(volume_file), allow_pickle=True))
+            b_entries = len(np.load(str(bundle_file), allow_pickle=True))
+            if v_entries > b_entries:
+                print(
+                    f"[init] SAFETY GATE: Volume {filename} has {v_entries} "
+                    f"embeddings but bundle only has {b_entries}. "
+                    f"Refusing to overwrite — volume has upload data."
                 )
                 return True
         except Exception:
