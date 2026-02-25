@@ -96,7 +96,24 @@ app, rt = fast_app(
     hdrs=(
         Meta(name="viewport", content="width=device-width, initial-scale=1"),
         Link(rel="icon", type="image/svg+xml", href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%234f46e5'/%3E%3Ctext x='16' y='23' font-size='20' font-family='serif' font-weight='bold' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E"),
+        # Google Fonts: Playfair Display (serif) for editorial archival headings (DD-001)
+        Link(rel="preconnect", href="https://fonts.googleapis.com"),
+        Link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin="anonymous"),
+        Link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"),
         Script(src="https://cdn.tailwindcss.com"),
+        # Tailwind config: extend font-serif to use Playfair Display (DD-001)
+        Script("""
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            serif: ['"Playfair Display"', 'Georgia', '"Times New Roman"', 'serif'],
+                            display: ['"Playfair Display"', 'Georgia', '"Times New Roman"', 'serif'],
+                        }
+                    }
+                }
+            }
+        """),
         # Hyperscript required for _="on click..." modal interactions
         Script(src="https://unpkg.com/hyperscript.org@0.9.12"),
         # Global: handle auth error hash fragments and recovery redirects
@@ -2969,7 +2986,7 @@ def mobile_header() -> Div:
             type="button",
             aria_label="Open menu",
         ),
-        Span("Rhodesli", cls="text-lg font-bold text-white"),
+        Span("Rhodesli", cls="text-lg font-display font-bold text-white"),
         cls="mobile-header fixed top-0 left-0 right-0 h-14 bg-slate-800 border-b border-slate-700 "
             "flex items-center gap-3 px-4 z-20",
         id="mobile-header",
@@ -3002,7 +3019,7 @@ def _public_nav_links(active: str = "", user=None) -> list:
 
 
 def _public_page_nav(nav_links: list, *, active: str = "", user=None,
-                     max_w: str = "max-w-5xl", font_cls: str = "text-lg font-serif font-bold text-white",
+                     max_w: str = "max-w-5xl", font_cls: str = "text-lg font-display font-bold text-white",
                      sticky: bool = True, fixed: bool = False,
                      extra_links: list = None, include_admin_bar: bool = True) -> object:
     """Build a public page nav bar with mobile hamburger menu.
@@ -3036,7 +3053,7 @@ def _public_page_nav(nav_links: list, *, active: str = "", user=None,
         # Menu panel
         Div(
             Div(
-                Span("Rhodesli", cls="text-lg font-bold text-white"),
+                Span("Rhodesli", cls="text-lg font-display font-bold text-white"),
                 Button(
                     NotStr(close_svg),
                     cls="text-slate-400 hover:text-white p-1",
@@ -3176,8 +3193,8 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
         # Header with collapse toggle
         Div(
             A(
-                H1("Rhodesli", cls="sidebar-label text-lg font-bold text-white leading-tight"),
-                P("Identity System", cls="sidebar-label text-xs text-slate-400 mt-0.5"),
+                H1("Rhodesli", cls="sidebar-label text-lg font-bold text-white leading-tight font-display"),
+                P("Heritage Archive", cls="sidebar-label text-xs text-amber-700/80 mt-0.5 tracking-wide uppercase"),
                 href="/",
                 cls="flex-1 min-w-0 no-underline hover:opacity-80 transition-opacity"
             ),
@@ -3366,7 +3383,7 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
     """
     header_content = [
         Div(
-            H2(title, cls="text-2xl font-bold text-white"),
+            H2(title, cls="text-2xl font-bold text-white font-display"),
             P(subtitle, cls="text-sm text-slate-400 mt-1"),
         )
     ]
@@ -3634,7 +3651,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             ),
             # Right: Details + Actions
             Div(
-                H3(name, cls="text-xl font-semibold text-white"),
+                H3(name, cls="text-xl font-semibold text-white font-display"),
                 P(
                     f"{face_count} face{'s' if face_count != 1 else ''}",
                     cls="text-sm text-slate-400 mt-1"
@@ -3678,7 +3695,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             ),
             cls="flex flex-col sm:flex-row gap-4 sm:gap-6"
         ),
-        cls="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-4 sm:p-6",
+        cls="identity-card-archival rounded-xl p-4 sm:p-6",
         id="focus-card"
     )
 
@@ -6147,17 +6164,17 @@ def face_card(
         )
 
     return Div(
-        # Image container with era badge
+        # Image container with era badge — archival photograph feel (DD-002)
         Div(
             Img(
                 src=crop_url,
                 alt=face_id,
-                cls="w-full aspect-square object-cover sepia-[.3] hover:sepia-0 transition-all duration-300"
+                cls="w-full aspect-square object-cover sepia-[.15] hover:sepia-0 transition-all duration-300"
             ),
             era_badge(era) if era else None,
-            cls="relative border border-slate-600 bg-slate-700"
+            cls="relative border border-amber-900/30 rounded-sm overflow-hidden"
         ),
-        # Metadata and actions
+        # Metadata and actions — compact layout
         Div(
             P(
                 f"Quality: {quality:.2f}",
@@ -6169,9 +6186,9 @@ def face_card(
                 detach_btn,
                 cls="flex items-center"
             ) if view_photo_btn or detach_btn or full_page_link else None,
-            cls="mt-2"
+            cls="mt-1.5 px-0.5"
         ),
-        cls="bg-slate-700 border border-slate-600 p-2 rounded shadow-md hover:shadow-lg transition-shadow",
+        cls="face-card-archival p-1.5 rounded",
         # Fix: Apply the safe ID to the container
         id=make_css_id(face_id)
     )
@@ -6518,7 +6535,7 @@ def name_display(identity_id: str, name: str, is_admin: bool = True,
         type="button",
     ) if is_admin else None
     return Div(
-        H3(display_name, cls="text-lg font-serif font-bold text-white"),
+        H3(display_name, cls="text-lg font-display font-bold text-white"),
         edit_btn,
         id=f"name-{identity_id}",
         cls="flex items-center"
@@ -6748,7 +6765,7 @@ def identity_card(
         Div(
             Div(
                 *face_cards,
-                cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+                cls="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2",
             ),
             pagination,
             id=f"faces-{identity_id}",
@@ -6759,7 +6776,7 @@ def identity_card(
         review_action_buttons(identity_id, state, is_admin=is_admin),
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
-        cls=f"identity-card bg-slate-800 border border-slate-700 border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r shadow-lg mb-4",
+        cls=f"identity-card identity-card-archival border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r mb-4",
         id=f"identity-{identity_id}",
         data_name=(raw_name or "").lower()
     )
@@ -7875,8 +7892,8 @@ def landing_page(stats, featured_photos):
         Nav(
             Div(
                 Div(
-                    Span("Rhodesli", cls="text-xl md:text-2xl font-bold text-amber-100 tracking-wide"),
-                    Span("Photo Archive", cls="text-xs text-amber-400/60 ml-2 hidden md:inline tracking-widest uppercase"),
+                    Span("Rhodesli", cls="text-xl md:text-2xl font-bold text-amber-100 tracking-wide font-display"),
+                    Span("Heritage Archive", cls="text-xs text-amber-400/60 ml-2 hidden md:inline tracking-widest uppercase"),
                     cls="flex items-baseline"
                 ),
                 Div(*nav_items, cls="hidden sm:flex items-center gap-4 md:gap-6"),
@@ -7895,7 +7912,7 @@ def landing_page(stats, featured_photos):
                         H1(
                             Span("Preserving the faces and stories", cls="block"),
                             Span("of the Jewish Community of Rhodes", cls="block text-amber-200"),
-                            cls="text-3xl md:text-5xl lg:text-6xl font-bold text-amber-50 leading-tight tracking-tight"
+                            cls="text-3xl md:text-5xl lg:text-6xl font-bold text-amber-50 leading-tight tracking-tight font-display"
                         ),
                         P("A digital archive using face recognition to reconnect generations of a Ladino-speaking "
                           "Sephardic community scattered by history. Browse photographs, identify faces, and help "
@@ -8714,6 +8731,36 @@ def get(section: str = None, view: str = "focus", current: str = None,
         /* Darkroom theme - monospace for data */
         .font-data {
             font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+        }
+        /* Archival display font — serif for headings (DD-001) */
+        .font-display {
+            font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+        }
+        /* Archival face card — warm tones evoking physical photographs (DD-002) */
+        .face-card-archival {
+            background: linear-gradient(145deg, #2a241e 0%, #1e1a15 100%);
+            border: 1px solid #3d3428;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(61, 52, 40, 0.2);
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        .face-card-archival:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(61, 52, 40, 0.3);
+            transform: translateY(-1px);
+        }
+        /* Archival identity card — warm border with photograph feel (DD-002) */
+        .identity-card-archival {
+            background: linear-gradient(180deg, #1e1a15 0%, #1a1714 100%);
+            border: 1px solid #3d3428;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+        }
+        .identity-card-archival:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(61, 52, 40, 0.4);
+        }
+        /* Photo card frame — evoking a mounted print (DD-002) */
+        .photo-card-frame {
+            background: #2a241e;
+            border: 1px solid #3d3428;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(245, 230, 211, 0.03);
         }
         /* Collapsible sidebar */
         .sidebar-container {
@@ -18613,14 +18660,14 @@ def public_photo_page(
                 cls="relative group" if quick_id_btn else "",
             ) if quick_id_btn else crop_el,
             Div(
-                P(name_el, cls="text-sm font-medium text-white mt-2 text-center") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center"),
+                P(name_el, cls="text-sm font-medium text-white mt-2 text-center font-display") if isinstance(name_el, str) else Div(name_el, cls="text-sm font-medium mt-2 text-center font-display"),
                 badge,
                 see_all_link,
                 cls="flex flex-col items-center"
             ),
             quick_id_area,
             id=f"person-{fi['identity_id']}" if fi["identity_id"] else None,
-            cls=f"photo-face-card flex flex-col items-center p-4 bg-slate-800/50 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 hover:bg-slate-700/50 transition-colors",
+            cls=f"photo-face-card photo-card-frame flex flex-col items-center p-4 rounded-xl border {card_border} min-w-[140px] flex-shrink-0 hover:bg-amber-900/10 transition-colors",
         )
 
         if card_href and not quick_id_btn:
