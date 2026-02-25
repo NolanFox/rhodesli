@@ -51,6 +51,7 @@
 | 65C | 2026-02-24 | [recovered](session-65c-log-recovered.md) | [assess](../assessments/session-65c-assessment.md) | [prompt](../prompts/session-65c-prompt.md) | [ctx](../session_context/session-65c-context.md) | Recovered |
 | 65D | 2026-02-24 | [log](session-65d-log.md) | [assess](../assessments/session-65d-assessment.md) | [prompt](../prompts/session-65d-prompt.md) | [ctx](../session_context/session-65d-context.md) | Complete |
 | 66 | 2026-02-24 | [log](session-66-log.md) | [assess](../assessments/session-66-assessment.md) | [prompt](../prompts/session-66-prompt.md) | [ctx](../session_context/session-66-context.md) | Complete |
+| 66B | 2026-02-25 | [log](session-66b-log.md) | [assess](../assessments/session-66b-assessment.md) | [prompt](../prompts/session-66b-prompt.md) | [ctx](../session_context/session-66b-context.md) | Complete |
 
 ## B-Path Analysis
 
@@ -68,14 +69,15 @@ the original session scope was completed, blocked, or required follow-up work.
 | 61 | Yes (B,C) | Verify+research | 61B=verify+optimize, 61C=GEDCOM+model comparison |
 | 64 | Yes (B,C,D) | Execute deferred | 64B=execute deferred, 64C=concerns, 64D=retry |
 | 65 | Yes (A-D) | Multi-phase | 65A=upload fix, 65B=GEDCOM, 65C=upload fix, 65D=disk space |
+| 66 | Yes (B) | Critical fix | 66B=upload silent data loss fix (cache + R2 race) |
 
 ## Session Analytics
-- **Total sessions tracked:** 44 (47B through 66)
+- **Total sessions tracked:** 45 (47B through 66B)
 - **Complete** (has log): 18
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14
 - **Missing** (limited/no artifacts in session_logs/): 7 (54, 54B, 54C, 54D, 54E, 54F, 55B)
 - **Planned:** 0
-- **Sessions with b-paths:** 9 (49, 51, 54, 55, 59, 60, 61, 64, 65)
-- **Total b-path branches:** 23
+- **Sessions with b-paths:** 10 (49, 51, 54, 55, 59, 60, 61, 64, 65, 66)
+- **Total b-path branches:** 24
 - **Gap period:** Sessions 53-55B had weakest archival coverage
