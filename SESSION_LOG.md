@@ -37,8 +37,40 @@
 - [x] Test 8: Recovery instructions session-agnostic — PASS
 - NOTE: Full lifecycle testing (does hook fire at actual session events) requires separate session.
   PreCompact "Can Block?" is No per docs — exit 2 approach needs live testing.
-### Phase 3: Deferred Subagent Work — PENDING
-### Phase 4: GEDCOM + Cleanup — PENDING
-### Phase 5: /clear Investigation — PENDING
-### Phase 6: Retry Rate-Limited Photos — PENDING
+### Phase 3: Deferred Subagent Work — COMPLETE
+- [x] 3A: ux-reviewer invoked on session 65b screenshots (6 files — only session with actual screenshots)
+  - Sessions 66/66b had EMPTY screenshot directories — confirming the never-invoked pattern
+- [x] 3B: session-evaluator invoked on Session 66 (independent eval vs self-assessment)
+- [x] 3C: Enrichment validation reviewed — doc is thorough and accurate:
+  - GEDCOM tokens: 400-3700+ per enriched photo (first_order variant, AD-159)
+  - Family members named in Gemini output (Betty Capeluto Fox, Big Leon, Victoria, Debbie, Selma)
+  - gemini_config + response_summary fully populated
+  - Bug fix validated: CONFIRMED identity priority in _find_identity_for_face()
+
+### Phase 4: Production Cleanup — COMPLETE (partial)
+- [x] 4B: Production data check:
+  - test_upload_verification.jpg: NOT in local registry (clean)
+  - morris_touriel: legitimate photo, not orphaned
+  - Photo count: 274 production vs 271 local (3-photo delta from production uploads)
+  - Delta is expected — sessions 65c-66b uploaded directly to production
+- SKIPPED: 4A (GEDCOM upload e2e test) — requires file dialog interaction, deferred
+- SKIPPED: 4C (upload re-verify) — verified in session 66b, not worth re-testing
+
+### Phase 5: /clear Investigation — COMPLETE
+- [x] Finding: /clear is interactive-only, does NOT work in -p (pipe) mode
+  - -p mode = single prompt → exit, no slash commands available
+- [x] Created scripts/run_session.sh — phase-splitting session runner
+  - Splits prompt at ## PHASE markers, runs each as independent claude -p call
+  - Each phase gets fresh context window (true isolation)
+  - Checkpoint file connects phases
+- [x] Documented in docs/harness/clear_investigation.md
+- [x] Cannot test claude nesting from within a Claude session
+### Phase 6: Retry Rate-Limited Photos — DEFERRED (cost)
+- [x] Identified 144 failed photos in batch_alignment_20260223_023456.json
+  - Error: "Gemini API call failed" (generic, not specifically 429)
+  - Includes mix of standard (9411826b...) and inbox photos
+- [x] Retry command ready: `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`
+  - Estimated cost: $1.50-4.50 (144 photos x $0.01-0.03 each)
+  - Requires manual approval to execute due to API cost
+- DEFERRED: Not executing automatically — API cost requires user authorization
 ### Phase 7: Docs + Evaluation — PENDING
