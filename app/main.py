@@ -22727,7 +22727,13 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
         _json_upload.dump(initial_status, _sf)
 
     def _background_ingest():
-        """Run face detection in background thread using shared hybrid models."""
+        """Run face detection in background thread using shared hybrid models.
+
+        AD-165: This thread handles the FULL pipeline including R2 upload.
+        Previous bug: R2 upload was in the status polling endpoint, but the
+        staging directory was deleted here before the poll could upload.
+        Now: R2 upload happens here, BEFORE staging cleanup.
+        """
         import logging as _bg_logging
         log_path = inbox_dir / f"{job_id}.log"
         try:
@@ -22737,7 +22743,7 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
             _bg_logging.getLogger("core.ingest_inbox").addHandler(file_handler)
 
             from core.ingest_inbox import process_directory
-            process_directory(
+            result = process_directory(
                 directory=job_dir,
                 job_id=job_id,
                 data_dir=data_path,
@@ -22745,6 +22751,56 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
                 collection=collection,
                 prefer_hybrid=True,  # Use already-loaded hybrid models (AD-161)
             )
+
+            # AD-165: Upload to R2 INSIDE the thread, BEFORE staging cleanup.
+            # Previous bug: staging dir was deleted before R2 upload could happen.
+            from core.storage import can_write_r2, upload_bytes_to_r2
+            if can_write_r2() and result.get("status") in ("success", "partial"):
+                try:
+                    import mimetypes
+                    r2_count = 0
+
+                    # Upload original photos from staging directory (still exists!)
+                    for fpath in job_dir.iterdir():
+                        if fpath.is_file() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png"):
+                            ct = mimetypes.guess_type(fpath.name)[0] or "image/jpeg"
+                            upload_bytes_to_r2(f"raw_photos/{fpath.name}", fpath.read_bytes(), content_type=ct)
+                            r2_count += 1
+
+                    # Upload new crop files
+                    crops_dir = Path("app/static/crops")
+                    if crops_dir.exists():
+                        for fid in result.get("face_ids", []):
+                            crop_path = crops_dir / f"{fid}.jpg"
+                            if crop_path.exists():
+                                upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type="image/jpeg")
+                                r2_count += 1
+
+                    # Update status file with R2 info
+                    status_path = inbox_dir / f"{job_id}.status.json"
+                    if status_path.exists():
+                        with open(status_path) as _rf:
+                            status_data = _json_upload.load(_rf)
+                        status_data["r2_uploaded"] = True
+                        status_data["r2_count"] = r2_count
+                        with open(status_path, "w") as _wf:
+                            _json_upload.dump(status_data, _wf, indent=2)
+
+                    print(f"[upload] R2 upload complete: {r2_count} files for job {job_id}")
+                except Exception as e:
+                    print(f"[upload] R2 upload error for job {job_id}: {e}")
+
+            # AD-165: Invalidate ALL in-memory caches so the web app sees new data.
+            # Without this, the sidebar counts and photo grid remain stale until restart.
+            global _photo_cache, _face_to_photo_cache, _photo_id_aliases
+            global _face_data_cache, _photo_registry_cache
+            _photo_cache = None
+            _face_to_photo_cache = None
+            _photo_id_aliases = None
+            _face_data_cache = None
+            _photo_registry_cache = None
+            print(f"[upload] Caches invalidated for job {job_id}")
+
         except Exception as e:
             # Write error to status file so the poller can show it
             error_status = {
@@ -22770,7 +22826,8 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "",
                 pass
         finally:
             # AD-162: Always clean up staging directory to prevent disk exhaustion.
-            # The processing thread copies needed files; staging is no longer needed.
+            # R2 upload happens ABOVE (before this finally block), so files are
+            # already uploaded before cleanup.
             import shutil as _shutil_cleanup
             try:
                 if job_dir.exists():
@@ -23008,44 +23065,11 @@ def get(job_id: str):
         return Div(*elements, cls="p-2 bg-amber-900/30 border border-amber-500/30 rounded")
 
     # Success (all files processed successfully)
+    # AD-165: R2 upload now happens in the background thread (not here).
+    # The thread uploads to R2 BEFORE cleaning up the staging directory.
     faces = status.get("faces_extracted", 0)
     identities = len(status.get("identities_created", []))
     total = status.get("total_files")
-
-    # Upload original photos and crops to R2 (if R2 write is configured)
-    # This happens once on first success poll — the status file is the lock.
-    from core.storage import can_write_r2, upload_bytes_to_r2
-    if can_write_r2() and not status.get("r2_uploaded"):
-        try:
-            r2_count = 0
-            # Upload original photos from staging directory
-            staging_dir = data_path / "staging" / job_id
-            if staging_dir.exists():
-                import mimetypes
-                for fpath in staging_dir.iterdir():
-                    if fpath.is_file() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png"):
-                        ct = mimetypes.guess_type(fpath.name)[0] or "image/jpeg"
-                        upload_bytes_to_r2(f"raw_photos/{fpath.name}", fpath.read_bytes(), content_type=ct)
-                        r2_count += 1
-
-            # Upload new crop files (generated during ingest)
-            # Crops are named by face_id (e.g., inbox_abc123.jpg), not identity_id
-            crops_dir = Path("app/static/crops")
-            if crops_dir.exists():
-                for fid in status.get("face_ids", []):
-                    crop_path = crops_dir / f"{fid}.jpg"
-                    if crop_path.exists():
-                        upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type="image/jpeg")
-                        r2_count += 1
-
-            # Mark as uploaded to prevent duplicate uploads on next poll
-            status["r2_uploaded"] = True
-            status["r2_count"] = r2_count
-            with open(status_path, "w") as f:
-                json.dump(status, f, indent=2)
-            print(f"[upload] R2 upload complete: {r2_count} files for job {job_id}")
-        except Exception as e:
-            print(f"[upload] R2 upload error for job {job_id}: {e}")
 
     success_text = f"\u2713 {_pl(faces, 'face')} extracted"
     if total and total > 1:

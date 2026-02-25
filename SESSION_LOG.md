@@ -1,107 +1,57 @@
-# Session 66 Log
-## Mission: Harness Overhaul, Enrichment Validation, GEDCOM Admin, UX Review, Portfolio
-## Started: 2026-02-24
-## Context: First forward-progress session after 65a-d infrastructure fixes
+# Session 66b Log
+## Mission: Fix Upload Silent Data Loss (CRITICAL)
+## Started: 2026-02-25
+## Context: b-path from Session 66 — upload still broken after 4 "fix" sessions
 ## Rule: /clear between phases, NEVER /compact
-## Predecessor: Session 65d (v0.71.0 — disk space fix, GEDCOM versioning, harness)
+## Predecessor: Session 66 (v0.72.0 — parallel worktrees, enrichment, GEDCOM UI, portfolio)
 
-### Phase 0: Orient + Session Log Fix
-- [x] Read CLAUDE.md, ROADMAP.md, session-66-context.md, SESSION_LOG.md, tasks/lessons.md
-- [x] Set .claude/current_session.txt to "66"
-- [x] Read ALGORITHMIC_DECISIONS.md (head 80)
-- App version: v0.71.0 | ~3553 tests | 271 photos | 775 identities | 55 confirmed
+### Phase 0: Diagnose the Upload Bug
+- [x] Read all mandatory files (CLAUDE.md, session-66 context/assessment/log, AD head)
+- [x] Set .claude/current_session.txt to "66b"
+- [x] Traced full upload code path: POST /upload → _background_ingest → process_directory → process_single_image
+- [x] Checked production state via health endpoint + Chrome sidebar
+- [x] Checked R2 for uploaded photo file
 
-#### 0B: Session Log Archival Fix
-- [x] Renamed 21 files in docs/session_logs/ to lowercase hyphenated format
-- [x] Recovered 4 session logs from git history (53, 65a, 65b, 65c)
-- [x] Copied current SESSION_LOG.md as session-65d-log.md
-- [x] Created 14 stub files for sessions with lost logs (56-59, 59c, 61b-c, 62-64, 64b-d)
-- [x] Deleted stale docs/SESSION_LOG.md (748-line duplicate)
-- [x] Created docs/session_logs/INDEX.md with full session table, b-path analysis, analytics
-- [x] Updated references to SESSION_LOG.md in harness files
-- Total sessions in index: 44 (47B through 66)
-- Status breakdown: 17 Complete, 4 Recovered, 14 Stub, 8 Missing, 1 Planned
+#### 0A: Production State Check
+- Health endpoint: 666 identities, **273 photos**, processing_enabled=true, ml_pipeline=ready
+- Sidebar: 407 New Matches, 202 Help Identify, 55 People, **271 Photos**
+- **KEY DISCREPANCY**: Health shows 273 photos (reads disk), sidebar shows 271 (stale cache)
+- This 2-photo gap PROVES data IS being written to disk but NOT reflected in UI
 
-#### Phase 0 VERDICT: PASS
+#### 0B: R2 Upload Check
+- `morris_mazal_ancestry_murry_army.jpeg` → **404 on R2**
+- Photo file was NOT uploaded to R2 despite "success" status
+- Data records (identities.json, photo_index.json) WERE written to disk
 
-### Phase 1: Subagents + Infrastructure
-#### 1A: Created 7 Subagents in .claude/agents/
-- [x] ux-reviewer.md — Senior UX designer reviewing screenshots
-- [x] session-evaluator.md — Post-session evaluator replicating Nolan's review
-- [x] fix-prompt-writer.md — Writes b-session prompts for fix-up concerns
-- [x] design-check.md — Pre-implementation PRD/SDD check (advisory)
-- [x] parallel-optimizer.md — Reviews prompts for parallelization opportunities
-- [x] merge-resolver.md — Merges parallel worktree branches to main
-- [x] enrichment-worker.md — Runs enrichment pipeline validation in isolated worktree
+#### 0C: Root Cause Analysis
 
-#### 1B: GEDCOM Migration on Production Supabase
-- [x] Ran supabase_migration_002_gedcom_versioning.sql via Supabase SQL Editor
-- [x] Tables created: gedcom_versions, gedcom_change_log, gedcom_enrichment_queue
-- [x] Views created: current_gedcom_individuals, current_gedcom_events, current_gedcom_relationships
-- [x] Verified: 0 versions, 21809 current individuals, 0 change log, 0 pending enrichments
+**BUG 1: In-memory cache staleness (CRITICAL)**
+- Background upload thread writes to identities.json, photo_index.json, embeddings.npy on disk
+- Web app has global caches (`_photo_cache`, `_face_data_cache`, `_face_to_photo_cache`, `_photo_registry_cache`) built once, never invalidated after upload
+- Sidebar "Photos" count uses `len(_photo_cache)` → stale 271 instead of 273
+- Photo grid uses `_photo_cache` → new photos invisible
+- Code location: app/main.py caches at lines 2001, 2002, 2348, 2349 — never invalidated by upload
+- The /api/sync/push endpoint HAS proper cache invalidation (line 28457-28475), but the upload status endpoint does NOT
 
-#### 1C: Stop Hook Verified
-- [x] .claude/settings.json has Stop hook → bash .claude/hooks/post-session-eval.sh
-- [x] Hook checks: assessment file, phase verdicts, /compact detection, macOS notification
+**BUG 2: R2 upload race condition (CRITICAL)**
+- Background thread's `finally` block (line 22772-22779) deletes staging directory after processing
+- Status endpoint R2 upload (line 23015-23048) runs on first successful poll
+- By then, staging directory is already deleted → `staging_dir.exists()` is False → no R2 upload
+- Photo URL on R2 → 404 → broken images even if caches were fixed
+- Code location: app/main.py lines 22772-22779 (delete) vs 23015-23048 (R2 upload)
 
-#### 1D: Worktree Support
-- [x] Added .claude/worktrees/ to .gitignore
+**NOT A BUG: Help Identify count (202) is correct**
+- INBOX identities go to "New Matches" (to_review section), not "Help Identify" (skipped section)
+- The 3 new INBOX identities are likely in the 407 "New Matches" count
+- Nolan expected Help Identify to increase, but that section only shows SKIPPED identities
 
-#### Phase 1 VERDICT: PASS
+**Why previous fixes (65a, 65c, 65d, 66) didn't catch this:**
+- 65a: Fixed subprocess death detection + timeout → never addressed caches
+- 65c: Replaced subprocess with background thread → thread works, but cache invalidation missing
+- 65d: Fixed disk space → disk is fine, data writes succeed
+- 66: "Chrome can't handle file dialogs" → never tested with real upload
+- ALL sessions verified processing status == "success" but never checked if data appears in UI
 
-### Phase 2: Parallel Execution — 3 Worktree Subagents Spawned
-- Subagent A: Enrichment Validation (worktree isolated)
-- Subagent B: Portfolio Writeup (worktree isolated)
-- Subagent C: GEDCOM Admin UI (worktree isolated)
-- All spawned at same time, running in parallel
+#### Phase 0 VERDICT: ROOT CAUSE FOUND — Two bugs in app/main.py
 
-#### Subagent Results
-- [x] Portfolio (B): Created docs/portfolio/ml_pipeline_writeup.md (134 lines)
-- [x] Enrichment (A): Added --dry-run mode, fixed identity priority bug, 5 real Gemini calls ($0.06), validation doc
-- [x] GEDCOM UI (C): Enhanced /admin/gedcom with version management, upload/diff/apply, 25 tests, AD-164
-
-#### Phase 2 VERDICT: PASS
-
-### Phase 3: Merge Parallel Work
-- [x] Identified 3 worktree branches, mapped to subagents
-- [x] Merge 1: Portfolio (docs only) — clean merge, 3015+538 tests pass
-- [x] Merge 2: Enrichment (scripts+docs) — RESULTS.md conflict resolved, 3015+538 tests pass
-- [x] Merge 3: GEDCOM UI (app code) — RESULTS.md conflict resolved, 3040+538 tests pass
-- [x] Cleaned up worktree dirs and deleted worktree branches
-- Test count: 3040 app + 538 ML = 3578 total (up from 3553)
-
-#### Phase 3 VERDICT: PASS
-
-### Phase 4+5: Browser Verification + UX Review
-- [x] Waited for Railway deploy (502 during redeploy, recovered ~60s)
-- [x] Upload page (/upload) — form renders, file input present, admin logged in
-- [x] Compare page (/compare/pair) — dual drop zone, "Compare Selected Faces" CTA
-- [x] Landing page (/) — 404 to review, 55 people, 202 help identify, ML match cards
-- [x] Photos page (/photos) — 271 photos, decade filters, scene tags, face counts
-- [x] People page (/people) — 55 identified, circular crop grid, A-Z sort
-- [x] Estimate page (/estimate) — upload zone + photo selection grid
-- [x] Map page (/map) — 267 photos, 18 locations, clustered markers
-- [x] Timeline page (/timeline) — "A Century of Rhodes", 15 historical events
-- [x] Collections page (/collections) — 9 collections with stats
-- [x] GEDCOM Admin (/admin/gedcom) — NEW: version panel, stats cards, upload form, 0 pending, 33 confirmed matches
-- Note: File upload test requires native file dialog (not automatable via Chrome extension)
-- Note: Version still shows v0.65.0 (hardcoded in app, not auto-incremented)
-
-#### Phase 4+5 VERDICT: PASS
-
-### Phase 6: Docs Sync + Auto-Evaluation
-- [x] CHANGELOG.md updated with Session 66 entry
-- [x] ROADMAP.md updated: v0.72.0, 3578 tests, Session 66 in recently completed
-- [x] Assessment written: docs/assessments/session-66-assessment.md
-- [x] Session log archived: docs/session_logs/session-66-log.md
-- [x] All phases PASS
-
-#### Phase 6 VERDICT: PASS
-
-### Session 66 Summary
-- Version: v0.72.0
-- Tests: 3578 (3040 app + 538 ML)
-- New features: GEDCOM admin UI (AD-164), enrichment dry-run, portfolio writeup
-- Bug fixes: identity priority in _find_identity_for_face()
-- Infrastructure: 7 subagents, session log archival, GEDCOM migration, parallel worktrees
-- All 6 phases: PASS
+### Phase 1: Fix the Upload Bug (IN PROGRESS)

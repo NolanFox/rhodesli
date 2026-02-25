@@ -1842,11 +1842,22 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `app/main.py` (new route sections + helpers), `tests/test_gedcom_admin.py` (new tests)
 - **Tests**: `tests/test_gedcom_admin.py`
 
+### AD-165: Upload Silent Data Loss — Cache Invalidation + R2 Upload Ordering
+- **Date**: 2026-02-25 | **Session**: 66b
+- **Context**: Upload shows "✓ 3 faces extracted, 3 added to Inbox" but data not visible in UI. Bug persisted through sessions 65a, 65c, 65d, 66. Root cause: TWO bugs working together.
+- **Bug 1: Cache staleness**: Background upload thread writes to identities.json, photo_index.json, embeddings.npy on disk. Web app has global caches (`_photo_cache`, `_face_data_cache`, `_face_to_photo_cache`, `_photo_registry_cache`) that are built once and never invalidated after upload. Health endpoint (reads disk) showed 273 photos; sidebar (reads stale cache) showed 271.
+- **Bug 2: R2 upload race**: Background thread deletes staging directory in `finally` block. Status endpoint tried to upload photos to R2 on first success poll — but staging directory was already deleted. Photos never uploaded to R2 → 404.
+- **Fix**: (1) Move R2 upload INSIDE the background thread, BEFORE staging cleanup. (2) Invalidate all caches in the background thread after successful processing. (3) Remove R2 upload from status polling endpoint.
+- **Rejected**: (a) Invalidating caches in the status endpoint (too late — user sees stale data on poll), (b) Not deleting staging dir (AD-162 disk space concern), (c) Re-reading from disk on every request (too slow for photo_cache with embeddings.npy)
+- **Why previous fixes didn't catch this**: All sessions verified `status == "success"` but never checked if data appeared in UI. "Chrome can't handle file dialogs" was used as excuse to skip real upload testing.
+- **Affects**: `app/main.py` (`_background_ingest`, `/upload/status/{job_id}`)
+- **Tests**: `tests/test_upload_cache_invalidation.py`
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-165)
+1. Add a new entry with AD-XXX format (next: AD-166)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
