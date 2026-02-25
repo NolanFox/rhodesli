@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.73.0 · ~3588 tests · 274 photos · 775 identities · 55 confirmed
+Current: v0.73.1 · ~3064 tests · 274 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -35,8 +35,8 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
-- [ ] Retry 144 failed photos: `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json` (~$1.50-4.50)
-- [ ] UX-103: Full-bleed photo view has no CTAs, overlays, or metadata (P1 from session 67 UX review)
+- [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
+- [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
 
 ### Near-Term
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
@@ -55,10 +55,9 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 68: LoRA Prep + Fine-Tuning
-- LoRA training data audit: count confirmed pairs, assess readiness
-- Fine-tune InsightFace final layers on confirmed identity pairs
-- Recalibrate isotonic regression on new embedding space
+### Session 69: LoRA Fine-Tuning (if admin reviews 3 identities) or Similarity Calibration
+- Depends on LoRA audit: 221 positive pairs is MARGINAL. Need admin to confirm candidates for Vida/BigLeon/Victor to reach 500+.
+- Alternative: similarity calibration improvements, active learning pipeline
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates
@@ -66,6 +65,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-25: **v0.73.1 — Session 68**: Hook Hardening + LoRA Audit + UX-103 + Photo Retry. Python stop gate replaces bash grep (AD-167). PreCompact recovery strategy. UX-103: back nav + metadata overlay + mobile menu. LoRA audit: 221 positive pairs, MARGINAL. Photo retry: 142/144 done, 2 blocked by Gemini content safety. 3 parallel worktree subagents. ~3064 tests.
 - [x] 2026-02-25: **v0.73.0 — Session 67**: Hook Enforcement System. Stop hook blocks session end until assessment exists + phases logged. PreCompact blocks /compact. UserPromptSubmit injects parallelization reminder. Session runner script for headless phase isolation. ux-reviewer: 8 new UX issues (1 P1). session-evaluator: independent eval found Phases 4/5/6 of session 66 were PARTIAL (self-assessment rated PASS). AD-166. ~3588 total.
 - [x] 2026-02-25: **v0.72.1 — Session 66b**: CRITICAL Upload Fix. Root cause: cache staleness + R2 upload race (AD-165). Background thread now does R2 upload + cache invalidation. embeddings.npy safety gate added. Verified in production: 2 faces uploaded, sidebar counts updated immediately. 10 new tests. ~3588 total.
 - [x] 2026-02-24: **v0.72.0 — Session 66**: Parallel Worktrees + Enrichment Validation + GEDCOM Admin + Portfolio. First parallel worktree execution (3 subagents). 7 harness subagents. Session log archival (INDEX.md). GEDCOM admin UI with version management (AD-164). Enrichment validation: identity priority bug fix, 400-3700 GEDCOM tokens confirmed. Portfolio writeup. 25 new tests. ~3578 total.

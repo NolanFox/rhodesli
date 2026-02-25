@@ -2,6 +2,34 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.73.1] — 2026-02-25 (Session 68: Hook Hardening + LoRA Audit + UX-103)
+
+### Fixed — Hook Upgrades (AD-167)
+- Python stop gate (`session-stop-gate.py`): Replaces bash grep with structural regex. Only matches FAIL in phase header lines, preventing false positives from FAIL in test descriptions.
+- PreCompact manual: Changed from exit 2 (doesn't block) to exit 0 with loud warning. /compact ban is convention-enforced, not mechanically blocked.
+- SessionStart compact handler: Re-injects all context from disk after compaction.
+
+### Fixed — UX-103 Photo Detail Dead End (P1)
+- Added "Back to Photos" breadcrumb navigation with collection link
+- Added metadata overlay on photo hero (date estimate, face count, collection)
+- Replaced broken mobile nav with `_public_page_nav()` hamburger menu
+- 14 new tests, 3 updated tests
+
+### Added — LoRA Training Data Audit
+- 221 positive pairs from 8 multi-anchor identities (MARGINAL readiness)
+- 3,033 negative pairs (STRONG)
+- Verdict: Proceed with caution. Admin review of 3 identities could boost to 500+ pairs.
+- Full report: `docs/analysis/lora_training_data_audit.md`
+
+### Added — Photo Retry Analysis
+- 142/144 previously failed photos already retried successfully ($2.04 total)
+- 2 permanently blocked by Gemini child safety content filter (PROHIBITED_CONTENT)
+- No additional API spend needed. Coverage: 264/266 photos (99.2%)
+
+### Tests
+- 3064 app tests passing (+14 from UX-103)
+- Harness regression: 13/15 pass (2 browser-dependent skipped)
+
 ## [v0.73.0] — 2026-02-25 (Session 67: Hook Enforcement System)
 
 ### Added — Hook-Enforced Harness (AD-166)

@@ -1,0 +1,23 @@
+{
+  "batch_id": "batch_combined_20260225_135023",
+  "model": "gemini-3.1-pro-preview",
+  "mode": "live",
+  "total_photos": 2,
+  "success": 0,
+  "errors": 2,
+  "skipped": 0,
+  "gedcom_enriched": 0,
+  "total_cost": 0.0,
+  "results": [
+    {
+      "photo_id": "9411826ba358db3c",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    },
+    {
+      "photo_id": "81bf7f85ec9814bc",
+      "status": "error",
+      "reason": "Gemini API call failed"
+    }
+  ]
+}

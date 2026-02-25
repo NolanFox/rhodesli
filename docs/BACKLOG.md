@@ -20,7 +20,7 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - ~~**UX-044/052**: Compare/Estimate upload messaging~~ FIXED (Session 49D/49E)
 
 ### P1 — Significant Friction
-- **UX-103**: Full-bleed photo view has no CTAs, overlays, or metadata (Session 67 UX review)
+- ~~**UX-103**: Full-bleed photo view has no CTAs, overlays, or metadata~~ FIXED (Session 68)
 - **UX-037-038**: Merge direction unintuitive + operations on merged-away IDs return 200 silently
 - **UX-039**: No admin controls on /person/ page (no rename/confirm/merge)
 - **UX-042**: /identify/{id} shareable page has no link to source photo (critical for community onboarding)
