@@ -1,35 +1,65 @@
-# Session 66 Worktree Results (Combined)
+# Photo Retry Analysis Results
 
-## Subagent A: Enrichment Pipeline Validation
+## Task
+Investigate the 144 failed photos from the batch alignment pipeline and prepare
+a retry analysis.
 
-### What Was Done
+## Key Finding
 
-1. **Dry-Run Mode Added** to `scripts/run_combined_pipeline.py` — builds prompts and logs token counts without calling Gemini API
-2. **Dry-Run on 10 Photos** (5 GEDCOM-linked, 5 unlinked):
-   - Bare prompts: 419-461 tokens | Enriched: 592-4,200 tokens | GEDCOM context alone: 158-3,717 tokens
-   - 4 of 5 enriched photos reach 400+ tokens, confirming AD-159
-3. **5 Real Gemini API Calls** — total cost $0.06, all logged to gemini_api_calls table
-4. **Bug Fix**: `_find_identity_for_face()` returned INBOX identities instead of CONFIRMED — fixed to prefer CONFIRMED state
+**The 144 failed photos have already been retried.** 142 of 144 succeeded in
+subsequent batch runs. Only 2 photos remain permanently unprocessable.
 
-| File | Change |
-|------|--------|
-| `scripts/run_combined_pipeline.py` | Added `--dry-run` flag |
-| `rhodesli_ml/gedcom_context.py` | Fixed identity priority bug |
-| `docs/analysis/enrichment_validation_66.md` | Full validation report |
+## Summary
 
-## Subagent B: Portfolio ML Pipeline Writeup
+| Metric | Value |
+|--------|-------|
+| Original failures | 144 |
+| Already retried successfully | 142 |
+| Permanently failing | 2 |
+| Total API cost (all batches) | $2.04 |
+| Additional cost for this analysis | $0.00 (confirmed retry failed) |
 
-Created `docs/portfolio/ml_pipeline_writeup.md` (134 lines) — technical writeup of the full ML pipeline for interview portfolio. Covers face detection, similarity calibration (AUC 0.9577), date estimation (CORAL), Gemini alignment with GEDCOM enrichment, and human-in-the-loop architecture.
+## Root Cause of 2 Permanent Failures
 
-## Subagent C: GEDCOM Admin UI
+Both photos (`Image 914_compress.jpg` and `Image 018_compress.jpg`) are
+portraits of young girls from the Vida Capeluto NYC Collection. Gemini returns
+`FinishReason.PROHIBITED_CONTENT` when the face alignment prompt (which includes
+"forensic photo analyst" framing and requests for age/gender/identifying features)
+is combined with these images. This is a **content safety policy block**, not a
+transient error.
 
-Enhanced `/admin/gedcom` with version management UI (AD-164):
-- Version info panel, version history, re-enrichment queue display
-- Upload/preview/apply/cancel flow for GEDCOM updates
-- 25 tests in `tests/test_gedcom_admin.py`
+Evidence gathered:
+- Gemini API returns HTTP 200 but empty response text
+- `finish_reason` is `PROHIBITED_CONTENT` (not rate limiting)
+- Simple description prompts work fine for both images
+- Both photos have been attempted 4 times each across different batches
 
-| File | Change |
-|------|--------|
-| `app/main.py` | +333 lines for GEDCOM admin routes |
-| `docs/ml/ALGORITHMIC_DECISIONS.md` | AD-164 entry |
-| `tests/test_gedcom_admin.py` | 25 tests (286 lines) |
+## Retry Attempted
+
+Ran `python scripts/run_combined_pipeline.py --photo-ids 81bf7f85ec9814bc 9411826ba358db3c`
+as part of this analysis. Both failed again with PROHIBITED_CONTENT. Results in
+`results/batch_combined_20260225_135023.json`.
+
+## `--retry-failed` Flag Status
+
+The flag exists and works correctly in `scripts/run_combined_pipeline.py` (line 545).
+It reads photo IDs with error status from a previous results JSON and filters the
+eligible photos to just those IDs.
+
+## Files Created
+- `docs/analysis/photo_retry_analysis.md` -- Full analysis with batch timeline,
+  cost breakdown, source distribution, root cause investigation
+- `results/batch_combined_20260225_135023.json` -- Results from retry attempt
+  (created by the pipeline run during analysis)
+- `RESULTS.md` -- This file
+
+## Recommendation
+
+Mark the "Retry 144 failed photos" ROADMAP item as effectively complete.
+Coverage is 264/266 photos (99.2%). The 2 blocked photos are an acceptable
+loss -- they each contain only 1 face, and the block is a Gemini policy
+decision that cannot be resolved by retrying.
+
+A potential future workaround would be to rephrase the alignment prompt to
+avoid language that triggers child safety filters (remove "forensic" framing,
+reduce biometric analysis specificity). This would be a low-priority task.
