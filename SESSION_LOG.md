@@ -26,7 +26,17 @@
 - [x] Fixed: recovery-instructions.sh now session-agnostic (was hardcoded to session 55)
 - [x] Tested: stop gate blocks when assessment missing, approves when present
 
-### Phase 2: Test Hooks — PENDING
+### Phase 2: Test Hooks — COMPLETE
+- [x] Test 1: Stop gate BLOCKS when assessment missing — PASS
+- [x] Test 2: Stop gate BLOCKS on second try (stop_hook_active=true) — PASS
+- [x] Test 3: Stop gate APPROVES when assessment exists — PASS
+- [x] Test 4: Stop gate detects FAIL without b-path — PASS
+- [x] Test 5: Stop gate approves when no session tracking — PASS
+- [x] Test 6: PreCompact manual exit code 2 — PASS
+- [x] Test 7: UserPromptSubmit parallelization reminder — PASS
+- [x] Test 8: Recovery instructions session-agnostic — PASS
+- NOTE: Full lifecycle testing (does hook fire at actual session events) requires separate session.
+  PreCompact "Can Block?" is No per docs — exit 2 approach needs live testing.
 ### Phase 3: Deferred Subagent Work — PENDING
 ### Phase 4: GEDCOM + Cleanup — PENDING
 ### Phase 5: /clear Investigation — PENDING
