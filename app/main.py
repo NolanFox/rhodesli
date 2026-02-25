@@ -26610,7 +26610,7 @@ def post(person_a: str, person_b: str, type: str, sess=None):
 
 @rt("/admin/gedcom")
 def get(sess=None):
-    """GEDCOM import admin page — upload + match review combined."""
+    """GEDCOM admin page — version management, upload, match review (AD-164)."""
     denied = _check_admin(sess)
     if denied:
         return denied
@@ -26626,7 +26626,6 @@ def get(sess=None):
     # Relationship graph stats
     rel_graph = _load_relationship_graph()
     rel_count = len(rel_graph.get("relationships", []))
-    import_count = len(rel_graph.get("gedcom_imports", []))
 
     # Co-occurrence graph stats
     cooccur_path = data_path / "co_occurrence_graph.json"
@@ -26638,7 +26637,55 @@ def get(sess=None):
         except (json.JSONDecodeError, ValueError):
             pass
 
-    # Stats section
+    # --- GEDCOM Version Info from Supabase (AD-164) ---
+    versions = _load_gedcom_versions()
+    enrichment_pending_count = _load_gedcom_enrichment_queue_count()
+    current_version = versions[0] if versions else None
+
+    # Version info panel
+    if current_version:
+        summary = current_version.get("summary", {}) or {}
+        imported_at = current_version.get("imported_at", "")[:19].replace("T", " ") if current_version.get("imported_at") else "Unknown"
+        version_info = Div(
+            H2("Current GEDCOM Version", cls="text-lg font-semibold text-white mb-3"),
+            Div(
+                Div(
+                    P(str(current_version.get("version_number", "?")), cls="text-3xl font-bold text-indigo-400"),
+                    P("Version", cls="text-sm text-slate-400"),
+                    cls="text-center"
+                ),
+                Div(
+                    P(f"{current_version.get('individual_count', 0):,}", cls="text-3xl font-bold text-white"),
+                    P("Individuals", cls="text-sm text-slate-400"),
+                    cls="text-center"
+                ),
+                Div(
+                    P(f"{current_version.get('family_count', 0):,}", cls="text-3xl font-bold text-white"),
+                    P("Families", cls="text-sm text-slate-400"),
+                    cls="text-center"
+                ),
+                Div(
+                    P(str(enrichment_pending_count), cls=f"text-3xl font-bold {'text-amber-400' if enrichment_pending_count > 0 else 'text-emerald-400'}"),
+                    P("Re-Enrichment Queue", cls="text-sm text-slate-400"),
+                    cls="text-center"
+                ),
+                cls="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4"
+            ),
+            P(f"Imported: {imported_at}", cls="text-sm text-slate-500"),
+            P(f"File: {current_version.get('source_file', '?')}", cls="text-sm text-slate-500"),
+            P(f"Notes: {current_version.get('notes', 'None')}", cls="text-sm text-slate-500") if current_version.get("notes") else None,
+            cls="bg-slate-800 rounded-lg p-5 border border-slate-700 mb-6",
+            data_testid="gedcom-version-info",
+        )
+    else:
+        version_info = Div(
+            H2("GEDCOM Version", cls="text-lg font-semibold text-white mb-3"),
+            P("No versions imported yet. Upload a GEDCOM file to get started.", cls="text-slate-400"),
+            cls="bg-slate-800 rounded-lg p-5 border border-slate-700 mb-6",
+            data_testid="gedcom-version-info",
+        )
+
+    # Stats section (match-related)
     stats_cards = Div(
         Div(
             P(str(len(matches)), cls="text-3xl font-bold text-white"),
@@ -26668,15 +26715,18 @@ def get(sess=None):
         cls="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6"
     )
 
-    # Upload section
+    # Versioned upload section (AD-164)
     upload_section = Div(
         H2("Upload GEDCOM File", cls="text-lg font-semibold text-white mb-3"),
-        P("Upload a .ged file exported from Ancestry, MyHeritage, FamilySearch, or other genealogy software.",
+        P("Upload a .ged file exported from Ancestry, MyHeritage, FamilySearch, or other genealogy software. "
+          "The file will be parsed and compared against the current database before any changes are applied.",
           cls="text-sm text-slate-400 mb-4"),
         Form(
             Input(type="file", name="gedcom_file", accept=".ged,.gedcom",
                   cls="block w-full text-sm text-slate-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-400"),
-            Button("Upload & Parse", type="submit",
+            Input(type="text", name="notes", placeholder="Notes (e.g., 'Added Marcus branch')",
+                  cls="block w-full mt-2 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-white placeholder-slate-400"),
+            Button("Upload & Preview Changes", type="submit",
                    cls="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium"),
             hx_post="/admin/gedcom/upload",
             hx_target="#gedcom-results",
@@ -26684,10 +26734,59 @@ def get(sess=None):
             hx_indicator="#upload-spinner",
             cls="space-y-2"
         ),
-        Span("Parsing...", id="upload-spinner", cls="htmx-indicator text-sm text-slate-400 ml-2"),
+        Span("Parsing and comparing...", id="upload-spinner", cls="htmx-indicator text-sm text-slate-400 ml-2"),
         Div(id="gedcom-results", cls="mt-4"),
         cls="bg-slate-800 rounded-lg p-5 border border-slate-700 mb-6"
     )
+
+    # Version history table (AD-164)
+    version_history_section = None
+    if versions:
+        version_rows = []
+        for v in versions:
+            v_summary = v.get("summary", {}) or {}
+            v_date = v.get("imported_at", "")[:10] if v.get("imported_at") else "?"
+            added = v_summary.get("added", 0)
+            modified = v_summary.get("modified", 0)
+            removed = v_summary.get("removed", 0)
+            unchanged = v_summary.get("unchanged", 0)
+
+            change_badges = []
+            if added:
+                change_badges.append(Span(f"+{added}", cls="text-xs px-1.5 py-0.5 rounded bg-emerald-900/40 text-emerald-400"))
+            if modified:
+                change_badges.append(Span(f"~{modified}", cls="text-xs px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400"))
+            if removed:
+                change_badges.append(Span(f"-{removed}", cls="text-xs px-1.5 py-0.5 rounded bg-red-900/40 text-red-400"))
+            if unchanged:
+                change_badges.append(Span(f"={unchanged}", cls="text-xs px-1.5 py-0.5 rounded bg-slate-700 text-slate-400"))
+
+            version_rows.append(Div(
+                Div(
+                    Span(f"v{v.get('version_number', '?')}", cls="text-white font-bold text-sm mr-3"),
+                    Span(v.get("source_file", "?"), cls="text-slate-300 text-sm"),
+                    cls="flex items-center"
+                ),
+                Div(
+                    *change_badges,
+                    cls="flex items-center gap-1.5 mt-1"
+                ),
+                Div(
+                    Span(v_date, cls="text-xs text-slate-500"),
+                    Span(f" — {v.get('individual_count', 0):,} individuals, {v.get('family_count', 0):,} families",
+                         cls="text-xs text-slate-500"),
+                    Span(f" — {v.get('notes', '')}", cls="text-xs text-slate-400 italic") if v.get("notes") else None,
+                    cls="mt-1"
+                ),
+                cls="py-3 border-b border-slate-700/50 last:border-0",
+            ))
+
+        version_history_section = Div(
+            H2("Version History", cls="text-lg font-semibold text-white mb-3"),
+            *version_rows,
+            cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6",
+            data_testid="gedcom-version-history",
+        )
 
     # Pending matches section
     match_rows = []
@@ -26760,7 +26859,7 @@ def get(sess=None):
             cls="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50 mb-6"
         )
 
-    # Import history section
+    # Legacy import history section (from relationship graph)
     import_history_section = None
     imports = rel_graph.get("gedcom_imports", [])
     if imports:
@@ -26835,15 +26934,17 @@ def get(sess=None):
     return Title("GEDCOM Import — Rhodesli"), Div(
         _admin_nav_bar("gedcom"),
         Div(
-            H1("GEDCOM Import", cls="text-2xl font-bold text-white"),
-            P(f"Source: {source_file}" if source_file else "No GEDCOM file imported yet",
+            H1("GEDCOM Management", cls="text-2xl font-bold text-white"),
+            P(f"Source: {source_file}" if source_file else "Upload a GEDCOM file to enrich identity records with genealogical data.",
               cls="text-sm text-slate-400"),
             cls="mb-6"
         ),
         test_data_warning,
+        version_info,
         stats_cards,
-        import_history_section,
+        version_history_section,
         upload_section,
+        import_history_section,
         matches_section,
         confirmed_section,
         enrichment_section,
@@ -26852,8 +26953,8 @@ def get(sess=None):
 
 
 @rt("/admin/gedcom/upload")
-async def post(gedcom_file: UploadFile = None, sess=None):
-    """Handle GEDCOM file upload — parse and generate match proposals."""
+async def post(gedcom_file: UploadFile = None, notes: str = "", sess=None):
+    """Handle GEDCOM file upload — parse, diff, and show preview before apply (AD-164)."""
     denied = _check_admin(sess)
     if denied:
         return denied
@@ -26863,6 +26964,7 @@ async def post(gedcom_file: UploadFile = None, sess=None):
 
     # Save uploaded file temporarily
     import tempfile
+    import hashlib as _hashlib
     content = await gedcom_file.read()
     with tempfile.NamedTemporaryFile(suffix=".ged", delete=False, mode="wb") as tmp:
         tmp.write(content)
@@ -26870,66 +26972,248 @@ async def post(gedcom_file: UploadFile = None, sess=None):
 
     try:
         from rhodesli_ml.importers.gedcom_parser import parse_gedcom
-        from rhodesli_ml.importers.identity_matcher import match_gedcom_to_identities
-        from rhodesli_ml.importers.gedcom_matches import save_gedcom_matches
 
         # Parse GEDCOM
         parsed = parse_gedcom(tmp_path)
 
-        # Load identities for matching
-        registry = load_registry()
-        identities = {iid: registry.get_identity(iid) for iid in registry.list_identities()}
+        # Compute file hash for dedup
+        file_hash = _hashlib.sha256(content).hexdigest()
 
-        # Load ML birth year estimates
-        estimates = _load_birth_year_estimates()
-
-        # Match
-        result = match_gedcom_to_identities(
-            parsed, identities,
-            surname_variants_path=str(data_path / "surname_variants.json"),
-            birth_year_estimates=estimates,
-        )
-
-        # Save match proposals
-        save_gedcom_matches(
-            result.proposals,
-            filepath=str(data_path / "gedcom_matches.json"),
-            source_file=gedcom_file.filename,
-        )
-
-        # Invalidate cache
-        global _gedcom_matches_cache
-        _gedcom_matches_cache = None
-
-        # Sync GEDCOM matches to Supabase (AD-135)
+        # Try versioned diff against Supabase (AD-163/164)
+        diff_result = None
         try:
-            from rhodesli_ml.importers.gedcom_matches import load_gedcom_matches
-            from app.supabase_data import sync_gedcom_matches
-            gm_data = load_gedcom_matches(str(data_path / "gedcom_matches.json"))
-            sync_gedcom_matches(gm_data.get("matches", []))
-        except Exception as e:
-            logging.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
+            from app.supabase_data import get_supabase_client
+            from scripts.import_gedcom_version import import_versioned, check_duplicate_hash
+            sb = get_supabase_client()
+            if sb:
+                # Check for duplicate
+                existing = check_duplicate_hash(sb, file_hash)
+                if existing:
+                    return Div(
+                        P(f"This exact file was already imported as version {existing['version_number']}.",
+                          cls="text-amber-400 font-medium"),
+                        P("Upload a different GEDCOM file or modify this one first.",
+                          cls="text-sm text-slate-400 mt-1"),
+                        cls="bg-amber-900/20 border border-amber-700/50 rounded-lg p-4 mt-4",
+                    )
 
-        return Div(
-            P(f"Parsed {parsed.individual_count} individuals, {parsed.family_count} families",
-              cls="text-emerald-400 font-medium"),
-            P(f"Found {result.match_count} potential matches with archive identities",
-              cls="text-white mt-1"),
-            P(f"{len(result.unmatched_gedcom)} GEDCOM individuals unmatched",
-              cls="text-sm text-slate-400 mt-1") if result.unmatched_gedcom else None,
-            A("Refresh to review matches", href="/admin/gedcom",
-              cls="inline-block mt-3 text-indigo-400 hover:text-indigo-300 underline text-sm"),
-            cls="bg-emerald-900/20 border border-emerald-700/50 rounded-lg p-4 mt-4"
-        )
+                # Dry-run to get diff
+                diff_result = import_versioned(
+                    sb, parsed, gedcom_file.filename, file_hash,
+                    notes=notes.strip() if notes else None,
+                    dry_run=True,
+                )
+        except Exception as e:
+            logging.warning(f"Versioned diff failed (falling back to legacy): {e}")
+
+        # Store preview data for apply step
+        global _gedcom_upload_preview
+        _gedcom_upload_preview = {
+            "tmp_path": tmp_path,
+            "filename": gedcom_file.filename,
+            "file_hash": file_hash,
+            "notes": notes.strip() if notes else None,
+            "individual_count": parsed.individual_count,
+            "family_count": parsed.family_count,
+            "diff": diff_result,
+        }
+
+        # Build diff preview UI
+        if diff_result and not diff_result.get("skipped"):
+            added = diff_result.get("added", 0)
+            modified = diff_result.get("modified", 0)
+            removed = diff_result.get("removed", 0)
+            unchanged = diff_result.get("unchanged", 0)
+
+            diff_badges = []
+            if added:
+                diff_badges.append(Span(f"+{added} added", cls="px-2 py-1 rounded bg-emerald-900/40 text-emerald-400 text-sm"))
+            if modified:
+                diff_badges.append(Span(f"~{modified} modified", cls="px-2 py-1 rounded bg-amber-900/40 text-amber-400 text-sm"))
+            if removed:
+                diff_badges.append(Span(f"-{removed} removed", cls="px-2 py-1 rounded bg-red-900/40 text-red-400 text-sm"))
+            if unchanged:
+                diff_badges.append(Span(f"={unchanged} unchanged", cls="px-2 py-1 rounded bg-slate-700 text-slate-400 text-sm"))
+
+            return Div(
+                P(f"Parsed {parsed.individual_count:,} individuals, {parsed.family_count:,} families",
+                  cls="text-emerald-400 font-medium"),
+                H3("Change Summary", cls="text-white font-semibold mt-3 mb-2"),
+                Div(*diff_badges, cls="flex flex-wrap gap-2 mb-4"),
+                Div(
+                    Button("Apply Changes", cls="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium mr-2",
+                           hx_post="/admin/gedcom/apply",
+                           hx_target="#gedcom-results",
+                           hx_indicator="#apply-spinner"),
+                    Button("Cancel", cls="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium",
+                           hx_post="/admin/gedcom/cancel",
+                           hx_target="#gedcom-results"),
+                    Span("Applying...", id="apply-spinner", cls="htmx-indicator text-sm text-slate-400 ml-2"),
+                    cls="flex items-center"
+                ),
+                cls="bg-indigo-900/20 border border-indigo-700/50 rounded-lg p-4 mt-4",
+                data_testid="gedcom-diff-preview",
+            )
+        else:
+            # Fallback: no Supabase or diff failed — show basic parse results + apply
+            return Div(
+                P(f"Parsed {parsed.individual_count:,} individuals, {parsed.family_count:,} families",
+                  cls="text-emerald-400 font-medium"),
+                P("Version diff not available (Supabase not configured). You can still apply the import.",
+                  cls="text-sm text-slate-400 mt-1") if not diff_result else None,
+                Div(
+                    Button("Apply Import", cls="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium mr-2",
+                           hx_post="/admin/gedcom/apply",
+                           hx_target="#gedcom-results"),
+                    Button("Cancel", cls="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg text-sm font-medium",
+                           hx_post="/admin/gedcom/cancel",
+                           hx_target="#gedcom-results"),
+                    cls="flex items-center mt-3"
+                ),
+                cls="bg-indigo-900/20 border border-indigo-700/50 rounded-lg p-4 mt-4",
+                data_testid="gedcom-diff-preview",
+            )
     except Exception as e:
         logging.exception("GEDCOM parse error")
-        return Div(P(f"Error parsing GEDCOM: {e}", cls="text-red-400"), cls="mt-4")
-    finally:
+        # Clean up temp file on error
         import os as _os
         try:
             _os.unlink(tmp_path)
         except OSError:
             pass
+        return Div(P(f"Error parsing GEDCOM: {e}", cls="text-red-400"), cls="mt-4")
+
+
+@rt("/admin/gedcom/apply")
+def post(sess=None):
+    """Apply a previewed GEDCOM import (AD-164). Gatekeeper pattern: requires explicit confirmation."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    global _gedcom_upload_preview
+    preview = _gedcom_upload_preview
+    if not preview:
+        return Div(P("No pending upload to apply. Please upload a file first.", cls="text-amber-400"), cls="mt-4")
+
+    tmp_path = preview.get("tmp_path")
+    filename = preview.get("filename", "unknown.ged")
+    file_hash = preview.get("file_hash", "")
+    notes = preview.get("notes")
+
+    try:
+        from rhodesli_ml.importers.gedcom_parser import parse_gedcom
+
+        # Re-parse the file (still on disk)
+        parsed = parse_gedcom(tmp_path)
+
+        # Try versioned import to Supabase
+        version_result = None
+        try:
+            from app.supabase_data import get_supabase_client
+            from scripts.import_gedcom_version import import_versioned
+            sb = get_supabase_client()
+            if sb:
+                version_result = import_versioned(
+                    sb, parsed, filename, file_hash,
+                    notes=notes, dry_run=False,
+                )
+        except Exception as e:
+            logging.warning(f"Versioned import failed: {e}")
+
+        # Also run legacy matching pipeline
+        try:
+            from rhodesli_ml.importers.identity_matcher import match_gedcom_to_identities
+            from rhodesli_ml.importers.gedcom_matches import save_gedcom_matches
+
+            registry = load_registry()
+            identities = {iid: registry.get_identity(iid) for iid in registry.list_identities()}
+            estimates = _load_birth_year_estimates()
+
+            match_result = match_gedcom_to_identities(
+                parsed, identities,
+                surname_variants_path=str(data_path / "surname_variants.json"),
+                birth_year_estimates=estimates,
+            )
+            save_gedcom_matches(
+                match_result.proposals,
+                filepath=str(data_path / "gedcom_matches.json"),
+                source_file=filename,
+            )
+
+            global _gedcom_matches_cache
+            _gedcom_matches_cache = None
+
+            # Sync to Supabase
+            try:
+                from rhodesli_ml.importers.gedcom_matches import load_gedcom_matches
+                from app.supabase_data import sync_gedcom_matches
+                gm_data = load_gedcom_matches(str(data_path / "gedcom_matches.json"))
+                sync_gedcom_matches(gm_data.get("matches", []))
+            except Exception as e:
+                logging.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
+
+            match_info = P(f"Found {match_result.match_count} potential matches with archive identities",
+                           cls="text-white mt-1")
+        except Exception as e:
+            logging.warning(f"Legacy matching pipeline failed: {e}")
+            match_info = P(f"Match generation skipped: {e}", cls="text-sm text-amber-400 mt-1")
+
+        # Build success UI
+        version_badge = None
+        if version_result and not version_result.get("skipped"):
+            vn = version_result.get("version_number", "?")
+            version_badge = P(f"Created version {vn} in database.", cls="text-indigo-400 mt-1")
+
+        _gedcom_upload_preview = None  # Clear preview
+
+        return Div(
+            P(f"Successfully imported {parsed.individual_count:,} individuals, {parsed.family_count:,} families",
+              cls="text-emerald-400 font-medium"),
+            version_badge,
+            match_info,
+            A("Refresh page to see updated data", href="/admin/gedcom",
+              cls="inline-block mt-3 text-indigo-400 hover:text-indigo-300 underline text-sm"),
+            cls="bg-emerald-900/20 border border-emerald-700/50 rounded-lg p-4 mt-4",
+            data_testid="gedcom-apply-success",
+        )
+    except Exception as e:
+        logging.exception("GEDCOM apply error")
+        return Div(P(f"Error applying GEDCOM import: {e}", cls="text-red-400"), cls="mt-4")
+    finally:
+        # Clean up temp file
+        import os as _os
+        try:
+            if tmp_path:
+                _os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+@rt("/admin/gedcom/cancel")
+def post(sess=None):
+    """Cancel a previewed GEDCOM import (AD-164)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    global _gedcom_upload_preview
+    preview = _gedcom_upload_preview
+    _gedcom_upload_preview = None
+
+    # Clean up temp file
+    if preview and preview.get("tmp_path"):
+        import os as _os
+        try:
+            _os.unlink(preview["tmp_path"])
+        except OSError:
+            pass
+
+    return Div(
+        P("Upload cancelled.", cls="text-slate-400"),
+        cls="mt-4",
+        data_testid="gedcom-cancel-result",
+    )
 
 
 @rt("/admin/gedcom/confirm/{xref}")
@@ -27146,6 +27430,42 @@ def _invalidate_gedcom_cache():
     """Invalidate GEDCOM caches after link/unlink operations."""
     global _gedcom_face_links_cache
     _gedcom_face_links_cache = None
+
+
+def _load_gedcom_versions():
+    """Load GEDCOM version history from Supabase. Returns list of version dicts, newest first."""
+    try:
+        from app.supabase_data import get_supabase_client
+        sb = get_supabase_client()
+        if not sb:
+            return []
+        resp = sb.table("gedcom_versions").select("*").order(
+            "version_number", desc=True
+        ).execute()
+        return resp.data if resp and resp.data else []
+    except Exception as e:
+        logging.warning(f"Failed to load GEDCOM versions: {e}")
+        return []
+
+
+def _load_gedcom_enrichment_queue_count():
+    """Load count of pending GEDCOM re-enrichment items from Supabase."""
+    try:
+        from app.supabase_data import get_supabase_client
+        sb = get_supabase_client()
+        if not sb:
+            return 0
+        resp = sb.table("gedcom_enrichment_queue").select(
+            "id", count="exact"
+        ).eq("status", "pending").execute()
+        return resp.count if resp and hasattr(resp, 'count') and resp.count else len(resp.data) if resp and resp.data else 0
+    except Exception as e:
+        logging.warning(f"Failed to load enrichment queue count: {e}")
+        return 0
+
+
+# Temporary storage for versioned GEDCOM upload preview (diff before apply)
+_gedcom_upload_preview = None
 
 
 def _search_gedcom_individuals(query: str, limit: int = 10) -> list:

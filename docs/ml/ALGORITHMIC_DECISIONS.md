@@ -1829,11 +1829,24 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `scripts/import_gedcom_version.py`, `scripts/supabase_migration_002_gedcom_versioning.sql`, `app/main.py` (reads from view)
 - **Tests**: `tests/test_gedcom_versioning.py` (20 tests)
 
+### AD-164: GEDCOM Admin UI — Version Management via Web
+- **Date**: 2026-02-24 | **Session**: 66 (agent)
+- **Context**: GEDCOM versioning infrastructure (AD-163) exists in CLI only. Admin must SSH or run local scripts to import GEDCOM files and see version history. Web UI needed for self-service admin operations.
+- **Decision**: Enhance existing `/admin/gedcom` page with Supabase-backed version management panels:
+  1. **Info Panel**: Current GEDCOM version number, import date, individual/family counts from `gedcom_versions` table
+  2. **Versioned Upload**: Upload .ged file, parse with `gedcom_parser`, diff against current DB state via `import_versioned()`, show diff summary, require explicit "Apply" confirmation (Gatekeeper pattern)
+  3. **Version History**: Table of all past imports with dates and change summaries from `gedcom_versions`
+  4. **Re-Enrichment Queue**: Count of pending photos needing re-processing from `gedcom_enrichment_queue`
+- **Why web UI over CLI**: (a) Admin may not have SSH access to Railway, (b) reduces bus factor for Nolan, (c) consistent with admin-panel-first approach for all data operations, (d) leverages existing auth guards and dark theme UI
+- **Rejected**: Separate `/admin/gedcom-versions` page (fragmenting related functionality), auto-apply on upload without diff preview (violates Gatekeeper pattern), client-side GEDCOM parsing (python-gedcom is server-side only)
+- **Affects**: `app/main.py` (new route sections + helpers), `tests/test_gedcom_admin.py` (new tests)
+- **Tests**: `tests/test_gedcom_admin.py`
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-164)
+1. Add a new entry with AD-XXX format (next: AD-165)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
