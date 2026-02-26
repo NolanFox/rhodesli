@@ -1830,7 +1830,7 @@ def _build_triage_bar(to_review: list, view_mode: str, active_filter: str = "") 
 
     return Div(
         *items,
-        cls="flex gap-3 mb-4 flex-wrap",
+        cls="flex gap-3 mb-6 flex-wrap pb-4 border-b border-slate-700/50",
     )
 
 
@@ -3394,22 +3394,27 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
     ]
 
     # Add view toggle for sections that support it
+    # Active tab styling: high-contrast white bg + shadow for dark theme visibility (UX fix #4)
+    _tab_active = "bg-white text-slate-900 shadow-md shadow-white/10 font-semibold"
+    _tab_inactive = "bg-slate-700/60 text-slate-400 hover:bg-slate-600 hover:text-slate-200"
+    _tab_match_active = "bg-amber-500 text-white shadow-md shadow-amber-500/20 font-semibold"
+
     if section == "to_review" and view_mode is not None:
         toggle = Div(
             A(
                 "Focus",
                 href="/?section=to_review&view=focus",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'focus' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}"
             ),
             A(
                 "View All",
                 href="/?section=to_review&view=browse",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'browse' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}"
             ),
             A(
                 "Match",
                 href="/?section=to_review&view=match",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-amber-500 text-white' if view_mode == 'match' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_match_active if view_mode == 'match' else _tab_inactive}"
             ),
             cls="flex items-center gap-2"
         )
@@ -3419,12 +3424,12 @@ def section_header(title: str, subtitle: str, view_mode: str = None, section: st
             A(
                 "Focus",
                 href="/?section=skipped&view=focus",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'focus' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'focus' else _tab_inactive}"
             ),
             A(
                 "View All",
                 href="/?section=skipped&view=browse",
-                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg {'bg-white text-slate-900' if view_mode == 'browse' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}"
+                cls=f"px-3 py-1.5 text-sm font-medium rounded-lg transition-colors {_tab_active if view_mode == 'browse' else _tab_inactive}"
             ),
             cls="flex items-center gap-2"
         )
@@ -3455,8 +3460,11 @@ def _proposal_banner(identity_id: str):
     all_proposals = _get_proposals_for_identity(identity_id)
     count_text = f" (+{len(all_proposals) - 1} more)" if len(all_proposals) > 1 else ""
 
+    # User-friendly confidence labels (UX fix: avoid mixing system vocabulary with prose)
+    confidence_label = _CONFIDENCE_LABEL.get(confidence, "Possible match")
+
     return Div(
-        Span(f"ML Match: {confidence}", cls="text-xs font-bold uppercase"),
+        Span(confidence_label, cls="text-xs font-bold uppercase"),
         Span(" — ", cls="text-xs opacity-50"),
         Span(f"Likely {target_name}", cls="text-sm font-medium"),
         Span(f" ({confidence_pct}%)", cls="text-xs opacity-70"),
@@ -19326,10 +19334,17 @@ def public_photo_page(
             _build_face_alignment_section(photo_id, is_admin),
 
             # Call to action — link to first unidentified face from this photo
+            # More prominent when ALL faces are unidentified (UX-105)
             Section(
                 Div(
+                    Div(
+                        Span(f"{unidentified_count} {'person' if unidentified_count == 1 else 'people'} awaiting identification",
+                             cls="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2 block"),
+                        cls=""
+                    ) if identified_count == 0 and total_faces > 0 else None,
                     H2(
-                        "Do you recognize someone?",
+                        "Nobody in this photo has been identified yet — can you help?" if identified_count == 0 and total_faces > 0
+                        else "Do you recognize someone?",
                         cls="text-xl font-serif font-bold text-white mb-3"
                     ),
                     P(
@@ -19341,7 +19356,10 @@ def public_photo_page(
                             "I Can Help Identify",
                             href=(f"/?section=skipped&current={first_unidentified_id}"
                                   if first_unidentified_id else "/?section=skipped"),
-                            cls="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"
+                            cls=("inline-block px-8 py-4 bg-amber-600 text-white font-semibold text-lg rounded-lg hover:bg-amber-500 transition-colors"
+                                 if identified_count == 0 and total_faces > 0
+                                 else "inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"),
+                            data_testid="help-identify-cta",
                         ),
                         A(
                             "Browse All Photos",
@@ -19352,7 +19370,10 @@ def public_photo_page(
                     ),
                     cls="text-center max-w-2xl mx-auto"
                 ),
-                cls="px-4 sm:px-6 py-12 border-t border-slate-800/50"
+                cls=("px-4 sm:px-6 py-12 border-t border-amber-800/30 bg-amber-950/10"
+                     if identified_count == 0 and total_faces > 0
+                     else "px-4 sm:px-6 py-12 border-t border-slate-800/50"),
+                data_testid="help-identify-section",
             ) if unidentified_count > 0 else None,
 
             # Footer
@@ -23700,12 +23721,13 @@ def get(sess=None):
         return Div(
             Div(
                 Span("\u2705", cls="text-4xl mb-3 block"),
-                H3("All caught up!", cls="text-lg font-semibold text-white mb-1"),
+                H3("All discoveries reviewed!", cls="text-lg font-semibold text-white mb-1"),
                 P("No high-confidence matches found. New discoveries will appear here when uploaded faces match confirmed identities.",
                   cls="text-sm text-slate-400"),
                 cls="text-center py-12"
             ),
-            cls="bg-slate-800/50 border border-slate-700/50 rounded-xl"
+            cls="bg-slate-800/50 border border-slate-700/50 rounded-xl",
+            data_testid="discoveries-empty-state"
         )
 
     cards = []
@@ -23771,7 +23793,7 @@ def get(sess=None):
                 Div(
                     source_img,
                     Div(
-                        P(source_name, cls="text-sm font-medium text-white truncate max-w-[120px]"),
+                        P(source_name, cls="text-sm font-medium text-white truncate max-w-[200px]", title=source_name),
                         Span("Unreviewed", cls="text-xs text-slate-400"),
                         cls="mt-1.5 text-center"
                     ),
@@ -23786,7 +23808,8 @@ def get(sess=None):
                     ),
                     Span(
                         f"{confidence_pct}% match",
-                        cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}"
+                        cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
+                        title=f"ML confidence that these two faces are the same person. {confidence_pct}% means a {_CONFIDENCE_LABEL.get(confidence, 'possible match').lower()}."
                     ),
                     cls="flex flex-col items-center gap-1.5 px-4"
                 ),
@@ -23795,7 +23818,8 @@ def get(sess=None):
                     target_img,
                     Div(
                         A(target_name, href=f"/person/{target_id}",
-                          cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[120px] block"),
+                          cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
+                          title=target_name),
                         Span("Confirmed", cls="text-xs text-green-400"),
                         cls="mt-1.5 text-center"
                     ),
@@ -23811,11 +23835,12 @@ def get(sess=None):
                              d="M5 13l4 4L19 7"),
                         cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"
                     ),
-                    Span(f"Confirm as {target_name}"),
+                    Span(f"Confirm as {target_name}", cls="truncate max-w-[200px]"),
                     hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={target_id}",
                     hx_target=f"#discovery-card-{source_id}",
                     hx_swap="outerHTML",
-                    cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px]"
+                    cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px] max-w-full",
+                    title=f"Confirm this face as {target_name}"
                 ) if first_face_id else None,
                 Button(
                     Svg(

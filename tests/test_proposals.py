@@ -153,7 +153,7 @@ class TestProposalBanner:
             from starlette.testclient import TestClient
             # Banner should mention target name and confidence
             banner_html = str(banner)
-            assert "Big Leon Capeluto" in banner_html or "ML Match" in banner_html
+            assert "Big Leon Capeluto" in banner_html or "match" in banner_html.lower()
 
     def test_proposal_banner_returns_none_for_no_proposal(self, tmp_path):
         """_proposal_banner returns None when no proposals exist."""

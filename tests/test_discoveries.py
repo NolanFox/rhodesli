@@ -399,14 +399,14 @@ class TestApiDiscoveriesRoute:
         return TestClient(app)
 
     def test_api_discoveries_empty_shows_message(self, client):
-        """/api/discoveries shows 'all caught up' when no discoveries."""
+        """/api/discoveries shows 'all discoveries reviewed' when no discoveries."""
         with patch("app.main._check_admin", return_value=None), \
              patch("app.main._compute_discoveries", return_value=[]), \
              patch("app.main.get_crop_files", return_value=set()):
             response = client.get("/api/discoveries")
 
         assert response.status_code == 200
-        assert "All caught up" in response.text
+        assert "All discoveries reviewed" in response.text
 
     def test_api_discoveries_renders_cards(self, client):
         """Cards are rendered for each discovery match."""
