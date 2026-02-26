@@ -72,10 +72,16 @@ Commits: b772594 (BUG fixes), 32ca057 (AD entries)
 - [x] Full test suite: 3057 app + 538 ML = 3595 total
 - [x] Cleaned up worktrees and branches
 - [x] Pushed to main (8e968f1)
-- [ ] Browser verify (pending deploy)
+- [x] Browser verify via Playwright:
+  - Health check: 668 identities, 274 photos, all services ready
+  - Main page: Playfair Display font, Heritage Archive branding, Discoveries badge (1) visible
+  - /discoveries page: 1 real discovery (unidentified → Big Leon Capeluto, 54%), confirm/reject buttons
+  - Screenshots: docs/screenshots/session-69/
 
-### Phase 6: Docs + Evaluation — IN PROGRESS
+### Phase 6: Docs + Evaluation — COMPLETE
 - [x] SESSION_LOG.md updated
-- [ ] CHANGELOG, ROADMAP, BACKLOG
-- [ ] Assessment
-- [ ] Archive session log
+- [x] CHANGELOG v0.74.0, ROADMAP updated, BACKLOG HARNESS-004
+- [x] Assessment: docs/assessments/session-69-assessment.md
+- [x] Archive: docs/session_logs/session-69-log.md
+- [x] INDEX.md + SESSION_HISTORY.md updated
+- [x] Pushed docs commit (982a71e)
