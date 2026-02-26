@@ -378,6 +378,44 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Breadcrumbs:** docs/session_context/session-68-context.md (Part 2),
   docs/session_logs/session-68-log.md (Phase 1 results)
 
+## HD-019: Multi-Tool Harness Architecture
+- **Date:** 2026-02-25
+- **Session:** 70
+- **Decision:** Canonical source (CLAUDE.md) + adapter pattern for multi-tool
+  support. Tool-agnostic rules extracted to `docs/AGENT_HARNESS.md`. Each tool
+  gets a thin adapter file that references the canonical source and adds
+  tool-specific conventions.
+- **Architecture:**
+  ```
+  CLAUDE.md (canonical, Claude Code native)
+      |
+      +-- docs/AGENT_HARNESS.md (tool-agnostic rules)
+      +-- AGENTS.md (Codex adapter)
+      +-- .cursorrules (Cursor pointer)
+      +-- .gemini/GEMINI.md (Gemini pointer)
+      +-- .antigravity/rules.md (Antigravity adapter)
+      +-- scripts/sync-harness.sh (regeneration)
+      +-- scripts/setup-worktree.sh (dependency setup)
+  ```
+- **Rationale:** Different AI coding tools (Claude Code, Codex, Cursor, Gemini
+  Code Assist, Antigravity) each read project rules from different files and
+  in different formats. A canonical-source + adapter pattern ensures rules stay
+  consistent across tools without manual duplication. `sync-harness.sh`
+  regenerates all adapter files from the canonical sources.
+- **Commit convention:** `[tool-name] type(scope): description` enables
+  attribution when multiple tools contribute to the same codebase.
+- **Alternatives considered:**
+  - Symlinks: Fragile across platforms (Windows, Docker), tools may not follow
+    symlinks, and each tool expects a different format/filename.
+  - Duplicate files without sync script: Guaranteed drift. Rules would diverge
+    within 2-3 sessions.
+  - Single file for all tools: Incompatible file paths and formats.
+    AGENTS.md vs .cursorrules vs .gemini/GEMINI.md are tool requirements.
+  - Inline everything in CLAUDE.md: Already at the 80-line limit (HD-006).
+    Multi-tool instructions would bloat it past the limit.
+- **Breadcrumbs:** .claude/rules/harness-sync.md, docs/AGENT_HARNESS.md,
+  AGENTS.md, .cursorrules, .gemini/GEMINI.md, .antigravity/rules.md
+
 ## HD-020: Auto-Evaluation Loop Architecture
 - **Date:** 2026-02-25
 - **Session:** 70
