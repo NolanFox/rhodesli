@@ -377,3 +377,45 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
     shell/Python scripts that require specific stdin/env setup
 - **Breadcrumbs:** docs/session_context/session-68-context.md (Part 2),
   docs/session_logs/session-68-log.md (Phase 1 results)
+
+## HD-020: Auto-Evaluation Loop Architecture
+- **Date:** 2026-02-25
+- **Session:** 70
+- **Decision:** `scripts/run_session.sh` orchestrates a full auto-evaluation
+  loop: main session (phase-by-phase) -> session-evaluator -> fix-prompt-writer
+  -> b-version launch. All stages are timestamped and logged to
+  `docs/session_logs/session-NN-autoeval-report.md`.
+- **Rationale:** Self-assessment (HD-016) catches ~70% of issues but has a
+  fundamental conflict of interest: the same model that built the feature
+  evaluates it. The evaluator subagent runs in a fresh context with no
+  emotional investment in the work. The fix-prompt-writer generates surgical
+  b-session prompts that address only what failed. This creates a
+  self-correcting development loop that catches issues that self-assessment
+  misses (proven in Session 67: evaluator found 3 phases PARTIAL that
+  self-assessment rated PASS).
+- **Architecture:**
+  1. Phase-by-phase execution with `claude -p` per phase (context isolation)
+  2. Evaluator reads: prompt, session log, assessment, git log, test results
+  3. Evaluator outputs structured PASS/FAIL with `B-SESSION CONCERNS: FOUND|NONE` marker
+  4. Fix-prompt-writer generates targeted b-session prompt (one phase per fix)
+  5. B-version runs as a single `claude -p` invocation
+  6. Final report aggregates all stages with timestamps
+- **Alternatives considered:**
+  - Manual review only: Does not scale for overnight/autonomous sessions.
+    Nolan cannot review every session before the next one starts.
+  - Inline evaluation (evaluator within the same session): Context pollution.
+    The evaluator would inherit the same degraded context and biases as the
+    main session. Fresh context is essential for honest evaluation.
+  - Always run b-version: Wasteful when the main session is clean. The
+    structured marker (`B-SESSION CONCERNS: FOUND|NONE`) gates b-version
+    launch to only when needed.
+  - Human-written b-session prompts: The fix-prompt-writer generates prompts
+    using the same best practices (small phases, specific criteria, assessment
+    mandatory) but without human latency. Human can still override by editing
+    the generated prompt before it runs.
+- **Limitations:** Cannot be tested from within a Claude session (requires
+  external invocation of `claude -p`). The script itself is testable via
+  dry-run with mock claude commands.
+- **Breadcrumbs:** scripts/run_session.sh,
+  .claude/agents/session-evaluator.md, .claude/agents/fix-prompt-writer.md,
+  HD-016 (self-assessment), HD-003 (verification gate)
