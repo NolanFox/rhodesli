@@ -66,7 +66,14 @@
 - [x] Total: 3671 tests (up from 3595)
 - [x] Pushed to main, Railway deploy triggered
 - [x] Worktrees and branches cleaned up
-- [x] Browser verify: Phase 1 fixes confirmed (UX-108/109). Phase 2 deploy pending at time of check.
+- [x] Browser verify: ALL fixes confirmed in production
+  - UX-108: Heritage Archive subtitle bright amber — PASS
+  - UX-109: New Matches badge amber (consistent) — PASS
+  - UX-110: Discovery names show fully (200px) — PASS
+  - UX-112: Confirm button properly sized — PASS
+  - MEDIUM #3: ML banner "POSSIBLE MATCH" (was "ML MATCH: MODERATE") — PASS
+  - MEDIUM #4: Tab styling with shadows + transitions — PASS
+  - MEDIUM #5: Triage bar border separation — PASS
 
 ### Phase 5: Docs + Evaluation — COMPLETE
 - [x] CHANGELOG v0.75.0
