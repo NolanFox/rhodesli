@@ -1922,6 +1922,9 @@ def _compute_sidebar_counts(registry) -> dict:
     except Exception:
         pass
 
+    # Count discoveries (high-confidence matches to confirmed identities)
+    discovery_count = _count_discoveries(registry)
+
     return {
         "to_review": len(to_review),
         "confirmed": len(confirmed_list),
@@ -1931,6 +1934,7 @@ def _compute_sidebar_counts(registry) -> dict:
         "pending_uploads": _count_pending_uploads(),
         "proposals": proposal_count,
         "pending_annotations": pending_annotations,
+        "discoveries": discovery_count,
     }
 
 
@@ -3236,6 +3240,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
                 nav_item("/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "blue"),
+                nav_item("/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"),
                 nav_item("/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
                 cls="mb-3"
             ),
@@ -4770,6 +4775,123 @@ def _confidence_tier(distance: float) -> str:
 _CONFIDENCE_RING = {"VERY HIGH": "ring-emerald-400", "HIGH": "ring-blue-400", "MODERATE": "ring-amber-400"}
 _CONFIDENCE_COLOR = {"VERY HIGH": "text-emerald-300", "HIGH": "text-blue-300", "MODERATE": "text-amber-300"}
 _CONFIDENCE_LABEL = {"VERY HIGH": "Strong match", "HIGH": "Good match", "MODERATE": "Possible match", "LOW": "Weak match"}
+
+# =============================================================================
+# DISCOVERY DETECTION — High-confidence matches to CONFIRMED identities
+# =============================================================================
+
+_discovery_cache = None
+_discovery_cache_key = None
+
+DISCOVERY_DISTANCE_THRESHOLD = 1.0  # Distance < 1.0 = HIGH or VERY HIGH confidence
+
+
+def _compute_discoveries(registry=None) -> list:
+    """Find INBOX/PROPOSED identities with high-confidence matches to CONFIRMED identities.
+
+    A "discovery" is an unreviewed face that has a nearest CONFIRMED neighbor
+    with distance < DISCOVERY_DISTANCE_THRESHOLD. These are high-priority
+    items because an admin can resolve them with a single click.
+
+    Returns a list of dicts:
+        [{source_id, source_name, target_id, target_name, distance, confidence}, ...]
+    sorted by distance (best matches first).
+
+    This is a read-only computation — no data mutation.
+    """
+    global _discovery_cache, _discovery_cache_key
+    if registry is None:
+        registry = load_registry()
+
+    # Cache key: count of inbox + proposed + confirmed
+    inbox = registry.list_identities(state=IdentityState.INBOX)
+    proposed = registry.list_identities(state=IdentityState.PROPOSED)
+    confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
+    cache_key = (len(inbox), len(proposed), len(confirmed_list))
+
+    if _discovery_cache is not None and _discovery_cache_key == cache_key:
+        return _discovery_cache
+
+    unreviewed = inbox + proposed
+    if not unreviewed or not confirmed_list:
+        _discovery_cache = []
+        _discovery_cache_key = cache_key
+        return _discovery_cache
+
+    # Build confirmed identity set for filtering
+    confirmed_ids = {c["identity_id"] for c in confirmed_list}
+
+    discoveries = []
+
+    # Use proposals first (cheap), then fall back to batch computation
+    ids_with_proposals = _get_identities_with_proposals()
+    needs_computation = []
+
+    for identity in unreviewed:
+        iid = identity["identity_id"]
+        if iid in ids_with_proposals:
+            best = _get_best_proposal_for_identity(iid)
+            if best:
+                target_id = best.get("target_identity_id", best.get("target_id", ""))
+                if target_id in confirmed_ids and best.get("distance", 999) < DISCOVERY_DISTANCE_THRESHOLD:
+                    dist = best["distance"]
+                    discoveries.append({
+                        "source_id": iid,
+                        "source_name": ensure_utf8_display(identity.get("name", "")),
+                        "target_id": target_id,
+                        "target_name": ensure_utf8_display(best.get("target_name", best.get("name", ""))),
+                        "distance": dist,
+                        "confidence": _confidence_tier(dist),
+                    })
+                continue  # Already checked via proposal
+        needs_computation.append(identity)
+
+    # For the rest, use batch neighbor computation filtered to confirmed targets
+    if needs_computation:
+        try:
+            from core.neighbors import batch_best_neighbor_distances
+            face_data = get_face_data()
+
+            # Compute neighbors for unreviewed identities
+            need_ids = [i["identity_id"] for i in needs_computation]
+            batch_results = batch_best_neighbor_distances(need_ids, registry, face_data)
+
+            for identity in needs_computation:
+                iid = identity["identity_id"]
+                if iid not in batch_results:
+                    continue
+                dist, neighbor_id, neighbor_name = batch_results[iid]
+                if neighbor_id and neighbor_id in confirmed_ids and dist < DISCOVERY_DISTANCE_THRESHOLD:
+                    discoveries.append({
+                        "source_id": iid,
+                        "source_name": ensure_utf8_display(identity.get("name", "")),
+                        "target_id": neighbor_id,
+                        "target_name": ensure_utf8_display(neighbor_name or ""),
+                        "distance": dist,
+                        "confidence": _confidence_tier(dist),
+                    })
+        except (ImportError, Exception) as e:
+            logging.warning(f"[discoveries] Batch neighbor computation failed: {e}")
+
+    discoveries.sort(key=lambda d: d["distance"])
+    _discovery_cache = discoveries
+    _discovery_cache_key = cache_key
+    return discoveries
+
+
+def _count_discoveries(registry=None) -> int:
+    """Count high-confidence matches to CONFIRMED identities.
+
+    Lightweight wrapper around _compute_discoveries for sidebar badge.
+    """
+    return len(_compute_discoveries(registry))
+
+
+def _invalidate_discovery_cache():
+    """Invalidate the discovery cache (call after merge/reject actions)."""
+    global _discovery_cache, _discovery_cache_key
+    _discovery_cache = None
+    _discovery_cache_key = None
 
 
 def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
@@ -19881,6 +20003,7 @@ def post(face_id: str, target_id: str, seq: str = "", sess=None):
 
     if result["success"]:
         save_registry(registry)
+        _invalidate_discovery_cache()
 
         # Find the photo this face is in to re-render the photo view
         photo_id = get_photo_id_for_face(face_id)
@@ -23384,6 +23507,336 @@ def get(sess=None):
         sidebar_script,
         cls="h-full"
     )
+
+
+# =============================================================================
+# DISCOVERIES — High-confidence matches to confirmed identities
+# =============================================================================
+
+@rt("/discoveries")
+def get(sess=None):
+    """
+    Discovery inbox: high-confidence matches between unreviewed faces and confirmed identities.
+    Admin-only: these are actionable items that can be resolved with one click.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+    user = get_current_user(sess or {})
+
+    style = Style("""
+        html, body { height: 100%; margin: 0; }
+        body { background-color: #0f172a; }
+    """)
+
+    registry = load_registry()
+    counts = _compute_sidebar_counts(registry)
+    discovery_count = counts.get("discoveries", 0)
+
+    page_style = Style("""
+        .sidebar-container { width: 15rem; transition: width 0.2s ease, transform 0.3s ease; }
+        .sidebar-container.collapsed { width: 3.5rem; }
+        .sidebar-container.collapsed .sidebar-label,
+        .sidebar-container.collapsed .sidebar-search,
+        .sidebar-container.collapsed .sidebar-search-results { display: none; }
+        .sidebar-container.collapsed .sidebar-nav-item { justify-content: center; padding-left: 0; padding-right: 0; }
+        .sidebar-container.collapsed .sidebar-icon { margin: 0; }
+        .sidebar-container.collapsed .sidebar-chevron { transform: rotate(180deg); }
+        .sidebar-container.collapsed .sidebar-collapse-btn { margin: 0 auto; }
+        .sidebar-search-results:not(:empty) { position: absolute; left: 0.75rem; right: 0.75rem; top: 100%; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem; max-height: 300px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        @media (max-width: 767px) {
+            #sidebar { width: 15rem !important; transform: translateX(-100%); transition: transform 0.3s ease; }
+            #sidebar.open { transform: translateX(0); }
+            #sidebar .sidebar-label { display: inline !important; }
+            #sidebar .sidebar-search { display: block !important; }
+            .main-content { margin-left: 0 !important; }
+        }
+        @media (min-width: 768px) { #sidebar { transform: translateX(0); } }
+        @media (min-width: 1024px) { .main-content { margin-left: 15rem; transition: margin-left 0.2s ease; } .main-content.sidebar-collapsed { margin-left: 3.5rem; } }
+    """)
+    mobile_header = Div(
+        Button(
+            Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                     d="M4 6h16M4 12h16M4 18h16"),
+                cls="w-6 h-6", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+            onclick="toggleSidebar()",
+            cls="p-2 text-slate-300 hover:text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+        ),
+        Span("Discoveries", cls="text-lg font-bold text-white"),
+        cls="mobile-header lg:hidden flex items-center gap-3 px-4 py-3 bg-slate-800 border-b border-slate-700 sticky top-0 z-30"
+    )
+    sidebar_overlay = Div(onclick="closeSidebar()",
+                          cls="sidebar-overlay fixed inset-0 bg-black/50 z-30 hidden lg:hidden")
+    sidebar_script = Script("""
+        function toggleSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.toggle('open');
+            sb.classList.toggle('-translate-x-full');
+            ov.classList.toggle('hidden');
+        }
+        function closeSidebar() {
+            var sb = document.getElementById('sidebar');
+            var ov = document.querySelector('.sidebar-overlay');
+            sb.classList.remove('open');
+            sb.classList.add('-translate-x-full');
+            ov.classList.add('hidden');
+        }
+        function toggleSidebarCollapse() {
+            var sb = document.getElementById('sidebar');
+            var mc = document.querySelector('.main-content');
+            var isCollapsed = sb.classList.toggle('collapsed');
+            if (mc) mc.classList.toggle('sidebar-collapsed', isCollapsed);
+            try { localStorage.setItem('sidebar_collapsed', isCollapsed ? 'true' : 'false'); } catch(e) {}
+        }
+        (function() {
+            try {
+                var collapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+                if (collapsed && window.innerWidth >= 1024) {
+                    var sb = document.getElementById('sidebar');
+                    var mc = document.querySelector('.main-content');
+                    if (sb) sb.classList.add('collapsed');
+                    if (mc) mc.classList.add('sidebar-collapsed');
+                }
+            } catch(e) {}
+        })();
+    """)
+
+    return Title("Discoveries - Rhodesli"), style, page_style, Div(
+        toast_container(),
+        mobile_header,
+        sidebar_overlay,
+        sidebar(counts, current_section="discoveries", user=user),
+        Main(
+            Div(
+                Div(
+                    H2("Discoveries", cls="text-2xl font-bold text-white"),
+                    P(f"{discovery_count} high-confidence match{'es' if discovery_count != 1 else ''} to confirmed identities",
+                      cls="text-sm text-slate-400 mt-1"),
+                    cls="mb-6"
+                ),
+                Div(
+                    id="discoveries-list",
+                    hx_get="/api/discoveries",
+                    hx_trigger="load",
+                    hx_swap="innerHTML",
+                ),
+                cls="max-w-3xl mx-auto px-4 sm:px-8 py-6"
+            ),
+            cls="main-content min-h-screen overflow-x-hidden"
+        ),
+        sidebar_script,
+        cls="h-full"
+    )
+
+
+@rt("/api/discoveries")
+def get(sess=None):
+    """HTMX endpoint: render discovery cards for the discoveries page."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    registry = load_registry()
+    discoveries = _compute_discoveries(registry)
+    crop_files = get_crop_files()
+
+    if not discoveries:
+        return Div(
+            Div(
+                Span("\u2705", cls="text-4xl mb-3 block"),
+                H3("All caught up!", cls="text-lg font-semibold text-white mb-1"),
+                P("No high-confidence matches found. New discoveries will appear here when uploaded faces match confirmed identities.",
+                  cls="text-sm text-slate-400"),
+                cls="text-center py-12"
+            ),
+            cls="bg-slate-800/50 border border-slate-700/50 rounded-xl"
+        )
+
+    cards = []
+    for d in discoveries:
+        source_id = d["source_id"]
+        target_id = d["target_id"]
+        source_name = d["source_name"] or f"Identity {source_id[:8]}..."
+        target_name = d["target_name"] or f"Identity {target_id[:8]}..."
+        distance = d["distance"]
+        confidence = d["confidence"]
+        confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+
+        # Resolve crop URLs for both source and target
+        source_crop = _resolve_identity_crop(source_id, crop_files)
+        target_crop = _resolve_identity_crop(target_id, crop_files)
+
+        # Confidence badge styling
+        if confidence == "VERY HIGH":
+            badge_cls = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+            ring_cls = "ring-2 ring-emerald-400/50"
+        else:
+            badge_cls = "bg-blue-500/20 text-blue-400 border-blue-500/30"
+            ring_cls = "ring-2 ring-blue-400/50"
+
+        # Source face image (unreviewed)
+        source_img = Img(
+            src=source_crop or "/static/placeholder.jpg",
+            alt=source_name,
+            cls=f"w-20 h-20 rounded-full object-cover {ring_cls}",
+            loading="lazy"
+        ) if source_crop else Div(
+            Span("?", cls="text-2xl text-slate-500"),
+            cls=f"w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center {ring_cls}"
+        )
+
+        # Target face image (confirmed)
+        target_img = Img(
+            src=target_crop or "/static/placeholder.jpg",
+            alt=target_name,
+            cls="w-20 h-20 rounded-full object-cover ring-2 ring-green-400/50",
+            loading="lazy"
+        ) if target_crop else Div(
+            Span("?", cls="text-2xl text-slate-500"),
+            cls="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
+        )
+
+        # Build the face_id for source identity (first face)
+        source_identity = _safe_get_identity(registry, source_id)
+        source_face_ids = (source_identity.get("anchor_ids", []) + source_identity.get("candidate_ids", [])) if source_identity else []
+        first_face_id = ""
+        for f in source_face_ids:
+            first_face_id = f if isinstance(f, str) else f.get("face_id", "")
+            if first_face_id:
+                break
+
+        from urllib.parse import quote
+        face_id_encoded = quote(first_face_id, safe="")
+
+        card = Div(
+            # Match pair: source -> target
+            Div(
+                # Source face
+                Div(
+                    source_img,
+                    Div(
+                        P(source_name, cls="text-sm font-medium text-white truncate max-w-[120px]"),
+                        Span("Unreviewed", cls="text-xs text-slate-400"),
+                        cls="mt-1.5 text-center"
+                    ),
+                    cls="flex flex-col items-center"
+                ),
+                # Arrow + confidence
+                Div(
+                    Svg(
+                        Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                             d="M14 5l7 7m0 0l-7 7m7-7H3"),
+                        cls="w-6 h-6 text-slate-400", fill="none", stroke="currentColor", viewBox="0 0 24 24"
+                    ),
+                    Span(
+                        f"{confidence_pct}% match",
+                        cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}"
+                    ),
+                    cls="flex flex-col items-center gap-1.5 px-4"
+                ),
+                # Target face (confirmed)
+                Div(
+                    target_img,
+                    Div(
+                        A(target_name, href=f"/person/{target_id}",
+                          cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[120px] block"),
+                        Span("Confirmed", cls="text-xs text-green-400"),
+                        cls="mt-1.5 text-center"
+                    ),
+                    cls="flex flex-col items-center"
+                ),
+                cls="flex items-center justify-center gap-2 py-4"
+            ),
+            # Action buttons
+            Div(
+                Button(
+                    Svg(
+                        Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                             d="M5 13l4 4L19 7"),
+                        cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"
+                    ),
+                    Span(f"Confirm as {target_name}"),
+                    hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={target_id}",
+                    hx_target=f"#discovery-card-{source_id}",
+                    hx_swap="outerHTML",
+                    cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px]"
+                ) if first_face_id else None,
+                Button(
+                    Svg(
+                        Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                             d="M6 18L18 6M6 6l12 12"),
+                        cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"
+                    ),
+                    Span("Not a match"),
+                    hx_post=f"/api/discovery/reject?source_id={source_id}&target_id={target_id}",
+                    hx_target=f"#discovery-card-{source_id}",
+                    hx_swap="outerHTML",
+                    cls="flex items-center gap-1.5 px-4 py-2 bg-slate-600 text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors min-h-[44px]"
+                ),
+                cls="flex items-center justify-center gap-3 pb-4 px-4"
+            ),
+            id=f"discovery-card-{source_id}",
+            cls="bg-slate-800/80 border border-slate-700/50 rounded-xl hover:border-slate-600/50 transition-colors"
+        )
+        cards.append(card)
+
+    return Div(*cards, cls="space-y-4")
+
+
+def _resolve_identity_crop(identity_id: str, crop_files: set) -> str:
+    """Resolve the best face crop URL for an identity. Returns URL or None."""
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(identity_id)
+        face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+        for f in face_ids:
+            fid = f if isinstance(f, str) else f.get("face_id", "")
+            url = resolve_face_image_url(fid, crop_files)
+            if url:
+                return url
+    except (KeyError, Exception):
+        pass
+    return None
+
+
+@rt("/api/discovery/reject")
+def post(source_id: str, target_id: str, sess=None):
+    """Reject a discovery match by adding the target as a negative for the source identity.
+
+    This prevents the match from showing up again. Returns a success confirmation
+    that replaces the card via HTMX.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        registry = load_registry()
+        identity = registry.get_identity(source_id)
+        negatives = identity.get("negative_ids", [])
+        neg_entry = f"identity:{target_id}"
+        if neg_entry not in negatives:
+            negatives.append(neg_entry)
+            # Mutate registry directly (lesson 36: get_identity returns shallow copy)
+            registry._identities[source_id]["negative_ids"] = negatives
+            save_registry(registry)
+        _invalidate_discovery_cache()
+        return Div(
+            Div(
+                Span("\u2716", cls="text-slate-500 mr-2"),
+                Span("Match dismissed", cls="text-sm text-slate-400"),
+                cls="flex items-center justify-center py-3"
+            ),
+            cls="bg-slate-800/30 border border-slate-700/30 rounded-xl opacity-60",
+            style="animation: fadeOut 2s forwards;"
+        )
+    except (KeyError, Exception) as e:
+        logging.error(f"[discoveries] Reject failed: {e}")
+        return Div(
+            toast("Failed to dismiss match. Please try again.", "error"),
+            hx_swap_oob="beforeend:#toast-container"
+        )
 
 
 @rt("/admin/proposals")
