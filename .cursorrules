@@ -1,0 +1,3 @@
+# Rhodesli Project Rules
+# See CLAUDE.md for full project rules and docs/AGENT_HARNESS.md for tool-agnostic rules.
+# Test: pytest tests/ -x -q && pytest rhodesli_ml/tests/ -x -q
