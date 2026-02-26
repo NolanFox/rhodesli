@@ -11,6 +11,48 @@ For ops decisions, see: `docs/ops/OPS_DECISIONS.md`
 
 ---
 
+## DD-001: Archival Aesthetic Direction
+
+- **Date:** 2026-02-25
+- **Session:** 69 (Subagent A)
+- **Status:** Decided
+
+**What:** Playfair Display serif font for all display headings and identity names.
+Warm amber/parchment color palette for card backgrounds and borders.
+Three custom CSS classes for archival card styling.
+
+**Why:** Heritage archive for a 100+ year old community deserves museum-quality
+editorial feel (Lesson 84). Cold slate developer-tool aesthetic does not match
+the emotional weight of the content.
+
+**Alternatives rejected:**
+- System serif (Georgia) -- lacks character
+- Cormorant Garamond -- too thin at small sizes
+- Full cream background -- clashed with existing dark mode
+
+See `docs/design-decisions.md` DD-001 for full rationale.
+
+---
+
+## DD-002: Face Card Layout Improvements
+
+- **Date:** 2026-02-25
+- **Session:** 69 (Subagent A)
+- **Status:** Decided
+
+**What:** Compact face cards (reduced padding, denser grid), warm gradient
+backgrounds, lighter sepia filter, archival border styling.
+
+**Key changes:**
+- Face grid: 2/3/4 cols -> 3/4/5/6 cols (50% more faces visible)
+- Face card padding: p-2 -> p-1.5
+- Sepia filter: 0.3 -> 0.15 (more face detail)
+- Card backgrounds: cold slate -> warm gradient (#2a241e -> #1e1a15)
+
+See `docs/design-decisions.md` DD-002 for full rationale and component table.
+
+---
+
 ## DD-003: Discovery Notification UX — Badge + One-Click Confirm View
 
 - **Date:** 2026-02-25
