@@ -30,6 +30,16 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **UX-081**: About page missing navbar
 - **UX-092**: Birth year Save Edit race condition (click interference)
 
+### P1 — From Session 69 UX Review
+- **UX-108**: "Heritage Archive" subtitle fails WCAG AA contrast (~2.1:1) on sidebar. See docs/session_context/session-69-ux-evaluation.md #1
+- **UX-109**: "To Review" color inconsistent — amber in banner, blue in sidebar badge. See session-69-ux-evaluation.md #2
+
+### P2 — From Session 69 UX Review
+- **UX-110**: Discovery card identity names truncated at 120px — cuts identifying info. See session-69-ux-evaluation.md #8
+- **UX-111**: Discovery match confidence badge has no tooltip/explanation. See session-69-ux-evaluation.md #9
+- **UX-112**: "Confirm as {name}" button will overflow on long names. See session-69-ux-evaluation.md #10
+- **UX-113**: Discovery empty state returns blank div — no feedback after clearing queue. See session-69-ux-evaluation.md #11
+
 ### P2 — From Session 67 UX Review
 - **UX-104**: Compare "Compare Selected Faces" button not disabled before prerequisites met
 - **UX-105**: Missing "Help Identify" CTA for photos with all-unidentified faces
