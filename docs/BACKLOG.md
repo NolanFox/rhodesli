@@ -31,21 +31,21 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **UX-092**: Birth year Save Edit race condition (click interference)
 
 ### P1 — From Session 69 UX Review
-- **UX-108**: "Heritage Archive" subtitle fails WCAG AA contrast (~2.1:1) on sidebar. See docs/session_context/session-69-ux-evaluation.md #1
-- **UX-109**: "To Review" color inconsistent — amber in banner, blue in sidebar badge. See session-69-ux-evaluation.md #2
+- ~~**UX-108**: "Heritage Archive" subtitle fails WCAG AA contrast~~ FIXED (Session 70)
+- ~~**UX-109**: "To Review" color inconsistent — amber vs blue~~ FIXED (Session 70)
 
 ### P2 — From Session 69 UX Review
-- **UX-110**: Discovery card identity names truncated at 120px — cuts identifying info. See session-69-ux-evaluation.md #8
-- **UX-111**: Discovery match confidence badge has no tooltip/explanation. See session-69-ux-evaluation.md #9
-- **UX-112**: "Confirm as {name}" button will overflow on long names. See session-69-ux-evaluation.md #10
-- **UX-113**: Discovery empty state returns blank div — no feedback after clearing queue. See session-69-ux-evaluation.md #11
+- ~~**UX-110**: Discovery card identity names truncated at 120px~~ FIXED (Session 70, 200px + tooltips)
+- ~~**UX-111**: Discovery confidence badge no tooltip~~ FIXED (Session 70)
+- ~~**UX-112**: "Confirm as {name}" button overflow~~ FIXED (Session 70, truncation + tooltip)
+- ~~**UX-113**: Discovery empty state blank div~~ FIXED (Session 70, "All discoveries reviewed!")
 
 ### P2 — From Session 70
 - **UX-114**: Collection dropdown `onfocus="this.select()"` is fragile — keyboard nav doesn't trigger onfocus. Replace with placeholder text or proper select component. Source: Session 69 BUG-3 fix fragility.
 
 ### P2 — From Session 67 UX Review
-- **UX-104**: Compare "Compare Selected Faces" button not disabled before prerequisites met
-- **UX-105**: Missing "Help Identify" CTA for photos with all-unidentified faces
+- ~~**UX-104**: Compare "Compare Selected Faces" button disabled state~~ VERIFIED (Session 70, already implemented)
+- ~~**UX-105**: Missing "Help Identify" CTA for all-unidentified photos~~ FIXED (Session 70, amber styling)
 - **UX-106**: Inconsistent contribution CTA phrasing ("Do you know?" vs "Can you help?")
 - **UX-107**: "Identified" badge on person page has no tooltip or explanation
 

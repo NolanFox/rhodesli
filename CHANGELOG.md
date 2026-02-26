@@ -2,6 +2,49 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.75.0] — 2026-02-25 (Session 70: UX Fix Pass + Multi-Tool Harness + Auto-Eval Loop)
+
+### Fixed — UX Issues from Session 69 Audit (13 issues addressed)
+- UX-108 [HIGH]: Heritage Archive subtitle contrast fix (text-amber-500/80, WCAG AA ~8:1)
+- UX-109 [HIGH]: Sidebar badge color consistency (blue → amber, matches top bar)
+- UX-110: Discovery card name truncation (120px → 200px, added tooltips)
+- UX-111: Confidence badge tooltip explaining match percentage
+- UX-112: Confirm button overflow handling (truncation + tooltip)
+- UX-113: Discovery empty state "All discoveries reviewed!" (was blank)
+- UX-104: Compare Selected Faces disabled state (already implemented, verified)
+- UX-105: Help Identify CTA enhanced for all-unidentified photos (amber styling)
+- MEDIUM #3: ML banner uses user-friendly vocabulary (Strong/Good/Possible/Weak match)
+- MEDIUM #4: Active tab styling improved (shadow, transitions, better dark theme contrast)
+- MEDIUM #5: Triage bar visual separation (border-b, increased margin)
+
+### Added — Multi-Tool Harness (HD-019)
+- `docs/AGENT_HARNESS.md`: Tool-agnostic project rules (124 lines)
+- `AGENTS.md`: Codex adapter (105 lines)
+- `.cursorrules`, `.gemini/GEMINI.md`, `.antigravity/rules.md`: Tool pointers
+- `scripts/sync-harness.sh`: Regenerates adapters from CLAUDE.md
+- `scripts/setup-worktree.sh`: Worktree dependency setup
+
+### Added — Auto-Evaluation Loop (HD-020)
+- `scripts/run_session.sh`: 6-stage orchestration (455 lines)
+  - Phase-by-phase execution → evaluator → fix-prompt-writer → b-version
+- `.claude/agents/session-evaluator.md`: 20-item checklist, parseable markers
+- `.claude/agents/fix-prompt-writer.md`: Input/output contracts, quality rules
+
+### Added — Parallelization Skill Validation
+- Tested prompt-parallelizer skill against session 70 prompt
+- Accuracy: HIGH (8 correct, 6 minor gaps)
+- Analysis: `docs/analysis/parallelization_skill_test_session70.md`
+
+### Fixed — Documentation Alignment
+- DD-003 threshold: "P(match) > 0.85" → "distance < 1.0" (code alignment)
+- UX-114 added to BACKLOG (BUG-3 dropdown fragility)
+- Lessons 86 (context overflow) + 87 (subagent commit discipline)
+
+### Infrastructure
+- 3 parallel worktree subagents (UX, harness, auto-eval)
+- HARNESS_DECISIONS.md: HD-019, HD-020
+- 28 new UX tests, 3671 total (3133 app + 538 ML)
+
 ## [v0.74.0] — 2026-02-25 (Session 69: Bug Fixes + Design Audit + Discovery Notifications)
 
 ### Fixed — BUG-1: Create Identity 500 Error [P0] (AD-168)

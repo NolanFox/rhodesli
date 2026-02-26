@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 70: UX Fix Pass + Multi-Tool Harness + Auto-Eval Loop (2026-02-25) — v0.75.0
+- **UX fix pass**: 13 issues from session 69 audit addressed (2 HIGH, 5 MEDIUM, 6 LOW). UX-108 contrast fix, UX-109 color consistency, UX-110-113 discovery card improvements, UX-104/105 verified/fixed, MEDIUM #3-5 (ML banner vocab, tab styling, triage bar).
+- **Multi-tool harness (HD-019)**: Canonical source + adapter pattern. AGENT_HARNESS.md (tool-agnostic rules), AGENTS.md (Codex), .cursorrules, .gemini/GEMINI.md, .antigravity/rules.md. sync-harness.sh + setup-worktree.sh.
+- **Auto-evaluation loop (HD-020)**: run_session.sh rewritten as 6-stage orchestration (phases → evaluator → fix-prompt-writer → b-version). session-evaluator.md (20-item checklist), fix-prompt-writer.md (I/O contracts).
+- **Parallelization skill validated**: Tested against session 70 prompt. Accuracy HIGH (8 correct, 6 minor gaps). Analysis in docs/analysis/.
+- **Lessons 86-87**: Context overflow + subagent commit discipline added.
+- 3 parallel worktree subagents. 28 new tests. ~3671 total (3133 app + 538 ML).
+
 ## Session 69: Bug Fixes + Design Audit + Discovery Notifications (2026-02-25) — v0.74.0
 - **BUG-1 (P0, AD-168)**: Create Identity 500 error — `rename_identity()` missing `user_source` param. Also fixed hyperscript parse error (missing `end` keyword).
 - **BUG-2 (P0, AD-169)**: Clustering pipeline confirmed BY DESIGN (Gatekeeper pattern). Upload → face detection → INBOX only. No auto-clustering intentional.
