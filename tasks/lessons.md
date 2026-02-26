@@ -126,3 +126,5 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 75 | Harness decisions need provenance tracking (HD-NNN) just like algorithmic decisions |
 | 76 | Audits can have blind spots — always audit against ACTUAL PROMPT TEXT, not assumed scope |
 | 77 | Trimming docs without verifying destination loses context — always confirm target file has the data before removing |
+| 86 | Context overflow in long sessions — subagent results flood orchestrator, need context budget estimation |
+| 87 | Subagent commit discipline — every subagent MUST run tests AND commit ALL files before completing |

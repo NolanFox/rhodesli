@@ -154,6 +154,22 @@ Merge order: B (docs) -> C (docs+scripts, RESULTS.md conflict resolved) -> A (ap
 
 Result: 3 parallel streams completed, 2 RESULTS.md conflicts resolved at merge, all 3064 tests pass.
 
+## Subagent Commit Discipline (Lesson 87)
+
+Every subagent MUST before completing:
+1. Run the full test suite (`pytest tests/ -x -q && pytest rhodesli_ml/tests/ -x -q`)
+2. Commit ALL files (`git status` must show clean working tree)
+3. The orchestrator verifies `git status` in each worktree before merge
+
+Failure to commit all files means manual recovery at merge time (happened sessions 64, 69).
+
+## Context Budget (Lesson 86)
+
+Estimate context consumption per subagent. If total exceeds ~60% of context window:
+- Stagger execution (2 parallel, then 1)
+- Use /clear between merging subagent results
+- Subagent briefs should specify max response size
+
 ## Anti-Patterns
 
 - **Do not parallelize** if all phases touch app/main.py
@@ -161,6 +177,7 @@ Result: 3 parallel streams completed, 2 RESULTS.md conflicts resolved at merge, 
 - **Do not create >4 worktrees** (resource exhaustion)
 - **Do not skip the merge phase** — always run full test suite after merge
 - **Do not let subagents edit shared docs** (CHANGELOG, ROADMAP) — main agent only
+- **Do not let subagents complete with uncommitted files** (Lesson 87)
 
 ## Related
 

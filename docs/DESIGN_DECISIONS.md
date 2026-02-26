@@ -57,7 +57,7 @@ See `docs/design-decisions.md` DD-002 for full rationale and component table.
 
 - **Date:** 2026-02-25
 - **Session:** 69 (planning)
-- **Status:** Proposed
+- **Status:** Implemented
 
 ### Problem
 
@@ -81,7 +81,8 @@ calibrated confidence scores that can power a notification layer.
 Add a discovery notification system with two components:
 
 1. **Notification badge** on the admin dashboard showing count of
-   high-confidence proposals (P(match) > 0.85 per calibrated score).
+   high-confidence proposals (cosine distance < 1.0, corresponding to
+   approximately P(match) > 0.85 per calibrated score).
    Updates when new proposals are generated or when calibration model
    is updated.
 
@@ -121,9 +122,11 @@ Add a discovery notification system with two components:
 
 ### Implementation Notes
 
-- Badge count query: `SELECT COUNT(*) FROM proposals WHERE
-  calibrated_score > 0.85 AND status = 'pending'`
-- Threshold (0.85) should be configurable via admin settings
+- Badge count query: computed by `_compute_discoveries()` using
+  `DISCOVERY_DISTANCE_THRESHOLD = 1.0` (cosine distance < 1.0)
+- This distance threshold approximately maps to P(match) > 0.85
+  per the isotonic calibration model (AD-149)
+- Threshold configurable via `DISCOVERY_DISTANCE_THRESHOLD` constant
 - Badge renders in `_admin_bar()` in app/main.py
 - One-click view reuses existing proposal review components
 - Must preserve all existing Gatekeeper guards (_check_admin)

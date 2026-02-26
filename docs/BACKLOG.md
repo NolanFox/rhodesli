@@ -40,6 +40,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **UX-112**: "Confirm as {name}" button will overflow on long names. See session-69-ux-evaluation.md #10
 - **UX-113**: Discovery empty state returns blank div — no feedback after clearing queue. See session-69-ux-evaluation.md #11
 
+### P2 — From Session 70
+- **UX-114**: Collection dropdown `onfocus="this.select()"` is fragile — keyboard nav doesn't trigger onfocus. Replace with placeholder text or proper select component. Source: Session 69 BUG-3 fix fragility.
+
 ### P2 — From Session 67 UX Review
 - **UX-104**: Compare "Compare Selected Faces" button not disabled before prerequisites met
 - **UX-105**: Missing "Help Identify" CTA for photos with all-unidentified faces

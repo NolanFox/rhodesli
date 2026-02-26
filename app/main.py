@@ -3198,7 +3198,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
         Div(
             A(
                 H1("Rhodesli", cls="sidebar-label text-lg font-bold text-white leading-tight font-display"),
-                P("Heritage Archive", cls="sidebar-label text-xs text-amber-700/80 mt-0.5 tracking-wide uppercase"),
+                P("Heritage Archive", cls="sidebar-label text-xs text-amber-500/80 mt-0.5 tracking-wide uppercase"),
                 href="/",
                 cls="flex-1 min-w-0 no-underline hover:opacity-80 transition-opacity"
             ),
@@ -3256,7 +3256,7 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                     "Review",
                     cls="sidebar-label px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1"
                 ),
-                nav_item("/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "blue"),
+                nav_item("/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
                 nav_item("/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"),
                 nav_item("/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
                 cls="mb-3"
