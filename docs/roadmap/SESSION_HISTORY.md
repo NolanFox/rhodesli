@@ -364,6 +364,19 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 69: Bug Fixes + Design Audit + Discovery Notifications (2026-02-25) — v0.74.0
+- **BUG-1 (P0, AD-168)**: Create Identity 500 error — `rename_identity()` missing `user_source` param. Also fixed hyperscript parse error (missing `end` keyword).
+- **BUG-2 (P0, AD-169)**: Clustering pipeline confirmed BY DESIGN (Gatekeeper pattern). Upload → face detection → INBOX only. No auto-clustering intentional.
+- **BUG-3 (P1)**: Collection dropdown UX — datalist hidden by pre-filled "Uncategorized". Fix: `onfocus="this.select()"`.
+- **Editorial archival design (DD-001, DD-002)**: Playfair Display serif font for headings. Warm amber/parchment card styling. Face grid density +50% (3→6 cols). Sepia 0.3→0.15. "Heritage Archive" branding.
+- **Discovery notification system (DD-003)**: High-confidence matches to CONFIRMED identities. Sidebar badge, /discoveries admin page, one-click confirm/reject. Proposals-first optimization with caching.
+- **Parallelization skill (HD-018)**: `.claude/skills/prompt-parallelizer/SKILL.md`. Tiered regression (5-item smoke vs 15-item full). Content safety case study.
+- **DESIGN_DECISIONS.md created** (DD-001 through DD-003).
+- 3 parallel worktree subagents. 41 new tests. ~3595 total (3057 app + 538 ML).
+
+## Session 68: Hook Hardening + LoRA Audit + UX-103 + Photo Retry (2026-02-25) — v0.73.1
+- Python stop gate replaces bash grep (AD-167). PreCompact recovery strategy. UX-103: back nav + metadata overlay + mobile menu. LoRA audit: 221 positive pairs, MARGINAL. Photo retry: 142/144 done, 2 blocked by Gemini content safety. 3 parallel worktree subagents. ~3064 tests.
+
 ## Session 67: Hook Enforcement System (2026-02-25) — v0.73.0
 - **Hook enforcement (AD-166)**: Replaced informational-only hooks with blocking enforcement. Stop hook blocks session end until assessment file exists, phase verdicts logged, screenshots reviewed, b-path written if failures. PreCompact (manual) blocks /compact via exit 2. UserPromptSubmit injects parallelization reminder. All hooks use python3 (jq not installed).
 - **Deferred subagent invocations**: ux-reviewer reviewed 6 session-65b screenshots (8 new issues: 1 P1, 4 P2, 3 P3). session-evaluator independently evaluated session 66 (Phases 4/5/6 PARTIAL vs self-assessed PASS). Enrichment validation confirmed.
@@ -449,6 +462,8 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.74.0 | 2026-02-25 | 69 | 3057+538 |
+| v0.73.1 | 2026-02-25 | 68 | 3064 |
 | v0.72.0 | 2026-02-24 | 66 | 3040+538 |
 | v0.71.0 | 2026-02-24 | 65d | 3015+538 |
 | v0.70.0 | 2026-02-24 | 65c | 2937+538 |

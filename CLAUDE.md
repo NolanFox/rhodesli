@@ -67,4 +67,5 @@ All UX changes MUST be verified in production browser before session ends.
 - `docs/ml/ALGORITHMIC_DECISIONS.md` — All ML decisions (AD-NNN)
 - `docs/ops/OPS_DECISIONS.md` — Ops decisions (OD-NNN)
 - `docs/HARNESS_DECISIONS.md` — Workflow decisions (HD-NNN)
+- `docs/DESIGN_DECISIONS.md` — UX/design decisions (DD-NNN)
 - `docs/prds/` — Product requirement docs

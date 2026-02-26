@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.74.0] — 2026-02-25 (Session 69: Bug Fixes + Design Audit + Discovery Notifications)
+
+### Fixed — BUG-1: Create Identity 500 Error [P0] (AD-168)
+- Root cause: `rename_identity()` call missing required `user_source` parameter
+- Fix: Added `user_source="face_tag"` + try/except with error toast
+- Also fixed hyperscript parse error: missing `end` keyword in if block
+
+### Fixed — BUG-2: Clustering Pipeline Diagnosed as By-Design (AD-169)
+- Confirmed: Gatekeeper pattern intentionally prevents auto-clustering
+- Upload → face detection → INBOX identities (no auto-assignment)
+- UX gap addressed by new Discovery Notification system
+
+### Fixed — BUG-3: Collection Dropdown UX
+- Datalist filtering hid options when field pre-filled with "Uncategorized"
+- Fix: Added `onfocus="this.select()"` for easy text replacement
+
+### Added — Editorial Archival Design (DD-001, DD-002)
+- Playfair Display serif font for all display headings and branding
+- Warm amber/parchment card styling (`.face-card-archival`, `.identity-card-archival`)
+- Face grid density: 50% more faces visible (3→6 cols at lg breakpoint)
+- Sepia filter lightened (0.3→0.15) for more face detail
+- "Heritage Archive" branding replaces "Identity System"
+
+### Added — Discovery Notification System (DD-003)
+- High-confidence matches to CONFIRMED identities surfaced automatically
+- Sidebar badge: "Discoveries" with count
+- `/discoveries` admin page with face pair cards, one-click confirm/reject
+- Proposals-first optimization, distance-based caching
+- Negative ID tracking for rejected discoveries
+
+### Added — Parallelization Skill + Harness (HD-018)
+- `.claude/skills/prompt-parallelizer/SKILL.md` for analyzing phase dependencies
+- Tiered regression: 5-item smoke vs 15-item full suite
+- Content safety edge cases documented (`docs/case_studies/`)
+- `docs/DESIGN_DECISIONS.md` created (DD-001 through DD-003)
+
+### Tests
+- 3595 total (3057 app + 538 ML), up from 3064
+- 40 new tests: 16 design audit + 24 discovery + 1 BUG-1 regression
+
 ## [v0.73.1] — 2026-02-25 (Session 68: Hook Hardening + LoRA Audit + UX-103)
 
 ### Fixed — Hook Upgrades (AD-167)

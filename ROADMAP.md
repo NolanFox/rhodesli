@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.73.1 · ~3064 tests · 274 photos · 775 identities · 55 confirmed
+Current: v0.74.0 · ~3595 tests · 274 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -55,9 +55,10 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 69: LoRA Fine-Tuning (if admin reviews 3 identities) or Similarity Calibration
+### Session 70: LoRA Fine-Tuning (if admin reviews 3 identities) or Active Learning
 - Depends on LoRA audit: 221 positive pairs is MARGINAL. Need admin to confirm candidates for Vida/BigLeon/Victor to reach 500+.
-- Alternative: similarity calibration improvements, active learning pipeline
+- Alternative: active learning pipeline, similarity calibration improvements
+- Browser-verify session 69 discovery notification system in production
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates
@@ -65,6 +66,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-25: **v0.74.0 — Session 69**: Bug Fixes + Design Audit + Discovery Notifications. BUG-1: Create Identity 500 fix (AD-168). BUG-2: Gatekeeper confirmed by design (AD-169). BUG-3: Collection dropdown UX. Editorial archival design (DD-001/002). Discovery notification system (DD-003). Parallelization skill. 3 parallel worktree subagents. ~3595 tests.
 - [x] 2026-02-25: **v0.73.1 — Session 68**: Hook Hardening + LoRA Audit + UX-103 + Photo Retry. Python stop gate replaces bash grep (AD-167). PreCompact recovery strategy. UX-103: back nav + metadata overlay + mobile menu. LoRA audit: 221 positive pairs, MARGINAL. Photo retry: 142/144 done, 2 blocked by Gemini content safety. 3 parallel worktree subagents. ~3064 tests.
 - [x] 2026-02-25: **v0.73.0 — Session 67**: Hook Enforcement System. Stop hook blocks session end until assessment exists + phases logged. PreCompact blocks /compact. UserPromptSubmit injects parallelization reminder. Session runner script for headless phase isolation. ux-reviewer: 8 new UX issues (1 P1). session-evaluator: independent eval found Phases 4/5/6 of session 66 were PARTIAL (self-assessment rated PASS). AD-166. ~3588 total.
 - [x] 2026-02-25: **v0.72.1 — Session 66b**: CRITICAL Upload Fix. Root cause: cache staleness + R2 upload race (AD-165). Background thread now does R2 upload + cache invalidation. embeddings.npy safety gate added. Verified in production: 2 faces uploaded, sidebar counts updated immediately. 10 new tests. ~3588 total.
