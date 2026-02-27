@@ -76,18 +76,21 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
             .attr('ry', 8);
 
         // Highlight root person
-        d3svg.selectAll('g.card').filter(d => d.data.id === mainId).select('rect')
+        d3svg.selectAll('g.card_cont')
+            .filter(d => d && d.data && d.data.id === mainId)
+            .select('rect')
             .attr('stroke', '#818cf8') // indigo-400
             .attr('stroke-width', 2.5);
 
         // Style the avatar fallback circles (if no image)
-        d3svg.selectAll('g.card .person-icon').each(function (d) {
+        d3svg.selectAll('g.card_cont').each(function (d) {
+            if (!d || !d.data) return;
             const el = d3.select(this);
             const gender = d.data.data?.gender || 'U';
             const strokeColor = gender === 'M' ? '#3b82f6' : (gender === 'F' ? '#ec4899' : '#9ca3af');
 
             // Apply styles to the SVG icon container
-            el.select('svg path').attr('fill', strokeColor).attr('opacity', 0.8);
+            el.selectAll('.person-icon svg path').attr('fill', strokeColor).attr('opacity', 0.8);
         });
 
         // Style links (parent-child and spouse)
@@ -101,11 +104,7 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
         // we could refine this further if needed.
     }
 
-    // Call custom view with the current tree state
-    const tree = store.getTree();
-    customView(tree, svg, Card);
-
-    // Initial zoom-to-fit
+    // Initial render and zoom-to-fit
     store.setOnUpdate((props) => customView(store.getTree(), svg, Card));
     store.updateTree({ initial: true });
 };
