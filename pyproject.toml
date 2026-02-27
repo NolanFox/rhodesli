@@ -1,4 +1,6 @@
 [tool.pytest.ini_options]
 markers = [
     "e2e: end-to-end browser tests (require running server + Playwright)",
+    "slow: marks tests as slow (integration, e2e, browser, ML model loading)",
 ]
+addopts = "--strict-markers"
