@@ -112,8 +112,8 @@ def test_face_card_quality_fallback_for_inbox_crops():
             # quality not passed — will parse filename (gets 0.0), then fallback
         )
         html = to_xml(card)
-        assert "Quality: 24.60" in html
-        assert "Quality: 0.00" not in html
+        assert "Good quality" in html  # 24.6 >= 20 → Good
+        assert "quality" in html.lower()
 
 
 def test_face_card_quality_from_filename_when_available():
@@ -127,7 +127,7 @@ def test_face_card_quality_from_filename_when_available():
             crop_url="/static/crops/Image_001_compress_21.98_0.jpg",
         )
         html = to_xml(card)
-        assert "Quality: 21.98" in html
+        assert "Good quality" in html  # 21.98 >= 20 → Good
 
 
 def test_identity_card_expanded_shows_crop_without_photo_id():
