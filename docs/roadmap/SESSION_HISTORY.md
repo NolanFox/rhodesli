@@ -364,6 +364,12 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 73: Cleanup + Share-Readiness (2026-02-27) — v0.77.1
+- **Phase 1 — File naming + harness cleanup**: Renamed 3 session logs to convention (lowercase hyphens). Removed 3 legacy scripts (enforce_worktree.sh, merge-worktree.sh, merge_tracks.sh). Fixed stop hook for merge sessions. Added naming conventions to CLAUDE.md (79 lines).
+- **Phase 2 — Bug investigation + fix**: Track A revert mystery: no git hooks or formatters found (likely subagent interference, Lesson 88). Enter key fix: replaced 400ms setTimeout hack with htmx:afterSettle event-driven approach.
+- **Phase 3 — Share-readiness assessment**: 10/10 smoke test checks PASS via Chrome browser. Status: READY to share with family.
+- Single-threaded on main. ~2166 fast tests passing.
+
 ## Session 72: Harness Fix + ML Similarity Calibration (2026-02-27) — v0.77.0
 - **Phase 1 — Permanent harness fixes**: Test tiering (`make test-fast` 28s, 2166 tests via pytest-xdist). Branch enforcement hooks in `.claude/settings.json`. `scripts/merge.sh` merge ceremony script. CLAUDE.md updated with testing section (77 lines).
 - **Phase 2 — ML similarity calibration**: Extracted 3804 training pairs (951 pos, 2853 neg) from confirmed/rejected data. Trained MLP calibrator on frozen embeddings (AUC 0.84, F1 0.75, 111 epochs, early stopped). Regression gate: NO-SHIP on ECE (0.108 vs 0.095 baseline) despite AUC +0.013 and precision@90recall +0.037. Shadow scoring: 96.3% agreement with threshold system, 74 disagreements in MODERATE tier (calibrator more conservative).

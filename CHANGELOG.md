@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.77.1] — 2026-02-27 (Session 73: Cleanup + Share-Readiness)
+
+### Fixed
+- Enter key in face tag search: replaced 400ms setTimeout hack with event-driven htmx:afterSettle
+- HTMX trigger for tag search now includes `keydown[key=='Enter']` for immediate fetch (no debounce)
+
+### Changed — Harness Cleanup
+- Session log naming convention enforced (lowercase hyphens, `-log` suffix)
+- Removed 3 legacy scripts: enforce_worktree.sh, merge-worktree.sh, merge_tracks.sh
+- Stop hook now skips assessment check for merge sessions
+- Added naming conventions section to CLAUDE.md
+- Worktree enforcement rule updated to reference Claude Code hooks + merge.sh
+
+### Added
+- Share-readiness assessment: 10/10 smoke test checks PASS (docs/share-readiness.md)
+- Track A revert mystery investigated: no formatters found, likely subagent interference
+
 ## [v0.77.0] — 2026-02-27 (Session 72: Harness Fix + ML Similarity Calibration)
 
 ### Added — Test Tiering
