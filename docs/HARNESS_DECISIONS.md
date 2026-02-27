@@ -457,3 +457,31 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Breadcrumbs:** scripts/run_session.sh,
   .claude/agents/session-evaluator.md, .claude/agents/fix-prompt-writer.md,
   HD-016 (self-assessment), HD-003 (verification gate)
+
+## HD-021: Worktree Enforcement Scripts
+
+- **Date:** 2026-02-26
+- **Session:** 71D
+- **Status:** ACCEPTED
+
+- **What:** Two scripts that mechanically enforce worktree discipline:
+  1. `scripts/enforce_worktree.sh` — checks that current branch is not
+     main/master, exits non-zero if violated. Run at start of each parallel track.
+  2. `scripts/merge_tracks.sh` — ordered merge ceremony with uncommitted file
+     detection, auto-commit, sequential merging with --no-ff, and pytest test
+     gates after each merge.
+- **Alternatives considered:**
+  - Rule-only enforcement (behavioral): Proven to fail — 4+ instances of tracks
+    running on main despite written instructions in CLAUDE.md and lessons.md.
+    Behavioral rules degrade under context window pressure.
+  - Hook-based enforcement (PreToolUse hook checking branch): Too complex for
+    shell scripts, harder to debug, and hooks have their own reliability issues
+    (PreCompact cannot block, as learned in HD-017).
+  - Manual merge process: Error-prone, no test gates, easy to forget uncommitted
+    files in worktrees.
+- **Why this works:** Scripts that exit non-zero are mechanically enforced. Unlike
+  a written instruction that can be forgotten, a script failure stops execution.
+- **Files:** scripts/enforce_worktree.sh, scripts/merge_tracks.sh,
+  .claude/rules/worktree-enforcement.md
+- **Breadcrumbs:** AD-170, Lesson 87 (subagent commit discipline),
+  Lesson 88 (monolithic app prevents parallel execution)
