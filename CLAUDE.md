@@ -29,15 +29,17 @@ FastHTML + HTMX | Supabase/Postgres | Cloudflare R2 | Railway | InsightFace + Ge
 @docs/architecture/OVERVIEW.md @docs/architecture/DATA_MODEL.md
 @docs/architecture/PERMISSIONS.md @docs/architecture/PHOTO_STORAGE.md
 
-## Domain Rules
-See `.claude/rules/ml-development.md` — ML code modification protocol
-See `.claude/rules/data-layer.md` — Postgres-first data architecture
-See `.claude/rules/session-protocol.md` — Session execution discipline
-See `docs/CODING_RULES.md` for detailed coding, testing, data safety rules
+## Rules & Skills
+See `.claude/rules/` — ML, data-layer, session-protocol, worktree-enforcement
+See `docs/CODING_RULES.md` — Coding, testing, data safety
+See `.claude/skills/session-run.md` — Overnight execution | `.claude/skills/deploy-verify.md` — Deploy
 
-## Session Protocol
-See `.claude/skills/session-run.md` — Overnight/autonomous execution
-See `.claude/skills/deploy-verify.md` — Deploy + production smoke test
+## Naming Conventions
+- Session logs: `docs/session_logs/session-NN-log.md` (lowercase, hyphens)
+- Prompts: `docs/prompts/session-NNx-prompt.md`
+- Assessments: `docs/assessments/session-NNx-assessment.md`
+- Context: `docs/session_context/session-NNx-context.md`
+- Branches: `session-NN/description`
 
 ## Workflow
 1. Read `tasks/lessons.md` + `tasks/todo.md` at session start

@@ -1,5 +1,6 @@
-"""Tests for worktree enforcement scripts (Session 71D Phase 4)."""
+"""Tests for worktree enforcement (merge.sh + Claude Code hooks)."""
 
+import json
 import os
 import stat
 from pathlib import Path
@@ -9,62 +10,33 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
-class TestEnforceWorktreeScript:
-    """Tests for scripts/enforce_worktree.sh."""
+class TestMergeScript:
+    """Tests for scripts/merge.sh — the canonical merge tool."""
 
     def test_script_exists(self):
-        script = PROJECT_ROOT / "scripts" / "enforce_worktree.sh"
-        assert script.exists(), f"enforce_worktree.sh not found at {script}"
+        script = PROJECT_ROOT / "scripts" / "merge.sh"
+        assert script.exists(), f"merge.sh not found at {script}"
 
     def test_script_is_executable(self):
-        script = PROJECT_ROOT / "scripts" / "enforce_worktree.sh"
+        script = PROJECT_ROOT / "scripts" / "merge.sh"
         mode = os.stat(script).st_mode
-        assert mode & stat.S_IXUSR, "enforce_worktree.sh is not executable (user)"
-
-    def test_script_checks_main_branch(self):
-        script = PROJECT_ROOT / "scripts" / "enforce_worktree.sh"
-        content = script.read_text()
-        assert '"main"' in content, "enforce_worktree.sh must check for 'main' branch"
-
-    def test_script_checks_master_branch(self):
-        script = PROJECT_ROOT / "scripts" / "enforce_worktree.sh"
-        content = script.read_text()
-        assert '"master"' in content, "enforce_worktree.sh must check for 'master' branch"
-
-    def test_script_exits_nonzero_on_main(self):
-        script = PROJECT_ROOT / "scripts" / "enforce_worktree.sh"
-        content = script.read_text()
-        assert "exit 1" in content, "enforce_worktree.sh must exit 1 when on main"
-
-
-class TestMergeTracksScript:
-    """Tests for scripts/merge_tracks.sh."""
-
-    def test_script_exists(self):
-        script = PROJECT_ROOT / "scripts" / "merge_tracks.sh"
-        assert script.exists(), f"merge_tracks.sh not found at {script}"
-
-    def test_script_is_executable(self):
-        script = PROJECT_ROOT / "scripts" / "merge_tracks.sh"
-        mode = os.stat(script).st_mode
-        assert mode & stat.S_IXUSR, "merge_tracks.sh is not executable (user)"
-
-    def test_script_contains_test_gate(self):
-        script = PROJECT_ROOT / "scripts" / "merge_tracks.sh"
-        content = script.read_text()
-        assert "pytest" in content, "merge_tracks.sh must include a pytest test gate"
+        assert mode & stat.S_IXUSR, "merge.sh is not executable (user)"
 
     def test_script_uses_no_ff_merge(self):
-        script = PROJECT_ROOT / "scripts" / "merge_tracks.sh"
+        script = PROJECT_ROOT / "scripts" / "merge.sh"
         content = script.read_text()
-        assert "--no-ff" in content, "merge_tracks.sh must use --no-ff for merge commits"
+        assert "--no-ff" in content, "merge.sh must use --no-ff for merge commits"
 
-    def test_script_checks_uncommitted_files(self):
-        script = PROJECT_ROOT / "scripts" / "merge_tracks.sh"
+    def test_script_runs_tests(self):
+        script = PROJECT_ROOT / "scripts" / "merge.sh"
         content = script.read_text()
-        assert "status --porcelain" in content, (
-            "merge_tracks.sh must check for uncommitted files"
-        )
+        assert "test" in content.lower(), "merge.sh must include a test step"
+
+    def test_old_scripts_removed(self):
+        """Ensure legacy duplicate scripts are cleaned up."""
+        for name in ["enforce_worktree.sh", "merge-worktree.sh", "merge_tracks.sh"]:
+            script = PROJECT_ROOT / "scripts" / name
+            assert not script.exists(), f"Legacy script {name} should be removed"
 
 
 class TestWorktreeEnforcementRule:
@@ -74,14 +46,38 @@ class TestWorktreeEnforcementRule:
         rule = PROJECT_ROOT / ".claude" / "rules" / "worktree-enforcement.md"
         assert rule.exists(), f"worktree-enforcement.md not found at {rule}"
 
-    def test_rule_references_enforce_script(self):
-        rule = PROJECT_ROOT / ".claude" / "rules" / "worktree-enforcement.md"
-        content = rule.read_text()
-        assert "enforce_worktree.sh" in content, (
-            "Rule must reference enforce_worktree.sh"
-        )
-
     def test_rule_references_merge_script(self):
         rule = PROJECT_ROOT / ".claude" / "rules" / "worktree-enforcement.md"
         content = rule.read_text()
-        assert "merge_tracks.sh" in content, "Rule must reference merge_tracks.sh"
+        assert "merge.sh" in content, "Rule must reference merge.sh"
+
+
+class TestClaudeCodeHooksEnforcement:
+    """Tests that Claude Code hooks enforce worktree discipline."""
+
+    def test_settings_has_pretooluse_hook(self):
+        settings = PROJECT_ROOT / ".claude" / "settings.json"
+        data = json.loads(settings.read_text())
+        hooks = data.get("hooks", {})
+        assert "PreToolUse" in hooks, "settings.json must have PreToolUse hooks"
+
+    def test_pretooluse_blocks_main_commits(self):
+        settings = PROJECT_ROOT / ".claude" / "settings.json"
+        data = json.loads(settings.read_text())
+        pre_hooks = data["hooks"]["PreToolUse"]
+        # Find the Bash matcher hook
+        bash_hook = next((h for h in pre_hooks if h.get("matcher") == "Bash"), None)
+        assert bash_hook is not None, "Must have a Bash PreToolUse hook"
+        cmd = bash_hook["hooks"][0]["command"]
+        assert "parallel_session_active" in cmd, (
+            "PreToolUse hook must check for parallel_session_active"
+        )
+
+    def test_stop_hook_allows_merge_sessions(self):
+        settings = PROJECT_ROOT / ".claude" / "settings.json"
+        data = json.loads(settings.read_text())
+        stop_hooks = data["hooks"]["Stop"]
+        cmd = stop_hooks[0]["hooks"][0]["command"]
+        assert "merge" in cmd.lower(), (
+            "Stop hook must handle merge sessions (skip assessment)"
+        )

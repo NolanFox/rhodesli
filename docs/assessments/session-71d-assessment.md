@@ -2,7 +2,7 @@
 (Session 71D ran as parallel sub-session of Session 71. Current session file says "71".)
 
 ## Shipped
-- [x] Phase 0: Orient + worktree setup — Evidence: 2 worktrees created (discoveries + harness), session log at docs/session_logs/SESSION_071D.md
+- [x] Phase 0: Orient + worktree setup — Evidence: 2 worktrees created (discoveries + harness), session log at docs/session_logs/session-71d-log.md
 - [x] Phase 1: Discoveries audit — Evidence: docs/session_logs/discoveries_audit.md — full code path trace of route, _compute_discoveries, percentage formula, threshold issue
 - [x] Phase 2: Architecture decision — Evidence: AD-170 (fix discoveries as separate section) + AD-171 (confidence labels replace percentages) in ALGORITHMIC_DECISIONS.md
 - [x] Phase 3: Implementation — Evidence: app/main.py changes (threshold, labels, navigation, photo context), 7 new tests + 1 updated, 28/28 discoveries tests pass

@@ -57,6 +57,8 @@
 | 69 | 2026-02-25 | [log](session-69-log.md) | [assess](../assessments/session-69-assessment.md) | [prompt](../prompts/session-69-prompt.md) | [ctx](../session_context/session-69-context.md) | Complete |
 | 70 | 2026-02-25 | [log](session-70-log.md) | [assess](../assessments/session-70-assessment.md) | [prompt](../prompts/session-70-prompt.md) | [ctx](../session_context/session-70-context.md) | Complete |
 | 71 | 2026-02-26 | [log](session-71-log.md) | [assess](../assessments/session-71-assessment.md) | [prompt](../prompts/session-71-prompt.md) | [ctx](../session_context/session-71-context.md) | Complete |
+| 71D | 2026-02-26 | [log](session-71d-log.md) | [assess](../assessments/session-71d-assessment.md) | [prompt](../prompts/session-71d-prompt.md) | - | Complete |
+| 72 | 2026-02-27 | [log](session-72-log.md) | [assess](../assessments/session-72-assessment.md) | [prompt](../prompts/session-72-prompt.md) | - | Complete |
 
 ## B-Path Analysis
 

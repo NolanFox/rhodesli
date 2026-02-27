@@ -87,7 +87,7 @@ These files cause merge failures when edited concurrently:
 |----------|----------|---------|
 | `docs/` subdirectories | Different files per track | Track A: `docs/prds/`, Track C: `docs/harness/` |
 | New test files | Additive, no overlap | Track A: `tests/test_ux_fixes.py`, Track B: `tests/test_gedcom.py` |
-| `scripts/` | Independent scripts | Track C: `scripts/merge-worktree.sh` |
+| `scripts/` | Independent scripts | Track C: `scripts/new-helper.sh` |
 | `.claude/rules/` | Different rule files | Track C: `.claude/rules/new-rule.md` |
 | `rhodesli_ml/` subpackages | Independent modules | Track D: `rhodesli_ml/training/` |
 
@@ -111,20 +111,17 @@ Create this BEFORE launching subagents:
 
 After all subagents complete, merge back to main in a specific order.
 
-### Pre-Merge: Use the Enforcement Script
+### Pre-Merge: Use the Canonical Merge Script
 
 ```bash
-# From main branch
-./scripts/merge-worktree.sh .claude/worktrees/session-71-c
-./scripts/merge-worktree.sh .claude/worktrees/session-71-a
-./scripts/merge-worktree.sh .claude/worktrees/session-71-b
+# From main branch — merge branches in order (docs first, then code)
+./scripts/merge.sh session-71-c session-71-a session-71-b
 ```
 
 The script automatically:
-1. Checks for uncommitted files (auto-commits if found)
-2. Runs tests in the worktree
-3. Merges with `--no-ff`
-4. Runs tests after merge
+1. Merges each branch with `--no-ff`
+2. Runs tests after each merge
+3. Reports failures and stops on error
 
 ### Merge Order: Lowest Risk First
 
@@ -192,7 +189,7 @@ Parallelize when:
 
 ### Subagent left uncommitted files
 
-The `merge-worktree.sh` script handles this automatically (HD-021).
+The `scripts/merge.sh` script is the canonical merge tool (HD-021).
 If merging manually:
 
 ```bash
