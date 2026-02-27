@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.76.0] — 2026-02-26 (Session 71: UX Dogfooding Fixes + GEDCOM Integration + Harness Enforcement)
+
+### Fixed — UX Dogfooding Fixes (Track A)
+- A1: Enter key in face tag search — 400ms retry fallback for race condition with HTMX debounce
+- A2: Face card photos enlarged — min-w-[150px], grid 5 cols (was 6), gap-3 for breathing room
+- A3: "Run Face Analysis" button — loading state with "Analyzing faces..." spinner, disabled during request
+- A4: AI Analysis sections — Scene and Photo Detective Evidence expanded by default
+- A5: "Often appears with" names — max-w-[140px] (was 80px) + title tooltip for full name
+- A6: Quality scores — human-readable labels (Excellent/Good/Fair/Low) replace raw numbers, admin tooltip preserved
+
+### Added — GEDCOM Search Improvements (Track B)
+- B1: GEDCOM search ranking — date bonus (+0.05), Rhodes connection bonus (+0.05)
+- B1: Match strength indicators (Strong/Good/Partial) per search result
+- B1: Result count header and "Show more" pagination (15 per page, was hardcoded 10)
+- B3: "Link to Tree" / "View in Tree" button on confirmed identity cards (admin-only)
+
+### Added — Harness Enforcement (Track C)
+- `scripts/merge-worktree.sh`: Mechanical subagent commit enforcement (HD-021)
+- AD-170: ML match banner vocabulary change documented
+- Lesson 88: Monolithic app files prevent parallel worktree execution
+- `docs/harness/PARALLEL_SESSIONS.md`: Parallel session best practices (264 lines)
+
+### Stats
+- Tests: 3146 passed (up from 3133)
+- 3 parallel tracks executed (C in worktree, A+B sequential on main)
+
 ## [v0.75.0] — 2026-02-25 (Session 70: UX Fix Pass + Multi-Tool Harness + Auto-Eval Loop)
 
 ### Fixed — UX Issues from Session 69 Audit (13 issues addressed)
