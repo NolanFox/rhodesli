@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.77.0] — 2026-02-27 (Session 72: Harness Fix + ML Similarity Calibration)
+
+### Added — Test Tiering
+- `make test-fast`: 2166 unit tests in <30s via pytest-xdist parallel execution
+- `make test-full`: all 3180 tests in parallel
+- `make test-ml`: rhodesli_ml/ test suite
+- Auto-marking of slow tests (e2e, ML, integration) via conftest.py
+
+### Added — Harness Improvements
+- `scripts/merge.sh`: single-command merge ceremony for branches
+- Branch enforcement hook: blocks commits to main during parallel sessions
+- Post-commit test reminder hook
+- Enhanced stop gate: requires assessment file + clean git
+
+### Added — ML Similarity Calibration (AD-174)
+- Siamese MLP calibrator on frozen InsightFace embeddings (32K params)
+- Training: 3804 pairs (951 pos, 2853 neg), 54 confirmed identities
+- Results: AUC 0.84, F1 0.75, precision 1.0 at threshold 0.5
+- Regression gate: NO-SHIP on ECE (shadow mode only)
+- Shadow scoring: 96.3% agreement with baseline, calibrator more conservative on borderline matches
+- Scripts: extract_pairs.py, evaluate_calibrator.py, shadow_score.py
+
+### Fixed
+- 3 pre-existing test failures (list_photos() AttributeError from Session 71D merge)
+- Completed unfinished Session 71D merge on main
+
+### Stats
+- Tests: ~3180 total (2166 fast, 1014 slow)
+- `make test-fast` time: 28s
+- ML calibration artifacts: calibration_v1.pt, training_pairs.json, shadow_scores.json
+
 ## [v0.76.1] — 2026-02-27 (Session 71D Merge: Discoveries Fix + Harness Enforcement)
 
 ### Fixed — Discoveries Page

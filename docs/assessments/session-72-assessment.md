@@ -1,34 +1,36 @@
-# Session 71D Merge Assessment
-(current_session.txt says "72" because the harness branch set it, but this is the 71D merge ceremony, not session 72.)
+# Session 72 Assessment
 
 ## Shipped
-- [x] Phase 0: Baseline — 3146 tests passing, both branches verified, main clean
-- [x] Phase 1: Merge harness branch — merged session-71d/harness-hardening, resolved AD-170 conflict → renumbered to AD-171, updated breadcrumbs in worktree-enforcement.md and HARNESS_DECISIONS.md. 3159 tests pass.
-- [x] Phase 2: Merge discoveries branch — merged session-71d/discoveries-fix, resolved AD-170/171 conflict → renumbered to AD-172/AD-173, updated all cross-references in app/main.py, tests, session logs. 3163 tests pass.
-- [x] Phase 3: Deploy + browser verify — pushed to main, Railway deployed, Playwright browser verification of /discoveries page confirms all fixes working.
-- [x] Phase 4: Cleanup — worktrees removed, branches deleted, SESSION_HISTORY.md updated, CHANGELOG.md v0.76.1 added, ROADMAP.md updated.
-
-## Browser Verification Evidence
-- Confidence labels: PASS — "Good match" (distance 0.91), "Possible match" (distance 1.01)
-- Navigation links: PASS — source face + confirmed face both clickable → /person/{id}
-- Nace discovery: PASS — threshold 1.05 catches distance 1.01
-- Photo context: PASS — collection, co-occurring faces, "View photo" link
-- Session 71 fixes intact: PASS — New Matches loads, quality labels correct
-- Screenshot: docs/screenshots/session-71d/discoveries-page.png
-
-## AD Conflict Resolution
-| Original | Branch | Final | Title |
-|----------|--------|-------|-------|
-| AD-170 | Session 71 Track C (main) | AD-170 | ML Match Banner Vocabulary |
-| AD-170 | harness-hardening | AD-171 | Worktree Enforcement |
-| AD-170 | discoveries-fix | AD-172 | Review Section Architecture |
-| AD-171 | discoveries-fix | AD-173 | Match Confidence Display |
+- [x] Phase 1A: Test tiering — `make test-fast` 28s (2166 tests), pytest-xdist parallel
+  - Evidence: `make test-fast` = 28.02s, 2166 passed, 0 failed
+- [x] Phase 1B: Claude Code hooks — branch enforcement, test reminders, stop gate
+  - Evidence: .claude/settings.json updated, validated JSON
+- [x] Phase 1C: Merge script — `scripts/merge.sh`
+  - Evidence: File created, chmod +x applied
+- [x] Phase 1D: CLAUDE.md update — testing section, 77 lines
+  - Evidence: `wc -l CLAUDE.md` = 77
+- [x] Phase 2A: Training data extraction — 3804 train, 40 eval pairs
+  - Evidence: rhodesli_ml/data/training_pairs.json (54 identities, 951 pos, 2853 neg)
+- [x] Phase 2B: Calibrator training — AUC 0.84, F1 0.75
+  - Evidence: rhodesli_ml/artifacts/calibration_v1.pt, 111 epochs, early stopped
+- [x] Phase 2C: Regression gate — NO-SHIP on ECE
+  - Evidence: AUC +0.013, precision@90recall +0.037, ECE -0.013 (regression)
+- [x] Phase 2D: Shadow scoring — 96.3% agreement
+  - Evidence: rhodesli_ml/data/shadow_scores.json, 2025 comparisons, 74 disagreements
+- [x] Phase Final: Merge + docs
+  - Evidence: Clean merge, 2166 tests pass on main
 
 ## Deferred
-- None. All merge tasks completed.
+- Calibrator production deployment — blocked by ECE regression gate (AD-174)
+  - Fix: more eval data, temperature scaling, or admin review to override
+  - BACKLOG: implicit in Session 73 roadmap entry
 
 ## Red Flags
-- None.
+- [LOW] ONNX date export test pre-existing failure (not from this session)
+- [LOW] Some xdist flaky tests in ML suite (pass individually, fail under parallel)
+- [LOW] Only 40 eval pairs for regression gate — metrics are noisy
 
 ## Next Session Should Verify
-1. This was a merge-only session. Session 72 should start fresh from ROADMAP planned sessions.
+1. Shadow scoring disagreements — are calibrator demotions correct?
+2. ECE can be resolved with temperature scaling on more eval data
+3. `make test-fast` still under 30s after any new tests added

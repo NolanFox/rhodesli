@@ -364,6 +364,12 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 72: Harness Fix + ML Similarity Calibration (2026-02-27) — v0.77.0
+- **Phase 1 — Permanent harness fixes**: Test tiering (`make test-fast` 28s, 2166 tests via pytest-xdist). Branch enforcement hooks in `.claude/settings.json`. `scripts/merge.sh` merge ceremony script. CLAUDE.md updated with testing section (77 lines).
+- **Phase 2 — ML similarity calibration**: Extracted 3804 training pairs (951 pos, 2853 neg) from confirmed/rejected data. Trained MLP calibrator on frozen embeddings (AUC 0.84, F1 0.75, 111 epochs, early stopped). Regression gate: NO-SHIP on ECE (0.108 vs 0.095 baseline) despite AUC +0.013 and precision@90recall +0.037. Shadow scoring: 96.3% agreement with threshold system, 74 disagreements in MODERATE tier (calibrator more conservative).
+- **AD-174**: Similarity calibration decision with full provenance.
+- Single-threaded execution (no subagents). ~3180 tests (2166 fast / 1014 slow).
+
 ## Session 71D: Merge Ceremony — Discoveries Fix + Harness Enforcement (2026-02-27) — v0.76.1
 - **Merge ceremony**: Merged 2 unmerged worktree branches from Session 71D into main.
 - **Harness branch**: Worktree enforcement scripts (enforce_worktree.sh, merge_tracks.sh), AD-171, HD-021.
@@ -484,6 +490,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.77.0 | 2026-02-27 | 72 | 2166+1014 |
 | v0.76.1 | 2026-02-27 | 71D | 3163 |
 | v0.76.0 | 2026-02-26 | 71 | 3146 |
 | v0.75.0 | 2026-02-25 | 70 | 3133+538 |

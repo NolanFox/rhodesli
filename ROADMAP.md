@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.76.1 · ~3163 tests · 274 photos · 775 identities · 55 confirmed
+Current: v0.77.0 · ~3180 tests · 274 photos · 775 identities · 55 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -55,9 +55,9 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 72: LoRA Fine-Tuning or Active Learning
-- Depends on LoRA audit: 221 positive pairs is MARGINAL. Need admin to confirm candidates for Vida/BigLeon/Victor to reach 500+.
-- Alternative: active learning pipeline, similarity calibration improvements
+### Session 73: Active Learning or Calibrator Ship
+- Ship calibrator after resolving ECE regression (needs more eval data or temperature scaling)
+- Alternative: active learning pipeline, LoRA fine-tuning
 
 ### Session 43: Life Events & Context Graph (deferred)
 - Event tagging, connecting photos/people/places/dates
@@ -65,6 +65,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-27: **v0.77.0 — Session 72**: Harness Fix + ML Similarity Calibration. Test tiering (make test-fast <30s, 2166 tests via pytest-xdist). Branch enforcement hooks. Merge script. MLP calibrator on frozen embeddings (AUC 0.84, F1 0.75). Regression gate: NO-SHIP on ECE. Shadow scoring: 96.3% agreement, calibrator more conservative. AD-174. ~3180 tests.
 - [x] 2026-02-27: **v0.76.1 — Session 71D Merge**: Discoveries fix + harness enforcement. Merged 2 worktree branches. Discoveries: confidence labels replace "54% match", clickable navigation, threshold 1.05 (Nace surfaces), photo context. Harness: worktree enforcement scripts. AD conflict resolved (AD-171/172/173). Browser verified. ~3163 tests.
 - [x] 2026-02-26: **v0.76.0 — Session 71**: UX Dogfooding Fixes + GEDCOM Integration + Harness Enforcement. Track A: 6 UX fixes (quality labels, face card size, enter key, analysis sections, name truncation, loading indicator). Track B: GEDCOM search ranking with date/Rhodes bonuses, match strength labels, pagination, tree buttons on identity cards. Track C: Mechanical subagent commit enforcement (HD-021), AD-170, Lesson 88, parallel sessions doc. 3 parallel tracks. ~3146 tests.
 - [x] 2026-02-25: **v0.75.0 — Session 70**: UX Fix Pass + Multi-Tool Harness + Auto-Eval Loop. 13 UX issues addressed (2 HIGH, 5 MEDIUM, 6 LOW). Multi-tool harness: AGENT_HARNESS.md + 5 adapter files + sync script (HD-019). Auto-eval loop: run_session.sh rewritten for 6-stage orchestration (HD-020). Parallelization skill validated. 3 parallel worktree subagents. 28 new tests. ~3671 tests.
