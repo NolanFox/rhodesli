@@ -1944,11 +1944,27 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `app/main.py` `_CONFIDENCE_LABEL` dict, `_render_proposal_banner()`.
   No ML logic, threshold, or distance calculation changes.
 
+### AD-171: Worktree Enforcement — Mechanical Script Replacing Behavioral Rules
+
+- **Date**: 2026-02-26
+- **Session**: 71D
+- **Status**: ACCEPTED
+
+**Problem:** Parallel session tracks were observed running directly on main branch despite written instructions in CLAUDE.md and LESSONS_LEARNED requiring worktree usage. Session 71 Track A ran on main — this is the 4th+ instance of behavioral rules failing under context window pressure.
+
+**Decision:** Scripts that verify branch name (`enforce_worktree.sh`) and enforce ordered merge ceremony with test gates (`merge_tracks.sh`). Scripts exit non-zero on violation, which is mechanically enforced — unlike behavioral rules that degrade with context.
+
+- **Rejected**: Adding another line to CLAUDE.md or LESSONS_LEARNED — proven to fail (4+ instances of tracks running on main despite written instructions).
+- **Rejected**: Hook-based enforcement (too complex for shell scripts, harder to debug).
+- **Why**: Behavioral rules don't survive context window pressure. Scripts that exit non-zero are mechanically enforced.
+- **Affects**: scripts/enforce_worktree.sh, scripts/merge_tracks.sh, .claude/rules/worktree-enforcement.md
+- **Breadcrumbs**: HD-021, docs/session_context/session-71d-context.md Section 6
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-171)
+1. Add a new entry with AD-XXX format (next: AD-172)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
