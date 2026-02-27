@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .claude/hooks/session-stop-gate.py",
+            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); [ ! -f \"docs/assessments/session-${S}-assessment.md\" ] && echo \"Missing assessment file\" && exit 1; [ -n \"$(git status --porcelain)\" ] && echo \"Uncommitted files\" && git status --porcelain && exit 1; exit 0'",
             "timeout": 30
           }
         ]
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then cd \"$CLAUDE_PROJECT_DIR\" && source venv/bin/activate && python -m pytest tests/ -x -q --ignore=tests/e2e/ 2>&1 | tail -5; fi'"
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --git-common-dir 2>/dev/null | xargs dirname); PYTEST=\"${REPO}/venv/bin/pytest\"; [ ! -f \"$PYTEST\" ] && PYTEST=venv/bin/pytest; $PYTEST tests/ -x -q -n auto -m \"not slow\" --timeout=10 2>&1 | tail -5; fi'"
           }
         ]
       }
@@ -76,6 +76,15 @@
           {
             "type": "command",
             "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin).get(\\\"tool_input\\\",{}); print(d.get(\\\"file_path\\\",d.get(\\\"path\\\",\\\"\\\")))\" 2>/dev/null); if echo \"$FILE\" | grep -qE \"(rhodesli_ml|core)/.*\\.py$\"; then echo \"REMINDER: Update ALGORITHMIC_DECISIONS.md if this changes ML behavior.\" >&2; fi'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"git commit|git merge\"; then echo \"REMINDER: Run make test-fast before proceeding.\"; fi; exit 0'"
           }
         ]
       }
