@@ -27978,6 +27978,8 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
     # Also load relationship data for spouse disambiguation
     rel_graph = _load_relationship_graph()
 
+    import difflib
+
     results = []
     for row in individuals:
         name = (row.get("name") or "").lower()
@@ -27992,34 +27994,29 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
         # All query parts found in name
         elif all(p in name for p in query_parts):
             score = 0.85
-        # Surname match + given name starts-with
-        elif len(query_parts) >= 2:
-            q_surname = query_parts[-1]
-            q_given = query_parts[0]
-            # Direct surname match or variant
-            surname_match = (
-                q_surname == surname
-                or q_surname in SURNAME_VARIANTS.get(surname, set())
-                or surname in SURNAME_VARIANTS.get(q_surname, set())
-            )
-            if surname_match:
-                if q_given == given or given.startswith(q_given) or q_given.startswith(given):
+        # Fuzzy match and surname variations handling
+        else:
+            # Check surname direct or variant match
+            surname_match = False
+            q_surname = query_parts[-1] if len(query_parts) >= 2 else query_parts[0]
+            if q_surname == surname or q_surname in SURNAME_VARIANTS.get(surname, set()) or surname in SURNAME_VARIANTS.get(q_surname, set()):
+                surname_match = True
+
+            # Use SequenceMatcher for given name or full string comparison
+            if surname_match and len(query_parts) >= 2:
+                q_given = query_parts[0]
+                given_ratio = difflib.SequenceMatcher(None, q_given, given).ratio()
+                if given_ratio > 0.8:
                     score = 0.9
-                elif given and q_given and given[:3] == q_given[:3]:
-                    score = 0.6
+                elif given_ratio > 0.6:
+                    score = 0.7
                 else:
-                    score = 0.4  # Surname match only
-        # Single word: check if it matches surname or given name
-        elif len(query_parts) == 1:
-            q = query_parts[0]
-            if q == surname or q in SURNAME_VARIANTS.get(surname, set()):
-                score = 0.5
-            elif q == given:
-                score = 0.5
-            elif surname.startswith(q) or given.startswith(q):
-                score = 0.4
-            elif q in name:
-                score = 0.3
+                    score = 0.4
+            else:
+                 # Fallback to general fuzzy ratio against the whole name
+                 ratio = difflib.SequenceMatcher(None, query_lower, name).ratio()
+                 if ratio > 0.7:
+                     score = ratio
 
         if score < 0.3:
             import difflib
@@ -28208,7 +28205,7 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
     if denied:
         return denied
 
-    page_size = 15
+    page_size = 10
     results, total = _search_gedcom_individuals(q, limit=page_size, offset=offset)
 
     if not results:
@@ -28278,9 +28275,6 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
                 hx_target=f"#gedcom-link-panel-{identity_id}",
                 hx_swap="outerHTML",
                 disabled=is_linked,
-            ) if not is_linked else Span("Linked", cls="px-3 py-1 text-xs rounded font-medium bg-emerald-600/30 text-emerald-400 shrink-0"),
-            cls="flex items-center justify-between py-2 px-3 hover:bg-slate-700/50 rounded transition-colors",
-        )
         items.append(item)
 
     # Show result count header
@@ -28290,34 +28284,46 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
     ) if total > 0 else None
 
     # Proper Pagination Controls
-    pagination = None
+    pagination_controls = []
+    
     if total > page_size:
-        prev_btn = Button(
-            "← Prev",
-            cls="px-2 py-1 text-xs rounded transition-colors " + ("text-slate-500 bg-slate-800/50 cursor-not-allowed" if offset == 0 else "text-slate-300 bg-slate-800 border border-slate-700 hover:text-white hover:bg-slate-700"),
-            hx_get=f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={max(0, offset - page_size)}",
-            hx_target=f"#gedcom-results-{identity_id}",
-            hx_swap="innerHTML",
-            disabled=(offset == 0)
-        )
-        next_btn = Button(
-            "Next →",
-            cls="px-2 py-1 text-xs rounded transition-colors " + ("text-slate-500 bg-slate-800/50 cursor-not-allowed" if offset + page_size >= total else "text-slate-300 bg-slate-800 border border-slate-700 hover:text-white hover:bg-slate-700"),
-            hx_get=f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={offset + page_size}",
-            hx_target=f"#gedcom-results-{identity_id}",
-            hx_swap="innerHTML",
-            disabled=(offset + page_size >= total)
-        )
+        prev_offset = max(0, offset - page_size)
+        next_offset = offset + page_size
         current_page = (offset // page_size) + 1
         total_pages = (total + page_size - 1) // page_size
-        pagination = Div(
-            prev_btn,
-            Span(f"Page {current_page} of {total_pages}", cls="text-xs text-slate-500"),
-            next_btn,
-            cls="flex items-center justify-between mt-3 pt-2 border-t border-slate-700/50"
+        
+        btn_cls = "px-3 py-1.5 text-xs font-medium rounded transition-colors"
+        btn_active = "text-indigo-400 bg-slate-800 hover:bg-slate-700"
+        btn_disabled = "text-slate-600 bg-slate-800/50 cursor-not-allowed"
+        
+        # Prev Button
+        prev_btn = Button(
+            "← Prev",
+            cls=f"{btn_cls} {btn_active if offset > 0 else btn_disabled}",
+            disabled=(offset == 0),
+            **(
+                {
+                    "hx_get": f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={prev_offset}",
+                    "hx_target": f"#gedcom-results-{identity_id}",
+                    "hx_swap": "innerHTML"
+                } if offset > 0 else {}
+            )
         )
-
-    return Div(count_header, Div(*items, cls="space-y-0.5"), pagination)
+        
+        # Next Button
+        next_btn = Button(
+            "Next →",
+            cls=f"{btn_cls} {btn_active if next_offset < total else btn_disabled}",
+            disabled=(next_offset >= total),
+            **(
+                {
+                    "hx_get": f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={next_offset}",
+                    "hx_target": f"#gedcom-results-{identity_id}",
+                    "hx_swap": "innerHTML"
+                } if next_offset < total else {}
+            )
+        
+    return Div(count_header, Div(*items, cls="space-y-0.5"), *pagination_controls)
 
 
 @rt("/api/gedcom/link")
