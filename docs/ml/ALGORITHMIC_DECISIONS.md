@@ -1989,11 +1989,26 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rationale**: UX Principle #8: "Quality Scores are for Engineers." Labels are universally understood. Admin tooltip preserves debugging info. Consistent with how New Matches already shows confidence tiers.
 - **Affects**: `app/main.py` discovery card rendering (line ~23741 and ~23809-23813)
 
+### AD-174: Similarity Calibration — Siamese MLP on Frozen Embeddings
+- **Date**: 2026-02-27 | **Session**: 72
+- **Context**: The existing threshold system uses hard distance cutoffs (0.80/1.00/1.20) to classify match confidence. This ignores metadata signals and produces cliff effects at boundaries.
+- **Decision**: Train a Siamese MLP calibrator on frozen InsightFace embeddings using |a-b| and a*b interaction features. The model outputs P(same_person) in [0,1].
+- **Architecture**: 512→1024→32→1 (32K params). Dropout 0.5. BCE loss. Adam lr=5e-4, weight_decay=1e-2.
+- **Training data**: 54 confirmed identities, 20 multi-face. 3804 train pairs (951 pos, 2853 neg), 40 eval pairs. Hard negatives: distance < 1.2 cross-identity pairs.
+- **Results**: AUC 0.84, best F1 0.75, precision=1.0 at threshold 0.5. Beats baseline on AUC (+0.013) and precision@90%recall (+0.037). ECE slightly worse (+0.013) on small eval set.
+- **Regression gate**: NO-SHIP on ECE (0.108 vs 0.095 baseline). All three metrics must beat baseline to ship. ECE regression is expected noise on 40 eval pairs.
+- **Shadow scoring**: 2025 comparisons, 96.3% agreement. 74 disagreements ALL in MODERATE tier — calibrator is more conservative, demoting borderline matches. Zero false promotions.
+- **Deployment**: Shadow mode only (Session 72). Not wired to production scoring. Will ship after: (1) more eval data, (2) ECE regression resolved, (3) admin review of shadow disagreements.
+- **Rejected**: LoRA backbone fine-tuning (deferred per roadmap — 221 positive pairs marginal, calibration simpler).
+- **Rejected**: Threshold tuning alone (ignores embedding interaction features, can't learn from data).
+- **Rejected**: Full embedding concatenation (2x params, overfitting risk on small dataset).
+- **Affects**: rhodesli_ml/calibration/, rhodesli_ml/artifacts/calibration_v1.pt, rhodesli_ml/scripts/extract_pairs.py, rhodesli_ml/scripts/evaluate_calibrator.py, rhodesli_ml/scripts/shadow_score.py
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-174)
+1. Add a new entry with AD-XXX format (next: AD-175)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

@@ -8,6 +8,43 @@ from starlette.testclient import TestClient
 
 
 # ---------------------------------------------------------------------------
+# Auto-mark slow tests by file path
+# ---------------------------------------------------------------------------
+
+_SLOW_PATH_PATTERNS = [
+    "/e2e/", "/integration/", "/smoke/",
+    "playwright", "browser",
+    "test_gedcom", "test_upload", "test_photo_process",
+    "test_deploy", "test_combined_pipeline",
+    "test_regression", "test_ml_clustering",
+    "test_cluster_new_faces", "test_temporal",
+    "test_dependency_gate", "test_pending_uploads",
+    "test_session_49b", "test_session_51B",
+    "test_face_alignment", "test_face_comparison",
+    "test_face_overlays", "test_facecompare",
+    "test_compare_faces", "test_compare_intelligence",
+    "test_photo_context", "test_photo_viewer",
+    "test_identity_display", "test_share_download",
+    "test_data_integrity", "test_auto_backup",
+    "test_face_tagging", "test_year_estimation",
+    "test_sync_api", "test_estimate_route",
+    "test_supabase_data", "test_annotations",
+    "test_session_57_coral", "test_session_51B",
+    "test_smoke.py", "test_connect.py",
+    "test_mobile.py", "test_ui_clarity",
+    "test_face_count", "test_design_audit",
+]
+
+
+def pytest_collection_modifyitems(config, items):
+    """Auto-mark slow tests by location."""
+    for item in items:
+        path = str(item.fspath)
+        if any(x in path for x in _SLOW_PATH_PATTERNS):
+            item.add_marker(pytest.mark.slow)
+
+
+# ---------------------------------------------------------------------------
 # Supabase isolation (AD-135)
 # Prevent real Supabase writes during tests. Tests that specifically test
 # Supabase behavior should mock get_supabase_client themselves.

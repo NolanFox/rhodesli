@@ -12,7 +12,23 @@ import pytest
 from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
-from app.main import app, load_registry
+import json
+from pathlib import Path
+
+from app.main import app, load_registry, data_path
+
+
+def _load_photos_list():
+    """Load photos from photo_index.json directly (PhotoRegistry has no list_photos)."""
+    pi_path = data_path / "photo_index.json"
+    if not pi_path.exists():
+        return []
+    pi = json.loads(pi_path.read_text(encoding="utf-8"))
+    photos = []
+    for pid, entry in pi.get("photos", {}).items():
+        entry["photo_id"] = pid
+        photos.append(entry)
+    return photos
 
 
 @pytest.fixture
@@ -82,9 +98,7 @@ class TestAIAnalysisExpanded:
     def test_scene_section_expanded(self, client):
         """Scene section should have 'open' attribute when data exists."""
         # We test via a photo that has AI analysis data
-        from app.main import load_photo_registry
-        photo_reg = load_photo_registry()
-        photos = photo_reg.list_photos()
+        photos = _load_photos_list()
         if not photos:
             pytest.skip("No photos available")
 
@@ -157,9 +171,7 @@ class TestRunFaceAnalysisFeedback:
 
     def test_analysis_button_has_loading_indicator(self, client):
         """Face analysis button should have htmx-indicator for loading state."""
-        from app.main import load_photo_registry
-        photo_reg = load_photo_registry()
-        photos = photo_reg.list_photos()
+        photos = _load_photos_list()
         if not photos:
             pytest.skip("No photos available")
 
@@ -180,9 +192,7 @@ class TestEnterKeyHandler:
 
     def test_tag_search_has_enter_handler(self, client):
         """Face tag search input should have Enter key hyperscript handler."""
-        from app.main import load_photo_registry
-        photo_reg = load_photo_registry()
-        photos = photo_reg.list_photos()
+        photos = _load_photos_list()
         if not photos:
             pytest.skip("No photos available")
 
