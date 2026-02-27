@@ -7,8 +7,14 @@ FastHTML + HTMX | Supabase/Postgres | Cloudflare R2 | Railway | InsightFace + Ge
 
 ## Quick Reference
 - **Admin**: NolanFox@gmail.com | **Live**: https://rhodesli.nolanandrewfox.com
-- **Test**: `source venv/bin/activate && pytest tests/ -x -q` + `pytest rhodesli_ml/tests/ -x -q`
 - **Deploy**: `git push origin main`
+
+## Testing
+- Per-commit: `make test-fast` (<30s, unit tests, parallel via pytest-xdist)
+- Pre-deploy: `make test-full` (all tests, parallel)
+- ML tests: `make test-ml` (rhodesli_ml/ package)
+- Merge branches: `./scripts/merge.sh branch1 [branch2...]`
+- Parallel sessions: create `.claude/parallel_session_active` to block main commits
 
 ## Critical Invariants
 - Postgres is source of truth for all structured data (not JSON files)
@@ -41,13 +47,13 @@ See `.claude/skills/deploy-verify.md` — Deploy + production smoke test
 @tasks/lessons.md for past mistakes and prevention rules
 
 ## Hook Enforcement (Deterministic, .claude/settings.json)
-- **Stop (Python)**: Blocks session end until: assessment exists, phases logged, b-path for failures, UX review if screenshots exist
-- **PreCompact (manual)**: Warning + transcript backup (CANNOT block — confirmed)
-- **PreCompact (auto) / SessionStart (compact)**: Re-injects all context from disk after compaction
-- **UserPromptSubmit**: Parallelization reminder injected before every prompt
-- **PreToolUse (Bash)**: Runs pytest before git commit
+- **Stop**: Blocks session end until: assessment exists + clean git
+- **PreToolUse (Bash)**: Runs `make test-fast` before git commit; blocks main commits during parallel sessions
 - **PostToolUse (Edit|Write)**: AD reminder for ML/core file edits
-NOTE: /compact banned by convention (CLAUDE.md rule + assessment RED FLAG). Cannot be mechanically blocked.
+- **PostToolUse (Bash)**: Test reminder after git commit/merge
+- **UserPromptSubmit**: Parallelization reminder
+- **PreCompact**: Warning (manual) + recovery (auto)
+NOTE: /compact banned by convention (use /clear instead).
 
 ## Mandatory Session Outputs
 Every session MUST produce before final commit:
