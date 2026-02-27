@@ -11,20 +11,23 @@ class TestProposalsPage:
 
     def test_proposals_page_returns_200(self, client):
         """Proposals page returns 200 when auth is disabled."""
-        response = client.get("/admin/proposals")
-        assert response.status_code == 200
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/admin/proposals")
+            assert response.status_code == 200
 
     def test_proposals_page_has_title(self, client):
         """Proposals page has Proposed Matches heading."""
-        response = client.get("/admin/proposals")
-        assert "Proposed Matches" in response.text
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/admin/proposals")
+            assert "Proposed Matches" in response.text
 
     def test_proposals_page_loads_list_via_htmx(self, client):
         """Proposals page loads list via HTMX on page load."""
-        response = client.get("/admin/proposals")
-        text = response.text
-        assert "proposed-matches-list" in text
-        assert "/api/proposed-matches" in text
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/admin/proposals")
+            text = response.text
+            assert "proposed-matches-list" in text
+            assert "/api/proposed-matches" in text
 
     def test_proposals_page_requires_admin(self, client, auth_enabled, no_user):
         """Proposals page returns 401 for unauthenticated users."""
@@ -38,13 +41,15 @@ class TestProposalsPage:
 
     def test_proposals_page_has_sidebar(self, client):
         """Proposals page includes the sidebar."""
-        response = client.get("/admin/proposals")
-        assert 'id="sidebar"' in response.text
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/admin/proposals")
+            assert 'id="sidebar"' in response.text
 
     def test_proposals_page_has_mobile_header(self, client):
         """Proposals page includes mobile header."""
-        response = client.get("/admin/proposals")
-        assert "mobile-header" in response.text
+        with patch("app.main.is_auth_enabled", return_value=False):
+            response = client.get("/admin/proposals")
+            assert "mobile-header" in response.text
 
 
 class TestSidebarProposalsLink:

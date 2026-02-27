@@ -19,26 +19,28 @@ class TestPublicNavLinks:
     """Test the centralized _public_nav_links helper."""
 
     def test_returns_all_links(self):
-        links = _public_nav_links(active="photos")
-        hrefs = [link.attrs.get("href", "") for link in links]
-        assert "/photos" in hrefs
-        assert "/collections" in hrefs
-        assert "/people" in hrefs
-        assert "/map" in hrefs
-        assert "/timeline" in hrefs
-        assert "/connect" in hrefs
-        assert "/compare" in hrefs
-        assert "/estimate" in hrefs
+        with patch("app.main.is_auth_enabled", return_value=False):
+            links = _public_nav_links(active="photos")
+            hrefs = [link.attrs.get("href", "") for link in links]
+            assert "/photos" in hrefs
+            assert "/collections" in hrefs
+            assert "/people" in hrefs
+            assert "/map" in hrefs
+            assert "/timeline" in hrefs
+            assert "/connect" in hrefs
+            assert "/compare" in hrefs
+            assert "/estimate" in hrefs
 
     def test_active_link_highlighted(self):
-        links = _public_nav_links(active="map")
-        for link in links:
-            href = link.attrs.get("href", "")
-            cls = link.attrs.get("class", "")
-            if href == "/map":
-                assert "text-white" in cls
-            else:
-                assert "text-slate-300" in cls
+        with patch("app.main.is_auth_enabled", return_value=False):
+            links = _public_nav_links(active="map")
+            for link in links:
+                href = link.attrs.get("href", "")
+                cls = link.attrs.get("class", "")
+                if href == "/map":
+                    assert "text-white" in cls
+                else:
+                    assert "text-slate-300" in cls
 
     def test_sign_in_when_auth_enabled_no_user(self):
         with patch("app.main.is_auth_enabled", return_value=True):
@@ -60,10 +62,11 @@ class TestPublicNavLinks:
             assert len(links) == 9
 
     def test_link_order(self):
-        links = _public_nav_links(active="")
-        hrefs = [link.attrs.get("href", "") for link in links]
-        expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare", "/estimate"]
-        assert hrefs == expected_order
+        with patch("app.main.is_auth_enabled", return_value=False):
+            links = _public_nav_links(active="")
+            hrefs = [link.attrs.get("href", "") for link in links]
+            expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare", "/estimate"]
+            assert hrefs == expected_order
 
 
 class TestNavOnPublicPages:

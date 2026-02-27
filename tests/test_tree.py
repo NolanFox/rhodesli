@@ -112,8 +112,8 @@ class TestTreePage:
         assert resp.status_code == 200
         assert "d3.v7.min.js" in resp.text
 
-    def test_tree_d3_script_contains_tree_layout(self, client):
-        """D3 script uses d3.tree() layout."""
+    def test_tree_script_contains_family_chart(self, client):
+        """Page includes family-chart.js for the new tree rendering."""
         patches = _patch_data()
         for p in patches:
             p.start()
@@ -121,7 +121,7 @@ class TestTreePage:
         for p in patches:
             p.stop()
         assert resp.status_code == 200
-        assert "d3.tree" in resp.text
+        assert "family-chart.js" in resp.text
 
     def test_tree_person_filter_present(self, client):
         """Person filter dropdown present with confirmed identities."""

@@ -113,69 +113,31 @@ class TestBuildFamilyTree:
         assert tree == []
 
     def test_single_couple_with_children(self):
-        """Single couple with 2 children produces correct 2-level hierarchy."""
+        """Single couple with 2 children produces 4 nodes in flat format."""
         tree = build_family_tree(_SINGLE_COUPLE_GRAPH, _IDENTITIES)
-        assert len(tree) == 1
-        root = tree[0]
-        assert root["type"] == "couple"
-        member_ids = {m["id"] for m in root["members"]}
-        assert member_ids == {"father", "mother"}
-        assert len(root["children"]) == 2
-        child_ids = set()
-        for child_node in root["children"]:
-            # Children without spouses are "single" type
-            if child_node["type"] == "single":
-                child_ids.add(child_node["id"])
-            elif child_node["type"] == "couple":
-                for m in child_node["members"]:
-                    child_ids.add(m["id"])
-        assert {"child1", "child2"} == child_ids
+        assert len(tree) == 4
+        ids = {n["id"] for n in tree}
+        assert ids == {"father", "mother", "child1", "child2"}
 
     def test_multi_generation_hierarchy(self):
-        """3-level tree: grandparents -> parents -> children."""
+        """3-level tree: grandparents -> parents -> children returns 5 nodes."""
         tree = build_family_tree(_MULTI_GEN_GRAPH, _IDENTITIES)
-        assert len(tree) == 1
-        root = tree[0]
-        # Root should be grandparents
-        root_ids = {m["id"] for m in root["members"]}
-        assert root_ids == {"grandpa", "grandma"}
-        # Should have at least one child subtree
-        assert len(root["children"]) >= 1
-        # Find the father's subtree (should be a couple with mother)
-        father_subtree = None
-        for child in root["children"]:
-            if child["type"] == "couple":
-                ids = {m["id"] for m in child["members"]}
-                if "father" in ids:
-                    father_subtree = child
-                    break
-        assert father_subtree is not None, "Father should be in a couple node"
-        assert {m["id"] for m in father_subtree["members"]} == {"father", "mother"}
-        # Father+mother should have child1
-        assert len(father_subtree["children"]) == 1
-        child_node = father_subtree["children"][0]
-        if child_node["type"] == "single":
-            assert child_node["id"] == "child1"
-        else:
-            assert "child1" in {m["id"] for m in child_node["members"]}
+        assert len(tree) == 5
+        ids = {n["id"] for n in tree}
+        assert "grandpa" in ids
+        assert "father" in ids
 
     def test_root_person_focuses_subtree(self):
-        """root_person parameter centers tree on a specific person."""
+        """root_person parameter centers tree on a specific person. Here, all 5 are connected."""
         tree = build_family_tree(_MULTI_GEN_GRAPH, _IDENTITIES, root_person="father")
-        assert len(tree) == 1
-        root = tree[0]
-        # Root should contain father
-        all_ids = set()
-        if root["type"] == "couple":
-            all_ids = {m["id"] for m in root["members"]}
-        else:
-            all_ids = {root["id"]}
-        assert "father" in all_ids
+        assert len(tree) == 5
+        ids = {n["id"] for n in tree}
+        assert "father" in ids
 
     def test_disconnected_families_separate_trees(self):
-        """Two disconnected families produce two separate sub-trees."""
+        """If no root person is given, all individuals from disconnected graphs are returned."""
         tree = build_family_tree(_DISCONNECTED_GRAPH, _IDENTITIES)
-        assert len(tree) == 2
+        assert len(tree) == 6
 
     def test_cycle_prevention(self):
         """Graph with a cycle doesn't recurse infinitely."""
@@ -196,3 +158,4 @@ class TestBuildFamilyTree:
         # Should not hang or raise
         tree = build_family_tree(cycle_graph, ids)
         assert isinstance(tree, list)
+        assert len(tree) == 3

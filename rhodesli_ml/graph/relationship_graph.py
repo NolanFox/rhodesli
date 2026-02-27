@@ -201,102 +201,101 @@ def build_family_tree(
     identities: dict,
     root_person: Optional[str] = None,
 ) -> list:
-    """Build a hierarchical family tree from a relationship graph.
-
-    AD-081: Uses hierarchical tree structure with couple-based nodes.
-    AD-082: Each family unit (married couple + children) is a logical node.
-
-    Args:
-        graph: Relationship graph dict (from relationships.json)
-        identities: Dict of identity_id -> identity record
-        root_person: If set, center the tree on this person's family
-
-    Returns: List of tree root nodes. Each node is either:
-        - {"type": "couple", "members": [{id, name, ...}, ...], "children": [...]}
-        - {"type": "single", "id": str, "name": str, ..., "children": [...]}
+    """Build a family tree in the flat array format required by family-chart.
+    
+    If root_person is provided, traversed bidirectionally (ancestors + descendants) 
+    to include their full family context. Otherwise, returns all individuals.
+    
+    Format per node:
+    { "id": str, "rels": {"father": str, "mother": str, "spouses": [str], "children": [str]}, "data": {...} }
     """
     relationships = graph.get("relationships", [])
     if not relationships:
         return []
 
-    # Build adjacency maps
-    parent_to_children = {}  # parent_id -> [child_id, ...]
-    child_to_parents = {}    # child_id -> [parent_id, ...]
-    spouse_map = {}          # person -> spouse
+    parent_to_children = {}
+    child_to_parents = {}
+    person_to_spouses = {}
 
     for rel in relationships:
         if rel.get("removed"):
             continue
         if rel["type"] == "parent_child":
-            parent_to_children.setdefault(rel["person_a"], []).append(rel["person_b"])
-            child_to_parents.setdefault(rel["person_b"], []).append(rel["person_a"])
+            parent_to_children.setdefault(rel["person_a"], set()).add(rel["person_b"])
+            child_to_parents.setdefault(rel["person_b"], set()).add(rel["person_a"])
         elif rel["type"] == "spouse":
-            spouse_map[rel["person_a"]] = rel["person_b"]
-            spouse_map[rel["person_b"]] = rel["person_a"]
+            person_to_spouses.setdefault(rel["person_a"], set()).add(rel["person_b"])
+            person_to_spouses.setdefault(rel["person_b"], set()).add(rel["person_a"])
 
-    visited = set()
-
-    def _enrich_person(person_id: str) -> dict:
-        """Build person metadata from identity record."""
-        ident = identities.get(person_id, {})
-        return {
-            "id": person_id,
-            "name": ident.get("name", "Unknown"),
-            "birth_year": ident.get("metadata", {}).get("birth_year")
-                          or ident.get("metadata", {}).get("birth_year_estimate"),
-            "death_year": ident.get("metadata", {}).get("death_year"),
-            "gender": ident.get("metadata", {}).get("gender"),
-        }
-
-    def _build_subtree(person_id: str, spouse_id: Optional[str] = None) -> dict:
-        """Recursively build a subtree starting from a person (and their spouse)."""
-        visited.add(person_id)
-        if spouse_id:
-            visited.add(spouse_id)
-
-        # Collect children of this person (and spouse if present)
-        children_ids = set(parent_to_children.get(person_id, []))
-        if spouse_id:
-            children_ids |= set(parent_to_children.get(spouse_id, []))
-
-        # Build child subtrees
-        child_nodes = []
-        for child_id in sorted(children_ids):
-            if child_id in visited:
-                continue
-            child_spouse = spouse_map.get(child_id)
-            if child_spouse and child_spouse in visited:
-                child_spouse = None
-            child_nodes.append(_build_subtree(child_id, child_spouse))
-
-        if spouse_id:
-            return {
-                "type": "couple",
-                "members": [_enrich_person(person_id), _enrich_person(spouse_id)],
-                "children": child_nodes,
-            }
-        else:
-            node = _enrich_person(person_id)
-            node["type"] = "single"
-            node["children"] = child_nodes
-            return node
-
-    # If root_person specified, build subtree from that person
+    included_ids = set()
+    
     if root_person:
-        spouse = spouse_map.get(root_person)
-        tree = [_build_subtree(root_person, spouse)]
-        return tree
+        # Bi-directional search to get the connected family component
+        queue = [root_person]
+        while queue:
+            curr = queue.pop(0)
+            if curr in included_ids:
+                continue
+            included_ids.add(curr)
+            for p in child_to_parents.get(curr, []): 
+                if p not in included_ids: queue.append(p)
+            for c in parent_to_children.get(curr, []): 
+                if c not in included_ids: queue.append(c)
+            for s in person_to_spouses.get(curr, []): 
+                if s not in included_ids: queue.append(s)
+    else:
+        for rel in relationships:
+            if not rel.get("removed"):
+                included_ids.add(rel["person_a"])
+                included_ids.add(rel["person_b"])
 
-    # Otherwise, find all root couples and build from each
-    root_couples = find_root_couples(graph)
-    trees = []
-    for couple in root_couples:
-        person_a, person_b = couple
-        if person_a in visited:
-            continue
-        trees.append(_build_subtree(person_a, person_b))
+    nodes = []
+    for pid in included_ids:
+        ident = identities.get(pid, {})
+        name = ident.get("name", "Unknown")
+        gender = ident.get("metadata", {}).get("gender", "U")
+        
+        parents = list(child_to_parents.get(pid, []))
+        father = None
+        mother = None
+        for p in parents:
+            p_ident = identities.get(p, {})
+            p_gender = p_ident.get("metadata", {}).get("gender", "U")
+            if p_gender == "M" and not father:
+                father = p
+            elif p_gender == "F" and not mother:
+                mother = p
+            else:
+                if not father: father = p
+                elif not mother: mother = p
 
-    return trees
+        rels = {}
+        if father: rels["father"] = father
+        if mother: rels["mother"] = mother
+        
+        spouses = list(person_to_spouses.get(pid, []))
+        if spouses:
+            rels["spouses"] = spouses
+            
+        children = list(parent_to_children.get(pid, []))
+        if children:
+            rels["children"] = children
+
+        byear = ident.get("metadata", {}).get("birth_year") or ident.get("metadata", {}).get("birth_year_estimate") or ""
+        dyear = ident.get("metadata", {}).get("death_year") or ""
+        
+        nodes.append({
+            "id": pid,
+            "rels": rels,
+            "data": {
+                "name": name,
+                "gender": gender,
+                "birth_year": byear,
+                "death_year": dyear,
+            }
+        })
+
+    return nodes
 
 
 def add_relationship(

@@ -282,7 +282,7 @@ class TestSeqPropagation:
         assert "tag-search" in html
         assert "&amp;seq=1" in html or "&seq=1" in html
 
-    def test_tag_search_passes_seq_to_results(self, client):
+    def test_tag_search_passes_seq_to_results(self, client, auth_disabled):
         """Tag search with seq=1 includes seq=1 in action button URLs."""
         response = client.get("/api/face/tag-search?face_id=test_face&q=TestName&seq=1")
         text = response.text
@@ -292,7 +292,7 @@ class TestSeqPropagation:
         if "/api/face/tag?" in text:
             assert "seq=1" in text
 
-    def test_tag_search_no_seq_without_param(self, client):
+    def test_tag_search_no_seq_without_param(self, client, auth_disabled):
         """Tag search without seq param does not include seq=1 in URLs."""
         response = client.get("/api/face/tag-search?face_id=test_face&q=TestName")
         text = response.text
@@ -308,7 +308,7 @@ class TestSeqPropagation:
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     def test_tag_endpoint_passes_seq_mode(self, mock_dim, mock_meta, mock_pid, mock_get_id,
-                                          mock_reg, mock_photo_reg, mock_save, client):
+                                          mock_reg, mock_photo_reg, mock_save, client, auth_disabled):
         """POST /api/face/tag with seq=1 re-renders in sequential mode."""
         mock_meta.return_value = _make_photo_meta(face_count=3)
         mock_get_id.side_effect = _identity_for_face(set())
@@ -333,7 +333,7 @@ class TestSeqPropagation:
     @patch("app.main.get_photo_metadata")
     @patch("app.main.get_photo_dimensions", return_value=(800, 600))
     def test_create_identity_passes_seq_mode(self, mock_dim, mock_meta, mock_pid, mock_get_id,
-                                              mock_reg, mock_save, client):
+                                              mock_reg, mock_save, client, auth_disabled):
         """POST /api/face/create-identity with seq=1 re-renders in sequential mode."""
         mock_meta.return_value = _make_photo_meta(face_count=3)
         mock_get_id.side_effect = _identity_for_face(set())
@@ -354,7 +354,7 @@ class TestSeqPropagation:
 class TestPartialRouteSeqParam:
     """The /photo/{id}/partial route accepts and passes seq parameter."""
 
-    def test_partial_route_accepts_seq(self, client):
+    def test_partial_route_accepts_seq(self, client, auth_disabled):
         """GET /photo/{id}/partial?seq=1 returns 200."""
         from app.main import load_embeddings_for_photos
         photos = load_embeddings_for_photos()

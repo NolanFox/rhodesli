@@ -15,6 +15,10 @@ import io
 import json
 import logging
 import os
+import sys
+if not os.environ.get("RAILWAY_ENVIRONMENT") and "pytest" not in sys.modules:
+    from dotenv import load_dotenv
+    load_dotenv()
 import random
 import re
 import sys
@@ -423,6 +427,18 @@ for i, route in enumerate(app.routes):
         photos_route = app.routes.pop(i)
         app.routes.insert(0, photos_route)
         break
+
+from starlette.staticfiles import StaticFiles
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Move static route to position 1 so it takes precedence over catch-all
+for i, route in enumerate(app.routes):
+    if getattr(route, "name", None) == "static":
+        static_route = app.routes.pop(i)
+        app.routes.insert(1, static_route)
+        break
+
 
 
 # ---------------------------------------------------------------------------
@@ -3989,7 +4005,10 @@ def render_to_review_section(
         cards = [c for c in cards if c]  # Filter None
 
         if cards:
-            content = Div(*cards)
+            content = Div(
+                *cards,
+                cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+            )
         else:
             content = Div(
                 "All caught up! No new faces to review right now.",
@@ -4056,7 +4075,10 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
     cards = [c for c in cards if c]
 
     if cards:
-        content = Div(*cards)
+        content = Div(
+            *cards,
+            cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+        )
     else:
         content = Div(
             "No confirmed identities yet. Browse the inbox to help identify faces.",
@@ -4178,7 +4200,10 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
             cards.append(Div(badge, card, hint, cls="identity-card-wrapper", data_name=raw_name))
 
     if cards:
-        content = Div(*cards)
+        content = Div(
+            *cards,
+            cls="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+        )
     else:
         content = Div(
             "No unresolved faces right now. Check the inbox for new arrivals.",
@@ -6912,9 +6937,9 @@ def identity_card(
                 find_similar_btn,
                 gedcom_tree_btn,
                 view_public_link,
-                cls="flex items-center gap-3 flex-wrap"
+                cls="flex items-center gap-2 flex-wrap"
             ),
-            cls="identity-card-header flex items-center justify-between mb-3"
+            cls="identity-card-header flex items-center justify-between flex-wrap gap-2 mb-3"
         ),
         # Face grid (paginated)
         Div(
@@ -6931,7 +6956,7 @@ def identity_card(
         review_action_buttons(identity_id, state, is_admin=is_admin),
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
-        cls=f"identity-card identity-card-archival border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r mb-4",
+        cls=f"identity-card identity-card-archival border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r mb-4 min-w-0 w-full",
         id=f"identity-{identity_id}",
         data_name=(raw_name or "").lower()
     )
@@ -17963,272 +17988,11 @@ def get(person: str = "", show_theory: str = "true", sess=None):
 
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
             ),
-            # D3.js
+            # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(f"""
-(function() {{
-    var treeData = {tree_json};
-    var container = document.getElementById('tree-container');
-    if (!container || !treeData.length) return;
-
-    var focusPerson = '{person}';
-    var nodeW = 140, nodeH = 70, coupleGap = 10;
-
-    // Flatten the tree into a d3-hierarchy-compatible format
-    // Each couple becomes a single node in the hierarchy with children
-    function flatten(nodes) {{
-        if (!nodes || !nodes.length) return null;
-        // If multiple roots, create a virtual root
-        if (nodes.length === 1) return convertNode(nodes[0]);
-        return {{
-            id: '_root',
-            type: 'virtual',
-            children: nodes.map(convertNode)
-        }};
-    }}
-
-    function convertNode(n) {{
-        var result = {{
-            id: n.id || (n.members ? n.members.map(function(m){{ return m.id; }}).join('+') : 'unknown'),
-            type: n.type,
-            members: n.members || null,
-            name: n.name || '',
-            avatar_url: n.avatar_url || null,
-            birth_year: n.birth_year || null,
-            death_year: n.death_year || null,
-        }};
-        if (n.children && n.children.length) {{
-            result.children = n.children.map(convertNode);
-        }}
-        return result;
-    }}
-
-    var root = d3.hierarchy(flatten(treeData));
-
-    var treeLayout = d3.tree().nodeSize([nodeW * 2 + coupleGap + 40, 140]);
-    treeLayout(root);
-
-    // Compute bounds
-    var x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
-    root.each(function(d) {{
-        if (d.x < x0) x0 = d.x;
-        if (d.x > x1) x1 = d.x;
-        if (d.y < y0) y0 = d.y;
-        if (d.y > y1) y1 = d.y;
-    }});
-
-    var treeW = x1 - x0 + nodeW * 4;
-    var treeH = y1 - y0 + nodeH * 4;
-    var svgW = container.clientWidth || 900;
-    var svgH = Math.max(600, treeH + 100);
-    container.style.height = svgH + 'px';
-
-    var svg = d3.select('#tree-container')
-        .append('svg')
-        .attr('width', svgW)
-        .attr('height', svgH);
-
-    var g = svg.append('g');
-
-    // Zoom
-    svg.call(d3.zoom().scaleExtent([0.3, 4]).on('zoom', function(event) {{
-        g.attr('transform', event.transform);
-    }}));
-
-    // Center the tree
-    var initialX = svgW / 2 - (x0 + x1) / 2;
-    var initialY = 60 - y0;
-    g.attr('transform', 'translate(' + initialX + ',' + initialY + ')');
-
-    // Draw links (parent-child)
-    g.selectAll('.tree-link')
-        .data(root.links().filter(function(d) {{ return d.source.data.type !== 'virtual'; }}))
-        .join('path')
-        .attr('class', 'tree-link')
-        .attr('d', function(d) {{
-            var sy = d.source.y + nodeH;
-            var ty = d.target.y;
-            var mx = d.target.x;
-            return 'M' + d.source.x + ',' + sy +
-                   ' V' + ((sy + ty) / 2) +
-                   ' H' + mx +
-                   ' V' + ty;
-        }});
-
-    // Draw nodes
-    var nodes = g.selectAll('.tree-node')
-        .data(root.descendants().filter(function(d) {{ return d.data.type !== 'virtual'; }}))
-        .join('g')
-        .attr('class', 'tree-node')
-        .attr('transform', function(d) {{ return 'translate(' + d.x + ',' + d.y + ')'; }});
-
-    // For couple nodes, draw two side-by-side cards
-    nodes.each(function(d) {{
-        var el = d3.select(this);
-        if (d.data.type === 'couple' && d.data.members) {{
-            var m = d.data.members;
-            var halfW = nodeW / 2 + coupleGap / 2;
-
-            // Spouse connector (dashed pink line)
-            el.append('line')
-                .attr('x1', -coupleGap / 2)
-                .attr('y1', nodeH / 2)
-                .attr('x2', coupleGap / 2)
-                .attr('y2', nodeH / 2)
-                .attr('class', 'spouse-link')
-                .attr('stroke', '#ec4899')
-                .attr('stroke-width', 2);
-
-            for (var i = 0; i < m.length; i++) {{
-                var offsetX = i === 0 ? -halfW : coupleGap / 2;
-                var person = m[i];
-                var isHighlighted = person.id === focusPerson;
-                var cardG = el.append('g')
-                    .attr('transform', 'translate(' + offsetX + ',0)')
-                    .style('cursor', 'pointer')
-                    .on('click', (function(pid) {{ return function() {{ window.location.href = '/person/' + pid; }}; }})(person.id));
-
-                cardG.append('rect')
-                    .attr('width', nodeW)
-                    .attr('height', nodeH)
-                    .attr('rx', 8)
-                    .attr('fill', '#1e293b')
-                    .attr('stroke', isHighlighted ? '#818cf8' : '#334155')
-                    .attr('stroke-width', isHighlighted ? 2.5 : 1)
-                    .attr('class', isHighlighted ? 'highlight-glow' : '');
-
-                // Avatar circle
-                if (person.avatar_url) {{
-                    var clipId = 'clip-' + person.id.replace(/[^a-zA-Z0-9]/g, '');
-                    el.append('defs').append('clipPath').attr('id', clipId)
-                        .append('circle').attr('cx', offsetX + 25).attr('cy', 25).attr('r', 16);
-                    cardG.append('image')
-                        .attr('href', person.avatar_url)
-                        .attr('x', 9)
-                        .attr('y', 9)
-                        .attr('width', 32)
-                        .attr('height', 32)
-                        .attr('clip-path', 'url(#' + clipId + ')');
-                }} else {{
-                    // Letter initial
-                    cardG.append('circle')
-                        .attr('cx', 25).attr('cy', 25).attr('r', 16)
-                        .attr('fill', '#374151');
-                    cardG.append('text')
-                        .attr('x', 25).attr('y', 30)
-                        .attr('text-anchor', 'middle')
-                        .attr('fill', '#9ca3af')
-                        .attr('font-size', '14px')
-                        .text((person.name || '?')[0]);
-                }}
-
-                // Name
-                var displayName = person.name || 'Unknown';
-                if (displayName.length > 14) displayName = displayName.substring(0, 13) + '\u2026';
-                cardG.append('text')
-                    .attr('x', 48).attr('y', 22)
-                    .attr('fill', '#e2e8f0')
-                    .attr('font-size', '12px')
-                    .attr('font-weight', '600')
-                    .text(displayName);
-
-                // Dates
-                var dates = '';
-                if (person.birth_year) dates += person.birth_year;
-                if (person.birth_year && person.death_year) dates += '\u2013' + person.death_year;
-                if (dates) {{
-                    cardG.append('text')
-                        .attr('x', 48).attr('y', 38)
-                        .attr('fill', '#64748b')
-                        .attr('font-size', '10px')
-                        .text(dates);
-                }}
-            }}
-        }} else {{
-            // Single person node
-            var person = d.data;
-            var isHighlighted = person.id === focusPerson;
-            var cardG = el.append('g')
-                .style('cursor', 'pointer')
-                .on('click', function() {{ window.location.href = '/person/' + person.id; }});
-
-            cardG.append('rect')
-                .attr('x', -nodeW / 2)
-                .attr('width', nodeW)
-                .attr('height', nodeH)
-                .attr('rx', 8)
-                .attr('fill', '#1e293b')
-                .attr('stroke', isHighlighted ? '#818cf8' : '#334155')
-                .attr('stroke-width', isHighlighted ? 2.5 : 1)
-                .attr('class', isHighlighted ? 'highlight-glow' : '');
-
-            // Avatar
-            if (person.avatar_url) {{
-                var clipId = 'clip-' + (person.id || 'x').replace(/[^a-zA-Z0-9]/g, '');
-                el.append('defs').append('clipPath').attr('id', clipId)
-                    .append('circle').attr('cx', -nodeW / 2 + 25).attr('cy', 25).attr('r', 16);
-                cardG.append('image')
-                    .attr('href', person.avatar_url)
-                    .attr('x', -nodeW / 2 + 9)
-                    .attr('y', 9)
-                    .attr('width', 32)
-                    .attr('height', 32)
-                    .attr('clip-path', 'url(#' + clipId + ')');
-            }} else {{
-                cardG.append('circle')
-                    .attr('cx', -nodeW / 2 + 25).attr('cy', 25).attr('r', 16)
-                    .attr('fill', '#374151');
-                cardG.append('text')
-                    .attr('x', -nodeW / 2 + 25).attr('y', 30)
-                    .attr('text-anchor', 'middle')
-                    .attr('fill', '#9ca3af')
-                    .attr('font-size', '14px')
-                    .text((person.name || '?')[0]);
-            }}
-
-            var displayName = person.name || 'Unknown';
-            if (displayName.length > 14) displayName = displayName.substring(0, 13) + '\u2026';
-            cardG.append('text')
-                .attr('x', -nodeW / 2 + 48).attr('y', 22)
-                .attr('fill', '#e2e8f0')
-                .attr('font-size', '12px')
-                .attr('font-weight', '600')
-                .text(displayName);
-
-            var dates = '';
-            if (person.birth_year) dates += person.birth_year;
-            if (person.birth_year && person.death_year) dates += '\u2013' + person.death_year;
-            if (dates) {{
-                cardG.append('text')
-                    .attr('x', -nodeW / 2 + 48).attr('y', 38)
-                    .attr('fill', '#64748b')
-                    .attr('font-size', '10px')
-                    .text(dates);
-            }}
-        }}
-    }});
-
-    // Auto-zoom to focus person if specified
-    if (focusPerson) {{
-        root.each(function(d) {{
-            var nodeIds = [];
-            if (d.data.members) {{
-                nodeIds = d.data.members.map(function(m) {{ return m.id; }});
-            }} else if (d.data.id) {{
-                nodeIds = [d.data.id];
-            }}
-            if (nodeIds.indexOf(focusPerson) >= 0) {{
-                var tx = svgW / 2 - d.x;
-                var ty = svgH / 3 - d.y;
-                svg.transition().duration(750).call(
-                    d3.zoom().transform,
-                    d3.zoomIdentity.translate(tx, ty).scale(1.2)
-                );
-            }}
-        }});
-    }}
-}})();
-"""),
+            Script(src="/static/js/family-chart.js"),
+            Script(src="/static/js/family-tree.js"),
+            Script(f"window.setupFamilyTree({tree_json}, '#tree-container', '{person}');"),
             cls="min-h-screen bg-slate-900",
         ),
     )
@@ -28243,7 +28007,12 @@ def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> 
                 score = 0.3
 
         if score < 0.3:
-            continue
+            import difflib
+            sim = difflib.SequenceMatcher(None, query_lower, name).ratio()
+            if sim > 0.6:
+                score = sim * 0.8
+            else:
+                continue
 
         # Extract birth/death years
         birth_year = None
@@ -28499,27 +28268,41 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
         )
         items.append(item)
 
-    # "Show more" pagination button (B1)
-    next_offset = offset + page_size
-    if next_offset < total:
-        remaining = total - next_offset
-        show_more = Button(
-            f"Show {min(remaining, page_size)} more ({remaining} remaining)",
-            cls="w-full mt-2 py-1.5 text-xs text-indigo-400 hover:text-indigo-300 "
-                "bg-slate-800/50 hover:bg-slate-700/50 rounded transition-colors",
-            hx_get=f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={next_offset}",
-            hx_target="this",
-            hx_swap="outerHTML",
-        )
-        items.append(show_more)
-
     # Show result count header
     count_header = P(
         f"{total} result{'s' if total != 1 else ''} for \"{q}\"",
-        cls="text-xs text-slate-500 px-3 pb-1",
-    ) if offset == 0 else None
+        cls="text-xs text-slate-500 px-3 pb-1 mb-1 border-b border-slate-700/50",
+    ) if total > 0 else None
 
-    return Div(count_header, *items) if offset == 0 else Div(*items)
+    # Proper Pagination Controls
+    pagination = None
+    if total > page_size:
+        prev_btn = Button(
+            "← Prev",
+            cls="px-2 py-1 text-xs rounded transition-colors " + ("text-slate-500 bg-slate-800/50 cursor-not-allowed" if offset == 0 else "text-slate-300 bg-slate-800 border border-slate-700 hover:text-white hover:bg-slate-700"),
+            hx_get=f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={max(0, offset - page_size)}",
+            hx_target=f"#gedcom-results-{identity_id}",
+            hx_swap="innerHTML",
+            disabled=(offset == 0)
+        )
+        next_btn = Button(
+            "Next →",
+            cls="px-2 py-1 text-xs rounded transition-colors " + ("text-slate-500 bg-slate-800/50 cursor-not-allowed" if offset + page_size >= total else "text-slate-300 bg-slate-800 border border-slate-700 hover:text-white hover:bg-slate-700"),
+            hx_get=f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={offset + page_size}",
+            hx_target=f"#gedcom-results-{identity_id}",
+            hx_swap="innerHTML",
+            disabled=(offset + page_size >= total)
+        )
+        current_page = (offset // page_size) + 1
+        total_pages = (total + page_size - 1) // page_size
+        pagination = Div(
+            prev_btn,
+            Span(f"Page {current_page} of {total_pages}", cls="text-xs text-slate-500"),
+            next_btn,
+            cls="flex items-center justify-between mt-3 pt-2 border-t border-slate-700/50"
+        )
+
+    return Div(count_header, Div(*items, cls="space-y-0.5"), pagination)
 
 
 @rt("/api/gedcom/link")
