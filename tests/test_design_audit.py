@@ -168,8 +168,8 @@ class TestArchivalCSSDefinitions:
 class TestFaceGridDensity:
     """DD-002: Face grid uses more columns for compact cards."""
 
-    def test_face_grid_has_six_column_layout(self):
-        """Face grid in identity_card uses 6 columns at lg breakpoint."""
+    def test_face_grid_has_five_column_layout(self):
+        """Face grid in identity_card uses 5 columns at lg breakpoint (A2 fix)."""
         from app.main import identity_card, to_xml
         identity = {
             "identity_id": "test-id-grid-001",
@@ -180,7 +180,7 @@ class TestFaceGridDensity:
         }
         crop_files = {"test-id-grid-001_0.jpg"}
         html = to_xml(identity_card(identity, crop_files))
-        assert 'lg:grid-cols-6' in html
+        assert 'lg:grid-cols-5' in html
 
 
 class TestLandingPageDisplayFont:

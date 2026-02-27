@@ -1903,11 +1903,52 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: Auto-clustering on upload — violates AD-110 (no heavy ML in web requests) and Gatekeeper principle (human must review before assignment).
 - **Affects**: No code changes. Documentation only.
 
+### AD-170: ML Match Banner Vocabulary — System Labels to User-Friendly Prose
+- **Date**: 2026-02-26 | **Session**: 71 (Track C)
+- **Context**: Session 70 Subagent A (commit 103b6de) changed the proposal banner
+  vocabulary from raw system confidence tiers to user-friendly language. The banner
+  on inbox/proposed identity cards previously displayed `"ML Match: MODERATE"`,
+  `"ML Match: HIGH"`, etc. — mixing system vocabulary with prose.
+- **Old vocabulary** (displayed directly in banner):
+  - `ML Match: VERY HIGH` (distance < 0.80)
+  - `ML Match: HIGH` (distance < 1.00)
+  - `ML Match: MODERATE` (distance < 1.20)
+  - `ML Match: LOW` (distance >= 1.20)
+- **New vocabulary** (via `_CONFIDENCE_LABEL` dict in app/main.py):
+  - `Strong match` (VERY HIGH, distance < 0.80)
+  - `Good match` (HIGH, distance < 1.00)
+  - `Possible match` (MODERATE, distance < 1.20)
+  - `Weak match` (LOW, distance >= 1.20)
+- **Threshold mapping**: The confidence tiers themselves are unchanged. Only the
+  display labels changed. The `_confidence_tier()` function and `core/config.py`
+  thresholds (MATCH_THRESHOLD_VERY_HIGH=0.80, MATCH_THRESHOLD_HIGH=1.05,
+  MATCH_THRESHOLD_MODERATE=1.15, MATCH_THRESHOLD_MEDIUM=1.20) are unmodified.
+  Note: the proposal banner uses hardcoded 0.80/1.00/1.20 breakpoints (from the
+  neighbor computation in `_get_best_proposal_for_identity`), which differ slightly
+  from the calibrated `core/config.py` thresholds. This is an existing discrepancy
+  predating the vocabulary change.
+- **Risk assessment**: "Possible match" for MODERATE confidence (distance < 1.20,
+  ~94% precision) could cause users to dismiss what is actually a likely match.
+  However, the old "ML Match: MODERATE" was equally ambiguous to non-technical
+  community users. The calibrated compare pages separately use "Very likely same
+  person" / "Strong match" / "Possible match" / "Unlikely match" based on
+  percentage scores (85%/70%/50% thresholds), which is a DIFFERENT vocabulary
+  from the proposal banner. This creates two label systems operating simultaneously.
+- **Decision**: ACCEPT the new vocabulary. The user-friendly labels are a clear UX
+  improvement over raw system tiers. The minor risk of "Possible match" for ~94%
+  precision matches is offset by the colored badge styling (amber for moderate)
+  which provides additional visual signal. The dual-vocabulary issue (proposal
+  banner vs compare page) should be tracked as a future UX consistency item.
+- **Rejected**: Reverting to system labels — raw confidence tiers like "ML MATCH:
+  MODERATE" are meaningless to community members who will use this archive.
+- **Affects**: `app/main.py` `_CONFIDENCE_LABEL` dict, `_render_proposal_banner()`.
+  No ML logic, threshold, or distance calculation changes.
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-170)
+1. Add a new entry with AD-XXX format (next: AD-171)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

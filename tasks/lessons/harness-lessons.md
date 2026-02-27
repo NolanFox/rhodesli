@@ -35,6 +35,11 @@
 - **Rule:** Every subagent MUST run tests AND commit ALL files before completing. The orchestrator verifies `git status` shows clean working tree in each worktree before merge.
 - **Prevention:** Added to parallelization skill anti-patterns and subagent completion criteria.
 
+## Lesson 88: Monolithic App Files Prevent Parallel Worktree Execution
+- **Mistake:** Session 71 planning identified that Track A (UX fixes) and Track B (GEDCOM integration) both need to modify `app/main.py` (~6000+ lines). Despite touching different sections, git merge cannot reliably resolve concurrent edits to the same file across worktrees. This forced Track A and B to run sequentially, reducing parallelization savings.
+- **Rule:** Any two tracks that both modify the same monolithic file (especially `app/main.py`) MUST run sequentially, not in parallel worktrees. Only tracks with fully disjoint file sets (e.g., docs-only, scripts-only) can safely parallelize. The parallelization skill's "high-conflict files" list in `SKILL.md` is the authoritative reference.
+- **Prevention:** When planning parallel tracks, check the file ownership map FIRST. If two tracks share ANY file in the high-conflict list (`app/main.py`, `CLAUDE.md`, `ROADMAP.md`, `CHANGELOG.md`, `SESSION_LOG.md`, data files), they must be sequential. Consider refactoring monolithic files into modules to enable future parallelization.
+
 ## Lesson 77: Trimming Docs Without Verifying Destination Loses Context
 - **Mistake:** Session 54c trimmed ROADMAP.md "Recently Completed" from 14 entries to 5, pointing to SESSION_HISTORY.md — but SESSION_HISTORY.md was missing sessions 47-54B. Session 47B (real audit session with 4 tests) was also never added. Context would have been silently lost if not caught.
 - **Rule:** Before removing entries from ANY document, verify the destination file already contains equivalent content. "See [other file]" is only valid if you've confirmed the other file actually has the data.

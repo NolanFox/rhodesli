@@ -416,6 +416,39 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 - **Breadcrumbs:** .claude/rules/harness-sync.md, docs/AGENT_HARNESS.md,
   AGENTS.md, .cursorrules, .gemini/GEMINI.md, .antigravity/rules.md
 
+## HD-021: Mechanical Subagent Commit Enforcement
+- **Date:** 2026-02-26
+- **Session:** 71 (Track C)
+- **Decision:** Created `scripts/merge-worktree.sh` that mechanically enforces
+  subagent commit discipline before merging. The script checks `git status
+  --porcelain` in the worktree and auto-commits any uncommitted files with a
+  tagged commit message before proceeding with the merge.
+- **Rationale:** Lesson 87 documents that subagents in sessions 64 and 69 left
+  uncommitted files in worktrees. These files were lost during merge, requiring
+  manual recovery. The `merge-resolver.md` agent doc mentions pre-merge checks
+  but relies on the agent remembering to verify — which is unreliable under
+  context pressure. A mechanical gate (script with explicit check) is more
+  reliable than a documented instruction.
+- **Architecture:**
+  1. Step 1: Check `git status --porcelain` in worktree. If uncommitted files
+     exist, auto-commit with message: `"fix: auto-commit uncommitted subagent
+     files (enforcement gate)"`
+  2. Step 2: Run tests in the worktree before merge
+  3. Step 3: Merge with `--no-ff` for clear merge commits
+  4. Step 4: Run tests after merge to catch integration issues
+  5. Supports `--dry-run` for preview
+- **Alternatives considered:**
+  - Documentation only (add to merge-resolver.md): Already existed but didn't
+    prevent the issue in sessions 64 and 69. Documented instructions degrade
+    under context pressure.
+  - Pre-merge hook in git: Git doesn't have a native pre-merge hook. A custom
+    hook would be fragile and non-portable.
+  - Fail instead of auto-commit: Considered but rejected — failing would require
+    the orchestrator to re-enter the worktree context and commit, which is more
+    error-prone than auto-committing with a clearly tagged message.
+- **Breadcrumbs:** scripts/merge-worktree.sh, Lesson 87, .claude/agents/merge-resolver.md,
+  .claude/skills/prompt-parallelizer/SKILL.md
+
 ## HD-020: Auto-Evaluation Loop Architecture
 - **Date:** 2026-02-25
 - **Session:** 70

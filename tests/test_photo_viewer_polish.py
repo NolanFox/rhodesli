@@ -62,7 +62,7 @@ class TestQualityScoreVisibility:
     """Quality scores are admin-only."""
 
     def test_quality_shown_for_admin(self):
-        """face_card shows quality score when is_admin=True."""
+        """face_card shows human-readable quality label with admin tooltip."""
         from fasthtml.common import to_xml
         card = face_card(
             face_id="test-face",
@@ -71,11 +71,11 @@ class TestQualityScoreVisibility:
             is_admin=True,
         )
         html = to_xml(card)
-        assert "Quality:" in html
-        assert "85.50" in html
+        assert "Excellent quality" in html
+        assert "Quality score: 85.50" in html  # Admin tooltip
 
-    def test_quality_hidden_for_non_admin(self):
-        """face_card hides quality score when is_admin=False."""
+    def test_quality_shown_for_non_admin(self):
+        """face_card shows quality label for non-admin (no tooltip)."""
         from fasthtml.common import to_xml
         card = face_card(
             face_id="test-face",
@@ -84,7 +84,8 @@ class TestQualityScoreVisibility:
             is_admin=False,
         )
         html = to_xml(card)
-        assert "Quality:" not in html
+        assert "Excellent quality" in html
+        assert "Quality score:" not in html  # No admin tooltip
 
     def test_quality_hidden_when_zero(self):
         """face_card hides quality when score is 0 even for admin."""
@@ -96,7 +97,7 @@ class TestQualityScoreVisibility:
             is_admin=True,
         )
         html = to_xml(card)
-        assert "Quality:" not in html
+        assert "quality" not in html.lower()
 
 
 class TestPersonCardInteraction:

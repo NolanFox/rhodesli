@@ -128,3 +128,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 77 | Trimming docs without verifying destination loses context — always confirm target file has the data before removing |
 | 86 | Context overflow in long sessions — subagent results flood orchestrator, need context budget estimation |
 | 87 | Subagent commit discipline — every subagent MUST run tests AND commit ALL files before completing |
+| 88 | Monolithic app files prevent parallel worktree execution — Tracks touching app/main.py must be sequential |

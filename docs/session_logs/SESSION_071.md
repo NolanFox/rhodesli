@@ -38,6 +38,45 @@ Predecessor: Session 70 (v0.75.0)
 5. No pagination for GEDCOM results — Track B
 6. No GEDCOM link from People tab — Track B
 
+## Track C: Harness Infrastructure (worktree-isolated)
+
+### C1: Mechanical Subagent Commit Enforcement
+- Created `scripts/merge-worktree.sh` with 4-step enforcement:
+  1. Check `git status --porcelain` in worktree, auto-commit if uncommitted files found
+  2. Run tests in worktree before merge
+  3. Merge with `--no-ff` for clear merge history
+  4. Run tests after merge to catch integration issues
+- Supports `--dry-run` for preview
+- Addresses Lesson 87 (sessions 64, 69 lost uncommitted files)
+
+### C2: ML Banner Vocabulary AD Entry
+- Added AD-170 documenting the Session 70 vocabulary change
+- Old: `"ML Match: VERY HIGH/HIGH/MODERATE/LOW"`
+- New: `"Strong match/Good match/Possible match/Weak match"` via `_CONFIDENCE_LABEL` dict
+- Documented threshold mappings, risk assessment, and dual-vocabulary issue
+- Note: proposal banner uses hardcoded 0.80/1.00/1.20 breakpoints vs calibrated config thresholds
+
+### C3: Parallelization Skill Documentation
+- Verified: UserPromptSubmit hook is wired in `.claude/settings.json` (line 40-48)
+- Hook fires on every prompt with parallelization reminder text
+- Parallelizer skill exists at `.claude/skills/prompt-parallelizer/SKILL.md`
+- Parallel-optimizer agent at `.claude/agents/parallel-optimizer.md`
+- Merge-resolver agent at `.claude/agents/merge-resolver.md`
+- Status: FULLY WIRED. The hook + skill + agents form a complete pipeline.
+
+### C4: Parallel Sessions Best Practices
+- Created `docs/harness/PARALLEL_SESSIONS.md` (264 lines, under 300 limit)
+- Covers: worktree setup, file ownership mapping, merge ceremony, when NOT to parallelize, recovery strategies
+- Includes historical data from sessions 66/68/69/70/71
+
+### C5: HD Entry
+- Added HD-021 "Mechanical Subagent Commit Enforcement" to docs/HARNESS_DECISIONS.md
+- Documents architecture, rationale, alternatives considered
+
+### C6: Lessons Learned
+- Added Lesson 88 to tasks/lessons.md index and tasks/lessons/harness-lessons.md
+- "Monolithic app files prevent parallel worktree execution — Tracks touching app/main.py must be sequential"
+
 ## Execution Notes
 - Monolithic app/main.py means Track A & B can't safely run in parallel worktrees
 - Strategy: Track C in worktree (docs/scripts), Track A on main, Track B after A merges

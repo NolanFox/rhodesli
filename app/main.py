@@ -1448,7 +1448,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         st = search_doc.get("searchable_text", "")
         scene = st.split(".")[0] + "." if "." in st else st[:200]
     if scene:
-        sections.append(_field("Scene", P(scene)))
+        sections.append(_field("Scene", P(scene), expanded=True))
 
     # Visible text (OCR)
     visible_text = label.get("visible_text", "")
@@ -1472,7 +1472,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     # Dating evidence — Photo Detective card layout
     detective_section = _detective_evidence_section(label)
     if detective_section:
-        sections.append(_field("Photo Detective Evidence", detective_section, expanded=False))
+        sections.append(_field("Photo Detective Evidence", detective_section, expanded=True))
     else:
         # Fallback: simple list for labels without structured evidence
         evidence = label.get("evidence", {})
@@ -1549,20 +1549,25 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         return Div(
             H3("Face Analysis", cls="text-lg font-serif font-bold text-white mb-2"),
             P("No face descriptions available yet.", cls="text-slate-400 text-sm mb-2"),
-            Button(
-                "Run Face Analysis",
-                cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white "
-                    "rounded-lg transition-colors",
-                hx_post=f"/api/face-alignment/{photo_id}",
-                hx_target=f"#face-alignment-{photo_id[:8]}",
-                hx_swap="innerHTML",
-                hx_indicator=f"#face-alignment-spinner-{photo_id[:8]}",
-                type="button",
-            ),
-            Span(
-                cls=f"htmx-indicator ml-2 inline-block w-4 h-4 border-2 border-indigo-400 "
-                    "border-t-transparent rounded-full animate-spin",
-                id=f"face-alignment-spinner-{photo_id[:8]}",
+            Div(
+                Button(
+                    "Run Face Analysis",
+                    cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white "
+                        "rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+                    hx_post=f"/api/face-alignment/{photo_id}",
+                    hx_target=f"#face-alignment-{photo_id[:8]}",
+                    hx_swap="innerHTML",
+                    hx_indicator=f"#face-alignment-spinner-{photo_id[:8]}",
+                    hx_disabled_elt="this",
+                    type="button",
+                ),
+                Span(
+                    Span(cls="inline-block w-4 h-4 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin mr-2"),
+                    "Analyzing faces...",
+                    cls="htmx-indicator ml-3 text-sm text-indigo-300",
+                    id=f"face-alignment-spinner-{photo_id[:8]}",
+                ),
+                cls="flex items-center",
             ),
             id=f"face-alignment-{photo_id[:8]}",
             cls="px-4 sm:px-6 py-4 border-t border-slate-800/50",
@@ -6307,9 +6312,10 @@ def face_card(
         # Metadata and actions — compact layout
         Div(
             P(
-                f"Quality: {quality:.2f}",
-                cls="text-xs font-data text-slate-500"
-            ) if is_admin and quality > 0 else None,
+                f"{'Excellent' if quality >= 30 else 'Good' if quality >= 20 else 'Fair' if quality >= 10 else 'Low'} quality",
+                cls=f"text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
+                title=f"Quality score: {quality:.2f}" if is_admin else None,
+            ) if quality > 0 else None,
             Div(
                 view_photo_btn,
                 full_page_link,
@@ -6318,7 +6324,7 @@ def face_card(
             ) if view_photo_btn or detach_btn or full_page_link else None,
             cls="mt-1.5 px-0.5"
         ),
-        cls="face-card-archival p-1.5 rounded",
+        cls="face-card-archival p-1 rounded min-w-[150px]",
         # Fix: Apply the safe ID to the container
         id=make_css_id(face_id)
     )
@@ -6895,7 +6901,7 @@ def identity_card(
         Div(
             Div(
                 *face_cards,
-                cls="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2",
+                cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3",
             ),
             pagination,
             id=f"faces-{identity_id}",
@@ -10100,6 +10106,9 @@ def photo_view_content(
             _enter_handler = (
                 f"on keydown[key=='Enter'] halt the event "
                 f"then set firstBtn to first <button/> in #{tag_results_id} "
+                f"then if firstBtn click firstBtn "
+                f"else wait 400ms "
+                f"then set firstBtn to first <button/> in #{tag_results_id} "
                 f"then if firstBtn click firstBtn end"
             )
             _focus_handler = "on load focus() me" if is_seq_active else ""
@@ -10713,7 +10722,7 @@ def public_person_page(
             companion_cards.append(
                 A(
                     crop_el,
-                    Span(companion["name"], cls="text-xs text-slate-400 mt-1 text-center truncate max-w-[80px]"),
+                    Span(companion["name"], cls="text-xs text-slate-400 mt-1 text-center truncate max-w-[140px]", title=companion["name"]),
                     href=f"/person/{companion['id']}",
                     cls="flex flex-col items-center gap-1 hover:opacity-80 transition-opacity",
                     title=f"View {companion['name']}",
