@@ -37,6 +37,8 @@ class TestPublicNavLinks:
             for link in links:
                 href = link.attrs.get("href", "")
                 cls = link.attrs.get("class", "")
+                if not href or href == "/?section=skipped":
+                    continue
                 if href == "/map":
                     assert "text-white" in cls
                 else:
@@ -51,21 +53,25 @@ class TestPublicNavLinks:
     def test_no_sign_in_when_auth_disabled(self):
         with patch("app.main.is_auth_enabled", return_value=False):
             links = _public_nav_links(active="photos", user=None)
-            # Should have exactly 9 links (no Sign In)
-            assert len(links) == 9
+            # Should have 11 items (5 archive + span + 4 tools + help identify)
+            assert len(links) == 11
 
     def test_no_sign_in_when_user_logged_in(self):
         mock_user = MagicMock()
         mock_user.email = "test@test.com"
         with patch("app.main.is_auth_enabled", return_value=True):
             links = _public_nav_links(active="photos", user=mock_user)
-            assert len(links) == 9
+            # Should have 11 items (5 archive + span + 4 tools + help identify)
+            assert len(links) == 11
 
     def test_link_order(self):
         with patch("app.main.is_auth_enabled", return_value=False):
             links = _public_nav_links(active="")
             hrefs = [link.attrs.get("href", "") for link in links]
-            expected_order = ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare", "/estimate"]
+            expected_order = [
+                "/photos", "/collections", "/people", "/timeline", "/map", 
+                "", "/tree", "/connect", "/compare", "/estimate", "/?section=skipped"
+            ]
             assert hrefs == expected_order
 
 

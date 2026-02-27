@@ -3019,27 +3019,36 @@ def mobile_header() -> Div:
 
 
 def _public_nav_links(active: str = "", user=None) -> list:
-    """Build standard navigation links for public pages.
-
-    Args:
-        active: Which link is currently active (e.g., "photos", "map", "timeline")
-        user: Current user (for Sign In link)
-    """
+    """Build standard navigation links for public pages."""
     _inactive = "text-slate-300 hover:text-white text-sm font-medium transition-colors"
-    _active = "text-white text-sm font-medium"
+    _active = "text-white text-sm font-medium border-b-2 border-amber-500 pb-1"
+    
     links = [
+        # Core Archive
         A("Photos", href="/photos", cls=_active if active == "photos" else _inactive),
         A("Collections", href="/collections", cls=_active if active == "collections" else _inactive),
         A("People", href="/people", cls=_active if active == "people" else _inactive),
-        A("Map", href="/map", cls=_active if active == "map" else _inactive),
         A("Timeline", href="/timeline", cls=_active if active == "timeline" else _inactive),
+        A("Map", href="/map", cls=_active if active == "map" else _inactive),
+        
+        # Visual separator for Tools
+        Span("|", cls="text-slate-700 hidden lg:inline"),
+        
+        # Tools
         A("Tree", href="/tree", cls=_active if active == "tree" else _inactive),
         A("Connect", href="/connect", cls=_active if active == "connect" else _inactive),
         A("Compare", href="/compare", cls=_active if active == "compare" else _inactive),
         A("Estimate", href="/estimate", cls=_active if active == "estimate" else _inactive),
     ]
+    
+    # Help Identify CTS
+    links.append(
+        A("Help Identify", href="/?section=skipped", 
+          cls="text-amber-400 hover:text-amber-300 font-medium text-sm transition-colors border border-amber-500/30 px-2 py-0.5 rounded ml-2")
+    )
+    
     if is_auth_enabled() and not user:
-        links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors"))
+        links.append(A("Sign In", href="/login", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-2"))
     return links
 
 
@@ -3153,21 +3162,21 @@ def _admin_bar(user=None) -> object:
 
     return Div(
         Div(
-            Span("Admin Mode", cls="text-amber-400/80 text-xs font-medium tracking-wide uppercase"),
+            Span("Admin Mode", cls="text-amber-400/80 text-[10px] sm:text-xs font-medium tracking-wide uppercase shrink-0"),
             Div(
                 A(f"Pending ({pending_count})", href="/admin/section/to_review",
-                  cls="text-slate-400 hover:text-white text-xs transition-colors"),
-                Span("|", cls="text-slate-700 mx-2"),
+                  cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors"),
+                Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
                 A(f"Proposals ({proposal_count})", href="/admin/section/proposals",
-                  cls="text-slate-400 hover:text-white text-xs transition-colors"),
-                Span("|", cls="text-slate-700 mx-2"),
+                  cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors"),
+                Span("|", cls="text-slate-700 mx-1 sm:mx-2"),
                 A("Upload", href="/admin/upload",
-                  cls="text-slate-400 hover:text-white text-xs transition-colors"),
-                cls="flex items-center",
+                  cls="text-slate-400 hover:text-white text-xs whitespace-nowrap transition-colors"),
+                cls="flex items-center overflow-x-auto scrollbar-hide w-full sm:w-auto",
             ),
-            cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+            cls="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1 sm:gap-0",
         ),
-        cls="bg-slate-950 border-b border-amber-400/20 py-1.5",
+        cls="bg-slate-950 border-b border-amber-400/20 py-1.5 sm:py-1",
         id="admin-bar",
         data_testid="admin-bar",
     )
@@ -7676,17 +7685,23 @@ def landing_page(stats, featured_photos):
     _nav_cls = "text-slate-300 hover:text-amber-200 transition-colors text-sm md:text-base"
     nav_items = [
         A("Photos", href="/photos", cls=_nav_cls),
-        A("People", href="/people", cls=_nav_cls),
         A("Collections", href="/collections", cls=_nav_cls),
+        A("People", href="/people", cls=_nav_cls),
         A("Map", href="/map", cls=_nav_cls),
         A("Timeline", href="/timeline", cls=_nav_cls),
+        
+        Span("|", cls="text-slate-700 hidden md:inline"),
+        
         A("Tree", href="/tree", cls=_nav_cls),
         A("Compare", href="/compare", cls=_nav_cls),
         A("About", href="/about", cls=_nav_cls),
+        
+        A("Help Identify", href="/?section=skipped", 
+          cls="text-amber-400 hover:text-amber-300 font-medium text-sm md:text-base transition-colors border border-amber-500/30 px-3 py-1 rounded ml-2")
     ]
     if auth_enabled:
         nav_items.append(
-            A("Sign In", href="/login", cls="text-amber-300 hover:text-amber-200 font-medium transition-colors text-sm md:text-base")
+            A("Sign In", href="/login", cls="text-amber-300 hover:text-amber-200 font-medium transition-colors text-sm md:text-base ml-2")
         )
 
     # Named people for the ticker / display
@@ -15047,9 +15062,9 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
         Div(
             P(display_name, cls="text-sm text-white font-medium mt-2 truncate text-center"),
             Div(
-                Span(f"{confidence_pct}%", cls=f"text-xs font-medium px-2 py-0.5 rounded border {style['badge_cls']}"),
+                Span(f"{confidence_pct}%", cls=f"text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded border {style['badge_cls']}"),
                 state_badge,
-                cls="flex items-center justify-center gap-2 mt-1",
+                cls="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-1",
             ),
             P(conf_label, cls="text-[10px] text-slate-500 text-center mt-0.5", data_testid="confidence-label"),
             A("View Photo", href=photo_link, cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2") if photo_id else None,
@@ -15309,10 +15324,10 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
                 Div(
                     H3(cfg["title"], cls=f"text-base font-serif {cfg['icon']}"),
                     Span(f"{len(cards)} result{'s' if len(cards) != 1 else ''} — {cfg['subtitle']}",
-                         cls="text-xs text-slate-500 ml-2"),
-                    cls="flex items-baseline gap-1 mb-3",
+                         cls="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-0 sm:ml-2 line-clamp-2 sm:line-clamp-none"),
+                    cls="flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-1 mb-3",
                 ),
-                Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"),
+                Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"),
                 cls=f"mb-6 pb-4 border-b {cfg['border']}",
                 data_testid=cfg["testid"],
             )
@@ -26181,7 +26196,7 @@ def _admin_nav_bar(active: str = "") -> Div:
     )
     return Div(
         *nav_items,
-        cls="flex flex-wrap items-center gap-2 mb-6 pb-4 border-b border-slate-700/50",
+        cls="flex items-center gap-2 mb-6 pb-4 border-b border-slate-700/50 overflow-x-auto whitespace-nowrap scrollbar-hide shrink-0",
         data_testid="admin-nav-bar",
     )
 
