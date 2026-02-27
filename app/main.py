@@ -6838,6 +6838,24 @@ def identity_card(
             target="_blank",
         )
 
+    # GEDCOM Tree link button (B3)
+    gedcom_tree_btn = None
+    if is_admin and state == "CONFIRMED":
+        gedcom_links = _load_gedcom_face_links()
+        gedcom_link = gedcom_links.get(identity_id)
+        if gedcom_link:
+            gedcom_tree_btn = A(
+                "\U0001f333 View in Tree",
+                href=f"/person/{identity_id}#gedcom",
+                cls="px-3 py-1.5 text-sm font-medium text-emerald-300 border border-emerald-500/30 rounded-lg hover:bg-emerald-600/20 transition-colors",
+            )
+        else:
+            gedcom_tree_btn = A(
+                "\U0001f333 Link to Tree",
+                href=f"/person/{identity_id}#gedcom",
+                cls="px-3 py-1.5 text-sm font-medium text-slate-400 border border-slate-600 rounded-lg hover:text-emerald-300 hover:border-emerald-500/30 transition-colors",
+            )
+
     # Find Similar button (loads neighbors via HTMX) -- scrolls into view after swap
     find_similar_btn = Button(
         "\U0001f50d Find Similar",
@@ -6892,8 +6910,9 @@ def identity_card(
                 sort_dropdown,
                 view_all_photos_btn,
                 find_similar_btn,
+                gedcom_tree_btn,
                 view_public_link,
-                cls="flex items-center gap-3"
+                cls="flex items-center gap-3 flex-wrap"
             ),
             cls="identity-card-header flex items-center justify-between mb-3"
         ),
@@ -28079,17 +28098,18 @@ def _load_gedcom_enrichment_queue_count():
 _gedcom_upload_preview = None
 
 
-def _search_gedcom_individuals(query: str, limit: int = 10) -> list:
+def _search_gedcom_individuals(query: str, limit: int = 20, offset: int = 0) -> tuple:
     """Search GEDCOM individuals by name. Fuzzy, case-insensitive.
 
-    Returns list of dicts with match info, sorted by relevance.
+    Returns (results_page, total_count) where results_page is a list of dicts
+    with match info, sorted by relevance.
     """
     if not query or len(query.strip()) < 2:
-        return []
+        return [], 0
 
     individuals = _load_gedcom_individuals()
     if not individuals:
-        return []
+        return [], 0
 
     query_lower = query.strip().lower()
     query_parts = query_lower.split()
@@ -28177,6 +28197,15 @@ def _search_gedcom_individuals(query: str, limit: int = 10) -> list:
                     death_year = int(part)
                     break
 
+        # Bonus scoring: people with dates are more useful (B1)
+        if birth_year or death_year:
+            score += 0.05
+        # Bonus: Rhodes connection
+        bp = (row.get("birth_place") or "").lower()
+        dp = (row.get("death_place") or "").lower()
+        if "rhodes" in bp or "rhodes" in dp or "rodi" in bp or "rodi" in dp:
+            score += 0.05
+
         results.append({
             "xref_id": row["gedcom_id"],
             "full_name": row.get("name") or "Unknown",
@@ -28189,7 +28218,8 @@ def _search_gedcom_individuals(query: str, limit: int = 10) -> list:
 
     # Sort by score descending, then by name
     results.sort(key=lambda x: (-x["score"], x["full_name"]))
-    return results[:limit]
+    total = len(results)
+    return results[offset:offset + limit], total
 
 
 def _person_gedcom_link_section(person_id: str, display_name: str, is_admin: bool):
@@ -28320,21 +28350,28 @@ def _gedcom_link_panel(identity_id: str, identity_name: str) -> Div:
 
 
 @rt("/api/gedcom/search")
-def get(q: str = "", identity_id: str = "", sess=None):
+def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
     """Search GEDCOM individuals by name. Admin only.
 
-    Returns HTMX fragment with selectable results.
+    Returns HTMX fragment with selectable results. Supports pagination
+    via offset parameter with "Show more" button (B1).
     """
     denied = _check_admin(sess)
     if denied:
         return denied
 
-    results = _search_gedcom_individuals(q, limit=10)
+    page_size = 15
+    results, total = _search_gedcom_individuals(q, limit=page_size, offset=offset)
 
     if not results:
-        return Div(
-            P("No matches found.", cls="text-slate-500 text-sm py-2"),
-        )
+        if offset == 0:
+            return Div(
+                P("No matches found.", cls="text-slate-500 text-sm py-2"),
+            )
+        else:
+            return Div(
+                P("No more results.", cls="text-slate-500 text-sm py-2"),
+            )
 
     # Check which individuals are already linked to this identity
     existing_links = _load_gedcom_face_links()
@@ -28347,7 +28384,6 @@ def get(q: str = "", identity_id: str = "", sess=None):
         is_linked = (xref == current_xref)
 
         # Build display info
-        name_parts = [r["full_name"]]
         life_span = []
         if r.get("birth_year"):
             life_span.append(f"b. {r['birth_year']}")
@@ -28356,19 +28392,35 @@ def get(q: str = "", identity_id: str = "", sess=None):
         if r.get("birth_place"):
             life_span.append(r["birth_place"])
 
+        # Match strength indicator (B1)
+        score = r.get("score", 0)
+        if score >= 0.9:
+            match_cls = "text-emerald-400"
+            match_label = "Strong"
+        elif score >= 0.7:
+            match_cls = "text-amber-400"
+            match_label = "Good"
+        else:
+            match_cls = "text-slate-500"
+            match_label = "Partial"
+
         item = Div(
             Div(
-                Span(r["full_name"], cls="text-white font-medium text-sm"),
+                Div(
+                    Span(r["full_name"], cls="text-white font-medium text-sm"),
+                    Span(match_label, cls=f"text-[10px] {match_cls} ml-1.5 font-medium"),
+                    cls="flex items-center",
+                ),
                 Span(
                     " · ".join(life_span) if life_span else "No dates",
-                    cls="text-slate-400 text-xs ml-2"
+                    cls="text-slate-400 text-xs"
                 ),
-                cls="flex items-baseline gap-1 flex-wrap",
+                cls="flex flex-col gap-0.5",
             ),
             Button(
                 "Linked" if is_linked else "Link",
                 cls=(
-                    "px-3 py-1 text-xs rounded font-medium "
+                    "px-3 py-1 text-xs rounded font-medium shrink-0 "
                     + ("bg-emerald-600/30 text-emerald-400 cursor-default"
                        if is_linked
                        else "bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer")
@@ -28378,12 +28430,32 @@ def get(q: str = "", identity_id: str = "", sess=None):
                 hx_target=f"#gedcom-link-panel-{identity_id}",
                 hx_swap="outerHTML",
                 disabled=is_linked,
-            ) if not is_linked else Span("Linked", cls="px-3 py-1 text-xs rounded font-medium bg-emerald-600/30 text-emerald-400"),
+            ) if not is_linked else Span("Linked", cls="px-3 py-1 text-xs rounded font-medium bg-emerald-600/30 text-emerald-400 shrink-0"),
             cls="flex items-center justify-between py-2 px-3 hover:bg-slate-700/50 rounded transition-colors",
         )
         items.append(item)
 
-    return Div(*items)
+    # "Show more" pagination button (B1)
+    next_offset = offset + page_size
+    if next_offset < total:
+        remaining = total - next_offset
+        show_more = Button(
+            f"Show {min(remaining, page_size)} more ({remaining} remaining)",
+            cls="w-full mt-2 py-1.5 text-xs text-indigo-400 hover:text-indigo-300 "
+                "bg-slate-800/50 hover:bg-slate-700/50 rounded transition-colors",
+            hx_get=f"/api/gedcom/search?q={quote(q)}&identity_id={identity_id}&offset={next_offset}",
+            hx_target="this",
+            hx_swap="outerHTML",
+        )
+        items.append(show_more)
+
+    # Show result count header
+    count_header = P(
+        f"{total} result{'s' if total != 1 else ''} for \"{q}\"",
+        cls="text-xs text-slate-500 px-3 pb-1",
+    ) if offset == 0 else None
+
+    return Div(count_header, *items) if offset == 0 else Div(*items)
 
 
 @rt("/api/gedcom/link")

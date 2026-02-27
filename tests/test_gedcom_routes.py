@@ -402,21 +402,22 @@ class TestSearchGedcomFunction:
     def test_exact_match_scores_highest(self):
         from app.main import _search_gedcom_individuals
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
-            results = _search_gedcom_individuals("Leon Capeluto")
+            results, total = _search_gedcom_individuals("Leon Capeluto")
             assert len(results) > 0
             assert results[0]["xref_id"] == "@I1@"
-            assert results[0]["score"] == 1.0
+            # Score is 1.0 base + bonus for having dates + Rhodes location
+            assert results[0]["score"] >= 1.0
 
     def test_partial_match(self):
         from app.main import _search_gedcom_individuals
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
-            results = _search_gedcom_individuals("Capeluto")
+            results, total = _search_gedcom_individuals("Capeluto")
             assert len(results) >= 2  # Leon + Moise
 
     def test_surname_variant(self):
         from app.main import _search_gedcom_individuals
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
-            results = _search_gedcom_individuals("Victoria Capeluto")
+            results, total = _search_gedcom_individuals("Victoria Capeluto")
             # Should find Victoria Capuano via surname variant
             xrefs = [r["xref_id"] for r in results]
             assert "@I2@" in xrefs
@@ -424,10 +425,129 @@ class TestSearchGedcomFunction:
     def test_empty_query_returns_empty(self):
         from app.main import _search_gedcom_individuals
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
-            assert _search_gedcom_individuals("") == []
-            assert _search_gedcom_individuals("a") == []
+            results, total = _search_gedcom_individuals("")
+            assert results == []
+            assert total == 0
+            results2, total2 = _search_gedcom_individuals("a")
+            assert results2 == []
 
     def test_no_match_returns_empty(self):
         from app.main import _search_gedcom_individuals
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
-            assert _search_gedcom_individuals("Zzzzz Nonexistent") == []
+            results, total = _search_gedcom_individuals("Zzzzz Nonexistent")
+            assert results == []
+            assert total == 0
+
+    def test_date_bonus_scoring(self):
+        """People with dates and Rhodes connection get bonus score (B1)."""
+        from app.main import _search_gedcom_individuals
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+            results, total = _search_gedcom_individuals("Capeluto")
+            # Leon (has dates + Rhodes) should rank above Selma Capouya (no dates)
+            scored = {r["xref_id"]: r["score"] for r in results}
+            # Leon Capeluto has both dates AND Rhodes → should have highest bonus
+            assert scored.get("@I1@", 0) > scored.get("@I5@", 0) if "@I5@" in scored else True
+
+    def test_pagination_offset(self):
+        """Pagination returns correct slice of results."""
+        from app.main import _search_gedcom_individuals
+        # Create many similar individuals
+        many_individuals = [
+            {"gedcom_id": f"@I{i}@", "name": f"Person Capeluto {i}", "given_name": f"Person{i}",
+             "surname": "Capeluto", "gender": "M", "birth_date": "", "birth_place": "",
+             "death_date": "", "death_place": ""}
+            for i in range(25)
+        ]
+        with patch("app.main._load_gedcom_individuals", return_value=many_individuals):
+            page1, total = _search_gedcom_individuals("Capeluto", limit=10, offset=0)
+            assert total == 25
+            assert len(page1) == 10
+            page2, total2 = _search_gedcom_individuals("Capeluto", limit=10, offset=10)
+            assert total2 == 25
+            assert len(page2) == 10
+            page3, total3 = _search_gedcom_individuals("Capeluto", limit=10, offset=20)
+            assert total3 == 25
+            assert len(page3) == 5  # Only 5 remaining
+
+    def test_result_count_in_search_response(self, admin_client):
+        """Search endpoint shows result count (B1)."""
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=Capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "result" in resp.text.lower()  # Shows "N results"
+
+    def test_match_strength_indicator(self, admin_client):
+        """Search results show match strength labels (B1)."""
+        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
+             patch("app.main._load_gedcom_face_links", return_value={}):
+            resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
+            assert resp.status_code == 200
+            assert "Strong" in resp.text  # Exact match → Strong
+
+
+class TestGedcomTreeButtonOnIdentityCard:
+    """B3: Identity cards should show GEDCOM tree button for confirmed identities."""
+
+    def test_confirmed_identity_shows_tree_link(self):
+        """Confirmed identity card shows 'Link to Tree' when not linked."""
+        from app.main import identity_card, to_xml
+        identity = {
+            "identity_id": "test-id-gedcom-001",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-1"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-001_0.jpg"}
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert "Link to Tree" in html
+        assert f"/person/test-id-gedcom-001#gedcom" in html
+
+    def test_linked_identity_shows_view_tree(self):
+        """Confirmed identity card shows 'View in Tree' when linked."""
+        from app.main import identity_card, to_xml
+        identity = {
+            "identity_id": "test-id-gedcom-002",
+            "name": "Victoria Capuano",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-2"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-002_0.jpg"}
+        linked = {"test-id-gedcom-002": {"gedcom_id": "@I2@"}}
+        with patch("app.main._load_gedcom_face_links", return_value=linked):
+            html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert "View in Tree" in html
+
+    def test_proposed_identity_no_tree_button(self):
+        """Proposed identities should NOT show tree button."""
+        from app.main import identity_card, to_xml
+        identity = {
+            "identity_id": "test-id-gedcom-003",
+            "name": "Unknown Person",
+            "state": "PROPOSED",
+            "anchor_ids": ["face-3"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-003_0.jpg"}
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert "Link to Tree" not in html
+        assert "View in Tree" not in html
+
+    def test_non_admin_no_tree_button(self):
+        """Non-admin users should NOT see tree button."""
+        from app.main import identity_card, to_xml
+        identity = {
+            "identity_id": "test-id-gedcom-004",
+            "name": "Leon Capeluto",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-4"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-id-gedcom-004_0.jpg"}
+        with patch("app.main._load_gedcom_face_links", return_value={}):
+            html = to_xml(identity_card(identity, crop_files, is_admin=False))
+        assert "Link to Tree" not in html
