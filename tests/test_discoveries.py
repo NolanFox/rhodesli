@@ -112,7 +112,7 @@ class TestCountDiscoveries:
         assert count == 1
 
     def test_ignores_low_confidence_match(self):
-        """Does not count matches with distance >= 1.0."""
+        """Does not count matches with distance >= 1.05."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
         _invalidate_discovery_cache()
 
@@ -131,6 +131,27 @@ class TestCountDiscoveries:
             count = _count_discoveries(registry)
 
         assert count == 0
+
+    def test_includes_borderline_high_match(self):
+        """Borderline matches at distance 1.01 are included (AD-170 widened threshold)."""
+        from app.main import _count_discoveries, _invalidate_discovery_cache
+        _invalidate_discovery_cache()
+
+        identities = [
+            _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"]),
+            _make_identity("conf1", "Known Person", "CONFIRMED", anchor_ids=["face_conf1"]),
+        ]
+        registry = _make_registry_mock(identities)
+
+        # Distance 1.01 was previously excluded (threshold was 1.0), now included
+        batch_result = {"inbox1": (1.01, "conf1", "Known Person")}
+
+        with patch("app.main._get_identities_with_proposals", return_value=set()), \
+             patch("app.main.get_face_data", return_value={}), \
+             patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result):
+            count = _count_discoveries(registry)
+
+        assert count == 1
 
 
 class TestComputeDiscoveries:
@@ -427,7 +448,9 @@ class TestApiDiscoveriesRoute:
              patch("app.main._compute_discoveries", return_value=discoveries), \
              patch("app.main.get_crop_files", return_value=set()), \
              patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity):
+             patch("app.main._safe_get_identity", return_value=source_identity), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
             response = client.get("/api/discoveries")
 
         assert response.status_code == 200
@@ -438,6 +461,101 @@ class TestApiDiscoveriesRoute:
         assert "/api/face/tag" in html
         # Reject button present
         assert "/api/discovery/reject" in html
+
+    def test_api_discoveries_shows_confidence_label_not_percentage(self, client):
+        """Discovery cards show confidence labels (AD-171), not misleading percentages."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Unknown 1",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": 0.91,
+                "confidence": "HIGH",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"])
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", return_value=source_identity), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        # Should show "Good match" label, NOT "54% match"
+        assert "Good match" in html
+        assert "54%" not in html
+        # Admin tooltip should show raw distance
+        assert "Distance: 0.91" in html
+
+    def test_api_discoveries_source_face_is_clickable(self, client):
+        """Source face image and name are wrapped in navigation links."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Unknown 1",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": 0.6,
+                "confidence": "VERY HIGH",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"])
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", return_value=source_identity), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        # Source face should link to person page
+        assert 'href="/person/inbox1"' in html
+        # Target face should also link to person page
+        assert 'href="/person/conf1"' in html
+
+    def test_api_discoveries_shows_photo_context(self, client):
+        """Discovery cards show photo context (collection, view photo link)."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Unknown 1",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": 0.6,
+                "confidence": "VERY HIGH",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"])
+        photo_data = {
+            "collection": "Betty Capeluto Miami Collection",
+            "faces": [{"face_id": "face_inbox1", "bbox": [0, 0, 100, 100]}],
+            "filename": "test_photo.jpg",
+        }
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", return_value=source_identity), \
+             patch("app.main.get_photo_id_for_face", return_value="photo123"), \
+             patch("app.main.get_photo_metadata", return_value=photo_data), \
+             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        # Collection name shown
+        assert "Betty Capeluto Miami Collection" in html
+        # View photo link present
+        assert 'href="/photo/photo123"' in html
+        assert "View photo" in html
 
 
 class TestApiDiscoveryReject:
@@ -514,7 +632,7 @@ class TestDiscoveryCacheInvalidation:
 
         assert result1 == result2
 
-    def test_discovery_threshold_is_1_point_0(self):
-        """The discovery threshold is distance < 1.0."""
+    def test_discovery_threshold_is_1_point_05(self):
+        """The discovery threshold is distance < 1.05 (AD-170 widened from 1.0)."""
         from app.main import DISCOVERY_DISTANCE_THRESHOLD
-        assert DISCOVERY_DISTANCE_THRESHOLD == 1.0
+        assert DISCOVERY_DISTANCE_THRESHOLD == 1.05

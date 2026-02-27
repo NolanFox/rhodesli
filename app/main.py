@@ -4808,7 +4808,7 @@ _CONFIDENCE_LABEL = {"VERY HIGH": "Strong match", "HIGH": "Good match", "MODERAT
 _discovery_cache = None
 _discovery_cache_key = None
 
-DISCOVERY_DISTANCE_THRESHOLD = 1.0  # Distance < 1.0 = HIGH or VERY HIGH confidence
+DISCOVERY_DISTANCE_THRESHOLD = 1.05  # Distance < 1.05 catches HIGH tier + borderline (AD-170)
 
 
 def _compute_discoveries(registry=None) -> list:
@@ -23731,6 +23731,8 @@ def get(sess=None):
         )
 
     cards = []
+    from urllib.parse import quote
+
     for d in discoveries:
         source_id = d["source_id"]
         target_id = d["target_id"]
@@ -23738,7 +23740,7 @@ def get(sess=None):
         target_name = d["target_name"] or f"Identity {target_id[:8]}..."
         distance = d["distance"]
         confidence = d["confidence"]
-        confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+        confidence_label = _CONFIDENCE_LABEL.get(confidence, "Match")
 
         # Resolve crop URLs for both source and target
         source_crop = _resolve_identity_crop(source_id, crop_files)
@@ -23748,31 +23750,12 @@ def get(sess=None):
         if confidence == "VERY HIGH":
             badge_cls = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
             ring_cls = "ring-2 ring-emerald-400/50"
-        else:
+        elif confidence == "HIGH":
             badge_cls = "bg-blue-500/20 text-blue-400 border-blue-500/30"
             ring_cls = "ring-2 ring-blue-400/50"
-
-        # Source face image (unreviewed)
-        source_img = Img(
-            src=source_crop or "/static/placeholder.jpg",
-            alt=source_name,
-            cls=f"w-20 h-20 rounded-full object-cover {ring_cls}",
-            loading="lazy"
-        ) if source_crop else Div(
-            Span("?", cls="text-2xl text-slate-500"),
-            cls=f"w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center {ring_cls}"
-        )
-
-        # Target face image (confirmed)
-        target_img = Img(
-            src=target_crop or "/static/placeholder.jpg",
-            alt=target_name,
-            cls="w-20 h-20 rounded-full object-cover ring-2 ring-green-400/50",
-            loading="lazy"
-        ) if target_crop else Div(
-            Span("?", cls="text-2xl text-slate-500"),
-            cls="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
-        )
+        else:
+            badge_cls = "bg-amber-500/20 text-amber-400 border-amber-500/30"
+            ring_cls = "ring-2 ring-amber-400/50"
 
         # Build the face_id for source identity (first face)
         source_identity = _safe_get_identity(registry, source_id)
@@ -23783,23 +23766,100 @@ def get(sess=None):
             if first_face_id:
                 break
 
-        from urllib.parse import quote
         face_id_encoded = quote(first_face_id, safe="")
+
+        # Resolve photo context for source face
+        photo_context_el = None
+        if first_face_id:
+            photo_id = get_photo_id_for_face(first_face_id)
+            if photo_id:
+                photo_data = get_photo_metadata(photo_id)
+                if photo_data:
+                    collection = photo_data.get("collection", "")
+                    # Find co-occurring faces in the same photo
+                    co_faces = []
+                    photo_face_ids = [f.get("face_id", "") if isinstance(f, dict) else f for f in photo_data.get("faces", [])]
+                    for fid in photo_face_ids:
+                        if fid == first_face_id or not fid:
+                            continue
+                        # Look up identity for this co-occurring face
+                        for iid, ident in registry._identities.items():
+                            all_face_ids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+                            face_id_strs = [fi if isinstance(fi, str) else fi.get("face_id", "") for fi in all_face_ids]
+                            if fid in face_id_strs and iid != source_id:
+                                co_name = ident.get("name", "Unknown")
+                                co_state = ident.get("state", "")
+                                co_faces.append((iid, co_name, co_state))
+                                break
+
+                    context_parts = []
+                    if collection:
+                        context_parts.append(Span(collection, cls="text-xs text-slate-400"))
+                    if co_faces:
+                        co_labels = []
+                        for co_id, co_name, co_state in co_faces[:3]:
+                            state_color = "text-green-400" if co_state == "CONFIRMED" else "text-slate-300"
+                            co_labels.append(A(co_name, href=f"/person/{co_id}", cls=f"text-xs {state_color} hover:text-blue-300"))
+                        context_parts.append(
+                            Div(
+                                Span("Also in photo: ", cls="text-xs text-slate-500"),
+                                *[Span(label, ", " if i < len(co_labels) - 1 else "") for i, label in enumerate(co_labels)],
+                                cls="flex flex-wrap items-center gap-0.5"
+                            )
+                        )
+                    # View photo link
+                    context_parts.append(
+                        A("View photo", href=f"/photo/{photo_id}",
+                          cls="text-xs text-blue-400 hover:text-blue-300 underline")
+                    )
+                    if context_parts:
+                        photo_context_el = Div(*context_parts, cls="flex flex-col gap-1 px-4 py-2 border-t border-slate-700/50")
+
+        # Source face image (unreviewed) — wrapped in link for navigation
+        source_img_el = Img(
+            src=source_crop or "/static/placeholder.jpg",
+            alt=source_name,
+            cls=f"w-20 h-20 rounded-full object-cover {ring_cls}",
+            loading="lazy"
+        ) if source_crop else Div(
+            Span("?", cls="text-2xl text-slate-500"),
+            cls=f"w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center {ring_cls}"
+        )
+        # Wrap source image in a link to the person page
+        source_img = A(source_img_el, href=f"/person/{source_id}",
+                       cls="block cursor-pointer hover:opacity-80 transition-opacity",
+                       title=f"View {source_name}")
+
+        # Target face image (confirmed) — wrapped in link
+        target_img_el = Img(
+            src=target_crop or "/static/placeholder.jpg",
+            alt=target_name,
+            cls="w-20 h-20 rounded-full object-cover ring-2 ring-green-400/50",
+            loading="lazy"
+        ) if target_crop else Div(
+            Span("?", cls="text-2xl text-slate-500"),
+            cls="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
+        )
+        target_img = A(target_img_el, href=f"/person/{target_id}",
+                       cls="block cursor-pointer hover:opacity-80 transition-opacity",
+                       title=f"View {target_name}")
 
         card = Div(
             # Match pair: source -> target
             Div(
-                # Source face
+                # Source face (clickable)
                 Div(
                     source_img,
                     Div(
-                        P(source_name, cls="text-sm font-medium text-white truncate max-w-[200px]", title=source_name),
+                        A(source_name, href=f"/person/{source_id}",
+                          cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
+                          title=source_name),
                         Span("Unreviewed", cls="text-xs text-slate-400"),
                         cls="mt-1.5 text-center"
                     ),
                     cls="flex flex-col items-center"
                 ),
-                # Arrow + confidence
+                # Arrow + confidence label (AD-171)
                 Div(
                     Svg(
                         Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
@@ -23807,13 +23867,13 @@ def get(sess=None):
                         cls="w-6 h-6 text-slate-400", fill="none", stroke="currentColor", viewBox="0 0 24 24"
                     ),
                     Span(
-                        f"{confidence_pct}% match",
+                        confidence_label,
                         cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
-                        title=f"ML confidence that these two faces are the same person. {confidence_pct}% means a {_CONFIDENCE_LABEL.get(confidence, 'possible match').lower()}."
+                        title=f"Distance: {distance:.2f} ({confidence})"
                     ),
                     cls="flex flex-col items-center gap-1.5 px-4"
                 ),
-                # Target face (confirmed)
+                # Target face (confirmed, clickable)
                 Div(
                     target_img,
                     Div(
@@ -23827,6 +23887,8 @@ def get(sess=None):
                 ),
                 cls="flex items-center justify-center gap-2 py-4"
             ),
+            # Photo context (collection, co-occurring faces, view photo link)
+            photo_context_el,
             # Action buttons
             Div(
                 Button(

@@ -359,10 +359,10 @@ class TestDiscoveryCardNameWidth:
 # ---------------------------------------------------------------------------
 
 class TestDiscoveryConfidenceBadgeTooltip:
-    """UX-111: Discovery match confidence badge should have a tooltip explaining the percentage."""
+    """UX-111: Discovery match confidence badge should have a tooltip explaining the match (AD-171)."""
 
     def test_confidence_badge_has_title(self):
-        """Confidence badge has title attribute explaining match percentage."""
+        """Confidence badge has title with distance and tier for admin debugging."""
         from app.main import _invalidate_discovery_cache
 
         _invalidate_discovery_cache()
@@ -380,16 +380,19 @@ class TestDiscoveryConfidenceBadgeTooltip:
              patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result), \
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._check_admin", return_value=None):
+             patch("app.main._check_admin", return_value=None), \
+             patch("app.main.get_photo_id_for_face", return_value=None):
 
             from app.main import app
             client = TestClient(app)
             response = client.get("/api/discoveries")
             html = response.text
 
-            # Badge should have a title attribute with explanation
-            assert "ML confidence" in html
-            assert "strong match" in html.lower()
+            # Badge shows confidence label, not percentage (AD-171)
+            assert "Strong match" in html
+            # Admin tooltip shows raw distance for debugging
+            assert "Distance: 0.50" in html
+            assert "VERY HIGH" in html
 
 
 # ---------------------------------------------------------------------------
