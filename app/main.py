@@ -10122,11 +10122,13 @@ def photo_view_content(
             is_seq_active = (seq_mode and face_id == seq_active_face_id)
             seq_param = "&seq=1" if seq_mode else ""
             # UX-073: Enter key submits first result in dropdown
+            # Enter triggers HTMX fetch immediately (bypassing 300ms debounce),
+            # then waits for htmx:afterSettle before clicking — no timing hacks.
             _enter_handler = (
                 f"on keydown[key=='Enter'] halt the event "
                 f"then set firstBtn to first <button/> in #{tag_results_id} "
                 f"then if firstBtn click firstBtn "
-                f"else wait 400ms "
+                f"else wait for htmx:afterSettle from #{tag_results_id} "
                 f"then set firstBtn to first <button/> in #{tag_results_id} "
                 f"then if firstBtn click firstBtn end"
             )
@@ -10138,7 +10140,7 @@ def photo_view_content(
                 cls="w-full px-2 py-1.5 text-sm bg-slate-800 border border-slate-600 text-white rounded "
                     "focus:outline-none focus:ring-1 focus:ring-indigo-400 placeholder-slate-500",
                 hx_get=f"/api/face/tag-search?face_id={face_id_encoded}{seq_param}",
-                hx_trigger="keyup changed delay:300ms",
+                hx_trigger="keyup changed delay:300ms, keydown[key=='Enter']",
                 hx_target=f"#{tag_results_id}",
                 hx_include="this",
                 name="q",

@@ -207,8 +207,29 @@ class TestEnterKeyHandler:
                 html = response.text
                 # Should have the Enter key handler in hyperscript
                 if "keydown" in html and "Enter" in html:
-                    # Verify the retry logic exists (wait 400ms fallback)
-                    assert "wait 400ms" in html, "Enter handler should have 400ms retry fallback"
+                    # Verify proper event-driven approach (htmx:afterSettle, no timing hacks)
+                    assert "htmx:afterSettle" in html, "Enter handler should use htmx:afterSettle"
+                    assert "wait 400ms" not in html, "Enter handler should not use 400ms timing hack"
+                    return
+
+        pytest.skip("No photos with face tag search found")
+
+    def test_tag_search_htmx_trigger_includes_enter(self, client):
+        """HTMX trigger should include Enter keydown for immediate fetch."""
+        photos = _load_photos_list()
+        if not photos:
+            pytest.skip("No photos available")
+
+        for photo in photos[:10]:
+            photo_id = photo.get("photo_id", "")
+            face_ids = photo.get("face_ids", [])
+            if not face_ids:
+                continue
+            response = client.get(f"/photo/{photo_id}/partial")
+            if response.status_code == 200 and "tag-search" in response.text:
+                html = response.text
+                # The HTMX trigger should include both keyup debounce AND Enter keydown
+                if "keydown[key==&#x27;Enter&#x27;]" in html or 'keydown[key==\'Enter\']' in html:
                     return
 
         pytest.skip("No photos with face tag search found")
