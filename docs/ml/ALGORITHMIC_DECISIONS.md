@@ -1960,11 +1960,40 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: scripts/enforce_worktree.sh, scripts/merge_tracks.sh, .claude/rules/worktree-enforcement.md
 - **Breadcrumbs**: HD-021, docs/session_context/session-71d-context.md Section 6
 
+### AD-172: Review Section Architecture — Fix Discoveries, Don't Merge
+- **Date**: 2026-02-26 | **Session**: 71D
+- **Context**: Dogfooding found Discoveries page is broken: no navigation from face images, misleading 54% display, only 1 of 2 matching faces shown. Three sections (New Matches / Discoveries / Help Identify) are confusing. See `docs/session_context/session-71d-context.md`.
+- **Decision**: **Option A — Fix Discoveries as a separate section.** Keep the three-section architecture but fix the bugs:
+  1. Replace misleading percentage with confidence labels (AD-173)
+  2. Add clickable navigation (source face → person page, view photo link)
+  3. Widen discovery threshold from 1.0 to 1.05 to catch borderline HIGH matches
+  4. Add photo context (collection, co-occurring faces)
+- **Rejected alternatives**:
+  - **Option B (Merge into New Matches)**: Would simplify to two sections but requires extensive triage bar refactoring, risks conflicts with concurrent Track A work on templates/CSS, and loses the "proactive notification" UX concept.
+  - **Option C (Notification banner)**: Lower risk but doesn't address the fundamental navigation and display issues; banner is less actionable than a full card.
+- **Rationale**: The three-section funnel (Discoveries → New Matches → Help Identify) is architecturally sound. The problems are bugs in the Discoveries implementation, not a flawed architecture. Fixing is more surgical than restructuring, and keeps file changes contained to `app/main.py` discoveries code paths.
+- **Affects**: `app/main.py` (discovery route, API endpoint, sidebar), `DISCOVERY_DISTANCE_THRESHOLD`
+
+### AD-173: Match Confidence Display — Labels Replace Percentages
+- **Date**: 2026-02-26 | **Session**: 71D
+- **Context**: Discoveries page shows "54% match" for a distance-0.91 match. Formula `(1 - distance/2.0) * 100` produces numbers that contradict user intuition: 54% sounds uncertain, but distance 0.91 is a HIGH confidence match. The system already has `_CONFIDENCE_LABEL` mapping tiers to human-readable labels.
+- **Decision**: Replace percentages with confidence tier labels on the Discoveries page:
+  - VERY HIGH (<0.80): "Strong match"
+  - HIGH (0.80-1.00): "Good match"
+  - MODERATE (1.00-1.20): "Possible match"
+  - LOW (>1.20): "Weak match"
+  Uses the existing `_CONFIDENCE_LABEL` dict already defined in app/main.py. Admin tooltip shows raw distance for debugging.
+- **Rejected alternatives**:
+  - **Fixed percentage formula** (e.g., calibrated probability): Would require calibration pipeline changes and still risks user confusion since "percentage" implies "probability" which our distances are not.
+  - **No display at all**: Removes useful information. Labels give the admin quick confidence assessment.
+- **Rationale**: UX Principle #8: "Quality Scores are for Engineers." Labels are universally understood. Admin tooltip preserves debugging info. Consistent with how New Matches already shows confidence tiers.
+- **Affects**: `app/main.py` discovery card rendering (line ~23741 and ~23809-23813)
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-172)
+1. Add a new entry with AD-XXX format (next: AD-174)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
