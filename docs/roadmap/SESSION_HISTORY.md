@@ -364,6 +364,20 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 71D: Merge Ceremony — Discoveries Fix + Harness Enforcement (2026-02-27) — v0.76.1
+- **Merge ceremony**: Merged 2 unmerged worktree branches from Session 71D into main.
+- **Harness branch**: Worktree enforcement scripts (enforce_worktree.sh, merge_tracks.sh), AD-171, HD-021.
+- **Discoveries branch**: Fix navigation dead-ends, replace misleading "54% match" with confidence labels ("Good match"/"Possible match"), widen threshold to 1.05 to surface Nace Capeluto, add photo context and co-occurring faces. AD-172, AD-173.
+- **AD conflict resolution**: Both branches + Session 71 Track C all used AD-170. Renumbered: harness→AD-171, discoveries architecture→AD-172, confidence display→AD-173.
+- **Browser verified**: Discoveries page shows 2 matches (Big Leon + Nace Capeluto) with correct labels, clickable navigation, photo context. Session 71 fixes intact.
+- 3163 tests (up from 3146 baseline).
+
+## Session 71: UX Dogfooding Fixes + GEDCOM Integration + Harness Enforcement (2026-02-26) — v0.76.0
+- **Track A**: 6 UX fixes from dogfooding (quality labels, face card size, enter key, analysis sections, name truncation, loading indicator).
+- **Track B**: GEDCOM search ranking with date/Rhodes bonuses, match strength labels, pagination, tree buttons on identity cards.
+- **Track C**: Mechanical subagent commit enforcement (HD-021), AD-170 (banner vocabulary), parallel sessions doc.
+- 3 parallel tracks. ~3146 tests.
+
 ## Session 70: UX Fix Pass + Multi-Tool Harness + Auto-Eval Loop (2026-02-25) — v0.75.0
 - **UX fix pass**: 13 issues from session 69 audit addressed (2 HIGH, 5 MEDIUM, 6 LOW). UX-108 contrast fix, UX-109 color consistency, UX-110-113 discovery card improvements, UX-104/105 verified/fixed, MEDIUM #3-5 (ML banner vocab, tab styling, triage bar).
 - **Multi-tool harness (HD-019)**: Canonical source + adapter pattern. AGENT_HARNESS.md (tool-agnostic rules), AGENTS.md (Codex), .cursorrules, .gemini/GEMINI.md, .antigravity/rules.md. sync-harness.sh + setup-worktree.sh.
@@ -470,6 +484,9 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.76.1 | 2026-02-27 | 71D | 3163 |
+| v0.76.0 | 2026-02-26 | 71 | 3146 |
+| v0.75.0 | 2026-02-25 | 70 | 3133+538 |
 | v0.74.0 | 2026-02-25 | 69 | 3057+538 |
 | v0.73.1 | 2026-02-25 | 68 | 3064 |
 | v0.72.0 | 2026-02-24 | 66 | 3040+538 |

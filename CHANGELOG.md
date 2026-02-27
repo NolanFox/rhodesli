@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.76.1] — 2026-02-27 (Session 71D Merge: Discoveries Fix + Harness Enforcement)
+
+### Fixed — Discoveries Page
+- Confidence labels replace misleading percentages: "Good match" / "Possible match" instead of "54% match" (AD-173)
+- Source and confirmed face photos are now clickable (navigate to person page)
+- Discovery threshold widened from 1.0 to 1.05 — Nace Capeluto now surfaces (AD-172)
+- Photo context added: collection name, co-occurring faces, "View photo" link
+
+### Added — Worktree Enforcement
+- `scripts/enforce_worktree.sh`: Verifies session is NOT on main branch (AD-171)
+- `scripts/merge_tracks.sh`: Ordered merge ceremony with test gates
+- `.claude/rules/worktree-enforcement.md`: Mechanical enforcement rule
+
+### Fixed — AD Numbering Conflict
+- Session 71 Track C, harness branch, and discoveries branch all used AD-170
+- Renumbered: AD-170 (banner vocab, unchanged), AD-171 (worktree enforcement), AD-172 (review architecture), AD-173 (confidence display)
+
+### Stats
+- Tests: 3163 passed (up from 3146)
+- 2 branches merged, 0 regressions
+- Browser verified: Discoveries page, New Matches, Session 71 fixes intact
+
 ## [v0.76.0] — 2026-02-26 (Session 71: UX Dogfooding Fixes + GEDCOM Integration + Harness Enforcement)
 
 ### Fixed — UX Dogfooding Fixes (Track A)
