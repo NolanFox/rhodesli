@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.79.1 · ~3752 tests · 274 photos · 775 identities · 60 confirmed
+Current: v0.80.0 · ~3792 tests · 274 photos · 775 identities · 60 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-28: **v0.80.0 — Session 78**: Integration + Fix-Everything. Stop hook fixed (exit 2 blocking). 2 ML test failures resolved. Per-face dedup implemented. GEDCOM→Supabase sync (1,019 rels, pagination fix). PRD-024 auto-clustering. Threshold analysis: Tier 2 ceiling 1.10 provably too low. 31 new tests. Visual audit: 9 pages PASS. ~3792 tests.
 - [x] 2026-02-28: **v0.79.1 — Session 77**: Compare Rebuild Follow-up. Pair compare enriched with cross-photo face summaries and archive best-hit matches (AD-181). Compare uploads auto-queued to admin pending review (AD-182). Golden test suite in tests/test_compare.py. Session provenance: audit log + assessment.
 - [x] 2026-02-28: **v0.79.0 — Session 76a**: Auto-Clustering + Discoveries Redesign + Face Cards. Two-tier auto-clustering pipeline (AD-179): Tier 1 (<0.85) auto-adds, Tier 2 (0.85-1.10) surfaces as suggestions. Discoveries page redesigned as ML audit trail with confirm/undo/reject. Browse cards face-dominant (200px min). Backfill: 0 Tier 1, 7 Tier 2, 652 no match. 15 new tests + 4 regression fixes. ~3742 tests.
 - [x] 2026-02-28: **v0.78.0 — Session 75**: Post-Gemini Cleanup + Tree Upgrade. Data integrity: restored 19 UUID relationships, reverted 9K lines of key-reorder noise. GEDCOM date parser: regex replaces broken [:4] slice (AD-175). Tree rewrite: CardHtml API, bidirectional rels, 718 people, siblings render. xdist fix: atomic route reordering + timeout (0 failures). 38 new tests. AD-175/176/177/178. ~3216 tests.

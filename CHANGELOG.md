@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.80.0] — 2026-02-28 (Session 78: Integration + Fix-Everything)
+
+### Fixed
+- Stop hook exit code changed from 1 (non-blocking) to 2 (blocking), messages to stderr
+- `test_only_matched_individuals` — assertion corrected (renamed to `test_single_match_uses_raw_xrefs`)
+- `test_compare_photos_tab_has_face_overlays` — added photo dimensions cache fallback in `get_photo_dimensions()`
+- Supabase pagination in `sync_from_supabase_on_startup()` — was only fetching first 1000 rows
+
+### Added
+- Per-face dedup in `core/auto_cluster.py`: full duplicates, partial face removal, review categories
+- `scripts/sync_gedcom_to_supabase.py`: idempotent GEDCOM→Supabase sync (batched, dry-run support)
+- Threshold analysis document proving Tier 2 ceiling of 1.10 is too low (52% of clusters exceed it)
+- PRD-024 for auto-clustering pipeline (`docs/prds/024_auto_clustering.md`)
+- 31 new tests (11 dedup + 20 GEDCOM sync)
+- Session 78 assessment, UX evaluation, threshold analysis
+
+### Changed
+- Test count audited: 3254 app + 538 ML = 3792 total (corrects prior session miscounts)
+
 ## [v0.79.1] — 2026-02-28 (Session 77: Compare Rebuild Follow-up)
 
 ### Changed

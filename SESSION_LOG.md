@@ -1,57 +1,47 @@
-# Session 76a Log
-## Mission: Auto-Clustering Pipeline + Discoveries UX Redesign + Face Card Sizing
+# Session 78 Log — Integration + Fix-Everything
+## Mission: Close every open thread from sessions 75-77. No new features.
 ## Started: 2026-02-28
-## Context: docs/session_context/session-76a-context.md
-## Predecessor: Session 75 (v0.78.0 — Post-Gemini Cleanup + Tree Upgrade)
+## Context: docs/session_context/session-78-context.md
+## Predecessor: Session 77 (v0.79.1 — Compare Rebuild Follow-up)
 ## Rule: /clear between phases, NEVER /compact
 
-### Phase 0: Orient + Investigate
-- [x] Read: CLAUDE.md, session-76a-context.md, ROADMAP.md, lessons
-- [x] Production verified: HTTP 200, v0.78.0
-- [x] Data investigation: 775 identities, within-cluster mean=1.01 std=0.19
-- [x] 57 duplicate face IDs found (confirmed + inbox overlap)
-- [x] Threshold decision: Tier 1 < 0.85, Tier 2 0.85-1.10
+### Track 1: Harness Fix (on main)
+- [x] Stop hook: exit 1→2 (blocking), stderr messages
+- [x] Test count audit: 3254 app + 538 ML = 3792 total
 
-### Track A: Auto-Clustering Pipeline (worktree)
-- [x] core/auto_cluster.py: auto_cluster_face(), dedup_inbox(), build_confirmed_clusters()
-- [x] scripts/backfill_auto_cluster.py: CLI for backfill
-- [x] Wired into process_uploads.py (step 5)
-- [x] AD-179 in ALGORITHMIC_DECISIONS.md
-- [x] 37 tests in tests/test_auto_cluster.py
+### Track 2: ML Test Fixes (worktree: ml-test-fix)
+- [x] test_mls_score_range_exceeds_threshold: already passing
+- [x] test_only_matched_individuals: assertion wrong, renamed
+- [x] test_compare_photos_tab_has_face_overlays: photo dims cache fallback
 
-### Track C: Browse Card Face Sizing (worktree)
-- [x] face_card() min-h-[150px] sm:min-h-[200px]
-- [x] Secondary actions: hover-only overlay
-- [x] Neighbor thumbnails: 64px → 80px
-- [x] 6 test assertions updated
+### Track 3: Dedup + Threshold Analysis (worktree: dedup-fix)
+- [x] Per-face dedup: full, partial, review categories
+- [x] Threshold analysis: 52% clusters exceed 1.10 ceiling
+- [x] Big Leon max=1.3824, Nace max=1.4095
+- [x] 11 new tests
 
-### Merge A + C
-- [x] Both merged cleanly with --no-ff
-- [x] Tests passed after merge
+### Track 4: GEDCOM→Supabase Sync (worktree: gedcom-sync)
+- [x] sync_gedcom_to_supabase.py: idempotent, batched, dry-run
+- [x] Supabase pagination fix (1000-row limit)
+- [x] 1,019 relationships synced
+- [x] 20 new tests
 
-### Backfill
-- [x] Ran backfill: 0 dedup, 0 Tier 1, 7 Tier 2, 652 no match
-- [x] discovery_log.json created with 7 entries
+### Track 5: Deploy + Visual Audit
+- [x] Deployed via git push
+- [x] 9 pages verified via Chrome, all PASS
 
-### Track B: Discoveries UX Redesign
-- [x] _load_discovery_log(), _get_pending_discovery_entries(), _update_discovery_log_entry()
-- [x] Two-tier layout: Recently Auto-Added + Suggested Matches
-- [x] /api/discovery/confirm, /api/discovery/undo routes
-- [x] Reject route logs to discovery_log
-- [x] Face images enlarged (80→96px)
+### Track 6: Compare Verification
+- [x] Routes return 200
+- [x] UI verified via Chrome
+- [ ] Full upload E2E deferred (requires ML on Railway)
 
-### Track D: Tests + Docs
-- [x] 15 new tests in test_session76a.py
-- [x] 4 regression fixes (missing discovery log mock)
-- [x] All 3205 app + 537 ML tests passing
-- [x] CHANGELOG, ROADMAP, SESSION_HISTORY, BACKLOG updated
-- [x] Assessment written
+### Track 7: Docs Cleanup (worktree: docs-cleanup)
+- [x] PRD-024 auto-clustering (141 lines)
+- [x] AD numbering verified
+- [x] BACKLOG updated (292 lines)
 
-### Verification
-- [x] Auto-clustering module exists with correct thresholds
-- [x] Discovery log exists
-- [x] AD-179 documented
-- [x] Discoveries two-tier layout implemented
-- [x] Browse cards face-dominant
-- [x] Tests pass (3742 total)
-- [x] All docs updated
+### Track 8: Self-Assessment + Auto-Fix
+- [x] 13 critical questions answered
+- [x] 0 red flags requiring immediate fix
+- [x] Assessment + UX evaluation written
+- [x] CHANGELOG, ROADMAP, SESSION_HISTORY updated

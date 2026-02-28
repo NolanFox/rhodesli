@@ -364,6 +364,16 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 78: Integration + Fix-Everything (2026-02-28) — v0.80.0
+- Fixed stop hook (exit 1→2 blocking), test count audited (3254 app + 538 ML = 3792)
+- Fixed 2 failing ML tests: photo dimensions cache fallback, relationship graph test assertion
+- Per-face dedup in auto_cluster.py (full, partial, review categories). 11 new tests.
+- Threshold analysis: 52% of clusters exceed Tier 2 ceiling of 1.10. Raise to 1.30 recommended.
+- GEDCOM→Supabase sync: 1,019 relationships, pagination fix, batched inserts. 20 new tests.
+- PRD-024 auto-clustering created. BACKLOG trimmed (292 lines). AD numbering verified.
+- Visual audit: 9 pages verified via Chrome, all PASS.
+- Deferred: Tier 2 threshold raise (needs admin decision), full compare upload E2E, mobile viewport.
+
 ## Session 77: Compare Rebuild Follow-up (2026-02-28) — v0.79.1
 - Added pair compare archive context: selected faces in `/compare/pair` now show top archive matches beneath pair similarity output.
 - Added all-face pair summaries (top A↔B matches and per-face archive best hits) in pair comparison output.
