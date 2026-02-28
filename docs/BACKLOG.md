@@ -49,6 +49,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 - **UX-106**: Inconsistent contribution CTA phrasing ("Do you know?" vs "Can you help?")
 - **UX-107**: "Identified" badge on person page has no tooltip or explanation
 
+### COMPARE-002: Real-Time Compare Upload (Concrete Plan, AD-187)
+- **Status**: DEFERRED — blocked by AD-007 (no ML deps in production)
+- **What works now**: Archive-face comparison (pre-computed embeddings). Upload queues to R2 for batch.
+- **What's needed**: GPU on Railway OR ONNX export of InsightFace compatible with PFE embeddings
+- **Estimated effort**: 2-3 sessions once blocker clears
+- **Steps**: (1) Export InsightFace to ONNX, (2) Add onnxruntime-cpu to production, (3) Single-face inference on upload, (4) Cosine distance vs cached embeddings
+- **Trigger**: Railway GPU support announcement OR compatible lightweight model
+
 ### Deferred from Earlier Audits (Medium/Low)
 - **M2**: Compare file input lacks preview feedback
 - **L1**: Login inputs missing `autocomplete` attribute

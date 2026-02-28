@@ -15976,17 +15976,25 @@ async def post(photo: UploadFile = None, sess=None):
             upload_id = _save_compare_upload(content, original_filename, faces=[], results=[], status="awaiting_analysis")
             return Div(
                 Div(
-                    Span("✓", cls="text-2xl text-green-400"),
+                    Span("&#10003;", cls="text-3xl text-emerald-400"),
                     cls="flex justify-center mb-3"
                 ),
-                P("Photo received!", cls="text-lg font-semibold text-white text-center"),
-                P("Face comparison requires offline processing by the archive team. "
-                  "We'll include your photo in the next analysis batch.",
-                  cls="text-sm text-slate-400 text-center mt-2"),
-                P("Want faster results? Email your photo to ",
+                P("Photo Received", cls="text-lg font-semibold text-white text-center"),
+                P("Face detection runs on specialized hardware and is processed in batches. "
+                  "Your photo will be analyzed within 24 hours.",
+                  cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto"),
+                Div(
+                    P("While you wait, try browsing faces already in the archive:",
+                      cls="text-sm text-slate-400 text-center mt-4"),
+                    Div(
+                        A("Browse People", href="/people", cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"),
+                        A("Browse Photos", href="/photos", cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"),
+                        cls="flex justify-center gap-3 mt-3",
+                    ),
+                ),
+                P("For immediate results, email ",
                   A("NolanFox@gmail.com", href="mailto:NolanFox@gmail.com", cls="text-indigo-400 hover:text-indigo-300"),
-                  " and we'll run a comparison for you.",
-                  cls="text-sm text-slate-400 text-center mt-2"),
+                  cls="text-xs text-slate-500 text-center mt-4"),
                 P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
                 cls="py-8 px-4",
                 id="compare-results",

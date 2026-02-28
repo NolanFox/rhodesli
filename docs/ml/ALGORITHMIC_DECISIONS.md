@@ -2120,3 +2120,11 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: (1) Keep inline neighbors sidebar — cramped, poor UX. (2) Modal overlay — loses URL sharability.
 - **Affects**: `app/main.py` (new route + card changes).
 - **Tests**: 8 new tests in `tests/test_find_similar_page.py`.
+
+### AD-187: Compare Upload — Async Batch Processing, Not CPU Inference
+- **Date**: 2026-02-28
+- **Context**: Compare upload deferred 7+ sessions. Blocker: InsightFace needs GPU, Railway has no GPU. AD-007 prohibits adding ML deps to production.
+- **Decision**: Ship the current async workflow as the official experience. Uploaded photos queue to R2 for batch processing on local hardware. Improved messaging explains the 24h turnaround. Archive-face comparison (using pre-computed embeddings) works immediately.
+- **Rejected**: (1) ONNX Runtime CPU inference — violates AD-007, adds ~500MB to Docker image. (2) Proxy to external GPU service — adds dependency, cost, complexity. (3) MediaPipe/dlib — different embedding space from InsightFace, can't compare with existing archive embeddings.
+- **Concrete plan for real-time compare**: When Railway adds GPU support OR a lightweight embedding model compatible with existing PFE vectors becomes available, implement: (a) ONNX export of InsightFace model, (b) onnxruntime-cpu inference for single uploaded face, (c) cosine distance against pre-cached archive embeddings.
+- **Affects**: `app/main.py` (upload response messaging).
