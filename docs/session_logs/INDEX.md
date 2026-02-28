@@ -60,6 +60,8 @@
 | 71D | 2026-02-26 | [log](session-71d-log.md) | [assess](../assessments/session-71d-assessment.md) | [prompt](../prompts/session-71d-prompt.md) | - | Complete |
 | 72 | 2026-02-27 | [log](session-72-log.md) | [assess](../assessments/session-72-assessment.md) | [prompt](../prompts/session-72-prompt.md) | - | Complete |
 | 73 | 2026-02-27 | [log](session-73-log.md) | [assess](../assessments/session-73-assessment.md) | [prompt](../prompts/session-73-prompt.md) | - | Complete |
+| 74 | 2026-02-27 | [log](session-74-log.md) | [assess](../assessments/session-74-assessment.md) | [prompt](../prompts/session-74-prompt.md) | [ctx](../session_context/session-74-context.md) | Complete (Gemini) |
+| 74-eval | 2026-02-27 | - | [eval](../assessments/session-74-eval.md) | [prompt](../prompts/session-74-eval-prompt.md) | - | Complete (Claude eval) |
 
 ## B-Path Analysis
 

@@ -518,3 +518,16 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
   .claude/rules/worktree-enforcement.md
 - **Breadcrumbs:** AD-171, Lesson 87 (subagent commit discipline),
   Lesson 88 (monolithic app prevents parallel execution)
+
+## HD-022: FastHTML + Surgical JS Embedding (Session 74)
+
+**Date:** 2026-02-27
+**Status:** ACCEPTED
+**Decision:** Retain FastHTML+HTMX as primary framework. Embed standalone JS (D3, vanilla JS) for components requiring rich interactivity.
+**Context:** Session 74 UX overhaul identified interactive limitations in pure HTMX: family tree zoom/pan/expand, mobile swipe gestures, smooth animations. Evaluated full framework migration (React/Next.js) vs. surgical embedding.
+**Options Considered:**
+1. **Full React migration** — Superior interactivity, massive ecosystem. REJECTED: 799+ tests to rewrite, weeks of work, deployment pipeline rebuild, delays job search portfolio.
+2. **Keep pure FastHTML+HTMX** — Zero migration cost. REJECTED for tree/mobile: cannot deliver zoom/pan, gestures, fluid animations with HTMX alone.
+3. **FastHTML + surgical JS embeds** — ACCEPTED. Keep all routing, auth, data, HTMX partials. Add standalone JS only where HTMX falls short. No build step, no npm, files served from static/js/.
+**Consequences:** Tree visualization gets D3/SVG. Mobile gets CSS transitions + vanilla JS event listeners. Face cards get CSS animations. All server communication stays HTMX. JS files are self-contained, no framework dependency.
+**Review Trigger:** If 3+ components need complex state management, or mobile UX still underperforms after Session 74, revisit full frontend framework. Track in ROADMAP.md as a future evaluation item.
