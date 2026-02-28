@@ -8151,6 +8151,38 @@
       "person_b": "@I132174071894@",
       "created_at": "2026-02-28T01:27:43.003685+00:00",
       "gedcom_family_id": "@F176@"
+    },
+    {
+      "type": "spouse",
+      "source": "manual",
+      "person_a": "016e9fba-b0a7-4eab-aaa4-27b7667b1b0a",
+      "person_b": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "created_at": "2026-02-28T22:34:07.552454+00:00",
+      "gedcom_family_id": null
+    },
+    {
+      "type": "parent_child",
+      "source": "manual",
+      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "person_b": "964f4c07-e9e5-43e2-933c-7fd8bfd234b8",
+      "created_at": "2026-02-28T22:34:07.552454+00:00",
+      "gedcom_family_id": null
+    },
+    {
+      "type": "parent_child",
+      "source": "manual",
+      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "person_b": "0b9cb708-9b13-4a42-a25d-ad36f3e08547",
+      "created_at": "2026-02-28T22:34:07.552454+00:00",
+      "gedcom_family_id": null
+    },
+    {
+      "type": "parent_child",
+      "source": "manual",
+      "person_a": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "person_b": "e31718ca-2f73-4976-9181-e92a7c58ca37",
+      "created_at": "2026-02-28T22:34:07.552454+00:00",
+      "gedcom_family_id": null
     }
   ],
   "metadata": {}

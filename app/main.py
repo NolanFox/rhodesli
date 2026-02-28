@@ -18457,7 +18457,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
 
     page_style = Style("""
         html, body { margin: 0; } body { background-color: #080d1a; }
-        #tree-container { width: 100%; height: calc(100vh - 200px); min-height: 500px; position: relative; }
+        #tree-container { width: 100%; height: calc(100vh - 260px); min-height: 400px; position: relative; }
         #tree-container svg { border-radius: 0.75rem; }
         .tree-search-results { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px;
             overflow-y: auto; background: #151d2e; border: 1px solid rgba(148,163,184,0.12); border-radius: 0.5rem;
@@ -18478,6 +18478,20 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             padding: 8px 12px; border: none; background: none; cursor: pointer; border-radius: 6px;
             font-size: 13px; color: #f1f5f9; text-decoration: none; transition: background 0.15s; font-family: 'Inter', system-ui, sans-serif; }
         .tree-node-popup a:hover, .tree-node-popup button:hover { background: rgba(99,102,241,0.15); }
+        /* Timeline slider */
+        #timeline-bar { width: 100%; background: rgba(15,20,32,0.85); border: 1px solid rgba(148,163,184,0.08);
+            border-radius: 12px; padding: 12px 20px 8px; backdrop-filter: blur(8px); margin-top: 8px; }
+        #timeline-bar.hidden { display: none; }
+        #timeline-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px;
+            background: linear-gradient(90deg, rgba(99,102,241,0.3), rgba(212,165,116,0.4)); outline: none; cursor: pointer; }
+        #timeline-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 22px; height: 22px;
+            border-radius: 50%; background: #d4a574; border: 3px solid #080d1a; cursor: grab; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease; }
+        #timeline-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        #timeline-slider::-webkit-slider-thumb:active { cursor: grabbing; transform: scale(1.1); }
+        #timeline-year { font-family: 'Georgia', serif; font-size: 20px; color: #d4a574; font-weight: bold; }
+        .timeline-ticks { display: flex; justify-content: space-between; padding: 0 2px; margin-top: 2px; }
+        .timeline-ticks span { font-size: 10px; color: rgba(148,163,184,0.5); font-family: 'Inter', system-ui, sans-serif; }
     """)
 
     return (
@@ -18552,6 +18566,18 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                     ),
                     cls="relative",
                 ),
+                # Photo timeline slider
+                Div(
+                    Div(
+                        Span("", id="timeline-year"),
+                        Span(" — drag to see faces change through time", id="timeline-hint",
+                             cls="text-xs text-slate-500 ml-2"),
+                        cls="flex items-baseline mb-2",
+                    ),
+                    Input(type="range", id="timeline-slider", min="1870", max="2020", value="1945", step="1"),
+                    Div(id="timeline-ticks", cls="timeline-ticks"),
+                    id="timeline-bar", cls="hidden",
+                ),
 
                 cls="max-w-6xl mx-auto px-6 pt-10 pb-16",
             ),
@@ -18559,7 +18585,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-tree.js?v=81b"),
+            Script(src="/static/js/family-tree.js?v=82a"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
                     window.initRhodesliTree('{person}', '{show_theory}');
@@ -18646,14 +18672,17 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
     dr = meta.get("death_date") or meta.get("death_year") or ""
     lifespan = format_lifespan(str(br) if br else None, str(dr) if dr else None)
     avatar = ""
+    all_faces = []
     try:
         ri = registry.get_identity(pid)
         if ri:
             fids = ri.get("anchor_ids", []) or ri.get("candidate_ids", [])
-            if fids:
-                url = resolve_face_image_url(fids[0], crop_files)
+            for fid in fids:
+                url = resolve_face_image_url(fid, crop_files)
                 if url:
-                    avatar = url
+                    all_faces.append({"url": url, "face_id": fid})
+                    if not avatar:
+                        avatar = url
     except (KeyError, IndexError):
         pass
     # Rels — only to included persons
@@ -18696,6 +18725,8 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
                  "birthday": parse_gedcom_year(str(br)) if br else "",
                  "lifespan": lifespan, "avatar": avatar,
                  "identity_url": f"/person/{pid}" if not pid.startswith("@") else "",
+                 "face_count": len(all_faces),
+                 "all_faces": all_faces,
                  "has_more_parents": bool(all_parents - included),
                  "has_more_children": bool(all_children - included),
                  "has_more_siblings": bool(all_siblings - included)},

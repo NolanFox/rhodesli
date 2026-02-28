@@ -2128,3 +2128,22 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: (1) ONNX Runtime CPU inference — violates AD-007, adds ~500MB to Docker image. (2) Proxy to external GPU service — adds dependency, cost, complexity. (3) MediaPipe/dlib — different embedding space from InsightFace, can't compare with existing archive embeddings.
 - **Concrete plan for real-time compare**: When Railway adds GPU support OR a lightweight embedding model compatible with existing PFE vectors becomes available, implement: (a) ONNX export of InsightFace model, (b) onnxruntime-cpu inference for single uploaded face, (c) cosine distance against pre-cached archive embeddings.
 - **Affects**: `app/main.py` (upload response messaging).
+
+### AD-188: Photo/Face Ordering Controls on Public Person Page
+- **Date**: 2026-02-28
+- **Source**: OpenAI Codex (automated task, PR #2)
+- **Accepted**: Yes, merged to main during Session 80.
+- **Decision**: sort_by query parameter with 4 modes (date_asc, date_desc, uploaded_desc, uploaded_asc). Default: date_asc (earliest → latest). Shared sort-key logic across Faces/Photos views. Dropdown UI preserving sort across view toggles.
+- **Rationale**: Straightforward UI/sorting feature. Codex was used because this was a well-scoped, isolated feature (sort parameter + dropdown UI + tests) that didn't touch ML pipelines or core architectural patterns. It ran in parallel with Session 80 (Claude Code) to test multi-agent development workflow.
+- **Sort-key fallback chain**: best_year_estimate → date_taken → upload timestamp. Aligns with the ML roadmap's date estimation pipeline.
+- **What Codex produced**: +144/-16 lines across app/main.py and tests/test_public_person_page.py. 3 new test methods.
+- **Review notes**: Tests pass. No changes to ML code or Supabase schema.
+- **Affects**: `app/main.py` (/person/{person_id} route), `tests/test_public_person_page.py`.
+
+### AD-189: Photo-Dominant Tree v3 — 144px Faces + Timeline Scrubber
+- **Date**: 2026-02-28
+- **Context**: User feedback: "faces are too small", "lines too faint", "no easy way to expand". Floating-face v2 (DD-004) used 96px photos which were still insufficient.
+- **Decision**: Increase to 144px diameter faces (PHOTO_R=72), 200x260px cards. Connection lines opacity 0.35→0.55 and stroke 1.5→2.5. Expand arrows pill-shaped with text labels ("Parents", "Children", "Siblings") instead of tiny arrow icons. Added timeline photo scrubber bar at bottom — CSS crossfade between multiple face crops per person when scrubbing through years.
+- **Research**: Analyzed Google Photos timeline, MyHeritage family tree timeline, Clyfford Still Museum interactive exhibit, AgeLapse face scrubber, FamilySearch timeline. Docs: docs/research/timeline-slider-research.md, docs/research/reactive-tree-patterns.md.
+- **Rejected**: (1) WebGL canvas rendering — overengineered for current scale. (2) Fixed photo size with zoom-to-see — defeats purpose of face-dominant design. (3) Auto-play animation — distracting, user-controlled scrubbing is superior.
+- **Affects**: `app/static/js/family-tree.js`, `app/main.py` (tree page HTML/CSS, tree API face data).

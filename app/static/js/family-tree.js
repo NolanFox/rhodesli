@@ -1,9 +1,8 @@
 /**
  * family-tree.js — Rhodesli heritage family tree.
- * AD-185: Card-based layout with T-shape connections.
- * AD-186: Portrait cards with photo-dominant design.
- * Faces are the hero element — 50% of card area.
- * Gender-coded rings, glassmorphic cards, hover micro-interactions.
+ * DD-004: Floating-face design — faces ARE the tree.
+ * Photo-dominant: 144px diameter portraits, glassmorphic cards.
+ * Gender rings, expand arrows with labels, timeline photo scrubber.
  */
 
 (function() {
@@ -16,43 +15,44 @@
     var baseNodeIds = {};
     var expandedDirs = {};
 
-    // --- Floating-face constants (faces ARE the tree) ---
-    var CARD_W = 144, CARD_H = 190;
-    var PHOTO_R = 48;                      // 96px diameter — the star of the show
-    var PHOTO_CX = CARD_W / 2;            // Centered horizontally
-    var PHOTO_CY = 12 + PHOTO_R;          // 12px top padding + radius = 60
-    var NAME_Y1 = PHOTO_CY + PHOTO_R + 18; // First name baseline
-    var NAME_Y2 = NAME_Y1 + 16;            // Last name baseline
-    var DATE_Y  = NAME_Y2 + 14;            // Lifespan baseline
+    // --- PHOTO-DOMINANT layout: huge faces, minimal chrome ---
+    var CARD_W = 200, CARD_H = 260;
+    var PHOTO_R = 72;                      // 144px diameter — unmissable
+    var PHOTO_CX = CARD_W / 2;            // Centered
+    var PHOTO_CY = 14 + PHOTO_R;          // 14px top pad + radius = 86
+    var NAME_Y1 = PHOTO_CY + PHOTO_R + 20; // First name
+    var NAME_Y2 = NAME_Y1 + 18;            // Last name
+    var DATE_Y  = NAME_Y2 + 15;            // Lifespan
     var CARD_RX = 16;
 
-    var V_GAP = 250;
-    var H_GAP = 32;
-    var COUPLE_GAP = 16;
-    var DROP_Y = 32;
-    var EXPAND_R = 13;
+    var V_GAP = 310;
+    var H_GAP = 40;
+    var COUPLE_GAP = 20;
+    var DROP_Y = 36;
+    var EXPAND_R = 18;
 
     var COLORS = {
         svgBg:        "#080d1a",
-        cardBg:       "rgba(15, 20, 32, 0.25)",       // Nearly invisible
-        cardBorder:   "rgba(148, 163, 184, 0.04)",     // Whisper of an edge
-        cardHover:    "rgba(22, 32, 55, 0.88)",         // Materializes on hover
-        cardHoverBdr: "rgba(148, 163, 184, 0.15)",
+        cardBg:       "rgba(15, 20, 32, 0.20)",
+        cardBorder:   "rgba(148, 163, 184, 0.06)",
+        cardHover:    "rgba(22, 32, 55, 0.92)",
+        cardHoverBdr: "rgba(148, 163, 184, 0.2)",
         focalBorder:  "#d4a574",
-        focalGlow:    "rgba(212, 165, 116, 0.35)",
+        focalGlow:    "rgba(212, 165, 116, 0.4)",
         nameText:     "#e8edf5",
-        dateText:     "#7a8ba3",
-        line:         "rgba(71, 85, 105, 0.35)",
-        coupleLine:   "rgba(212, 165, 116, 0.5)",
+        dateText:     "#8b9ab5",
+        line:         "rgba(100, 116, 139, 0.55)",    // Much more visible
+        coupleLine:   "rgba(212, 165, 116, 0.6)",
         coupleDot:    "#d4a574",
         expandBg:     "#4f46e5",
+        expandLabel:  "#c7d2fe",
         collapseBg:   "#7c3aed",
         photoBg:      "#111827",
         photoInitial: "#3b4a64",
         genderM:      "#60a5fa",
         genderF:      "#f9a8d4",
         genderU:      "#4b5e78",
-        photoShadow:  "rgba(0, 0, 0, 0.5)"
+        faceBadge:    "#d4a574"
     };
 
     // --- Initialization ---
@@ -62,6 +62,7 @@
         setupSearch();
         setupPopupDismiss();
         setupKeyboard();
+        setupTimeline();
         loadTreeData(personId, 2);
     };
 
@@ -88,6 +89,7 @@
                 expandedDirs = {};
                 allNodes.forEach(function(n) { baseNodeIds[n.id] = true; });
                 renderTree(currentPersonId);
+                updateTimeline();
             })
             .catch(function(err) {
                 if (loading) loading.style.display = "none";
@@ -112,6 +114,7 @@
                 });
                 expandedDirs[key] = addedIds;
                 renderTree(currentPersonId);
+                updateTimeline();
             });
     }
 
@@ -125,6 +128,7 @@
         });
         allNodes = allNodes.filter(function(n) { return keepIds[n.id]; });
         renderTree(currentPersonId);
+        updateTimeline();
     }
 
     function mergeNodes(newNodes) {
@@ -147,6 +151,11 @@
                 existing.data["has_more_parents"] = nn.data["has_more_parents"];
                 existing.data["has_more_children"] = nn.data["has_more_children"];
                 existing.data["has_more_siblings"] = nn.data["has_more_siblings"];
+                // Merge face data
+                if (nn.data["all_faces"] && nn.data["all_faces"].length > 0) {
+                    existing.data["all_faces"] = nn.data["all_faces"];
+                    existing.data["face_count"] = nn.data["face_count"];
+                }
             }
         }
     }
@@ -324,13 +333,14 @@
                 .style("background", COLORS.svgBg);
             g = svg.append("g");
             zoomBehavior = d3.zoom()
-                .scaleExtent([0.1, 3])
+                .scaleExtent([0.08, 3])
                 .on("zoom", function(event) {
                     g.attr("transform", event.transform);
-                    // Progressive detail: hide dates at low zoom
                     var k = event.transform.k;
-                    g.selectAll(".date-label").attr("opacity", k > 0.35 ? 1 : 0);
-                    g.selectAll(".name-label").attr("opacity", k > 0.25 ? 1 : 0);
+                    g.selectAll(".date-label").attr("opacity", k > 0.3 ? 1 : 0);
+                    g.selectAll(".name-label").attr("opacity", k > 0.2 ? 1 : 0);
+                    g.selectAll(".expand-btn").attr("opacity", k > 0.15 ? 1 : 0);
+                    g.selectAll(".face-badge").attr("opacity", k > 0.3 ? 1 : 0);
                 });
             svg.call(zoomBehavior);
             window.addEventListener("resize", function() {
@@ -344,50 +354,49 @@
         // Glow filter for focal person
         var glow = defs.append("filter").attr("id", "focalGlow")
             .attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%");
-        glow.append("feGaussianBlur").attr("stdDeviation", "6").attr("result", "blur");
+        glow.append("feGaussianBlur").attr("stdDeviation", "8").attr("result", "blur");
         var glowMerge = glow.append("feMerge");
         glowMerge.append("feMergeNode").attr("in", "blur");
         glowMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-        // Hover shadow filter for card materialization
+        // Hover shadow
         var shadow = defs.append("filter").attr("id", "hoverShadow")
             .attr("x", "-15%").attr("y", "-15%").attr("width", "140%").attr("height", "150%");
-        shadow.append("feDropShadow").attr("dx", "0").attr("dy", "6").attr("stdDeviation", "12")
-            .attr("flood-color", "rgba(0,0,0,0.55)").attr("flood-opacity", "0.55");
+        shadow.append("feDropShadow").attr("dx", "0").attr("dy", "8").attr("stdDeviation", "14")
+            .attr("flood-color", "rgba(0,0,0,0.6)").attr("flood-opacity", "0.6");
 
-        // Subtle shadow beneath each photo for depth
+        // Photo shadow for depth
         var photoShadow = defs.append("filter").attr("id", "photoShadow")
             .attr("x", "-20%").attr("y", "-10%").attr("width", "140%").attr("height", "140%");
-        photoShadow.append("feDropShadow").attr("dx", "0").attr("dy", "3").attr("stdDeviation", "5")
-            .attr("flood-color", "rgba(0,0,0,0.5)").attr("flood-opacity", "0.5");
+        photoShadow.append("feDropShadow").attr("dx", "0").attr("dy", "4").attr("stdDeviation", "6")
+            .attr("flood-color", "rgba(0,0,0,0.55)").attr("flood-opacity", "0.55");
 
-        // Clip paths for circular photos (centered in portrait card)
+        // Clip paths
         Object.keys(positions).forEach(function(pid) {
             defs.append("clipPath")
                 .attr("id", "clip-" + pid.replace(/[^a-zA-Z0-9]/g, "_"))
                 .append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R);
         });
 
-        // --- Draw connections ---
+        // --- Draw connections (VISIBLE) ---
         var lineGroup = g.append("g").attr("class", "connections");
         connections.forEach(function(c) {
             if (c.type === "couple") {
-                // Dashed gold line with center dot
                 lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y1).attr("x2", c.x2).attr("y2", c.y2)
-                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", 2)
-                    .attr("stroke-dasharray", "6,4");
+                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", 2.5)
+                    .attr("stroke-dasharray", "8,5");
                 lineGroup.append("circle")
-                    .attr("cx", c.midX).attr("cy", c.y1).attr("r", 3.5)
+                    .attr("cx", c.midX).attr("cy", c.y1).attr("r", 4)
                     .attr("fill", COLORS.coupleDot);
             } else if (c.type === "drop" || c.type === "childDrop") {
                 lineGroup.append("line")
                     .attr("x1", c.x).attr("y1", c.y1).attr("x2", c.x).attr("y2", c.y2)
-                    .attr("stroke", COLORS.line).attr("stroke-width", 1.5);
+                    .attr("stroke", COLORS.line).attr("stroke-width", 2.5);
             } else if (c.type === "bar") {
                 lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y).attr("x2", c.x2).attr("y2", c.y)
-                    .attr("stroke", COLORS.line).attr("stroke-width", 1.5);
+                    .attr("stroke", COLORS.line).attr("stroke-width", 2.5);
             }
         });
 
@@ -408,7 +417,7 @@
                 showNodePopup(event, d.node.data, d.id);
             });
 
-        // Hover: card materializes from nothing, photo ring grows
+        // Hover: card materializes, photo ring grows
         cards.on("mouseenter", function() {
                 var card = d3.select(this);
                 card.select(".card-bg").transition().duration(200)
@@ -416,10 +425,10 @@
                     .attr("stroke", COLORS.cardHoverBdr)
                     .attr("filter", "url(#hoverShadow)");
                 card.select(".photo-ring").transition().duration(200)
-                    .attr("stroke-width", 3.5);
+                    .attr("stroke-width", 4);
                 card.transition().duration(200)
                     .attr("transform", function(d) {
-                        return "translate(" + d.x + "," + (d.y - 4) + ")";
+                        return "translate(" + d.x + "," + (d.y - 5) + ")";
                     });
             })
             .on("mouseleave", function(event, d) {
@@ -430,124 +439,154 @@
                     .attr("stroke", isFocal ? COLORS.focalBorder : COLORS.cardBorder)
                     .attr("filter", null);
                 card.select(".photo-ring").transition().duration(300)
-                    .attr("stroke-width", 2.5);
+                    .attr("stroke-width", 3);
                 card.transition().duration(300)
                     .attr("transform", function(d) {
                         return "translate(" + d.x + "," + d.y + ")";
                     });
             });
 
-        // Card background — rounded rect
+        // Card background
         cards.append("rect")
             .attr("class", "card-bg")
             .attr("width", CARD_W).attr("height", CARD_H)
             .attr("rx", CARD_RX).attr("ry", CARD_RX)
             .attr("fill", COLORS.cardBg)
             .attr("stroke", function(d) { return d.id === focalId ? COLORS.focalBorder : COLORS.cardBorder; })
-            .attr("stroke-width", function(d) { return d.id === focalId ? 2 : 1; });
+            .attr("stroke-width", function(d) { return d.id === focalId ? 2.5 : 1; });
 
-        // Focal person outer glow ring
+        // Focal person outer glow
         cards.each(function(d) {
             if (d.id === focalId) {
                 d3.select(this).insert("circle", ":first-child")
                     .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY)
-                    .attr("r", PHOTO_R + 8)
+                    .attr("r", PHOTO_R + 10)
                     .attr("fill", "none").attr("stroke", COLORS.focalGlow)
-                    .attr("stroke-width", 4)
+                    .attr("stroke-width", 5)
                     .attr("filter", "url(#focalGlow)");
             }
         });
 
-        // Photo — the star of the show. Shadow + image + gender ring.
+        // Photo — THE STAR. Shadow + image + gender ring + face count badge.
         cards.each(function(d) {
             var el = d3.select(this);
             var clipId = "clip-" + d.id.replace(/[^a-zA-Z0-9]/g, "_");
-            var photoUrl = d.node.data.avatar || d.node.data.photo_url;
+            var faces = d.node.data.all_faces || [];
+            var photoUrl = faces.length > 0 ? faces[0].url : (d.node.data.avatar || d.node.data.photo_url);
 
-            // Shadow circle behind the photo for depth
+            // Shadow
             el.append("circle")
                 .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R + 1)
-                .attr("fill", "rgba(0,0,0,0.3)")
+                .attr("fill", "rgba(0,0,0,0.35)")
                 .attr("filter", "url(#photoShadow)");
 
             if (photoUrl) {
+                // Primary image (crossfadeable via timeline)
                 el.append("image")
+                    .attr("class", "face-primary")
                     .attr("x", PHOTO_CX - PHOTO_R).attr("y", PHOTO_CY - PHOTO_R)
                     .attr("width", PHOTO_R * 2).attr("height", PHOTO_R * 2)
                     .attr("href", photoUrl)
                     .attr("clip-path", "url(#" + clipId + ")")
-                    .attr("preserveAspectRatio", "xMidYMid slice");
+                    .attr("preserveAspectRatio", "xMidYMid slice")
+                    .style("transition", "opacity 0.4s ease");
+                // Secondary image layer for crossfade
+                if (faces.length > 1) {
+                    el.append("image")
+                        .attr("class", "face-secondary")
+                        .attr("x", PHOTO_CX - PHOTO_R).attr("y", PHOTO_CY - PHOTO_R)
+                        .attr("width", PHOTO_R * 2).attr("height", PHOTO_R * 2)
+                        .attr("href", photoUrl)
+                        .attr("clip-path", "url(#" + clipId + ")")
+                        .attr("preserveAspectRatio", "xMidYMid slice")
+                        .style("opacity", "0")
+                        .style("transition", "opacity 0.4s ease");
+                }
             } else {
                 el.append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
                     .attr("fill", COLORS.photoBg);
                 el.append("text").attr("x", PHOTO_CX).attr("y", PHOTO_CY)
                     .attr("text-anchor", "middle").attr("dy", "0.35em")
                     .attr("fill", COLORS.photoInitial)
-                    .attr("font-size", "32px")
+                    .attr("font-size", "40px")
                     .attr("font-family", "'Georgia', serif")
                     .text((d.node.data["first name"] || "?")[0].toUpperCase());
             }
 
-            // Gender-coded ring — the visual signature
+            // Gender ring
             var gender = d.node.data.gender || "U";
             var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
             el.append("circle")
                 .attr("class", "photo-ring")
                 .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
-                .attr("fill", "none").attr("stroke", ringColor).attr("stroke-width", 2.5);
+                .attr("fill", "none").attr("stroke", ringColor).attr("stroke-width", 3);
+
+            // Face count badge (top-right of photo)
+            var faceCount = d.node.data.face_count || 0;
+            if (faceCount > 1) {
+                var badgeG = el.append("g")
+                    .attr("class", "face-badge")
+                    .attr("transform", "translate(" + (PHOTO_CX + PHOTO_R - 12) + "," + (PHOTO_CY - PHOTO_R + 8) + ")");
+                badgeG.append("circle").attr("r", 12)
+                    .attr("fill", COLORS.faceBadge).attr("stroke", COLORS.svgBg).attr("stroke-width", 2);
+                badgeG.append("text").attr("text-anchor", "middle").attr("dy", "0.35em")
+                    .attr("fill", "#080d1a").attr("font-size", "11px").attr("font-weight", "700")
+                    .attr("font-family", "'Inter', system-ui, sans-serif")
+                    .text(faceCount);
+            }
         });
 
-        // First name — centered below photo
+        // First name
         cards.append("text")
             .attr("class", "name-label")
             .attr("x", CARD_W / 2).attr("y", NAME_Y1)
             .attr("text-anchor", "middle")
             .attr("fill", COLORS.nameText)
-            .attr("font-size", "13px").attr("font-weight", "600")
+            .attr("font-size", "15px").attr("font-weight", "600")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
             .text(function(d) {
                 var first = d.node.data["first name"] || "";
-                return first.length > 16 ? first.substring(0, 14) + "\u2026" : first;
+                return first.length > 18 ? first.substring(0, 16) + "\u2026" : first;
             });
 
-        // Last name — centered, slightly lighter
+        // Last name
         cards.append("text")
             .attr("class", "name-label")
             .attr("x", CARD_W / 2).attr("y", NAME_Y2)
             .attr("text-anchor", "middle")
             .attr("fill", COLORS.nameText)
-            .attr("font-size", "12px").attr("font-weight", "500")
+            .attr("font-size", "13px").attr("font-weight", "500")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
             .text(function(d) {
                 var last = d.node.data["last name"] || "";
-                return last.length > 16 ? last.substring(0, 14) + "\u2026" : last;
+                return last.length > 18 ? last.substring(0, 16) + "\u2026" : last;
             });
 
-        // Lifespan — subtle, centered
+        // Lifespan
         cards.append("text")
             .attr("class", "date-label")
             .attr("x", CARD_W / 2).attr("y", DATE_Y)
             .attr("text-anchor", "middle")
-            .attr("fill", COLORS.dateText).attr("font-size", "10.5px")
+            .attr("fill", COLORS.dateText).attr("font-size", "11.5px")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
             .attr("letter-spacing", "0.03em")
             .text(function(d) { return d.node.data.lifespan || ""; });
 
-        // --- Expand/collapse arrows ---
+        // --- Expand/collapse arrows — BIG and LABELED ---
         var arrowGroup = g.append("g").attr("class", "expand-arrows");
         nodeData.forEach(function(d) {
             var data = d.node.data;
             var cx = d.x + CARD_W / 2;
             var dirs = [
-                { flag: "has_more_parents", dir: "parents", arrowDir: "up", ax: cx, ay: d.y - 20 },
-                { flag: "has_more_children", dir: "children", arrowDir: "down", ax: cx, ay: d.y + CARD_H + 20 },
-                { flag: "has_more_siblings", dir: "siblings", arrowDir: "left", ax: d.x - 20, ay: d.y + CARD_H / 2 }
+                { flag: "has_more_parents", dir: "parents", label: "Parents", arrowDir: "up", ax: cx, ay: d.y - 28 },
+                { flag: "has_more_children", dir: "children", label: "Children", arrowDir: "down", ax: cx, ay: d.y + CARD_H + 28 },
+                { flag: "has_more_siblings", dir: "siblings", label: "Siblings", arrowDir: "left", ax: d.x - 28, ay: d.y + CARD_H / 2 }
             ];
             dirs.forEach(function(dd) {
                 var key = d.id + "|" + dd.dir;
                 var isExpanded = expandedDirs.hasOwnProperty(key);
                 if (data[dd.flag] || isExpanded) {
-                    drawExpandArrow(arrowGroup, dd.ax, dd.ay, dd.arrowDir, d.id, dd.dir, isExpanded);
+                    drawExpandArrow(arrowGroup, dd.ax, dd.ay, dd.arrowDir, d.id, dd.dir, isExpanded, dd.label);
                 }
             });
         });
@@ -555,7 +594,7 @@
         fitToContent();
     }
 
-    function drawExpandArrow(parent, cx, cy, direction, personId, expandDir, isCollapse) {
+    function drawExpandArrow(parent, cx, cy, direction, personId, expandDir, isCollapse, label) {
         var grp = parent.append("g")
             .attr("class", "expand-btn")
             .attr("transform", "translate(" + cx + "," + cy + ")")
@@ -569,29 +608,43 @@
                 }
             });
 
-        grp.append("circle").attr("r", EXPAND_R)
+        // Pill-shaped background for labeled button
+        var pillW = isCollapse ? 32 : 80;
+        var pillH = 30;
+        grp.append("rect")
+            .attr("x", -pillW / 2).attr("y", -pillH / 2)
+            .attr("width", pillW).attr("height", pillH)
+            .attr("rx", pillH / 2).attr("ry", pillH / 2)
             .attr("fill", isCollapse ? COLORS.collapseBg : COLORS.expandBg)
             .attr("stroke", COLORS.svgBg).attr("stroke-width", 2);
 
         if (isCollapse) {
-            grp.append("line").attr("x1", -4).attr("y1", 0).attr("x2", 4).attr("y2", 0)
-                .attr("stroke", "white").attr("stroke-width", 2).attr("stroke-linecap", "round");
+            grp.append("line").attr("x1", -6).attr("y1", 0).attr("x2", 6).attr("y2", 0)
+                .attr("stroke", "white").attr("stroke-width", 2.5).attr("stroke-linecap", "round");
         } else {
+            // Arrow icon
             var arrow;
-            if (direction === "up") arrow = "M-4,2 L0,-4 L4,2";
-            else if (direction === "down") arrow = "M-4,-2 L0,4 L4,-2";
-            else if (direction === "left") arrow = "M2,-4 L-4,0 L2,4";
-            else arrow = "M-2,-4 L4,0 L-2,4";
-            grp.append("path").attr("d", arrow).attr("fill", "white").attr("stroke", "none");
+            var iconX = -pillW / 2 + 14;
+            if (direction === "up") arrow = "M" + iconX + ",3 L" + (iconX) + ",-3";
+            else if (direction === "down") arrow = "M" + iconX + ",-3 L" + (iconX) + ",3";
+            else arrow = "M" + (iconX + 3) + ",0 L" + (iconX - 3) + ",0";
+
+            // Label text
+            grp.append("text")
+                .attr("x", 4).attr("y", 0)
+                .attr("text-anchor", "middle").attr("dy", "0.35em")
+                .attr("fill", "white").attr("font-size", "11px").attr("font-weight", "600")
+                .attr("font-family", "'Inter', system-ui, sans-serif")
+                .text(label || expandDir);
         }
 
-        // Hover effect on expand buttons
+        // Hover pulse
         grp.on("mouseenter", function() {
-            d3.select(this).select("circle").transition().duration(150)
-                .attr("r", EXPAND_R + 2);
+            d3.select(this).select("rect").transition().duration(150)
+                .attr("fill", isCollapse ? "#8b5cf6" : "#6366f1");
         }).on("mouseleave", function() {
-            d3.select(this).select("circle").transition().duration(200)
-                .attr("r", EXPAND_R);
+            d3.select(this).select("rect").transition().duration(200)
+                .attr("fill", isCollapse ? COLORS.collapseBg : COLORS.expandBg);
         });
     }
 
@@ -601,16 +654,124 @@
         if (bbox.width === 0 || bbox.height === 0) return;
         var container = document.getElementById("tree-container");
         var w = container.clientWidth, h = container.clientHeight;
-        var pad = 60;
+        var pad = 80;
         var scaleX = (w - pad * 2) / bbox.width;
         var scaleY = (h - pad * 2) / bbox.height;
         var scale = Math.min(scaleX, scaleY, 1.0);
         var tx = w / 2 - (bbox.x + bbox.width / 2) * scale;
         var ty = h / 2 - (bbox.y + bbox.height / 2) * scale;
-        svg.transition().duration(600).call(
+        svg.transition().duration(700).ease(d3.easeCubicOut).call(
             zoomBehavior.transform,
             d3.zoomIdentity.translate(tx, ty).scale(scale)
         );
+    }
+
+    // --- Timeline slider for photo scrubbing ---
+    function setupTimeline() {
+        var slider = document.getElementById("timeline-slider");
+        if (!slider) return;
+        slider.addEventListener("input", function() {
+            var year = parseInt(slider.value);
+            var yearEl = document.getElementById("timeline-year");
+            if (yearEl) yearEl.textContent = "c. " + year;
+            scrubPhotos(year);
+        });
+    }
+
+    function updateTimeline() {
+        var bar = document.getElementById("timeline-bar");
+        var slider = document.getElementById("timeline-slider");
+        var ticksEl = document.getElementById("timeline-ticks");
+        if (!bar || !slider) return;
+
+        // Find people with multiple faces to determine if timeline is useful
+        var hasMulti = false;
+        var minYear = 2020, maxYear = 1870;
+        allNodes.forEach(function(n) {
+            var faces = n.data.all_faces || [];
+            if (faces.length > 1) hasMulti = true;
+            var bday = n.data.birthday;
+            if (bday && typeof bday === "number") {
+                if (bday < minYear) minYear = bday;
+                if (bday + 60 > maxYear) maxYear = bday + 60; // Estimated lifespan
+            }
+        });
+
+        if (!hasMulti && allNodes.length < 3) {
+            bar.classList.add("hidden");
+            return;
+        }
+
+        // Show timeline for any tree with people
+        bar.classList.remove("hidden");
+        minYear = Math.max(1870, minYear - 10);
+        maxYear = Math.min(2025, maxYear + 10);
+        slider.min = minYear;
+        slider.max = maxYear;
+        slider.value = Math.round((minYear + maxYear) / 2);
+
+        var yearEl = document.getElementById("timeline-year");
+        if (yearEl) yearEl.textContent = "c. " + slider.value;
+
+        // Decade ticks
+        if (ticksEl) {
+            var html = "";
+            for (var decade = Math.ceil(minYear / 10) * 10; decade <= maxYear; decade += 10) {
+                html += "<span>" + decade + "</span>";
+            }
+            ticksEl.innerHTML = html;
+        }
+
+        // Hide hint after first interaction
+        slider.addEventListener("input", function hideHint() {
+            var hint = document.getElementById("timeline-hint");
+            if (hint) hint.style.display = "none";
+            slider.removeEventListener("input", hideHint);
+        }, { once: true });
+    }
+
+    var scrubState = {}; // Track which face index is showing per person
+
+    function scrubPhotos(year) {
+        // For each person with multiple faces, cycle through based on year position
+        allNodes.forEach(function(n) {
+            var faces = n.data.all_faces || [];
+            if (faces.length <= 1) return;
+
+            // Distribute faces evenly across the person's likely lifespan
+            var bday = n.data.birthday;
+            var birthYear = (typeof bday === "number" && bday > 1800) ? bday : 1900;
+            var spanStart = birthYear;
+            var spanEnd = birthYear + Math.max(faces.length * 10, 60);
+
+            // Determine which face to show based on where the year falls
+            var fraction = Math.max(0, Math.min(1, (year - spanStart) / (spanEnd - spanStart)));
+            var faceIdx = Math.min(Math.floor(fraction * faces.length), faces.length - 1);
+
+            // Skip if already showing this face
+            var prevIdx = scrubState[n.id];
+            if (prevIdx === faceIdx) return;
+            scrubState[n.id] = faceIdx;
+
+            // Crossfade: swap secondary to new image, fade in, then swap primary
+            var nodeEl = g.selectAll(".person-node").filter(function(d) { return d.id === n.id; });
+            var primary = nodeEl.select(".face-primary");
+            var secondary = nodeEl.select(".face-secondary");
+
+            if (secondary.empty() || primary.empty()) return;
+
+            var newUrl = faces[faceIdx].url;
+            secondary.attr("href", newUrl);
+            secondary.style("opacity", "1");
+            primary.style("opacity", "0");
+
+            // After transition, swap primary to the new image
+            setTimeout(function() {
+                primary.attr("href", newUrl);
+                primary.style("opacity", "1");
+                secondary.style("opacity", "0");
+            }, 450);
+        });
     }
 
     // --- Node Action Popup ---
@@ -619,34 +780,39 @@
         if (!popup) return;
 
         var name = ((nodeData["first name"] || "") + " " + (nodeData["last name"] || "")).trim();
-        var photoUrl = nodeData.avatar || nodeData.photo_url || "";
+        var photoUrl = nodeData.avatar || (nodeData.all_faces && nodeData.all_faces.length > 0 ? nodeData.all_faces[0].url : "") || nodeData.photo_url || "";
         var gender = nodeData.gender || "U";
         var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
+        var faceCount = nodeData.face_count || 0;
 
         var html = '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #1e293b;margin-bottom:4px">';
         if (photoUrl) {
-            html += '<img src="' + photoUrl + '" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ' + ringColor + '" />';
+            html += '<img src="' + photoUrl + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid ' + ringColor + '" />';
         } else {
-            html += '<div style="width:40px;height:40px;border-radius:50%;background:#1a2336;border:2px solid ' + ringColor + ';display:flex;align-items:center;justify-content:center;color:#4b5e7a;font-family:Georgia,serif;font-size:18px">' + (name[0] || "?").toUpperCase() + '</div>';
+            html += '<div style="width:48px;height:48px;border-radius:50%;background:#1a2336;border:2.5px solid ' + ringColor + ';display:flex;align-items:center;justify-content:center;color:#4b5e7a;font-family:Georgia,serif;font-size:20px">' + (name[0] || "?").toUpperCase() + '</div>';
         }
-        html += '<span style="font-weight:600;color:#f1f5f9;font-size:14px;font-family:Georgia,serif">' + name + '</span></div>';
+        html += '<div><span style="font-weight:600;color:#f1f5f9;font-size:15px;font-family:Georgia,serif;display:block">' + name + '</span>';
+        if (faceCount > 1) {
+            html += '<span style="font-size:11px;color:#d4a574">' + faceCount + ' photos</span>';
+        }
+        html += '</div></div>';
 
         if (nodeData.identity_url)
             html += '<a href="' + nodeData.identity_url + '">View Profile</a>';
         html += '<button data-action="tree-focus" data-person-id="' + nodeId + '">Focus Tree Here</button>';
         if (nodeData["has_more_parents"])
-            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="parents">Expand Parents</button>';
+            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="parents">\u2191 Expand Parents</button>';
         if (nodeData["has_more_children"])
-            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="children">Expand Children</button>';
+            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="children">\u2193 Expand Children</button>';
         if (nodeData["has_more_siblings"])
-            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="siblings">Expand Siblings</button>';
+            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="siblings">\u2194 Expand Siblings</button>';
 
         popup.innerHTML = html;
         popup.classList.remove("hidden");
 
         var x = event.clientX + 12, y = event.clientY + 12;
-        if (x + 220 > window.innerWidth) x = window.innerWidth - 230;
-        if (y + 260 > window.innerHeight) y = window.innerHeight - 270;
+        if (x + 240 > window.innerWidth) x = window.innerWidth - 250;
+        if (y + 280 > window.innerHeight) y = window.innerHeight - 290;
         popup.style.left = x + "px";
         popup.style.top = y + "px";
         popup.style.position = "fixed";
