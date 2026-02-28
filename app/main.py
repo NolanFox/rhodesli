@@ -4027,7 +4027,7 @@ def render_to_review_section(
         # default: newest (already sorted by created_at desc above)
 
         cards = [
-            identity_card(identity, crop_files, lane_color="blue", show_actions=True, is_admin=is_admin)
+            identity_card_compact(identity, crop_files, is_admin=is_admin)
             for identity in to_review
         ]
         cards = [c for c in cards if c]  # Filter None
@@ -4035,7 +4035,7 @@ def render_to_review_section(
         if cards:
             content = Div(
                 *cards,
-                cls="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
             )
         else:
             content = Div(
@@ -6877,6 +6877,163 @@ def _face_pagination_controls(identity_id: str, page: int, total_faces: int, sor
         Span(f"{start}-{end} of {total_faces}", cls="text-xs text-slate-400 mx-2"),
         next_btn,
         cls="flex items-center justify-center gap-1 mt-3"
+    )
+
+
+def identity_card_compact(
+    identity: dict,
+    crop_files: set,
+    is_admin: bool = True,
+) -> Div:
+    """Compact identity card for browse/review grid.
+
+    Face-dominant layout: large face image (60%+ of card), one-line name,
+    icon-only action buttons. Secondary actions in overflow menu.
+    Designed for scanning 20+ cards quickly.
+    """
+    identity_id = identity["identity_id"]
+    raw_name = ensure_utf8_display(identity.get("name"))
+    name = raw_name or f"Identity {identity_id[:8]}..."
+    state = identity["state"]
+
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    total_faces = len(all_face_ids)
+    if total_faces == 0:
+        return None
+
+    # Pick representative face (best quality)
+    best_face_id = get_best_face_id(all_face_ids) if all_face_ids else all_face_ids[0]
+    if not best_face_id and all_face_ids:
+        best_face_id = all_face_ids[0] if isinstance(all_face_ids[0], str) else all_face_ids[0].get("face_id", "")
+
+    face_id = best_face_id if isinstance(best_face_id, str) else best_face_id.get("face_id", "")
+    crop_url = resolve_face_image_url(face_id, crop_files)
+    if not crop_url:
+        return None
+
+    photo_id = get_photo_id_for_face(face_id)
+
+    # Confirm button
+    confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
+    confirm_btn = Button(
+        NotStr("&#10003;"),
+        cls="w-8 h-8 flex items-center justify-center rounded bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition-colors",
+        hx_post=confirm_url,
+        hx_target=f"#identity-{identity_id}",
+        hx_swap="outerHTML",
+        title="Confirm identity",
+        type="button",
+    ) if state in ("INBOX", "PROPOSED", "SKIPPED") and is_admin else None
+
+    # Reject button
+    reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
+    reject_btn = Button(
+        NotStr("&#10007;"),
+        cls="w-8 h-8 flex items-center justify-center rounded border border-red-500 text-red-400 hover:bg-red-500/20 text-sm font-bold transition-colors",
+        hx_post=reject_url,
+        hx_target=f"#identity-{identity_id}",
+        hx_swap="outerHTML",
+        title="Wrong person",
+        type="button",
+    ) if state in ("INBOX", "PROPOSED", "SKIPPED") and is_admin else None
+
+    # Skip button
+    skip_btn = Button(
+        NotStr("&#9197;"),
+        cls="w-8 h-8 flex items-center justify-center rounded border border-slate-500 text-slate-400 hover:bg-slate-600 text-sm transition-colors",
+        hx_post=f"/identity/{identity_id}/skip",
+        hx_target=f"#identity-{identity_id}",
+        hx_swap="outerHTML",
+        title="Review later",
+        type="button",
+    ) if state in ("INBOX", "PROPOSED") and is_admin else None
+
+    # Overflow menu (secondary actions)
+    overflow_items = []
+    if photo_id:
+        _vp_url = f"/photo/{photo_id}/partial?face={face_id}"
+        if identity_id:
+            _vp_url += f"&identity_id={identity_id}"
+        overflow_items.append(A(
+            "View Photo",
+            cls="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600 cursor-pointer",
+            hx_get=_vp_url,
+            hx_target="#photo-modal-content",
+            hx_swap="innerHTML",
+            **{"_": "on click remove .hidden from #photo-modal then set @open of closest <details/> to false"},
+        ))
+    overflow_items.append(A(
+        "Find Similar",
+        cls="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600 cursor-pointer",
+        hx_get=f"/api/identity/{identity_id}/neighbors",
+        hx_target=f"#neighbors-{identity_id}",
+        hx_swap="innerHTML",
+        **{"_": "on click set @open of closest <details/> to false"},
+    ))
+    if is_admin:
+        overflow_items.append(A(
+            "Edit Details",
+            href=f"/person/{identity_id}",
+            cls="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600",
+        ))
+
+    overflow_menu = Details(
+        Summary(
+            NotStr("&#8943;"),
+            cls="w-8 h-8 flex items-center justify-center rounded border border-slate-600 text-slate-400 hover:bg-slate-600 text-sm cursor-pointer list-none transition-colors",
+        ),
+        Div(
+            *overflow_items,
+            cls="absolute right-0 bottom-full mb-1 bg-slate-700 border border-slate-600 rounded shadow-lg py-1 min-w-[120px] z-10",
+        ),
+        cls="relative",
+    ) if overflow_items else None
+
+    # Match count text
+    match_text = f"{total_faces} face{'s' if total_faces != 1 else ''}" if total_faces > 1 else ""
+
+    # Loading indicator
+    loading = Span(
+        "...",
+        id=f"loading-{identity_id}",
+        cls="htmx-indicator text-slate-400 animate-pulse text-xs",
+    )
+
+    return Div(
+        # Face hero: full-width, portrait aspect ratio
+        Div(
+            Img(
+                src=crop_url,
+                alt=name,
+                cls="w-full h-full object-cover",
+                loading="lazy",
+            ),
+            cls="relative aspect-[3/4] overflow-hidden bg-slate-800",
+        ),
+        # Name + metadata row
+        Div(
+            Div(
+                Span(name, cls="text-sm text-white font-medium truncate block"),
+                Span(match_text, cls="text-xs text-slate-400") if match_text else None,
+                cls="min-w-0 flex-1",
+            ),
+            cls="px-2.5 pt-2 pb-1",
+        ),
+        # Compact action row
+        Div(
+            confirm_btn,
+            reject_btn,
+            skip_btn,
+            Div(cls="flex-1"),
+            loading,
+            overflow_menu,
+            cls="flex items-center gap-1.5 px-2.5 pb-2.5",
+        ),
+        # Hidden neighbors container (populated by Find Similar)
+        Div(id=f"neighbors-{identity_id}", cls="px-2.5"),
+        cls="identity-card-archival rounded-lg overflow-hidden",
+        id=f"identity-{identity_id}",
+        data_name=(raw_name or "").lower(),
     )
 
 
