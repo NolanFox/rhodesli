@@ -178,6 +178,9 @@ def sync_annotations(annotations_dict):
 def sync_relationships(relationships_list):
     """Sync relationships to Supabase.
 
+    Uses delete-all + batched insert. Batching prevents request size limits
+    for large relationship sets (1000+ rows).
+
     Args:
         relationships_list: list of relationship dicts from relationships.json
     """
@@ -203,7 +206,11 @@ def sync_relationships(relationships_list):
                 'updated_at': r.get('created_at'),
             })
 
-        sb.table('relationships').insert(rows).execute()
+        # Batch insert to avoid request size limits
+        batch_size = 200
+        for i in range(0, len(rows), batch_size):
+            batch = rows[i:i + batch_size]
+            sb.table('relationships').insert(batch).execute()
         logger.debug(f"Synced {len(rows)} relationships to Supabase")
     except Exception as e:
         logger.warning(f"Supabase relationship sync failed (degraded mode): {e}")
@@ -327,12 +334,26 @@ def sync_from_supabase_on_startup(data_path):
 
     # --- Sync relationships ---
     try:
-        result = sb.table('relationships').select('data').execute()
-        if result.data:
+        # Paginate to handle >1000 relationships (Supabase default limit)
+        all_rel_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = sb.table('relationships').select('data').range(
+                offset, offset + page_size - 1
+            ).execute()
+            if not result.data:
+                break
+            all_rel_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        if all_rel_rows:
             rel_path = data_path / 'relationships.json'
             rel_data = {
-                'schema_version': 1,
-                'relationships': [row['data'] for row in result.data]
+                'relationships': [row['data'] for row in all_rel_rows],
+                'metadata': {},
             }
 
             tmp_path = rel_path.with_suffix('.tmp')
@@ -341,7 +362,7 @@ def sync_from_supabase_on_startup(data_path):
                 json.dump(rel_data, f, indent=2)
             tmp_path.replace(rel_path)
 
-            logger.info(f"Startup sync: applied {len(result.data)} relationships from Supabase")
+            logger.info(f"Startup sync: applied {len(all_rel_rows)} relationships from Supabase")
             changes_made = True
     except Exception as e:
         logger.error(f"Startup sync failed for relationships: {e}")
