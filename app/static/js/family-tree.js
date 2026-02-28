@@ -25,7 +25,7 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
     var chart = f3.createChart(containerSelector, data)
         .setTransitionTime(800);
 
-    var card = chart.setCard(f3.CardHtmlWrapper);
+    var card = chart.setCard(f3.CardHtml);
     card.setCardDisplay([
         function(d) { return (d.data["first name"] || "") + " " + (d.data["last name"] || ""); },
         function(d) { return d.data["lifespan"] || ""; }
