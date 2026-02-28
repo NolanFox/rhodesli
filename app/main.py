@@ -18701,10 +18701,12 @@ def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
         extra.update(pts.get(nid, set()))
     new_ids.update(extra)
 
-    # Include the requesting person so rels connect
+    # Include the requesting person so rels connect, and return
+    # the requesting person's updated node so the client can merge
+    # its rels (e.g., new children appear in parent's rels.children)
     all_ids = new_ids | {person_id}
     nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, all_ids, crop_files, registry)
-             for pid in new_ids]
+             for pid in all_ids]
     return JSONResponse({"source_person": person_id, "direction": direction, "nodes": nodes})
 
 
