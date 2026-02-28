@@ -249,20 +249,33 @@ def build_family_tree(
     root_person: Optional[str] = None,
 ) -> list:
     """Build a family tree in the flat array format required by family-chart.
-    
-    If root_person is provided, traversed bidirectionally (ancestors + descendants) 
+
+    If root_person is provided, traverses bidirectionally (ancestors + descendants)
     to include their full family context. Otherwise, returns all individuals.
-    
-    Format per node:
-    { "id": str, "rels": {"father": str, "mother": str, "spouses": [str], "children": [str]}, "data": {...} }
+
+    Output format per node (family-chart CardHtml compatible):
+    {
+        "id": str,
+        "data": {
+            "first name": str, "last name": str, "gender": "M"|"F"|"U",
+            "birthday": str, "lifespan": str, "avatar": str
+        },
+        "rels": {
+            "father": str|None, "mother": str|None,
+            "spouses": [str], "children": [str]
+        }
+    }
+
+    AD-175: Uses parse_gedcom_year() for all dates. Populates children
+    bidirectionally so siblings render correctly.
     """
     relationships = graph.get("relationships", [])
     if not relationships:
         return []
 
-    parent_to_children = {}
-    child_to_parents = {}
-    person_to_spouses = {}
+    parent_to_children: dict[str, set] = {}
+    child_to_parents: dict[str, set] = {}
+    person_to_spouses: dict[str, set] = {}
 
     for rel in relationships:
         if rel.get("removed"):
@@ -274,22 +287,25 @@ def build_family_tree(
             person_to_spouses.setdefault(rel["person_a"], set()).add(rel["person_b"])
             person_to_spouses.setdefault(rel["person_b"], set()).add(rel["person_a"])
 
-    included_ids = set()
-    
+    # Determine which people to include
+    included_ids: set = set()
+
     if root_person:
-        # Bi-directional search to get the connected family component
         queue = [root_person]
         while queue:
             curr = queue.pop(0)
             if curr in included_ids:
                 continue
             included_ids.add(curr)
-            for p in child_to_parents.get(curr, []): 
-                if p not in included_ids: queue.append(p)
-            for c in parent_to_children.get(curr, []): 
-                if c not in included_ids: queue.append(c)
-            for s in person_to_spouses.get(curr, []): 
-                if s not in included_ids: queue.append(s)
+            for p in child_to_parents.get(curr, []):
+                if p not in included_ids:
+                    queue.append(p)
+            for c in parent_to_children.get(curr, []):
+                if c not in included_ids:
+                    queue.append(c)
+            for s in person_to_spouses.get(curr, []):
+                if s not in included_ids:
+                    queue.append(s)
     else:
         for rel in relationships:
             if not rel.get("removed"):
@@ -300,8 +316,31 @@ def build_family_tree(
     for pid in included_ids:
         ident = identities.get(pid, {})
         name = ident.get("name", "Unknown")
-        gender = ident.get("metadata", {}).get("gender", "U")
-        
+        meta = ident.get("metadata", {})
+        gender = meta.get("gender", "U")
+
+        # Split name into first/last
+        name_parts = name.rsplit(" ", 1) if name and name != "Unknown" else ["Unknown", ""]
+        first_name = name_parts[0] if len(name_parts) >= 1 else "Unknown"
+        last_name = name_parts[1] if len(name_parts) >= 2 else ""
+
+        # Override with explicit first_name/last_name if available
+        if ident.get("first_name"):
+            first_name = ident["first_name"]
+        if ident.get("last_name"):
+            last_name = ident["last_name"]
+
+        # Dates — use parse_gedcom_year for GEDCOM dates, fall back to metadata
+        birth_raw = meta.get("birth_date") or meta.get("birth_year") or meta.get("birth_year_estimate") or ""
+        death_raw = meta.get("death_date") or meta.get("death_year") or ""
+        birthday = parse_gedcom_year(str(birth_raw)) if birth_raw else ""
+        lifespan = format_lifespan(str(birth_raw) if birth_raw else None,
+                                   str(death_raw) if death_raw else None)
+
+        # Avatar URL (populated by app/main.py after calling this function)
+        avatar = ident.get("avatar_url", "")
+
+        # Assign father/mother from parents
         parents = list(child_to_parents.get(pid, []))
         father = None
         mother = None
@@ -313,33 +352,37 @@ def build_family_tree(
             elif p_gender == "F" and not mother:
                 mother = p
             else:
-                if not father: father = p
-                elif not mother: mother = p
+                if not father:
+                    father = p
+                elif not mother:
+                    mother = p
 
-        rels = {}
-        if father: rels["father"] = father
-        if mother: rels["mother"] = mother
-        
+        # Build rels
+        rels: dict = {}
+        if father:
+            rels["father"] = father
+        if mother:
+            rels["mother"] = mother
+
         spouses = list(person_to_spouses.get(pid, []))
         if spouses:
             rels["spouses"] = spouses
-            
+
         children = list(parent_to_children.get(pid, []))
         if children:
             rels["children"] = children
 
-        byear = ident.get("metadata", {}).get("birth_year") or ident.get("metadata", {}).get("birth_year_estimate") or ""
-        dyear = ident.get("metadata", {}).get("death_year") or ""
-        
         nodes.append({
             "id": pid,
-            "rels": rels,
             "data": {
-                "name": name,
+                "first name": first_name,
+                "last name": last_name,
                 "gender": gender,
-                "birth_year": byear,
-                "death_year": dyear,
-            }
+                "birthday": birthday or "",
+                "lifespan": lifespan,
+                "avatar": avatar,
+            },
+            "rels": rels,
         })
 
     return nodes

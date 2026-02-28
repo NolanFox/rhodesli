@@ -17880,34 +17880,25 @@ def get(person: str = "", show_theory: str = "true", sess=None):
         root_person=person if person else None,
     )
 
-    # Enrich tree nodes with avatar URLs
+    # Enrich tree nodes with avatar URLs (flat array format)
     crop_files = get_crop_files()
 
-    def _enrich_with_avatars(nodes):
-        for node in nodes:
-            if node.get("type") == "couple":
-                for member in node.get("members", []):
-                    member["avatar_url"] = _get_person_avatar(member["id"], registry, crop_files)
-                _enrich_with_avatars(node.get("children", []))
-            else:
-                node["avatar_url"] = _get_person_avatar(node.get("id", ""), registry, crop_files)
-                _enrich_with_avatars(node.get("children", []))
-
-    def _get_person_avatar(person_id, reg, crops):
+    for node in tree_data:
+        pid = node.get("id", "")
+        avatar_url = ""
         try:
-            ident = reg.get_identity(person_id)
-            if not ident:
-                return None
-            anchor_ids = ident.get("anchor_ids", [])
-            if anchor_ids:
-                url = resolve_face_image_url(anchor_ids[0], crops)
-                if url:
-                    return url
+            ident = registry.get_identity(pid)
+            if ident:
+                anchor_ids = ident.get("anchor_ids", [])
+                candidate_ids = ident.get("candidate_ids", [])
+                face_ids = anchor_ids or candidate_ids
+                if face_ids:
+                    url = resolve_face_image_url(face_ids[0], crop_files)
+                    if url:
+                        avatar_url = url
         except (KeyError, IndexError):
             pass
-        return None
-
-    _enrich_with_avatars(tree_data)
+        node["data"]["avatar"] = avatar_url
 
     tree_json = json.dumps(tree_data)
 
