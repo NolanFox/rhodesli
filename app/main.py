@@ -17918,23 +17918,15 @@ def get(person: str = "", show_theory: str = "true", sess=None):
     nav_links = _public_nav_links(active="tree", user=user)
 
     page_style = Style("""
-        html, body { margin: 0; }
-        body { background-color: #0f172a; }
-        #tree-container { width: 100%; min-height: 600px; border-radius: 0.75rem; overflow: hidden; }
-        @media (min-width: 768px) { #tree-container { min-height: 700px; } }
-        .tree-node rect { cursor: pointer; transition: filter 0.2s ease; }
-        .tree-node rect:hover { filter: brightness(1.2); }
-        .tree-node text { pointer-events: none; }
-        .tree-link { fill: none; stroke: #d97706; stroke-width: 2; stroke-opacity: 0.6; }
-        .spouse-link { stroke: #ec4899; stroke-dasharray: 5,3; stroke-opacity: 0.6; }
-        .highlight-glow { filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)); }
+        #tree-container { width: 100%; height: 70vh; min-height: 500px; }
+        #tree-container svg { background: #f8fafc !important; }
     """)
 
     empty_state = ""
     if not tree_data:
         empty_state = Div(
             Div(
-                Span("No family relationships found yet.", cls="text-slate-400 text-lg"),
+                Span("No family relationships found yet.", cls="text-slate-600 text-lg"),
                 P("Import a GEDCOM file to build the family tree.", cls="text-slate-500 mt-2"),
                 cls="text-center py-16",
             ),
@@ -17959,18 +17951,18 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(
                 # Header
                 Div(
-                    H1(title_text, cls="text-2xl md:text-3xl font-bold text-white mb-2"),
-                    P("Explore family relationships across generations.", cls="text-slate-400 mb-6"),
-                    cls="mb-6",
+                    H1(title_text, cls="text-2xl md:text-3xl font-bold text-slate-800 mb-2"),
+                    P("Explore family relationships across generations.", cls="text-slate-500 mb-4"),
+                    cls="mb-4",
                 ),
 
                 # Controls row
                 Div(
                     Form(
                         Div(
-                            Label("Focus on", cls="text-xs text-slate-400 mb-1 block"),
+                            Label("Focus on", cls="text-xs text-slate-500 mb-1 block"),
                             Select(*person_options, name="person",
-                                   cls="px-3 py-2 bg-slate-800 text-white rounded-lg border border-slate-700 focus:border-indigo-500 outline-none text-sm",
+                                   cls="px-3 py-2 bg-white text-slate-800 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm",
                                    onchange="this.form.submit()"),
                         ),
                         Div(
@@ -17980,11 +17972,10 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                                       cls="mr-2 rounded",
                                       onchange="this.form.submit()"),
                                 "Show speculative",
-                                cls="text-sm text-slate-400 flex items-center",
+                                cls="text-sm text-slate-500 flex items-center",
                             ),
                             cls="flex items-end pb-2",
                         ),
-                        # Hidden field to handle unchecked checkbox
                         Input(type="hidden", name="show_theory", value="false") if show_theory == "false" else "",
                         method="get",
                         action="/tree",
@@ -17999,20 +17990,13 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                         data_action="share-photo",
                         data_share_url=share_url,
                     ),
-                    cls="flex flex-wrap items-end justify-between gap-4 bg-slate-800/50 rounded-xl p-4 border border-slate-700/50 mb-6",
+                    cls="flex flex-wrap items-end justify-between gap-4 bg-slate-50 rounded-xl p-4 border border-slate-200 mb-4",
                 ),
 
                 # Tree visualization
                 empty_state if not tree_data else Div(
-                    Div(
-                        Div(
-                            Div(Div(cls="w-2.5 h-2.5 rounded-full", style="background:#d97706"), Span("Parent-Child", cls="text-xs text-slate-500"), cls="flex items-center gap-1.5"),
-                            Div(Div(cls="w-2.5 h-2.5 rounded-full", style="background:#ec4899"), Span("Spouse", cls="text-xs text-slate-500"), cls="flex items-center gap-1.5"),
-                            cls="flex gap-4",
-                        ),
-                        cls="flex justify-end mb-2",
-                    ),
-                    Div(id="tree-container", cls="bg-slate-800/50 rounded-xl border border-slate-700/50"),
+                    P("Loading family tree...", id="tree-loading", cls="text-center text-slate-400 py-8"),
+                    Div(id="tree-container", cls="bg-white rounded-xl border border-slate-200"),
                 ),
 
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
@@ -18021,8 +18005,14 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Script(src="https://d3js.org/d3.v7.min.js"),
             Script(src="/static/js/family-chart.js"),
             Script(src="/static/js/family-tree.js"),
-            Script(f"window.setupFamilyTree({tree_json}, '#tree-container', '{person}');"),
-            cls="min-h-screen bg-slate-900",
+            Script(f"""
+                document.addEventListener('DOMContentLoaded', function() {{
+                    var loading = document.getElementById('tree-loading');
+                    if (loading) loading.style.display = 'none';
+                    window.setupFamilyTree({tree_json}, '#tree-container', '{person}');
+                }});
+            """),
+            cls="min-h-screen bg-slate-100",
         ),
     )
 
