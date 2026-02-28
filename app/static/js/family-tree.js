@@ -111,7 +111,7 @@
             // Update existing chart
             chart.updateData(allNodes);
             chart.updateMainId(mainId);
-            chart.updateTree({});
+            chart.updateTree({ tree_position: "fit" });
         } else {
             // Create new chart
             var container = document.getElementById("tree-container");
@@ -125,13 +125,16 @@
                 function(d) { return d.data["lifespan"] || ""; }
             ]);
             card.setMiniTree(true);
+            card.setCardDim({ w: 220, h: 70, img_w: 60, img_h: 60, img_x: 5, img_y: 5 });
 
             // Card click: show action popup
             card.setOnCardClick(function(e, d) {
                 showNodePopup(e, d.data);
             });
 
-            chart.updateTree({ initial: true });
+            chart.updateTree({ initial: true, tree_position: "fit" });
+            // Apply dark theme overrides to SVG card elements
+            applyDarkTheme();
         }
     }
 
@@ -319,6 +322,32 @@
         if (chart) {
             chart.updateTree({ tree_position: "fit" });
         }
+    }
+
+    // --- Dark Theme for SVG Cards ---
+    function applyDarkTheme() {
+        // MutationObserver to style cards as they're created by f3
+        var container = document.getElementById("tree-container");
+        if (!container) return;
+        function styleCards() {
+            // Card backgrounds
+            container.querySelectorAll(".card-male rect, .card-female rect, .card-genderless rect, .card rect.card-body-rect").forEach(function(r) {
+                r.setAttribute("fill", "#1e293b");
+                r.setAttribute("stroke", "#334155");
+            });
+            // Card text
+            container.querySelectorAll(".card-male text, .card-female text, .card-genderless text, .card text").forEach(function(t) {
+                t.setAttribute("fill", "#e2e8f0");
+            });
+            // Connector lines
+            container.querySelectorAll("path.link, .links path").forEach(function(p) {
+                p.setAttribute("stroke", "#475569");
+            });
+        }
+        styleCards();
+        // Re-apply after transitions
+        var observer = new MutationObserver(function() { setTimeout(styleCards, 700); });
+        observer.observe(container, { childList: true, subtree: true });
     }
 
     // --- Theory Toggle ---
