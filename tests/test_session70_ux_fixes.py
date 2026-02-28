@@ -483,6 +483,7 @@ class TestDiscoveryEmptyState:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
              patch("app.main._check_admin", return_value=None):
 
             from app.main import app
@@ -505,6 +506,7 @@ class TestDiscoveryEmptyState:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
              patch("app.main._check_admin", return_value=None):
 
             from app.main import app
@@ -527,6 +529,7 @@ class TestDiscoveryEmptyState:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
              patch("app.main._check_admin", return_value=None):
 
             from app.main import app
