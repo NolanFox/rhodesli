@@ -2112,3 +2112,11 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Library**: Kept donatso/family-chart with CardSvg. Library's `updateData()` + `updateTree()` support dynamic data replacement without chart recreation.
 - **Affects**: `app/main.py` (3 API endpoints + page rewrite), `app/static/js/family-tree.js` (full rewrite).
 - **Tests**: 18 new tests in `tests/test_tree_api.py`.
+
+### AD-186: Find Similar Full-Page Layout + Face Card Click-to-Photo
+- **Date**: 2026-02-28
+- **Context**: Find Similar rendered as badly-formatted vertical column inside card. Face images not clickable. No share or quick actions visible. Prompt: "hero face + responsive grid below."
+- **Decision**: (1) New `/people/{id}/similar` route — hero face (300-400px) + responsive grid of results with confidence tiers. (2) Face card images now clickable → navigate to full photo. (3) Quick action links visible below name (Similar, Profile). (4) Face count badge on multi-face cards.
+- **Rejected**: (1) Keep inline neighbors sidebar — cramped, poor UX. (2) Modal overlay — loses URL sharability.
+- **Affects**: `app/main.py` (new route + card changes).
+- **Tests**: 8 new tests in `tests/test_find_similar_page.py`.

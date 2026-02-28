@@ -6999,22 +6999,44 @@ def identity_card_compact(
         cls="htmx-indicator text-slate-400 animate-pulse text-xs",
     )
 
-    return Div(
-        # Face hero: full-width, portrait aspect ratio
-        Div(
-            Img(
-                src=crop_url,
-                alt=name,
-                cls="w-full h-full object-cover",
-                loading="lazy",
-            ),
-            cls="relative aspect-[3/4] overflow-hidden bg-slate-800",
+    # Face count badge
+    face_badge = Span(
+        f"{total_faces}",
+        cls="absolute top-1.5 right-1.5 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-full font-medium",
+    ) if total_faces > 1 else None
+
+    # Make face image clickable → go to full photo
+    photo_link_url = f"/photo/{photo_id}" if photo_id else f"/people/{identity_id}"
+    face_hero = A(
+        Img(
+            src=crop_url,
+            alt=name,
+            cls="w-full h-full object-cover",
+            loading="lazy",
         ),
+        face_badge,
+        href=photo_link_url,
+        cls="relative block aspect-[3/4] overflow-hidden bg-slate-800",
+        title="View full photo",
+    )
+
+    # Quick action links (visible, not buried)
+    quick_links = Div(
+        A("Similar", href=f"/people/{identity_id}/similar",
+          cls="text-xs text-indigo-400 hover:text-indigo-300"),
+        Span("|", cls="text-xs text-slate-600"),
+        A("Profile", href=f"/people/{identity_id}",
+          cls="text-xs text-slate-400 hover:text-slate-300"),
+        cls="flex items-center gap-2",
+    )
+
+    return Div(
+        face_hero,
         # Name + metadata row
         Div(
             Div(
                 Span(name, cls="text-sm text-white font-medium truncate block"),
-                Span(match_text, cls="text-xs text-slate-400") if match_text else None,
+                quick_links,
                 cls="min-w-0 flex-1",
             ),
             cls="px-2.5 pt-2 pb-1",
@@ -7029,8 +7051,6 @@ def identity_card_compact(
             overflow_menu,
             cls="flex items-center gap-1.5 px-2.5 pb-2.5",
         ),
-        # Hidden neighbors container (populated by Find Similar)
-        Div(id=f"neighbors-{identity_id}", cls="px-2.5"),
         cls="identity-card-archival rounded-lg overflow-hidden",
         id=f"identity-{identity_id}",
         data_name=(raw_name or "").lower(),
@@ -13442,6 +13462,155 @@ def get(sort_by: str = "name", sess=None):
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
                 ),
                 cls="py-8 border-t border-slate-800",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
+@rt("/people/{identity_id}/similar")
+def get(identity_id: str, sess=None):
+    """Find Similar — full-page hero + grid layout (AD-186)."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = user and user.is_admin if user else not is_auth_enabled()
+
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    name = ensure_utf8_display(identity.get("name", ""))
+    state = identity.get("state", "INBOX")
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    total_faces = len(all_face_ids)
+
+    # Get best face for hero
+    crop_files = get_crop_files()
+    best_face = get_best_face_id(all_face_ids) if all_face_ids else (all_face_ids[0] if all_face_ids else "")
+    face_id = best_face if isinstance(best_face, str) else best_face.get("face_id", "") if best_face else ""
+    hero_url = resolve_face_image_url(face_id, crop_files) if face_id else ""
+
+    # Find similar faces
+    face_data = get_face_data()
+    photo_registry = load_photo_registry()
+    neighbors = []
+    try:
+        from core.neighbors import find_nearest_neighbors
+        neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=20
+        )
+    except Exception as e:
+        logging.warning(f"Find similar failed: {e}")
+
+    # Enhance with crop URLs and state
+    for n in neighbors:
+        nid = n["identity_id"]
+        try:
+            n_ident = registry.get_identity(nid)
+            n_faces = n_ident.get("anchor_ids", []) + n_ident.get("candidate_ids", [])
+            n_best = get_best_face_id(n_faces) if n_faces else (n_faces[0] if n_faces else "")
+            n_fid = n_best if isinstance(n_best, str) else n_best.get("face_id", "") if n_best else ""
+            n["crop_url"] = resolve_face_image_url(n_fid, crop_files)
+            n["name"] = ensure_utf8_display(n_ident.get("name", ""))
+            n["state"] = n_ident.get("state", "INBOX")
+            n["face_count"] = len(n_faces)
+        except KeyError:
+            n["crop_url"] = ""
+            n["name"] = "Unknown"
+            n["state"] = "INBOX"
+            n["face_count"] = 0
+
+    # Confidence tier for distance
+    def _confidence_tier(dist):
+        if dist < 0.80:
+            return ("Very High", "bg-emerald-600")
+        elif dist < 1.05:
+            return ("High", "bg-emerald-500")
+        elif dist < 1.15:
+            return ("Moderate", "bg-amber-500")
+        elif dist < 1.30:
+            return ("Low", "bg-orange-500")
+        return ("Very Low", "bg-red-500")
+
+    # Build result grid cards
+    result_cards = []
+    for n in neighbors:
+        if not n.get("crop_url"):
+            continue
+        tier_label, tier_cls = _confidence_tier(n.get("distance", 99))
+        card = Div(
+            A(
+                Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full h-full object-cover", loading="lazy"),
+                href=f"/people/{n['identity_id']}",
+                cls="block aspect-[3/4] overflow-hidden bg-slate-800",
+            ),
+            Div(
+                Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
+                Div(
+                    Span(tier_label, cls=f"text-xs px-2 py-0.5 rounded-full text-white {tier_cls}"),
+                    Span(f"{n.get('distance', 0):.2f}", cls="text-xs text-slate-500 ml-2") if is_admin else None,
+                    cls="flex items-center gap-1 mt-1",
+                ),
+                Span(f"{n.get('face_count', 0)} face{'s' if n.get('face_count', 0) != 1 else ''}", cls="text-xs text-slate-400 mt-0.5 block") if n.get("face_count", 0) > 1 else None,
+                cls="p-2.5",
+            ),
+            cls="rounded-lg overflow-hidden bg-slate-800 border border-slate-700 hover:border-slate-500 transition-colors",
+        )
+        result_cards.append(card)
+
+    nav_links = _public_nav_links(active="people", user=user)
+
+    return (
+        Title(f"Similar to {name} — Rhodesli"),
+        Style("""
+            .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+            @media (max-width: 640px) { .similar-grid { grid-template-columns: repeat(2, 1fr); } }
+        """),
+        Main(
+            Nav(
+                Div(
+                    A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
+                    Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
+                ),
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
+            ),
+            # Hero section
+            Section(
+                Div(
+                    Div(
+                        A("Back to People", href="/people", cls="text-sm text-indigo-400 hover:text-indigo-300 mb-4 inline-block"),
+                        cls="mb-2",
+                    ),
+                    Div(
+                        # Large hero face
+                        Div(
+                            Img(src=hero_url, alt=name, cls="w-full h-full object-cover rounded-xl") if hero_url else
+                            Div("No photo", cls="w-full h-full flex items-center justify-center text-slate-500"),
+                            cls="w-64 h-80 sm:w-80 sm:h-96 flex-shrink-0 overflow-hidden rounded-xl bg-slate-800",
+                        ),
+                        # Info beside hero
+                        Div(
+                            H1(name, cls="text-3xl font-serif font-bold text-white mb-2"),
+                            P(f"{total_faces} photo{'s' if total_faces != 1 else ''}", cls="text-slate-400 mb-4"),
+                            A("View Profile", href=f"/people/{identity_id}",
+                              cls="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"),
+                            cls="flex flex-col justify-center",
+                        ),
+                        cls="flex flex-col sm:flex-row gap-6 items-start",
+                    ),
+                    cls="max-w-6xl mx-auto px-6 pt-10 pb-8",
+                ),
+            ),
+            # Results grid
+            Section(
+                Div(
+                    H2(f"{len(result_cards)} Similar Face{'s' if len(result_cards) != 1 else ''}", cls="text-xl font-bold text-white mb-4"),
+                    Div(*result_cards, cls="similar-grid") if result_cards else
+                    P("No similar faces found in the archive.", cls="text-slate-400"),
+                    cls="max-w-6xl mx-auto px-6 pb-16",
+                ),
             ),
             cls="min-h-screen bg-slate-900",
         ),
