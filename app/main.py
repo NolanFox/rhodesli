@@ -15405,6 +15405,35 @@ def get(face_id: str = "", limit: int = 20, sess=None):
     return _compare_results_grid(results, crop_files, result_id=rid)
 
 
+def _queue_compare_upload_for_review(upload_id: str, meta: dict) -> None:
+    """Ensure compare uploads are visible in admin pending queue.
+
+    Compare uploads are user contributions by default, so they should appear in
+    pending review without requiring a second manual submit action.
+    """
+    pending = _load_pending_uploads()
+    job_id = f"compare_{upload_id}"
+    uploads = pending.setdefault("uploads", {})
+    if job_id in uploads:
+        return
+
+    uploads[job_id] = {
+        "job_id": job_id,
+        "status": "pending",
+        "submitted_at": datetime.now().isoformat(),
+        "submitted_by": "compare_auto",
+        "source": "compare_upload",
+        "collection": "",
+        "file_count": 1,
+        "files": [meta.get("original_filename", f"{upload_id}.jpg")],
+        "compare_upload_id": upload_id,
+        "image_key": meta.get("image_key", f"uploads/compare/{upload_id}.jpg"),
+        "faces_detected": meta.get("faces_detected", 0),
+        "top_match": meta.get("top_match"),
+    }
+    _save_pending_uploads(pending)
+
+
 def _save_compare_upload(content: bytes, filename: str, faces: list, results: list, status: str = "uploaded") -> str:
     """Persist a compare upload to R2 (preferred) or local filesystem.
 
@@ -15446,6 +15475,11 @@ def _save_compare_upload(content: bytes, filename: str, faces: list, results: li
         upload_dir.mkdir(parents=True, exist_ok=True)
         (_Path("uploads/compare") / f"{upload_id}{suffix}").write_bytes(content)
         (_Path("uploads/compare") / f"{upload_id}_meta.json").write_text(json.dumps(meta, indent=2))
+
+    try:
+        _queue_compare_upload_for_review(upload_id, meta)
+    except Exception as e:
+        logging.warning(f"[compare] Could not queue upload {upload_id} for admin review: {e}")
 
     return upload_id
 
@@ -17018,7 +17052,7 @@ async def post(request):
 
 @rt("/api/compare/pair/match")
 def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 0):
-    """Compute similarity between two selected faces from different uploads."""
+    """Compute similarity between selected faces and summarize all cross matches."""
     import pickle
     import numpy as np
     from core.storage import can_write_r2, download_bytes_from_r2, get_upload_url
@@ -17048,17 +17082,13 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
     if face_a >= len(faces_a) or face_b >= len(faces_b):
         return Div(P("Invalid face selection.", cls="text-red-400 text-sm"))
 
-    # Compute cosine similarity
+    # Compute selected pair similarity
     mu_a = np.array(faces_a[face_a]["mu"])
     mu_b = np.array(faces_b[face_b]["mu"])
-    # Euclidean distance
     distance = float(np.linalg.norm(mu_a - mu_b))
-    # Convert to cosine similarity: s = 1 - d²/2
     cosine_sim = max(0.0, 1.0 - (distance ** 2) / 2.0)
-    # Simple confidence percentage
     confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
 
-    # Try calibrated score (AD-149: isotonic regression)
     calibrated_pct = None
     try:
         from rhodesli_ml.similarity_calibration import SimilarityCalibrator
@@ -17071,7 +17101,6 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
 
     display_pct = calibrated_pct if calibrated_pct is not None else confidence_pct
 
-    # Determine confidence label and colors
     if display_pct >= 85:
         label, badge_cls, bar_color = "Very Likely Match", "text-green-400 border-green-500/30 bg-green-900/20", "bg-green-500"
     elif display_pct >= 70:
@@ -17081,14 +17110,102 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
     else:
         label, badge_cls, bar_color = "Unlikely Match", "text-slate-400 border-slate-500/30 bg-slate-800", "bg-slate-500"
 
-    # Face crop URLs
     crop_a_url = get_upload_url(f"uploads/compare/{upload_a}_face{face_a}.jpg")
     crop_b_url = get_upload_url(f"uploads/compare/{upload_b}_face{face_b}.jpg")
+
+    # Cross-compare all faces A ↔ B (excluding same-photo comparisons by design)
+    cross_pairs = []
+    for idx_a, fa in enumerate(faces_a):
+        mu_vec_a = np.array(fa["mu"])
+        for idx_b, fb in enumerate(faces_b):
+            mu_vec_b = np.array(fb["mu"])
+            d = float(np.linalg.norm(mu_vec_a - mu_vec_b))
+            pct = max(0, min(100, int((1 - d / 2.0) * 100)))
+            cross_pairs.append({"face_a": idx_a, "face_b": idx_b, "distance": d, "confidence_pct": pct})
+    cross_pairs.sort(key=lambda p: p["distance"])
+
+    cross_rows = [
+        Div(
+            Span(f"A{pair['face_a'] + 1} ↔ B{pair['face_b'] + 1}", cls="text-xs text-slate-300"),
+            Span(f"{pair['confidence_pct']}%", cls="text-xs text-slate-400"),
+            cls="flex items-center justify-between py-1 border-b border-slate-800/50 last:border-0",
+        )
+        for pair in cross_pairs[:5]
+    ]
+
+    archive_sections = []
+    try:
+        from core.neighbors import find_similar_faces
+
+        face_data = get_face_data()
+        registry = load_registry()
+        crop_files = get_crop_files()
+
+        def _best_archive_hits(faces, label_prefix):
+            hits = []
+            for i, face in enumerate(faces):
+                matches = find_similar_faces(face["mu"], face_data, registry=registry, limit=1)
+                if matches:
+                    top = matches[0]
+                    hits.append(Div(
+                        Span(f"{label_prefix}{i + 1}", cls="text-xs text-slate-300"),
+                        Span(f"{top.get('identity_name', 'Unknown')} · {top.get('confidence_pct', 0)}%", cls="text-xs text-slate-400"),
+                        cls="flex items-center justify-between py-1 border-b border-slate-800/50 last:border-0",
+                    ))
+            return hits
+
+        archive_sections.append(
+            Div(
+                H4("Top cross-photo matches", cls="text-sm font-medium text-slate-300 mb-2"),
+                Div(*cross_rows, cls="rounded-lg border border-slate-700/60 bg-slate-900/30 p-3"),
+                data_testid="pair-cross-matches",
+                cls="mt-8",
+            )
+        )
+
+        archive_a = find_similar_faces(mu_a.tolist(), face_data, registry=registry, limit=5)
+        archive_b = find_similar_faces(mu_b.tolist(), face_data, registry=registry, limit=5)
+
+        if archive_a:
+            archive_sections.append(
+                Div(
+                    H4("Top archive matches for selected face A", cls="text-sm font-medium text-slate-300 mb-2"),
+                    _compare_results_grid(archive_a, crop_files),
+                    cls="mt-8",
+                    data_testid="pair-archive-a",
+                )
+            )
+        if archive_b:
+            archive_sections.append(
+                Div(
+                    H4("Top archive matches for selected face B", cls="text-sm font-medium text-slate-300 mb-2"),
+                    _compare_results_grid(archive_b, crop_files),
+                    cls="mt-8",
+                    data_testid="pair-archive-b",
+                )
+            )
+
+        all_archive_summary_a = _best_archive_hits(faces_a, "A")
+        all_archive_summary_b = _best_archive_hits(faces_b, "B")
+        if all_archive_summary_a or all_archive_summary_b:
+            archive_sections.append(
+                Div(
+                    H4("Archive best hit per detected face", cls="text-sm font-medium text-slate-300 mb-2"),
+                    Div(
+                        Div(H5("Photo A", cls="text-xs text-slate-400 mb-1"), Div(*all_archive_summary_a), cls="flex-1 min-w-[220px]"),
+                        Div(H5("Photo B", cls="text-xs text-slate-400 mb-1"), Div(*all_archive_summary_b), cls="flex-1 min-w-[220px]"),
+                        cls="flex flex-wrap gap-4",
+                    ),
+                    cls="mt-8",
+                    data_testid="pair-archive-summary",
+                )
+            )
+    except Exception:
+        archive_sections = []
 
     return Div(
         Div(
             H3("Comparison Result", cls="text-lg font-serif text-white mb-4 text-center"),
-            # Side-by-side face crops
             Div(
                 Div(
                     Img(src=crop_a_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-slate-600"),
@@ -17107,17 +17224,14 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 ),
                 cls="flex items-center justify-center gap-4 mb-6",
             ),
-            # Confidence bar
             Div(
                 Div(cls=f"{bar_color} h-2 rounded-full transition-all", style=f"width: {display_pct}%"),
                 cls="w-full max-w-xs mx-auto bg-slate-700 rounded-full h-2 mb-4",
             ),
-            # Technical details (small print)
             Div(
                 P(f"Euclidean distance: {distance:.3f}", cls="text-[10px] text-slate-600"),
                 P(f"Cosine similarity: {cosine_sim:.4f}", cls="text-[10px] text-slate-600"),
-                P(f"{'Calibrated' if calibrated_pct is not None else 'Estimated'} confidence",
-                  cls="text-[10px] text-slate-600"),
+                P(f"{'Calibrated' if calibrated_pct is not None else 'Estimated'} confidence", cls="text-[10px] text-slate-600"),
                 cls="text-center",
             ),
             Button(
@@ -17125,9 +17239,15 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 onclick="window.location.reload()",
                 cls="mt-4 px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm",
             ),
+            Div(
+                A("Explore the full archive →", href="/photos", cls="text-xs text-indigo-400 hover:text-indigo-300"),
+                A("Know someone in this photo? Help identify them →", href="/compare", cls="text-xs text-indigo-400 hover:text-indigo-300 ml-4"),
+                cls="mt-4 flex flex-wrap gap-3 justify-center",
+            ),
             cls="text-center",
         ),
-        cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto mt-4",
+        *archive_sections,
+        cls="bg-slate-800/50 rounded-2xl p-8 max-w-3xl mx-auto mt-4",
         data_testid="pair-comparison-result",
     )
 

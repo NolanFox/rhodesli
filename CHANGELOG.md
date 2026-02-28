@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.78.1] — 2026-02-28 (Session 77: Compare Rebuild Follow-up)
+
+### Changed
+- Pair compare (`/api/compare/pair/match`) now includes cross-photo all-face summaries, top archive matches for selected faces, and best-hit archive summaries per detected face.
+- Compare upload persistence now auto-queues each upload into admin pending review (`pending_uploads.json`) so contributions are not lost if users skip the manual CTA.
+
+### Added
+- Golden compare coverage in `tests/test_compare.py` for upload, pair UX shell, persistence fallback, share URL access, loading indicator, confidence labels, and mobile-friendly markup checks.
+- Added tests for automatic compare-upload queueing and pair cross-match summary rendering.
+- Session 77 compare audit log at `docs/session_logs/session_77_audit.md`.
+- AD-179 documenting pair-compare archive-context decision.
+
 ## [v0.78.0] — 2026-02-28 (Session 75: Post-Gemini Cleanup + Tree Upgrade)
 
 ### Fixed

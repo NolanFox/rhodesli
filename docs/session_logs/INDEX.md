@@ -62,6 +62,7 @@
 | 73 | 2026-02-27 | [log](session-73-log.md) | [assess](../assessments/session-73-assessment.md) | [prompt](../prompts/session-73-prompt.md) | - | Complete |
 | 74 | 2026-02-27 | [log](session-74-log.md) | [assess](../assessments/session-74-assessment.md) | [prompt](../prompts/session-74-prompt.md) | [ctx](../session_context/session-74-context.md) | Complete (Gemini) |
 | 74-eval | 2026-02-27 | - | [eval](../assessments/session-74-eval.md) | [prompt](../prompts/session-74-eval-prompt.md) | - | Complete (Claude eval) |
+| 77 | 2026-02-28 | [log](session-77-log.md), [audit](session_77_audit.md) | [assess](session_77_assessment.md) | [prompt](../prompts/session-77-prompt.md) | [ctx](../session_context/session-77-context.md) | Complete |
 
 ## B-Path Analysis
 

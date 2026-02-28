@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 77: Compare Rebuild Follow-up (2026-02-28)
+- Added pair compare archive context: selected faces in `/compare/pair` now show top archive matches beneath pair similarity output.
+- Added all-face pair summaries (top A↔B matches and per-face archive best hits) in pair comparison output.
+- Added automatic queueing for compare uploads to admin pending review.
+- Added focused golden compare test suite in `tests/test_compare.py`.
+- Added audit log: `docs/session_logs/session_77_audit.md`.
+- Added AD-179 to document pair compare archive-context requirement.
+
 ## Session 75: Post-Gemini Cleanup + Tree Upgrade (2026-02-28) — v0.78.0
 - **Data integrity**: Reverted 9,000+ lines of key-reorder noise. Preserved 5 identity renames + 4 annotations. Restored 19 UUID relationships, merged with 1,000 GEDCOM-xref (1,019 total).
 - **GEDCOM date parser**: Regex `parse_gedcom_year()` replaces broken `[:4]` slice. "21 SEP 1887" → "1887" (was "21 S"). Handles ABT/AFT/BEF/BET qualifiers. AD-175.
