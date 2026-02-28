@@ -6347,33 +6347,41 @@ def face_card(
             type="button",
         )
 
+    # Quality label text
+    quality_word = None
+    quality_label = None
+    if quality > 0:
+        quality_word = 'Excellent' if quality >= 30 else 'Good' if quality >= 20 else 'Fair' if quality >= 10 else 'Low'
+        quality_label = f"{quality_word} quality"
+
     return Div(
-        # Image container with era badge — archival photograph feel (DD-002)
+        # Face hero — dominant visual element (min 200px desktop, 150px mobile)
         Div(
             Img(
                 src=crop_url,
                 alt=face_id,
-                cls="w-full aspect-square object-cover sepia-[.15] hover:sepia-0 transition-all duration-300"
+                cls="w-full h-full object-cover sepia-[.15] hover:sepia-0 transition-all duration-300"
             ),
             era_badge(era) if era else None,
-            cls="relative border border-amber-900/30 rounded-sm overflow-hidden"
+            cls="relative border border-amber-900/30 rounded-sm overflow-hidden min-h-[150px] sm:min-h-[200px]"
         ),
-        # Metadata and actions — compact layout
+        # Compact metadata: quality label + secondary actions on hover
         Div(
-            P(
-                f"{'Excellent' if quality >= 30 else 'Good' if quality >= 20 else 'Fair' if quality >= 10 else 'Low'} quality",
+            Span(
+                quality_label,
                 cls=f"text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
                 title=f"Quality score: {quality:.2f}" if is_admin else None,
-            ) if quality > 0 else None,
+            ) if quality_label else None,
+            # Secondary actions (View Photo, Share, Detach) — visible on hover
             Div(
                 view_photo_btn,
                 full_page_link,
                 detach_btn,
-                cls="flex items-center"
+                cls="flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
             ) if view_photo_btn or detach_btn or full_page_link else None,
-            cls="mt-1.5 px-0.5"
+            cls="mt-1 px-0.5 flex items-center justify-between"
         ),
-        cls="face-card-archival p-1 rounded min-w-[150px]",
+        cls="face-card-archival group p-1 rounded min-w-[150px]",
         # Fix: Apply the safe ID to the container
         id=make_css_id(face_id)
     )
@@ -6463,7 +6471,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     )
 
     # Thumbnail logic — prefer best quality, fall back to any available crop
-    thumbnail_img = Div(cls="w-16 h-16 bg-slate-600 rounded")
+    thumbnail_img = Div(cls="w-20 h-20 bg-slate-600 rounded")
     anchor_face_ids = neighbor.get("anchor_face_ids", []) + neighbor.get("candidate_face_ids", [])
     crop_url = None
     best_fid = get_best_face_id(anchor_face_ids) if anchor_face_ids else None
@@ -6475,7 +6483,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
             if crop_url:
                 break
     if crop_url:
-        thumbnail_img = Img(src=crop_url, alt=name, cls="w-16 h-16 object-cover rounded border border-slate-600 hover:scale-105 transition-transform")
+        thumbnail_img = Img(src=crop_url, alt=name, cls="w-20 h-20 object-cover rounded border border-slate-600 hover:scale-105 transition-transform")
 
     # Checkbox for bulk selection (linked to bulk form via hyperscript)
     # Uses property assignment (not attribute toggle) so FormData picks it up
@@ -6939,8 +6947,17 @@ def identity_card(
             cls="text-xs px-2 py-0.5 rounded bg-purple-600/20 text-purple-300 border border-purple-500/30 ml-2",
         )
 
+    # Quality label from best face for compact header display
+    best_face_id = get_best_face_id(all_face_ids) if all_face_ids else None
+    best_quality = None
+    if best_face_id:
+        best_quality = get_face_quality(best_face_id)
+    quality_label_text = None
+    if best_quality and best_quality > 0:
+        quality_label_text = 'Excellent' if best_quality >= 30 else 'Good' if best_quality >= 20 else 'Fair' if best_quality >= 10 else 'Low'
+
     return Div(
-        # Header with name, state, and controls
+        # Compact header: name + state + face count + quality
         Div(
             Div(
                 name_display(identity_id, identity.get("name"), is_admin=is_admin,
@@ -6953,8 +6970,13 @@ def identity_card(
                     f"{total_faces} face{'s' if total_faces != 1 else ''}",
                     cls="text-xs text-slate-400 ml-2"
                 ),
-                cls="flex items-center gap-3 flex-wrap"
+                Span(
+                    f" \u00b7 {quality_label_text}",
+                    cls=f"text-xs {'text-emerald-500' if best_quality and best_quality >= 20 else 'text-amber-500' if best_quality and best_quality >= 10 else 'text-slate-500'}",
+                ) if quality_label_text else None,
+                cls="flex items-center gap-2 flex-wrap"
             ),
+            # Secondary tools row — compact
             Div(
                 sort_dropdown,
                 view_all_photos_btn,
@@ -6965,7 +6987,7 @@ def identity_card(
             ),
             cls="identity-card-header flex items-center justify-between flex-wrap gap-2 mb-3"
         ),
-        # Face grid (paginated)
+        # Face grid (paginated) — faces are the hero visual
         Div(
             Div(
                 *face_cards,
@@ -6976,7 +6998,7 @@ def identity_card(
         ),
         # Identity metadata (AN-012)
         _identity_metadata_display(identity, is_admin=is_admin),
-        # Action buttons based on state (admin only)
+        # Action buttons based on state (admin only) — compact row
         review_action_buttons(identity_id, state, is_admin=is_admin),
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
