@@ -1,8 +1,9 @@
 /**
- * family-tree.js — Rhodesli family tree wrapper using CardHtml API.
- * Uses f3.createChart() with CardHtml for HTML-based cards with photos.
+ * family-tree.js — Rhodesli family tree wrapper using CardSvg API.
+ * Uses f3.createChart() with CardSvg for reliable SVG-based cards.
  *
- * AD-175: CardHtml replaces SVG cards for avatar support and cleaner styling.
+ * AD-175: CardSvg used for compatibility (CardHtml silently fails in
+ * current family-chart build). Session 79 fix.
  */
 
 window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
@@ -21,16 +22,15 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
         mainDatum.data.main = true;
     }
 
-    // Create chart with CardHtml
+    // Create chart with CardSvg (CardHtml is broken in this library build)
     var chart = f3.createChart(containerSelector, data)
         .setTransitionTime(800);
 
-    var card = chart.setCard(f3.CardHtml);
+    var card = chart.setCard(f3.CardSvg);
     card.setCardDisplay([
         function(d) { return (d.data["first name"] || "") + " " + (d.data["last name"] || ""); },
         function(d) { return d.data["lifespan"] || ""; }
     ]);
-    card.setStyle('default');
     card.setMiniTree(true);
 
     // On card click: re-center tree on that person
