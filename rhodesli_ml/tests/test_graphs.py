@@ -105,8 +105,8 @@ class TestRelationshipGraph:
         count2 = len(graph2["relationships"])
         assert count2 == count1  # No duplicates
 
-    def test_only_matched_individuals(self, parsed):
-        """Only individuals with confirmed matches create relationships."""
+    def test_single_match_uses_raw_xrefs(self, parsed):
+        """With one match, relationships use raw GEDCOM xrefs for unmatched endpoints."""
         # Only match Leon
         matches = [MatchProposal(
             gedcom_individual=parsed.individuals["@I3@"],
@@ -118,8 +118,16 @@ class TestRelationshipGraph:
             status="confirmed",
         )]
         graph = build_relationship_graph(parsed, matches)
-        # No relationships because both endpoints must be matched
-        assert len(graph["relationships"]) == 0
+        # Relationships are created using raw xref IDs for unmatched individuals
+        # and identity IDs for matched ones (preserves full family tree structure)
+        assert len(graph["relationships"]) > 0
+        # Leon should appear as identity ID, parents as raw xrefs
+        leon_rels = [r for r in graph["relationships"]
+                     if r["person_b"] == "id-leon" and r["type"] == "parent_child"]
+        assert len(leon_rels) > 0
+        for rel in leon_rels:
+            # Parents are unmatched, so they keep raw GEDCOM xref format
+            assert rel["person_a"].startswith("@I")
 
 
 class TestRelationshipGraphPersistence:

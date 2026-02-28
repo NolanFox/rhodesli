@@ -74,8 +74,11 @@ def build_relationship_graph(
 ) -> dict:
     """Build a relationship graph from GEDCOM data and confirmed matches.
 
-    Only creates relationships between individuals that have been
-    matched to archive identities (both endpoints must be matched).
+    Creates relationships for all family members in the GEDCOM data.
+    Matched individuals use their archive identity_id; unmatched individuals
+    retain their raw GEDCOM xref_id (e.g., '@I1@'). This preserves the full
+    family tree structure for visualization even when not all members are
+    matched to archive identities.
 
     Args:
         parsed_gedcom: Parsed GEDCOM data

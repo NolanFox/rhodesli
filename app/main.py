@@ -2292,6 +2292,10 @@ def get_photo_dimensions(filename: str) -> tuple:
     # Local mode: read from filesystem
     filepath = photos_path / basename
     if not filepath.exists():
+        # Fall back to cached dimensions from photo_index.json
+        cache = _load_photo_dimensions_cache()
+        if basename in cache:
+            return cache[basename]
         return (0, 0)
 
     try:
