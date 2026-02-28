@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 38.0 — February 28, 2026
-**Status**: ~3742 tests passing, v0.79.0, 274 photos, 60 confirmed identities, 775 total identities, 267 geocoded
+**Version**: 39.0 — February 28, 2026
+**Status**: ~3752 tests passing, v0.79.1, 274 photos, 60 confirmed identities, 775 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -60,7 +60,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.79.0 — 2026-02-28)
+## Recent Sessions (v0.79.1 — 2026-02-28)
+
+- **Session 77** (v0.79.1): Compare Rebuild Follow-up. Pair compare enriched with cross-photo face summaries and archive best-hit matches (AD-181). Compare uploads auto-queued to admin pending review (AD-182). Golden test suite in tests/test_compare.py. ~3752 total.
 
 - **Session 76a** (v0.79.0): Auto-Clustering + Discoveries Redesign + Face Cards. Two-tier auto-clustering pipeline (AD-179). Discovery log as ML audit trail. Discoveries page two-tier layout. Browse cards face-dominant (200px min). Backfill: 0 Tier 1, 7 Tier 2, 652 no match. 15 new tests + 4 regression fixes. ~3742 total.
 
@@ -70,15 +72,24 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - **Session 65a** (v0.68.0): Upload Fix + Compare Overhaul + UX Polish. Upload subprocess death detection + timeout. Two-photo face comparison (/compare/pair). Face overlay toggle. Prompt fidelity audit (AD-159). 24 new tests. ~3493 total.
 - **Session 64** (v0.67.0): Verify, Migrate, Harden. Harness hardening (5 skills, 3 rules, 3 hooks). Face alignment → Supabase. gemini_api_calls tracking. Centralized model config. Combined pipeline. Calibrated scores in UI. Recalibration hooks wired. AD-152. ~50 new tests. ~3450 total.
 - **Session 63** (v0.66.0): Close the Gaps, Calibrate, Re-Run. Real photo face alignment (3/3 pass). GEDCOM Supabase import (21,809 individuals, 145,574 relationships). Similarity calibration (AUC=0.9577, 348 pairs). Recalibration hooks. AD-149/150/151. 29 new ML tests. ~3402 total.
-- **Session 62** (v0.65.0): PRD-015 Face Alignment via Coordinate Bridging. EXIF handler, coordinate bridging module (app/face_alignment.py), API endpoints (POST/GET /api/face-alignment/{photo_id}), photo page UI with per-face description cards. AD-146. 54 new tests. ~3373 total.
-- **Session 61** (v0.64.0): Gemini Photo Detective + Multi-Photo Compare + ML Iteration Loop. Fixed enriched prompt gap (ML-090), upgraded to Gemini 3.1 Pro (AD-139), MLflow tracking (AD-140), multi-photo compare upload 2-5 photos (AD-141, PRD-021), Photo Detective UX with evidence cards (AD-142, PRD-022), data integrity report script. ~50 new tests.
-- **Session 60B** (v0.63.1): Production Verification + ML Deep Dive + UX Review. Found+fixed P0 quick-identify CSS selector crash (legacy face IDs with colons/spaces). ML analysis: progressive refinement pipeline 60% complete (enriched prompt built but never sent to Gemini). UX review: 7 friction points, 5 improvement recommendations. See `docs/session_logs/session_60b_*.md`. 3192 total tests.
-- **Session 60** (v0.63.0): Gemini Progressive Refinement + SSE Upload UX + Admin Unification. Three-act session: centralized Gemini config (AD-136), API logging (AD-137), progressive refinement pipeline (AD-138), SSE streaming upload on /compare + /facecompare, admin bar, quick-identify inline flow. 96 new tests. 3190 total.
-- **Session 59C** (v0.62.0): Supabase Migration for User Data Safety. All user-entered data migrated to Postgres. DATA-001 structurally resolved (AD-135). 3102 total tests.
-- **Session 59/59B** (v0.61.0/v0.61.1): Face Compare Standalone Tier 1 + Emergency Recovery. Museum-quality /facecompare page (AD-131/132/133). Deploy safety gate (AD-134). 3123 total tests.
-- **Session 58** (v0.60.0): MLflow Model Registry + Promotion Pipeline (AD-130). 3068 total tests.
-- **Session 57** (v0.59.0): CORAL Date Estimation → Production. ONNX export (16.5 MB), /estimate uses local ML model (instant, free), decade probability bars on photo detail. 3048 total tests.
-- **Sessions 49B-56** (v0.55-0.58): Similarity calibration, ONNX serving, landing page refresh, UX fixes, GEDCOM import. See docs/roadmap/SESSION_HISTORY.md.
+- **Sessions 57-62** (v0.59.0-v0.65.0): CORAL production, MLflow, Face Compare Tier 1, Supabase migration, Gemini refinement, SSE upload, face alignment. See [docs/roadmap/SESSION_HISTORY.md](../docs/roadmap/SESSION_HISTORY.md).
+- **Sessions 49B-56** (v0.55-v0.58): Similarity calibration, ONNX serving, landing page refresh, UX fixes, GEDCOM import. See [docs/roadmap/SESSION_HISTORY.md](../docs/roadmap/SESSION_HISTORY.md).
+
+---
+
+## Session 78 Outstanding Items (2026-02-28)
+
+### GEDCOM Sync Follow-up
+- [ ] **GEDCOM-007: Verify production tree count after deploy** — Local data/relationships.json has ~1,019 relationships (19 UUID + 1,000 GEDCOM). Supabase may only have the 19 UUID ones. After Session 78 deploy, verify /tree shows ~718 people, not just 24 confirmed identities. Source: docs/session_context/session-78-context.md.
+
+### Compare Full Rebuild
+- [ ] **COMPARE-001: Complete compare UX rebuild** — Session 77 (Codex) implemented ~25% of the original 8-phase compare prompt: archive context + auto-queue + golden tests. Remaining: full UX redesign of compare flow, upload pipeline reliability, mobile optimization, standalone compare product vision. Source: docs/session_context/session-78-context.md.
+
+### Route Error Investigation
+- [ ] **BUG-004: Verify /connect and /map stability** — Both routes had 500 errors in earlier sessions (Sessions 40-41). /map depends on PhotoRegistry.get_photo() and geocoded data. /connect depends on D3.js social graph. Verify both return 200 in production after deploy, check for ISEs under edge cases (missing data, bad IDs). Source: Session 78 Track 7 prompt.
+
+### Per-Identity Adaptive Thresholds
+- [ ] **ML-098: Per-identity adaptive thresholds for auto-clustering** — Current auto-clustering uses global thresholds (Tier 1 < 0.85, Tier 2 < 1.10). Per-identity thresholds based on within-cluster distance variance could improve precision. Big Leon's within-cluster max may exceed 1.10, meaning Tier 2 misses valid matches for high-variance identities. Requires per-identity distance stats from threshold analysis. Source: AD-179, docs/prds/024_auto_clustering.md "Out of Scope".
 
 ---
 
@@ -153,37 +164,11 @@ See: docs/session_context/session_49C_community_feedback.md
 
 ---
 
-## Progressive Refinement Architecture (Session 50)
-
-### Fact-Enriched Re-Analysis (AD-102) — DONE (Session 60)
-Progressive refinement pipeline implemented: `rhodesli_ml/scripts/progressive_refinement.py`.
-Gathers verified facts (confirmed identities, birth years, GEDCOM relationships),
-builds enriched prompts, compares old vs new estimates. 41 eligible photos identified.
-AD-138. See Session 60 log.
-
-### Comprehensive API Result Logging (AD-103) — DONE (Session 60)
-API logging infrastructure: `rhodesli_ml/utils/api_logger.py`. Per-call JSON logs
-with full prompt, response, token counts, cost tracking, comparison to previous analysis.
-AD-137. See Session 60 log.
-
 ### Estimate Page Remaining (PRD-020 P1/P2)
 - [ ] Search/filter by collection, date range
 - [ ] Date correction flow — "Know the date?" → Gatekeeper pattern
 - [ ] Deep CTAs: "View in archive", "Help identify", "Explore era"
 - [ ] Auto-run Gemini on uploaded photos when API key configured
-
----
-
-## Session 47 (v0.49.0 — 2026-02-18)
-
-- ML Gatekeeper Pattern — ML birth year estimates gated behind admin review (AD-097)
-- Bulk review page at /admin/review/birth-years with Accept/Edit/Reject/Accept All High
-- Ground truth feedback loop — confirmed data → retraining samples (AD-099)
-- Feature Reality Contract harness rule — anti-phantom-feature check (AD-098)
-- User Input Taxonomy documentation (AD-100)
-- Dynamic version display from CHANGELOG.md (was hardcoded "v0.6.0")
-- ROADMAP.md split (394→90 lines) + BACKLOG.md split (558→102 lines)
-- AD-097–100. 23 new tests (2365 total)
 
 ---
 
@@ -245,21 +230,9 @@ AD-137. See Session 60 log.
 - [ ] **PRODUCT-003: NL Archive Query MVP (LangChain)**: Natural language interface: "Show me photos from the 1930s with people who look like [uploaded face]." Chain: face detection → embedding search → date filtering → NL response. Prerequisites: similarity calibration + CORAL + stable identity matching. Estimated 2-3 sessions once prerequisites met. See AD-118, docs/session_context/session_54c_planning_context.md Part 1B.
 - [ ] **PRODUCT-004: Historical Photo Date Estimator Standalone**: Upload historical photo → estimate when taken using CORAL model. Genuinely novel — no existing tool offers this. Prerequisite: CORAL model trained and validated. Could combine with face comparison in shared "faces" tool site. See docs/session_context/session_54c_planning_context.md Part 2D.
 
-## EPIC: Interactive Upload UX with SSE Progress — DONE (Session 60)
-
-SSE streaming endpoint (`/api/upload/stream`) with progressive stage indicators
-on both `/compare` and `/facecompare`. Client-side validation, timeout warning,
-connection drop recovery. 24 tests. AD-121. See Session 60 log.
-
-Remaining from original epic (deferred):
+### Upload UX Remaining (from Session 60 SSE Epic)
 - [ ] Face-by-face progressive rendering + overlay animations
-- [x] Multi-photo upload + compare/estimate view switching — DONE (Session 61, PRD-021)
 - [ ] asyncio.Queue for concurrent upload serialization
-
-## Performance Chronicle Maintenance
-- Keep `docs/PERFORMANCE_CHRONICLE.md` updated with future optimizations
-- Planned future entries: SSE upload progress, ML pipeline scaling, GPU migration
-- Breadcrumbs: docs/PERFORMANCE_CHRONICLE.md, AD-119, AD-120
 
 ## Long-Term
 
@@ -276,27 +249,6 @@ Remaining from original epic (deferred):
 - [ ] **ML-080: DNA Matching Integration**: Explore DNA-based family matching as complement to face comparison. Community interest from Leo Di Leyo (Facebook). Source: Session 49C community feedback.
 - [ ] **PARTNER-001: Institutional Partnership**: Museum/archive collaboration for expanded photo access and academic credibility. Source: Session 49C community feedback.
 - [ ] **UX-110: Three-Mode Cognitive Framing**: Explore/Investigate/Curate modes with progressive complexity. Adopted conceptually, not yet built. Source: Session 50 planning.
-
----
-
-## Next Sessions (Prioritized)
-
-### Session 55: Similarity Calibration + Backlog Audit (CURRENT)
-- Learned calibration layer on frozen InsightFace embeddings
-- PyTorch Lightning + MLflow experiment tracking
-- PRD-023, SDD-023, full training pipeline + evaluation
-
-### Session 56: Landing Page Refresh + P1 UX Polish
-- Landing page: live-data entry points, mobile-first
-- Timeline/Photos lazy loading (271 images, needed before 500)
-- P1 UX fixes from UX tracker
-
-### Session 57: CORAL Date Estimation Model
-- PyTorch portfolio centerpiece
-
-### Session 58: MLflow Integration + Experiment Dashboard
-
-### Session 59: Face Compare Standalone Tier 1 (PRODUCT-001)
 
 ---
 
