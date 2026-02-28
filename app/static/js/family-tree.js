@@ -321,7 +321,7 @@
             .attr("fill", "none")
             .attr("stroke", function(d) {
                 if (d.id === focalId) return "#d4a574";
-                return d.node.data.photo_url ? "#334155" : "#1e293b";
+                return (d.node.data.avatar || d.node.data.photo_url) ? "#334155" : "#1e293b";
             })
             .attr("stroke-width", function(d) { return d.id === focalId ? 3 : 1.5; })
             .attr("opacity", function(d) { return d.id === focalId ? 1 : 0.8; });
@@ -332,11 +332,12 @@
             var r = d.id === focalId ? FOCAL_R : NODE_R;
             var clipId = "clip-" + d.id.replace(/[^a-zA-Z0-9]/g, "_");
 
-            if (d.node.data.photo_url) {
+            var photoUrl = d.node.data.avatar || d.node.data.photo_url;
+            if (photoUrl) {
                 el.append("image")
                     .attr("x", -r).attr("y", -r)
                     .attr("width", r * 2).attr("height", r * 2)
-                    .attr("href", d.node.data.photo_url)
+                    .attr("href", photoUrl)
                     .attr("clip-path", "url(#" + clipId + ")")
                     .attr("preserveAspectRatio", "xMidYMid slice");
             } else {
@@ -384,7 +385,7 @@
             .attr("font-family", "'Georgia', serif")
             .text(function(d) {
                 var name = ((d.node.data["first name"] || "") + " " + (d.node.data["last name"] || "")).trim();
-                return name.length > 20 ? name.substring(0, 18) + "..." : name;
+                return name.length > 24 ? name.substring(0, 22) + "..." : name;
             });
 
         // Lifespan labels
@@ -407,7 +408,7 @@
         var container = document.getElementById("tree-container");
         var w = container.clientWidth;
         var h = container.clientHeight;
-        var pad = 60;
+        var pad = 80;
 
         var scaleX = (w - pad * 2) / bbox.width;
         var scaleY = (h - pad * 2) / bbox.height;
