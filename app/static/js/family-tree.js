@@ -1,8 +1,8 @@
 /**
  * family-tree.js — Rhodesli heritage family tree.
  * DD-004: Floating-face design — faces ARE the tree.
- * Photo-dominant: 144px diameter portraits, glassmorphic cards.
- * Gender rings, expand arrows with labels, timeline photo scrubber.
+ * Photo-dominant: 176px diameter portraits, glassmorphic cards.
+ * Gender silhouettes, labeled expand arrows, timeline photo scrubber.
  */
 
 (function() {
@@ -15,34 +15,34 @@
     var baseNodeIds = {};
     var expandedDirs = {};
 
-    // --- PHOTO-DOMINANT layout: huge faces, minimal chrome ---
-    var CARD_W = 200, CARD_H = 260;
-    var PHOTO_R = 72;                      // 144px diameter — unmissable
+    // --- PHOTO-DOMINANT layout: HUGE faces, minimal chrome ---
+    var CARD_W = 220, CARD_H = 290;
+    var PHOTO_R = 88;                      // 176px diameter — impossible to miss
     var PHOTO_CX = CARD_W / 2;            // Centered
-    var PHOTO_CY = 14 + PHOTO_R;          // 14px top pad + radius = 86
-    var NAME_Y1 = PHOTO_CY + PHOTO_R + 20; // First name
-    var NAME_Y2 = NAME_Y1 + 18;            // Last name
-    var DATE_Y  = NAME_Y2 + 15;            // Lifespan
-    var CARD_RX = 16;
+    var PHOTO_CY = 12 + PHOTO_R;          // 12px top pad + radius = 100
+    var NAME_Y1 = PHOTO_CY + PHOTO_R + 16; // First name
+    var NAME_Y2 = NAME_Y1 + 19;            // Last name
+    var DATE_Y  = NAME_Y2 + 16;            // Lifespan
+    var CARD_RX = 18;
 
-    var V_GAP = 310;
-    var H_GAP = 40;
-    var COUPLE_GAP = 20;
-    var DROP_Y = 36;
+    var V_GAP = 360;
+    var H_GAP = 50;
+    var COUPLE_GAP = 24;
+    var DROP_Y = 40;
     var EXPAND_R = 18;
 
     var COLORS = {
         svgBg:        "#080d1a",
-        cardBg:       "rgba(15, 20, 32, 0.20)",
-        cardBorder:   "rgba(148, 163, 184, 0.06)",
+        cardBg:       "rgba(15, 20, 32, 0.25)",
+        cardBorder:   "rgba(148, 163, 184, 0.08)",
         cardHover:    "rgba(22, 32, 55, 0.92)",
-        cardHoverBdr: "rgba(148, 163, 184, 0.2)",
+        cardHoverBdr: "rgba(148, 163, 184, 0.25)",
         focalBorder:  "#d4a574",
         focalGlow:    "rgba(212, 165, 116, 0.4)",
         nameText:     "#e8edf5",
         dateText:     "#8b9ab5",
-        line:         "rgba(100, 116, 139, 0.55)",    // Much more visible
-        coupleLine:   "rgba(212, 165, 116, 0.6)",
+        line:         "rgba(148, 163, 184, 0.7)",    // BOLD and visible
+        coupleLine:   "rgba(212, 165, 116, 0.75)",
         coupleDot:    "#d4a574",
         expandBg:     "#4f46e5",
         expandLabel:  "#c7d2fe",
@@ -378,25 +378,25 @@
                 .append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R);
         });
 
-        // --- Draw connections (VISIBLE) ---
+        // --- Draw connections (BOLD and VISIBLE) ---
         var lineGroup = g.append("g").attr("class", "connections");
         connections.forEach(function(c) {
             if (c.type === "couple") {
                 lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y1).attr("x2", c.x2).attr("y2", c.y2)
-                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", 2.5)
-                    .attr("stroke-dasharray", "8,5");
+                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", 3)
+                    .attr("stroke-dasharray", "10,6");
                 lineGroup.append("circle")
-                    .attr("cx", c.midX).attr("cy", c.y1).attr("r", 4)
+                    .attr("cx", c.midX).attr("cy", c.y1).attr("r", 5)
                     .attr("fill", COLORS.coupleDot);
             } else if (c.type === "drop" || c.type === "childDrop") {
                 lineGroup.append("line")
                     .attr("x1", c.x).attr("y1", c.y1).attr("x2", c.x).attr("y2", c.y2)
-                    .attr("stroke", COLORS.line).attr("stroke-width", 2.5);
+                    .attr("stroke", COLORS.line).attr("stroke-width", 3);
             } else if (c.type === "bar") {
                 lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y).attr("x2", c.x2).attr("y2", c.y)
-                    .attr("stroke", COLORS.line).attr("stroke-width", 2.5);
+                    .attr("stroke", COLORS.line).attr("stroke-width", 3);
             }
         });
 
@@ -425,7 +425,7 @@
                     .attr("stroke", COLORS.cardHoverBdr)
                     .attr("filter", "url(#hoverShadow)");
                 card.select(".photo-ring").transition().duration(200)
-                    .attr("stroke-width", 4);
+                    .attr("stroke-width", 5);
                 card.transition().duration(200)
                     .attr("transform", function(d) {
                         return "translate(" + d.x + "," + (d.y - 5) + ")";
@@ -439,7 +439,7 @@
                     .attr("stroke", isFocal ? COLORS.focalBorder : COLORS.cardBorder)
                     .attr("filter", null);
                 card.select(".photo-ring").transition().duration(300)
-                    .attr("stroke-width", 3);
+                    .attr("stroke-width", 3.5);
                 card.transition().duration(300)
                     .attr("transform", function(d) {
                         return "translate(" + d.x + "," + d.y + ")";
@@ -503,34 +503,42 @@
                         .style("transition", "opacity 0.4s ease");
                 }
             } else {
+                // Gender silhouette avatar — Ancestry-style
+                var silColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
+                var silBg = gender === "M" ? "rgba(96,165,250,0.12)" : gender === "F" ? "rgba(249,168,212,0.12)" : "rgba(75,94,120,0.12)";
                 el.append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
-                    .attr("fill", COLORS.photoBg);
-                el.append("text").attr("x", PHOTO_CX).attr("y", PHOTO_CY)
-                    .attr("text-anchor", "middle").attr("dy", "0.35em")
-                    .attr("fill", COLORS.photoInitial)
-                    .attr("font-size", "40px")
-                    .attr("font-family", "'Georgia', serif")
-                    .text((d.node.data["first name"] || "?")[0].toUpperCase());
+                    .attr("fill", silBg);
+                // Head
+                el.append("circle")
+                    .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY - PHOTO_R * 0.18)
+                    .attr("r", PHOTO_R * 0.32)
+                    .attr("fill", silColor).attr("opacity", 0.5);
+                // Shoulders
+                el.append("ellipse")
+                    .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY + PHOTO_R * 0.52)
+                    .attr("rx", PHOTO_R * 0.52).attr("ry", PHOTO_R * 0.35)
+                    .attr("fill", silColor).attr("opacity", 0.35)
+                    .attr("clip-path", "url(#" + clipId + ")");
             }
 
-            // Gender ring
+            // Gender ring — bold border
             var gender = d.node.data.gender || "U";
             var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
             el.append("circle")
                 .attr("class", "photo-ring")
                 .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
-                .attr("fill", "none").attr("stroke", ringColor).attr("stroke-width", 3);
+                .attr("fill", "none").attr("stroke", ringColor).attr("stroke-width", 3.5);
 
             // Face count badge (top-right of photo)
             var faceCount = d.node.data.face_count || 0;
             if (faceCount > 1) {
                 var badgeG = el.append("g")
                     .attr("class", "face-badge")
-                    .attr("transform", "translate(" + (PHOTO_CX + PHOTO_R - 12) + "," + (PHOTO_CY - PHOTO_R + 8) + ")");
-                badgeG.append("circle").attr("r", 12)
-                    .attr("fill", COLORS.faceBadge).attr("stroke", COLORS.svgBg).attr("stroke-width", 2);
+                    .attr("transform", "translate(" + (PHOTO_CX + PHOTO_R - 14) + "," + (PHOTO_CY - PHOTO_R + 10) + ")");
+                badgeG.append("circle").attr("r", 14)
+                    .attr("fill", COLORS.faceBadge).attr("stroke", COLORS.svgBg).attr("stroke-width", 2.5);
                 badgeG.append("text").attr("text-anchor", "middle").attr("dy", "0.35em")
-                    .attr("fill", "#080d1a").attr("font-size", "11px").attr("font-weight", "700")
+                    .attr("fill", "#080d1a").attr("font-size", "12px").attr("font-weight", "700")
                     .attr("font-family", "'Inter', system-ui, sans-serif")
                     .text(faceCount);
             }
@@ -542,11 +550,11 @@
             .attr("x", CARD_W / 2).attr("y", NAME_Y1)
             .attr("text-anchor", "middle")
             .attr("fill", COLORS.nameText)
-            .attr("font-size", "15px").attr("font-weight", "600")
+            .attr("font-size", "16px").attr("font-weight", "600")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
             .text(function(d) {
                 var first = d.node.data["first name"] || "";
-                return first.length > 18 ? first.substring(0, 16) + "\u2026" : first;
+                return first.length > 20 ? first.substring(0, 18) + "\u2026" : first;
             });
 
         // Last name
@@ -555,11 +563,11 @@
             .attr("x", CARD_W / 2).attr("y", NAME_Y2)
             .attr("text-anchor", "middle")
             .attr("fill", COLORS.nameText)
-            .attr("font-size", "13px").attr("font-weight", "500")
+            .attr("font-size", "14px").attr("font-weight", "500")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
             .text(function(d) {
                 var last = d.node.data["last name"] || "";
-                return last.length > 18 ? last.substring(0, 16) + "\u2026" : last;
+                return last.length > 20 ? last.substring(0, 18) + "\u2026" : last;
             });
 
         // Lifespan
@@ -567,20 +575,20 @@
             .attr("class", "date-label")
             .attr("x", CARD_W / 2).attr("y", DATE_Y)
             .attr("text-anchor", "middle")
-            .attr("fill", COLORS.dateText).attr("font-size", "11.5px")
+            .attr("fill", COLORS.dateText).attr("font-size", "12.5px")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
             .attr("letter-spacing", "0.03em")
             .text(function(d) { return d.node.data.lifespan || ""; });
 
-        // --- Expand/collapse arrows — BIG and LABELED ---
+        // --- Expand/collapse arrows — LARGE, LABELED, UNMISSABLE ---
         var arrowGroup = g.append("g").attr("class", "expand-arrows");
         nodeData.forEach(function(d) {
             var data = d.node.data;
             var cx = d.x + CARD_W / 2;
             var dirs = [
-                { flag: "has_more_parents", dir: "parents", label: "Parents", arrowDir: "up", ax: cx, ay: d.y - 28 },
-                { flag: "has_more_children", dir: "children", label: "Children", arrowDir: "down", ax: cx, ay: d.y + CARD_H + 28 },
-                { flag: "has_more_siblings", dir: "siblings", label: "Siblings", arrowDir: "left", ax: d.x - 28, ay: d.y + CARD_H / 2 }
+                { flag: "has_more_parents", dir: "parents", label: "Parents", arrowDir: "up", ax: cx, ay: d.y - 34 },
+                { flag: "has_more_children", dir: "children", label: "Children", arrowDir: "down", ax: cx, ay: d.y + CARD_H + 34 },
+                { flag: "has_more_siblings", dir: "siblings", label: "Siblings", arrowDir: "left", ax: d.x - 34, ay: d.y + CARD_H / 2 }
             ];
             dirs.forEach(function(dd) {
                 var key = d.id + "|" + dd.dir;
@@ -608,43 +616,45 @@
                 }
             });
 
-        // Pill-shaped background for labeled button
-        var pillW = isCollapse ? 32 : 80;
-        var pillH = 30;
+        // Large pill-shaped button — Ancestry-style expand
+        var pillW = isCollapse ? 36 : 100;
+        var pillH = 34;
         grp.append("rect")
             .attr("x", -pillW / 2).attr("y", -pillH / 2)
             .attr("width", pillW).attr("height", pillH)
             .attr("rx", pillH / 2).attr("ry", pillH / 2)
             .attr("fill", isCollapse ? COLORS.collapseBg : COLORS.expandBg)
-            .attr("stroke", COLORS.svgBg).attr("stroke-width", 2);
+            .attr("stroke", "rgba(255,255,255,0.15)").attr("stroke-width", 1.5);
 
         if (isCollapse) {
-            grp.append("line").attr("x1", -6).attr("y1", 0).attr("x2", 6).attr("y2", 0)
+            // Minus icon
+            grp.append("line").attr("x1", -7).attr("y1", 0).attr("x2", 7).attr("y2", 0)
                 .attr("stroke", "white").attr("stroke-width", 2.5).attr("stroke-linecap", "round");
         } else {
-            // Arrow icon
-            var arrow;
-            var iconX = -pillW / 2 + 14;
-            if (direction === "up") arrow = "M" + iconX + ",3 L" + (iconX) + ",-3";
-            else if (direction === "down") arrow = "M" + iconX + ",-3 L" + (iconX) + ",3";
-            else arrow = "M" + (iconX + 3) + ",0 L" + (iconX - 3) + ",0";
-
-            // Label text
+            // Arrow + label
+            var arrowChar = direction === "up" ? "\u25B2" : direction === "down" ? "\u25BC" : "\u25C0";
             grp.append("text")
-                .attr("x", 4).attr("y", 0)
+                .attr("x", -pillW / 2 + 16).attr("y", 0)
                 .attr("text-anchor", "middle").attr("dy", "0.35em")
-                .attr("fill", "white").attr("font-size", "11px").attr("font-weight", "600")
+                .attr("fill", "rgba(255,255,255,0.7)").attr("font-size", "9px")
+                .text(arrowChar);
+            grp.append("text")
+                .attr("x", 6).attr("y", 0)
+                .attr("text-anchor", "middle").attr("dy", "0.35em")
+                .attr("fill", "white").attr("font-size", "12px").attr("font-weight", "600")
                 .attr("font-family", "'Inter', system-ui, sans-serif")
                 .text(label || expandDir);
         }
 
-        // Hover pulse
+        // Hover glow
         grp.on("mouseenter", function() {
             d3.select(this).select("rect").transition().duration(150)
-                .attr("fill", isCollapse ? "#8b5cf6" : "#6366f1");
+                .attr("fill", isCollapse ? "#8b5cf6" : "#6366f1")
+                .attr("stroke", "rgba(255,255,255,0.35)");
         }).on("mouseleave", function() {
             d3.select(this).select("rect").transition().duration(200)
-                .attr("fill", isCollapse ? COLORS.collapseBg : COLORS.expandBg);
+                .attr("fill", isCollapse ? COLORS.collapseBg : COLORS.expandBg)
+                .attr("stroke", "rgba(255,255,255,0.15)");
         });
     }
 
@@ -654,10 +664,11 @@
         if (bbox.width === 0 || bbox.height === 0) return;
         var container = document.getElementById("tree-container");
         var w = container.clientWidth, h = container.clientHeight;
-        var pad = 80;
+        var pad = 60;
         var scaleX = (w - pad * 2) / bbox.width;
         var scaleY = (h - pad * 2) / bbox.height;
-        var scale = Math.min(scaleX, scaleY, 1.0);
+        // Never zoom out below 0.25 — faces must stay visible
+        var scale = Math.max(Math.min(scaleX, scaleY, 1.0), 0.25);
         var tx = w / 2 - (bbox.x + bbox.width / 2) * scale;
         var ty = h / 2 - (bbox.y + bbox.height / 2) * scale;
         svg.transition().duration(700).ease(d3.easeCubicOut).call(
@@ -785,34 +796,52 @@
         var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
         var faceCount = nodeData.face_count || 0;
 
-        var html = '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #1e293b;margin-bottom:4px">';
+        var html = '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #1e293b;margin-bottom:6px">';
         if (photoUrl) {
-            html += '<img src="' + photoUrl + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid ' + ringColor + '" />';
+            html += '<img src="' + photoUrl + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ' + ringColor + '" />';
         } else {
-            html += '<div style="width:48px;height:48px;border-radius:50%;background:#1a2336;border:2.5px solid ' + ringColor + ';display:flex;align-items:center;justify-content:center;color:#4b5e7a;font-family:Georgia,serif;font-size:20px">' + (name[0] || "?").toUpperCase() + '</div>';
+            html += '<div style="width:56px;height:56px;border-radius:50%;background:#1a2336;border:3px solid ' + ringColor + ';display:flex;align-items:center;justify-content:center;color:#4b5e7a;font-family:Georgia,serif;font-size:22px">' + (name[0] || "?").toUpperCase() + '</div>';
         }
-        html += '<div><span style="font-weight:600;color:#f1f5f9;font-size:15px;font-family:Georgia,serif;display:block">' + name + '</span>';
+        html += '<div><span style="font-weight:600;color:#f1f5f9;font-size:16px;font-family:Georgia,serif;display:block">' + name + '</span>';
         if (faceCount > 1) {
-            html += '<span style="font-size:11px;color:#d4a574">' + faceCount + ' photos</span>';
+            html += '<span style="font-size:12px;color:#d4a574">' + faceCount + ' photos</span>';
+        }
+        var lifespan = nodeData.lifespan || "";
+        if (lifespan) {
+            html += '<span style="font-size:11px;color:#8b9ab5;display:block;margin-top:2px">' + lifespan + '</span>';
         }
         html += '</div></div>';
 
+        // Always show View Profile and Focus Tree
         if (nodeData.identity_url)
             html += '<a href="' + nodeData.identity_url + '">View Profile</a>';
         html += '<button data-action="tree-focus" data-person-id="' + nodeId + '">Focus Tree Here</button>';
-        if (nodeData["has_more_parents"])
-            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="parents">\u2191 Expand Parents</button>';
-        if (nodeData["has_more_children"])
-            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="children">\u2193 Expand Children</button>';
-        if (nodeData["has_more_siblings"])
-            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="siblings">\u2194 Expand Siblings</button>';
+
+        // Expand buttons — show when there's more to load
+        var hasExpandOptions = false;
+        if (nodeData["has_more_parents"]) {
+            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="parents">\u25B2 Show Parents</button>';
+            hasExpandOptions = true;
+        }
+        if (nodeData["has_more_children"]) {
+            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="children">\u25BC Show Children</button>';
+            hasExpandOptions = true;
+        }
+        if (nodeData["has_more_siblings"]) {
+            html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="siblings">\u25C0 Show Siblings</button>';
+            hasExpandOptions = true;
+        }
+        // If no expand options, show a hint
+        if (!hasExpandOptions && !nodeData.identity_url) {
+            html += '<div style="padding:6px 14px;color:#4b5e78;font-size:11px;font-style:italic">All known connections loaded</div>';
+        }
 
         popup.innerHTML = html;
         popup.classList.remove("hidden");
 
-        var x = event.clientX + 12, y = event.clientY + 12;
-        if (x + 240 > window.innerWidth) x = window.innerWidth - 250;
-        if (y + 280 > window.innerHeight) y = window.innerHeight - 290;
+        var x = event.clientX + 14, y = event.clientY + 14;
+        if (x + 260 > window.innerWidth) x = window.innerWidth - 270;
+        if (y + 320 > window.innerHeight) y = window.innerHeight - 330;
         popup.style.left = x + "px";
         popup.style.top = y + "px";
         popup.style.position = "fixed";
