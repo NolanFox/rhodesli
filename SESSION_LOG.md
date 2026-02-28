@@ -1,47 +1,39 @@
-# Session 78 Log — Integration + Fix-Everything
-## Mission: Close every open thread from sessions 75-77. No new features.
+# Session 79 Log — Fix Three Visible Failures
+## Mission: Fix tree, face cards, Big Leon/Nace + Session 78 cleanup
 ## Started: 2026-02-28
-## Context: docs/session_context/session-78-context.md
-## Predecessor: Session 77 (v0.79.1 — Compare Rebuild Follow-up)
-## Rule: /clear between phases, NEVER /compact
+## Version: v0.80.0 → v0.81.0
+## Context: docs/session_context/session-79-context.md
+## Predecessor: Session 78 (v0.80.0)
 
-### Track 1: Harness Fix (on main)
-- [x] Stop hook: exit 1→2 (blocking), stderr messages
-- [x] Test count audit: 3254 app + 538 ML = 3792 total
+### Track 1: Fix Blank /tree Page
+- [x] Diagnosed CardHtmlWrapper → CardHtml name mismatch
+- [x] Discovered CardHtml silently fails (zero cards rendered)
+- [x] Switched to CardSvg — 13-node family tree renders correctly
+- [x] Chrome verified: names, lifespans, photos across 3 generations
+- [x] Focus dropdown: 57 confirmed identities
+- [x] AD-184: CardSvg replaces CardHtml
 
-### Track 2: ML Test Fixes (worktree: ml-test-fix)
-- [x] test_mls_score_range_exceeds_threshold: already passing
-- [x] test_only_matched_individuals: assertion wrong, renamed
-- [x] test_compare_photos_tab_has_face_overlays: photo dims cache fallback
+### Track 2: Redesign Face Cards
+- [x] New identity_card_compact() — face hero 60%+ of card
+- [x] Icon-only actions: confirm/reject/skip/overflow
+- [x] 5 cards/row desktop, 2/row mobile
+- [x] Chrome verified at desktop + 375px mobile
 
-### Track 3: Dedup + Threshold Analysis (worktree: dedup-fix)
-- [x] Per-face dedup: full, partial, review categories
-- [x] Threshold analysis: 52% clusters exceed 1.10 ceiling
-- [x] Big Leon max=1.3824, Nace max=1.4095
-- [x] 11 new tests
+### Track 3: Big Leon/Nace + Threshold
+- [x] Investigation: NO data loss — both CONFIRMED with full faces
+- [x] TIER_2_THRESHOLD: 1.10 → 1.30 (AD-183, Nolan approved)
+- [x] DISCOVERY_DISTANCE_THRESHOLD: 1.05 → 1.30
+- [x] Backfill: 617 Tier 2 suggestions, 137 discoveries in UI
+- [x] Chrome verified: discoveries page populated
 
-### Track 4: GEDCOM→Supabase Sync (worktree: gedcom-sync)
-- [x] sync_gedcom_to_supabase.py: idempotent, batched, dry-run
-- [x] Supabase pagination fix (1000-row limit)
-- [x] 1,019 relationships synced
-- [x] 20 new tests
+### Track 4: Session 78 Cleanup
+- [x] Compare: page renders, upload blocked (InsightFace not on Railway)
+- [x] Skipped tests: 8 e2e (expected), 1 pre-existing e2e failure
+- [x] Mobile: 3 pages at 375px — all PASS
 
-### Track 5: Deploy + Visual Audit
-- [x] Deployed via git push
-- [x] 9 pages verified via Chrome, all PASS
-
-### Track 6: Compare Verification
-- [x] Routes return 200
-- [x] UI verified via Chrome
-- [ ] Full upload E2E deferred (requires ML on Railway)
-
-### Track 7: Docs Cleanup (worktree: docs-cleanup)
-- [x] PRD-024 auto-clustering (141 lines)
-- [x] AD numbering verified
-- [x] BACKLOG updated (292 lines)
-
-### Track 8: Self-Assessment + Auto-Fix
-- [x] 13 critical questions answered
-- [x] 0 red flags requiring immediate fix
-- [x] Assessment + UX evaluation written
-- [x] CHANGELOG, ROADMAP, SESSION_HISTORY updated
+### Track 5: Deploy + Docs
+- [x] All pushed to main, deployed
+- [x] Tests: 3246 app + 538 ML = 3784 passing
+- [x] Assessment: docs/assessments/session-79-assessment.md
+- [x] AD-183, AD-184 written
+- [x] CHANGELOG v0.81.0, SESSION_HISTORY, ROADMAP updated

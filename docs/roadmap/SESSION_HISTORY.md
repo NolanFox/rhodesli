@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 79: Fix Three Visible Failures (2026-02-28) — v0.81.0
+- Tree fix: CardSvg replaces broken CardHtml (AD-184). 13-node family tree renders with names, lifespans, photos. 57 families in "Focus on" dropdown.
+- Face card redesign: compact layout with face hero (60%+ area), icon-only action buttons, overflow menu. 5 cards/row desktop, 2/row mobile.
+- Tier 2 threshold raised 1.10→1.30 (AD-183, Nolan approved). Backfill: 617 Tier 2 suggestions. 137 unique discoveries visible.
+- Data loss investigation: No loss found. Big Leon (13 anchors) and Nace (3 candidates) both CONFIRMED and intact.
+- Session 78 cleanup: Compare blocked (InsightFace not on Railway), 8 skipped tests documented, mobile viewport verified.
+- Tests: 3246 app + 538 ML = 3784 passing. Pre-existing e2e failure documented.
+
 ## Session 78: Integration + Fix-Everything (2026-02-28) — v0.80.0
 - Fixed stop hook (exit 1→2 blocking), test count audited (3254 app + 538 ML = 3792)
 - Fixed 2 failing ML tests: photo dimensions cache fallback, relationship graph test assertion

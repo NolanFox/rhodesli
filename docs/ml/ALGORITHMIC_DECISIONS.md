@@ -2085,3 +2085,21 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Why**: Guarantees moderation visibility for uploads and aligns pair compare output with multi-face archive discovery goals.
 - **Affects**: `app/main.py` (`_save_compare_upload`, `_queue_compare_upload_for_review`, `/api/compare/pair/match`), `tests/test_compare.py`.
 - **Revisit condition**: If compare uploads move fully to Supabase tables, migrate queue write-path and keep JSON as fallback only.
+
+### AD-183: Tier 2 Threshold Raise from 1.10 to 1.30
+- **Date**: 2026-02-28
+- **Context**: Session 78 threshold analysis proved 1.10 too low — 52% of same-person cluster distances exceed 1.10. Big Leon max=1.38, Nace max=1.41. Heritage photos span decades; aging causes large legitimate distances.
+- **Decision**: Raise TIER_2_THRESHOLD from 1.10 to 1.30, DISCOVERY_DISTANCE_THRESHOLD from 1.05 to 1.30. Nolan explicitly approved. Backfill yielded 617 Tier 2 suggestions (vs 7 at 1.10), 137 unique discoveries visible in UI.
+- **Rejected**: (1) Keep 1.10 — misses majority of legitimate same-person pairs. (2) Raise to 1.40+ — too many false positives for admin review.
+- **Why**: Tier 2 only surfaces suggestions for admin review (no auto-action), so false positives are caught by human. Missing real matches (52%) was a worse trade-off.
+- **Affects**: `core/auto_cluster.py` (TIER_2_THRESHOLD), `app/main.py` (DISCOVERY_DISTANCE_THRESHOLD), all threshold tests updated.
+- **Revisit condition**: When enough admin decisions accumulate, use accept/reject rates to recalibrate.
+
+### AD-184: family-chart CardSvg Replaces CardHtml
+- **Date**: 2026-02-28
+- **Context**: Session 79 tree debugging revealed CardHtml creates SVG skeleton but never populates cards_view with foreignObject elements. Zero cards rendered for any dataset size. CardSvg correctly renders rect+text cards.
+- **Decision**: Switch from f3.CardHtml to f3.CardSvg in family-tree.js. Remove setStyle('default') call (not available on CardSvg).
+- **Rejected**: (1) Keep CardHtml + debug — silently fails with no errors, would require library source investigation. (2) Custom HTML tree — over-engineering for current needs.
+- **Why**: CardSvg works immediately with the current family-chart library build. Avatar support is lost but names/lifespans render correctly.
+- **Affects**: `app/static/js/family-tree.js`.
+- **Revisit condition**: If a newer family-chart version fixes CardHtml, or if avatar display in tree becomes a priority.

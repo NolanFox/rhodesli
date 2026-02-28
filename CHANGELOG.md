@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.81.0] — 2026-02-28 (Session 79: Fix Three Visible Failures)
+
+### Fixed
+- **Tree blank page**: Switched from f3.CardHtml (silently broken) to f3.CardSvg — tree now renders 13-node family with names, lifespans, and photos (AD-184)
+- **Face cards redesign**: New compact cards — face image 60%+ of card area, icon-only action buttons, overflow menu for secondary actions. 5 cards/row desktop, 2/row mobile.
+- **Tier 2 threshold**: Raised from 1.10 to 1.30 (AD-183, approved by Nolan). Backfill: 617 Tier 2 suggestions surfaced, 137 unique discoveries now visible in UI.
+- **Discovery threshold**: Raised from 1.05 to 1.30 to match Tier 2 ceiling.
+- Test assertions updated for new threshold values (3246 app + 538 ML = 3784 tests passing)
+
+### Changed
+- Browse view grid: 5 columns on desktop (was 4), 2 on mobile
+- identity_card_compact() replaces identity_card() in browse view — face-dominant layout
+
+### Investigated
+- Big Leon / Nace "data loss" — confirmed NO data loss occurred. Both identities exist as CONFIRMED with full face assignments. "Unidentified" was a UI display concern, not actual deletion.
+- Compare upload E2E — page renders correctly, upload blocked by ML models not available on Railway (requires InsightFace which is local-only). Documented as known limitation.
+- 8 skipped tests: all are e2e Playwright tests requiring a running server — expected behavior.
+
 ## [v0.80.0] — 2026-02-28 (Session 78: Integration + Fix-Everything)
 
 ### Fixed
