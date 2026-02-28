@@ -18388,27 +18388,28 @@ def get(person: str = "", show_theory: str = "true", sess=None):
     nav_links = _public_nav_links(active="tree", user=user)
 
     page_style = Style("""
+        html, body { margin: 0; } body { background-color: #0f172a; }
         #tree-container { width: 100%; height: calc(100vh - 200px); min-height: 500px; position: relative; }
-        #tree-container svg { background: #f8fafc !important; }
+        #tree-container svg { background: #1e293b !important; border-radius: 0.75rem; }
         .tree-search-results { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px;
-            overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; }
-        .tree-search-results .result-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
-        .tree-search-results .result-item:hover { background: #f1f5f9; }
-        .tree-search-results .result-item .name { font-weight: 500; color: #1e293b; }
-        .tree-search-results .result-item .badge { font-size: 11px; color: #64748b; }
+            overflow-y: auto; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100; }
+        .tree-search-results .result-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #334155; }
+        .tree-search-results .result-item:hover { background: #334155; }
+        .tree-search-results .result-item .name { font-weight: 500; color: #e2e8f0; }
+        .tree-search-results .result-item .badge { font-size: 11px; color: #94a3b8; }
         .tree-zoom-controls { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column;
             gap: 4px; z-index: 50; }
-        .tree-zoom-controls button { width: 36px; height: 36px; background: white; border: 1px solid #e2e8f0;
+        .tree-zoom-controls button { width: 36px; height: 36px; background: #1e293b; border: 1px solid #334155;
             border-radius: 6px; cursor: pointer; font-size: 18px; display: flex; align-items: center;
-            justify-content: center; color: #475569; transition: all 0.15s; }
-        .tree-zoom-controls button:hover { background: #f1f5f9; border-color: #cbd5e1; }
-        .tree-node-popup { position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 8px; z-index: 200; min-width: 160px; }
+            justify-content: center; color: #94a3b8; transition: all 0.15s; }
+        .tree-zoom-controls button:hover { background: #334155; border-color: #475569; color: #e2e8f0; }
+        .tree-node-popup { position: fixed; background: #1e293b; border: 1px solid #334155; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); padding: 8px; z-index: 200; min-width: 160px; }
         .tree-node-popup a, .tree-node-popup button { display: block; width: 100%; text-align: left;
             padding: 6px 10px; border: none; background: none; cursor: pointer; border-radius: 4px;
-            font-size: 13px; color: #334155; text-decoration: none; }
-        .tree-node-popup a:hover, .tree-node-popup button:hover { background: #f1f5f9; }
+            font-size: 13px; color: #e2e8f0; text-decoration: none; }
+        .tree-node-popup a:hover, .tree-node-popup button:hover { background: #334155; }
     """)
 
     return (
@@ -18417,20 +18418,20 @@ def get(person: str = "", show_theory: str = "true", sess=None):
         Meta(property="og:description", content="Explore the Rhodes-Capeluto family tree — generations of a Sephardic Jewish family from Rhodes."),
         Meta(property="og:url", content=f"{SITE_URL}{share_url}"),
         page_style,
-        Div(
+        Main(
             Nav(
                 Div(
                     A(Span("Rhodesli", cls="text-xl font-bold text-white"), href="/", cls="hover:opacity-90"),
                     Div(*nav_links, cls="hidden sm:flex items-center gap-6"),
-                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between",
+                    cls="max-w-6xl mx-auto px-6 flex items-center justify-between h-16",
                 ),
-                cls="fixed top-0 left-0 right-0 h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-50",
+                cls="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50",
             ),
             Div(
                 # Header
                 Div(
-                    H1(title_text, cls="text-2xl md:text-3xl font-bold text-slate-800 mb-2"),
-                    P("Explore family relationships across generations.", cls="text-slate-500 mb-4"),
+                    H1(title_text, cls="text-2xl md:text-3xl font-serif font-bold text-white mb-2"),
+                    P("Explore family relationships across generations.", cls="text-slate-400 mb-4"),
                     cls="mb-4",
                 ),
 
@@ -18438,10 +18439,10 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                 Div(
                     # Search bar
                     Div(
-                        Label("Search", cls="text-xs text-slate-500 mb-1 block"),
+                        Label("Search", cls="text-xs text-slate-400 mb-1 block"),
                         Div(
                             Input(type="text", id="tree-search-input", placeholder="Type a name to find someone...",
-                                  cls="w-full px-3 py-2 bg-white text-slate-800 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm",
+                                  cls="w-full px-3 py-2 bg-slate-700 text-slate-200 rounded-lg border border-slate-600 focus:border-indigo-500 outline-none text-sm placeholder-slate-400",
                                   autocomplete="off"),
                             Div(id="tree-search-results", cls="tree-search-results hidden"),
                             cls="relative",
@@ -18454,7 +18455,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                             Input(type="checkbox", id="tree-show-theory", value="true",
                                   checked=(show_theory != "false"), cls="mr-2 rounded"),
                             "Show speculative",
-                            cls="text-sm text-slate-500 flex items-center",
+                            cls="text-sm text-slate-400 flex items-center",
                         ),
                         cls="flex items-end pb-2",
                     ),
@@ -18467,13 +18468,13 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                         data_action="share-photo",
                         data_share_url=share_url,
                     ),
-                    cls="flex flex-wrap items-end gap-4 bg-slate-50 rounded-xl p-4 border border-slate-200 mb-4",
+                    cls="flex flex-wrap items-end gap-4 bg-slate-800/50 rounded-xl p-4 border border-slate-700 mb-4",
                 ),
 
                 # Tree visualization with zoom controls
                 Div(
-                    P("Loading family tree...", id="tree-loading", cls="text-center text-slate-400 py-8"),
-                    Div(id="tree-container", cls="bg-white rounded-xl border border-slate-200"),
+                    P("Loading family tree...", id="tree-loading", cls="text-center text-slate-500 py-8"),
+                    Div(id="tree-container", cls="bg-slate-800/50 rounded-xl border border-slate-700"),
                     # Zoom controls
                     Div(
                         Button("+", type="button", data_action="tree-zoom-in", title="Zoom in"),
@@ -18484,7 +18485,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                     cls="relative",
                 ),
 
-                cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
+                cls="max-w-6xl mx-auto px-6 pt-10 pb-16",
             ),
             # Popup container for node actions
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
@@ -18497,7 +18498,6 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                     window.initRhodesliTree('{person}', '{show_theory}');
                 }});
             """),
-            cls="min-h-screen bg-slate-100",
         ),
     )
 

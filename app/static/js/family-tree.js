@@ -281,6 +281,18 @@
     }
 
     // --- Zoom Controls ---
+    function setupZoomControls() {
+        // Zoom button clicks are handled via event delegation in setupPopupDismiss
+        // This function exists for scroll-wheel zoom on the tree container
+        var container = document.getElementById("tree-container");
+        if (!container) return;
+        container.addEventListener("wheel", function(e) {
+            if (e.ctrlKey || e.metaKey) return; // let browser handle pinch
+            e.preventDefault();
+            if (e.deltaY < 0) { zoomIn(); } else { zoomOut(); }
+        }, { passive: false });
+    }
+
     function getTreeSvg() {
         var container = document.getElementById("tree-container");
         return container ? container.querySelector("svg") : null;
