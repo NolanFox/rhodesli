@@ -10874,6 +10874,7 @@ def photo_view_content(
 def public_person_page(
     person_id: str,
     view: str = "faces",
+    sort_by: str = "date_asc",
     user=None,
     is_admin: bool = False,
 ) -> tuple:
@@ -10945,6 +10946,49 @@ def public_person_page(
     best_face_id = get_best_face_id(all_face_ids)
     avatar_url = resolve_face_image_url(best_face_id, crop_files) if best_face_id and crop_files else None
 
+    if sort_by not in {"date_asc", "date_desc", "uploaded_desc", "uploaded_asc"}:
+        sort_by = "date_asc"
+
+    date_labels = _load_date_labels()
+
+    def _parse_year(value):
+        try:
+            return int(str(value)[:4])
+        except (TypeError, ValueError):
+            return None
+
+    def _parse_uploaded_timestamp(value):
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+        except (TypeError, ValueError):
+            return None
+
+    def _build_sort_meta(photo_id: str, pm: dict | None):
+        pm = pm or {}
+        year = _parse_year((date_labels.get(photo_id) or {}).get("best_year_estimate"))
+        if year is None:
+            year = _parse_year(pm.get("date_taken"))
+        uploaded_ts = _parse_uploaded_timestamp(pm.get("created_at") or pm.get("updated_at"))
+        return {
+            "year": year,
+            "has_year": year is not None,
+            "uploaded_ts": uploaded_ts,
+            "has_uploaded_ts": uploaded_ts is not None,
+        }
+
+    def _gallery_sort_key(sort_meta: dict, stable: str):
+        year = sort_meta["year"] if sort_meta["has_year"] else 0
+        uploaded_ts = sort_meta["uploaded_ts"] if sort_meta["has_uploaded_ts"] else 0.0
+        if sort_by == "date_desc":
+            return (0 if sort_meta["has_year"] else 1, -year, -uploaded_ts, stable)
+        if sort_by == "uploaded_desc":
+            return (0 if sort_meta["has_uploaded_ts"] else 1, -uploaded_ts, year if sort_meta["has_year"] else 9999, stable)
+        if sort_by == "uploaded_asc":
+            return (0 if sort_meta["has_uploaded_ts"] else 1, uploaded_ts, year if sort_meta["has_year"] else 9999, stable)
+        return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
+
     # Get collections this person appears in
     collections = set()
     for pid in photo_ids:
@@ -10953,7 +10997,7 @@ def public_person_page(
             collections.add(pm["collection"])
 
     # --- Build face gallery items ---
-    face_gallery_items = []
+    face_entries = []
     for face_id_entry in all_face_ids:
         fid = face_id_entry if isinstance(face_id_entry, str) else face_id_entry.get("face_id", "")
         crop_url = resolve_face_image_url(fid, crop_files) if crop_files else None
@@ -10966,8 +11010,9 @@ def public_person_page(
         if face_photo:
             source_label = face_photo.get("collection", "") or face_photo.get("source", "") or ""
 
-        face_gallery_items.append(
-            A(
+        face_entries.append({
+            "sort_key": _gallery_sort_key(_build_sort_meta(face_photo_id, face_photo), f"{face_photo_id or 'zz'}:{fid}"),
+            "item": A(
                 Img(
                     src=crop_url,
                     alt=f"{display_name}",
@@ -10978,19 +11023,23 @@ def public_person_page(
                 href=f"/photo/{face_photo_id}" if face_photo_id else "#",
                 cls="flex flex-col items-center group",
                 title=f"View photo of {display_name}",
-            )
-        )
+            ),
+        })
+
+    face_entries.sort(key=lambda entry: entry["sort_key"])
+    face_gallery_items = [entry["item"] for entry in face_entries]
 
     # --- Build photo gallery items ---
-    photo_gallery_items = []
-    for pid in sorted(photo_ids):
+    photo_entries = []
+    for pid in photo_ids:
         pm = get_photo_metadata(pid)
         if not pm:
             continue
         filename = pm["filename"]
         collection_label = pm.get("collection", "") or ""
-        photo_gallery_items.append(
-            A(
+        photo_entries.append({
+            "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
+            "item": A(
                 Div(
                     Img(
                         src=photo_url(filename),
@@ -11004,8 +11053,11 @@ def public_person_page(
                 href=f"/photo/{pid}",
                 cls="flex flex-col group",
                 title=f"View photo of {display_name}",
-            )
-        )
+            ),
+        })
+
+    photo_entries.sort(key=lambda entry: entry["sort_key"])
+    photo_gallery_items = [entry["item"] for entry in photo_entries]
 
     # --- Build "Appears with" section ---
     appears_with = []
@@ -11250,19 +11302,29 @@ def public_person_page(
     toggle = Div(
         A(
             "Faces",
-            href=f"/person/{person_id}?view=faces",
+            href=f"/person/{person_id}?view=faces&sort_by={sort_by}",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
                 "bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
         ),
         A(
             "Photos",
-            href=f"/person/{person_id}?view=photos",
+            href=f"/person/{person_id}?view=photos&sort_by={sort_by}",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
                 "bg-indigo-600 text-white" if not faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
         ),
         cls="flex gap-1 bg-slate-800/50 p-1 rounded-xl",
+    )
+
+    sort_select = Select(
+        Option("Earliest First", value="date_asc", selected=(sort_by == "date_asc")),
+        Option("Earliest Last", value="date_desc", selected=(sort_by == "date_desc")),
+        Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
+        Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
+        cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
+        onchange=f"window.location.href='/person/{person_id}?view={'faces' if faces_active else 'photos'}&sort_by=' + this.value",
+        aria_label="Sort gallery",
     )
 
     # --- Gallery content ---
@@ -11608,8 +11670,13 @@ def public_person_page(
                         ),
                         Div(
                             toggle,
+                            Div(
+                                Span("Sort:", cls="text-xs text-slate-500 mr-2"),
+                                sort_select,
+                                cls="flex items-center ml-3",
+                            ),
                             Span(f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}", cls="text-xs text-slate-500 ml-3 self-center"),
-                            cls="flex items-center",
+                            cls="flex flex-wrap items-center",
                         ),
                         cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
                     ),
@@ -11695,7 +11762,7 @@ def public_person_page(
 
 
 @rt("/person/{person_id}")
-def get(person_id: str, view: str = "faces", sess=None):
+def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None):
     """
     Public shareable person page showing all photos of a specific person.
 
@@ -11703,10 +11770,11 @@ def get(person_id: str, view: str = "faces", sess=None):
 
     Query params:
     - view: "faces" (default) or "photos" — gallery view mode
+    - sort_by: date_asc (default), date_desc, uploaded_desc, uploaded_asc
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
-    return public_person_page(person_id, view=view, user=user, is_admin=user_is_admin)
+    return public_person_page(person_id, view=view, sort_by=sort_by, user=user, is_admin=user_is_admin)
 
 
 # --- Shareable Identification Pages ---
