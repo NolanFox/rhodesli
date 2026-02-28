@@ -6,20 +6,22 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - **Family Tree overhaul**: 3 API endpoints (data, expand, search), BFS lazy loading, type-ahead search across 718+ people (Archive + GEDCOM)
-- **Card-based tree layout**: D3 custom renderer with T-shape connections, circular portraits, generation rows, couple connectors (AD-185)
-- **Graph unification**: GEDCOM xrefs resolved to identity UUIDs in tree adjacency — single connected graph instead of two disconnected clusters
-- **Expand arrows**: Blue directional indicators on leaf nodes with hidden connections, click to dynamically expand tree
-- **UX research**: docs/research/family-tree-ux-patterns.md — Ancestry/MyHeritage/FamilySearch patterns analyzed
+- **Floating-face tree design** (DD-004): Faces ARE the tree — 96px photo circles with nearly invisible card backgrounds that materialize on hover (glassmorphism). Gender-coded photo rings (blue=M, pink=F, gray=U). Dashed gold couple connectors. Progressive detail hiding at low zoom. Keyboard shortcuts (+/- zoom, 0 fit-to-content).
+- **Graph unification**: GEDCOM xrefs resolved to identity UUIDs in tree adjacency — single connected graph
+- **Expand/collapse toggle**: Expanded branches show red minus button to collapse subtrees
+- **UX research**: docs/research/family-tree-ux-patterns.md — Ancestry/MyHeritage/FamilySearch/Geni patterns analyzed
 
 ### Fixed
-- **Tree expand broken**: Expand endpoint was not returning the requesting person's updated node, so the client couldn't merge new children into the parent's rels
+- **Profile button from tree**: /people/{pid} → /person/{pid} (tree popup links were 404ing)
+- **Tree expand broken**: Expand endpoint not returning source person for proper merge
 - **Avatar field**: Tree now reads `avatar` field (not `photo_url`) for face photos
 - **Cache busting**: family-tree.js loads with version parameter to prevent stale cache
 - **Face cards**: Compact redesign — face image 60%+ of card area, icon-only actions, Find Similar inline panel
 
 ### Changed
 - Tree rendering: dropped f3 library completely, replaced with custom D3 renderer
-- Tree dark theme matching People page (COLORS object with heritage palette)
+- Tree cards: landscape (280x110) → portrait floating-face (144x190) with 96px photo circles
+- Tree background: #080d1a for maximum photo contrast
 - Compare feature: explicit deferral with concrete plan (AD-187)
 - Lesson 89: /clear between acts is non-negotiable
 

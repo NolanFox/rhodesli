@@ -1,39 +1,61 @@
 # Session 80 Assessment
 
 ## Shipped
+
+### Acts 0-4 (Initial Session)
 - [x] Act 0: Red flag cleanup, GEDCOM integrity verified — Commit: d68bc7b
 - [x] Act 1: Tree API overhaul — 3 endpoints, BFS lazy loading, search, expand — Commit: 6f56824
 - [x] Act 2: Face cards + Find Similar redesign — hero+grid layout — Commit: 7fbe154
 - [x] Act 3: Compare deferral with concrete plan (AD-187) — Commit: c37d43f
 - [x] Act 4: Deploy, test fix, interactive log, synthesis script — Commit: b11f900
-- [x] Tree visual redesign: Card-based layout with T-shape connections, face photos, dark theme — Commits: cfcb139, 5441d03, cf3ac9a
-- [x] Graph unification: GEDCOM xrefs resolved to identity UUIDs in adjacency — Commit: cf3ac9a
-- [x] UX research logged: docs/research/family-tree-ux-patterns.md
-- [x] **Expand fix**: Source person included in expand response for proper merge — Commit: 27a72a3
+- [x] Tree visual redesign: Card layout with T-shape connections — Commits: cfcb139, 5441d03, cf3ac9a
+- [x] Graph unification: GEDCOM xrefs → identity UUIDs — Commit: cf3ac9a
+- [x] Expand fix: Source person in expand response — Commit: 27a72a3
 
-## Browser Verified (Continuation Session)
-- [x] Tree loads with focal person + family — 11 nodes (UUID tree), 16 nodes (GEDCOM tree)
-- [x] Tree search works — type-ahead finds Archive and GEDCOM people
-- [x] Tree expand arrows visible — blue circles on GEDCOM tree (4 nodes with arrows)
-- [x] Tree expand works — "Expand Children" on Haim adds 4 children, tree grows to ~24 nodes
-- [x] Tree node popup — shows View Profile, Focus Tree Here, Expand buttons as appropriate
-- [x] Tree zoom controls — +/- buttons and fit-to-content button present
-- [x] People page face cards — consistent 4-column layout, face-dominant, all actions visible
-- [x] Find Similar — inline panel with face results, distance scores, confidence tiers, batch actions
+### Act 5 (Continuation — Floating-Face Design)
+- [x] Profile button fix: /people/{pid} → /person/{pid} — Commit: e0d08bc
+- [x] Portrait card layout: photo-dominant, top-centered 96px circles — Commit: e0d08bc
+- [x] Gender-coded photo rings: blue=M, pink=F, gray=U — Commit: e0d08bc
+- [x] Collapse/expand toggle with state tracking — Commit: e0d08bc
+- [x] Floating-face design: faces ARE the tree, not data inside boxes — Commit: 06166f0
+  - Nearly invisible card backgrounds that materialize on hover (glassmorphism)
+  - Deep #080d1a background for maximum photo contrast
+  - Photo drop shadows, focal person gold glow
+  - Dashed gold couple connectors with center dot
+  - Progressive detail hiding at low zoom, keyboard shortcuts
+- [x] DD-004 documented in DESIGN_DECISIONS.md — Commit: 0da5fcc
+
+## Browser Verified
+- [x] Tree loads with focal person + family — floating-face design, faces dominant
+- [x] Tree search works — type-ahead finds people
+- [x] Tree expand arrows load additional family
+- [x] Tree node click — popup with View Profile / Focus Tree Here
+- [x] Tree zoom — +/- buttons, scroll wheel, keyboard shortcuts
+- [x] Hover effects — card materializes, ring thickens, shadow appears
+- [x] Profile link — /person/{uuid} navigates correctly (Big Leon verified)
+- [x] Gender rings — blue (male), pink (female) clearly visible
+- [x] Couple connectors — dashed gold with center dot (Betty+Roland)
+- [x] People page face cards — consistent layout, face-dominant
 
 ## Deferred
-- Hanula Mosafir Capuano has NO relationships and NO GEDCOM link — needs admin GEDCOM linking
-- 38 of 60 confirmed identities have zero relationships — need GEDCOM linking to appear in tree
-- Hero+grid layout for Find Similar (prompt requested full-page, got inline panel — functional but different from spec)
+- 38 of 60 confirmed identities have zero relationships — need GEDCOM linking
+- Find Similar: inline panel delivered (prompt spec'd full-page hero+grid)
+- Interactive test log not fully filled out (testing done visually, not form-tracked)
 
 ## Red Flags
-- **P0: Context compacted AGAIN** — failed to /clear between acts in first conversation. Lesson 89 written.
-- **P1: 38 confirmed identities disconnected from tree** — no relationships, no GEDCOM links. Data gap, not code bug.
-- **P2: Name truncation** — card width limits names to ~18 chars, some names still truncate
-- **P2: Profile button** — /people/{uuid} may be broken for some identities (user reported, investigating)
+- **P0: Context compacted during initial session** — Lesson 89 written. Mitigated in continuation by using /clear.
+- **P1: 38 confirmed identities disconnected from tree** — data gap, not code bug. Need bulk GEDCOM linking.
+- **P2: Name truncation on narrow cards** — 144px card width limits display. Acceptable trade-off for photo dominance.
+
+## Strengths
+- Floating-face design is genuinely differentiated from Geni/Ancestry/MyHeritage
+- Photo dominance achieved: 96px diameter circles = 60%+ of card visual weight
+- Hover glassmorphism is satisfying micro-interaction
+- Gender rings provide instant visual information without text
+- Tree is functional end-to-end: search, expand, navigate, zoom
 
 ## Next Session Should Verify
-1. Profile button fix (if worktree subagent resolved it)
-2. Hanula needs GEDCOM linking
-3. 38 disconnected identities — bulk GEDCOM linking tool would help
-4. Find Similar hero+grid vs inline panel — user preference check
+1. Tree on mobile viewport — touch zoom, card readability
+2. 38 disconnected identities — bulk GEDCOM linking tool
+3. Find Similar hero+grid vs inline panel — confirm user preference
+4. Expand arrow visibility at default zoom level

@@ -42,11 +42,44 @@
 - [x] Added Lesson 89: /clear between acts is NON-NEGOTIABLE
 - [x] Interactive test log created
 - [x] Synthesis script created
-- [ ] Push to deploy
-- [ ] Smoke test production
-- [ ] Assessment
+- [x] Pushed to deploy
+- [x] Assessment written
+
+### Act 5: Tree UX Feedback — Floating-Face Design (Continuation)
+- [x] Read tree UX feedback: docs/session_context/session-80-tree-feedback.md
+- [x] Checked worktree branch worktree-agent-a0660e49 — no diff, subagent didn't produce fix
+- [x] Fixed profile button: /people/{pid} → /person/{pid} (line 18630 in app/main.py)
+- [x] Increased card/photo sizes (CARD_W 180→280, PHOTO_R 26→40)
+- [x] Added gender color rings (blue=M, pink=F, gray=U)
+- [x] Added collapse/expand toggle with baseNodeIds tracking
+- [x] Researched Geni, Ancestry, MyHeritage, FamilySearch tree UX patterns
+- [x] Complete portrait card rewrite (CARD_W=156, CARD_H=196, photo top-centered)
+- [x] Committed: e0d08bc — portrait card layout
+- [x] Floating-face iteration: faces ARE the tree, not data inside boxes
+  - CARD_W=144, CARD_H=190, PHOTO_R=48 (96px diameter photos)
+  - Card backgrounds: rgba(15,20,32,0.25) → hover: rgba(22,32,55,0.88)
+  - Deep background: #080d1a for maximum photo contrast
+  - Photo drop shadows, focal person gold glow
+  - Dashed gold couple connectors with center dot
+  - Progressive detail hiding at low zoom
+  - Keyboard shortcuts: +/- zoom, 0 fit-to-content
+- [x] Committed: 06166f0 — floating-face design
+- [x] Documented DD-004 in DESIGN_DECISIONS.md
+- [x] Committed: 0da5fcc — DD-004 floating-face tree design decision
+- [x] Browser verified in production: floating-face design, hover materialization, popup, profile link
+
+### Browser Verification (Act 5)
+- [x] Tree loads with floating-face design — faces 60%+ of visual weight
+- [x] Gender rings visible (blue=M, pink=F)
+- [x] Hover: card materializes from invisible to glassmorphic panel
+- [x] Click: popup shows photo + name + "View Profile" / "Focus Tree Here"
+- [x] Profile link: /person/{uuid} navigates correctly (verified Big Leon → /person/b6d9ea5b-...)
+- [x] Couple connectors: dashed gold with center dot (Betty+Roland visible)
+- [x] Focal person glow: Victoria has gold border
+- [x] Connection lines: T-shape parent-child, subtle 35% opacity
 
 ### RED FLAGS
 - **P0: Context compacted during session** — failed to /clear between acts despite explicit prompt instruction and user reminders. Lesson 89 written.
 - **P1: Acts 1-3 all modified app/main.py sequentially** — could not parallelize (Lesson 88)
-- **P1: No browser verification yet** — tree and face cards not tested in production browser
+- **P1 RESOLVED: Browser verification done** — tree verified in production with floating-face design
+- **P2 RESOLVED: Profile button fixed** — /people/ → /person/ route, verified in browser
