@@ -7,12 +7,64 @@ AD-075: Relationship graph schema
 """
 
 import json
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
 from rhodesli_ml.importers.gedcom_parser import ParsedGedcom
 from rhodesli_ml.importers.identity_matcher import MatchProposal
+
+
+def parse_gedcom_year(date_str: str | None) -> str | None:
+    """Extract year from GEDCOM date string.
+
+    Handles: "1887", "21 SEP 1887", "ABT 1900", "AFT 1930",
+    "BEF 1920", "BET 1890 AND 1900", None, ""
+
+    AD-175: Replaces broken [:4] slice that produced "21 S" for day-first dates.
+    """
+    if not date_str or not isinstance(date_str, str):
+        return None
+    date_str = date_str.strip()
+    if not date_str:
+        return None
+
+    upper = date_str.upper()
+
+    # BET...AND... → range
+    bet_match = re.match(r'BET\w*\s+.*?(\d{4}).*AND.*?(\d{4})', upper)
+    if bet_match:
+        return f"{bet_match.group(1)}\u2013{bet_match.group(2)}"
+
+    # Find any 4-digit year
+    year_match = re.search(r'\b(\d{4})\b', date_str)
+    if not year_match:
+        return None
+    year = year_match.group(1)
+
+    # Qualifiers
+    if upper.startswith(('ABT', 'ABOUT')):
+        return f"~{year}"
+    if upper.startswith(('AFT', 'AFTER')):
+        return f"aft. {year}"
+    if upper.startswith(('BEF', 'BEFORE')):
+        return f"bef. {year}"
+
+    return year
+
+
+def format_lifespan(birth_date: str | None, death_date: str | None) -> str:
+    """Format birth/death into display string like '1887–1944'."""
+    b = parse_gedcom_year(birth_date)
+    d = parse_gedcom_year(death_date)
+    if b and d:
+        return f"{b}\u2013{d}"
+    if b:
+        return f"{b}\u2013"
+    if d:
+        return f"\u2013{d}"
+    return ""
 
 
 def build_relationship_graph(

@@ -17846,7 +17846,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
         person_options.append(Option(name, value=iid, selected=(iid == person)))
 
     # Build tree data
-    from rhodesli_ml.graph.relationship_graph import build_family_tree
+    from rhodesli_ml.graph.relationship_graph import build_family_tree, parse_gedcom_year
     identities_dict = {}
     for ident in registry.list_identities(state=IdentityState.CONFIRMED):
         if not ident.get("merged_into"):
@@ -17870,8 +17870,8 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             "name": g_ind.get("name") or "Unknown",
             "metadata": {
                 "gender": g_ind.get("gender", "U"),
-                "birth_year": g_ind.get("birth_date", "")[:4] if g_ind.get("birth_date") else "",
-                "death_year": g_ind.get("death_date", "")[:4] if g_ind.get("death_date") else "",
+                "birth_year": parse_gedcom_year(g_ind.get("birth_date")) or "",
+                "death_year": parse_gedcom_year(g_ind.get("death_date")) or "",
             }
         }
 
