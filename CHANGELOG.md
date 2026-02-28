@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.82.0] — 2026-02-28 (Session 80: Fix Everything — Tree + Face Cards + UX)
+
+### Added
+- **Family Tree overhaul**: 3 API endpoints (data, expand, search), BFS lazy loading, type-ahead search across 718+ people (Archive + GEDCOM)
+- **Card-based tree layout**: D3 custom renderer with T-shape connections, circular portraits, generation rows, couple connectors (AD-185)
+- **Graph unification**: GEDCOM xrefs resolved to identity UUIDs in tree adjacency — single connected graph instead of two disconnected clusters
+- **Expand arrows**: Blue directional indicators on leaf nodes with hidden connections, click to dynamically expand tree
+- **UX research**: docs/research/family-tree-ux-patterns.md — Ancestry/MyHeritage/FamilySearch patterns analyzed
+
+### Fixed
+- **Tree expand broken**: Expand endpoint was not returning the requesting person's updated node, so the client couldn't merge new children into the parent's rels
+- **Avatar field**: Tree now reads `avatar` field (not `photo_url`) for face photos
+- **Cache busting**: family-tree.js loads with version parameter to prevent stale cache
+- **Face cards**: Compact redesign — face image 60%+ of card area, icon-only actions, Find Similar inline panel
+
+### Changed
+- Tree rendering: dropped f3 library completely, replaced with custom D3 renderer
+- Tree dark theme matching People page (COLORS object with heritage palette)
+- Compare feature: explicit deferral with concrete plan (AD-187)
+- Lesson 89: /clear between acts is non-negotiable
+
 ## [v0.81.0] — 2026-02-28 (Session 79: Fix Three Visible Failures)
 
 ### Fixed
