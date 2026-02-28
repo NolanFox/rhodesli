@@ -33,7 +33,7 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
     card.setStyle('default');
     card.setMiniTree(true);
 
-    // On card click: re-center on that person
+    // On card click: re-center tree on that person
     card.setOnCardClick(function(e, d) {
         chart.updateMainId(d.data.id);
         chart.updateTree({});

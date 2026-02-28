@@ -17875,9 +17875,25 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             }
         }
 
+    # Default to most-connected confirmed identity if no person specified
+    effective_person = person
+    if not effective_person:
+        # Find UUID-based person with most connections
+        all_rels = rel_graph.get("relationships", [])
+        connection_count: dict = {}
+        for rel in all_rels:
+            if rel.get("removed"):
+                continue
+            for key in ("person_a", "person_b"):
+                pid = rel.get(key, "")
+                if pid and not pid.startswith("@"):
+                    connection_count[pid] = connection_count.get(pid, 0) + 1
+        if connection_count:
+            effective_person = max(connection_count, key=connection_count.get)
+
     tree_data = build_family_tree(
         rel_graph, identities_dict,
-        root_person=person if person else None,
+        root_person=effective_person if effective_person else None,
     )
 
     # Enrich tree nodes with avatar URLs (flat array format)
@@ -17899,6 +17915,9 @@ def get(person: str = "", show_theory: str = "true", sess=None):
         except (KeyError, IndexError):
             pass
         node["data"]["avatar"] = avatar_url
+        # Add identity page link for confirmed identities (UUID-based)
+        if not pid.startswith("@"):
+            node["data"]["identity_url"] = f"/people/{pid}"
 
     tree_json = json.dumps(tree_data)
 
