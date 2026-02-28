@@ -144,3 +144,56 @@ Add a discovery notification system with two components:
 - AD-150: Recalibration hooks
 - FE-041: "Help Identify" mode for non-admin users (related)
 - CAL-002: Active learning (surfaces uncertain pairs -- complement)
+
+---
+
+## DD-004: Family Tree Floating-Face Design
+
+- **Date:** 2026-02-28
+- **Session:** 80 continuation
+- **Status:** Implemented
+
+### Problem
+
+User feedback: "Barely any of the screen is the faces." The original tree
+used landscape cards (280x110px) with small 52px circular photos positioned
+left-of-text. The cards competed with faces for visual attention. Gender
+was not indicated. No way to collapse expanded branches. Profile links from
+tree were broken (/people/ vs /person/).
+
+### Decision
+
+"Floating-face" design: faces ARE the tree, not data inside boxes.
+
+1. **Portrait cards (144x190)** with 96px photo circles top-centered
+2. **Nearly invisible card backgrounds** (25% opacity) that materialize
+   on hover with glassmorphic rise + drop shadow
+3. **Gender-coded photo rings**: blue (#60a5fa) = M, pink (#f9a8d4) = F,
+   gray (#4b5e78) = U
+4. **Photo drop shadows** for depth against dark background
+5. **Collapse/expand toggle**: expanded branches show red minus button,
+   clicking collapses that subtree
+6. **Dashed gold couple connectors** with center dot
+7. **Progressive detail**: dates/names hide at low zoom levels
+8. **Keyboard shortcuts**: +/- zoom, 0 fit-to-content
+9. **Deep background** (#080d1a) for maximum photo contrast
+
+### Alternatives Rejected
+
+- **Landscape cards with bigger photos**: Still puts data boxes first
+- **Standard visible card backgrounds**: Competes with faces for attention
+- **Branch color coding (MyHeritage style)**: Adds visual noise; gender
+  rings already provide per-person color differentiation
+
+### Research
+
+Analyzed Geni, Ancestry, MyHeritage, FamilySearch, donatso/family-chart.
+All use visible card boxes with photos as supplementary. The floating-face
+approach is differentiated: faces are 90% of visual weight, cards only
+appear on interaction. Follows 2025-2026 glassmorphism trend.
+
+### Breadcrumbs
+
+- AD-185: Original card-based tree layout
+- Session 80 feedback: docs/session_context/session-80-tree-feedback.md
+- Bug fix: /people/{id} -> /person/{id} (profile links from tree)
