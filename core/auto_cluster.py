@@ -2,7 +2,7 @@
 Two-tier auto-clustering for the Rhodesli upload pipeline.
 
 Tier 1 (distance < 0.85): Auto-add face to confirmed cluster as candidate_id.
-Tier 2 (0.85 <= distance < 1.10): Surface as Discovery suggestion for admin review.
+Tier 2 (0.85 <= distance < 1.30): Surface as Discovery suggestion for admin review.
 
 Every action is logged to data/discovery_log.json for ML signal collection.
 Threshold values validated against 982 same-person pairs:
@@ -29,7 +29,7 @@ from scipy.spatial.distance import cdist
 
 # Thresholds (AD-179)
 TIER_1_THRESHOLD = 0.85  # Auto-add: well below p25=0.88 of same-person pairs
-TIER_2_THRESHOLD = 1.10  # Suggest: covers bulk of same-person distribution
+TIER_2_THRESHOLD = 1.30  # Suggest: raised from 1.10, approved by Nolan (Session 79)
 
 _log_lock = threading.Lock()
 

@@ -4866,7 +4866,7 @@ _CONFIDENCE_LABEL = {"VERY HIGH": "Strong match", "HIGH": "Good match", "MODERAT
 _discovery_cache = None
 _discovery_cache_key = None
 
-DISCOVERY_DISTANCE_THRESHOLD = 1.05  # Distance < 1.05 catches HIGH tier + borderline (AD-172)
+DISCOVERY_DISTANCE_THRESHOLD = 1.30  # Raised from 1.05 to match Tier 2 ceiling (Session 79, Nolan approved)
 
 
 def _compute_discoveries(registry=None) -> list:
