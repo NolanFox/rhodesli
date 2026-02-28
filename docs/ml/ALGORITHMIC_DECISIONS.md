@@ -2061,8 +2061,27 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-180)
+1. Add a new entry with AD-XXX format (next: AD-183)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly
 5. Cross-reference config files that encode the decision's parameters
+
+### AD-181: Pair Compare Must Include Archive Context
+- **Date**: 2026-02-28
+- **Context**: Two-photo compare produced an isolated similarity score but did not help users bridge discoveries back into archive identities.
+- **Decision**: In `/api/compare/pair/match`, compute top archive matches for each selected face and render two archive-context sections under the pair score.
+- **Rejected**: (1) Pair-only score (no next action). (2) Automatic identity assignment from pair score alone.
+- **Why**: Rhodesli is an archive tool first; pair compare should be a discovery bridge, not a dead-end diagnostic.
+- **Affects**: `app/main.py` pair compare match handler and compare result rendering path reuse.
+- **Revisit condition**: If pair mode expands to N-photo graph compare, replace dual-section output with a unified ranked graph view.
+
+
+### AD-182: Compare Uploads Auto-Queue + Pair All-Face Summaries
+- **Date**: 2026-02-28
+- **Context**: Session 77 prompt requires compare uploads to persist and enter admin review, and pair compare to evaluate all faces across both photos plus archive context.
+- **Decision**: Automatically queue each compare upload in `pending_uploads.json` from `_save_compare_upload`; extend `/api/compare/pair/match` to publish top cross-photo face pairs and per-face archive best-hit summaries.
+- **Rejected**: (1) Manual contribute-only queueing (drops uploads when user skips CTA). (2) Selected-face-only pair output (misses additional face evidence in multi-face photos).
+- **Why**: Guarantees moderation visibility for uploads and aligns pair compare output with multi-face archive discovery goals.
+- **Affects**: `app/main.py` (`_save_compare_upload`, `_queue_compare_upload_for_review`, `/api/compare/pair/match`), `tests/test_compare.py`.
+- **Revisit condition**: If compare uploads move fully to Supabase tables, migrate queue write-path and keep JSON as fallback only.

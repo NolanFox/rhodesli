@@ -364,6 +364,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 77: Compare Rebuild Follow-up (2026-02-28) — v0.79.1
+- Added pair compare archive context: selected faces in `/compare/pair` now show top archive matches beneath pair similarity output.
+- Added all-face pair summaries (top A↔B matches and per-face archive best hits) in pair comparison output.
+- Added automatic queueing for compare uploads to admin pending review.
+- Added focused golden compare test suite in `tests/test_compare.py`.
+- Added audit log: `docs/session_logs/session_77_audit.md`.
+- AD-181 (pair-compare archive-context), AD-182 (compare uploads auto-queue).
+
 ## Session 76a: Auto-Clustering + Discoveries Redesign + Face Cards (2026-02-28) — v0.79.0
 - **Track A — Auto-clustering pipeline (AD-179)**: `core/auto_cluster.py` with two-tier thresholds (Tier 1 < 0.85, Tier 2 0.85-1.10). Best-linkage distance to confirmed clusters. Discovery log (`data/discovery_log.json`) as ML audit trail. Wired into `process_uploads.py` step 5. Backfill results: 0 Tier 1 (all close matches already confirmed), 7 Tier 2 suggestions, 652 no match. `scripts/backfill_auto_cluster.py` CLI tool.
 - **Track B — Discoveries UX redesign**: Two-tier layout on `/api/discoveries` — "Recently Auto-Added" (Tier 1) with Confirm/Undo + "Suggested Matches" (Tier 2) with Accept/Reject. Discovery log entries feed back as ML signals. Routes: `/api/discovery/confirm`, `/api/discovery/undo`. Reject route updated to log to discovery_log.
