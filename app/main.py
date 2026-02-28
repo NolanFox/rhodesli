@@ -18390,13 +18390,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
     page_style = Style("""
         html, body { margin: 0; } body { background-color: #0f172a; }
         #tree-container { width: 100%; height: calc(100vh - 200px); min-height: 500px; position: relative; }
-        #tree-container svg { background: #1e293b !important; border-radius: 0.75rem; }
-        #tree-container .card rect { fill: #1e293b !important; stroke: #334155 !important; }
-        #tree-container .card text { fill: #e2e8f0 !important; font-size: 14px !important; }
-        #tree-container .card .card-main rect { fill: #1e3a5f !important; stroke: #4f83cc !important; }
-        #tree-container .card .card-main text { fill: #ffffff !important; }
-        #tree-container path.link, #tree-container .links path { stroke: #475569 !important; }
-        #tree-container .card image { border-radius: 4px; }
+        #tree-container svg { border-radius: 0.75rem; }
         .tree-search-results { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px;
             overflow-y: auto; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem;
             box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100; }
@@ -18497,7 +18491,6 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-chart.js"),
             Script(src="/static/js/family-tree.js"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
