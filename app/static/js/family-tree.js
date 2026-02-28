@@ -15,11 +15,11 @@
     var showTheory = "true";
 
     // --- Card & layout constants ---
-    var CARD_W = 156, CARD_H = 66;
-    var PHOTO_R = 20;
+    var CARD_W = 180, CARD_H = 76;
+    var PHOTO_R = 26;
     var V_GAP = 150;          // Vertical space between generation rows
     var H_GAP = 50;           // Between family groups in same row
-    var COUPLE_GAP = 4;       // Between spouse cards
+    var COUPLE_GAP = 24;      // Between spouse cards (visible gold connector)
     var DROP_Y = 30;          // How far below couple the horizontal bar sits
     var EXPAND_R = 12;        // Expand arrow circle radius
     var COLORS = {
@@ -325,7 +325,7 @@
         Object.keys(positions).forEach(function(pid) {
             defs.append("clipPath")
                 .attr("id", "clip-" + pid.replace(/[^a-zA-Z0-9]/g, "_"))
-                .append("circle").attr("cx", 14 + PHOTO_R).attr("cy", CARD_H / 2).attr("r", PHOTO_R);
+                .append("circle").attr("cx", 12 + PHOTO_R).attr("cy", CARD_H / 2).attr("r", PHOTO_R);
         });
 
         // --- Draw connections ---
@@ -378,13 +378,13 @@
         // Circular photo
         cards.each(function(d) {
             var el = d3.select(this);
-            var cx = 14 + PHOTO_R, cy = CARD_H / 2;
+            var cx = 12 + PHOTO_R, cy = CARD_H / 2;
             var clipId = "clip-" + d.id.replace(/[^a-zA-Z0-9]/g, "_");
             var photoUrl = d.node.data.avatar || d.node.data.photo_url;
 
             if (photoUrl) {
                 el.append("image")
-                    .attr("x", 14).attr("y", cy - PHOTO_R)
+                    .attr("x", 12).attr("y", cy - PHOTO_R)
                     .attr("width", PHOTO_R * 2).attr("height", PHOTO_R * 2)
                     .attr("href", photoUrl)
                     .attr("clip-path", "url(#" + clipId + ")")
@@ -407,18 +407,18 @@
 
         // Name text
         cards.append("text")
-            .attr("x", 14 + PHOTO_R * 2 + 10).attr("y", CARD_H / 2 - 6)
+            .attr("x", 12 + PHOTO_R * 2 + 10).attr("y", CARD_H / 2 - 6)
             .attr("fill", COLORS.nameText)
             .attr("font-size", "12px").attr("font-weight", "600")
             .attr("font-family", "'Georgia', serif")
             .text(function(d) {
                 var name = ((d.node.data["first name"] || "") + " " + (d.node.data["last name"] || "")).trim();
-                return name.length > 16 ? name.substring(0, 14) + "\u2026" : name;
+                return name.length > 20 ? name.substring(0, 18) + "\u2026" : name;
             });
 
         // Lifespan text
         cards.append("text")
-            .attr("x", 14 + PHOTO_R * 2 + 10).attr("y", CARD_H / 2 + 10)
+            .attr("x", 12 + PHOTO_R * 2 + 10).attr("y", CARD_H / 2 + 10)
             .attr("fill", COLORS.dateText).attr("font-size", "10px")
             .text(function(d) { return d.node.data.lifespan || ""; });
 

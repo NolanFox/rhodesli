@@ -18491,7 +18491,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-tree.js?v=80b"),
+            Script(src="/static/js/family-tree.js?v=80c"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
                     window.initRhodesliTree('{person}', '{show_theory}');
@@ -18504,19 +18504,39 @@ def get(person: str = "", show_theory: str = "true", sess=None):
 # --- Tree API Endpoints (AD-185: Lazy loading tree) ---
 
 def _build_tree_adjacency(show_theory=True):
-    """Build adjacency maps from relationship graph for tree API."""
+    """Build adjacency maps from relationship graph for tree API.
+
+    Unifies GEDCOM xrefs with linked identity UUIDs so the graph
+    is one connected component instead of two disconnected clusters.
+    """
     rel_graph = _load_relationship_graph()
     rels = [r for r in rel_graph.get("relationships", [])
             if not r.get("removed")
             and (show_theory or r.get("confidence") != "theory")]
+
+    # Build GEDCOM xref -> identity UUID mapping to unify the graph
+    gedcom_links = _load_gedcom_face_links()
+    xref_to_uuid = {}
+    for identity_id, link_data in gedcom_links.items():
+        gid = link_data.get("gedcom_id")
+        if gid:
+            xref_to_uuid[gid] = identity_id
+
+    def resolve(pid):
+        return xref_to_uuid.get(pid, pid)
+
     ptc, ctp, pts = {}, {}, {}  # parent_to_children, child_to_parents, person_to_spouses
     for r in rels:
+        a = resolve(r["person_a"])
+        b = resolve(r["person_b"])
+        if a == b:
+            continue  # skip self-loops from merging
         if r["type"] == "parent_child":
-            ptc.setdefault(r["person_a"], set()).add(r["person_b"])
-            ctp.setdefault(r["person_b"], set()).add(r["person_a"])
+            ptc.setdefault(a, set()).add(b)
+            ctp.setdefault(b, set()).add(a)
         elif r["type"] == "spouse":
-            pts.setdefault(r["person_a"], set()).add(r["person_b"])
-            pts.setdefault(r["person_b"], set()).add(r["person_a"])
+            pts.setdefault(a, set()).add(b)
+            pts.setdefault(b, set()).add(a)
     return ptc, ctp, pts
 
 
