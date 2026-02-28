@@ -420,24 +420,39 @@ async def serve_photo(filename: str):
     )
 
 
-# IMPORTANT: Move photos route to position 0 to take precedence over
-# FastHTML's catch-all static route (/{fname:path}.{ext:static})
-for i, route in enumerate(app.routes):
-    if getattr(route, "path", None) == "/photos/{filename:path}":
-        photos_route = app.routes.pop(i)
-        app.routes.insert(0, photos_route)
-        break
-
 from starlette.staticfiles import StaticFiles
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
-# Move static route to position 1 so it takes precedence over catch-all
-for i, route in enumerate(app.routes):
-    if getattr(route, "name", None) == "static":
-        static_route = app.routes.pop(i)
-        app.routes.insert(1, static_route)
-        break
+
+def _reorder_routes_atomic():
+    """Reorder routes so path-matching routes take precedence over catch-all.
+
+    Uses atomic list slice assignment instead of pop/insert to avoid
+    race conditions when xdist workers import this module concurrently.
+    Routes with {filename:path} or {filepath:path} patterns must precede
+    FastHTML's catch-all /{fname:path}.{ext:static} route.
+    """
+    priority_paths = {
+        "/photos/{filename:path}",
+        "/admin/staging-preview/{job_id}/{filename:path}",
+        "/api/sync/staged/download/{filepath:path}",
+    }
+    priority_names = {"static"}
+
+    priority_routes = []
+    other_routes = []
+    for route in app.routes:
+        path = getattr(route, "path", None)
+        name = getattr(route, "name", None)
+        if path in priority_paths or name in priority_names:
+            priority_routes.append(route)
+        else:
+            other_routes.append(route)
+    app.routes[:] = priority_routes + other_routes
+
+
+_reorder_routes_atomic()
 
 
 
@@ -24139,11 +24154,7 @@ async def admin_staging_preview(job_id: str, filename: str, sess=None):
     return FileResponse(str(target), media_type=content_type)
 
 # Move staging preview route before FastHTML's catch-all static route
-for i, route in enumerate(app.routes):
-    if getattr(route, "path", None) == "/admin/staging-preview/{job_id}/{filename:path}":
-        _staging_route = app.routes.pop(i)
-        app.routes.insert(0, _staging_route)
-        break
+_reorder_routes_atomic()
 
 
 # =============================================================================
@@ -28831,13 +28842,7 @@ async def download_staged_file(request, filepath: str):
     )
 
 # Move staged download route before FastHTML's catch-all static route
-# (same issue as /photos/{filename:path} — the /{fname:path}.{ext:static}
-# catch-all would intercept .jpg/.png paths before our handler)
-for i, route in enumerate(app.routes):
-    if getattr(route, "path", None) == "/api/sync/staged/download/{filepath:path}":
-        _staged_route = app.routes.pop(i)
-        app.routes.insert(0, _staged_route)
-        break
+_reorder_routes_atomic()
 
 
 @rt("/api/sync/staged/clear")

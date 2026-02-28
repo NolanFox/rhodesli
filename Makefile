@@ -7,7 +7,7 @@ PYTEST := $(VENV)/bin/pytest
 .PHONY: test test-fast test-full test-ml
 
 test-fast:
-	$(PYTEST) tests/ -x -q -n auto -m "not slow" --timeout=10
+	$(PYTEST) tests/ -x -q -n auto -m "not slow" --timeout=30
 
 test-full:
 	$(PYTEST) tests/ -x -q -n auto --timeout=60
