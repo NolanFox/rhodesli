@@ -2045,11 +2045,23 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: xdist_group markers — requires annotating every affected test.
 - **Affects**: `app/main.py` (all route reordering blocks), `Makefile` (test-fast timeout)
 
+### AD-179: Two-Tier Auto-Clustering at Upload Time
+- **Date**: 2026-02-28 | **Session**: 76a
+- **Context**: 775 identities (60 CONFIRMED, 472 INBOX, 215 SKIPPED). Manual review of all unresolved faces is impractical. Within-cluster distance stats: mean=1.01, std=0.19, p5=0.70, p25=0.88. 57 duplicate face IDs exist where the same face appears in both a confirmed identity AND a separate inbox identity.
+- **Decision**: Auto-add faces to confirmed clusters when Euclidean distance < 0.85 (Tier 1). Surface as Discovery suggestion when 0.85 <= distance < 1.10 (Tier 2). Dedup pass removes inbox identities whose faces are already in confirmed clusters (exact face_id match).
+- **Thresholds**: Tier 1 = 0.85 (well below p25=0.88 of same-person pairs, near-zero FP risk), Tier 2 = 1.10 (covers bulk of same-person distribution). Validated against 982 same-person pairs: mean=1.01, std=0.19, p5=0.70, p25=0.88.
+- **Safety**: Tier 1 faces added to candidate_ids (NOT anchor_ids) with provenance="model". Admin must still confirm. All actions logged to data/discovery_log.json for threshold recalibration.
+- **Rejected**: All-suggestion model (current cluster_new_faces.py) — produces 400+ manual review items, no prioritization.
+- **Rejected**: Single threshold — doesn't capture the confidence gradient between "definitely same person" and "worth investigating".
+- **Rejected**: Auto-add to anchor_ids — violates Gatekeeper pattern (provenance="human" > provenance="model").
+- **ML Signal**: Every Discovery action logged to discovery_log.json. Schema includes face_id, distance, tier, action, user_decision fields. Enables future threshold recalibration from admin feedback.
+- **Affects**: `core/auto_cluster.py`, `scripts/backfill_auto_cluster.py`, `scripts/process_uploads.py` (new step 5)
+
 ---
 
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-179)
+1. Add a new entry with AD-XXX format (next: AD-180)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

@@ -147,7 +147,7 @@ def create_backups() -> dict:
 
 def step_backup(interactive: bool) -> dict | None:
     """Step 1: Create pre-flight backups."""
-    print_step(1, 8, "Creating pre-flight backups")
+    print_step(1, 9, "Creating pre-flight backups")
     backups = create_backups()
     if not backups:
         print("  WARNING: No data files found to back up.")
@@ -156,7 +156,7 @@ def step_backup(interactive: bool) -> dict | None:
 
 def step_download(interactive: bool) -> int:
     """Step 2: Download staged photos. Returns count downloaded."""
-    print_step(2, 8, "Downloading staged photos from production")
+    print_step(2, 9, "Downloading staged photos from production")
 
     result = run_script(
         ["scripts/download_staged.py", "--dest", str(PENDING_DIR)],
@@ -175,7 +175,7 @@ def step_download(interactive: bool) -> int:
 
 def step_ml_processing(interactive: bool) -> subprocess.CompletedProcess:
     """Step 3: Run face detection and embedding generation."""
-    print_step(3, 8, "Running face detection (ML processing)")
+    print_step(3, 9, "Running face detection (ML processing)")
 
     job_id = f"staged-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
@@ -209,7 +209,7 @@ def step_ml_processing(interactive: bool) -> subprocess.CompletedProcess:
 
 def step_grouping(interactive: bool) -> subprocess.CompletedProcess:
     """Step 4: Group similar inbox faces into clusters (actual merges)."""
-    print_step(4, 8, "Grouping similar inbox faces into clusters")
+    print_step(4, 9, "Grouping similar inbox faces into clusters")
 
     result = run_script(
         ["scripts/group_inbox_faces.py", "--execute"],
@@ -218,9 +218,25 @@ def step_grouping(interactive: bool) -> subprocess.CompletedProcess:
     return result
 
 
+def step_auto_cluster(interactive: bool) -> subprocess.CompletedProcess:
+    """Step 5: Run two-tier auto-clustering (AD-179).
+
+    Tier 1 (distance < 0.85): auto-adds face as candidate on confirmed identity.
+    Tier 2 (0.85 <= distance < 1.10): logs as suggestion for Discoveries UI.
+    Also runs dedup to remove inbox identities that duplicate confirmed faces.
+    """
+    print_step(5, 9, "Running auto-clustering (dedup + Tier 1/Tier 2)")
+
+    result = run_script(
+        ["scripts/backfill_auto_cluster.py", "--execute"],
+        "Auto-clustering",
+    )
+    return result
+
+
 def step_clustering(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 5: Run clustering dry-run. ALWAYS pauses for review."""
-    print_step(5, 8, "Running face clustering (proposals)")
+    """Step 6: Run clustering dry-run. ALWAYS pauses for review."""
+    print_step(6, 9, "Running face clustering (proposals)")
 
     result = run_script(
         ["scripts/cluster_new_faces.py", "--dry-run"],
@@ -244,8 +260,8 @@ def step_clustering(interactive: bool) -> subprocess.CompletedProcess:
 
 
 def step_upload_r2(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 6: Upload photos and crops to R2."""
-    print_step(6, 8, "Uploading photos and crops to R2")
+    """Step 7: Upload photos and crops to R2."""
+    print_step(7, 9, "Uploading photos and crops to R2")
 
     if interactive and not prompt_continue("Upload to R2?"):
         print("  Skipped R2 upload.")
@@ -259,8 +275,8 @@ def step_upload_r2(interactive: bool) -> subprocess.CompletedProcess:
 
 
 def step_push_production(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 7: Push updated data to production."""
-    print_step(7, 8, "Pushing data to production")
+    """Step 8: Push updated data to production."""
+    print_step(8, 9, "Pushing data to production")
 
     if interactive and not prompt_continue("Push data to production?"):
         print("  Skipped production push.")
@@ -274,8 +290,8 @@ def step_push_production(interactive: bool) -> subprocess.CompletedProcess:
 
 
 def step_clear_staging(interactive: bool) -> subprocess.CompletedProcess:
-    """Step 8: Clear staging on production."""
-    print_step(8, 8, "Clearing staging on production")
+    """Step 9: Clear staging on production."""
+    print_step(9, 9, "Clearing staging on production")
 
     result = run_script(
         ["scripts/download_staged.py", "--clear-after", "--dest", str(PENDING_DIR)],
@@ -316,7 +332,7 @@ def main():
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Download + ML + grouping + clustering preview only (steps 1-5, no upload/push)",
+        help="Download + ML + grouping + auto-cluster + clustering preview only (steps 1-6, no upload/push)",
     )
     parser.add_argument(
         "--auto",
@@ -370,7 +386,12 @@ def main():
     if result.returncode != 0:
         print("\n  WARNING: Inbox grouping failed (non-fatal, continuing).")
 
-    # Step 5: Clustering (ALWAYS pauses for review, even in --auto)
+    # Step 5: Auto-clustering (dedup + Tier 1/Tier 2, AD-179)
+    result = step_auto_cluster(interactive)
+    if result.returncode != 0:
+        print("\n  WARNING: Auto-clustering failed (non-fatal, continuing).")
+
+    # Step 6: Clustering (ALWAYS pauses for review, even in --auto)
     result = step_clustering(interactive)
     if result.returncode != 0:
         print("\n  FAILED: Clustering failed.")
@@ -389,24 +410,25 @@ def main():
         print("    python scripts/process_uploads.py")
         print()
         print("  Or run remaining steps manually:")
+        print("    python scripts/backfill_auto_cluster.py --execute")
         print("    python scripts/upload_to_r2.py --execute")
         print("    python scripts/push_to_production.py")
         print("    python scripts/download_staged.py --clear-after")
         sys.exit(0)
 
-    # Step 5: Upload to R2
+    # Step 7: Upload to R2
     result = step_upload_r2(interactive)
     if result.returncode != 0:
         print("\n  WARNING: R2 upload failed or was skipped.")
         print("  You can retry: python scripts/upload_to_r2.py --execute")
 
-    # Step 6: Push to production
+    # Step 8: Push to production
     result = step_push_production(interactive)
     if result.returncode != 0:
         print("\n  WARNING: Production push failed or was skipped.")
         print("  You can retry: python scripts/push_to_production.py")
 
-    # Step 7: Clear staging
+    # Step 9: Clear staging
     step_clear_staging(interactive)
 
     # Summary
