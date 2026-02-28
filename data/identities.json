@@ -6725,10 +6725,20 @@
       "metadata": {}
     },
     "5ad32dd1-673e-4ae7-8437-6e1fe615cda2": {
-      "identity_id": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2",
-      "name": "Unidentified Person 033",
-      "state": "SKIPPED",
+      "name": "Regina Reina Israel Capeluto",
+      "state": "CONFIRMED",
+      "metadata": {},
+      "last_name": "Capeluto",
       "anchor_ids": [],
+      "created_at": "2026-02-01T21:29:26.547176+00:00",
+      "first_name": "Regina Reina Israel",
+      "updated_at": "2026-02-23T17:36:09.059746+00:00",
+      "version_id": 13,
+      "identity_id": "5ad32dd1-673e-4ae7-8437-6e1fe615cda2",
+      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
+      "negative_ids": [
+        "identity:925904af-af2c-49af-a721-e4b74a312182"
+      ],
       "candidate_ids": [
         "Image 936_compress:face0",
         "Image 948_compress:face0",
@@ -6738,51 +6748,43 @@
         "Image 975_compress:face0",
         "Image 932_compress:face0"
       ],
-      "negative_ids": [
-        "identity:925904af-af2c-49af-a721-e4b74a312182"
-      ],
-      "version_id": 11,
-      "created_at": "2026-02-01T21:29:26.547176+00:00",
-      "updated_at": "2026-02-11T06:22:25.119988+00:00",
-      "promoted_from": "SKIPPED",
-      "promoted_at": "2026-02-11T05:10:27.193326+00:00",
-      "promotion_reason": "group_discovery",
       "merge_history": [
         {
-          "merge_event_id": "83d86802-ab04-4000-9598-aa5daa239683",
-          "timestamp": "2026-02-11T05:10:27.195420+00:00",
+          "merged_by": "batch_grouping",
           "source_id": "1e559d44-62aa-4d63-a673-d8abd00e2112",
-          "source_name": "Unidentified Person 034",
-          "source_state": "INBOX",
-          "source_snapshot": {
-            "anchor_ids": [],
-            "candidate_ids": [
-              "Image 932_compress:face0"
-            ],
-            "negative_ids": [],
-            "name": "Unidentified Person 034",
-            "state": "INBOX",
-            "first_name": "",
-            "last_name": ""
-          },
-          "target_snapshot_before": {
-            "anchor_count": 0,
-            "candidate_count": 6,
-            "name": "Unidentified Person 033",
-            "state": "INBOX"
-          },
+          "timestamp": "2026-02-11T05:10:27.195420+00:00",
           "faces_added": {
             "anchors": [],
+            "negatives": [],
             "candidates": [
               "Image 932_compress:face0"
-            ],
-            "negatives": []
+            ]
           },
-          "direction_auto_corrected": false,
-          "merged_by": "batch_grouping"
+          "source_name": "Unidentified Person 034",
+          "source_state": "INBOX",
+          "merge_event_id": "83d86802-ab04-4000-9598-aa5daa239683",
+          "source_snapshot": {
+            "name": "Unidentified Person 034",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": [
+              "Image 932_compress:face0"
+            ]
+          },
+          "target_snapshot_before": {
+            "name": "Unidentified Person 033",
+            "state": "INBOX",
+            "anchor_count": 0,
+            "candidate_count": 6
+          },
+          "direction_auto_corrected": false
         }
       ],
-      "metadata": {}
+      "promoted_from": "SKIPPED",
+      "promotion_reason": "group_discovery"
     },
     "083f9f5f-1aa2-49cc-92f0-3aaba6e74304": {
       "identity_id": "083f9f5f-1aa2-49cc-92f0-3aaba6e74304",
@@ -15581,88 +15583,98 @@
       "metadata": {}
     },
     "64096284-ace8-4790-aebb-a82ff1f288a5": {
-      "identity_id": "64096284-ace8-4790-aebb-a82ff1f288a5",
-      "name": "Unidentified Person 667",
-      "state": "INBOX",
+      "name": "Netanel Menashe",
+      "state": "CONFIRMED",
+      "metadata": {},
+      "last_name": "Menashe",
       "anchor_ids": [
         "inbox_04a426269905"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
+      "birth_year": 1898,
       "created_at": "2026-02-14T14:50:49.079764+00:00",
-      "updated_at": "2026-02-14T14:50:49.079764+00:00",
+      "death_year": 1983,
+      "first_name": "Netanel",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
+        "source": "inbox_ingest",
         "filename": "sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n.jpg",
         "ingested_at": "2026-02-14T14:50:49.079729+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "updated_at": "2026-02-27T04:24:14.566675+00:00",
+      "version_id": 5,
+      "identity_id": "64096284-ace8-4790-aebb-a82ff1f288a5",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "10e6bb34-cff6-4697-8a01-03571d15beb7": {
-      "identity_id": "10e6bb34-cff6-4697-8a01-03571d15beb7",
-      "name": "Unidentified Person 668",
-      "state": "INBOX",
+      "name": "Rachel Amato Menashe",
+      "state": "CONFIRMED",
+      "metadata": {},
+      "last_name": "Menashe",
       "anchor_ids": [
         "inbox_797c4dc7f1f2"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-02-14T14:50:49.079799+00:00",
-      "updated_at": "2026-02-14T14:50:49.079799+00:00",
+      "first_name": "Rachel Amato",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
+        "source": "inbox_ingest",
         "filename": "sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n.jpg",
         "ingested_at": "2026-02-14T14:50:49.079790+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "updated_at": "2026-02-27T01:43:37.651531+00:00",
+      "version_id": 3,
+      "identity_id": "10e6bb34-cff6-4697-8a01-03571d15beb7",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "3cb17d23-10a2-4410-9e14-30da4487a80c": {
-      "identity_id": "3cb17d23-10a2-4410-9e14-30da4487a80c",
-      "name": "Unidentified Person 669",
-      "state": "INBOX",
+      "name": "Rica Sharhon Amato",
+      "state": "CONFIRMED",
+      "metadata": {},
+      "last_name": "Amato",
       "anchor_ids": [
         "inbox_881c37479192"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-02-14T14:50:49.079822+00:00",
-      "updated_at": "2026-02-14T14:50:49.079822+00:00",
+      "first_name": "Rica Sharhon",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
+        "source": "inbox_ingest",
         "filename": "sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n.jpg",
         "ingested_at": "2026-02-14T14:50:49.079814+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "updated_at": "2026-02-27T01:44:44.451873+00:00",
+      "version_id": 3,
+      "identity_id": "3cb17d23-10a2-4410-9e14-30da4487a80c",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "b1525892-5608-4033-bc8c-28db79b50875": {
-      "identity_id": "b1525892-5608-4033-bc8c-28db79b50875",
-      "name": "Unidentified Person 670",
-      "state": "INBOX",
+      "name": "Solomon Menashe",
+      "state": "CONFIRMED",
+      "metadata": {},
+      "last_name": "Menashe",
       "anchor_ids": [
         "inbox_1c95d96e1452"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-02-14T14:50:49.079844+00:00",
-      "updated_at": "2026-02-14T14:50:49.079844+00:00",
+      "first_name": "Solomon",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
+        "source": "inbox_ingest",
         "filename": "sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n.jpg",
         "ingested_at": "2026-02-14T14:50:49.079837+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "updated_at": "2026-02-27T01:45:36.133890+00:00",
+      "version_id": 3,
+      "identity_id": "b1525892-5608-4033-bc8c-28db79b50875",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "4312f272-6c0b-4715-bfe7-7a0df5eef69c": {
       "identity_id": "4312f272-6c0b-4715-bfe7-7a0df5eef69c",
