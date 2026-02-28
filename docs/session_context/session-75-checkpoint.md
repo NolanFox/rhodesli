@@ -2,7 +2,7 @@
 Started: 2026-02-27
 ## Phase Status
 - [x] Phase 0: Orient
-- [ ] Phase 1: Git state cleanup
+- [x] Phase 1: Git state cleanup — reverted 9000+ lines of key-reorder noise, preserved 5 identity renames + 4 annotations
 - [ ] Phase 2: Relationship data merge
 - [ ] Phase 3: GEDCOM date parser
 - [ ] Phase 4: Junk cleanup
@@ -16,4 +16,4 @@ Started: 2026-02-27
 ## Notes
 - Pre-Gemini commit: ab18ae6
 - Next AD entry: AD-175
-- 8004 lines in relationships.json (~1000 GEDCOM relationships)
+- Serial tests: 3115 passed, xdist has 13 race condition failures
