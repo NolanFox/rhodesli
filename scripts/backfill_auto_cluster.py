@@ -136,15 +136,31 @@ def main():
 
     # Dedup results
     dedup = results["dedup_results"]
-    print(f"\n1. DEDUP PASS: {len(dedup)} duplicate inbox identities")
-    if dedup:
+    full_dups = dedup["full_duplicates"]
+    partial_dups = dedup["partial_duplicates"]
+    print(f"\n1. DEDUP PASS: {len(full_dups)} full duplicates, "
+          f"{len(partial_dups)} partial duplicates, "
+          f"{dedup['total_face_dups']} total face dups")
+    if full_dups:
         print("-" * 60)
-        for inbox_id, conf_id, shared in dedup[:20]:
+        print("  Full duplicates (inbox merged into confirmed):")
+        for inbox_id, conf_id, shared in full_dups[:20]:
             inbox_name = identities.get(inbox_id, {}).get("name", "?")
             conf_name = identities.get(conf_id, {}).get("name", "?")
-            print(f"  {inbox_name} -> {conf_name} ({len(shared)} shared faces)")
-        if len(dedup) > 20:
-            print(f"  ... and {len(dedup) - 20} more")
+            print(f"    {inbox_name} -> {conf_name} ({len(shared)} shared faces)")
+        if len(full_dups) > 20:
+            print(f"    ... and {len(full_dups) - 20} more")
+    if partial_dups:
+        print("-" * 60)
+        print("  Partial duplicates:")
+        for p in partial_dups[:20]:
+            inbox_name = identities.get(p["inbox_id"], {}).get("name", "?")
+            action = p["action"]
+            n_shared = len(p["shared_faces"])
+            n_unshared = len(p["unshared_faces"])
+            print(f"    {inbox_name}: {n_shared} shared, {n_unshared} unique — {action}")
+        if len(partial_dups) > 20:
+            print(f"    ... and {len(partial_dups) - 20} more")
 
     # Tier 1 results
     t1 = results["tier_1_results"]

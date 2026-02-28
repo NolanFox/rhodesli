@@ -133,15 +133,25 @@ def dedup_inbox(identities_data, dry_run=True):
     """
     Find and remove inbox identities whose faces are already in confirmed clusters.
 
-    An inbox identity is a duplicate if ALL of its face_ids also appear
-    in a confirmed identity's anchor_ids or candidate_ids.
+    Per-face dedup logic (AD-179, improved Session 78):
+
+    1. **Full duplicate**: ALL faces of an inbox identity exist in a SINGLE
+       confirmed identity -> merge inbox identity into confirmed.
+    2. **Partial duplicate, single target**: SOME faces exist in ONE confirmed
+       identity -> remove duplicate face_ids from inbox identity.
+    3. **Partial duplicate, multi-target**: faces exist in DIFFERENT confirmed
+       identities -> log for admin review (ambiguous, no auto-action).
 
     Args:
         identities_data: The full identities.json data dict
-        dry_run: If True, only report; if False, mark duplicates as merged
+        dry_run: If True, only report; if False, apply dedup actions
 
     Returns:
-        list of (inbox_identity_id, confirmed_identity_id, shared_face_ids)
+        dict with keys:
+            - full_duplicates: list of (inbox_id, confirmed_id, shared_face_ids)
+            - partial_duplicates: list of dicts with keys:
+                inbox_id, confirmed_targets, shared_faces, unshared_faces, action
+            - total_face_dups: int count of individual face_id duplicates found
     """
     identities = identities_data.get("identities", {})
 
@@ -155,8 +165,10 @@ def dedup_inbox(identities_data, dry_run=True):
         for fid in _extract_face_ids(identity):
             confirmed_face_lookup[fid] = identity_id
 
-    # Find inbox duplicates
-    duplicates = []
+    full_duplicates = []
+    partial_duplicates = []
+    total_face_dups = 0
+
     for identity_id, identity in list(identities.items()):
         if identity.get("state") not in ("INBOX", "PROPOSED", "SKIPPED"):
             continue
@@ -169,16 +181,23 @@ def dedup_inbox(identities_data, dry_run=True):
 
         # Check which faces are already in confirmed identities
         shared = []
-        confirmed_targets = set()
+        confirmed_targets = {}  # confirmed_id -> list of shared face_ids
         for fid in face_ids:
             if fid in confirmed_face_lookup:
                 shared.append(fid)
-                confirmed_targets.add(confirmed_face_lookup[fid])
+                target = confirmed_face_lookup[fid]
+                confirmed_targets.setdefault(target, []).append(fid)
 
-        # Only dedup if ALL faces are already in confirmed clusters
-        if shared and len(shared) == len(face_ids) and len(confirmed_targets) == 1:
-            target_id = confirmed_targets.pop()
-            duplicates.append((identity_id, target_id, shared))
+        if not shared:
+            continue
+
+        total_face_dups += len(shared)
+        unshared = [fid for fid in face_ids if fid not in confirmed_face_lookup]
+
+        if len(shared) == len(face_ids) and len(confirmed_targets) == 1:
+            # Case 1: Full duplicate — all faces belong to one confirmed identity
+            target_id = next(iter(confirmed_targets))
+            full_duplicates.append((identity_id, target_id, shared))
 
             if not dry_run:
                 now = datetime.now(timezone.utc).isoformat()
@@ -186,7 +205,64 @@ def dedup_inbox(identities_data, dry_run=True):
                 identity["version_id"] = identity.get("version_id", 1) + 1
                 identity["updated_at"] = now
 
-    return duplicates
+        elif len(confirmed_targets) == 1:
+            # Case 2: Partial duplicate, single target — some faces in one confirmed
+            target_id = next(iter(confirmed_targets))
+            partial_duplicates.append({
+                "inbox_id": identity_id,
+                "confirmed_targets": {target_id: confirmed_targets[target_id]},
+                "shared_faces": shared,
+                "unshared_faces": unshared,
+                "action": "remove_duplicate_faces",
+            })
+
+            if not dry_run:
+                now = datetime.now(timezone.utc).isoformat()
+                _remove_face_ids_from_identity(identity, shared)
+                identity["version_id"] = identity.get("version_id", 1) + 1
+                identity["updated_at"] = now
+
+        else:
+            # Case 3: Partial duplicate, multiple targets — ambiguous
+            partial_duplicates.append({
+                "inbox_id": identity_id,
+                "confirmed_targets": dict(confirmed_targets),
+                "shared_faces": shared,
+                "unshared_faces": unshared,
+                "action": "review_needed",
+            })
+
+    return {
+        "full_duplicates": full_duplicates,
+        "partial_duplicates": partial_duplicates,
+        "total_face_dups": total_face_dups,
+    }
+
+
+def _remove_face_ids_from_identity(identity, face_ids_to_remove):
+    """Remove specific face_ids from an identity's anchor_ids and candidate_ids.
+
+    Handles both string and dict anchor formats.
+    """
+    remove_set = set(face_ids_to_remove)
+
+    # Filter anchor_ids
+    new_anchors = []
+    for anchor in identity.get("anchor_ids", []):
+        if isinstance(anchor, str):
+            if anchor not in remove_set:
+                new_anchors.append(anchor)
+        elif isinstance(anchor, dict):
+            if anchor.get("face_id") not in remove_set:
+                new_anchors.append(anchor)
+    identity["anchor_ids"] = new_anchors
+
+    # Filter candidate_ids
+    new_candidates = [
+        fid for fid in identity.get("candidate_ids", [])
+        if fid not in remove_set
+    ]
+    identity["candidate_ids"] = new_candidates
 
 
 def build_confirmed_clusters(identities_data, face_data):
@@ -248,7 +324,8 @@ def run_backfill(identities_data, face_data, log_path="data/discovery_log.json",
 
     Returns:
         dict with keys:
-            - dedup_results: list of (inbox_id, confirmed_id, shared_faces)
+            - dedup_results: dict from dedup_inbox() with full_duplicates,
+              partial_duplicates, total_face_dups
             - tier_1_results: list of dicts
             - tier_2_results: list of dicts
             - no_match_count: int
@@ -257,11 +334,13 @@ def run_backfill(identities_data, face_data, log_path="data/discovery_log.json",
     identities = identities_data.get("identities", {})
     now = datetime.now(timezone.utc).isoformat()
 
-    # Pass 1: Dedup
-    dedup_results = dedup_inbox(identities_data, dry_run=dry_run)
+    # Pass 1: Dedup (per-face)
+    dedup_result = dedup_inbox(identities_data, dry_run=dry_run)
+    full_duplicates = dedup_result["full_duplicates"]
+    partial_duplicates = dedup_result["partial_duplicates"]
 
-    # Log dedup results
-    for inbox_id, confirmed_id, shared_faces in dedup_results:
+    # Log full dedup results
+    for inbox_id, confirmed_id, shared_faces in full_duplicates:
         inbox_identity = identities.get(inbox_id, {})
         confirmed_identity = identities.get(confirmed_id, {})
         log_discovery({
@@ -278,13 +357,32 @@ def run_backfill(identities_data, face_data, log_path="data/discovery_log.json",
             "user_decision_timestamp": None,
         }, log_path=log_path)
 
+    # Log partial dedup results
+    for partial in partial_duplicates:
+        inbox_identity = identities.get(partial["inbox_id"], {})
+        for target_id, shared_faces in partial["confirmed_targets"].items():
+            confirmed_identity = identities.get(target_id, {})
+            log_discovery({
+                "face_id": shared_faces[0] if shared_faces else "unknown",
+                "source_identity_id": partial["inbox_id"],
+                "source_identity_name": inbox_identity.get("name", "Unknown"),
+                "target_identity_id": target_id,
+                "target_identity_name": confirmed_identity.get("name", "Unknown"),
+                "distance": 0.0,
+                "tier": 0,
+                "action": f"partial_dedup_{partial['action']}",
+                "timestamp": now,
+                "user_decision": None,
+                "user_decision_timestamp": None,
+            }, log_path=log_path)
+
     # Pass 2: Distance-based clustering
     # Build confirmed clusters (after dedup)
     confirmed_clusters = build_confirmed_clusters(identities_data, face_data)
 
     if not confirmed_clusters:
         return {
-            "dedup_results": dedup_results,
+            "dedup_results": dedup_result,
             "tier_1_results": [],
             "tier_2_results": [],
             "no_match_count": 0,
@@ -389,7 +487,7 @@ def run_backfill(identities_data, face_data, log_path="data/discovery_log.json",
                 no_match_count += 1
 
     return {
-        "dedup_results": dedup_results,
+        "dedup_results": dedup_result,
         "tier_1_results": tier_1_results,
         "tier_2_results": tier_2_results,
         "no_match_count": no_match_count,

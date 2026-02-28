@@ -207,10 +207,10 @@ class TestAutoClusterFace:
 
 
 class TestDedupInbox:
-    """Tests for dedup_inbox() — exact face_id deduplication."""
+    """Tests for dedup_inbox() — per-face deduplication (Session 78)."""
 
-    def test_finds_exact_duplicates(self):
-        """Inbox identity with same face_id as confirmed should be detected."""
+    def test_finds_full_duplicates(self):
+        """Inbox identity with all face_ids in one confirmed should be full dup."""
         from core.auto_cluster import dedup_inbox
 
         identities_data = _make_identities_data(
@@ -218,13 +218,14 @@ class TestDedupInbox:
             inbox=[("inbox-1", "Unidentified 1", ["face_a"])],
         )
 
-        results = dedup_inbox(identities_data, dry_run=True)
+        result = dedup_inbox(identities_data, dry_run=True)
 
-        assert len(results) == 1
-        inbox_id, conf_id, shared = results[0]
+        assert len(result["full_duplicates"]) == 1
+        inbox_id, conf_id, shared = result["full_duplicates"][0]
         assert inbox_id == "inbox-1"
         assert conf_id == "conf-1"
         assert "face_a" in shared
+        assert result["total_face_dups"] == 1
 
     def test_no_duplicates_when_different_faces(self):
         """Inbox with unique faces should not be flagged as duplicate."""
@@ -235,11 +236,13 @@ class TestDedupInbox:
             inbox=[("inbox-1", "Unidentified 1", ["face_x"])],
         )
 
-        results = dedup_inbox(identities_data, dry_run=True)
-        assert len(results) == 0
+        result = dedup_inbox(identities_data, dry_run=True)
+        assert len(result["full_duplicates"]) == 0
+        assert len(result["partial_duplicates"]) == 0
+        assert result["total_face_dups"] == 0
 
-    def test_partial_overlap_not_deduped(self):
-        """Inbox with only some faces in confirmed should NOT be deduped."""
+    def test_partial_overlap_single_target_detected(self):
+        """Inbox with some faces in one confirmed should be partial dup."""
         from core.auto_cluster import dedup_inbox
 
         identities_data = _make_identities_data(
@@ -247,9 +250,54 @@ class TestDedupInbox:
             inbox=[("inbox-1", "Unidentified 1", ["face_a", "face_x"])],
         )
 
-        results = dedup_inbox(identities_data, dry_run=True)
-        # face_x is NOT in confirmed, so this is not a full duplicate
-        assert len(results) == 0
+        result = dedup_inbox(identities_data, dry_run=True)
+        # Not a full duplicate (face_x is unique)
+        assert len(result["full_duplicates"]) == 0
+        # But should be detected as partial duplicate
+        assert len(result["partial_duplicates"]) == 1
+        partial = result["partial_duplicates"][0]
+        assert partial["inbox_id"] == "inbox-1"
+        assert partial["action"] == "remove_duplicate_faces"
+        assert "face_a" in partial["shared_faces"]
+        assert "face_x" in partial["unshared_faces"]
+        assert result["total_face_dups"] == 1
+
+    def test_partial_overlap_multi_target_review_needed(self):
+        """Faces in DIFFERENT confirmed identities should need review."""
+        from core.auto_cluster import dedup_inbox
+
+        identities_data = _make_identities_data(
+            confirmed=[
+                ("conf-1", "Person A", ["face_a"]),
+                ("conf-2", "Person B", ["face_b"]),
+            ],
+            inbox=[("inbox-1", "Unidentified", ["face_a", "face_b", "face_x"])],
+        )
+
+        result = dedup_inbox(identities_data, dry_run=True)
+        assert len(result["full_duplicates"]) == 0
+        assert len(result["partial_duplicates"]) == 1
+        partial = result["partial_duplicates"][0]
+        assert partial["action"] == "review_needed"
+        assert result["total_face_dups"] == 2
+
+    def test_all_faces_multi_target_review_needed(self):
+        """ALL faces belonging to DIFFERENT confirmed identities => review."""
+        from core.auto_cluster import dedup_inbox
+
+        identities_data = _make_identities_data(
+            confirmed=[
+                ("conf-1", "Person A", ["face_a"]),
+                ("conf-2", "Person B", ["face_b"]),
+            ],
+            inbox=[("inbox-1", "Unidentified", ["face_a", "face_b"])],
+        )
+
+        result = dedup_inbox(identities_data, dry_run=True)
+        # All faces are dups, but to different confirmed identities
+        assert len(result["full_duplicates"]) == 0
+        assert len(result["partial_duplicates"]) == 1
+        assert result["partial_duplicates"][0]["action"] == "review_needed"
 
     def test_dry_run_does_not_modify(self):
         """Dry run should not modify the identities data."""
@@ -265,8 +313,23 @@ class TestDedupInbox:
         # Identity should NOT be marked as merged
         assert "merged_into" not in identities_data["identities"]["inbox-1"]
 
-    def test_execute_marks_merged(self):
-        """Execute mode should mark duplicate as merged_into."""
+    def test_dry_run_partial_does_not_modify(self):
+        """Dry run should not remove faces from partial duplicates."""
+        from core.auto_cluster import dedup_inbox
+
+        identities_data = _make_identities_data(
+            confirmed=[("conf-1", "Big Leon", ["face_a"])],
+            inbox=[("inbox-1", "Unidentified 1", ["face_a", "face_x"])],
+        )
+
+        dedup_inbox(identities_data, dry_run=True)
+
+        inbox = identities_data["identities"]["inbox-1"]
+        # face_a should still be present (dry_run)
+        assert "face_a" in inbox["anchor_ids"]
+
+    def test_execute_marks_full_dup_merged(self):
+        """Execute mode should mark full duplicate as merged_into."""
         from core.auto_cluster import dedup_inbox
 
         identities_data = _make_identities_data(
@@ -280,6 +343,43 @@ class TestDedupInbox:
         assert inbox["merged_into"] == "conf-1"
         assert inbox["version_id"] == 2
 
+    def test_execute_removes_partial_dup_faces(self):
+        """Execute mode should remove duplicate faces from partial dup."""
+        from core.auto_cluster import dedup_inbox
+
+        identities_data = _make_identities_data(
+            confirmed=[("conf-1", "Big Leon", ["face_a"])],
+            inbox=[("inbox-1", "Unidentified 1", ["face_a", "face_x"])],
+        )
+
+        result = dedup_inbox(identities_data, dry_run=False)
+
+        inbox = identities_data["identities"]["inbox-1"]
+        # face_a should be removed, face_x should remain
+        assert "face_a" not in inbox["anchor_ids"]
+        assert "face_x" in inbox["anchor_ids"]
+        assert inbox["version_id"] == 2
+        assert "merged_into" not in inbox  # Not fully merged
+
+    def test_execute_partial_multi_target_no_action(self):
+        """Execute mode should NOT modify multi-target partial dups."""
+        from core.auto_cluster import dedup_inbox
+
+        identities_data = _make_identities_data(
+            confirmed=[
+                ("conf-1", "Person A", ["face_a"]),
+                ("conf-2", "Person B", ["face_b"]),
+            ],
+            inbox=[("inbox-1", "Unidentified", ["face_a", "face_b", "face_x"])],
+        )
+
+        dedup_inbox(identities_data, dry_run=False)
+
+        inbox = identities_data["identities"]["inbox-1"]
+        # Multi-target review_needed should not be auto-modified
+        assert "face_a" in inbox["anchor_ids"]
+        assert "face_b" in inbox["anchor_ids"]
+
     def test_skips_already_merged(self):
         """Already-merged identities should be skipped."""
         from core.auto_cluster import dedup_inbox
@@ -290,24 +390,23 @@ class TestDedupInbox:
         )
         identities_data["identities"]["inbox-1"]["merged_into"] = "conf-1"
 
-        results = dedup_inbox(identities_data, dry_run=True)
-        assert len(results) == 0
+        result = dedup_inbox(identities_data, dry_run=True)
+        assert len(result["full_duplicates"]) == 0
+        assert len(result["partial_duplicates"]) == 0
 
-    def test_multiple_confirmed_targets_not_deduped(self):
-        """If faces belong to DIFFERENT confirmed identities, don't dedup."""
+    def test_handles_candidate_ids_dedup(self):
+        """Face in confirmed candidate_ids should also be detected."""
         from core.auto_cluster import dedup_inbox
 
         identities_data = _make_identities_data(
-            confirmed=[
-                ("conf-1", "Person A", ["face_a"]),
-                ("conf-2", "Person B", ["face_b"]),
-            ],
-            inbox=[("inbox-1", "Unidentified", ["face_a", "face_b"])],
+            confirmed=[("conf-1", "Big Leon", [])],
+            inbox=[("inbox-1", "Unidentified", ["face_a"])],
         )
+        # Add face_a as candidate on confirmed identity
+        identities_data["identities"]["conf-1"]["candidate_ids"] = ["face_a"]
 
-        results = dedup_inbox(identities_data, dry_run=True)
-        # Faces belong to 2 different confirmed identities — ambiguous
-        assert len(results) == 0
+        result = dedup_inbox(identities_data, dry_run=True)
+        assert len(result["full_duplicates"]) == 1
 
 
 class TestBuildConfirmedClusters:
@@ -628,7 +727,7 @@ class TestRunBackfill:
                 identities_data, face_data, log_path=log_path, dry_run=True
             )
 
-        assert len(results["dedup_results"]) == 1
+        assert len(results["dedup_results"]["full_duplicates"]) == 1
         assert results["total_processed"] >= 1
 
     def test_discovery_log_written(self):
@@ -800,3 +899,77 @@ class TestExtractFaceIds:
         identity = {}
         result = _extract_face_ids(identity)
         assert result == []
+
+
+class TestRemoveFaceIdsFromIdentity:
+    """Tests for _remove_face_ids_from_identity helper (Session 78)."""
+
+    def test_removes_string_anchors(self):
+        """Should remove matching string anchor_ids."""
+        from core.auto_cluster import _remove_face_ids_from_identity
+
+        identity = {
+            "anchor_ids": ["face_a", "face_b", "face_c"],
+            "candidate_ids": [],
+        }
+        _remove_face_ids_from_identity(identity, ["face_a", "face_c"])
+        assert identity["anchor_ids"] == ["face_b"]
+
+    def test_removes_dict_anchors(self):
+        """Should remove matching dict-format anchor_ids."""
+        from core.auto_cluster import _remove_face_ids_from_identity
+
+        identity = {
+            "anchor_ids": [
+                {"face_id": "face_a", "provenance": "human"},
+                {"face_id": "face_b", "provenance": "model"},
+            ],
+            "candidate_ids": [],
+        }
+        _remove_face_ids_from_identity(identity, ["face_a"])
+        assert len(identity["anchor_ids"]) == 1
+        assert identity["anchor_ids"][0]["face_id"] == "face_b"
+
+    def test_removes_candidate_ids(self):
+        """Should remove matching candidate_ids."""
+        from core.auto_cluster import _remove_face_ids_from_identity
+
+        identity = {
+            "anchor_ids": [],
+            "candidate_ids": ["face_a", "face_b"],
+        }
+        _remove_face_ids_from_identity(identity, ["face_a"])
+        assert identity["candidate_ids"] == ["face_b"]
+
+    def test_removes_from_both_lists(self):
+        """Should remove from both anchors and candidates."""
+        from core.auto_cluster import _remove_face_ids_from_identity
+
+        identity = {
+            "anchor_ids": ["face_a"],
+            "candidate_ids": ["face_b"],
+        }
+        _remove_face_ids_from_identity(identity, ["face_a", "face_b"])
+        assert identity["anchor_ids"] == []
+        assert identity["candidate_ids"] == []
+
+    def test_no_op_when_no_matches(self):
+        """Should not modify identity when no faces match."""
+        from core.auto_cluster import _remove_face_ids_from_identity
+
+        identity = {
+            "anchor_ids": ["face_a"],
+            "candidate_ids": ["face_b"],
+        }
+        _remove_face_ids_from_identity(identity, ["face_z"])
+        assert identity["anchor_ids"] == ["face_a"]
+        assert identity["candidate_ids"] == ["face_b"]
+
+    def test_handles_missing_keys(self):
+        """Should handle identity with missing keys gracefully."""
+        from core.auto_cluster import _remove_face_ids_from_identity
+
+        identity = {}
+        _remove_face_ids_from_identity(identity, ["face_a"])
+        assert identity["anchor_ids"] == []
+        assert identity["candidate_ids"] == []
