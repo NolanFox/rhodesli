@@ -364,6 +364,13 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 76a: Auto-Clustering + Discoveries Redesign + Face Cards (2026-02-28) — v0.79.0
+- **Track A — Auto-clustering pipeline (AD-179)**: `core/auto_cluster.py` with two-tier thresholds (Tier 1 < 0.85, Tier 2 0.85-1.10). Best-linkage distance to confirmed clusters. Discovery log (`data/discovery_log.json`) as ML audit trail. Wired into `process_uploads.py` step 5. Backfill results: 0 Tier 1 (all close matches already confirmed), 7 Tier 2 suggestions, 652 no match. `scripts/backfill_auto_cluster.py` CLI tool.
+- **Track B — Discoveries UX redesign**: Two-tier layout on `/api/discoveries` — "Recently Auto-Added" (Tier 1) with Confirm/Undo + "Suggested Matches" (Tier 2) with Accept/Reject. Discovery log entries feed back as ML signals. Routes: `/api/discovery/confirm`, `/api/discovery/undo`. Reject route updated to log to discovery_log.
+- **Track C — Browse card face sizing**: Face-dominant cards with min-h-[150px] sm:min-h-[200px]. Secondary actions behind hover overlay. Neighbor thumbnails 64→80px.
+- **Data investigation**: Within-cluster distances mean=1.01, std=0.19, p5=0.70, p25=0.88. 57 duplicate face IDs across confirmed/inbox. Non-duplicate inbox-to-Big-Leon: 1.13+, inbox-to-Nace: 1.18+.
+- 2 parallel worktree subagents (Tracks A, C). AD-179. 15 new tests + 4 regression fixes. ~3742 total (3205 app + 537 ML).
+
 ## Session 75: Post-Gemini Cleanup + Tree Upgrade (2026-02-28) — v0.78.0
 - **Data integrity**: Reverted 9,000+ lines of key-reorder noise. Preserved 5 identity renames + 4 annotations. Restored 19 UUID relationships, merged with 1,000 GEDCOM-xref (1,019 total).
 - **GEDCOM date parser**: Regex `parse_gedcom_year()` replaces broken `[:4]` slice. "21 SEP 1887" → "1887" (was "21 S"). Handles ABT/AFT/BEF/BET qualifiers. AD-175.
@@ -514,6 +521,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.79.0 | 2026-02-28 | 76a | 3205+537 |
 | v0.78.0 | 2026-02-28 | 75 | 2176+977 |
 | v0.77.1 | 2026-02-27 | 73 | 2166+1014 |
 | v0.77.0 | 2026-02-27 | 72 | 2166+1014 |

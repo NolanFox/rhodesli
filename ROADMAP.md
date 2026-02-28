@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.78.0 · ~3216 tests · 274 photos · 775 identities · 60 confirmed
+Current: v0.79.0 · ~3742 tests · 274 photos · 775 identities · 60 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -15,6 +15,7 @@ Current: v0.78.0 · ~3216 tests · 274 photos · 775 identities · 60 confirmed
 - **Similarity calibration live**: isotonic regression, AUC=0.9577, calibrated scores in UI (AD-149/152)
 - **API call logging**: Every Gemini call tracked in gemini_api_calls table (AD-152). gemini_config + response_summary now populated (AD-159 fix).
 - **GEDCOM linking**: Admin can link identities to GEDCOM records via in-app search (AD-160)
+- **Auto-clustering pipeline**: Two-tier system — Tier 1 auto-adds (<0.85), Tier 2 surfaces as Discovery suggestions (0.85-1.10). AD-179.
 - **Railway volume space** — auto_backups pruned to 5 (was 10), ENOSPC fixed in Session 61B
 
 ## Phase Summary
@@ -67,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-28: **v0.79.0 — Session 76a**: Auto-Clustering + Discoveries Redesign + Face Cards. Two-tier auto-clustering pipeline (AD-179): Tier 1 (<0.85) auto-adds, Tier 2 (0.85-1.10) surfaces as suggestions. Discoveries page redesigned as ML audit trail with confirm/undo/reject. Browse cards face-dominant (200px min). Backfill: 0 Tier 1, 7 Tier 2, 652 no match. 15 new tests + 4 regression fixes. ~3742 tests.
 - [x] 2026-02-28: **v0.78.0 — Session 75**: Post-Gemini Cleanup + Tree Upgrade. Data integrity: restored 19 UUID relationships, reverted 9K lines of key-reorder noise. GEDCOM date parser: regex replaces broken [:4] slice (AD-175). Tree rewrite: CardHtml API, bidirectional rels, 718 people, siblings render. xdist fix: atomic route reordering + timeout (0 failures). 38 new tests. AD-175/176/177/178. ~3216 tests.
 - [x] 2026-02-27: **v0.77.1 — Session 73**: Cleanup + Share-Readiness. File naming convention enforced, 3 legacy scripts removed, stop hook fixed for merge sessions. Enter key 400ms hack replaced with htmx:afterSettle. Share-readiness: 10/10 smoke test PASS. Status: READY.
 - [x] 2026-02-27: **v0.77.0 — Session 72**: Harness Fix + ML Similarity Calibration. Test tiering (make test-fast <30s, 2166 tests via pytest-xdist). Branch enforcement hooks. Merge script. MLP calibrator on frozen embeddings (AUC 0.84, F1 0.75). Regression gate: NO-SHIP on ECE. Shadow scoring: 96.3% agreement, calibrator more conservative. AD-174. ~3180 tests.

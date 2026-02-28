@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 37.0 — February 24, 2026
-**Status**: ~3521 tests passing, v0.69.0, 271 photos, 55 confirmed identities, 775 total identities, 267 geocoded
+**Version**: 38.0 — February 28, 2026
+**Status**: ~3742 tests passing, v0.79.0, 274 photos, 60 confirmed identities, 775 total identities, 267 geocoded
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -60,7 +60,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 
 ---
 
-## Recent Sessions (v0.71.0 — 2026-02-24)
+## Recent Sessions (v0.79.0 — 2026-02-28)
+
+- **Session 76a** (v0.79.0): Auto-Clustering + Discoveries Redesign + Face Cards. Two-tier auto-clustering pipeline (AD-179). Discovery log as ML audit trail. Discoveries page two-tier layout. Browse cards face-dominant (200px min). Backfill: 0 Tier 1, 7 Tier 2, 652 no match. 15 new tests + 4 regression fixes. ~3742 total.
 
 - **Session 65d** (v0.71.0): Disk Space Fix + GEDCOM Versioning + Harness. Disk: .dockerignore saves ~400MB, startup cleanup, backup pruning (AD-162). All 3 uploads verified in Chrome browser. GEDCOM temporal versioning: version tracking, field-level diffs, enrichment queue, current_* views (AD-163). Stop hook + enhanced eval script. 30 new tests. ~3553 total.
 - **Session 65c** (v0.70.0): Upload Fix (MANDATORY) + Verification Sweep + Harness. Root cause: subprocess OOM from double model loading (AD-161). Fix: thread shares hybrid models. All 3 upload surfaces verified in production. GEDCOM linking verified end-to-end (6/6 PASS). Harness: assessment mandate, prompt template, eval script. ~3475 tests.

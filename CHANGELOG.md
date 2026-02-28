@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.79.0] — 2026-02-28 (Session 76a: Auto-Clustering + Discoveries Redesign + Face Cards)
+
+### Added
+- Two-tier auto-clustering pipeline (AD-179): Tier 1 (<0.85 distance) auto-adds faces to confirmed clusters, Tier 2 (0.85-1.10) surfaces as suggestions
+- `core/auto_cluster.py`: auto_cluster_face(), dedup_inbox(), build_confirmed_clusters(), run_backfill()
+- Discovery log (`data/discovery_log.json`): ML audit trail for every auto-cluster and suggestion
+- Discoveries page two-tier layout: "Recently Auto-Added" (Tier 1) + "Suggested Matches" (Tier 2)
+- `/api/discovery/confirm` and `/api/discovery/undo` routes for Tier 1 actions
+- Discovery reject route now logs to discovery_log.json as ML signal
+- `scripts/backfill_auto_cluster.py`: CLI tool for backfilling existing inbox faces
+- Auto-clustering step wired into `scripts/process_uploads.py` pipeline (step 5)
+
+### Changed
+- Browse card face sizing: min-h-[150px] sm:min-h-[200px] (face-dominant cards)
+- Browse card secondary actions hidden behind hover overlay (compact layout)
+- Neighbor card thumbnails: 64px → 80px (w-16 h-16 → w-20 h-20)
+- Discovery card face images: 80px → 96px (w-20 h-20 → w-24 h-24)
+- Discoveries page shows tier breakdown badges in header
+
+### Fixed
+- 4 test regressions from discovery log integration (missing _get_pending_discovery_entries mock)
+
 ## [v0.78.0] — 2026-02-28 (Session 75: Post-Gemini Cleanup + Tree Upgrade)
 
 ### Fixed
