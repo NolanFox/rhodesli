@@ -323,9 +323,9 @@ class TestAutoClusterThresholds:
 
     def test_tier_2_threshold(self):
         from core.auto_cluster import TIER_2_THRESHOLD
-        assert TIER_2_THRESHOLD == 1.10
+        assert TIER_2_THRESHOLD == 1.30
 
-    def test_discovery_distance_threshold_unchanged(self):
-        """Existing dynamic discovery threshold is not modified."""
+    def test_discovery_distance_threshold_value(self):
+        """Discovery threshold raised to 1.30 (Session 79, approved by Nolan)."""
         from app.main import DISCOVERY_DISTANCE_THRESHOLD
-        assert DISCOVERY_DISTANCE_THRESHOLD == 1.05
+        assert DISCOVERY_DISTANCE_THRESHOLD == 1.30

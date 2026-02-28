@@ -633,7 +633,7 @@ class TestDiscoveryCacheInvalidation:
 
         assert result1 == result2
 
-    def test_discovery_threshold_is_1_point_05(self):
-        """The discovery threshold is distance < 1.05 (AD-172 widened from 1.0)."""
+    def test_discovery_threshold_is_1_point_30(self):
+        """The discovery threshold is distance < 1.30 (Session 79, raised from 1.05)."""
         from app.main import DISCOVERY_DISTANCE_THRESHOLD
-        assert DISCOVERY_DISTANCE_THRESHOLD == 1.05
+        assert DISCOVERY_DISTANCE_THRESHOLD == 1.30

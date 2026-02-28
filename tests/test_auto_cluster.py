@@ -85,7 +85,7 @@ class TestAutoClusterFace:
         from core.auto_cluster import auto_cluster_face
 
         confirmed_mu = _make_mu([1.0, 0.0, 0.0])
-        # Create query at distance ~0.95 (between 0.85 and 1.10)
+        # Create query at distance ~0.95 (between 0.85 and 1.30)
         query_mu = _make_mu([0.1, 0.2, 0.0])
         # Compute actual distance to verify it's in tier 2 range
         dist = np.linalg.norm(confirmed_mu - query_mu)
@@ -104,7 +104,7 @@ class TestAutoClusterFace:
 
         assert tier == "tier_2"
         assert target_id == "conf-1"
-        assert 0.85 <= distance < 1.10
+        assert 0.85 <= distance < 1.30
 
     def test_no_match_far_distance(self):
         """Face far from all confirmed identities should be no_match."""
@@ -805,9 +805,9 @@ class TestThresholds:
         assert TIER_1_THRESHOLD == 0.85
 
     def test_tier_2_threshold_value(self):
-        """Tier 2 threshold should be 1.10."""
+        """Tier 2 threshold should be 1.30 (raised Session 79, approved by Nolan)."""
         from core.auto_cluster import TIER_2_THRESHOLD
-        assert TIER_2_THRESHOLD == 1.10
+        assert TIER_2_THRESHOLD == 1.30
 
     def test_boundary_at_tier_1(self):
         """Face just above 0.85 should be Tier 2, not Tier 1."""
@@ -836,12 +836,12 @@ class TestThresholds:
         assert distance > TIER_1_THRESHOLD
 
     def test_boundary_at_tier_2(self):
-        """Face at exactly 1.10 should be no_match."""
+        """Face at exactly 1.30 should be no_match."""
         from core.auto_cluster import auto_cluster_face
 
         confirmed_mu = _make_mu([1.0])
         query_mu = np.zeros(512, dtype=np.float32)
-        query_mu[0] = 1.0 - 1.10  # = -0.10, distance = 1.10
+        query_mu[0] = 1.0 - 1.30  # = -0.30, distance = 1.30
 
         confirmed_clusters = {
             "conf-1": {
@@ -855,7 +855,7 @@ class TestThresholds:
             "q", query_mu, confirmed_clusters, {}
         )
 
-        # At exactly 1.10, should be no_match (not strictly less than 1.10)
+        # At exactly 1.30, should be no_match (not strictly less than 1.30)
         assert tier == "no_match"
 
 
