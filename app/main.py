@@ -18388,7 +18388,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
     nav_links = _public_nav_links(active="tree", user=user)
 
     page_style = Style("""
-        html, body { margin: 0; } body { background-color: #0b1120; }
+        html, body { margin: 0; } body { background-color: #080d1a; }
         #tree-container { width: 100%; height: calc(100vh - 200px); min-height: 500px; position: relative; }
         #tree-container svg { border-radius: 0.75rem; }
         .tree-search-results { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px;
@@ -18491,7 +18491,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-tree.js?v=81a"),
+            Script(src="/static/js/family-tree.js?v=81b"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
                     window.initRhodesliTree('{person}', '{show_theory}');

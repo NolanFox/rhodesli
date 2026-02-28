@@ -16,41 +16,43 @@
     var baseNodeIds = {};
     var expandedDirs = {};
 
-    // --- Portrait card constants (photo-dominant) ---
-    var CARD_W = 156, CARD_H = 196;
-    var PHOTO_R = 40;                      // 80px diameter — hero element
+    // --- Floating-face constants (faces ARE the tree) ---
+    var CARD_W = 144, CARD_H = 190;
+    var PHOTO_R = 48;                      // 96px diameter — the star of the show
     var PHOTO_CX = CARD_W / 2;            // Centered horizontally
-    var PHOTO_CY = 16 + PHOTO_R;          // 16px top padding + radius = 56
-    var NAME_Y1 = PHOTO_CY + PHOTO_R + 20; // First name baseline
-    var NAME_Y2 = NAME_Y1 + 17;            // Last name baseline
-    var DATE_Y  = NAME_Y2 + 15;            // Lifespan baseline
-    var CARD_RX = 14;
+    var PHOTO_CY = 12 + PHOTO_R;          // 12px top padding + radius = 60
+    var NAME_Y1 = PHOTO_CY + PHOTO_R + 18; // First name baseline
+    var NAME_Y2 = NAME_Y1 + 16;            // Last name baseline
+    var DATE_Y  = NAME_Y2 + 14;            // Lifespan baseline
+    var CARD_RX = 16;
 
-    var V_GAP = 260;
-    var H_GAP = 36;
-    var COUPLE_GAP = 20;
-    var DROP_Y = 36;
+    var V_GAP = 250;
+    var H_GAP = 32;
+    var COUPLE_GAP = 16;
+    var DROP_Y = 32;
     var EXPAND_R = 13;
 
     var COLORS = {
-        svgBg:        "#0b1120",
-        cardBg:       "#151d2e",
-        cardBorder:   "rgba(148, 163, 184, 0.10)",
-        cardHover:    "#1c2740",
+        svgBg:        "#080d1a",
+        cardBg:       "rgba(15, 20, 32, 0.25)",       // Nearly invisible
+        cardBorder:   "rgba(148, 163, 184, 0.04)",     // Whisper of an edge
+        cardHover:    "rgba(22, 32, 55, 0.88)",         // Materializes on hover
+        cardHoverBdr: "rgba(148, 163, 184, 0.15)",
         focalBorder:  "#d4a574",
-        focalGlow:    "rgba(212, 165, 116, 0.25)",
-        nameText:     "#f1f5f9",
-        dateText:     "#8b9ab5",
-        line:         "rgba(71, 85, 105, 0.5)",
-        coupleLine:   "rgba(212, 165, 116, 0.6)",
+        focalGlow:    "rgba(212, 165, 116, 0.35)",
+        nameText:     "#e8edf5",
+        dateText:     "#7a8ba3",
+        line:         "rgba(71, 85, 105, 0.35)",
+        coupleLine:   "rgba(212, 165, 116, 0.5)",
         coupleDot:    "#d4a574",
         expandBg:     "#4f46e5",
         collapseBg:   "#7c3aed",
-        photoBg:      "#1a2336",
-        photoInitial: "#4b5e7a",
+        photoBg:      "#111827",
+        photoInitial: "#3b4a64",
         genderM:      "#60a5fa",
         genderF:      "#f9a8d4",
-        genderU:      "#64748b"
+        genderU:      "#4b5e78",
+        photoShadow:  "rgba(0, 0, 0, 0.5)"
     };
 
     // --- Initialization ---
@@ -347,11 +349,17 @@
         glowMerge.append("feMergeNode").attr("in", "blur");
         glowMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-        // Hover shadow filter
+        // Hover shadow filter for card materialization
         var shadow = defs.append("filter").attr("id", "hoverShadow")
             .attr("x", "-15%").attr("y", "-15%").attr("width", "140%").attr("height", "150%");
-        shadow.append("feDropShadow").attr("dx", "0").attr("dy", "6").attr("stdDeviation", "10")
-            .attr("flood-color", "rgba(0,0,0,0.45)").attr("flood-opacity", "0.45");
+        shadow.append("feDropShadow").attr("dx", "0").attr("dy", "6").attr("stdDeviation", "12")
+            .attr("flood-color", "rgba(0,0,0,0.55)").attr("flood-opacity", "0.55");
+
+        // Subtle shadow beneath each photo for depth
+        var photoShadow = defs.append("filter").attr("id", "photoShadow")
+            .attr("x", "-20%").attr("y", "-10%").attr("width", "140%").attr("height", "140%");
+        photoShadow.append("feDropShadow").attr("dx", "0").attr("dy", "3").attr("stdDeviation", "5")
+            .attr("flood-color", "rgba(0,0,0,0.5)").attr("flood-opacity", "0.5");
 
         // Clip paths for circular photos (centered in portrait card)
         Object.keys(positions).forEach(function(pid) {
@@ -400,27 +408,30 @@
                 showNodePopup(event, d.node.data, d.id);
             });
 
-        // Hover micro-interactions
+        // Hover: card materializes from nothing, photo ring grows
         cards.on("mouseenter", function() {
                 var card = d3.select(this);
-                card.select(".card-bg").transition().duration(180)
+                card.select(".card-bg").transition().duration(200)
                     .attr("fill", COLORS.cardHover)
+                    .attr("stroke", COLORS.cardHoverBdr)
                     .attr("filter", "url(#hoverShadow)");
-                card.select(".photo-ring").transition().duration(180)
+                card.select(".photo-ring").transition().duration(200)
                     .attr("stroke-width", 3.5);
-                card.transition().duration(180)
+                card.transition().duration(200)
                     .attr("transform", function(d) {
-                        return "translate(" + d.x + "," + (d.y - 3) + ")";
+                        return "translate(" + d.x + "," + (d.y - 4) + ")";
                     });
             })
-            .on("mouseleave", function() {
+            .on("mouseleave", function(event, d) {
                 var card = d3.select(this);
-                card.select(".card-bg").transition().duration(250)
+                var isFocal = d.id === currentPersonId;
+                card.select(".card-bg").transition().duration(300)
                     .attr("fill", COLORS.cardBg)
+                    .attr("stroke", isFocal ? COLORS.focalBorder : COLORS.cardBorder)
                     .attr("filter", null);
-                card.select(".photo-ring").transition().duration(250)
+                card.select(".photo-ring").transition().duration(300)
                     .attr("stroke-width", 2.5);
-                card.transition().duration(250)
+                card.transition().duration(300)
                     .attr("transform", function(d) {
                         return "translate(" + d.x + "," + d.y + ")";
                     });
@@ -447,11 +458,17 @@
             }
         });
 
-        // Circular photo — hero element, top-centered
+        // Photo — the star of the show. Shadow + image + gender ring.
         cards.each(function(d) {
             var el = d3.select(this);
             var clipId = "clip-" + d.id.replace(/[^a-zA-Z0-9]/g, "_");
             var photoUrl = d.node.data.avatar || d.node.data.photo_url;
+
+            // Shadow circle behind the photo for depth
+            el.append("circle")
+                .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R + 1)
+                .attr("fill", "rgba(0,0,0,0.3)")
+                .attr("filter", "url(#photoShadow)");
 
             if (photoUrl) {
                 el.append("image")
@@ -461,18 +478,17 @@
                     .attr("clip-path", "url(#" + clipId + ")")
                     .attr("preserveAspectRatio", "xMidYMid slice");
             } else {
-                // Placeholder: dark circle with initial
                 el.append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
                     .attr("fill", COLORS.photoBg);
                 el.append("text").attr("x", PHOTO_CX).attr("y", PHOTO_CY)
                     .attr("text-anchor", "middle").attr("dy", "0.35em")
                     .attr("fill", COLORS.photoInitial)
-                    .attr("font-size", "28px")
+                    .attr("font-size", "32px")
                     .attr("font-family", "'Georgia', serif")
                     .text((d.node.data["first name"] || "?")[0].toUpperCase());
             }
 
-            // Gender-coded photo ring
+            // Gender-coded ring — the visual signature
             var gender = d.node.data.gender || "U";
             var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
             el.append("circle")
