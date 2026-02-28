@@ -163,6 +163,66 @@ class TestPersonPageViewToggle:
         assert "Faces of" in html
 
 
+
+
+class TestPersonPageOrdering:
+    """Ordering controls for person page galleries."""
+
+    def _mock_person_data(self, monkeypatch):
+        class FakeRegistry:
+            def get_identity(self, person_id):
+                return {
+                    "identity_id": person_id,
+                    "name": "Test Person",
+                    "state": "CONFIRMED",
+                    "anchor_ids": ["face-a", "face-b", "face-c"],
+                    "candidate_ids": [],
+                }
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-1", "photo-2", "photo-3"]
+
+        photo_meta = {
+            "photo-1": {"photo_id": "photo-1", "filename": "photo-1.jpg", "collection": "C1", "created_at": "2025-01-01T00:00:00+00:00"},
+            "photo-2": {"photo_id": "photo-2", "filename": "photo-2.jpg", "collection": "C1", "created_at": "2023-01-01T00:00:00+00:00"},
+            "photo-3": {"photo_id": "photo-3", "filename": "photo-3.jpg", "collection": "C1", "created_at": "2024-01-01T00:00:00+00:00"},
+        }
+        face_to_photo = {"face-a": "photo-1", "face-b": "photo-2", "face-c": "photo-3"}
+
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr("app.main.get_photo_metadata", lambda pid: photo_meta.get(pid))
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a.jpg", "face-b.jpg", "face-c.jpg"})
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops: f"/crops/{fid}.jpg" if fid else None)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda fid: face_to_photo.get(fid))
+        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: (all_faces[0] if all_faces else None))
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {
+            "photo-1": {"best_year_estimate": 1940},
+            "photo-2": {"best_year_estimate": 1960},
+            "photo-3": {"best_year_estimate": 1950},
+        })
+
+    def test_default_order_uses_earliest_first(self, client, monkeypatch):
+        self._mock_person_data(monkeypatch)
+        response = client.get("/person/test-person?view=photos")
+        html = response.text
+        assert html.index("/photo/photo-1") < html.index("/photo/photo-3") < html.index("/photo/photo-2")
+
+    def test_uploaded_sort_orders_by_created_at(self, client, monkeypatch):
+        self._mock_person_data(monkeypatch)
+        response = client.get("/person/test-person?view=photos&sort_by=uploaded_desc")
+        html = response.text
+        assert html.index("/photo/photo-1") < html.index("/photo/photo-3") < html.index("/photo/photo-2")
+        assert "Newest Uploads" in html
+
+    def test_faces_toggle_preserves_sort_choice(self, client, monkeypatch):
+        self._mock_person_data(monkeypatch)
+        response = client.get("/person/test-person?view=faces&sort_by=date_desc")
+        html = response.text
+        assert "view=photos&amp;sort_by=date_desc" in html
+        assert "Earliest Last" in html
+
 class TestPersonPageOGTags:
     """Open Graph meta tags for social sharing."""
 
