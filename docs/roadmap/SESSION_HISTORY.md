@@ -364,6 +364,24 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 75: Post-Gemini Cleanup + Tree Upgrade (2026-02-28) — v0.78.0
+- **Data integrity**: Reverted 9,000+ lines of key-reorder noise. Preserved 5 identity renames + 4 annotations. Restored 19 UUID relationships, merged with 1,000 GEDCOM-xref (1,019 total).
+- **GEDCOM date parser**: Regex `parse_gedcom_year()` replaces broken `[:4]` slice. "21 SEP 1887" → "1887" (was "21 S"). Handles ABT/AFT/BEF/BET qualifiers. AD-175.
+- **Tree rewrite**: `build_family_tree()` produces CardHtml-compatible format. Bidirectional relationships: 193 parents with 2+ children, siblings render. 718 people, 22 UUID identities with names.
+- **Tree frontend**: family-tree.js uses CardHtml API. Light theme. Default to most-connected person. Loading state.
+- **xdist fix**: Atomic `_reorder_routes_atomic()` replaces pop/insert race. Timeout 10s→30s. 0 failures across 2 consecutive runs. AD-178.
+- **Junk cleanup**: Deleted fake test_tree_rendering.py, fixed rebuild_full_graph.py to load existing data.
+- AD-175/176/177/178. 38 new tests. ~3153 tests.
+
+## Session 74: Family Tree + UX Overhaul (2026-02-27) — Gemini 3.1 Pro
+- **Agent**: Gemini 3.1 Pro (Antigravity), 5 missions. Evaluated by Claude Code (session-74-eval.md).
+- **Mission 1**: Face card grid layouts (CSS grid, responsive). Grade: B.
+- **Mission 2**: GEDCOM pagination with prev/next, page counter. Grade: A-.
+- **Mission 3**: Family tree visualization with family-chart.js. Working tree, but wiped UUID relationships and broke date parsing. Grade: B-.
+- **Mission 4**: Mobile responsive admin/compare layouts. Grade: B+.
+- **Mission 5**: Nav grouping (Core Archive / Tools / Help Identify CTA). Grade: A-.
+- **Issues**: Data integrity bugs (relationship wipe, date [:4] slice, key reordering noise). Fixed in Session 75.
+
 ## Session 73: Cleanup + Share-Readiness (2026-02-27) — v0.77.1
 - **Phase 1 — File naming + harness cleanup**: Renamed 3 session logs to convention (lowercase hyphens). Removed 3 legacy scripts (enforce_worktree.sh, merge-worktree.sh, merge_tracks.sh). Fixed stop hook for merge sessions. Added naming conventions to CLAUDE.md (79 lines).
 - **Phase 2 — Bug investigation + fix**: Track A revert mystery: no git hooks or formatters found (likely subagent interference, Lesson 88). Enter key fix: replaced 400ms setTimeout hack with htmx:afterSettle event-driven approach.
@@ -496,6 +514,8 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.78.0 | 2026-02-28 | 75 | 2176+977 |
+| v0.77.1 | 2026-02-27 | 73 | 2166+1014 |
 | v0.77.0 | 2026-02-27 | 72 | 2166+1014 |
 | v0.76.1 | 2026-02-27 | 71D | 3163 |
 | v0.76.0 | 2026-02-26 | 71 | 3146 |

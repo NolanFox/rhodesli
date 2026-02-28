@@ -2014,9 +2014,42 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 
 ---
 
+### AD-175: GEDCOM Date Parsing — Regex vs [:4] Slice
+- **Date**: 2026-02-28 | **Session**: 75
+- **Context**: Session 74 (Gemini) used `date_str[:4]` to extract years from GEDCOM dates. This fails catastrophically on day-first formats: `"21 SEP 1887"[:4]` = `"21 S"`, `"ABT 1900"[:4]` = `"ABT "`.
+- **Accepted**: Regex extraction with `re.search(r'\b(\d{4})\b', date_str)` plus qualifier handling (ABT→~, AFT→aft., BEF→bef., BET...AND→range).
+- **Rejected**: `[:4]` slice — produces garbage for all non-year-first GEDCOM formats.
+- **Rejected**: dateutil parsing — overkill for year extraction, doesn't handle GEDCOM qualifiers.
+- **Affects**: `rhodesli_ml/graph/relationship_graph.py` (parse_gedcom_year, format_lifespan), `app/main.py` (tree route GEDCOM date handling)
+
+### AD-176: Relationship Data Merge — UUID + GEDCOM Coexistence
+- **Date**: 2026-02-28 | **Session**: 75
+- **Context**: Session 74 (Gemini) replaced 19 UUID-based relationships (linking confirmed photo identities to GEDCOM family structure) with 1,000 GEDCOM-xref-only relationships. UUID relationships are MORE authoritative because they link actual photos to people.
+- **Accepted**: Merge both sets. Keep all 19 UUID-based + all 1,000 GEDCOM-xref relationships. Deduplicate by (person_a, person_b, type). UUID takes priority on conflict.
+- **Rejected**: Replace old with new — loses identity-to-family links that took admin work to establish.
+- **Rejected**: Keep only UUID — loses structural GEDCOM family data.
+- **Affects**: `data/relationships.json`, `scripts/rebuild_full_graph.py`
+
+### AD-177: family-chart CardHtml vs SVG Cards
+- **Date**: 2026-02-28 | **Session**: 75
+- **Context**: Session 74 used SVG-based cards with D3 post-render styling overlays. CardHtml is the library's modern API that renders HTML cards with native avatar support.
+- **Accepted**: CardHtml via `f3.createChart().setCard(f3.CardHtmlWrapper)`. Supports avatar photos, HTML styling, and clean card display configuration.
+- **Rejected**: SVG cards with D3 overlays — cannot render photos, requires fragile post-render DOM manipulation, dark theme overlay hides built-in features.
+- **Affects**: `app/static/js/family-tree.js`, `app/main.py` (tree route template)
+
+### AD-178: xdist Route Reordering — Atomic Slice vs Pop/Insert
+- **Date**: 2026-02-28 | **Session**: 75
+- **Context**: `routes.pop(i)` + `routes.insert(0, route)` caused race conditions under pytest-xdist parallel imports. Tests showed 9-13 intermittent timeouts per run. Root cause: non-atomic list mutations during concurrent module imports, plus 10s timeout too tight for heavy imports.
+- **Accepted**: Atomic `routes[:] = priority + other` via `_reorder_routes_atomic()`. Combined with timeout increase from 10s to 30s.
+- **Rejected**: threading.Lock — module-level code runs during import, lock adds complexity.
+- **Rejected**: xdist_group markers — requires annotating every affected test.
+- **Affects**: `app/main.py` (all route reordering blocks), `Makefile` (test-fast timeout)
+
+---
+
 ## How to Add New Entries
 
-1. Add a new entry with AD-XXX format (next: AD-175)
+1. Add a new entry with AD-XXX format (next: AD-179)
 2. Include the rejected alternative and WHY it was rejected
 3. List all files/functions affected
 4. If the decision came from a user correction, note that explicitly

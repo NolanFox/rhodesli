@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.78.0] — 2026-02-28 (Session 75: Post-Gemini Cleanup + Tree Upgrade)
+
+### Fixed
+- GEDCOM date parser: regex `parse_gedcom_year()` replaces broken `[:4]` slice (AD-175)
+- Restored 19 UUID relationships wiped by Gemini session (AD-176)
+- Reverted 9,000+ lines of key-reorder noise in data files
+- xdist race condition: atomic route reordering replaces pop/insert (AD-178)
+- Fixed rebuild_full_graph.py to load existing data instead of passing empty graph
+- Deleted fake test_tree_rendering.py (standalone Playwright, not pytest-compatible)
+
+### Changed
+- `build_family_tree()` rewritten for CardHtml-compatible format (AD-177)
+- family-tree.js uses CardHtml API with HTML cards, avatar support
+- Tree page uses light theme (was dark SVG overlay)
+- Default to most-connected confirmed identity when no person specified
+- Test timeout increased from 10s to 30s for xdist stability
+
+### Added
+- `parse_gedcom_year()` and `format_lifespan()` functions (29 tests)
+- Family tree data integration tests (9 tests)
+- Loading state indicator while tree initializes
+- identity_url field for linking tree cards to identity pages
+
 ## [v0.77.1] — 2026-02-27 (Session 73: Cleanup + Share-Readiness)
 
 ### Fixed
