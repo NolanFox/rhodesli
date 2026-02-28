@@ -4973,6 +4973,62 @@ def _invalidate_discovery_cache():
     _discovery_cache_key = None
 
 
+def _load_discovery_log() -> dict:
+    """Load discovery_log.json. Returns {"schema_version": 1, "entries": []}."""
+    log_path = Path("data/discovery_log.json")
+    if not log_path.exists():
+        return {"schema_version": 1, "entries": []}
+    try:
+        with open(log_path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, Exception):
+        return {"schema_version": 1, "entries": []}
+
+
+def _get_pending_discovery_entries() -> tuple:
+    """Get pending discovery log entries split by tier.
+
+    Returns:
+        (tier_1_entries, tier_2_entries) — only entries without a user_decision.
+    """
+    log = _load_discovery_log()
+    tier_1 = []
+    tier_2 = []
+    for entry in log.get("entries", []):
+        if entry.get("user_decision") is not None:
+            continue  # Already acted on
+        if entry.get("tier") == 1:
+            tier_1.append(entry)
+        elif entry.get("tier") == 2:
+            tier_2.append(entry)
+    return tier_1, tier_2
+
+
+def _update_discovery_log_entry(face_id: str, target_identity_id: str,
+                                 user_decision: str):
+    """Update a discovery log entry with the user's decision."""
+    log_path = Path("data/discovery_log.json")
+    if not log_path.exists():
+        return
+    try:
+        with open(log_path) as f:
+            data = json.load(f)
+        for entry in data.get("entries", []):
+            if (entry.get("face_id") == face_id and
+                    entry.get("target_identity_id") == target_identity_id and
+                    entry.get("user_decision") is None):
+                entry["user_decision"] = user_decision
+                entry["user_decision_timestamp"] = datetime.now(
+                    timezone.utc).isoformat()
+                break
+        tmp = str(log_path) + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp, str(log_path))
+    except (json.JSONDecodeError, Exception) as e:
+        logging.error(f"[discovery_log] Failed to update: {e}")
+
+
 def _build_skipped_suggestion_with_strip(identity_id: str, crop_files: set):
     """Build 'Best Match' panel + horizontal strip of other matches.
 
@@ -23478,6 +23534,11 @@ def get(sess=None):
     counts = _compute_sidebar_counts(registry)
     discovery_count = counts.get("discoveries", 0)
 
+    # Discovery log tier counts
+    tier_1_entries, tier_2_entries = _get_pending_discovery_entries()
+    tier_1_count = len(tier_1_entries)
+    tier_2_count = len(tier_2_entries)
+
     page_style = Style("""
         .sidebar-container { width: 15rem; transition: width 0.2s ease, transform 0.3s ease; }
         .sidebar-container.collapsed { width: 3.5rem; }
@@ -23558,6 +23619,14 @@ def get(sess=None):
                     H2("Discoveries", cls="text-2xl font-bold text-white"),
                     P(f"{discovery_count} high-confidence match{'es' if discovery_count != 1 else ''} to confirmed identities",
                       cls="text-sm text-slate-400 mt-1"),
+                    # Tier breakdown badges
+                    Div(
+                        Span(f"{tier_1_count} auto-added",
+                             cls="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30") if tier_1_count > 0 else None,
+                        Span(f"{tier_2_count} suggestion{'s' if tier_2_count != 1 else ''}",
+                             cls="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30") if tier_2_count > 0 else None,
+                        cls="flex gap-2 mt-2"
+                    ) if (tier_1_count + tier_2_count) > 0 else None,
                     cls="mb-6"
                 ),
                 Div(
@@ -23577,7 +23646,14 @@ def get(sess=None):
 
 @rt("/api/discoveries")
 def get(sess=None):
-    """HTMX endpoint: render discovery cards for the discoveries page."""
+    """HTMX endpoint: render discovery cards for the discoveries page.
+
+    Merges two sources:
+    1. Dynamic computation (_compute_discoveries) — matches with distance < 1.05
+    2. Discovery log (data/discovery_log.json) — Tier 2 suggestions from auto-clustering
+
+    Shows cards with tier labels and appropriate actions (AD-179).
+    """
     denied = _check_admin(sess)
     if denied:
         return denied
@@ -23586,7 +23662,42 @@ def get(sess=None):
     discoveries = _compute_discoveries(registry)
     crop_files = get_crop_files()
 
-    if not discoveries:
+    # Merge discovery_log Tier 2 entries that aren't in dynamic discoveries
+    tier_1_entries, tier_2_entries = _get_pending_discovery_entries()
+    dynamic_source_ids = {d["source_id"] for d in discoveries}
+
+    for entry in tier_2_entries:
+        src_id = entry.get("source_identity_id", "")
+        if src_id and src_id not in dynamic_source_ids:
+            distance = entry.get("distance", 999)
+            discoveries.append({
+                "source_id": src_id,
+                "source_name": entry.get("source_identity_name", ""),
+                "target_id": entry.get("target_identity_id", ""),
+                "target_name": entry.get("target_identity_name", ""),
+                "distance": distance,
+                "confidence": _confidence_tier(distance),
+                "from_log": True,
+            })
+    discoveries.sort(key=lambda d: d["distance"])
+
+    # Also include pending Tier 1 entries (auto-clustered, needs confirmation)
+    all_items = []
+    for entry in tier_1_entries:
+        all_items.append({
+            "source_id": entry.get("source_identity_id", ""),
+            "source_name": entry.get("source_identity_name", ""),
+            "target_id": entry.get("target_identity_id", ""),
+            "target_name": entry.get("target_identity_name", ""),
+            "distance": entry.get("distance", 0),
+            "face_id": entry.get("face_id", ""),
+            "tier": 1,
+        })
+    for d in discoveries:
+        d["tier"] = 2
+        all_items.append(d)
+
+    if not all_items:
         return Div(
             Div(
                 Span("\u2705", cls="text-4xl mb-3 block"),
@@ -23599,200 +23710,273 @@ def get(sess=None):
             data_testid="discoveries-empty-state"
         )
 
-    cards = []
     from urllib.parse import quote
 
-    for d in discoveries:
-        source_id = d["source_id"]
-        target_id = d["target_id"]
-        source_name = d["source_name"] or f"Identity {source_id[:8]}..."
-        target_name = d["target_name"] or f"Identity {target_id[:8]}..."
-        distance = d["distance"]
-        confidence = d["confidence"]
-        confidence_label = _CONFIDENCE_LABEL.get(confidence, "Match")
+    sections = []
 
-        # Resolve crop URLs for both source and target
-        source_crop = _resolve_identity_crop(source_id, crop_files)
-        target_crop = _resolve_identity_crop(target_id, crop_files)
+    # Tier 1 section: Auto-added (confirm/undo)
+    tier_1_items = [d for d in all_items if d.get("tier") == 1]
+    if tier_1_items:
+        tier_1_cards = []
+        for d in tier_1_items:
+            card = _build_discovery_card(d, registry, crop_files, tier=1)
+            if card:
+                tier_1_cards.append(card)
+        if tier_1_cards:
+            sections.append(Div(
+                Div(
+                    H3("Recently Auto-Added", cls="text-lg font-semibold text-emerald-400"),
+                    P(f"{len(tier_1_cards)} face{'s' if len(tier_1_cards) != 1 else ''} automatically added to clusters",
+                      cls="text-xs text-slate-400 mt-0.5"),
+                    cls="mb-3"
+                ),
+                Div(*tier_1_cards, cls="space-y-3"),
+                cls="mb-8"
+            ))
 
-        # Confidence badge styling
-        if confidence == "VERY HIGH":
-            badge_cls = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-            ring_cls = "ring-2 ring-emerald-400/50"
-        elif confidence == "HIGH":
-            badge_cls = "bg-blue-500/20 text-blue-400 border-blue-500/30"
-            ring_cls = "ring-2 ring-blue-400/50"
-        else:
-            badge_cls = "bg-amber-500/20 text-amber-400 border-amber-500/30"
-            ring_cls = "ring-2 ring-amber-400/50"
+    # Tier 2 section: Suggested matches (accept/reject)
+    tier_2_items = [d for d in all_items if d.get("tier") == 2]
+    if tier_2_items:
+        tier_2_cards = []
+        for d in tier_2_items:
+            card = _build_discovery_card(d, registry, crop_files, tier=2)
+            if card:
+                tier_2_cards.append(card)
+        if tier_2_cards:
+            sections.append(Div(
+                Div(
+                    H3("Suggested Matches", cls="text-lg font-semibold text-blue-400"),
+                    P(f"{len(tier_2_cards)} potential match{'es' if len(tier_2_cards) != 1 else ''}",
+                      cls="text-xs text-slate-400 mt-0.5"),
+                    cls="mb-3"
+                ),
+                Div(*tier_2_cards, cls="space-y-3"),
+            ))
 
-        # Build the face_id for source identity (first face)
-        source_identity = _safe_get_identity(registry, source_id)
-        source_face_ids = (source_identity.get("anchor_ids", []) + source_identity.get("candidate_ids", [])) if source_identity else []
-        first_face_id = ""
+    return Div(*sections, cls="space-y-4") if sections else Div(
+        Div(
+            Span("\u2705", cls="text-4xl mb-3 block"),
+            H3("All discoveries reviewed!", cls="text-lg font-semibold text-white mb-1"),
+            P("No matches to review.", cls="text-sm text-slate-400"),
+            cls="text-center py-12"
+        ),
+        cls="bg-slate-800/50 border border-slate-700/50 rounded-xl",
+        data_testid="discoveries-empty-state"
+    )
+
+
+def _build_discovery_card(d, registry, crop_files, tier=2):
+    """Build a single discovery card for the Discoveries page.
+
+    Args:
+        d: discovery dict with source_id, target_id, distance, etc.
+        registry: identity registry
+        crop_files: set of crop filenames
+        tier: 1 (auto-added) or 2 (suggestion)
+    """
+    from urllib.parse import quote
+
+    source_id = d["source_id"]
+    target_id = d["target_id"]
+    source_name = d.get("source_name") or f"Identity {source_id[:8]}..."
+    target_name = d.get("target_name") or f"Identity {target_id[:8]}..."
+    distance = d.get("distance", 999)
+    confidence = d.get("confidence") or _confidence_tier(distance)
+    confidence_label = _CONFIDENCE_LABEL.get(confidence, "Match")
+
+    source_crop = _resolve_identity_crop(source_id, crop_files)
+    target_crop = _resolve_identity_crop(target_id, crop_files)
+
+    # Confidence badge styling
+    if confidence == "VERY HIGH":
+        badge_cls = "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+        ring_cls = "ring-2 ring-emerald-400/50"
+    elif confidence == "HIGH":
+        badge_cls = "bg-blue-500/20 text-blue-400 border-blue-500/30"
+        ring_cls = "ring-2 ring-blue-400/50"
+    else:
+        badge_cls = "bg-amber-500/20 text-amber-400 border-amber-500/30"
+        ring_cls = "ring-2 ring-amber-400/50"
+
+    # Build the face_id for source identity (first face)
+    source_identity = _safe_get_identity(registry, source_id)
+    source_face_ids = (source_identity.get("anchor_ids", []) + source_identity.get("candidate_ids", [])) if source_identity else []
+    first_face_id = d.get("face_id", "")
+    if not first_face_id:
         for f in source_face_ids:
             first_face_id = f if isinstance(f, str) else f.get("face_id", "")
             if first_face_id:
                 break
 
-        face_id_encoded = quote(first_face_id, safe="")
+    face_id_encoded = quote(first_face_id, safe="")
 
-        # Resolve photo context for source face
-        photo_context_el = None
-        if first_face_id:
-            photo_id = get_photo_id_for_face(first_face_id)
-            if photo_id:
-                photo_data = get_photo_metadata(photo_id)
-                if photo_data:
-                    collection = photo_data.get("collection", "")
-                    # Find co-occurring faces in the same photo
-                    co_faces = []
-                    photo_face_ids = [f.get("face_id", "") if isinstance(f, dict) else f for f in photo_data.get("faces", [])]
-                    for fid in photo_face_ids:
-                        if fid == first_face_id or not fid:
-                            continue
-                        # Look up identity for this co-occurring face
-                        for iid, ident in registry._identities.items():
-                            all_face_ids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
-                            face_id_strs = [fi if isinstance(fi, str) else fi.get("face_id", "") for fi in all_face_ids]
-                            if fid in face_id_strs and iid != source_id:
-                                co_name = ident.get("name", "Unknown")
-                                co_state = ident.get("state", "")
-                                co_faces.append((iid, co_name, co_state))
-                                break
-
-                    context_parts = []
-                    if collection:
-                        context_parts.append(Span(collection, cls="text-xs text-slate-400"))
-                    if co_faces:
-                        co_labels = []
-                        for co_id, co_name, co_state in co_faces[:3]:
-                            state_color = "text-green-400" if co_state == "CONFIRMED" else "text-slate-300"
-                            co_labels.append(A(co_name, href=f"/person/{co_id}", cls=f"text-xs {state_color} hover:text-blue-300"))
-                        context_parts.append(
-                            Div(
-                                Span("Also in photo: ", cls="text-xs text-slate-500"),
-                                *[Span(label, ", " if i < len(co_labels) - 1 else "") for i, label in enumerate(co_labels)],
-                                cls="flex flex-wrap items-center gap-0.5"
-                            )
-                        )
-                    # View photo link
+    # Resolve photo context for source face
+    photo_context_el = None
+    if first_face_id:
+        photo_id = get_photo_id_for_face(first_face_id)
+        if photo_id:
+            photo_data = get_photo_metadata(photo_id)
+            if photo_data:
+                collection = photo_data.get("collection", "")
+                co_faces = []
+                photo_face_ids = [f.get("face_id", "") if isinstance(f, dict) else f for f in photo_data.get("faces", [])]
+                for fid in photo_face_ids:
+                    if fid == first_face_id or not fid:
+                        continue
+                    for iid, ident in registry._identities.items():
+                        all_face_ids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+                        face_id_strs = [fi if isinstance(fi, str) else fi.get("face_id", "") for fi in all_face_ids]
+                        if fid in face_id_strs and iid != source_id:
+                            co_name = ident.get("name", "Unknown")
+                            co_state = ident.get("state", "")
+                            co_faces.append((iid, co_name, co_state))
+                            break
+                context_parts = []
+                if collection:
+                    context_parts.append(Span(collection, cls="text-xs text-slate-400"))
+                if co_faces:
+                    co_labels = []
+                    for co_id, co_name, co_state in co_faces[:3]:
+                        state_color = "text-green-400" if co_state == "CONFIRMED" else "text-slate-300"
+                        co_labels.append(A(co_name, href=f"/person/{co_id}", cls=f"text-xs {state_color} hover:text-blue-300"))
                     context_parts.append(
-                        A("View photo", href=f"/photo/{photo_id}",
-                          cls="text-xs text-blue-400 hover:text-blue-300 underline")
+                        Div(
+                            Span("Also in photo: ", cls="text-xs text-slate-500"),
+                            *[Span(label, ", " if i < len(co_labels) - 1 else "") for i, label in enumerate(co_labels)],
+                            cls="flex flex-wrap items-center gap-0.5"
+                        )
                     )
-                    if context_parts:
-                        photo_context_el = Div(*context_parts, cls="flex flex-col gap-1 px-4 py-2 border-t border-slate-700/50")
+                context_parts.append(
+                    A("View photo", href=f"/photo/{photo_id}",
+                      cls="text-xs text-blue-400 hover:text-blue-300 underline")
+                )
+                if context_parts:
+                    photo_context_el = Div(*context_parts, cls="flex flex-col gap-1 px-4 py-2 border-t border-slate-700/50")
 
-        # Source face image (unreviewed) — wrapped in link for navigation
-        source_img_el = Img(
-            src=source_crop or "/static/placeholder.jpg",
-            alt=source_name,
-            cls=f"w-20 h-20 rounded-full object-cover {ring_cls}",
-            loading="lazy"
-        ) if source_crop else Div(
-            Span("?", cls="text-2xl text-slate-500"),
-            cls=f"w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center {ring_cls}"
-        )
-        # Wrap source image in a link to the person page
-        source_img = A(source_img_el, href=f"/person/{source_id}",
-                       cls="block cursor-pointer hover:opacity-80 transition-opacity",
-                       title=f"View {source_name}")
+    # Face images — larger than before (w-24 h-24 = 96px)
+    source_img_el = Img(
+        src=source_crop or "/static/placeholder.jpg",
+        alt=source_name,
+        cls=f"w-24 h-24 rounded-full object-cover {ring_cls}",
+        loading="lazy"
+    ) if source_crop else Div(
+        Span("?", cls="text-2xl text-slate-500"),
+        cls=f"w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center {ring_cls}"
+    )
+    source_img = A(source_img_el, href=f"/person/{source_id}",
+                   cls="block cursor-pointer hover:opacity-80 transition-opacity",
+                   title=f"View {source_name}")
 
-        # Target face image (confirmed) — wrapped in link
-        target_img_el = Img(
-            src=target_crop or "/static/placeholder.jpg",
-            alt=target_name,
-            cls="w-20 h-20 rounded-full object-cover ring-2 ring-green-400/50",
-            loading="lazy"
-        ) if target_crop else Div(
-            Span("?", cls="text-2xl text-slate-500"),
-            cls="w-20 h-20 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
-        )
-        target_img = A(target_img_el, href=f"/person/{target_id}",
-                       cls="block cursor-pointer hover:opacity-80 transition-opacity",
-                       title=f"View {target_name}")
+    target_img_el = Img(
+        src=target_crop or "/static/placeholder.jpg",
+        alt=target_name,
+        cls="w-24 h-24 rounded-full object-cover ring-2 ring-green-400/50",
+        loading="lazy"
+    ) if target_crop else Div(
+        Span("?", cls="text-2xl text-slate-500"),
+        cls="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
+    )
+    target_img = A(target_img_el, href=f"/person/{target_id}",
+                   cls="block cursor-pointer hover:opacity-80 transition-opacity",
+                   title=f"View {target_name}")
 
-        card = Div(
-            # Match pair: source -> target
-            Div(
-                # Source face (clickable)
-                Div(
-                    source_img,
-                    Div(
-                        A(source_name, href=f"/person/{source_id}",
-                          cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
-                          title=source_name),
-                        Span("Unreviewed", cls="text-xs text-slate-400"),
-                        cls="mt-1.5 text-center"
-                    ),
-                    cls="flex flex-col items-center"
-                ),
-                # Arrow + confidence label (AD-173)
-                Div(
-                    Svg(
-                        Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
-                             d="M14 5l7 7m0 0l-7 7m7-7H3"),
-                        cls="w-6 h-6 text-slate-400", fill="none", stroke="currentColor", viewBox="0 0 24 24"
-                    ),
-                    Span(
-                        confidence_label,
-                        cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
-                        title=f"Distance: {distance:.2f} ({confidence})"
-                    ),
-                    cls="flex flex-col items-center gap-1.5 px-4"
-                ),
-                # Target face (confirmed, clickable)
-                Div(
-                    target_img,
-                    Div(
-                        A(target_name, href=f"/person/{target_id}",
-                          cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
-                          title=target_name),
-                        Span("Confirmed", cls="text-xs text-green-400"),
-                        cls="mt-1.5 text-center"
-                    ),
-                    cls="flex flex-col items-center"
-                ),
-                cls="flex items-center justify-center gap-2 py-4"
+    # Tier-specific action buttons
+    if tier == 1:
+        # Auto-added: Confirm / Undo
+        action_buttons = Div(
+            Button(
+                Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M5 13l4 4L19 7"),
+                    cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+                Span("Confirm"),
+                hx_post=f"/api/discovery/confirm?face_id={face_id_encoded}&target_id={target_id}&source_id={source_id}",
+                hx_target=f"#discovery-card-{source_id}",
+                hx_swap="outerHTML",
+                cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px]",
+            ) if first_face_id else None,
+            Button(
+                Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"),
+                    cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+                Span("Undo"),
+                hx_post=f"/api/discovery/undo?face_id={face_id_encoded}&target_id={target_id}&source_id={source_id}",
+                hx_target=f"#discovery-card-{source_id}",
+                hx_swap="outerHTML",
+                cls="flex items-center gap-1.5 px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-500 transition-colors min-h-[44px]",
             ),
-            # Photo context (collection, co-occurring faces, view photo link)
-            photo_context_el,
-            # Action buttons
-            Div(
-                Button(
-                    Svg(
-                        Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
-                             d="M5 13l4 4L19 7"),
-                        cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"
-                    ),
-                    Span(f"Confirm as {target_name}", cls="truncate max-w-[200px]"),
-                    hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={target_id}",
-                    hx_target=f"#discovery-card-{source_id}",
-                    hx_swap="outerHTML",
-                    cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px] max-w-full",
-                    title=f"Confirm this face as {target_name}"
-                ) if first_face_id else None,
-                Button(
-                    Svg(
-                        Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
-                             d="M6 18L18 6M6 6l12 12"),
-                        cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"
-                    ),
-                    Span("Not a match"),
-                    hx_post=f"/api/discovery/reject?source_id={source_id}&target_id={target_id}",
-                    hx_target=f"#discovery-card-{source_id}",
-                    hx_swap="outerHTML",
-                    cls="flex items-center gap-1.5 px-4 py-2 bg-slate-600 text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors min-h-[44px]"
-                ),
-                cls="flex items-center justify-center gap-3 pb-4 px-4"
-            ),
-            id=f"discovery-card-{source_id}",
-            cls="bg-slate-800/80 border border-slate-700/50 rounded-xl hover:border-slate-600/50 transition-colors"
+            cls="flex items-center justify-center gap-3 pb-4 px-4"
         )
-        cards.append(card)
+    else:
+        # Suggestion: Accept / Reject
+        action_buttons = Div(
+            Button(
+                Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M5 13l4 4L19 7"),
+                    cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+                Span(f"Confirm as {target_name}", cls="truncate max-w-[200px]"),
+                hx_post=f"/api/face/tag?face_id={face_id_encoded}&target_id={target_id}",
+                hx_target=f"#discovery-card-{source_id}",
+                hx_swap="outerHTML",
+                cls="flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-500 transition-colors min-h-[44px] max-w-full",
+                title=f"Confirm this face as {target_name}"
+            ) if first_face_id else None,
+            Button(
+                Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M6 18L18 6M6 6l12 12"),
+                    cls="w-4 h-4", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+                Span("Not a match"),
+                hx_post=f"/api/discovery/reject?source_id={source_id}&target_id={target_id}",
+                hx_target=f"#discovery-card-{source_id}",
+                hx_swap="outerHTML",
+                cls="flex items-center gap-1.5 px-4 py-2 bg-slate-600 text-slate-200 text-sm font-medium rounded-lg hover:bg-slate-500 transition-colors min-h-[44px]"
+            ),
+            cls="flex items-center justify-center gap-3 pb-4 px-4"
+        )
 
-    return Div(*cards, cls="space-y-4")
+    # Tier indicator border
+    tier_border = "border-l-2 border-l-emerald-500" if tier == 1 else "border-l-2 border-l-blue-500"
+
+    return Div(
+        Div(
+            Div(
+                source_img,
+                Div(
+                    A(source_name, href=f"/person/{source_id}",
+                      cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
+                      title=source_name),
+                    Span("Auto-added" if tier == 1 else "Unreviewed",
+                         cls=f"text-xs {'text-emerald-400' if tier == 1 else 'text-slate-400'}"),
+                    cls="mt-1.5 text-center"
+                ),
+                cls="flex flex-col items-center"
+            ),
+            Div(
+                Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                         d="M14 5l7 7m0 0l-7 7m7-7H3"),
+                    cls="w-6 h-6 text-slate-400", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+                Span(confidence_label,
+                     cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
+                     title=f"Distance: {distance:.2f} ({confidence})"),
+                cls="flex flex-col items-center gap-1.5 px-4"
+            ),
+            Div(
+                target_img,
+                Div(
+                    A(target_name, href=f"/person/{target_id}",
+                      cls="text-sm font-medium text-white hover:text-blue-300 truncate max-w-[200px] block",
+                      title=target_name),
+                    Span("Confirmed", cls="text-xs text-green-400"),
+                    cls="mt-1.5 text-center"
+                ),
+                cls="flex flex-col items-center"
+            ),
+            cls="flex items-center justify-center gap-2 py-4"
+        ),
+        photo_context_el,
+        action_buttons,
+        id=f"discovery-card-{source_id}",
+        cls=f"bg-slate-800/80 border border-slate-700/50 rounded-xl hover:border-slate-600/50 transition-colors {tier_border}"
+    )
 
 
 def _resolve_identity_crop(identity_id: str, crop_files: set) -> str:
@@ -23815,7 +23999,8 @@ def _resolve_identity_crop(identity_id: str, crop_files: set) -> str:
 def post(source_id: str, target_id: str, sess=None):
     """Reject a discovery match by adding the target as a negative for the source identity.
 
-    This prevents the match from showing up again. Returns a success confirmation
+    This prevents the match from showing up again. Logs to discovery_log.json
+    for ML signal collection (AD-179). Returns a success confirmation
     that replaces the card via HTMX.
     """
     denied = _check_admin(sess)
@@ -23832,6 +24017,16 @@ def post(source_id: str, target_id: str, sess=None):
             # Mutate registry directly (lesson 36: get_identity returns shallow copy)
             registry._identities[source_id]["negative_ids"] = negatives
             save_registry(registry)
+
+        # Log rejection to discovery_log for ML signal (AD-179)
+        face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+        first_fid = ""
+        for f in face_ids:
+            first_fid = f if isinstance(f, str) else f.get("face_id", "")
+            if first_fid:
+                break
+        _update_discovery_log_entry(first_fid, target_id, "rejected")
+
         _invalidate_discovery_cache()
         return Div(
             Div(
@@ -23846,6 +24041,93 @@ def post(source_id: str, target_id: str, sess=None):
         logging.error(f"[discoveries] Reject failed: {e}")
         return Div(
             toast("Failed to dismiss match. Please try again.", "error"),
+            hx_swap_oob="beforeend:#toast-container"
+        )
+
+
+@rt("/api/discovery/confirm")
+def post(face_id: str, target_id: str, source_id: str = "", sess=None):
+    """Confirm a Tier 1 auto-clustered face. Logs to discovery_log.json (AD-179)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        from urllib.parse import unquote
+        face_id = unquote(face_id)
+
+        # Tag the face to the target identity (same as /api/face/tag)
+        registry = load_registry()
+        target = registry.get_identity(target_id)
+        if target:
+            candidates = registry._identities[target_id].get("candidate_ids", [])
+            if face_id not in candidates:
+                candidates.append(face_id)
+                registry._identities[target_id]["candidate_ids"] = candidates
+                registry._identities[target_id]["version_id"] = target.get("version_id", 1) + 1
+                registry._identities[target_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
+                save_registry(registry)
+
+        # Log confirmation to discovery_log
+        _update_discovery_log_entry(face_id, target_id, "confirmed")
+        _invalidate_discovery_cache()
+
+        return Div(
+            Div(
+                Span("\u2705", cls="text-green-500 mr-2"),
+                Span("Confirmed", cls="text-sm text-green-400"),
+                cls="flex items-center justify-center py-3"
+            ),
+            cls="bg-slate-800/30 border border-emerald-700/30 rounded-xl opacity-60",
+            style="animation: fadeOut 2s forwards;"
+        )
+    except (KeyError, Exception) as e:
+        logging.error(f"[discoveries] Confirm failed: {e}")
+        return Div(
+            toast("Failed to confirm. Please try again.", "error"),
+            hx_swap_oob="beforeend:#toast-container"
+        )
+
+
+@rt("/api/discovery/undo")
+def post(face_id: str, target_id: str, source_id: str = "", sess=None):
+    """Undo a Tier 1 auto-clustered face. Removes from cluster, logs to discovery_log (AD-179)."""
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    try:
+        from urllib.parse import unquote
+        face_id = unquote(face_id)
+
+        # Remove face from target identity's candidate_ids
+        registry = load_registry()
+        target = registry.get_identity(target_id)
+        if target:
+            candidates = registry._identities[target_id].get("candidate_ids", [])
+            if face_id in candidates:
+                candidates.remove(face_id)
+                registry._identities[target_id]["version_id"] = target.get("version_id", 1) + 1
+                registry._identities[target_id]["updated_at"] = datetime.now(timezone.utc).isoformat()
+                save_registry(registry)
+
+        # Log undo to discovery_log — critical ML signal (false positive)
+        _update_discovery_log_entry(face_id, target_id, "undone")
+        _invalidate_discovery_cache()
+
+        return Div(
+            Div(
+                Span("\u21a9", cls="text-amber-500 mr-2"),
+                Span("Auto-add undone — face returned to inbox", cls="text-sm text-amber-400"),
+                cls="flex items-center justify-center py-3"
+            ),
+            cls="bg-slate-800/30 border border-amber-700/30 rounded-xl opacity-60",
+            style="animation: fadeOut 2s forwards;"
+        )
+    except (KeyError, Exception) as e:
+        logging.error(f"[discoveries] Undo failed: {e}")
+        return Div(
+            toast("Failed to undo. Please try again.", "error"),
             hx_swap_oob="beforeend:#toast-container"
         )
 

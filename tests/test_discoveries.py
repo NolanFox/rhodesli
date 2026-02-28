@@ -423,6 +423,7 @@ class TestApiDiscoveriesRoute:
         """/api/discoveries shows 'all discoveries reviewed' when no discoveries."""
         with patch("app.main._check_admin", return_value=None), \
              patch("app.main._compute_discoveries", return_value=[]), \
+             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
              patch("app.main.get_crop_files", return_value=set()):
             response = client.get("/api/discoveries")
 
