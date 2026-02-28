@@ -1,7 +1,9 @@
 /**
  * family-tree.js — Rhodesli heritage family tree.
- * AD-185: Custom D3 tree — circular portraits, dark theme, lazy loading.
- * No f3/family-chart dependency. Pure D3 v7.
+ * AD-185: Card-based layout with T-shape connections.
+ * Follows Ancestry/MyHeritage patterns: couples side-by-side,
+ * vertical drop to children, expand arrows, circular portraits.
+ * Research: docs/research/family-tree-ux-patterns.md
  */
 
 (function() {
@@ -11,11 +13,30 @@
     var allNodes = [];
     var currentPersonId = "";
     var showTheory = "true";
-    var NODE_R = 40;            // Portrait radius
-    var FOCAL_R = 52;           // Focal person radius
-    var V_GAP = 160;            // Vertical gap between generations
-    var H_GAP = 110;            // Horizontal gap between siblings
-    var SPOUSE_GAP = 16;        // Gap between spouses
+
+    // --- Card & layout constants ---
+    var CARD_W = 156, CARD_H = 66;
+    var PHOTO_R = 20;
+    var V_GAP = 150;          // Vertical space between generation rows
+    var H_GAP = 50;           // Between family groups in same row
+    var COUPLE_GAP = 4;       // Between spouse cards
+    var DROP_Y = 30;          // How far below couple the horizontal bar sits
+    var EXPAND_R = 12;        // Expand arrow circle radius
+    var COLORS = {
+        cardBg: "#1e293b",
+        cardBorder: "#334155",
+        cardHover: "#253547",
+        focalBorder: "#d4a574",
+        nameText: "#e2e8f0",
+        dateText: "#94a3b8",
+        line: "#475569",
+        coupleLine: "#d4a574",
+        expandBg: "#4f46e5",
+        expandHover: "#6366f1",
+        photoBg: "#334155",
+        photoInitial: "#64748b",
+        svgBg: "#0f172a"
+    };
 
     // --- Initialization ---
     window.initRhodesliTree = function(personId, theory) {
@@ -23,7 +44,6 @@
         showTheory = theory;
         setupSearch();
         setupPopupDismiss();
-        setupZoomControls();
         loadTreeData(personId, 2);
     };
 
@@ -62,7 +82,7 @@
             .then(function(data) {
                 if (!data.nodes) return;
                 mergeNodes(data.nodes);
-                renderTree(personId);
+                renderTree(currentPersonId);
             });
     }
 
@@ -95,7 +115,6 @@
         var nodeMap = {};
         allNodes.forEach(function(n) { nodeMap[n.id] = n; });
 
-        // BFS from focal to assign generations
         var visited = {};
         var queue = [{ id: focalId, gen: 0 }];
         visited[focalId] = 0;
@@ -110,21 +129,18 @@
             if (!generations[gen]) generations[gen] = [];
             generations[gen].push(node);
 
-            // Parents = gen - 1
             [node.rels.father, node.rels.mother].forEach(function(pid) {
                 if (pid && !visited.hasOwnProperty(pid)) {
                     visited[pid] = gen - 1;
                     queue.push({ id: pid, gen: gen - 1 });
                 }
             });
-            // Children = gen + 1
             (node.rels.children || []).forEach(function(cid) {
                 if (!visited.hasOwnProperty(cid)) {
                     visited[cid] = gen + 1;
                     queue.push({ id: cid, gen: gen + 1 });
                 }
             });
-            // Spouses = same gen
             (node.rels.spouses || []).forEach(function(sid) {
                 if (!visited.hasOwnProperty(sid)) {
                     visited[sid] = gen;
@@ -132,29 +148,26 @@
                 }
             });
         }
-
         return { generations: generations, genOf: visited, nodeMap: nodeMap };
     }
 
-    // --- Layout: assign x,y to each node ---
+    // --- Layout: assign x,y; build connections ---
     function layoutNodes(focalId) {
         var h = buildHierarchy(focalId);
         var gens = h.generations;
         var genOf = h.genOf;
         var nodeMap = h.nodeMap;
-
-        // Sort generation keys
         var genKeys = Object.keys(gens).map(Number).sort(function(a, b) { return a - b; });
 
         var positions = {};
-        var links = [];
+        var couples = [];   // { ids: [a,b], midX, y }
+        var connections = []; // { type, ... }
 
-        // Layout each generation
+        // Layout each generation row
         genKeys.forEach(function(gk) {
             var people = gens[gk];
-            // Group spouses together
             var placed = {};
-            var groups = [];
+            var groups = []; // each group = [person, ...spouses]
 
             people.forEach(function(p) {
                 if (placed[p.id]) return;
@@ -170,47 +183,106 @@
                 groups.push(group);
             });
 
-            // Calculate total width needed
+            // Calculate total width
             var totalWidth = 0;
             groups.forEach(function(grp, i) {
-                totalWidth += grp.length * (NODE_R * 2 + SPOUSE_GAP);
+                totalWidth += grp.length * CARD_W + (grp.length - 1) * COUPLE_GAP;
                 if (i > 0) totalWidth += H_GAP;
             });
 
-            // Center horizontally
             var x = -totalWidth / 2;
             var y = gk * V_GAP;
 
             groups.forEach(function(grp, gi) {
                 if (gi > 0) x += H_GAP;
+                var groupStartX = x;
                 grp.forEach(function(person, pi) {
-                    if (pi > 0) x += SPOUSE_GAP;
-                    x += NODE_R;
+                    if (pi > 0) x += COUPLE_GAP;
                     positions[person.id] = { x: x, y: y, node: person };
-                    x += NODE_R;
+                    x += CARD_W;
                 });
-            });
-        });
+                var groupEndX = x;
 
-        // Build links: parent->child, spouse connections
-        allNodes.forEach(function(n) {
-            var nPos = positions[n.id];
-            if (!nPos) return;
-            // Children links
-            (n.rels.children || []).forEach(function(cid) {
-                var cPos = positions[cid];
-                if (cPos) links.push({ source: nPos, target: cPos, type: "parent" });
-            });
-            // Spouse links
-            (n.rels.spouses || []).forEach(function(sid) {
-                var sPos = positions[sid];
-                if (sPos && n.id < sid) { // only draw once
-                    links.push({ source: nPos, target: sPos, type: "spouse" });
+                // Record couple for connection drawing
+                if (grp.length >= 2) {
+                    var ids = grp.map(function(p) { return p.id; });
+                    couples.push({
+                        ids: ids,
+                        midX: (groupStartX + groupEndX) / 2,
+                        y: y
+                    });
+                    // Draw couple connector line
+                    for (var ci = 0; ci < grp.length - 1; ci++) {
+                        var leftPos = positions[grp[ci].id];
+                        var rightPos = positions[grp[ci + 1].id];
+                        connections.push({
+                            type: "couple",
+                            x1: leftPos.x + CARD_W,
+                            y1: leftPos.y + CARD_H / 2,
+                            x2: rightPos.x,
+                            y2: rightPos.y + CARD_H / 2
+                        });
+                    }
                 }
             });
         });
 
-        return { positions: positions, links: links };
+        // Build parent-child T-shape connections
+        allNodes.forEach(function(n) {
+            var children = n.rels.children || [];
+            if (children.length === 0) return;
+            var nPos = positions[n.id];
+            if (!nPos) return;
+
+            // Find this person's spouse(s) to form couple midpoint
+            var spouses = (n.rels.spouses || []).filter(function(s) { return positions[s]; });
+            // Only draw from one parent per couple (avoid double-drawing)
+            if (spouses.length > 0) {
+                var firstSpouse = spouses[0];
+                if (n.id > firstSpouse && positions[firstSpouse]) return; // let the lower-id parent draw
+            }
+
+            // Calculate parent anchor point (midpoint of couple, or center of single parent)
+            var parentX, parentY;
+            if (spouses.length > 0 && positions[spouses[0]]) {
+                var sp = positions[spouses[0]];
+                parentX = (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2;
+                parentY = nPos.y + CARD_H;
+            } else {
+                parentX = nPos.x + CARD_W / 2;
+                parentY = nPos.y + CARD_H;
+            }
+
+            // Collect child positions
+            var childPositions = [];
+            children.forEach(function(cid) {
+                var cp = positions[cid];
+                if (cp) childPositions.push({ x: cp.x + CARD_W / 2, y: cp.y });
+            });
+            if (childPositions.length === 0) return;
+
+            // T-shape: vertical drop from parent, horizontal bar, vertical to each child
+            var barY = parentY + DROP_Y;
+            connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
+
+            var minCX = Math.min.apply(null, childPositions.map(function(c) { return c.x; }));
+            var maxCX = Math.max.apply(null, childPositions.map(function(c) { return c.x; }));
+            // Horizontal bar spans from leftmost child to rightmost child
+            if (childPositions.length > 1) {
+                connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
+            }
+            // Also connect parent drop to bar if parent midpoint is outside child range
+            if (parentX < minCX || parentX > maxCX) {
+                connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
+            }
+
+            // Vertical from bar to each child
+            childPositions.forEach(function(cp) {
+                connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
+            });
+        });
+
+        return { positions: positions, connections: connections, couples: couples };
     }
 
     // --- Render ---
@@ -222,7 +294,7 @@
 
         var layout = layoutNodes(focalId);
         var positions = layout.positions;
-        var links = layout.links;
+        var connections = layout.connections;
 
         // Create or reuse SVG
         if (!svg) {
@@ -231,82 +303,62 @@
             var h = container.clientHeight;
 
             svg = d3.select(container).append("svg")
-                .attr("width", w)
-                .attr("height", h)
-                .style("background", "#1e293b");
+                .attr("width", w).attr("height", h)
+                .style("background", COLORS.svgBg);
 
             g = svg.append("g");
 
             zoomBehavior = d3.zoom()
                 .scaleExtent([0.15, 3])
-                .on("zoom", function(event) {
-                    g.attr("transform", event.transform);
-                });
+                .on("zoom", function(event) { g.attr("transform", event.transform); });
             svg.call(zoomBehavior);
 
-            // Resize handler
             window.addEventListener("resize", function() {
-                var newW = container.clientWidth;
-                var newH = container.clientHeight;
-                svg.attr("width", newW).attr("height", newH);
+                svg.attr("width", container.clientWidth).attr("height", container.clientHeight);
             });
         }
 
-        // Clear previous content
         g.selectAll("*").remove();
-
-        // Define clip path for circular portraits
         var defs = g.append("defs");
+
+        // Clip paths for circular photos
         Object.keys(positions).forEach(function(pid) {
-            var r = pid === focalId ? FOCAL_R : NODE_R;
             defs.append("clipPath")
                 .attr("id", "clip-" + pid.replace(/[^a-zA-Z0-9]/g, "_"))
-                .append("circle")
-                .attr("r", r);
+                .append("circle").attr("cx", 14 + PHOTO_R).attr("cy", CARD_H / 2).attr("r", PHOTO_R);
         });
 
-        // Draw links
-        var linkGroup = g.append("g").attr("class", "links");
+        // --- Draw connections ---
+        var lineGroup = g.append("g").attr("class", "connections");
 
-        links.forEach(function(link) {
-            if (link.type === "parent") {
-                // Curved parent-child line
-                var sx = link.source.x, sy = link.source.y;
-                var tx = link.target.x, ty = link.target.y;
-                var my = (sy + ty) / 2;
-                linkGroup.append("path")
-                    .attr("d", "M" + sx + "," + (sy + NODE_R + 4) +
-                          " C" + sx + "," + my + " " + tx + "," + my + " " + tx + "," + (ty - NODE_R - 4))
-                    .attr("fill", "none")
-                    .attr("stroke", "#475569")
-                    .attr("stroke-width", 1.5)
-                    .attr("opacity", 0.7);
-            } else if (link.type === "spouse") {
-                // Horizontal spouse connector with heart
-                var sx = link.source.x, sy = link.source.y;
-                var tx = link.target.x;
-                var mx = (sx + tx) / 2;
-                linkGroup.append("line")
-                    .attr("x1", sx + NODE_R + 2).attr("y1", sy)
-                    .attr("x2", tx - NODE_R - 2).attr("y2", sy)
-                    .attr("stroke", "#d4a574")
-                    .attr("stroke-width", 1.5)
-                    .attr("stroke-dasharray", "4,3")
-                    .attr("opacity", 0.6);
+        connections.forEach(function(c) {
+            if (c.type === "couple") {
+                lineGroup.append("line")
+                    .attr("x1", c.x1).attr("y1", c.y1)
+                    .attr("x2", c.x2).attr("y2", c.y2)
+                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", 2);
+            } else if (c.type === "drop" || c.type === "childDrop") {
+                lineGroup.append("line")
+                    .attr("x1", c.x).attr("y1", c.y1)
+                    .attr("x2", c.x).attr("y2", c.y2)
+                    .attr("stroke", COLORS.line).attr("stroke-width", 1.5);
+            } else if (c.type === "bar") {
+                lineGroup.append("line")
+                    .attr("x1", c.x1).attr("y1", c.y)
+                    .attr("x2", c.x2).attr("y2", c.y)
+                    .attr("stroke", COLORS.line).attr("stroke-width", 1.5);
             }
         });
 
-        // Draw nodes
+        // --- Draw person cards ---
         var nodeData = Object.keys(positions).map(function(pid) {
             return { id: pid, x: positions[pid].x, y: positions[pid].y, node: positions[pid].node };
         });
 
         var nodeGroup = g.append("g").attr("class", "nodes");
-
-        var nodes = nodeGroup.selectAll(".person-node")
+        var cards = nodeGroup.selectAll(".person-node")
             .data(nodeData, function(d) { return d.id; })
-            .enter()
-            .append("g")
+            .enter().append("g")
             .attr("class", "person-node")
             .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
             .style("cursor", "pointer")
@@ -315,89 +367,104 @@
                 showNodePopup(event, d.node.data, d.id);
             });
 
-        // Background ring (glow for focal person)
-        nodes.append("circle")
-            .attr("r", function(d) { return (d.id === focalId ? FOCAL_R : NODE_R) + 3; })
-            .attr("fill", "none")
-            .attr("stroke", function(d) {
-                if (d.id === focalId) return "#d4a574";
-                return (d.node.data.avatar || d.node.data.photo_url) ? "#334155" : "#1e293b";
-            })
-            .attr("stroke-width", function(d) { return d.id === focalId ? 3 : 1.5; })
-            .attr("opacity", function(d) { return d.id === focalId ? 1 : 0.8; });
+        // Card background
+        cards.append("rect")
+            .attr("width", CARD_W).attr("height", CARD_H)
+            .attr("rx", 10).attr("ry", 10)
+            .attr("fill", COLORS.cardBg)
+            .attr("stroke", function(d) { return d.id === focalId ? COLORS.focalBorder : COLORS.cardBorder; })
+            .attr("stroke-width", function(d) { return d.id === focalId ? 2.5 : 1; });
 
-        // Face photo (circular)
-        nodes.each(function(d) {
+        // Circular photo
+        cards.each(function(d) {
             var el = d3.select(this);
-            var r = d.id === focalId ? FOCAL_R : NODE_R;
+            var cx = 14 + PHOTO_R, cy = CARD_H / 2;
             var clipId = "clip-" + d.id.replace(/[^a-zA-Z0-9]/g, "_");
-
             var photoUrl = d.node.data.avatar || d.node.data.photo_url;
+
             if (photoUrl) {
                 el.append("image")
-                    .attr("x", -r).attr("y", -r)
-                    .attr("width", r * 2).attr("height", r * 2)
+                    .attr("x", 14).attr("y", cy - PHOTO_R)
+                    .attr("width", PHOTO_R * 2).attr("height", PHOTO_R * 2)
                     .attr("href", photoUrl)
                     .attr("clip-path", "url(#" + clipId + ")")
                     .attr("preserveAspectRatio", "xMidYMid slice");
             } else {
-                // Placeholder circle with initial
-                el.append("circle")
-                    .attr("r", r)
-                    .attr("fill", "#334155");
-                var initial = (d.node.data["first name"] || "?")[0].toUpperCase();
-                el.append("text")
-                    .attr("text-anchor", "middle")
-                    .attr("dy", "0.35em")
-                    .attr("fill", "#64748b")
-                    .attr("font-size", r * 0.7 + "px")
+                el.append("circle").attr("cx", cx).attr("cy", cy).attr("r", PHOTO_R)
+                    .attr("fill", COLORS.photoBg);
+                el.append("text").attr("x", cx).attr("y", cy)
+                    .attr("text-anchor", "middle").attr("dy", "0.35em")
+                    .attr("fill", COLORS.photoInitial)
+                    .attr("font-size", PHOTO_R + "px")
                     .attr("font-family", "'Georgia', serif")
-                    .text(initial);
+                    .text((d.node.data["first name"] || "?")[0].toUpperCase());
             }
+
+            // Photo border ring
+            el.append("circle").attr("cx", cx).attr("cy", cy).attr("r", PHOTO_R)
+                .attr("fill", "none").attr("stroke", COLORS.cardBorder).attr("stroke-width", 1);
         });
 
-        // Expand indicator dots
-        nodes.each(function(d) {
-            var el = d3.select(this);
-            var r = d.id === focalId ? FOCAL_R : NODE_R;
-            var data = d.node.data;
-
-            if (data["has_more_parents"]) {
-                el.append("circle").attr("cx", 0).attr("cy", -(r + 12)).attr("r", 5)
-                    .attr("fill", "#6366f1").attr("stroke", "#1e293b").attr("stroke-width", 2);
-                el.append("text").attr("x", 0).attr("y", -(r + 8)).attr("text-anchor", "middle")
-                    .attr("fill", "white").attr("font-size", "8px").text("+");
-            }
-            if (data["has_more_children"]) {
-                el.append("circle").attr("cx", 0).attr("cy", r + 12).attr("r", 5)
-                    .attr("fill", "#6366f1").attr("stroke", "#1e293b").attr("stroke-width", 2);
-                el.append("text").attr("x", 0).attr("y", r + 16).attr("text-anchor", "middle")
-                    .attr("fill", "white").attr("font-size", "8px").text("+");
-            }
-        });
-
-        // Name labels
-        nodes.append("text")
-            .attr("text-anchor", "middle")
-            .attr("y", function(d) { return (d.id === focalId ? FOCAL_R : NODE_R) + 18; })
-            .attr("fill", "#e2e8f0")
-            .attr("font-size", "12px")
+        // Name text
+        cards.append("text")
+            .attr("x", 14 + PHOTO_R * 2 + 10).attr("y", CARD_H / 2 - 6)
+            .attr("fill", COLORS.nameText)
+            .attr("font-size", "12px").attr("font-weight", "600")
             .attr("font-family", "'Georgia', serif")
             .text(function(d) {
                 var name = ((d.node.data["first name"] || "") + " " + (d.node.data["last name"] || "")).trim();
-                return name.length > 24 ? name.substring(0, 22) + "..." : name;
+                return name.length > 16 ? name.substring(0, 14) + "\u2026" : name;
             });
 
-        // Lifespan labels
-        nodes.append("text")
-            .attr("text-anchor", "middle")
-            .attr("y", function(d) { return (d.id === focalId ? FOCAL_R : NODE_R) + 32; })
-            .attr("fill", "#64748b")
-            .attr("font-size", "10px")
+        // Lifespan text
+        cards.append("text")
+            .attr("x", 14 + PHOTO_R * 2 + 10).attr("y", CARD_H / 2 + 10)
+            .attr("fill", COLORS.dateText).attr("font-size", "10px")
             .text(function(d) { return d.node.data.lifespan || ""; });
 
-        // Fit to viewport
+        // --- Expand arrows ---
+        var arrowGroup = g.append("g").attr("class", "expand-arrows");
+
+        nodeData.forEach(function(d) {
+            var data = d.node.data;
+            var cx = d.x + CARD_W / 2;
+
+            if (data["has_more_parents"]) {
+                drawExpandArrow(arrowGroup, cx, d.y - 18, "up", d.id, "parents");
+            }
+            if (data["has_more_children"]) {
+                drawExpandArrow(arrowGroup, cx, d.y + CARD_H + 18, "down", d.id, "children");
+            }
+            if (data["has_more_siblings"]) {
+                drawExpandArrow(arrowGroup, d.x - 18, d.y + CARD_H / 2, "left", d.id, "siblings");
+            }
+        });
+
         fitToContent();
+    }
+
+    function drawExpandArrow(parent, cx, cy, direction, personId, expandDir) {
+        var grp = parent.append("g")
+            .attr("class", "expand-btn")
+            .attr("transform", "translate(" + cx + "," + cy + ")")
+            .style("cursor", "pointer")
+            .on("click", function(event) {
+                event.stopPropagation();
+                expandNode(personId, expandDir);
+            });
+
+        grp.append("circle").attr("r", EXPAND_R)
+            .attr("fill", COLORS.expandBg).attr("stroke", COLORS.svgBg).attr("stroke-width", 2);
+
+        // Arrow glyph
+        var arrow;
+        if (direction === "up") arrow = "M-4,2 L0,-4 L4,2";
+        else if (direction === "down") arrow = "M-4,-2 L0,4 L4,-2";
+        else if (direction === "left") arrow = "M2,-4 L-4,0 L2,4";
+        else arrow = "M-2,-4 L4,0 L-2,4";
+
+        grp.append("path").attr("d", arrow)
+            .attr("fill", "white").attr("stroke", "none");
     }
 
     function fitToContent() {
@@ -406,13 +473,12 @@
         if (bbox.width === 0 || bbox.height === 0) return;
 
         var container = document.getElementById("tree-container");
-        var w = container.clientWidth;
-        var h = container.clientHeight;
-        var pad = 80;
+        var w = container.clientWidth, h = container.clientHeight;
+        var pad = 60;
 
         var scaleX = (w - pad * 2) / bbox.width;
         var scaleY = (h - pad * 2) / bbox.height;
-        var scale = Math.min(scaleX, scaleY, 1.5); // Don't zoom in too much
+        var scale = Math.min(scaleX, scaleY, 1.2);
 
         var tx = w / 2 - (bbox.x + bbox.width / 2) * scale;
         var ty = h / 2 - (bbox.y + bbox.height / 2) * scale;
@@ -429,11 +495,10 @@
         if (!popup) return;
 
         var name = ((nodeData["first name"] || "") + " " + (nodeData["last name"] || "")).trim();
-        var html = '<div style="font-weight:600;padding:6px 12px;color:#e2e8f0;font-size:14px;border-bottom:1px solid #334155;margin-bottom:4px;font-family:Georgia,serif">' + name + '</div>';
+        var html = '<div style="font-weight:600;padding:8px 14px;color:#e2e8f0;font-size:14px;border-bottom:1px solid #334155;margin-bottom:4px;font-family:Georgia,serif">' + name + '</div>';
 
-        if (nodeData.identity_url) {
+        if (nodeData.identity_url)
             html += '<a href="' + nodeData.identity_url + '">View Profile</a>';
-        }
         html += '<button data-action="tree-focus" data-person-id="' + nodeId + '">Focus Tree Here</button>';
         if (nodeData["has_more_parents"])
             html += '<button data-action="tree-expand" data-person-id="' + nodeId + '" data-direction="parents">Expand Parents</button>';
@@ -445,10 +510,9 @@
         popup.innerHTML = html;
         popup.classList.remove("hidden");
 
-        var x = event.clientX + 12;
-        var y = event.clientY + 12;
-        if (x + 180 > window.innerWidth) x = window.innerWidth - 190;
-        if (y + 200 > window.innerHeight) y = window.innerHeight - 210;
+        var x = event.clientX + 12, y = event.clientY + 12;
+        if (x + 200 > window.innerWidth) x = window.innerWidth - 210;
+        if (y + 220 > window.innerHeight) y = window.innerHeight - 230;
         popup.style.left = x + "px";
         popup.style.top = y + "px";
         popup.style.position = "fixed";
@@ -480,9 +544,9 @@
                 hideNodePopup();
                 expandNode(personId, btn.getAttribute("data-direction"));
             } else if (action === "tree-zoom-in") {
-                zoomIn();
+                if (svg && zoomBehavior) svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.4);
             } else if (action === "tree-zoom-out") {
-                zoomOut();
+                if (svg && zoomBehavior) svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7);
             } else if (action === "tree-fit") {
                 fitToContent();
             }
@@ -541,21 +605,6 @@
         input.addEventListener("focus", function() {
             if (results.innerHTML && input.value.trim().length >= 2) results.classList.remove("hidden");
         });
-    }
-
-    // --- Zoom ---
-    function setupZoomControls() {
-        // Scroll wheel zoom is handled by d3.zoom on the SVG
-    }
-
-    function zoomIn() {
-        if (!svg || !zoomBehavior) return;
-        svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.4);
-    }
-
-    function zoomOut() {
-        if (!svg || !zoomBehavior) return;
-        svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7);
     }
 
     // --- Theory Toggle ---
