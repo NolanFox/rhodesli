@@ -56,8 +56,8 @@ class TestCompareUploadHonestMessaging:
         html = resp.text
 
         # Must show honest message
-        assert "Photo received!" in html
-        assert "next analysis batch" in html
+        assert "Photo Received" in html
+        assert "24 hours" in html
 
         # Must provide actionable alternative
         assert "NolanFox@gmail.com" in html
