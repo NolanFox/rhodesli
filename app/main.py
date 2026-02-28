@@ -18388,28 +18388,28 @@ def get(person: str = "", show_theory: str = "true", sess=None):
     nav_links = _public_nav_links(active="tree", user=user)
 
     page_style = Style("""
-        html, body { margin: 0; } body { background-color: #0f172a; }
+        html, body { margin: 0; } body { background-color: #0b1120; }
         #tree-container { width: 100%; height: calc(100vh - 200px); min-height: 500px; position: relative; }
         #tree-container svg { border-radius: 0.75rem; }
         .tree-search-results { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px;
-            overflow-y: auto; background: #1e293b; border: 1px solid #334155; border-radius: 0.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100; }
-        .tree-search-results .result-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #334155; }
-        .tree-search-results .result-item:hover { background: #334155; }
-        .tree-search-results .result-item .name { font-weight: 500; color: #e2e8f0; }
-        .tree-search-results .result-item .badge { font-size: 11px; color: #94a3b8; }
+            overflow-y: auto; background: #151d2e; border: 1px solid rgba(148,163,184,0.12); border-radius: 0.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); z-index: 100; backdrop-filter: blur(12px); }
+        .tree-search-results .result-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid rgba(148,163,184,0.08); transition: background 0.15s; }
+        .tree-search-results .result-item:hover { background: rgba(99,102,241,0.12); }
+        .tree-search-results .result-item .name { font-weight: 500; color: #f1f5f9; }
+        .tree-search-results .result-item .badge { font-size: 11px; color: #8b9ab5; }
         .tree-zoom-controls { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column;
             gap: 4px; z-index: 50; }
-        .tree-zoom-controls button { width: 36px; height: 36px; background: #1e293b; border: 1px solid #334155;
-            border-radius: 6px; cursor: pointer; font-size: 18px; display: flex; align-items: center;
-            justify-content: center; color: #94a3b8; transition: all 0.15s; }
-        .tree-zoom-controls button:hover { background: #334155; border-color: #475569; color: #e2e8f0; }
-        .tree-node-popup { position: fixed; background: #1e293b; border: 1px solid #334155; border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4); padding: 8px; z-index: 200; min-width: 160px; }
+        .tree-zoom-controls button { width: 36px; height: 36px; background: rgba(21,29,46,0.9); border: 1px solid rgba(148,163,184,0.12);
+            border-radius: 8px; cursor: pointer; font-size: 18px; display: flex; align-items: center;
+            justify-content: center; color: #8b9ab5; transition: all 0.2s; backdrop-filter: blur(8px); }
+        .tree-zoom-controls button:hover { background: rgba(30,41,59,0.95); border-color: rgba(99,102,241,0.3); color: #f1f5f9; }
+        .tree-node-popup { position: fixed; background: rgba(21,29,46,0.95); border: 1px solid rgba(148,163,184,0.12); border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6); padding: 4px 4px 8px; z-index: 200; min-width: 180px; backdrop-filter: blur(16px); }
         .tree-node-popup a, .tree-node-popup button { display: block; width: 100%; text-align: left;
-            padding: 6px 10px; border: none; background: none; cursor: pointer; border-radius: 4px;
-            font-size: 13px; color: #e2e8f0; text-decoration: none; }
-        .tree-node-popup a:hover, .tree-node-popup button:hover { background: #334155; }
+            padding: 8px 12px; border: none; background: none; cursor: pointer; border-radius: 6px;
+            font-size: 13px; color: #f1f5f9; text-decoration: none; transition: background 0.15s; font-family: 'Inter', system-ui, sans-serif; }
+        .tree-node-popup a:hover, .tree-node-popup button:hover { background: rgba(99,102,241,0.15); }
     """)
 
     return (
@@ -18474,7 +18474,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                 # Tree visualization with zoom controls
                 Div(
                     P("Loading family tree...", id="tree-loading", cls="text-center text-slate-500 py-8"),
-                    Div(id="tree-container", cls="bg-slate-800/50 rounded-xl border border-slate-700"),
+                    Div(id="tree-container", cls="rounded-xl border border-slate-800/50"),
                     # Zoom controls
                     Div(
                         Button("+", type="button", data_action="tree-zoom-in", title="Zoom in"),
@@ -18491,7 +18491,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-tree.js?v=80c"),
+            Script(src="/static/js/family-tree.js?v=81a"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
                     window.initRhodesliTree('{person}', '{show_theory}');
@@ -18627,7 +18627,7 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
         "data": {"first name": first, "last name": last, "gender": gender,
                  "birthday": parse_gedcom_year(str(br)) if br else "",
                  "lifespan": lifespan, "avatar": avatar,
-                 "identity_url": f"/people/{pid}" if not pid.startswith("@") else "",
+                 "identity_url": f"/person/{pid}" if not pid.startswith("@") else "",
                  "has_more_parents": bool(all_parents - included),
                  "has_more_children": bool(all_children - included),
                  "has_more_siblings": bool(all_siblings - included)},
