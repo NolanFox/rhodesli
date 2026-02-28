@@ -40,16 +40,16 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
         store: store,
         card_dim: { w: 220, h: 70, text_x: 75, text_y: 15, img_w: 60, img_h: 60, img_x: 5, img_y: 5 },
         card_display: [
-            (d) => `<div style="color: #e2e8f0; font-size: 14px; font-weight: 600; font-family: 'Playfair Display', serif;">${d.data.name || 'Unknown'}</div>`,
+            (d) => `${d.data?.name || 'Unknown'}`,
             (d) => {
                 let dateStr = "";
-                const b = d.data.birth_year;
-                const dd = d.data.death_year;
+                const b = d.data?.birth_year;
+                const dd = d.data?.death_year;
                 if (b) dateStr += b;
                 if (b && dd) dateStr += " – ";
                 if (dd && !b) dateStr += "d. ";
                 if (dd) dateStr += dd;
-                return `<div style="color: #64748b; font-size: 11px; margin-top: 4px;">${dateStr}</div>`;
+                return dateStr;
             }
         ],
         mini_tree: true,
@@ -92,6 +92,22 @@ window.setupFamilyTree = function (data, containerSelector, rootPersonId) {
             // Apply styles to the SVG icon container
             el.selectAll('.person-icon svg path').attr('fill', strokeColor).attr('opacity', 0.8);
         });
+
+        // Style text tags specifically, removing HTML injection from standard tspan
+        d3svg.selectAll('g.card text tspan:first-child')
+            .attr('fill', '#e2e8f0')
+            .attr('font-size', '14px')
+            .attr('font-weight', '600')
+            .attr('font-family', "'Playfair Display', serif")
+            .attr('dy', '18'); // Explicit vertical offset for first text line
+
+        d3svg.selectAll('g.card text tspan:nth-child(2)')
+            .attr('fill', '#64748b')
+            .attr('font-size', '11px')
+            .attr('dy', '18'); // Stack beneath first line
+
+        // Disable standard pointer events on background so text is selectable if needed
+        d3svg.selectAll('g.card rect.card-bg').attr('pointer-events', 'none');
 
         // Style links (parent-child and spouse)
         d3svg.selectAll('path.link')

@@ -44,6 +44,12 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [ ] FE-041: "Help Identify" mode for non-admin users
 - [ ] Active learning pipeline
 
+### Future Evaluation: Frontend Framework Migration
+- **Trigger:** If 3+ JS embeds require shared state, or mobile UX audit scores below acceptable after Session 74
+- **Options:** React SPA with FastAPI backend, or Next.js with Supabase direct
+- **Queued by:** HD-022 (Session 74)
+- **Status:** NOT YET TRIGGERED
+
 ### Future
 - [ ] PRODUCT-003: NL Archive Query MVP — LangChain (AD-118)
 - [ ] PRODUCT-004: Historical Photo Date Estimator Standalone

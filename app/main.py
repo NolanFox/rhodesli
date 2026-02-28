@@ -17852,6 +17852,29 @@ def get(person: str = "", show_theory: str = "true", sess=None):
         if not ident.get("merged_into"):
             identities_dict[ident["identity_id"]] = ident
 
+    # Also include all GEDCOM individuals so unconfirmed family members have names and metadata
+    gedcom_inds = _load_gedcom_individuals()
+    
+    # We need a reverse map from gedcom_id -> identity_id so we don't duplicate confirmed matches
+    gedcom_links = _load_gedcom_face_links()
+    gedcom_to_identity = {v["gedcom_id"]: k for k, v in gedcom_links.items()}
+    
+    for g_ind in gedcom_inds:
+        g_id = g_ind.get("gedcom_id")
+        if not g_id: continue
+        # If this GEDCOM individual is already mapped to an identity, skip to avoid overwriting their richer archive data
+        if g_id in gedcom_to_identity:
+            continue
+            
+        identities_dict[g_id] = {
+            "name": g_ind.get("name") or "Unknown",
+            "metadata": {
+                "gender": g_ind.get("gender", "U"),
+                "birth_year": g_ind.get("birth_date", "")[:4] if g_ind.get("birth_date") else "",
+                "death_year": g_ind.get("death_date", "")[:4] if g_ind.get("death_date") else "",
+            }
+        }
+
     tree_data = build_family_tree(
         rel_graph, identities_dict,
         root_person=person if person else None,
@@ -28275,6 +28298,9 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
                 hx_target=f"#gedcom-link-panel-{identity_id}",
                 hx_swap="outerHTML",
                 disabled=is_linked,
+            ) if not is_linked else Span("Linked", cls="px-3 py-1 text-xs rounded font-medium bg-emerald-600/30 text-emerald-400 shrink-0"),
+            cls="flex items-center justify-between py-2 px-3 hover:bg-slate-700/50 rounded transition-colors",
+        )
         items.append(item)
 
     # Show result count header
@@ -28322,7 +28348,17 @@ def get(q: str = "", identity_id: str = "", offset: int = 0, sess=None):
                     "hx_swap": "innerHTML"
                 } if next_offset < total else {}
             )
+        )
         
+        pagination_controls = [
+            Div(
+                prev_btn,
+                Span(f"Page {current_page} of {total_pages}", cls="text-xs text-slate-500"),
+                next_btn,
+                cls="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/50 w-full"
+            )
+        ]
+
     return Div(count_header, Div(*items, cls="space-y-0.5"), *pagination_controls)
 
 

@@ -798,6 +798,14 @@ When making any algorithmic choice in the ML pipeline:
 - **Rationale**: The fix is a single CSS property addition. Percentage-based absolute positioning within a `position: relative` parent is the standard web pattern for image overlays. All modern browsers handle responsive scaling of percentage-positioned children correctly.
 - **Affects**: `app/main.py` (`_build_photo_view_content()` image wrapper div)
 
+### AD-089: Pre-Emptive Full Graph Generation
+- **Date**: 2026-02-27 (Session 74)
+- **Status**: ACCEPTED
+- **Context**: The `build_relationship_graph` logic previously filtered out all connections unless BOTH endpoints existed as confirmed archive identities. This meant the tree viz naturally collapsed into fragments.
+- **Decision**: Refactoring `build_relationship_graph.py` to output a unified graph merging confirmed identity UUIDs with raw GEDCOM `xref_id` fallback nodes. Replaced the `relationships.json` output pattern to just output the pure graph list directly, bypassing `data/relationships.json` metadata wrapper to remain consistent.
+- **Rationale**: The visualization of a family tree requires the entire tree skeleton to remain unbroken to see pathways between archive identities.
+- **Affects**: `rhodesli_ml/graph/relationship_graph.py`, `scripts/rebuild_full_graph.py`
+
 ### AD-089: Search Result Routing — State-Based Destination
 - **Date**: 2026-02-17
 - **Status**: ACCEPTED

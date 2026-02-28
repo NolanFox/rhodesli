@@ -50,14 +50,10 @@ def build_relationship_graph(
             parent_xrefs.append(fam.wife_xref)
 
         for parent_xref in parent_xrefs:
-            if parent_xref not in xref_to_identity:
-                continue
-            parent_id = xref_to_identity[parent_xref]
+            parent_id = xref_to_identity.get(parent_xref, parent_xref)
 
             for child_xref in fam.children_xrefs:
-                if child_xref not in xref_to_identity:
-                    continue
-                child_id = xref_to_identity[child_xref]
+                child_id = xref_to_identity.get(child_xref, child_xref)
 
                 pair_key = ("parent_child", parent_id, child_id)
                 if pair_key in seen_pairs:
@@ -75,22 +71,21 @@ def build_relationship_graph(
 
         # Spouse relationship
         if fam.husband_xref and fam.wife_xref:
-            if fam.husband_xref in xref_to_identity and fam.wife_xref in xref_to_identity:
-                husband_id = xref_to_identity[fam.husband_xref]
-                wife_id = xref_to_identity[fam.wife_xref]
-                # Normalize pair order for dedup
-                pair = tuple(sorted([husband_id, wife_id]))
-                pair_key = ("spouse", pair[0], pair[1])
-                if pair_key not in seen_pairs:
-                    seen_pairs.add(pair_key)
-                    relationships.append({
-                        "person_a": husband_id,
-                        "person_b": wife_id,
-                        "type": "spouse",
-                        "source": "gedcom",
-                        "gedcom_family_id": fam_xref,
-                        "created_at": datetime.now(timezone.utc).isoformat(),
-                    })
+            husband_id = xref_to_identity.get(fam.husband_xref, fam.husband_xref)
+            wife_id = xref_to_identity.get(fam.wife_xref, fam.wife_xref)
+            # Normalize pair order for dedup
+            pair = tuple(sorted([husband_id, wife_id]))
+            pair_key = ("spouse", pair[0], pair[1])
+            if pair_key not in seen_pairs:
+                seen_pairs.add(pair_key)
+                relationships.append({
+                    "person_a": husband_id,
+                    "person_b": wife_id,
+                    "type": "spouse",
+                    "source": "gedcom",
+                    "gedcom_family_id": fam_xref,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                })
 
     # Merge with existing graph
     graph = existing_graph or {
