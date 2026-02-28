@@ -123,8 +123,8 @@ class TestTreePage:
         assert resp.status_code == 200
         assert "family-chart.js" in resp.text
 
-    def test_tree_person_filter_present(self, client):
-        """Person filter dropdown present with confirmed identities."""
+    def test_tree_search_input_present(self, client):
+        """Search input present for finding people in tree (AD-185)."""
         patches = _patch_data()
         for p in patches:
             p.start()
@@ -132,8 +132,7 @@ class TestTreePage:
         for p in patches:
             p.stop()
         assert resp.status_code == 200
-        assert 'name="person"' in resp.text
-        assert "Rahamin Capeluto" in resp.text
+        assert 'tree-search-input' in resp.text
 
     def test_tree_with_person_param(self, client):
         """?person=UUID parameter accepted (200 response)."""
@@ -192,7 +191,8 @@ class TestTreePage:
         for p in patches:
             p.stop()
         assert resp.status_code == 200
-        assert "show_theory" in resp.text
+        assert "tree-show-theory" in resp.text
+        assert "Show speculative" in resp.text
 
     def test_tree_with_show_theory_false(self, client):
         """?show_theory=false filters theory relationships."""
@@ -238,8 +238,8 @@ class TestTreePage:
         # Should show some kind of empty state, not crash
         assert "tree-container" in resp.text or "No family" in resp.text
 
-    def test_tree_contains_identity_names(self, client):
-        """Tree data includes identity names from mock data."""
+    def test_tree_uses_api_loading(self, client):
+        """Tree page uses API-driven loading via initRhodesliTree (AD-185)."""
         patches = _patch_data()
         for p in patches:
             p.start()
@@ -247,5 +247,4 @@ class TestTreePage:
         for p in patches:
             p.stop()
         assert resp.status_code == 200
-        # Names should appear in the inline JSON data or rendered SVG text
-        assert "Rahamin" in resp.text or "Capeluto" in resp.text
+        assert "initRhodesliTree" in resp.text

@@ -18192,112 +18192,13 @@ async def post(photo: UploadFile = None, sess=None):
 
 @rt("/tree")
 def get(person: str = "", show_theory: str = "true", sess=None):
-    """Family Tree — hierarchical visualization of family relationships."""
+    """Family Tree — lazy-loading tree with search, zoom, expand/collapse (AD-185)."""
     user = get_current_user(sess or {}) if is_auth_enabled() else None
-
-    registry = load_registry()
-    rel_graph = _load_relationship_graph()
-
-    # Filter out theory relationships if requested
-    if show_theory == "false":
-        filtered_rels = [
-            r for r in rel_graph.get("relationships", [])
-            if r.get("confidence", "confirmed") != "theory"
-        ]
-        rel_graph = {**rel_graph, "relationships": filtered_rels}
-
-    # Build person selector options (confirmed identities with real names)
-    confirmed = [
-        i for i in registry.list_identities(state=IdentityState.CONFIRMED)
-        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
-    ]
-    confirmed.sort(key=lambda x: (x.get("name") or "").lower())
-
-    person_options = [Option("Everyone", value="")]
-    for ident in confirmed:
-        name = ensure_utf8_display(ident.get("name", ""))
-        iid = ident.get("identity_id", "")
-        person_options.append(Option(name, value=iid, selected=(iid == person)))
-
-    # Build tree data
-    from rhodesli_ml.graph.relationship_graph import build_family_tree, parse_gedcom_year
-    identities_dict = {}
-    for ident in registry.list_identities(state=IdentityState.CONFIRMED):
-        if not ident.get("merged_into"):
-            identities_dict[ident["identity_id"]] = ident
-
-    # Also include all GEDCOM individuals so unconfirmed family members have names and metadata
-    gedcom_inds = _load_gedcom_individuals()
-    
-    # We need a reverse map from gedcom_id -> identity_id so we don't duplicate confirmed matches
-    gedcom_links = _load_gedcom_face_links()
-    gedcom_to_identity = {v["gedcom_id"]: k for k, v in gedcom_links.items()}
-    
-    for g_ind in gedcom_inds:
-        g_id = g_ind.get("gedcom_id")
-        if not g_id: continue
-        # If this GEDCOM individual is already mapped to an identity, skip to avoid overwriting their richer archive data
-        if g_id in gedcom_to_identity:
-            continue
-            
-        identities_dict[g_id] = {
-            "name": g_ind.get("name") or "Unknown",
-            "metadata": {
-                "gender": g_ind.get("gender", "U"),
-                "birth_year": parse_gedcom_year(g_ind.get("birth_date")) or "",
-                "death_year": parse_gedcom_year(g_ind.get("death_date")) or "",
-            }
-        }
-
-    # Default to most-connected confirmed identity if no person specified
-    effective_person = person
-    if not effective_person:
-        # Find UUID-based person with most connections
-        all_rels = rel_graph.get("relationships", [])
-        connection_count: dict = {}
-        for rel in all_rels:
-            if rel.get("removed"):
-                continue
-            for key in ("person_a", "person_b"):
-                pid = rel.get(key, "")
-                if pid and not pid.startswith("@"):
-                    connection_count[pid] = connection_count.get(pid, 0) + 1
-        if connection_count:
-            effective_person = max(connection_count, key=connection_count.get)
-
-    tree_data = build_family_tree(
-        rel_graph, identities_dict,
-        root_person=effective_person if effective_person else None,
-    )
-
-    # Enrich tree nodes with avatar URLs (flat array format)
-    crop_files = get_crop_files()
-
-    for node in tree_data:
-        pid = node.get("id", "")
-        avatar_url = ""
-        try:
-            ident = registry.get_identity(pid)
-            if ident:
-                anchor_ids = ident.get("anchor_ids", [])
-                candidate_ids = ident.get("candidate_ids", [])
-                face_ids = anchor_ids or candidate_ids
-                if face_ids:
-                    url = resolve_face_image_url(face_ids[0], crop_files)
-                    if url:
-                        avatar_url = url
-        except (KeyError, IndexError):
-            pass
-        node["data"]["avatar"] = avatar_url
-        # Add identity page link for confirmed identities (UUID-based)
-        if not pid.startswith("@"):
-            node["data"]["identity_url"] = f"/people/{pid}"
-
-    tree_json = json.dumps(tree_data)
 
     # Person name for title/OG
     person_name = ""
     if person:
+        registry = load_registry()
         try:
             p_ident = registry.get_identity(person)
             if p_ident:
@@ -18307,24 +18208,31 @@ def get(person: str = "", show_theory: str = "true", sess=None):
 
     title_text = f"{person_name}'s Family Tree" if person_name else "Family Tree"
     share_url = f"/tree?person={person}" if person else "/tree"
-
     nav_links = _public_nav_links(active="tree", user=user)
 
     page_style = Style("""
-        #tree-container { width: 100%; height: 70vh; min-height: 500px; }
+        #tree-container { width: 100%; height: calc(100vh - 200px); min-height: 500px; position: relative; }
         #tree-container svg { background: #f8fafc !important; }
+        .tree-search-results { position: absolute; top: 100%; left: 0; right: 0; max-height: 300px;
+            overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); z-index: 100; }
+        .tree-search-results .result-item { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .tree-search-results .result-item:hover { background: #f1f5f9; }
+        .tree-search-results .result-item .name { font-weight: 500; color: #1e293b; }
+        .tree-search-results .result-item .badge { font-size: 11px; color: #64748b; }
+        .tree-zoom-controls { position: absolute; top: 12px; right: 12px; display: flex; flex-direction: column;
+            gap: 4px; z-index: 50; }
+        .tree-zoom-controls button { width: 36px; height: 36px; background: white; border: 1px solid #e2e8f0;
+            border-radius: 6px; cursor: pointer; font-size: 18px; display: flex; align-items: center;
+            justify-content: center; color: #475569; transition: all 0.15s; }
+        .tree-zoom-controls button:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .tree-node-popup { position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15); padding: 8px; z-index: 200; min-width: 160px; }
+        .tree-node-popup a, .tree-node-popup button { display: block; width: 100%; text-align: left;
+            padding: 6px 10px; border: none; background: none; cursor: pointer; border-radius: 4px;
+            font-size: 13px; color: #334155; text-decoration: none; }
+        .tree-node-popup a:hover, .tree-node-popup button:hover { background: #f1f5f9; }
     """)
-
-    empty_state = ""
-    if not tree_data:
-        empty_state = Div(
-            Div(
-                Span("No family relationships found yet.", cls="text-slate-600 text-lg"),
-                P("Import a GEDCOM file to build the family tree.", cls="text-slate-500 mt-2"),
-                cls="text-center py-16",
-            ),
-            id="tree-container",
-        )
 
     return (
         Title(f"{title_text} — Rhodesli"),
@@ -18349,30 +18257,29 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                     cls="mb-4",
                 ),
 
-                # Controls row
+                # Controls row: search + options
                 Div(
-                    Form(
+                    # Search bar
+                    Div(
+                        Label("Search", cls="text-xs text-slate-500 mb-1 block"),
                         Div(
-                            Label("Focus on", cls="text-xs text-slate-500 mb-1 block"),
-                            Select(*person_options, name="person",
-                                   cls="px-3 py-2 bg-white text-slate-800 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm",
-                                   onchange="this.form.submit()"),
+                            Input(type="text", id="tree-search-input", placeholder="Type a name to find someone...",
+                                  cls="w-full px-3 py-2 bg-white text-slate-800 rounded-lg border border-slate-300 focus:border-indigo-500 outline-none text-sm",
+                                  autocomplete="off"),
+                            Div(id="tree-search-results", cls="tree-search-results hidden"),
+                            cls="relative",
                         ),
-                        Div(
-                            Label(
-                                Input(type="checkbox", name="show_theory", value="true",
-                                      checked=(show_theory != "false"),
-                                      cls="mr-2 rounded",
-                                      onchange="this.form.submit()"),
-                                "Show speculative",
-                                cls="text-sm text-slate-500 flex items-center",
-                            ),
-                            cls="flex items-end pb-2",
+                        cls="flex-1 min-w-[200px]",
+                    ),
+                    # Show speculative toggle
+                    Div(
+                        Label(
+                            Input(type="checkbox", id="tree-show-theory", value="true",
+                                  checked=(show_theory != "false"), cls="mr-2 rounded"),
+                            "Show speculative",
+                            cls="text-sm text-slate-500 flex items-center",
                         ),
-                        Input(type="hidden", name="show_theory", value="false") if show_theory == "false" else "",
-                        method="get",
-                        action="/tree",
-                        cls="flex flex-wrap gap-4 items-end",
+                        cls="flex items-end pb-2",
                     ),
                     # Share button
                     Button(
@@ -18383,31 +18290,246 @@ def get(person: str = "", show_theory: str = "true", sess=None):
                         data_action="share-photo",
                         data_share_url=share_url,
                     ),
-                    cls="flex flex-wrap items-end justify-between gap-4 bg-slate-50 rounded-xl p-4 border border-slate-200 mb-4",
+                    cls="flex flex-wrap items-end gap-4 bg-slate-50 rounded-xl p-4 border border-slate-200 mb-4",
                 ),
 
-                # Tree visualization
-                empty_state if not tree_data else Div(
+                # Tree visualization with zoom controls
+                Div(
                     P("Loading family tree...", id="tree-loading", cls="text-center text-slate-400 py-8"),
                     Div(id="tree-container", cls="bg-white rounded-xl border border-slate-200"),
+                    # Zoom controls
+                    Div(
+                        Button("+", type="button", data_action="tree-zoom-in", title="Zoom in"),
+                        Button("\u2013", type="button", data_action="tree-zoom-out", title="Zoom out"),
+                        Button("\u2302", type="button", data_action="tree-fit", title="Fit to screen"),
+                        cls="tree-zoom-controls",
+                    ),
+                    cls="relative",
                 ),
 
                 cls="max-w-6xl mx-auto px-6 pt-24 pb-16",
             ),
+            # Popup container for node actions
+            Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
             Script(src="/static/js/family-chart.js"),
             Script(src="/static/js/family-tree.js"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
-                    var loading = document.getElementById('tree-loading');
-                    if (loading) loading.style.display = 'none';
-                    window.setupFamilyTree({tree_json}, '#tree-container', '{person}');
+                    window.initRhodesliTree('{person}', '{show_theory}');
                 }});
             """),
             cls="min-h-screen bg-slate-100",
         ),
     )
+
+
+# --- Tree API Endpoints (AD-185: Lazy loading tree) ---
+
+def _build_tree_adjacency(show_theory=True):
+    """Build adjacency maps from relationship graph for tree API."""
+    rel_graph = _load_relationship_graph()
+    rels = [r for r in rel_graph.get("relationships", [])
+            if not r.get("removed")
+            and (show_theory or r.get("confidence") != "theory")]
+    ptc, ctp, pts = {}, {}, {}  # parent_to_children, child_to_parents, person_to_spouses
+    for r in rels:
+        if r["type"] == "parent_child":
+            ptc.setdefault(r["person_a"], set()).add(r["person_b"])
+            ctp.setdefault(r["person_b"], set()).add(r["person_a"])
+        elif r["type"] == "spouse":
+            pts.setdefault(r["person_a"], set()).add(r["person_b"])
+            pts.setdefault(r["person_b"], set()).add(r["person_a"])
+    return ptc, ctp, pts
+
+
+def _build_tree_person_lookup():
+    """Build lookup of all people (identities + GEDCOM) for tree rendering."""
+    from rhodesli_ml.graph.relationship_graph import parse_gedcom_year
+    registry = load_registry()
+    lookup = {}
+    for ident in registry.list_identities(state=IdentityState.CONFIRMED):
+        if not ident.get("merged_into"):
+            lookup[ident["identity_id"]] = ident
+    gedcom_inds = _load_gedcom_individuals()
+    gedcom_links = _load_gedcom_face_links()
+    g2i = {v["gedcom_id"]: k for k, v in gedcom_links.items()}
+    for g in gedcom_inds:
+        gid = g.get("gedcom_id")
+        if not gid or gid in g2i:
+            continue
+        lookup[gid] = {
+            "name": g.get("name") or "Unknown",
+            "metadata": {"gender": g.get("gender", "U"),
+                         "birth_year": parse_gedcom_year(g.get("birth_date")) or "",
+                         "death_year": parse_gedcom_year(g.get("death_date")) or ""}
+        }
+    return lookup
+
+
+def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
+    """Create a single family-chart node with expansion indicators."""
+    from rhodesli_ml.graph.relationship_graph import parse_gedcom_year, format_lifespan
+    ident = lookup.get(pid, {})
+    name = ident.get("name", "Unknown")
+    meta = ident.get("metadata", {})
+    gender = meta.get("gender", "U")
+    parts = name.rsplit(" ", 1) if name != "Unknown" else ["Unknown", ""]
+    first = ident.get("first_name") or (parts[0] if parts else "Unknown")
+    last = ident.get("last_name") or (parts[1] if len(parts) >= 2 else "")
+    br = meta.get("birth_date") or meta.get("birth_year") or meta.get("birth_year_estimate") or ""
+    dr = meta.get("death_date") or meta.get("death_year") or ""
+    lifespan = format_lifespan(str(br) if br else None, str(dr) if dr else None)
+    avatar = ""
+    try:
+        ri = registry.get_identity(pid)
+        if ri:
+            fids = ri.get("anchor_ids", []) or ri.get("candidate_ids", [])
+            if fids:
+                url = resolve_face_image_url(fids[0], crop_files)
+                if url:
+                    avatar = url
+    except (KeyError, IndexError):
+        pass
+    # Rels — only to included persons
+    rels = {}
+    parents = list(ctp.get(pid, set()))
+    father, mother = None, None
+    for p in parents:
+        if p not in included:
+            continue
+        pg = lookup.get(p, {}).get("metadata", {}).get("gender", "U")
+        if pg == "M" and not father:
+            father = p
+        elif pg == "F" and not mother:
+            mother = p
+        elif not father:
+            father = p
+        elif not mother:
+            mother = p
+    if father:
+        rels["father"] = father
+    if mother:
+        rels["mother"] = mother
+    spouses = [s for s in pts.get(pid, set()) if s in included]
+    if spouses:
+        rels["spouses"] = spouses
+    children = [c for c in ptc.get(pid, set()) if c in included]
+    if children:
+        rels["children"] = children
+    # Expansion flags
+    all_parents = ctp.get(pid, set())
+    all_children = ptc.get(pid, set())
+    all_siblings = set()
+    for p in all_parents:
+        for c in ptc.get(p, set()):
+            if c != pid:
+                all_siblings.add(c)
+    return {
+        "id": pid,
+        "data": {"first name": first, "last name": last, "gender": gender,
+                 "birthday": parse_gedcom_year(str(br)) if br else "",
+                 "lifespan": lifespan, "avatar": avatar,
+                 "identity_url": f"/people/{pid}" if not pid.startswith("@") else "",
+                 "has_more_parents": bool(all_parents - included),
+                 "has_more_children": bool(all_children - included),
+                 "has_more_siblings": bool(all_siblings - included)},
+        "rels": rels,
+    }
+
+
+@rt("/api/tree/data")
+def get(person_id: str = "", depth: int = 1, show_theory: str = "true"):
+    """Return tree data for a focal person + N levels of connections."""
+    ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
+    lookup = _build_tree_person_lookup()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    # Default to most-connected person
+    if not person_id:
+        counts = {}
+        for pid in set(list(ptc.keys()) + list(ctp.keys()) + list(pts.keys())):
+            counts[pid] = len(ptc.get(pid, set())) + len(ctp.get(pid, set())) + len(pts.get(pid, set()))
+        # Prefer UUID-based (archive identities) over GEDCOM xrefs
+        uuid_counts = {k: v for k, v in counts.items() if not k.startswith("@")}
+        person_id = max(uuid_counts, key=uuid_counts.get) if uuid_counts else (max(counts, key=counts.get) if counts else "")
+
+    if not person_id:
+        return JSONResponse({"focal_person": "", "nodes": []})
+
+    # BFS with depth limit
+    included = set()
+    queue = [(person_id, 0)]
+    while queue:
+        pid, d = queue.pop(0)
+        if pid in included or d > depth:
+            continue
+        included.add(pid)
+        if d < depth:
+            for p in ctp.get(pid, set()):
+                queue.append((p, d + 1))
+            for c in ptc.get(pid, set()):
+                queue.append((c, d + 1))
+            for s in pts.get(pid, set()):
+                queue.append((s, d + 1))
+
+    nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry)
+             for pid in included]
+    return JSONResponse({"focal_person": person_id, "nodes": nodes})
+
+
+@rt("/api/tree/expand")
+def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
+    """Return additional tree nodes for expansion in a given direction."""
+    ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
+    lookup = _build_tree_person_lookup()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    new_ids = set()
+    if direction == "parents":
+        new_ids = ctp.get(person_id, set())
+    elif direction == "children":
+        new_ids = ptc.get(person_id, set())
+    elif direction == "siblings":
+        for p in ctp.get(person_id, set()):
+            for c in ptc.get(p, set()):
+                if c != person_id:
+                    new_ids.add(c)
+
+    # Include spouses of new people
+    extra = set()
+    for nid in new_ids:
+        extra.update(pts.get(nid, set()))
+    new_ids.update(extra)
+
+    # Include the requesting person so rels connect
+    all_ids = new_ids | {person_id}
+    nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, all_ids, crop_files, registry)
+             for pid in new_ids]
+    return JSONResponse({"source_person": person_id, "direction": direction, "nodes": nodes})
+
+
+@rt("/api/tree/search")
+def get(q: str = ""):
+    """Search all people (identities + GEDCOM) by name for tree type-ahead."""
+    if not q or len(q) < 2:
+        return JSONResponse({"results": []})
+    lookup = _build_tree_person_lookup()
+    q_lower = q.lower()
+    results = []
+    for pid, info in lookup.items():
+        name = info.get("name", "Unknown")
+        if q_lower in name.lower():
+            results.append({
+                "id": pid,
+                "name": name,
+                "has_photo": not pid.startswith("@"),
+            })
+    results.sort(key=lambda x: (not x["has_photo"], x["name"].lower()))
+    return JSONResponse({"results": results[:20]})
 
 
 @rt("/connect")

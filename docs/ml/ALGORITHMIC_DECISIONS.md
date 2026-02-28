@@ -2103,3 +2103,12 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Why**: CardSvg works immediately with the current family-chart library build. Avatar support is lost but names/lifespans render correctly.
 - **Affects**: `app/static/js/family-tree.js`.
 - **Revisit condition**: If a newer family-chart version fixes CardHtml, or if avatar display in tree becomes a priority.
+
+### AD-185: API-Driven Lazy Loading Tree with Search
+- **Date**: 2026-02-28
+- **Context**: Tree showed 13 of 718 people. 114 disconnected clusters. Dropdown navigation didn't scale. No search, no expand/collapse, no zoom controls, no click-to-navigate.
+- **Decision**: Replace inline JSON tree with API-driven lazy loading. Three endpoints: `/api/tree/data` (focal person + depth), `/api/tree/expand` (directional expansion), `/api/tree/search` (type-ahead). JS rewritten for fetch-based loading with node action popup (View Profile / Focus Tree / Expand).
+- **Rejected**: (1) BALKAN FamilyTreeJS — superior features but commercial license required for production. (2) Full tree dump — 718 nodes fine now but doesn't scale, and bad UX (shows one component only). (3) React/Next.js tree — overkill given FastHTML + HTMX constraint.
+- **Library**: Kept donatso/family-chart with CardSvg. Library's `updateData()` + `updateTree()` support dynamic data replacement without chart recreation.
+- **Affects**: `app/main.py` (3 API endpoints + page rewrite), `app/static/js/family-tree.js` (full rewrite).
+- **Tests**: 18 new tests in `tests/test_tree_api.py`.
