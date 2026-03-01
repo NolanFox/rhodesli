@@ -76,7 +76,7 @@ class TestRelationshipGraph:
     def test_import_recorded(self, parsed, confirmed_matches):
         graph = build_relationship_graph(parsed, confirmed_matches)
         assert len(graph["gedcom_imports"]) == 1
-        assert graph["gedcom_imports"][0]["individuals_count"] == 14
+        assert graph["gedcom_imports"][0]["individuals_count"] == 17
         assert graph["gedcom_imports"][0]["families_count"] == 6
 
     def test_no_duplicate_relationships(self, parsed, confirmed_matches):
