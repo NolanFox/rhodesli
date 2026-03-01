@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-93 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+96 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -67,6 +67,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 70 | Dockerfile must COPY every package the web app imports at runtime |
 | 78 | **Production-local data divergence is the #1 recurring deployment failure** |
 | 85 | **Deploy data safety gate — 5th occurrence, triple protection (AD-134)** |
+| 94 | **Wait for deploy completion before Chrome verification — 502 corrupts JS state** |
 | 71 | has_insightface check must probe actual deferred imports |
 
 ## UI, HTMX & Frontend — `tasks/lessons/ui-lessons.md`
@@ -97,6 +98,7 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 91 | Leaflet CDN loading requires polling, not DOMContentLoaded |
 | 92 | Subtree computation must include ALL photo people, even disconnected ones |
 | 93 | Verify API response data matches what the JS consumer expects |
+| 95 | Stale JS closure state after fetch failures — fresh page navigation required |
 
 ## Data Safety & Registries — `tasks/lessons/data-lessons.md`
 
@@ -134,3 +136,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 87 | Subagent commit discipline — every subagent MUST run tests AND commit ALL files before completing |
 | 88 | Monolithic app files prevent parallel worktree execution — Tracks touching app/main.py must be sequential |
 | 89 | /clear between acts is NON-NEGOTIABLE — never rationalize skipping it. Compaction at 2% destroyed session 80 |
+| 96 | Multi-layered rendering pipeline bugs require iterative fix-verify cycles |

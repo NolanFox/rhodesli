@@ -25,6 +25,9 @@
 - [x] Lesson 91: Leaflet CDN loading requires polling, not DOMContentLoaded — Evidence: `tasks/lessons/ui-lessons.md`
 - [x] Lesson 92: Subtree computation must include ALL photo people, even disconnected — Evidence: `tasks/lessons/ui-lessons.md`
 - [x] Lesson 93: Verify API response data matches what JS consumer expects — Evidence: `tasks/lessons/ui-lessons.md`
+- [x] Lesson 94: Wait for deploy completion before Chrome verification — Evidence: `tasks/lessons/deployment-lessons.md`
+- [x] Lesson 95: Stale JS closure state after fetch failures — Evidence: `tasks/lessons/ui-lessons.md`
+- [x] Lesson 96: Multi-layered pipeline bugs require iterative fix-verify — Evidence: `tasks/lessons/harness-lessons.md`
 
 ## Red Flags
 

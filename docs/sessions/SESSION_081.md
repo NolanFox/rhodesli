@@ -68,6 +68,9 @@ Started: 2026-03-01 ~02:00 EST | Completed: 2026-03-01 ~05:00 EST
 - Lesson 91: Leaflet CDN loading requires polling, not DOMContentLoaded
 - Lesson 92: Subtree computation must include ALL photo people, even disconnected
 - Lesson 93: Verify API response data matches what JS consumer expects
+- Lesson 94: Wait for deploy completion before Chrome verification — 502 corrupts JS state
+- Lesson 95: Stale JS closure state after fetch failures — fresh navigation required
+- Lesson 96: Multi-layered pipeline bugs require iterative fix-verify cycles
 
 ### Key Debugging Insight
 The tree bug required 3 iterative fixes because the failure had 3 layers:
