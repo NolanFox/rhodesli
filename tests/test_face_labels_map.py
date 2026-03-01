@@ -257,6 +257,8 @@ class TestFaceIdentityLabels:
         # Confirmed identity name should appear as a link in the analysis
         assert CONFIRMED_NAME in html
         assert f"/person/{CONFIRMED_ID}" in html
+        # No "Face N:" prefix for identified faces — just the name link
+        assert "Face 0: " not in html
 
     def test_confirmed_identity_name_links_to_person_page(self, client, monkeypatch):
         """Face analysis links confirmed names to /person/{id}."""

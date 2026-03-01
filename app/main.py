@@ -1561,14 +1561,18 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                                 }}).addTo(map);
                                 var marker = L.marker([{location_data['lat']}, {location_data['lng']}]{', {{draggable: true}}' if is_admin else ''}).addTo(map);
                                 marker.bindPopup('<strong>{location_name}</strong>');
+                                setTimeout(function() {{ map.invalidateSize(); }}, 100);
                             }}
-                            if (typeof L !== 'undefined') {{
-                                initMap();
-                            }} else {{
-                                document.addEventListener('DOMContentLoaded', function() {{
-                                    setTimeout(initMap, 500);
-                                }});
+                            var attempts = 0;
+                            function tryInit() {{
+                                if (typeof L !== 'undefined') {{
+                                    initMap();
+                                }} else if (attempts < 50) {{
+                                    attempts++;
+                                    setTimeout(tryInit, 100);
+                                }}
                             }}
+                            tryInit();
                         }})();
                     """),
                 )
@@ -1769,7 +1773,6 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         # Header: face index + identity name (clickable link if identified)
         if has_real_name and identity_id:
             header_el = Div(
-                Span(f"Face {i}: ", cls="text-white font-medium text-sm"),
                 A(display_name, href=f"/person/{identity_id}",
                   cls="text-emerald-400 hover:text-emerald-300 font-medium text-sm underline transition-colors",
                   data_testid="face-identity-link"),
