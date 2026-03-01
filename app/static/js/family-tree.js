@@ -464,11 +464,17 @@
         photoShadow.append("feDropShadow").attr("dx", "0").attr("dy", "4").attr("stdDeviation", "6")
             .attr("flood-color", "rgba(0,0,0,0.55)").attr("flood-opacity", "0.55");
 
-        // Clip paths
+        // Clip paths — rounded rect (squircle) to show more face area
         Object.keys(positions).forEach(function(pid) {
             defs.append("clipPath")
                 .attr("id", "clip-" + pid.replace(/[^a-zA-Z0-9]/g, "_"))
-                .append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R);
+                .append("rect")
+                .attr("x", PHOTO_CX - PHOTO_R)
+                .attr("y", PHOTO_CY - PHOTO_R)
+                .attr("width", PHOTO_R * 2)
+                .attr("height", PHOTO_R * 2)
+                .attr("rx", PHOTO_R * 0.25)
+                .attr("ry", PHOTO_R * 0.25);
         });
 
         // --- Draw connections (BOLD and VISIBLE) with draw-in animation ---
@@ -598,9 +604,13 @@
         // Focal person outer glow
         cards.each(function(d) {
             if (d.id === focalId) {
-                d3.select(this).insert("circle", ":first-child")
-                    .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY)
-                    .attr("r", PHOTO_R + 10)
+                d3.select(this).insert("rect", ":first-child")
+                    .attr("x", PHOTO_CX - PHOTO_R - 10)
+                    .attr("y", PHOTO_CY - PHOTO_R - 10)
+                    .attr("width", PHOTO_R * 2 + 20)
+                    .attr("height", PHOTO_R * 2 + 20)
+                    .attr("rx", PHOTO_R * 0.25 + 10)
+                    .attr("ry", PHOTO_R * 0.25 + 10)
                     .attr("fill", "none").attr("stroke", COLORS.focalGlow)
                     .attr("stroke-width", 5)
                     .attr("filter", "url(#focalGlow)");
@@ -620,9 +630,14 @@
             var gender = d.node.data.gender || "U";
             var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
 
-            // Shadow
-            el.append("circle")
-                .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R + 1)
+            // Shadow — rounded rect
+            el.append("rect")
+                .attr("x", PHOTO_CX - PHOTO_R - 1)
+                .attr("y", PHOTO_CY - PHOTO_R - 1)
+                .attr("width", PHOTO_R * 2 + 2)
+                .attr("height", PHOTO_R * 2 + 2)
+                .attr("rx", PHOTO_R * 0.25 + 1)
+                .attr("ry", PHOTO_R * 0.25 + 1)
                 .attr("fill", "rgba(0,0,0,0.35)")
                 .attr("filter", "url(#photoShadow)");
 
@@ -652,7 +667,13 @@
                 // Gender silhouette avatar — Ancestry-style
                 var silColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
                 var silBg = gender === "M" ? "rgba(96,165,250,0.15)" : gender === "F" ? "rgba(249,168,212,0.15)" : "rgba(75,94,120,0.15)";
-                el.append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
+                el.append("rect")
+                    .attr("x", PHOTO_CX - PHOTO_R)
+                    .attr("y", PHOTO_CY - PHOTO_R)
+                    .attr("width", PHOTO_R * 2)
+                    .attr("height", PHOTO_R * 2)
+                    .attr("rx", PHOTO_R * 0.25)
+                    .attr("ry", PHOTO_R * 0.25)
                     .attr("fill", silBg);
                 // Head
                 el.append("circle")
@@ -676,10 +697,15 @@
                     .text(initial);
             }
 
-            // Gender ring — bold border
-            el.append("circle")
+            // Gender ring — bold rounded-rect border
+            el.append("rect")
                 .attr("class", "photo-ring")
-                .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
+                .attr("x", PHOTO_CX - PHOTO_R)
+                .attr("y", PHOTO_CY - PHOTO_R)
+                .attr("width", PHOTO_R * 2)
+                .attr("height", PHOTO_R * 2)
+                .attr("rx", PHOTO_R * 0.25)
+                .attr("ry", PHOTO_R * 0.25)
                 .attr("fill", "none").attr("stroke", ringColor).attr("stroke-width", 3.5);
 
             // Face count badge (top-right of photo)
@@ -1245,9 +1271,9 @@
 
         var html = '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #1e293b;margin-bottom:6px">';
         if (photoUrl) {
-            html += '<img src="' + photoUrl + '" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:3px solid ' + ringColor + '" />';
+            html += '<img src="' + photoUrl + '" style="width:56px;height:56px;border-radius:22%;object-fit:cover;border:3px solid ' + ringColor + '" />';
         } else {
-            html += '<div style="width:56px;height:56px;border-radius:50%;background:#1a2336;border:3px solid ' + ringColor + ';display:flex;align-items:center;justify-content:center;color:#4b5e7a;font-family:Georgia,serif;font-size:22px">' + (name[0] || "?").toUpperCase() + '</div>';
+            html += '<div style="width:56px;height:56px;border-radius:22%;background:#1a2336;border:3px solid ' + ringColor + ';display:flex;align-items:center;justify-content:center;color:#4b5e7a;font-family:Georgia,serif;font-size:22px">' + (name[0] || "?").toUpperCase() + '</div>';
         }
         html += '<div><span style="font-weight:600;color:#f1f5f9;font-size:16px;font-family:Georgia,serif;display:block">' + name + '</span>';
         if (faceCount > 1) {
