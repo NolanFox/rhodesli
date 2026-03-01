@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S}\" >&2; exit 2; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"BLOCKED: Uncommitted files\" >&2; git status --porcelain >&2; exit 2; fi; exit 0'",
+            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S}\" >&2; exit 2; fi; if [ ! -f \"docs/sessions/SESSION_0${S}.md\" ]; then echo \"BLOCKED: Session log missing: docs/sessions/SESSION_0${S}.md\" >&2; exit 2; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"BLOCKED: Uncommitted files\" >&2; git status --porcelain >&2; exit 2; fi; exit 0'",
             "timeout": 30
           }
         ]
@@ -84,7 +84,18 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"git commit|git merge\"; then echo \"REMINDER: Run make test-fast before proceeding.\"; fi; exit 0'"
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"git commit|git merge\"; then echo \"══════════════════════════════════════════════\"; echo \"🔴 SESSION 81: /clear GATE\"; echo \"══════════════════════════════════════════════\"; echo \"You just committed. You MUST now:\"; echo \"  1. Run /clear (NOT /compact)\"; echo \"  2. Re-read ONLY next act from docs/prompts/session-81-prompt.md\"; echo \"  3. Re-read context: head -40 docs/session_context/session_81_context.md\"; echo \"  4. Check progress: cat /tmp/session_81_checklist.md\"; echo \"══════════════════════════════════════════════\"; if [ -f /tmp/session_81_checklist.md ]; then cat /tmp/session_81_checklist.md; fi; echo \"REMINDER: Run make test-fast before proceeding.\"; fi; exit 0'"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'osascript -e \"display notification \\\"Session 81: Awaiting input\\\" with title \\\"Claude Code\\\"\" 2>/dev/null; exit 0'"
           }
         ]
       }
