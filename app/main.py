@@ -18905,6 +18905,18 @@ def _build_tree_adjacency(show_theory=True):
         if gid:
             xref_to_uuid[gid] = identity_id
 
+    # Also build from gedcom_matches.json for comprehensive xref resolution
+    # (Supabase gedcom_face_links may not have all confirmed matches)
+    try:
+        gm = _load_gedcom_matches()
+        for m in gm.get("matches", []):
+            xref = m.get("gedcom_xref")
+            uid = m.get("identity_id")
+            if xref and uid and xref not in xref_to_uuid:
+                xref_to_uuid[xref] = uid
+    except Exception:
+        pass
+
     def resolve(pid):
         return xref_to_uuid.get(pid, pid)
 
@@ -18934,6 +18946,16 @@ def _build_tree_person_lookup():
     gedcom_inds = _load_gedcom_individuals()
     gedcom_links = _load_gedcom_face_links()
     g2i = {v["gedcom_id"]: k for k, v in gedcom_links.items()}
+    # Also include gedcom_matches.json links for comprehensive coverage
+    try:
+        gm = _load_gedcom_matches()
+        for m in gm.get("matches", []):
+            xref = m.get("gedcom_xref")
+            uid = m.get("identity_id")
+            if xref and uid and xref not in g2i:
+                g2i[xref] = uid
+    except Exception:
+        pass
     for g in gedcom_inds:
         gid = g.get("gedcom_id")
         if not gid or gid in g2i:

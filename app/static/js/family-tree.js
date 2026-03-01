@@ -845,10 +845,10 @@
                     .attr("transform", "translate(" + (PHOTO_CX - PHOTO_R - 2) + "," + PHOTO_CY + ")")
                     .style("cursor", "pointer")
                     .attr("opacity", 0);
-                leftArrow.append("circle").attr("r", 14)
+                leftArrow.append("circle").attr("r", 22)
                     .attr("fill", "rgba(0,0,0,0.6)").attr("stroke", "rgba(255,255,255,0.3)").attr("stroke-width", 1);
                 leftArrow.append("text").attr("text-anchor", "middle").attr("dy", "0.35em")
-                    .attr("fill", "white").attr("font-size", "14px").attr("font-weight", "700")
+                    .attr("fill", "white").attr("font-size", "18px").attr("font-weight", "700")
                     .text("\u2039");
                 leftArrow.on("click", function(event) {
                     event.stopPropagation();
@@ -861,10 +861,10 @@
                     .attr("transform", "translate(" + (PHOTO_CX + PHOTO_R + 2) + "," + PHOTO_CY + ")")
                     .style("cursor", "pointer")
                     .attr("opacity", 0);
-                rightArrow.append("circle").attr("r", 14)
+                rightArrow.append("circle").attr("r", 22)
                     .attr("fill", "rgba(0,0,0,0.6)").attr("stroke", "rgba(255,255,255,0.3)").attr("stroke-width", 1);
                 rightArrow.append("text").attr("text-anchor", "middle").attr("dy", "0.35em")
-                    .attr("fill", "white").attr("font-size", "14px").attr("font-weight", "700")
+                    .attr("fill", "white").attr("font-size", "18px").attr("font-weight", "700")
                     .text("\u203A");
                 rightArrow.on("click", function(event) {
                     event.stopPropagation();
