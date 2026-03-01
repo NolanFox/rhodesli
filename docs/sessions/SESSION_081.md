@@ -80,6 +80,28 @@ The tree bug required 3 iterative fixes because the failure had 3 layers:
 
 Each fix revealed the next layer. Full Chrome verification after each deploy was essential.
 
+## Session 81C: Tree Data Fix + Arrow Size + Supabase Sync
+Started: 2026-03-01 ~14:00 EST | Completed: 2026-03-01 ~15:30 EST
+
+### Issues Fixed
+| Issue | Problem | Fix | Chrome Verified |
+|-------|---------|-----|-----------------|
+| 1 | Tree shows only 2-7 nodes (should show 17) | Fixed 21 truncated UUIDs in gedcom_matches.json, added gedcom_matches.json fallback to `_build_tree_adjacency()` and `_build_tree_person_lookup()`, synced 1240 rels + 56 matches to Supabase | YES -- 17 nodes confirmed |
+| 2 | Photo cycling arrows 28px (below 44px WCAG) | Changed circle r=14 to r=22, font 14px to 18px | YES -- r=22 confirmed |
+| 3 | Photo cycling works | Tested via D3 handler invocation: images change correctly | YES -- 3 different photos cycled |
+| 4 | Expand/collapse works | Clicked Children button, nodes 17->22 | YES -- 5 new nodes added |
+
+### Root Causes Discovered
+1. **Truncated UUIDs**: 21 of 56 identity_id entries in gedcom_matches.json were only 8 chars
+2. **Missing fallback**: Tree adjacency builder only used Supabase `gedcom_face_links` for xref mapping, not `gedcom_matches.json`
+3. **Stale Supabase data**: Supabase had 1023 relationships (0 with GEDCOM xrefs), local had 1240 (1213 with xrefs)
+
+### Data Pipeline Fix
+- `gedcom_matches.json` and `relationships.json` are NOT in git deploy bundle
+- They sync FROM Supabase at Railway startup
+- Local changes must be pushed TO Supabase using `sync_gedcom_matches()` and `sync_relationships()`
+- Fixed by syncing both to Supabase, then redeploying
+
 ## Deferred to Session 82
 1. ACT 5: Batch Gemini re-run with enhanced prompts (needs API key)
 2. Location correction backend endpoint (form is placeholder)
