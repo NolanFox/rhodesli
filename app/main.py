@@ -6110,11 +6110,11 @@ def review_action_buttons(identity_id: str, state: str, is_admin: bool = True) -
             type="button",
         ))
 
-    # Reset button - available for terminal states
+    # Reset button - available for terminal states (de-emphasized — admin edge case)
     if state in ("CONFIRMED", "SKIPPED", "REJECTED", "CONTESTED"):
         buttons.append(Button(
-            "\u21a9 Return to Inbox",
-            cls="px-3 py-1.5 text-sm font-bold border border-slate-500 text-slate-400 rounded hover:bg-slate-700 transition-colors min-h-[44px]",
+            "Reset",
+            cls="px-2 py-1 text-xs text-slate-500 hover:text-slate-300 hover:bg-slate-700/50 rounded transition-colors",
             hx_post=f"/identity/{identity_id}/reset",
             hx_target=f"#identity-{identity_id}",
             hx_swap="outerHTML",
@@ -7152,27 +7152,11 @@ def identity_card(
                 cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
             )
 
-    # Find Similar button (loads neighbors via HTMX)
-    find_similar_btn = Button(
+    # Find Similar — link to full-page hero+grid layout
+    find_similar_btn = A(
         "Similar",
+        href=f"/people/{identity_id}/similar",
         cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
-        hx_get=f"/api/identity/{identity_id}/neighbors",
-        hx_target=f"#neighbors-{identity_id}",
-        hx_swap="innerHTML",
-        hx_indicator=f"#neighbors-loading-{identity_id}",
-        type="button",
-        **{"hx-on::after-swap": f"document.getElementById('neighbors-{identity_id}').scrollIntoView({{behavior: 'smooth', block: 'start'}})"},
-    )
-
-    # Neighbors container (populated by HTMX)
-    neighbors_container = Div(
-        Span(
-            "Loading...",
-            id=f"neighbors-loading-{identity_id}",
-            cls="htmx-indicator text-slate-400 text-sm",
-        ),
-        id=f"neighbors-{identity_id}",
-        cls="mt-4"
     )
 
     # Pagination controls
@@ -7268,28 +7252,33 @@ def identity_card(
         cls="flex flex-wrap gap-1.5 mt-3 px-1",
     )
 
-    # Admin tools (sort, edit, return to inbox) — collapsed by default
+    # Admin tools — collapsible to keep cards clean
     admin_tools = None
     if is_admin:
-        admin_tools = Div(
-            Div(
-                sort_dropdown,
-                review_action_buttons(identity_id, state, is_admin=is_admin),
-                cls="flex flex-wrap items-center gap-2",
+        admin_tools = Details(
+            Summary(
+                Span("Admin", cls="text-xs text-slate-500 font-medium"),
+                cls="list-none cursor-pointer mt-2 px-1 flex items-center gap-1"
+                    " text-slate-500 hover:text-slate-300 transition-colors select-none",
             ),
-            # Identity metadata (AN-012)
-            _identity_metadata_display(identity, is_admin=is_admin),
-            # Expandable face grid for multi-face identities
             Div(
                 Div(
-                    *face_cards,
-                    cls="grid grid-cols-3 sm:grid-cols-4 gap-2",
+                    sort_dropdown,
+                    review_action_buttons(identity_id, state, is_admin=is_admin),
+                    cls="flex flex-wrap items-center gap-2",
                 ),
-                pagination,
-                id=f"faces-{identity_id}",
-                cls="mt-2",
-            ) if total_faces > 1 else None,
-            cls="mt-3 px-1 pt-3 border-t border-slate-700/50",
+                _identity_metadata_display(identity, is_admin=is_admin),
+                Div(
+                    Div(
+                        *face_cards,
+                        cls="grid grid-cols-3 sm:grid-cols-4 gap-2",
+                    ),
+                    pagination,
+                    id=f"faces-{identity_id}",
+                    cls="mt-2",
+                ) if total_faces > 1 else None,
+                cls="mt-2 px-1 pt-2 border-t border-slate-700/50",
+            ),
         )
 
     return Div(
@@ -7297,8 +7286,6 @@ def identity_card(
         name_section,
         action_section,
         admin_tools,
-        # Neighbors container (shown when "Find Similar" is clicked)
-        neighbors_container,
         cls=f"identity-card bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3"
             f" hover:border-slate-600 hover:bg-slate-800/80 transition-all duration-300"
             f" hover:shadow-lg hover:shadow-slate-900/50",
@@ -13672,7 +13659,7 @@ def get(identity_id: str, sess=None):
         card = Div(
             A(
                 Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full h-full object-cover", loading="lazy"),
-                href=f"/people/{n['identity_id']}",
+                href=f"/person/{n['identity_id']}",
                 cls="block aspect-[3/4] overflow-hidden bg-slate-800",
             ),
             Div(
@@ -13685,7 +13672,9 @@ def get(identity_id: str, sess=None):
                 Span(f"{n.get('face_count', 0)} face{'s' if n.get('face_count', 0) != 1 else ''}", cls="text-xs text-slate-400 mt-0.5 block") if n.get("face_count", 0) > 1 else None,
                 cls="p-2.5",
             ),
-            cls="rounded-lg overflow-hidden bg-slate-800 border border-slate-700 hover:border-slate-500 transition-colors",
+            cls="rounded-lg overflow-hidden bg-slate-800 border border-slate-700"
+                " hover:border-slate-500 hover:shadow-lg hover:shadow-slate-900/50"
+                " hover:-translate-y-1 transition-all duration-300",
         )
         result_cards.append(card)
 
@@ -13724,7 +13713,7 @@ def get(identity_id: str, sess=None):
                         Div(
                             H1(name, cls="text-3xl font-serif font-bold text-white mb-2"),
                             P(f"{total_faces} photo{'s' if total_faces != 1 else ''}", cls="text-slate-400 mb-4"),
-                            A("View Profile", href=f"/people/{identity_id}",
+                            A("View Profile", href=f"/person/{identity_id}",
                               cls="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"),
                             cls="flex flex-col justify-center",
                         ),
