@@ -253,6 +253,7 @@ See: docs/session_context/session_49C_community_feedback.md
 - [ ] **KIN-001**: Kinship recalibration post-GEDCOM (19 relationships now available)
 - [ ] **Session 43**: Life Events & Context Graph (event tagging, richer timeline)
 - [ ] **PRODUCT-005: Face Compare Tier 3 — Product Grade**: User accounts, saved comparisons, API access, batch comparison. Post-employment priority. See AD-117.
+- [ ] **PRODUCT-006: Interactive Photo Chatbot**: Conversational interface for photo analysis — user provides context, chatbot cross-references GEDCOM data, progressive refinement. Demonstrated by Asheville case study (Session 81). Each user input documented as metadata, feeds back to improve estimates. Source: Session 81 Nolan feedback, `docs/session_context/session_81_context.md` §5.
 - [ ] **GRAPH-001: "Six Degrees" Connection Finder**: Graph traversal showing shortest path between any two people in the archive via photos, family, events. Novel feature. Source: Session 54c planning.
 - [ ] **ML-080: DNA Matching Integration**: Explore DNA-based family matching as complement to face comparison. Community interest from Leo Di Leyo (Facebook). Source: Session 49C community feedback.
 - [ ] **PARTNER-001: Institutional Partnership**: Museum/archive collaboration for expanded photo access and academic credibility. Source: Session 49C community feedback.
