@@ -1540,6 +1540,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             )
 
         # Embedded Leaflet map if geocoded data exists
+        map_script = None
         if location_data.get("lat") and location_data.get("lng"):
             map_id = f"location-map-{photo_id[:8]}"
             location_parts.append(
@@ -1548,35 +1549,36 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                         data_testid="location-map"),
                     Link(rel="stylesheet", href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"),
                     Script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"),
-                    Script(f"""
-                        (function() {{
-                            function initMap() {{
-                                var el = document.getElementById('{map_id}');
-                                if (!el || el._leaflet_id) return;
-                                var map = L.map('{map_id}').setView([{location_data['lat']}, {location_data['lng']}], 10);
-                                L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
-                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-                                    subdomains: 'abcd',
-                                    maxZoom: 19
-                                }}).addTo(map);
-                                var marker = L.marker([{location_data['lat']}, {location_data['lng']}]{', {{draggable: true}}' if is_admin else ''}).addTo(map);
-                                marker.bindPopup('<strong>{location_name}</strong>');
-                                setTimeout(function() {{ map.invalidateSize(); }}, 100);
-                            }}
-                            var attempts = 0;
-                            function tryInit() {{
-                                if (typeof L !== 'undefined') {{
-                                    initMap();
-                                }} else if (attempts < 50) {{
-                                    attempts++;
-                                    setTimeout(tryInit, 100);
-                                }}
-                            }}
-                            tryInit();
-                        }})();
-                    """),
                 )
             )
+            # Script placed OUTSIDE the <details> wrapper so it executes reliably
+            map_script = Script(f"""
+                (function() {{
+                    function initMap() {{
+                        var el = document.getElementById('{map_id}');
+                        if (!el || el._leaflet_id) return;
+                        var map = L.map('{map_id}').setView([{location_data['lat']}, {location_data['lng']}], 10);
+                        L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                            subdomains: 'abcd',
+                            maxZoom: 19
+                        }}).addTo(map);
+                        var marker = L.marker([{location_data['lat']}, {location_data['lng']}]{', {{draggable: true}}' if is_admin else ''}).addTo(map);
+                        marker.bindPopup('<strong>{location_name}</strong>');
+                        setTimeout(function() {{ map.invalidateSize(); }}, 100);
+                    }}
+                    var attempts = 0;
+                    function tryInit() {{
+                        if (typeof L !== 'undefined') {{
+                            initMap();
+                        }} else if (attempts < 50) {{
+                            attempts++;
+                            setTimeout(tryInit, 100);
+                        }}
+                    }}
+                    tryInit();
+                }})();
+            """)
 
         location_content = Div(
             *location_parts,
@@ -1584,6 +1586,8 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             data_testid="location-estimate",
         )
         sections.append(_field("Location Estimate", location_content, expanded=True))
+        if map_script:
+            sections.append(map_script)
 
     # Scene description
     scene = label.get("scene_description", "")
