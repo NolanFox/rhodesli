@@ -159,6 +159,13 @@
                     existing.data["all_faces"] = nn.data["all_faces"];
                     existing.data["face_count"] = nn.data["face_count"];
                 }
+                // Merge shared photos
+                if (nn.data["shared_photos"]) {
+                    existing.data["shared_photos"] = existing.data["shared_photos"] || {};
+                    Object.keys(nn.data["shared_photos"]).forEach(function(k) {
+                        existing.data["shared_photos"][k] = nn.data["shared_photos"][k];
+                    });
+                }
             }
         }
     }
@@ -198,6 +205,26 @@
             });
         }
         return { generations: generations, genOf: visited, nodeMap: nodeMap };
+    }
+
+    // --- Shared photos helper ---
+    function _getSharedPhotos(nodeA, nodeB) {
+        var sp = (nodeA && nodeA.data && nodeA.data.shared_photos) || {};
+        var idB = nodeB ? nodeB.id : "";
+        return sp[idB] || 0;
+    }
+
+    function _maxSharedPhotosParentChild(parentNodes, childNodes, nodeMap) {
+        var maxSp = 0;
+        parentNodes.forEach(function(pid) {
+            var pNode = nodeMap[pid];
+            if (!pNode) return;
+            childNodes.forEach(function(cid) {
+                var sp = _getSharedPhotos(pNode, { id: cid });
+                if (sp > maxSp) maxSp = sp;
+            });
+        });
+        return maxSp;
     }
 
     // --- Layout: assign x,y; build connections ---
@@ -255,13 +282,18 @@
                     for (var ci = 0; ci < grp.length - 1; ci++) {
                         var leftPos = positions[grp[ci].id];
                         var rightPos = positions[grp[ci + 1].id];
+                        var leftId = grp[ci].id;
+                        var rightId = grp[ci + 1].id;
+                        var sp = _getSharedPhotos(grp[ci], grp[ci + 1]);
                         connections.push({
                             type: "couple",
                             x1: leftPos.x + CARD_W,
                             y1: leftPos.y + PHOTO_CY,
                             x2: rightPos.x,
                             y2: rightPos.y + PHOTO_CY,
-                            midX: (leftPos.x + CARD_W + rightPos.x) / 2
+                            midX: (leftPos.x + CARD_W + rightPos.x) / 2,
+                            personA: leftId, personB: rightId,
+                            sharedPhotos: sp
                         });
                     }
                 }
@@ -271,6 +303,36 @@
         // Parent-child T-shape connections
         // Track which parent pairs we've already drawn children for
         var drawnChildPairs = {};
+
+        // Helper: push parent-child connections with shared photos metadata
+        function pushParentChildConns(parentIds, childIds, parentX, parentY) {
+            var pcSp = _maxSharedPhotosParentChild(parentIds, childIds, nodeMap);
+            var childPos = [];
+            childIds.forEach(function(cid) {
+                var cp = positions[cid];
+                if (cp) childPos.push({ x: cp.x + CARD_W / 2, y: cp.y });
+            });
+            if (childPos.length === 0) return;
+
+            var barY = parentY + DROP_Y;
+            connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY,
+                               relLabel: "Parent \u2192 Child", sharedPhotos: pcSp, parentIds: parentIds, childIds: childIds });
+            var minCX = Math.min.apply(null, childPos.map(function(c) { return c.x; }));
+            var maxCX = Math.max.apply(null, childPos.map(function(c) { return c.x; }));
+            if (childPos.length > 1) {
+                connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX,
+                                   relLabel: "Parent \u2192 Child", sharedPhotos: pcSp });
+            }
+            if (parentX < minCX || parentX > maxCX) {
+                connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX),
+                                   relLabel: "Parent \u2192 Child", sharedPhotos: pcSp });
+            }
+            childPos.forEach(function(cp) {
+                connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y,
+                                   relLabel: "Parent \u2192 Child", sharedPhotos: pcSp });
+            });
+        }
+
         allNodes.forEach(function(n) {
             var children = n.rels.children || [];
             if (children.length === 0) return;
@@ -316,27 +378,7 @@
                     var sp = positions[sid];
                     var parentX = (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2;
                     var parentY = nPos.y + CARD_H;
-
-                    var childPos = [];
-                    spouseChildren.forEach(function(cid) {
-                        var cp = positions[cid];
-                        if (cp) childPos.push({ x: cp.x + CARD_W / 2, y: cp.y });
-                    });
-                    if (childPos.length === 0) return;
-
-                    var barY = parentY + DROP_Y;
-                    connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
-                    var minCX = Math.min.apply(null, childPos.map(function(c) { return c.x; }));
-                    var maxCX = Math.max.apply(null, childPos.map(function(c) { return c.x; }));
-                    if (childPos.length > 1) {
-                        connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
-                    }
-                    if (parentX < minCX || parentX > maxCX) {
-                        connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
-                    }
-                    childPos.forEach(function(cp) {
-                        connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
-                    });
+                    pushParentChildConns([n.id, sid], spouseChildren, parentX, parentY);
                 });
 
                 // Draw unpaired children from the first spouse midpoint (fallback)
@@ -344,26 +386,7 @@
                     var sp = positions[spouses[0]];
                     var parentX = sp ? (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2 : nPos.x + CARD_W / 2;
                     var parentY = nPos.y + CARD_H;
-                    var childPos = [];
-                    unpairedChildren.forEach(function(cid) {
-                        var cp = positions[cid];
-                        if (cp) childPos.push({ x: cp.x + CARD_W / 2, y: cp.y });
-                    });
-                    if (childPos.length > 0) {
-                        var barY = parentY + DROP_Y;
-                        connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
-                        var minCX = Math.min.apply(null, childPos.map(function(c) { return c.x; }));
-                        var maxCX = Math.max.apply(null, childPos.map(function(c) { return c.x; }));
-                        if (childPos.length > 1) {
-                            connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
-                        }
-                        if (parentX < minCX || parentX > maxCX) {
-                            connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
-                        }
-                        childPos.forEach(function(cp) {
-                            connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
-                        });
-                    }
+                    pushParentChildConns([n.id, spouses[0]], unpairedChildren, parentX, parentY);
                 }
             } else {
                 // Single or no spouse — original logic
@@ -377,6 +400,7 @@
                     parentY = nPos.y + CARD_H;
                 }
 
+                var parentIds = spouses.length > 0 ? [n.id, spouses[0]] : [n.id];
                 var childPositions = [];
                 children.forEach(function(cid) {
                     var cp = positions[cid];
@@ -384,24 +408,30 @@
                 });
                 if (childPositions.length === 0) return;
 
+                var pcSp = _maxSharedPhotosParentChild(parentIds, children, nodeMap);
                 var barY = parentY + DROP_Y;
-                connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
+                connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY,
+                                   relLabel: "Parent \u2192 Child", sharedPhotos: pcSp, parentIds: parentIds, childIds: children });
 
                 var minCX = Math.min.apply(null, childPositions.map(function(c) { return c.x; }));
                 var maxCX = Math.max.apply(null, childPositions.map(function(c) { return c.x; }));
                 if (childPositions.length > 1) {
-                    connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
+                    connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX,
+                                       relLabel: "Parent \u2192 Child", sharedPhotos: pcSp });
                 }
                 if (parentX < minCX || parentX > maxCX) {
-                    connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
+                    connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX),
+                                       relLabel: "Parent \u2192 Child", sharedPhotos: pcSp });
                 }
                 childPositions.forEach(function(cp) {
-                    connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
+                    connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y,
+                                       relLabel: "Parent \u2192 Child", sharedPhotos: pcSp });
                 });
             }
         });
 
-        return { positions: positions, connections: connections, couples: couples };
+        return { positions: positions, connections: connections, couples: couples,
+                 genKeys: genKeys, genOf: genOf, nodeMap: nodeMap };
     }
 
     // --- Render ---
@@ -434,6 +464,7 @@
                     g.selectAll(".face-badge").attr("opacity", k > 0.3 ? 1 : 0);
                     g.selectAll(".photo-cycle-btn").attr("opacity", k > 0.4 ? 1 : 0);
                     g.selectAll(".photo-dots").attr("opacity", k > 0.4 ? 1 : 0);
+                    g.selectAll(".generation-bands").attr("opacity", k > 0.1 ? 1 : 0);
                 });
             svg.call(zoomBehavior);
             window.addEventListener("resize", function() {
@@ -477,15 +508,80 @@
                 .attr("ry", PHOTO_R * 0.25);
         });
 
+        // --- Generation bands (alternating subtle backgrounds) ---
+        var genKeys = layout.genKeys;
+        var genOf = layout.genOf;
+        if (genKeys.length > 0) {
+            var bandGroup = g.append("g").attr("class", "generation-bands");
+            // Compute x extent across ALL positions
+            var allXs = Object.keys(positions).map(function(pid) { return positions[pid].x; });
+            var minX = Math.min.apply(null, allXs) - H_GAP * 2;
+            var maxX = Math.max.apply(null, allXs) + CARD_W + H_GAP * 2;
+            var bandColors = ["rgba(148, 163, 184, 0.04)", "rgba(99, 131, 176, 0.04)"];
+            var genLabels = {};
+            // Assign generation labels relative to focal generation (gen 0)
+            genKeys.forEach(function(gk) {
+                if (gk < 0) genLabels[gk] = Math.abs(gk) === 1 ? "Parents" : (Math.abs(gk) === 2 ? "Grandparents" : "Gen " + gk);
+                else if (gk === 0) genLabels[gk] = "Focal";
+                else genLabels[gk] = gk === 1 ? "Children" : (gk === 2 ? "Grandchildren" : "Gen +" + gk);
+            });
+            genKeys.forEach(function(gk, gi) {
+                var y = gk * V_GAP;
+                var bandY = y - 30;
+                var bandH = CARD_H + 60;
+                bandGroup.append("rect")
+                    .attr("x", minX).attr("y", bandY)
+                    .attr("width", maxX - minX).attr("height", bandH)
+                    .attr("fill", bandColors[gi % 2])
+                    .attr("rx", 12).attr("ry", 12)
+                    .attr("opacity", 0)
+                    .transition().duration(800).ease(d3.easeCubicOut)
+                    .attr("opacity", 1);
+                // Generation label on the left
+                bandGroup.append("text")
+                    .attr("x", minX + 16).attr("y", bandY + 22)
+                    .attr("fill", "rgba(148, 163, 184, 0.35)")
+                    .attr("font-size", "13px")
+                    .attr("font-family", "Georgia, serif")
+                    .attr("font-style", "italic")
+                    .text(genLabels[gk] || "Gen " + gk)
+                    .attr("opacity", 0)
+                    .transition().delay(400).duration(600).ease(d3.easeCubicOut)
+                    .attr("opacity", 1);
+            });
+        }
+
+        // --- Stroke width from shared photos (min 2, max 5) ---
+        function connStrokeWidth(c) {
+            var sp = c.sharedPhotos || 0;
+            if (sp <= 0) return 2;
+            if (sp >= 4) return 5;
+            // Linear scale: 1 photo = 2.75, 2 = 3.5, 3 = 4.25, 4+ = 5
+            return 2 + sp * 0.75;
+        }
+
+        // --- Hover tooltip text ---
+        function connTooltip(c) {
+            var label = c.relLabel || (c.type === "couple" ? "Spouse" : "");
+            var sp = c.sharedPhotos || 0;
+            var parts = [];
+            if (label) parts.push(label);
+            if (sp > 0) parts.push(sp + " shared photo" + (sp !== 1 ? "s" : ""));
+            return parts.join(" \u2014 ") || "";
+        }
+
         // --- Draw connections (BOLD and VISIBLE) with draw-in animation ---
         var lineGroup = g.append("g").attr("class", "connections");
         connections.forEach(function(c, ci) {
             var lineEl;
+            var sw = connStrokeWidth(c);
+            var tip = connTooltip(c);
             if (c.type === "couple") {
                 lineEl = lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y1).attr("x2", c.x2).attr("y2", c.y2)
-                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", 3)
+                    .attr("stroke", COLORS.coupleLine).attr("stroke-width", sw)
                     .attr("stroke-dasharray", "10,6");
+                if (tip) lineEl.append("title").text(tip);
                 // Couple dot fades in after line draws
                 var dot = lineGroup.append("circle")
                     .attr("cx", c.midX).attr("cy", c.y1).attr("r", 5)
@@ -496,11 +592,13 @@
             } else if (c.type === "drop" || c.type === "childDrop") {
                 lineEl = lineGroup.append("line")
                     .attr("x1", c.x).attr("y1", c.y1).attr("x2", c.x).attr("y2", c.y2)
-                    .attr("stroke", COLORS.line).attr("stroke-width", 3);
+                    .attr("stroke", COLORS.line).attr("stroke-width", sw);
+                if (tip) lineEl.append("title").text(tip);
             } else if (c.type === "bar") {
                 lineEl = lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y).attr("x2", c.x2).attr("y2", c.y)
-                    .attr("stroke", COLORS.line).attr("stroke-width", 3);
+                    .attr("stroke", COLORS.line).attr("stroke-width", sw);
+                if (tip) lineEl.append("title").text(tip);
             }
             // Animate line drawing in via stroke-dashoffset
             if (lineEl) {

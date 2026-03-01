@@ -18780,7 +18780,44 @@ def _build_tree_person_lookup():
     return lookup
 
 
-def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
+def _compute_shared_photos(person_ids, registry):
+    """Compute shared photo counts between pairs of people.
+
+    Returns a dict: {person_id: {other_person_id: count}} for each pair
+    of people in person_ids that share at least one photo.
+    """
+    _build_caches()
+    # Build identity_id -> set of photo_ids
+    id_to_photos = {}
+    for pid in person_ids:
+        photos = set()
+        try:
+            ident = registry.get_identity(pid)
+            if ident:
+                fids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+                for fid in fids:
+                    photo_id = _face_to_photo_cache.get(fid) if _face_to_photo_cache else None
+                    if photo_id:
+                        photos.add(photo_id)
+        except (KeyError, TypeError):
+            pass
+        if photos:
+            id_to_photos[pid] = photos
+
+    # Compute pairwise overlap
+    result = {}
+    pids_with_photos = list(id_to_photos.keys())
+    for i, pid_a in enumerate(pids_with_photos):
+        for pid_b in pids_with_photos[i + 1:]:
+            shared = len(id_to_photos[pid_a] & id_to_photos[pid_b])
+            if shared > 0:
+                result.setdefault(pid_a, {})[pid_b] = shared
+                result.setdefault(pid_b, {})[pid_a] = shared
+    return result
+
+
+def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry,
+                    shared_photos_map=None):
     """Create a single family-chart node with expansion indicators."""
     from rhodesli_ml.graph.relationship_graph import parse_gedcom_year, format_lifespan
     ident = lookup.get(pid, {})
@@ -18848,6 +18885,8 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
         for c in ptc.get(p, set()):
             if c != pid:
                 all_siblings.add(c)
+    # Shared photos with related people
+    sp = shared_photos_map.get(pid, {}) if shared_photos_map else {}
     return {
         "id": pid,
         "data": {"first name": first, "last name": last, "gender": gender,
@@ -18858,7 +18897,8 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
                  "all_faces": all_faces,
                  "has_more_parents": bool(all_parents - included),
                  "has_more_children": bool(all_children - included),
-                 "has_more_siblings": bool(all_siblings - included)},
+                 "has_more_siblings": bool(all_siblings - included),
+                 "shared_photos": sp},
         "rels": rels,
     }
 
@@ -18899,7 +18939,12 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true"):
             for s in pts.get(pid, set()):
                 queue.append((s, d + 1))
 
-    nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry)
+    # Build shared_photos map: for each pair of included people,
+    # count how many photos they both appear in
+    shared_photos_map = _compute_shared_photos(included, registry)
+
+    nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry,
+                             shared_photos_map)
              for pid in included]
     return JSONResponse({"focal_person": person_id, "nodes": nodes})
 
@@ -18933,7 +18978,11 @@ def get(person_id: str, direction: str = "parents", show_theory: str = "true"):
     # the requesting person's updated node so the client can merge
     # its rels (e.g., new children appear in parent's rels.children)
     all_ids = new_ids | {person_id}
-    nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, all_ids, crop_files, registry)
+
+    shared_photos_map = _compute_shared_photos(all_ids, registry)
+
+    nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, all_ids, crop_files, registry,
+                             shared_photos_map)
              for pid in all_ids]
     return JSONResponse({"source_person": person_id, "direction": direction, "nodes": nodes})
 
