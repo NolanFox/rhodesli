@@ -2174,3 +2174,32 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Method**: (1) Location prompt section now has 3 steps: Visual Analysis, Biographical Cross-Reference, Confidence Assessment. Cross-reference step instructs "missing child" test and migration pattern analysis. (2) GEDCOM context builder separates RESI events into "Residential History" subsection, emits children under "Children (birth dates help narrow photo date and location)" heading with month precision when available, and propagates spouse RESI/OCCU events. (3) Location schema now has `visual_evidence`, `biographical_evidence`, and `missing_child_analysis` fields.
 - **Result**: Asheville dry-run prompt contains all ground-truth-relevant data: Victoria's residence at 33 Elizabeth Street (1930-1940), Leon's occupation in Asheville, children Selma (b.1926 Asheville), Anita (b.1931 NC), Nace (b.1933 Mar Asheville), Betty (b.1950 Miami), Vida (b.1945 NY). Context is 654 tokens, total prompt 2021 tokens.
 - **Affects**: `rhodesli_ml/gemini_extraction.py` (location prompt + schema), `rhodesli_ml/gedcom_context.py` (residential history, children context, spouse events).
+
+### AD-193: Photo Location Data Model and UX
+- **Date**: 2026-03-01
+- **Session**: 81 Act 3
+- **Context**: Location estimates were displayed as free text from Gemini but had no structured schema for geocoding, confidence, or provenance. Needed structured data to support embedded maps and admin corrections.
+- **Decision**: Define `photo_locations.json` schema with per-photo location records containing: `location_name` (string), `region` (string), `country` (string), `lat`/`lng` (float), `confidence` (high/medium/low), `source` (gemini/human/geocoded), `evidence` (string). UI renders embedded Leaflet.js map when lat/lng present, location label with confidence badge, evidence text, and admin-only correction form.
+- **Schema**:
+  ```json
+  {
+    "version": 1,
+    "photos": {
+      "<photo_id>": {
+        "photo_id": "<photo_id>",
+        "location_name": "Rhodes, Greece",
+        "region": "Mediterranean",
+        "country": "Greece",
+        "lat": 36.4413,
+        "lng": 28.2261,
+        "confidence": "high",
+        "source": "gemini",
+        "location_estimate": "Visual evidence text from Gemini",
+        "all_matches": [{"key": "rhodes", "name": "Rhodes, Greece"}]
+      }
+    }
+  }
+  ```
+- **UX patterns**: Embedded mini-map (Google Photos), confidence badge (internal date estimate pattern), evidence text (original to Rhodesli). Research: `docs/session_context/session_81_location_ux_research.md`.
+- **Rejected**: (1) Google Maps API — requires API key and billing. (2) Storing locations in Supabase only — premature, JSON file matches current date-labels pattern. (3) Full-page map only — embedded mini-map provides context without navigation.
+- **Affects**: `app/main.py` (`_build_ai_analysis_section`, `_load_photo_locations`), `data/photo_locations.json`, `tests/test_location_ux.py`.
