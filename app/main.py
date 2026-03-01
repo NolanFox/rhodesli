@@ -1472,6 +1472,115 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         )
         sections.append(_field("Date Estimate", date_content, field_key="date", expanded=True))
 
+    # Location estimate (from Gemini + geocoded data)
+    location_estimate = label.get("location_estimate", "")
+    locations = _load_photo_locations()
+    location_data = locations.get(photo_id, {})
+    location_name = location_data.get("location_name", "")
+    location_region = location_data.get("region", "")
+    location_confidence = location_data.get("confidence", "")
+    has_location = bool(location_estimate or location_name)
+
+    if has_location:
+        location_parts = []
+        # Location label
+        if location_name:
+            loc_label = location_name
+            if location_region:
+                loc_label += f", {location_region}"
+            location_parts.append(
+                P(loc_label, cls="text-lg font-serif text-amber-200 mb-1")
+            )
+        # Confidence badge
+        if location_confidence:
+            loc_conf_cls = {
+                "high": "bg-emerald-500/20 text-emerald-400",
+                "medium": "bg-amber-500/20 text-amber-400",
+                "low": "bg-red-500/20 text-red-400",
+            }.get(location_confidence, "bg-slate-500/20 text-slate-400")
+            location_parts.append(
+                Span(f"Confidence: {location_confidence}",
+                     cls=f"text-[11px] px-2 py-0.5 rounded-full {loc_conf_cls}")
+            )
+        # Evidence text (Gemini's reasoning)
+        if location_estimate:
+            location_parts.append(
+                P(location_estimate, cls="text-slate-400 text-xs mt-2 italic",
+                  data_testid="location-evidence")
+            )
+        # Admin: Correct Location button (simple text input)
+        if is_admin:
+            location_parts.append(
+                Div(
+                    Form(
+                        Div(
+                            Label("Correct location:", fr="correction-location-input",
+                                  cls="text-[11px] text-slate-400 mr-2"),
+                            Input(
+                                type="text",
+                                name="correction_location",
+                                id="correction-location-input",
+                                placeholder=location_name or "City, Country",
+                                cls="bg-slate-800 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48",
+                                data_testid="correction-location",
+                            ),
+                            Button(
+                                "Submit",
+                                cls="ml-2 px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
+                                type="button",
+                                disabled=True,
+                                title="Location correction coming soon",
+                            ),
+                            cls="flex items-center mt-2",
+                        ),
+                    ),
+                    cls="mt-2",
+                    data_testid="location-correction-form",
+                )
+            )
+
+        # Embedded Leaflet map if geocoded data exists
+        if location_data.get("lat") and location_data.get("lng"):
+            map_id = f"location-map-{photo_id[:8]}"
+            location_parts.append(
+                Div(
+                    Div(id=map_id, style="height: 300px; border-radius: 8px; margin-top: 12px;",
+                        data_testid="location-map"),
+                    Link(rel="stylesheet", href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"),
+                    Script(src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"),
+                    Script(f"""
+                        (function() {{
+                            function initMap() {{
+                                var el = document.getElementById('{map_id}');
+                                if (!el || el._leaflet_id) return;
+                                var map = L.map('{map_id}').setView([{location_data['lat']}, {location_data['lng']}], 10);
+                                L.tileLayer('https://{{s}}.basemaps.cartocdn.com/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+                                    subdomains: 'abcd',
+                                    maxZoom: 19
+                                }}).addTo(map);
+                                var marker = L.marker([{location_data['lat']}, {location_data['lng']}]{', {{draggable: true}}' if is_admin else ''}).addTo(map);
+                                marker.bindPopup('<strong>{location_name}</strong>');
+                            }}
+                            if (typeof L !== 'undefined') {{
+                                initMap();
+                            }} else {{
+                                document.addEventListener('DOMContentLoaded', function() {{
+                                    setTimeout(initMap, 500);
+                                }});
+                            }}
+                        }})();
+                    """),
+                )
+            )
+
+        location_content = Div(
+            *location_parts,
+            id=f"location-section-{photo_id[:8]}",
+            data_testid="location-estimate",
+        )
+        sections.append(_field("Location Estimate", location_content, expanded=True))
+
     # Scene description
     scene = label.get("scene_description", "")
     if not scene and search_doc:
@@ -1628,6 +1737,9 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         scene_context = alignment.scene_context
         model_used = alignment.model_used
 
+    # Look up identities for face labels
+    registry = load_registry()
+
     face_cards = []
     for i, face in enumerate(aligned_faces):
         is_subject = face.get("is_subject", True)
@@ -1642,14 +1754,33 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         position = face.get("position_in_photo", "")
         features = face.get("identifying_features", "")
 
+        # Look up actual identity from registry for this face
+        face_id = face.get("face_id", "")
+        matched_identity = get_identity_for_face(registry, face_id) if face_id else None
+        identity_id = matched_identity.get("identity_id") if matched_identity else None
+        registry_name = ensure_utf8_display(matched_identity.get("name", "")) if matched_identity else ""
+        is_confirmed = matched_identity and matched_identity.get("state") == "CONFIRMED"
+        has_real_name = is_confirmed and registry_name and not registry_name.startswith("Unidentified")
+
+        # Use registry name if available and confirmed, otherwise use Gemini name
+        display_name = registry_name if has_real_name else name
+
         card_content = []
-        # Header: face index + identity name
-        header_text = f"Face {i}"
-        if name != "Unidentified":
-            header_text += f": {name}"
-        card_content.append(
-            P(header_text, cls="text-white font-medium text-sm mb-1")
-        )
+        # Header: face index + identity name (clickable link if identified)
+        if has_real_name and identity_id:
+            header_el = Div(
+                Span(f"Face {i}: ", cls="text-white font-medium text-sm"),
+                A(display_name, href=f"/person/{identity_id}",
+                  cls="text-emerald-400 hover:text-emerald-300 font-medium text-sm underline transition-colors",
+                  data_testid="face-identity-link"),
+                cls="mb-1",
+            )
+        else:
+            header_text = f"Face {i}"
+            if display_name != "Unidentified":
+                header_text += f": {display_name}"
+            header_el = P(header_text, cls="text-white font-medium text-sm mb-1")
+        card_content.append(header_el)
 
         # Demographics line
         demo_parts = []
@@ -14153,9 +14284,20 @@ def _load_photo_locations() -> dict:
 
 
 @rt("/map")
-def get(collection: str = "", person: str = "", decade: str = "", sess=None):
-    """Interactive map view of photo locations across the Rhodes Jewish diaspora."""
+def get(collection: str = "", person: str = "", people: str = "", decade: str = "", sess=None):
+    """Interactive map view of photo locations across the Rhodes Jewish diaspora.
+
+    Query params:
+        person: Single person ID to filter by
+        people: Comma-separated person IDs (from photo page navigation)
+    """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    # If people param provided (from photo page), use the first as the person filter
+    if people and not person:
+        person_ids = [p.strip() for p in people.split(",") if p.strip()]
+        if person_ids:
+            person = person_ids[0]
 
     _build_caches()
     locations = _load_photo_locations()
@@ -18558,9 +18700,21 @@ async def post(photo: UploadFile = None, sess=None):
 
 
 @rt("/tree")
-def get(person: str = "", show_theory: str = "true", sess=None):
-    """Family Tree — lazy-loading tree with search, zoom, expand/collapse (AD-185)."""
+def get(person: str = "", show_theory: str = "true", photo_id: str = "", people: str = "", sess=None):
+    """Family Tree — lazy-loading tree with search, zoom, expand/collapse (AD-185).
+
+    Query params:
+        person: Single person ID to center tree on
+        photo_id: Source photo ID (for using face crops from that photo)
+        people: Comma-separated person IDs (from photo page navigation)
+    """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    # If people param provided (from photo page), pick the first as the focused person
+    if people and not person:
+        person_ids = [p.strip() for p in people.split(",") if p.strip()]
+        if person_ids:
+            person = person_ids[0]
 
     # Person name for title/OG
     person_name = ""
@@ -19616,6 +19770,12 @@ def public_photo_page(
             # For admin cards with quick-identify, don't wrap in link (form inside link = invalid HTML)
             person_cards.append(card_inner)
 
+    # --- Collect identified person IDs for tree/map navigation ---
+    identified_person_ids = [
+        fi["identity_id"] for fi in face_info_list
+        if fi["is_identified"] and fi["identity_id"]
+    ]
+
     # --- Photo metadata line (with clickable collection link) ---
     meta_elements = []
     if photo.get("collection"):
@@ -19977,6 +20137,22 @@ def public_photo_page(
                             data_action="flip-photo",
                             id="flip-photo-btn",
                         ) if has_back else None,
+                        # Family Tree button (only when identified people exist)
+                        A(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>'),
+                            "Family Tree",
+                            href=f"/tree?photo_id={photo_id}&people={','.join(identified_person_ids)}",
+                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
+                            data_testid="photo-tree-btn",
+                        ) if identified_person_ids else None,
+                        # Map button (only when identified people exist)
+                        A(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'),
+                            "See on Map",
+                            href=f"/map?people={','.join(identified_person_ids)}",
+                            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm rounded-lg transition-colors inline-flex items-center",
+                            data_testid="photo-map-btn",
+                        ) if identified_person_ids else None,
                         # Admin: Name These Faces button (2+ unidentified faces required)
                         Button(
                             f"Name These Faces ({unidentified_count} unidentified)",
