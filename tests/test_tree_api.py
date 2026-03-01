@@ -164,6 +164,187 @@ class TestTreeSearchEndpoint:
         assert "has_photo" in result
 
 
+class TestSharedPhotosInTree:
+    """Tests for shared_photos field in tree node data."""
+
+    def test_shared_photos_field_present(self, client, mock_tree_data):
+        """Every tree node should include shared_photos in data."""
+        resp = client.get("/api/tree/data?person_id=father-1&depth=1")
+        data = resp.json()
+        for node in data["nodes"]:
+            assert "shared_photos" in node["data"], f"Node {node['id']} missing shared_photos"
+
+    def test_shared_photos_empty_when_no_face_data(self, client, mock_tree_data):
+        """With no face data, shared_photos should be empty dict."""
+        resp = client.get("/api/tree/data?person_id=father-1&depth=1")
+        data = resp.json()
+        for node in data["nodes"]:
+            assert node["data"]["shared_photos"] == {}, \
+                f"Node {node['id']} has unexpected shared_photos: {node['data']['shared_photos']}"
+
+    def test_shared_photos_with_face_data(self, client):
+        """When two people share photos, shared_photos should reflect the count."""
+        # Create identities with overlapping face IDs in the same photos
+        test_identities = {
+            "identities": {
+                "person-a": {"identity_id": "person-a", "name": "Person A", "state": "CONFIRMED",
+                             "metadata": {"gender": "M"}, "anchor_ids": ["face-a1", "face-a2"], "candidate_ids": []},
+                "person-b": {"identity_id": "person-b", "name": "Person B", "state": "CONFIRMED",
+                             "metadata": {"gender": "F"}, "anchor_ids": ["face-b1"], "candidate_ids": []},
+            },
+            "schema_version": 1,
+        }
+        test_graph = {
+            "schema_version": 1,
+            "relationships": [
+                {"person_a": "person-a", "person_b": "person-b", "type": "spouse", "source": "gedcom"},
+            ],
+            "gedcom_imports": [],
+        }
+
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = list(test_identities["identities"].values())
+        mock_registry.get_identity = lambda pid: test_identities["identities"].get(pid)
+
+        # face-a1 and face-b1 are in photo-1 (shared), face-a2 is in photo-2 (not shared)
+        mock_f2p = {"face-a1": "photo-1", "face-a2": "photo-2", "face-b1": "photo-1"}
+
+        with patch("app.main._load_relationship_graph", return_value=test_graph), \
+             patch("app.main._load_gedcom_individuals", return_value=[]), \
+             patch("app.main._load_gedcom_face_links", return_value={}), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", mock_f2p):
+            resp = client.get("/api/tree/data?person_id=person-a&depth=1")
+            data = resp.json()
+            node_a = next(n for n in data["nodes"] if n["id"] == "person-a")
+            node_b = next(n for n in data["nodes"] if n["id"] == "person-b")
+            # Person A and Person B share 1 photo (photo-1)
+            assert node_a["data"]["shared_photos"].get("person-b") == 1
+            assert node_b["data"]["shared_photos"].get("person-a") == 1
+
+    def test_shared_photos_in_expand_response(self, client):
+        """Expand endpoint should also include shared_photos."""
+        test_identities = {
+            "identities": {
+                "parent-x": {"identity_id": "parent-x", "name": "Parent X", "state": "CONFIRMED",
+                             "metadata": {"gender": "M"}, "anchor_ids": [], "candidate_ids": []},
+                "child-x": {"identity_id": "child-x", "name": "Child X", "state": "CONFIRMED",
+                            "metadata": {"gender": "M"}, "anchor_ids": [], "candidate_ids": []},
+            },
+            "schema_version": 1,
+        }
+        test_graph = {
+            "schema_version": 1,
+            "relationships": [
+                {"person_a": "parent-x", "person_b": "child-x", "type": "parent_child", "source": "gedcom"},
+            ],
+            "gedcom_imports": [],
+        }
+
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = list(test_identities["identities"].values())
+        mock_registry.get_identity = lambda pid: test_identities["identities"].get(pid)
+
+        with patch("app.main._load_relationship_graph", return_value=test_graph), \
+             patch("app.main._load_gedcom_individuals", return_value=[]), \
+             patch("app.main._load_gedcom_face_links", return_value={}), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main.load_registry", return_value=mock_registry), \
+             patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", {}):
+            resp = client.get("/api/tree/expand?person_id=parent-x&direction=children")
+            data = resp.json()
+            for node in data["nodes"]:
+                assert "shared_photos" in node["data"]
+
+
+class TestComputeSharedPhotos:
+    """Unit tests for _compute_shared_photos helper."""
+
+    def test_no_faces_returns_empty(self):
+        """People with no face IDs should have no shared photos."""
+        mock_registry = MagicMock()
+        mock_registry.get_identity.return_value = {"anchor_ids": [], "candidate_ids": []}
+
+        with patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", {}):
+            from app.main import _compute_shared_photos
+            result = _compute_shared_photos({"p1", "p2"}, mock_registry)
+            assert result == {}
+
+    def test_shared_photo_detected(self):
+        """Two people with faces in the same photo should show shared count."""
+        mock_registry = MagicMock()
+        def get_ident(pid):
+            if pid == "p1":
+                return {"anchor_ids": ["f1"], "candidate_ids": []}
+            elif pid == "p2":
+                return {"anchor_ids": ["f2"], "candidate_ids": []}
+            return None
+        mock_registry.get_identity = get_ident
+
+        mock_f2p = {"f1": "photo-shared", "f2": "photo-shared"}
+
+        with patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", mock_f2p):
+            from app.main import _compute_shared_photos
+            result = _compute_shared_photos({"p1", "p2"}, mock_registry)
+            assert result.get("p1", {}).get("p2") == 1
+            assert result.get("p2", {}).get("p1") == 1
+
+    def test_multiple_shared_photos(self):
+        """Count should reflect number of shared photos, not faces."""
+        mock_registry = MagicMock()
+        def get_ident(pid):
+            if pid == "p1":
+                return {"anchor_ids": ["f1a", "f1b"], "candidate_ids": []}
+            elif pid == "p2":
+                return {"anchor_ids": ["f2a", "f2b"], "candidate_ids": []}
+            return None
+        mock_registry.get_identity = get_ident
+
+        # f1a and f2a in photo-1, f1b and f2b in photo-2 = 2 shared photos
+        mock_f2p = {"f1a": "photo-1", "f1b": "photo-2", "f2a": "photo-1", "f2b": "photo-2"}
+
+        with patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", mock_f2p):
+            from app.main import _compute_shared_photos
+            result = _compute_shared_photos({"p1", "p2"}, mock_registry)
+            assert result.get("p1", {}).get("p2") == 2
+
+    def test_no_overlap_returns_empty(self):
+        """Two people in different photos should have no shared photos."""
+        mock_registry = MagicMock()
+        def get_ident(pid):
+            if pid == "p1":
+                return {"anchor_ids": ["f1"], "candidate_ids": []}
+            elif pid == "p2":
+                return {"anchor_ids": ["f2"], "candidate_ids": []}
+            return None
+        mock_registry.get_identity = get_ident
+
+        mock_f2p = {"f1": "photo-1", "f2": "photo-2"}
+
+        with patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", mock_f2p):
+            from app.main import _compute_shared_photos
+            result = _compute_shared_photos({"p1", "p2"}, mock_registry)
+            assert result == {}
+
+    def test_identity_not_found_handled(self):
+        """If registry.get_identity raises KeyError, it should be handled gracefully."""
+        mock_registry = MagicMock()
+        mock_registry.get_identity.side_effect = KeyError("not found")
+
+        with patch("app.main._build_caches"), \
+             patch("app.main._face_to_photo_cache", {}):
+            from app.main import _compute_shared_photos
+            result = _compute_shared_photos({"p1", "p2"}, mock_registry)
+            assert result == {}
+
+
 class TestTreePageRendering:
     def test_tree_page_returns_200(self, client, mock_tree_data):
         resp = client.get("/tree")
