@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.83.1] — 2026-03-01 (Session 81B: Fix Real Issues — Face Labels, Map, Tree)
+
+### Fixed
+- **Face Analysis labels**: Removed "Face N:" prefix for identified faces — now shows only the person name as a clickable link
+- **Leaflet map rendering**: Fixed grey/blank map by moving script outside `<details>` element and using polling-based CDN load instead of DOMContentLoaded
+- **Tree for disconnected families**: Photos with people from multiple unrelated families now include ALL people in the tree (not just the connected majority)
+
+### Added
+- Lessons 90-93: Script/details interaction, Leaflet CDN polling, subtree completeness, API/JS data contract verification
+
 ## [v0.83.0] — 2026-03-01 (Session 81: Connected App — Tree, Map, Location, Face Labels)
 
 ### Added

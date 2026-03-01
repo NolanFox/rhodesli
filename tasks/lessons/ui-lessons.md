@@ -94,3 +94,13 @@ See also: `.claude/rules/ui-scalability.md`
 - **Mistake**: Used `DOMContentLoaded` as fallback for Leaflet library loading. This fails on HTMX swaps (event already fired) and when the CDN `<script src>` loads asynchronously after the inline script runs.
 - **Rule**: When loading third-party libraries from CDN, use a polling approach (`setInterval`/`setTimeout` loop checking for the global) instead of relying on DOM events. Also call `map.invalidateSize()` after creation when the container may have been recently sized.
 - **Prevention**: Use `tryInit()` pattern: check `typeof L !== 'undefined'` every 100ms up to 50 attempts (5s timeout). Always add `invalidateSize()` after Leaflet map creation. Session 81B.
+
+### Lesson 92: Subtree computation must include ALL photo people, even disconnected ones
+- **Mistake**: `compute_subtree_for_photo()` used BFS to find shortest paths between people in a photo. When a person (Moise Capeluto) had no graph connections to the main family cluster (Victoria/Leon), he was excluded from `path_union`. The tree button showed an empty tree because the focal person wasn't in the returned nodes.
+- **Rule**: When computing a subtree for a photo, ALL people identified in the photo must appear in the result set, even if they are graph-disconnected from each other. They share a photo, so they should appear in the tree. Add disconnected people plus their immediate family for context.
+- **Prevention**: After computing `path_union`, iterate ALL original `pids` and add any missing ones with their immediate family (spouses, parents, children). Session 81B.
+
+### Lesson 93: Verify API response data matches what the JS consumer expects
+- **Mistake**: After fixing the API to return 7 nodes, the tree still showed empty SVG. Investigation revealed the FOCAL person wasn't among the 7 returned nodes — the API returned connecting nodes but not the person the tree was centered on. The JS `buildHierarchy()` BFS starts from the focal person, so if that person is missing, nothing renders.
+- **Rule**: When debugging a data pipeline (API → JS rendering), verify not just that data is returned, but that the SPECIFIC data the consumer needs is present. Check: (1) focal/root node exists in response, (2) relationships connect to it, (3) the consumer's traversal algorithm can reach all nodes from its starting point.
+- **Prevention**: Add the focal person to the result set explicitly. Test with `console.log(nodeMap)` and verify the focal person ID is a key. Also verify node count matches expected count from API. Session 81B.

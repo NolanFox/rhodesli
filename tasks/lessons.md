@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-91 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+93 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -95,6 +95,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 84 | Museum-quality design for ML demos — editorial feel beats developer utility |
 | 90 | Script tags inside `<details>` elements don't execute reliably |
 | 91 | Leaflet CDN loading requires polling, not DOMContentLoaded |
+| 92 | Subtree computation must include ALL photo people, even disconnected ones |
+| 93 | Verify API response data matches what the JS consumer expects |
 
 ## Data Safety & Registries — `tasks/lessons/data-lessons.md`
 

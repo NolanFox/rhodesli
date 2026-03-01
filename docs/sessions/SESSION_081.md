@@ -53,9 +53,32 @@ Before: ~2933 → After: 3366+551=3917 (added ~984 new tests)
 ## New BACKLOG Items
 - **PRODUCT-006**: Interactive Photo Chatbot — conversational analysis with GEDCOM context
 
+## Session 81B: Fix Real Issues Found in Browser Verification
+Started: 2026-03-01 ~02:00 EST | Completed: 2026-03-01 ~05:00 EST
+
+### Issues Fixed
+| Issue | Problem | Fix | Commits | Chrome Verified |
+|-------|---------|-----|---------|-----------------|
+| 1 | "Face N:" prefix on identified faces | Show only name as clickable link | `daa8c0d` | YES — 4 names without prefix |
+| 2 | Leaflet map grey/blank | Script outside `<details>` + polling CDN load | `e13c1c3`, `32af46d` | YES — 10 tiles loaded |
+| 3 | Empty tree on photo fb6a846971b30f4b | Include disconnected photo people in subtree | `773867f`, `7fd7228`, `9220855` | YES — Moise+Betty render |
+
+### Lessons Added
+- Lesson 90: Script tags inside `<details>` don't execute reliably
+- Lesson 91: Leaflet CDN loading requires polling, not DOMContentLoaded
+- Lesson 92: Subtree computation must include ALL photo people, even disconnected
+- Lesson 93: Verify API response data matches what JS consumer expects
+
+### Key Debugging Insight
+The tree bug required 3 iterative fixes because the failure had 3 layers:
+1. `compute_subtree_for_photo()` excluded disconnected people from `path_union`
+2. `if pid in lookup` filter silently dropped GEDCOM xrefs not in lookup
+3. Focal person not in returned nodes → JS `buildHierarchy()` BFS starts from nothing
+
+Each fix revealed the next layer. Full Chrome verification after each deploy was essential.
+
 ## Deferred to Session 82
 1. ACT 5: Batch Gemini re-run with enhanced prompts (needs API key)
 2. Location correction backend endpoint (form is placeholder)
 3. Pre-existing test failures cleanup
-4. Production browser verification of new navigation links
-5. UX Review + Session Review skills (session wrapping)
+4. Disconnected tree component rendering (JS `buildHierarchy` only walks focal person's connected component)
