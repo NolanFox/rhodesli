@@ -7025,7 +7025,7 @@ def identity_card_compact(
         A("Similar", href=f"/people/{identity_id}/similar",
           cls="text-xs text-indigo-400 hover:text-indigo-300"),
         Span("|", cls="text-xs text-slate-600"),
-        A("Profile", href=f"/people/{identity_id}",
+        A("Profile", href=f"/person/{identity_id}",
           cls="text-xs text-slate-400 hover:text-slate-300"),
         cls="flex items-center gap-2",
     )
@@ -7189,9 +7189,52 @@ def identity_card(
     person_share_btn = share_button(
         url=f"/person/{identity_id}",
         style="icon",
-        title=f"{name} — Rhodesli Heritage Archive",
+        title=f"{name} — Jews of Rhodes Heritage Archive",
         text=f"Do you recognize {name}? Help us identify people in our heritage photo archive.",
     ) if state == "CONFIRMED" and not name.startswith("Unidentified") else None
+
+    # Multi-face gallery thumbnails for identities with 3+ faces
+    multi_face_gallery = None
+    if total_faces >= 3:
+        # Get up to 3 additional faces (beyond the hero face)
+        extra_faces = []
+        for fid_entry in all_face_ids:
+            fid = fid_entry if isinstance(fid_entry, str) else fid_entry.get("face_id", "")
+            if fid == (best_face if isinstance(best_face, str) else ""):
+                continue  # skip the hero face
+            extra_url = resolve_face_image_url(fid, crop_files)
+            if extra_url:
+                extra_faces.append(extra_url)
+            if len(extra_faces) >= 3:
+                break
+
+        if extra_faces:
+            thumb_items = []
+            for idx, eurl in enumerate(extra_faces):
+                thumb_items.append(
+                    Img(
+                        src=eurl,
+                        alt=f"{name} face {idx + 2}",
+                        cls="w-8 h-8 rounded-full object-cover border-2 border-slate-800"
+                            " shadow-sm hover:scale-110 transition-transform",
+                        loading="lazy",
+                    )
+                )
+            remaining = total_faces - 1 - len(extra_faces)
+            if remaining > 0:
+                thumb_items.append(
+                    Span(
+                        f"+{remaining}",
+                        cls="w-8 h-8 rounded-full bg-slate-700 border-2 border-slate-800"
+                            " text-[10px] text-slate-300 font-medium flex items-center justify-center",
+                    )
+                )
+            multi_face_gallery = A(
+                *thumb_items,
+                href=person_href,
+                cls="flex items-center -space-x-2 mt-1.5 cursor-pointer",
+                title=f"View all {total_faces} faces",
+            )
 
     hero_section = Div(
         # Face image — THE STAR of the card
@@ -7221,6 +7264,11 @@ def identity_card(
             person_share_btn,
             cls="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
         ) if person_share_btn else None,
+        # Multi-face thumbnail strip (bottom overlay)
+        Div(
+            multi_face_gallery,
+            cls="absolute bottom-2 left-2 right-2",
+        ) if multi_face_gallery else None,
         cls="relative group",
     )
 
@@ -11559,6 +11607,8 @@ def public_person_page(
         type="button",
         data_action="share-photo",
         data_share_url=og_page_url,
+        data_share_title=f"{display_name} — Jews of Rhodes Heritage Archive",
+        data_share_text=f"Do you recognize {display_name}? Help us identify people in our heritage photo archive.",
     )
 
     return (
@@ -13638,17 +13688,17 @@ def get(identity_id: str, sess=None):
             n["state"] = "INBOX"
             n["face_count"] = 0
 
-    # Confidence tier for distance
+    # Confidence tier for distance — color-coded labels
     def _confidence_tier(dist):
         if dist < 0.80:
             return ("Very High", "bg-emerald-600")
         elif dist < 1.05:
-            return ("High", "bg-emerald-500")
+            return ("High", "bg-blue-600")
         elif dist < 1.15:
             return ("Moderate", "bg-amber-500")
         elif dist < 1.30:
-            return ("Low", "bg-orange-500")
-        return ("Very Low", "bg-red-500")
+            return ("Low", "bg-slate-500")
+        return ("Very Low", "bg-slate-600")
 
     # Build result grid cards
     result_cards = []
@@ -13680,8 +13730,18 @@ def get(identity_id: str, sess=None):
 
     nav_links = _public_nav_links(active="people", user=user)
 
+    # Share button for similar page hero
+    similar_share_btn = share_button(
+        url=f"/person/{identity_id}",
+        style="button",
+        label="Share",
+        title=f"{name} — Jews of Rhodes Heritage Archive",
+        text=f"Do you recognize {name}? Help us identify people in our heritage photo archive.",
+    ) if name and not name.startswith("Unidentified") and not name.startswith("Identity ") else None
+
     return (
         Title(f"Similar to {name} — Rhodesli"),
+        _share_script(),
         Style("""
             .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
             @media (max-width: 640px) { .similar-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -13699,8 +13759,15 @@ def get(identity_id: str, sess=None):
             Section(
                 Div(
                     Div(
-                        A("Back to People", href="/people", cls="text-sm text-indigo-400 hover:text-indigo-300 mb-4 inline-block"),
-                        cls="mb-2",
+                        A(
+                            NotStr('&larr; '),
+                            "Back to Profile",
+                            href=f"/person/{identity_id}",
+                            cls="text-sm text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1",
+                        ),
+                        Span(" | ", cls="text-slate-600 mx-2"),
+                        A("All People", href="/people", cls="text-sm text-slate-400 hover:text-slate-300"),
+                        cls="mb-4 flex items-center",
                     ),
                     Div(
                         # Large hero face
@@ -13713,8 +13780,12 @@ def get(identity_id: str, sess=None):
                         Div(
                             H1(name, cls="text-3xl font-serif font-bold text-white mb-2"),
                             P(f"{total_faces} photo{'s' if total_faces != 1 else ''}", cls="text-slate-400 mb-4"),
-                            A("View Profile", href=f"/person/{identity_id}",
-                              cls="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"),
+                            Div(
+                                A("View Profile", href=f"/person/{identity_id}",
+                                  cls="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"),
+                                similar_share_btn,
+                                cls="flex flex-wrap gap-3 items-center",
+                            ),
                             cls="flex flex-col justify-center",
                         ),
                         cls="flex flex-col sm:flex-row gap-6 items-start",
