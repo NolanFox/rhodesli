@@ -19200,6 +19200,17 @@ def compute_subtree_for_photo(person_ids, ptc, ctp, pts):
         # Also add spouses for people along the path
         for pid in list(path_union):
             path_union.update(pts.get(pid, set()))
+        # Ensure ALL original photo people are included, even if disconnected
+        # (they're in the same photo, so they should appear in the tree)
+        for pid in pids:
+            if pid not in path_union:
+                path_union.add(pid)
+                # Also add their immediate family for context
+                path_union.update(pts.get(pid, set()))
+                for parent in ctp.get(pid, set()):
+                    path_union.add(parent)
+                for child in ptc.get(pid, set()):
+                    path_union.add(child)
         return path_union
 
     # Fallback: side-by-side immediate families
