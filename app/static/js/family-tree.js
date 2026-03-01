@@ -16,6 +16,7 @@
     var baseNodeIds = {};
     var expandedDirs = {};
     var isFirstRender = true; // Track first render for expand arrow pulse
+    var photoIndex = {}; // Track current face photo index per person {personId: index}
 
     // --- PHOTO-DOMINANT layout: HUGE faces, minimal chrome ---
     var CARD_W = 220, CARD_H = 290;
@@ -268,6 +269,8 @@
         });
 
         // Parent-child T-shape connections
+        // Track which parent pairs we've already drawn children for
+        var drawnChildPairs = {};
         allNodes.forEach(function(n) {
             var children = n.rels.children || [];
             if (children.length === 0) return;
@@ -280,37 +283,122 @@
                 if (n.id > firstSpouse && positions[firstSpouse]) return;
             }
 
-            var parentX, parentY;
-            if (spouses.length > 0 && positions[spouses[0]]) {
-                var sp = positions[spouses[0]];
-                parentX = (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2;
-                parentY = nPos.y + CARD_H;
+            // For multiple spouses, figure out which children belong to which spouse
+            // by checking if the child's other parent is one of the spouses
+            if (spouses.length > 1) {
+                // Group children by spouse
+                var childrenBySpouse = {};
+                var unpairedChildren = [];
+                spouses.forEach(function(sid) { childrenBySpouse[sid] = []; });
+
+                children.forEach(function(cid) {
+                    var childNode = nodeMap[cid];
+                    if (!childNode) return;
+                    var matched = false;
+                    spouses.forEach(function(sid) {
+                        // Check if this child has the spouse as a parent
+                        if (childNode.rels.father === sid || childNode.rels.mother === sid) {
+                            childrenBySpouse[sid].push(cid);
+                            matched = true;
+                        }
+                    });
+                    if (!matched) unpairedChildren.push(cid);
+                });
+
+                // Draw T-connections for each spouse group
+                spouses.forEach(function(sid) {
+                    var spouseChildren = childrenBySpouse[sid];
+                    if (spouseChildren.length === 0) return;
+                    var pairKey = [n.id, sid].sort().join("|");
+                    if (drawnChildPairs[pairKey]) return;
+                    drawnChildPairs[pairKey] = true;
+
+                    var sp = positions[sid];
+                    var parentX = (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2;
+                    var parentY = nPos.y + CARD_H;
+
+                    var childPos = [];
+                    spouseChildren.forEach(function(cid) {
+                        var cp = positions[cid];
+                        if (cp) childPos.push({ x: cp.x + CARD_W / 2, y: cp.y });
+                    });
+                    if (childPos.length === 0) return;
+
+                    var barY = parentY + DROP_Y;
+                    connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
+                    var minCX = Math.min.apply(null, childPos.map(function(c) { return c.x; }));
+                    var maxCX = Math.max.apply(null, childPos.map(function(c) { return c.x; }));
+                    if (childPos.length > 1) {
+                        connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
+                    }
+                    if (parentX < minCX || parentX > maxCX) {
+                        connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
+                    }
+                    childPos.forEach(function(cp) {
+                        connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
+                    });
+                });
+
+                // Draw unpaired children from the first spouse midpoint (fallback)
+                if (unpairedChildren.length > 0 && spouses.length > 0) {
+                    var sp = positions[spouses[0]];
+                    var parentX = sp ? (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2 : nPos.x + CARD_W / 2;
+                    var parentY = nPos.y + CARD_H;
+                    var childPos = [];
+                    unpairedChildren.forEach(function(cid) {
+                        var cp = positions[cid];
+                        if (cp) childPos.push({ x: cp.x + CARD_W / 2, y: cp.y });
+                    });
+                    if (childPos.length > 0) {
+                        var barY = parentY + DROP_Y;
+                        connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
+                        var minCX = Math.min.apply(null, childPos.map(function(c) { return c.x; }));
+                        var maxCX = Math.max.apply(null, childPos.map(function(c) { return c.x; }));
+                        if (childPos.length > 1) {
+                            connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
+                        }
+                        if (parentX < minCX || parentX > maxCX) {
+                            connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
+                        }
+                        childPos.forEach(function(cp) {
+                            connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
+                        });
+                    }
+                }
             } else {
-                parentX = nPos.x + CARD_W / 2;
-                parentY = nPos.y + CARD_H;
-            }
+                // Single or no spouse — original logic
+                var parentX, parentY;
+                if (spouses.length > 0 && positions[spouses[0]]) {
+                    var sp = positions[spouses[0]];
+                    parentX = (nPos.x + CARD_W / 2 + sp.x + CARD_W / 2) / 2;
+                    parentY = nPos.y + CARD_H;
+                } else {
+                    parentX = nPos.x + CARD_W / 2;
+                    parentY = nPos.y + CARD_H;
+                }
 
-            var childPositions = [];
-            children.forEach(function(cid) {
-                var cp = positions[cid];
-                if (cp) childPositions.push({ x: cp.x + CARD_W / 2, y: cp.y });
-            });
-            if (childPositions.length === 0) return;
+                var childPositions = [];
+                children.forEach(function(cid) {
+                    var cp = positions[cid];
+                    if (cp) childPositions.push({ x: cp.x + CARD_W / 2, y: cp.y });
+                });
+                if (childPositions.length === 0) return;
 
-            var barY = parentY + DROP_Y;
-            connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
+                var barY = parentY + DROP_Y;
+                connections.push({ type: "drop", x: parentX, y1: parentY, y2: barY });
 
-            var minCX = Math.min.apply(null, childPositions.map(function(c) { return c.x; }));
-            var maxCX = Math.max.apply(null, childPositions.map(function(c) { return c.x; }));
-            if (childPositions.length > 1) {
-                connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
+                var minCX = Math.min.apply(null, childPositions.map(function(c) { return c.x; }));
+                var maxCX = Math.max.apply(null, childPositions.map(function(c) { return c.x; }));
+                if (childPositions.length > 1) {
+                    connections.push({ type: "bar", y: barY, x1: minCX, x2: maxCX });
+                }
+                if (parentX < minCX || parentX > maxCX) {
+                    connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
+                }
+                childPositions.forEach(function(cp) {
+                    connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
+                });
             }
-            if (parentX < minCX || parentX > maxCX) {
-                connections.push({ type: "bar", y: barY, x1: Math.min(parentX, minCX), x2: Math.max(parentX, maxCX) });
-            }
-            childPositions.forEach(function(cp) {
-                connections.push({ type: "childDrop", x: cp.x, y1: barY, y2: cp.y });
-            });
         });
 
         return { positions: positions, connections: connections, couples: couples };
@@ -339,10 +427,13 @@
                 .on("zoom", function(event) {
                     g.attr("transform", event.transform);
                     var k = event.transform.k;
-                    g.selectAll(".date-label").attr("opacity", k > 0.3 ? 1 : 0);
-                    g.selectAll(".name-label").attr("opacity", k > 0.2 ? 1 : 0);
+                    // Hide dates earlier at low zoom, but keep names visible longer
+                    g.selectAll(".date-label").attr("opacity", k > 0.4 ? 1 : 0);
+                    g.selectAll(".name-label").attr("opacity", k > 0.15 ? 1 : 0);
                     g.selectAll(".expand-btn").attr("opacity", k > 0.15 ? 1 : 0);
                     g.selectAll(".face-badge").attr("opacity", k > 0.3 ? 1 : 0);
+                    g.selectAll(".photo-cycle-btn").attr("opacity", k > 0.4 ? 1 : 0);
+                    g.selectAll(".photo-dots").attr("opacity", k > 0.4 ? 1 : 0);
                 });
             svg.call(zoomBehavior);
             window.addEventListener("resize", function() {
@@ -460,7 +551,7 @@
                 .attr("opacity", 1);
         });
 
-        // Hover: card materializes, photo ring grows
+        // Hover: card materializes, photo ring grows, show photo cycling arrows
         cards.on("mouseenter", function() {
                 var card = d3.select(this);
                 card.select(".card-bg").transition().duration(200)
@@ -473,6 +564,9 @@
                     .attr("transform", function(d) {
                         return "translate(" + d.x + "," + (d.y - 5) + ")";
                     });
+                // Reveal photo cycling arrows and dots on hover
+                card.selectAll(".photo-cycle-btn").transition().duration(200).attr("opacity", 0.7);
+                card.selectAll(".photo-dots").transition().duration(200).attr("opacity", 0.8);
             })
             .on("mouseleave", function(event, d) {
                 var card = d3.select(this);
@@ -487,6 +581,9 @@
                     .attr("transform", function(d) {
                         return "translate(" + d.x + "," + d.y + ")";
                     });
+                // Hide photo cycling arrows and dots
+                card.selectAll(".photo-cycle-btn").transition().duration(300).attr("opacity", 0);
+                card.selectAll(".photo-dots").transition().duration(300).attr("opacity", 0);
             });
 
         // Card background
@@ -515,7 +612,9 @@
             var el = d3.select(this);
             var clipId = "clip-" + d.id.replace(/[^a-zA-Z0-9]/g, "_");
             var faces = d.node.data.all_faces || [];
-            var photoUrl = faces.length > 0 ? faces[0].url : (d.node.data.avatar || d.node.data.photo_url);
+            var faceIdx = photoIndex[d.id] || 0;
+            if (faceIdx >= faces.length) faceIdx = 0;
+            var photoUrl = faces.length > 0 ? faces[faceIdx].url : (d.node.data.avatar || d.node.data.photo_url);
 
             // Gender — declare BEFORE use in silhouette fallback and ring
             var gender = d.node.data.gender || "U";
@@ -596,45 +695,103 @@
                     .attr("font-family", "'Inter', system-ui, sans-serif")
                     .text(faceCount);
             }
+
+            // --- Photo cycling arrows (left/right) — appear on hover ---
+            if (faces.length > 1) {
+                var currentIdx = faceIdx;
+
+                // Left arrow
+                var leftArrow = el.append("g")
+                    .attr("class", "photo-cycle-btn photo-cycle-left")
+                    .attr("transform", "translate(" + (PHOTO_CX - PHOTO_R - 2) + "," + PHOTO_CY + ")")
+                    .style("cursor", "pointer")
+                    .attr("opacity", 0);
+                leftArrow.append("circle").attr("r", 14)
+                    .attr("fill", "rgba(0,0,0,0.6)").attr("stroke", "rgba(255,255,255,0.3)").attr("stroke-width", 1);
+                leftArrow.append("text").attr("text-anchor", "middle").attr("dy", "0.35em")
+                    .attr("fill", "white").attr("font-size", "14px").attr("font-weight", "700")
+                    .text("\u2039");
+                leftArrow.on("click", function(event) {
+                    event.stopPropagation();
+                    cyclePhoto(d.id, d.node.data, -1);
+                });
+
+                // Right arrow
+                var rightArrow = el.append("g")
+                    .attr("class", "photo-cycle-btn photo-cycle-right")
+                    .attr("transform", "translate(" + (PHOTO_CX + PHOTO_R + 2) + "," + PHOTO_CY + ")")
+                    .style("cursor", "pointer")
+                    .attr("opacity", 0);
+                rightArrow.append("circle").attr("r", 14)
+                    .attr("fill", "rgba(0,0,0,0.6)").attr("stroke", "rgba(255,255,255,0.3)").attr("stroke-width", 1);
+                rightArrow.append("text").attr("text-anchor", "middle").attr("dy", "0.35em")
+                    .attr("fill", "white").attr("font-size", "14px").attr("font-weight", "700")
+                    .text("\u203A");
+                rightArrow.on("click", function(event) {
+                    event.stopPropagation();
+                    cyclePhoto(d.id, d.node.data, 1);
+                });
+
+                // Dot indicator below photo
+                var dotGroup = el.append("g")
+                    .attr("class", "photo-dots")
+                    .attr("transform", "translate(" + PHOTO_CX + "," + (PHOTO_CY + PHOTO_R + 8) + ")")
+                    .attr("opacity", 0);
+                var dotSpacing = 10;
+                var dotsWidth = (faces.length - 1) * dotSpacing;
+                faces.forEach(function(f, fi) {
+                    dotGroup.append("circle")
+                        .attr("class", "photo-dot")
+                        .attr("cx", -dotsWidth / 2 + fi * dotSpacing)
+                        .attr("cy", 0)
+                        .attr("r", fi === currentIdx ? 3.5 : 2.5)
+                        .attr("fill", fi === currentIdx ? "#d4a574" : "rgba(255,255,255,0.4)");
+                });
+            }
         });
 
-        // First name
+        // First name — large and readable
         cards.append("text")
-            .attr("class", "name-label")
+            .attr("class", "name-label name-first")
             .attr("x", CARD_W / 2).attr("y", NAME_Y1)
             .attr("text-anchor", "middle")
-            .attr("fill", COLORS.nameText)
-            .attr("font-size", "16px").attr("font-weight", "600")
+            .attr("fill", "#f1f5f9")
+            .attr("font-size", "17px").attr("font-weight", "600")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
+            .style("text-shadow", "0 1px 3px rgba(0,0,0,0.6)")
             .text(function(d) {
                 var first = d.node.data["first name"] || "";
-                return first.length > 20 ? first.substring(0, 18) + "\u2026" : first;
+                // Truncate to fit card width (~18 chars at 17px)
+                return first.length > 16 ? first.substring(0, 14) + "\u2026" : first;
             });
 
         // Last name
         cards.append("text")
-            .attr("class", "name-label")
+            .attr("class", "name-label name-last")
             .attr("x", CARD_W / 2).attr("y", NAME_Y2)
             .attr("text-anchor", "middle")
-            .attr("fill", COLORS.nameText)
-            .attr("font-size", "14px").attr("font-weight", "500")
+            .attr("fill", "#e2e8f0")
+            .attr("font-size", "14.5px").attr("font-weight", "500")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
+            .style("text-shadow", "0 1px 2px rgba(0,0,0,0.5)")
             .text(function(d) {
                 var last = d.node.data["last name"] || "";
-                return last.length > 20 ? last.substring(0, 18) + "\u2026" : last;
+                return last.length > 18 ? last.substring(0, 16) + "\u2026" : last;
             });
 
-        // Lifespan
+        // Lifespan — higher contrast white text with shadow
         cards.append("text")
             .attr("class", "date-label")
             .attr("x", CARD_W / 2).attr("y", DATE_Y)
             .attr("text-anchor", "middle")
-            .attr("fill", COLORS.dateText).attr("font-size", "12.5px")
+            .attr("fill", "#cbd5e1").attr("font-size", "13px")
             .attr("font-family", "'Inter', system-ui, -apple-system, sans-serif")
-            .attr("letter-spacing", "0.03em")
+            .attr("letter-spacing", "0.04em")
+            .style("text-shadow", "0 1px 2px rgba(0,0,0,0.5)")
             .text(function(d) { return d.node.data.lifespan || ""; });
 
         // --- Expand/collapse arrows — LARGE, LABELED, UNMISSABLE ---
+        // Now works from ANY node, not just the focal person
         var arrowGroup = g.append("g").attr("class", "expand-arrows");
         var expandArrowCount = 0;
         nodeData.forEach(function(d) {
@@ -648,7 +805,14 @@
             dirs.forEach(function(dd) {
                 var key = d.id + "|" + dd.dir;
                 var isExpanded = expandedDirs.hasOwnProperty(key);
-                if (data[dd.flag] || isExpanded) {
+                // Show expand arrow if the node has hidden connections in this direction,
+                // OR if it has has_hidden_connections generic flag and this direction makes sense
+                var showArrow = data[dd.flag] || isExpanded;
+                if (!showArrow && data.has_hidden_connections && !isExpanded) {
+                    // For generic has_hidden_connections, show a generic expand button below the card
+                    if (dd.dir === "children") showArrow = true;
+                }
+                if (showArrow) {
                     drawExpandArrow(arrowGroup, dd.ax, dd.ay, dd.arrowDir, d.id, dd.dir, isExpanded, dd.label, isFirstRender && !isExpanded);
                     expandArrowCount++;
                 }
@@ -902,6 +1066,89 @@
     var scrubState = {}; // Track which face index is showing per person
     var scrubTransitioning = {}; // Track in-flight crossfades to prevent overlap
 
+    // --- Per-person photo cycling via arrow buttons ---
+    function cyclePhoto(personId, nodeData, direction) {
+        var faces = nodeData.all_faces || [];
+        if (faces.length <= 1) return;
+
+        var currentIdx = photoIndex[personId] || 0;
+        var newIdx = (currentIdx + direction + faces.length) % faces.length;
+        photoIndex[personId] = newIdx;
+        scrubState[personId] = newIdx; // Keep scrub state in sync
+
+        // Crossfade to new photo
+        var nodeEl = g.selectAll(".person-node").filter(function(d) { return d.id === personId; });
+        var primary = nodeEl.select(".face-primary");
+        var secondary = nodeEl.select(".face-secondary");
+
+        if (secondary.empty() || primary.empty()) {
+            // No secondary layer — just swap primary
+            if (!primary.empty()) primary.attr("href", faces[newIdx].url);
+            updatePhotoDots(personId, newIdx, faces.length);
+            return;
+        }
+
+        if (scrubTransitioning[personId]) {
+            // If already transitioning, force-finish and swap
+            primary.attr("href", faces[newIdx].url);
+            primary.style("opacity", "1");
+            secondary.style("opacity", "0");
+            scrubTransitioning[personId] = false;
+            updatePhotoDots(personId, newIdx, faces.length);
+            return;
+        }
+
+        var newUrl = faces[newIdx].url;
+        secondary.attr("href", newUrl);
+        scrubTransitioning[personId] = true;
+
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                secondary.style("opacity", "1");
+                primary.style("opacity", "0");
+
+                var secNode = secondary.node();
+                var handler = function onTransitionEnd(e) {
+                    if (e.propertyName !== "opacity") return;
+                    secNode.removeEventListener("transitionend", onTransitionEnd);
+                    primary.style("transition", "none");
+                    primary.attr("href", newUrl);
+                    primary.style("opacity", "1");
+                    secondary.style("transition", "none");
+                    secondary.style("opacity", "0");
+                    requestAnimationFrame(function() {
+                        primary.style("transition", "opacity 0.4s ease");
+                        secondary.style("transition", "opacity 0.4s ease");
+                        scrubTransitioning[personId] = false;
+                    });
+                };
+                secNode.addEventListener("transitionend", handler);
+
+                setTimeout(function() {
+                    if (scrubTransitioning[personId]) {
+                        secNode.removeEventListener("transitionend", handler);
+                        primary.attr("href", newUrl);
+                        primary.style("opacity", "1");
+                        secondary.style("opacity", "0");
+                        scrubTransitioning[personId] = false;
+                    }
+                }, 500);
+            });
+        });
+
+        updatePhotoDots(personId, newIdx, faces.length);
+    }
+
+    function updatePhotoDots(personId, activeIdx, totalFaces) {
+        var nodeEl = g.selectAll(".person-node").filter(function(d) { return d.id === personId; });
+        var dots = nodeEl.selectAll(".photo-dot");
+        dots.each(function(dot, i) {
+            d3.select(this)
+                .attr("r", i === activeIdx ? 3.5 : 2.5)
+                .attr("fill", i === activeIdx ? "#d4a574" : "rgba(255,255,255,0.4)");
+        });
+    }
+
     function scrubPhotos(year) {
         // For each person with multiple faces, cycle through based on year position
         allNodes.forEach(function(n) {
@@ -922,6 +1169,8 @@
             var prevIdx = scrubState[n.id];
             if (prevIdx === faceIdx) return;
             scrubState[n.id] = faceIdx;
+            photoIndex[n.id] = faceIdx; // Keep photo cycling in sync
+            updatePhotoDots(n.id, faceIdx, faces.length);
 
             // Skip if a crossfade is already in flight for this person
             if (scrubTransitioning[n.id]) return;
