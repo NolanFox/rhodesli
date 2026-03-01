@@ -115,12 +115,40 @@ def _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate=None
             death_str += f" in {indi.death.place}"
         lines.append(death_str)
 
-    # Events
+    # Events — separate residence/occupation for location summary
     events = indi.events
     if variant == "curated" and photo_date_estimate:
         events = _filter_events_by_date(events, photo_date_estimate, window=15)
 
+    residence_events = []
+    occupation_events = []
+    other_events = []
     for event in events:
+        if event.event_type == "residence":
+            residence_events.append(event)
+        elif event.event_type == "occupation":
+            occupation_events.append(event)
+        else:
+            other_events.append(event)
+
+    # Residential history (location-critical, shown prominently)
+    if residence_events:
+        lines.append("  Residential History:")
+        for event in residence_events:
+            r_str = f"    {event.raw_date or '?'}"
+            if event.place:
+                r_str += f": {event.place}"
+            lines.append(r_str)
+
+    # Occupation (location-relevant)
+    for event in occupation_events:
+        event_str = f"  Occupation: {event.raw_date or '?'}"
+        if event.place:
+            event_str += f" in {event.place}"
+        lines.append(event_str)
+
+    # Other events
+    for event in other_events:
         event_str = f"  {event.event_type.title()}: {event.raw_date or '?'}"
         if event.place:
             event_str += f" in {event.place}"
@@ -144,7 +172,11 @@ def _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate=None
 
 
 def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
-    """Build context for immediate family members."""
+    """Build context for immediate family members.
+
+    Enhanced to include residential addresses and occupation data for spouses
+    and parents, and children's birth places prominently for location inference.
+    """
     lines = []
 
     # Parents
@@ -156,30 +188,47 @@ def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
         if parent.birth_place:
             p_str += f", born in {parent.birth_place}"
         lines.append(p_str)
-        # Include parent events
+        # Include parent events (residence and occupation for location context)
         for event in parent.events:
             e_str = f"    {event.event_type.title()}: {event.raw_date or '?'}"
             if event.place:
                 e_str += f" in {event.place}"
             lines.append(e_str)
 
-    # Spouses
+    # Spouses (with residence and occupation events for location context)
     spouses = parsed_gedcom.get_spouses(indi)
     for spouse in spouses:
         s_str = f"  Spouse: {spouse.full_name}"
         if spouse.birth and spouse.birth_year:
             s_str += f" (b.{spouse.birth_year})"
+        if spouse.birth_place:
+            s_str += f", born in {spouse.birth_place}"
         lines.append(s_str)
+        # Include spouse events that help with location
+        for event in spouse.events:
+            if event.event_type in ("residence", "occupation", "immigration", "emigration"):
+                e_str = f"    {event.event_type.title()}: {event.raw_date or '?'}"
+                if event.place:
+                    e_str += f" in {event.place}"
+                lines.append(e_str)
 
-    # Children
+    # Children (with birth dates and places — critical for location + date inference)
     children = parsed_gedcom.get_children(indi)
-    for child in children:
-        c_str = f"  Child: {child.full_name}"
-        if child.birth and child.birth_year:
-            c_str += f" (b.{child.birth_year})"
-        if child.birth_place:
-            c_str += f", born in {child.birth_place}"
-        lines.append(c_str)
+    if children:
+        lines.append("  Children (birth dates help narrow photo date and location):")
+        for child in children:
+            c_str = f"    {child.full_name}"
+            if child.birth and child.birth_year:
+                c_str += f" (b.{child.birth_year}"
+                if child.birth and child.birth.date and child.birth.date.month:
+                    month_names = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
+                                   5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
+                                   9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
+                    c_str += f" {month_names.get(child.birth.date.month, '')}"
+                c_str += ")"
+            if child.birth_place:
+                c_str += f", born in {child.birth_place}"
+            lines.append(c_str)
 
     # Siblings
     siblings = parsed_gedcom.get_siblings(indi)

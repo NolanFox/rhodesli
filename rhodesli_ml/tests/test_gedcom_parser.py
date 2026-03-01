@@ -128,7 +128,7 @@ class TestParseGedcom:
         return parse_gedcom(str(FIXTURE_PATH))
 
     def test_individual_count(self, parsed):
-        assert parsed.individual_count == 14
+        assert parsed.individual_count == 17  # 14 original + 3 Asheville children (I15-I17)
 
     def test_family_count(self, parsed):
         assert parsed.family_count == 6

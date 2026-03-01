@@ -33,6 +33,12 @@
 1 DEAT
 2 DATE 15 JUN 1982
 2 PLAC Miami, Florida, USA
+1 RESI
+2 DATE BET 1928 AND 1940
+2 PLAC 33 Elizabeth Street, Asheville, North Carolina
+1 OCCU
+2 DATE 1930
+2 PLAC Asheville, North Carolina
 1 FAMC @F1@
 1 FAMS @F2@
 0 @I4@ INDI
@@ -74,6 +80,12 @@
 1 BIRT
 2 DATE 1908
 2 PLAC Rhodes, Ottoman Empire
+1 RESI
+2 DATE BET 1930 AND 1940
+2 PLAC 33 Elizabeth Street, Asheville, North Carolina
+1 RESI
+2 DATE AFT 1940
+2 PLAC Tampa, Florida, USA
 1 FAMS @F2@
 0 @I8@ INDI
 1 NAME Victoria /Cukran/
@@ -107,6 +119,27 @@
 2 DATE ABT 1917
 2 PLAC Rhodes, Greece
 1 FAMC @F1@
+0 @I15@ INDI
+1 NAME Selma /Capeluto/
+1 SEX F
+1 BIRT
+2 DATE 1926
+2 PLAC Asheville, North Carolina
+1 FAMC @F2@
+0 @I16@ INDI
+1 NAME Anita /Capeluto/
+1 SEX F
+1 BIRT
+2 DATE 1931
+2 PLAC North Carolina
+1 FAMC @F2@
+0 @I17@ INDI
+1 NAME Nace /Capeluto/
+1 SEX M
+1 BIRT
+2 DATE 5 MAR 1933
+2 PLAC Asheville, North Carolina
+1 FAMC @F2@
 0 @I12@ INDI
 1 NAME Roland /Fox/
 1 SEX M
@@ -142,6 +175,9 @@
 0 @F2@ FAM
 1 HUSB @I3@
 1 WIFE @I7@
+1 CHIL @I15@
+1 CHIL @I16@
+1 CHIL @I17@
 1 CHIL @I9@
 1 CHIL @I10@
 1 MARR

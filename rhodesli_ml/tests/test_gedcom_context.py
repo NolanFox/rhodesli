@@ -266,6 +266,225 @@ class TestFindIdentityForFace:
         assert _find_identity_for_face("face_xyz", sample_identities) is None
 
 
+class TestResidentialHistory:
+    """Test that residential addresses are emitted in context (AD-192)."""
+
+    def test_full_variant_includes_residence_events(
+        self, parsed_gedcom, sample_identities, gedcom_face_links
+    ):
+        """Full variant should include residential history for Leon."""
+        result = build_photo_context(
+            photo_id="photo1",
+            identified_faces=["face_leon_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=gedcom_face_links,
+            identities=sample_identities,
+            variant="full",
+        )
+        assert "Residential History:" in result
+        assert "33 Elizabeth Street, Asheville" in result
+
+    def test_full_variant_includes_occupation(
+        self, parsed_gedcom, sample_identities, gedcom_face_links
+    ):
+        """Full variant should include occupation events."""
+        result = build_photo_context(
+            photo_id="photo1",
+            identified_faces=["face_leon_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=gedcom_face_links,
+            identities=sample_identities,
+            variant="full",
+        )
+        assert "Occupation:" in result
+        assert "Asheville" in result
+
+    def test_first_order_includes_spouse_residence(self, parsed_gedcom):
+        """First-order variant should include Victoria's residence via spouse context."""
+        identities = {
+            "id-leon": {
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face_leon_1"],
+                "candidate_ids": [],
+                "negative_ids": [],
+            },
+        }
+        links = {"id-leon": "@I3@"}
+        result = build_photo_context(
+            photo_id="photo1",
+            identified_faces=["face_leon_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=links,
+            identities=identities,
+            variant="first_order",
+        )
+        # Victoria (Leon's spouse) has RESI events
+        assert "Victoria Capuano" in result
+        assert "Residence:" in result or "33 Elizabeth Street" in result
+
+    def test_first_order_includes_children_with_birth_places(self, parsed_gedcom):
+        """First-order variant should include children's birth places."""
+        identities = {
+            "id-leon": {
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face_leon_1"],
+                "candidate_ids": [],
+                "negative_ids": [],
+            },
+        }
+        links = {"id-leon": "@I3@"}
+        result = build_photo_context(
+            photo_id="photo1",
+            identified_faces=["face_leon_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=links,
+            identities=identities,
+            variant="first_order",
+        )
+        # Children of Leon+Victoria: Selma (1926 Asheville), Anita (1931 NC),
+        # Nace (1933 Asheville), Betty (1950 Miami), Vida (1945 NY)
+        assert "Children (birth dates help narrow photo date and location):" in result
+        assert "Asheville" in result
+        assert "North Carolina" in result
+
+    def test_curated_filters_residence_events(self, parsed_gedcom):
+        """Curated variant should only include residence events near photo date."""
+        identities = {
+            "id-victoria": {
+                "name": "Victoria Capuano",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face_victoria_1"],
+                "candidate_ids": [],
+                "negative_ids": [],
+            },
+        }
+        links = {"id-victoria": "@I7@"}
+        # Photo estimated at 1934 — should include Asheville RESI (1930-1940)
+        # but not Tampa RESI (after 1940, which is year 1941 due to AFT adjustment)
+        result = build_photo_context(
+            photo_id="photo1",
+            identified_faces=["face_victoria_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=links,
+            identities=identities,
+            variant="curated",
+            photo_date_estimate=1934,
+        )
+        assert "33 Elizabeth Street, Asheville" in result
+
+
+class TestAshevilleGroundTruth:
+    """Test the Asheville case study — Victoria Capeluto + children photo.
+
+    Ground truth: Photo 746dd11e5b4d86a1 shows Victoria with 3 of 4 children
+    at 33 Elizabeth Street, Asheville, NC circa Autumn 1934.
+    AD-192: GEDCOM-enriched location prompting.
+    """
+
+    @pytest.fixture
+    def asheville_identities(self):
+        """Identities matching the Asheville photo."""
+        return {
+            "id-victoria": {
+                "name": "Victoria Capuano Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face_victoria_1"],
+                "candidate_ids": [],
+                "negative_ids": [],
+            },
+            "id-leon": {
+                "name": "Leon Capeluto",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face_leon_1"],
+                "candidate_ids": [],
+                "negative_ids": [],
+            },
+        }
+
+    @pytest.fixture
+    def asheville_links(self):
+        """GEDCOM links for Asheville case."""
+        return {
+            "id-victoria": "@I7@",   # Victoria Capuano
+            "id-leon": "@I3@",       # Leon Capeluto
+        }
+
+    def test_first_order_includes_asheville_address(
+        self, parsed_gedcom, asheville_identities, asheville_links
+    ):
+        """First-order context for Victoria should include Asheville address."""
+        result = build_photo_context(
+            photo_id="asheville_photo",
+            identified_faces=["face_victoria_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=asheville_links,
+            identities=asheville_identities,
+            variant="first_order",
+        )
+        assert "33 Elizabeth Street, Asheville" in result
+
+    def test_first_order_includes_all_children(
+        self, parsed_gedcom, asheville_identities, asheville_links
+    ):
+        """First-order context should list all children with birth years."""
+        result = build_photo_context(
+            photo_id="asheville_photo",
+            identified_faces=["face_victoria_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=asheville_links,
+            identities=asheville_identities,
+            variant="first_order",
+        )
+        # Victoria's children in fixture: Selma (1926), Anita (1931),
+        # Nace (1933), Betty (1950), Vida (1945)
+        assert "b.1926" in result  # Selma
+        assert "b.1931" in result  # Anita
+        assert "b.1933" in result  # Nace Jr
+        assert "b.1950" in result  # Betty
+        assert "b.1945" in result  # Vida
+
+    def test_first_order_includes_nace_birth_month(
+        self, parsed_gedcom, asheville_identities, asheville_links
+    ):
+        """Nace Jr has a specific month (5 MAR 1933), should include month."""
+        result = build_photo_context(
+            photo_id="asheville_photo",
+            identified_faces=["face_victoria_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=asheville_links,
+            identities=asheville_identities,
+            variant="first_order",
+        )
+        assert "b.1933 Mar" in result
+
+    def test_combined_context_for_asheville_prompt(
+        self, parsed_gedcom, asheville_identities, asheville_links
+    ):
+        """Combined prompt for Asheville photo should have all location-relevant data."""
+        from rhodesli_ml.gemini_extraction import build_extraction_prompt
+
+        context = build_photo_context(
+            photo_id="asheville_photo",
+            identified_faces=["face_victoria_1"],
+            parsed_gedcom=parsed_gedcom,
+            gedcom_face_links=asheville_links,
+            identities=asheville_identities,
+            variant="first_order",
+        )
+        prompt = build_extraction_prompt(
+            preset="full",
+            gedcom_context=context,
+        )
+        # Prompt should contain BOTH the enhanced location instructions
+        # AND the GEDCOM context
+        assert "Biographical Cross-Reference" in prompt
+        assert "missing child" in prompt.lower()
+        assert "33 Elizabeth Street, Asheville" in prompt
+        assert "Genealogical Context" in prompt
+
+
 class TestInvalidVariant:
     def test_raises_for_unknown_variant(self, parsed_gedcom, sample_identities, gedcom_face_links):
         with pytest.raises(ValueError, match="Unknown variant"):
