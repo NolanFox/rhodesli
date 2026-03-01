@@ -102,6 +102,27 @@ Started: 2026-03-01 ~14:00 EST | Completed: 2026-03-01 ~15:30 EST
 - Local changes must be pushed TO Supabase using `sync_gedcom_matches()` and `sync_relationships()`
 - Fixed by syncing both to Supabase, then redeploying
 
+## Session 81D: Final Chrome Verification Pass
+Started: 2026-03-01 ~17:00 EST | Completed: 2026-03-01 ~17:30 EST
+
+### Verification Results (13/13 PASS)
+All session 81 features verified in production Chrome browser:
+- Face labels, Leaflet map, tree (17 nodes/3 gen), photo cycling, expand/collapse
+- Time slider (1860-2003, year display, track fill, photo scrubbing)
+- Relationship hover labels (Spouse/Parent→Child + shared photo counts)
+- Generation bands (Parents/Focal/Children)
+- Line thickness (2-5 based on shared photos)
+- Date estimate, location estimate, scene description, people cards
+
+### Key Technical Findings
+- Time slider: min=1860, max=2003, scrubPhotos cycles faces based on birth year + lifespan
+- Connection lines: `<title>` elements provide native browser tooltips on hover
+- Line widths: strokeWidth 2 (no shared), 2.75 (1 shared), 5 (4+ shared)
+- Generation bands: 3 SVG rect+text pairs at 0.04 opacity
+
+### No Bugs Found
+No UX issues or regressions discovered during verification.
+
 ## Deferred to Session 82
 1. ACT 5: Batch Gemini re-run with enhanced prompts (needs API key)
 2. Location correction backend endpoint (form is placeholder)

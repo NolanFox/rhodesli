@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.83.2] — 2026-03-01 (Session 81C+D: Tree Data Fix + Final Verification)
+
+### Fixed
+- **Tree full family display**: Fixed 21 truncated UUIDs in gedcom_matches.json, added fallback xref resolution via gedcom_matches.json
+- **Photo cycling arrows**: Increased from 28px to 44px (WCAG minimum touch target)
+- **Supabase data sync**: Synced 1240 relationships + 56 GEDCOM matches to Supabase (was missing xref data)
+
+### Verified (13/13 PASS in Chrome)
+- Time slider, relationship hover labels, generation bands, line thickness all working
+- Face labels, Leaflet map, tree (17 nodes), photo cycling, expand/collapse all verified
+- Date/location estimates, scene descriptions, people cards all rendering correctly
+
 ## [v0.83.1] — 2026-03-01 (Session 81B: Fix Real Issues — Face Labels, Map, Tree)
 
 ### Fixed
