@@ -83,7 +83,9 @@ _SCHEMA_FRAGMENTS: dict[str, str] = {
     "location": '''"location": {
     "place": "Rhodes, Greece",
     "confidence": "high|medium|low",
-    "evidence": "Mediterranean stone architecture, visible Greek signage"
+    "visual_evidence": "Mediterranean stone architecture, visible Greek signage",
+    "biographical_evidence": "Family resided at 33 Elizabeth St, Asheville NC per GEDCOM records",
+    "missing_child_analysis": "3 of 4 children visible; youngest (born 1935) absent, suggesting pre-1935"
   }''',
     "cultural_markers": '''"cultural_markers": ["Sephardic formal attire", "studio backdrop typical of Rhodes photographers"]''',
     "clothing_era": '''"clothing_notes": "Man in dark three-piece suit with pocket watch chain..."''',
@@ -126,8 +128,24 @@ estimate age, gender, and provide a brief physical description.
 {face_coordinates_section}""",
 
     "location": """## Location Identification
-Identify the likely geographic location based on architecture, vegetation,
-signage, and other environmental cues. Rate confidence.""",
+Identify the likely geographic location using BOTH visual evidence AND biographical context.
+
+**Step 1: Visual Analysis**
+Examine architecture style, vegetation, signage, street features, and environmental cues.
+
+**Step 2: Biographical Cross-Reference** (if genealogical context provided)
+Cross-reference visual observations with known biographical data:
+- Compare visual clues against known family addresses and residential history
+- Check if children's birth places match the apparent location
+- Consider the "missing child" test: count people visible vs known children at a given date
+  to narrow the date AND location (e.g., if 3 of 4 children are present, the photo predates
+  the 4th child's birth)
+- Use occupation/workplace info to narrow geographic possibilities
+- Consider migration patterns: where did this family live at different times?
+
+**Step 3: Confidence Assessment**
+Rate confidence. If visual evidence AND biographical data agree on a location, rate
+confidence higher. If they conflict, explain the discrepancy.""",
 
     "cultural_markers": """## Cultural Markers
 Identify any culturally specific items, traditions, or markers visible

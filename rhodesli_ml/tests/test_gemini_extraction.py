@@ -122,6 +122,38 @@ class TestBuildPrompt:
         assert "LAGGED" in prompt
 
 
+class TestEnhancedLocationPrompt:
+    """Test enhanced location prompt with GEDCOM cross-reference (AD-192)."""
+
+    def test_location_prompt_references_biographical_context(self):
+        """Location section should instruct Gemini to use biographical data."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "Biographical Cross-Reference" in prompt
+        assert "missing child" in prompt.lower()
+        assert "residential history" in prompt.lower()
+
+    def test_location_prompt_has_visual_and_biographical_steps(self):
+        """Location section should have both visual and biographical steps."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "Visual Analysis" in prompt
+        assert "Biographical Cross-Reference" in prompt
+        assert "Confidence Assessment" in prompt
+
+    def test_location_schema_includes_biographical_evidence(self):
+        """Location JSON schema should have biographical_evidence field."""
+        prompt = build_extraction_prompt(preset="full")
+        assert "biographical_evidence" in prompt
+        assert "visual_evidence" in prompt
+        assert "missing_child_analysis" in prompt
+
+    def test_gedcom_context_injected_into_prompt(self):
+        """GEDCOM context should appear in the prompt when provided."""
+        context = "Person: Victoria Capuano\n  Residential History:\n    BET 1930 AND 1940: 33 Elizabeth Street, Asheville, NC"
+        prompt = build_extraction_prompt(preset="full", gedcom_context=context)
+        assert "33 Elizabeth Street" in prompt
+        assert "Genealogical Context" in prompt
+
+
 class TestGetActiveExtractions:
     """Verify extraction type listing."""
 
