@@ -38,7 +38,7 @@ Added Gemini location intelligence with GEDCOM-enriched prompts. Labeled faces w
 11. `46da9f4` — BACKLOG update + resume state
 
 ## Test Count
-Before: ~2933 → After: ~3030+ (added ~97 new tests)
+Before: ~2933 → After: 3366+551=3917 (added ~984 new tests)
 - 34 tree navigation tests
 - 15 face labels/map tests
 - 22 location UX tests
