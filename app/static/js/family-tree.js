@@ -1,6 +1,7 @@
 /**
  * family-tree.js — Rhodesli heritage family tree.
  * DD-004: Floating-face design — faces ARE the tree.
+ * DD-005: Professional timeline slider + fluid card animations.
  * Photo-dominant: 176px diameter portraits, glassmorphic cards.
  * Gender silhouettes, labeled expand arrows, timeline photo scrubber.
  */
@@ -14,6 +15,7 @@
     var showTheory = "true";
     var baseNodeIds = {};
     var expandedDirs = {};
+    var isFirstRender = true; // Track first render for expand arrow pulse
 
     // --- PHOTO-DOMINANT layout: HUGE faces, minimal chrome ---
     var CARD_W = 220, CARD_H = 290;
@@ -378,25 +380,54 @@
                 .append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R);
         });
 
-        // --- Draw connections (BOLD and VISIBLE) ---
+        // --- Draw connections (BOLD and VISIBLE) with draw-in animation ---
         var lineGroup = g.append("g").attr("class", "connections");
-        connections.forEach(function(c) {
+        connections.forEach(function(c, ci) {
+            var lineEl;
             if (c.type === "couple") {
-                lineGroup.append("line")
+                lineEl = lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y1).attr("x2", c.x2).attr("y2", c.y2)
                     .attr("stroke", COLORS.coupleLine).attr("stroke-width", 3)
                     .attr("stroke-dasharray", "10,6");
-                lineGroup.append("circle")
+                // Couple dot fades in after line draws
+                var dot = lineGroup.append("circle")
                     .attr("cx", c.midX).attr("cy", c.y1).attr("r", 5)
-                    .attr("fill", COLORS.coupleDot);
+                    .attr("fill", COLORS.coupleDot)
+                    .attr("opacity", 0);
+                dot.transition().delay(600 + ci * 20).duration(300)
+                    .ease(d3.easeCubicOut).attr("opacity", 1);
             } else if (c.type === "drop" || c.type === "childDrop") {
-                lineGroup.append("line")
+                lineEl = lineGroup.append("line")
                     .attr("x1", c.x).attr("y1", c.y1).attr("x2", c.x).attr("y2", c.y2)
                     .attr("stroke", COLORS.line).attr("stroke-width", 3);
             } else if (c.type === "bar") {
-                lineGroup.append("line")
+                lineEl = lineGroup.append("line")
                     .attr("x1", c.x1).attr("y1", c.y).attr("x2", c.x2).attr("y2", c.y)
                     .attr("stroke", COLORS.line).attr("stroke-width", 3);
+            }
+            // Animate line drawing in via stroke-dashoffset
+            if (lineEl) {
+                var lineNode = lineEl.node();
+                var lineLen = lineNode.getTotalLength ? lineNode.getTotalLength() : 200;
+                // For couple lines, preserve the dashed pattern; for others, use solid draw-in
+                if (c.type !== "couple") {
+                    lineEl
+                        .attr("stroke-dasharray", lineLen)
+                        .attr("stroke-dashoffset", lineLen);
+                    lineEl.transition()
+                        .delay(ci * 15)
+                        .duration(600)
+                        .ease(d3.easeCubicOut)
+                        .attr("stroke-dashoffset", 0);
+                } else {
+                    // For couple lines, fade in instead (dasharray is decorative)
+                    lineEl.attr("opacity", 0);
+                    lineEl.transition()
+                        .delay(ci * 15)
+                        .duration(600)
+                        .ease(d3.easeCubicOut)
+                        .attr("opacity", 1);
+                }
             }
         });
 
@@ -410,12 +441,24 @@
             .data(nodeData, function(d) { return d.id; })
             .enter().append("g")
             .attr("class", "person-node")
-            .attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; })
+            // Start slightly below and invisible for entrance animation
+            .attr("transform", function(d) { return "translate(" + d.x + "," + (d.y + 20) + ")"; })
             .style("cursor", "pointer")
+            .attr("opacity", 0)
             .on("click", function(event, d) {
                 event.stopPropagation();
                 showNodePopup(event, d.node.data, d.id);
             });
+
+        // Staggered card entrance: fade in from below
+        cards.each(function(d, i) {
+            d3.select(this).transition()
+                .delay(i * 40)
+                .duration(400)
+                .ease(d3.easeCubicOut)
+                .attr("transform", "translate(" + d.x + "," + d.y + ")")
+                .attr("opacity", 1);
+        });
 
         // Hover: card materializes, photo ring grows
         cards.on("mouseenter", function() {
@@ -474,7 +517,7 @@
             var faces = d.node.data.all_faces || [];
             var photoUrl = faces.length > 0 ? faces[0].url : (d.node.data.avatar || d.node.data.photo_url);
 
-            // Gender — declare BEFORE use in silhouette fallback
+            // Gender — declare BEFORE use in silhouette fallback and ring
             var gender = d.node.data.gender || "U";
             var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
 
@@ -593,6 +636,7 @@
 
         // --- Expand/collapse arrows — LARGE, LABELED, UNMISSABLE ---
         var arrowGroup = g.append("g").attr("class", "expand-arrows");
+        var expandArrowCount = 0;
         nodeData.forEach(function(d) {
             var data = d.node.data;
             var cx = d.x + CARD_W / 2;
@@ -605,17 +649,26 @@
                 var key = d.id + "|" + dd.dir;
                 var isExpanded = expandedDirs.hasOwnProperty(key);
                 if (data[dd.flag] || isExpanded) {
-                    drawExpandArrow(arrowGroup, dd.ax, dd.ay, dd.arrowDir, d.id, dd.dir, isExpanded, dd.label);
+                    drawExpandArrow(arrowGroup, dd.ax, dd.ay, dd.arrowDir, d.id, dd.dir, isExpanded, dd.label, isFirstRender && !isExpanded);
+                    expandArrowCount++;
                 }
             });
         });
 
+        // Stop pulsing expand arrows after 3 seconds on first render
+        if (isFirstRender && expandArrowCount > 0) {
+            setTimeout(function() {
+                arrowGroup.selectAll(".expand-pulse").classed("expand-pulse", false);
+            }, 3000);
+        }
+        isFirstRender = false;
+
         fitToContent();
     }
 
-    function drawExpandArrow(parent, cx, cy, direction, personId, expandDir, isCollapse, label) {
+    function drawExpandArrow(parent, cx, cy, direction, personId, expandDir, isCollapse, label, shouldPulse) {
         var grp = parent.append("g")
-            .attr("class", "expand-btn")
+            .attr("class", "expand-btn" + (shouldPulse ? " expand-pulse" : ""))
             .attr("transform", "translate(" + cx + "," + cy + ")")
             .style("cursor", "pointer")
             .on("click", function(event) {
@@ -682,22 +735,110 @@
         var scale = Math.max(Math.min(scaleX, scaleY, 1.0), 0.25);
         var tx = w / 2 - (bbox.x + bbox.width / 2) * scale;
         var ty = h / 2 - (bbox.y + bbox.height / 2) * scale;
-        svg.transition().duration(700).ease(d3.easeCubicOut).call(
+        svg.transition().duration(800).ease(d3.easeCubicInOut).call(
             zoomBehavior.transform,
             d3.zoomIdentity.translate(tx, ty).scale(scale)
         );
     }
 
     // --- Timeline slider for photo scrubbing ---
+    var lastDisplayedYear = null;
+
     function setupTimeline() {
         var slider = document.getElementById("timeline-slider");
         if (!slider) return;
+
+        // Inject CSS for the slider track fill + year pulse animation
+        if (!document.getElementById("timeline-anim-styles")) {
+            var styleEl = document.createElement("style");
+            styleEl.id = "timeline-anim-styles";
+            styleEl.textContent = [
+                // Active track fill via gradient
+                "#timeline-slider { -webkit-appearance: none; appearance: none; background: transparent; }",
+                "#timeline-slider::-webkit-slider-runnable-track {",
+                "  height: 6px; border-radius: 3px;",
+                "  background: linear-gradient(to right,",
+                "    #d4a574 0%, #d4a574 var(--fill-pct, 50%),",
+                "    rgba(148,163,184,0.18) var(--fill-pct, 50%),",
+                "    rgba(148,163,184,0.18) 100%);",
+                "  transition: background 0.1s ease;",
+                "}",
+                "#timeline-slider::-moz-range-track {",
+                "  height: 6px; border-radius: 3px;",
+                "  background: linear-gradient(to right,",
+                "    #d4a574 0%, #d4a574 var(--fill-pct, 50%),",
+                "    rgba(148,163,184,0.18) var(--fill-pct, 50%),",
+                "    rgba(148,163,184,0.18) 100%);",
+                "}",
+                "#timeline-slider::-webkit-slider-thumb {",
+                "  -webkit-appearance: none; appearance: none;",
+                "  width: 18px; height: 18px; border-radius: 50%;",
+                "  background: #d4a574; border: 2px solid #080d1a;",
+                "  margin-top: -6px; cursor: pointer;",
+                "  box-shadow: 0 0 8px rgba(212,165,116,0.4);",
+                "  transition: transform 0.15s ease, box-shadow 0.15s ease;",
+                "}",
+                "#timeline-slider::-moz-range-thumb {",
+                "  width: 18px; height: 18px; border-radius: 50%;",
+                "  background: #d4a574; border: 2px solid #080d1a;",
+                "  cursor: pointer;",
+                "  box-shadow: 0 0 8px rgba(212,165,116,0.4);",
+                "}",
+                "#timeline-slider:active::-webkit-slider-thumb {",
+                "  transform: scale(1.25);",
+                "  box-shadow: 0 0 14px rgba(212,165,116,0.7);",
+                "}",
+                // Year counter pulse on decade boundary
+                "@keyframes yearPulse {",
+                "  0%   { transform: scale(1); color: #d4a574; }",
+                "  40%  { transform: scale(1.15); color: #f5d4ae; }",
+                "  100% { transform: scale(1); color: #d4a574; }",
+                "}",
+                ".year-pulse { animation: yearPulse 0.35s ease-out; }",
+                // Expand arrow pulse
+                "@keyframes expandPulse {",
+                "  0%   { transform: scale(1); filter: brightness(1); }",
+                "  50%  { transform: scale(1.08); filter: brightness(1.3); }",
+                "  100% { transform: scale(1); filter: brightness(1); }",
+                "}",
+                ".expand-pulse rect {",
+                "  animation: expandPulse 1s ease-in-out 3;",
+                "}"
+            ].join("\n");
+            document.head.appendChild(styleEl);
+        }
+
         slider.addEventListener("input", function() {
             var year = parseInt(slider.value);
-            var yearEl = document.getElementById("timeline-year");
-            if (yearEl) yearEl.textContent = "c. " + year;
+            updateSliderFill(slider);
+            updateYearDisplay(year);
             scrubPhotos(year);
         });
+    }
+
+    function updateSliderFill(slider) {
+        var min = parseFloat(slider.min) || 0;
+        var max = parseFloat(slider.max) || 100;
+        var val = parseFloat(slider.value) || 0;
+        var pct = ((val - min) / (max - min)) * 100;
+        slider.style.setProperty("--fill-pct", pct + "%");
+    }
+
+    function updateYearDisplay(year) {
+        var yearEl = document.getElementById("timeline-year");
+        if (!yearEl) return;
+        yearEl.textContent = "c. " + year;
+
+        // Pulse on decade boundary crossing
+        var prevDecade = lastDisplayedYear ? Math.floor(lastDisplayedYear / 10) : null;
+        var curDecade = Math.floor(year / 10);
+        if (prevDecade !== null && prevDecade !== curDecade) {
+            yearEl.classList.remove("year-pulse");
+            // Force reflow to restart animation
+            void yearEl.offsetWidth;
+            yearEl.classList.add("year-pulse");
+        }
+        lastDisplayedYear = year;
     }
 
     function updateTimeline() {
@@ -738,6 +879,8 @@
 
         var yearEl = document.getElementById("timeline-year");
         if (yearEl) yearEl.textContent = "c. " + slider.value;
+        lastDisplayedYear = parseInt(slider.value);
+        updateSliderFill(slider);
 
         // Decade ticks
         if (ticksEl) {
@@ -757,6 +900,7 @@
     }
 
     var scrubState = {}; // Track which face index is showing per person
+    var scrubTransitioning = {}; // Track in-flight crossfades to prevent overlap
 
     function scrubPhotos(year) {
         // For each person with multiple faces, cycle through based on year position
@@ -779,7 +923,10 @@
             if (prevIdx === faceIdx) return;
             scrubState[n.id] = faceIdx;
 
-            // Crossfade: swap secondary to new image, fade in, then swap primary
+            // Skip if a crossfade is already in flight for this person
+            if (scrubTransitioning[n.id]) return;
+
+            // Crossfade using CSS transitions + transitionend event
             var nodeEl = g.selectAll(".person-node").filter(function(d) { return d.id === n.id; });
             var primary = nodeEl.select(".face-primary");
             var secondary = nodeEl.select(".face-secondary");
@@ -787,16 +934,52 @@
             if (secondary.empty() || primary.empty()) return;
 
             var newUrl = faces[faceIdx].url;
-            secondary.attr("href", newUrl);
-            secondary.style("opacity", "1");
-            primary.style("opacity", "0");
+            var personId = n.id;
 
-            // After transition, swap primary to the new image
-            setTimeout(function() {
-                primary.attr("href", newUrl);
-                primary.style("opacity", "1");
-                secondary.style("opacity", "0");
-            }, 450);
+            // Set secondary to new image, then crossfade
+            secondary.attr("href", newUrl);
+            scrubTransitioning[personId] = true;
+
+            // Use requestAnimationFrame to ensure the browser has processed the new href
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    // Fade secondary in, primary out simultaneously
+                    secondary.style("opacity", "1");
+                    primary.style("opacity", "0");
+
+                    // Listen for transition end on the secondary element
+                    var secNode = secondary.node();
+                    var handler = function onTransitionEnd(e) {
+                        if (e.propertyName !== "opacity") return;
+                        secNode.removeEventListener("transitionend", onTransitionEnd);
+                        // Swap primary to new image, reset opacities instantly
+                        primary.style("transition", "none");
+                        primary.attr("href", newUrl);
+                        primary.style("opacity", "1");
+                        secondary.style("transition", "none");
+                        secondary.style("opacity", "0");
+                        // Restore transitions on next frame
+                        requestAnimationFrame(function() {
+                            primary.style("transition", "opacity 0.4s ease");
+                            secondary.style("transition", "opacity 0.4s ease");
+                            scrubTransitioning[personId] = false;
+                        });
+                    };
+                    secNode.addEventListener("transitionend", handler);
+
+                    // Safety fallback: if transitionend never fires (e.g., opacity was already 1)
+                    // clear transitioning state after 500ms
+                    setTimeout(function() {
+                        if (scrubTransitioning[personId]) {
+                            secNode.removeEventListener("transitionend", handler);
+                            primary.attr("href", newUrl);
+                            primary.style("opacity", "1");
+                            secondary.style("opacity", "0");
+                            scrubTransitioning[personId] = false;
+                        }
+                    }, 500);
+                });
+            });
         });
     }
 
@@ -888,9 +1071,9 @@
                 hideNodePopup();
                 expandNode(personId, btn.getAttribute("data-direction"));
             } else if (action === "tree-zoom-in") {
-                if (svg && zoomBehavior) svg.transition().duration(300).call(zoomBehavior.scaleBy, 1.4);
+                if (svg && zoomBehavior) svg.transition().duration(350).ease(d3.easeCubicOut).call(zoomBehavior.scaleBy, 1.4);
             } else if (action === "tree-zoom-out") {
-                if (svg && zoomBehavior) svg.transition().duration(300).call(zoomBehavior.scaleBy, 0.7);
+                if (svg && zoomBehavior) svg.transition().duration(350).ease(d3.easeCubicOut).call(zoomBehavior.scaleBy, 0.7);
             } else if (action === "tree-fit") {
                 fitToContent();
             }
@@ -903,10 +1086,10 @@
             if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
             if ((e.key === "+" || e.key === "=") && svg && zoomBehavior) {
                 e.preventDefault();
-                svg.transition().duration(200).call(zoomBehavior.scaleBy, 1.3);
+                svg.transition().duration(250).ease(d3.easeQuadOut).call(zoomBehavior.scaleBy, 1.3);
             } else if (e.key === "-" && svg && zoomBehavior) {
                 e.preventDefault();
-                svg.transition().duration(200).call(zoomBehavior.scaleBy, 0.7);
+                svg.transition().duration(250).ease(d3.easeQuadOut).call(zoomBehavior.scaleBy, 0.7);
             } else if (e.key === "0" && svg) {
                 e.preventDefault();
                 fitToContent();
