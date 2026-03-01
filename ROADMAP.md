@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.82.0 · ~3272 tests · 274 photos · 775 identities · 59 confirmed
+Current: v0.82.1 · ~2933 tests · 274 photos · 775 identities · 60 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-02-28: **v0.82.1 — Session 80 cont.**: Parallel track improvements. Tree: photo cycling, expand-any-node, multi-spouse, rounded-rect faces (DD-005). Cards: share button restored, multi-face gallery. GEDCOM: 21 new matches (56 total). Docs: DD-005, AD-190/191. 5 parallel worktree subagents. ~2933 tests.
 - [x] 2026-02-28: **v0.82.0 — Session 80**: Fix Everything — Tree + Face Cards + UX. Tree: complete D3 rewrite with card-based layout, T-shape connections, expand arrows, search (AD-185). Graph unification: GEDCOM xrefs→UUIDs. Expand fix: source person in response. Face cards verified. Compare deferred AD-187. Lesson 89. ~3272 tests.
 - [x] 2026-02-28: **v0.81.0 — Session 79**: Fix Three Visible Failures. Tree: CardSvg replaces broken CardHtml (AD-184), 13-node family renders with photos. Face cards: compact redesign, face 60%+ of card, icon-only actions. Tier 2 threshold 1.10→1.30 (AD-183, Nolan approved), 617 suggestions surfaced. No data loss found for Big Leon/Nace. Mobile verified. 3784 tests.
 - [x] 2026-02-28: **v0.80.0 — Session 78**: Integration + Fix-Everything. Stop hook fixed (exit 2 blocking). 2 ML test failures resolved. Per-face dedup implemented. GEDCOM→Supabase sync (1,019 rels, pagination fix). PRD-024 auto-clustering. Threshold analysis: Tier 2 ceiling 1.10 provably too low. 31 new tests. Visual audit: 9 pages PASS. ~3792 tests.

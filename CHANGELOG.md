@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.82.1] — 2026-02-28 (Session 80 continuation: Parallel Track Improvements)
+
+### Added
+- **Per-person photo cycling**: Arrow buttons on tree nodes cycle through face photos with dot indicators; resets on timeline scrub
+- **Expand from any node**: All nodes with hidden connections show expand arrows (not just focal person) — Ancestry-style tree exploration
+- **Multiple spouse support**: Children grouped by parent pair, each spouse gets own T-connector
+- **Multi-face gallery**: Identity cards with 3+ faces show thumbnail strip with overlapping circular previews
+- **Share button restored**: Web Share API on identity cards, person page, and Find Similar page with clipboard fallback
+- **21 new GEDCOM matches**: 56 total (was 35), only 4 confirmed identities not in tree
+
+### Fixed
+- **Face cropping**: Rounded-rect clips replace circles — ~35% more face visible (squircle, 25% corner radius)
+- **Find Similar page**: Color-coded confidence tiers (green/blue/amber/gray), breadcrumb nav to profile, share button
+- **Card profile links**: `/people/` → `/person/` on compact cards
+- **Text readability**: Tree names 17px (was 11px), birth-death years brighter with text-shadow
+
+### Changed
+- Tree face containers: circles → rounded rectangles for better face recognition
+- Find Similar nav: "Back to People" → breadcrumb "Back to Profile" + "All People"
+- Share title: "Rhodesli Heritage Archive" → "Jews of Rhodes Heritage Archive"
+
 ## [v0.82.0] — 2026-02-28 (Session 80: Fix Everything — Tree + Face Cards + UX)
 
 ### Added

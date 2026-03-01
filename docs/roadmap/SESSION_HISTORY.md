@@ -364,6 +364,26 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 80 continuation: Parallel Track Improvements (2026-02-28) — v0.82.1
+- 5 parallel worktree subagents merged cleanly to main
+- Track A: Tree JS — per-person photo cycling (arrows + dot indicators), expand-from-any-node, multiple spouse support (children grouped by parent pair), text readability (17px names, text-shadow)
+- Track B: app/main.py — Find Similar page fixed (color-coded tiers, breadcrumbs), share button restored on 3 surfaces (Web Share API + clipboard fallback), multi-face thumbnail gallery on cards
+- Track C: 21 new GEDCOM matches (56 total, 4 not in tree: Arlene Kessler, Eleanore Cohen, Herman Benson, Molly Benson)
+- Track D: DD-005 (photo-dominant cards), AD-190 (GEDCOM relationship import), AD-191 (best-face selection)
+- Track E: Rounded-rect face crops replacing circles (~35% more face visible, squircle with 25% corner radius)
+- Tests: 2933+ passing (2395 app + 538 ML)
+- Deferred: Supabase GEDCOM face link fix for Matilda, relationship visualization enhancements
+
+## Session 80: Fix Everything — Tree + Face Cards + UX (2026-02-28) — v0.82.0
+- Family Tree complete overhaul: 3 API endpoints (data, expand, search), BFS lazy loading, type-ahead search, floating-face design (DD-004), gender rings, glassmorphism
+- Graph unification: GEDCOM xrefs→UUIDs. Expand fix: source person in response
+- GEDCOM relationship import: 1221 correct rels replacing 1000 wrong xref-based rels. Abraham's 7 children restored.
+- Face cards: photo-dominant redesign (DD-005), collapsible admin, Find Similar full-page route
+- Best-face selection: get_best_face_id() for tree nodes and identity cards
+- Matilda Capouano + Hanula Mosafir added to GEDCOM matches (35 total)
+- Compare feature deferred (AD-187). Lesson 89: /clear between acts is non-negotiable.
+- Tests: ~3272
+
 ## Session 79: Fix Three Visible Failures (2026-02-28) — v0.81.0
 - Tree fix: CardSvg replaces broken CardHtml (AD-184). 13-node family tree renders with names, lifespans, photos. 57 families in "Focus on" dropdown.
 - Face card redesign: compact layout with face hero (60%+ area), icon-only action buttons, overflow menu. 5 cards/row desktop, 2/row mobile.

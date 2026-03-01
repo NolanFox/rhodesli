@@ -161,8 +161,37 @@
 - **P2 RESOLVED: Profile button fixed** — /people/ → /person/ route, verified in browser
 
 ### Act 8: Continuation — Parallel Tracks (Session 80 cont.)
-- [x] Track A: family-tree.js enhancements (photo cycling, expand-any, multi-spouse, text)
-- [x] Track B: find similar fix, share button, multi-face gallery
-- [x] Track C: GEDCOM matching for 25 remaining identities
-- [x] Track D: DD-005, AD-190, AD-191, session assessment
-- Executed via 4 parallel worktree subagents
+- [x] Track A: family-tree.js — photo cycling (arrows+dots), expand-any-node, multi-spouse (children grouped by parent pair), text readability (17px, text-shadow, brighter)
+- [x] Track B: app/main.py — Find Similar fixed (color tiers, breadcrumbs), share button on 3 surfaces, multi-face gallery on cards, profile link fix
+- [x] Track C: data — 21 new GEDCOM matches (56 total, 4 not in tree)
+- [x] Track D: docs — DD-005, AD-190/191, assessment, session log
+- [x] Track E: family-tree.js — rounded-rect face crops (squircle, 25% corner radius, ~35% more face visible)
+- 5 parallel worktree subagents, all merged cleanly to main
+- Tests: 2933+ passing (2395 app + 538 ML)
+
+### User Feedback Status (updated)
+1. GEDCOM avatars in tree — FIXED (Act 5)
+2. Timeline slider direction — FIXED (Act 6)
+3. Fluid animations — FIXED (Act 6)
+4. Smooth transitions — FIXED (Act 6)
+5. People page cards — FIXED (Act 6, DD-005)
+6. Find Similar broken — **NOW FIXED** (Track B)
+7. Share button lost — **NOW FIXED** (Track B)
+8. Big Leon wrong photo — FIXED (Act 7)
+9. Photo order wrong — FIXED (Act 7)
+10. Abraham's children — FIXED (Act 7)
+11. Per-person photo cycling — **NOW FIXED** (Track A)
+12. Relationship viz unclear — PARTIALLY (text improved, labels/bands deferred)
+13. Names/dates unreadable — **NOW FIXED** (Track A)
+14. Expand from any node — **NOW FIXED** (Track A)
+15. Multiple spouse support — **NOW FIXED** (Track A)
+16. Match Ancestry functionality — IN PROGRESS
+17. Parallel subagents — DONE (5 tracks this act)
+18. Clear between phases — DONE
+19. GEDCOM matching — **NOW FIXED** (Track C: 21 new, 56 total)
+20. Face cropping too aggressive — **NOW FIXED** (Track E: rounded-rect)
+
+### Deferred
+- Supabase GEDCOM face link fix (Matilda wrong xref)
+- Relationship visualization (thicker lines, hover labels, generation bands)
+- Browser verification of continuation changes
