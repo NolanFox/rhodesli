@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.83.0] — 2026-03-01 (Session 81: Connected App — Tree, Map, Location, Face Labels)
+
+### Added
+- **Photo→Tree navigation**: Smart subtree logic with BFS, nuclear family detection, photo-person highlighting in tree nodes
+- **Photo→Map navigation**: "See on Map" button on photo pages linking to filtered map view
+- **Face identity labels**: Confirmed names shown as clickable links to person pages (replaces "Face N")
+- **Location estimate display**: Confidence badges, evidence cards, embedded Leaflet maps (OpenStreetMap, no API key)
+- **Admin location correction**: Placeholder form for future location corrections
+- **GEDCOM-enriched location prompts**: Biographical cross-reference (residential history, children birth places, spouse events) for Gemini location analysis (AD-192)
+- **Location data model**: Photo location schema with geocoded data, confidence levels, evidence (AD-193)
+- **Relationship viz enhancements**: Thicker lines for shared photos, hover labels with relationship type, generation bands
+- **Chatbot BACKLOG**: PRODUCT-006 — interactive photo analysis chatbot concept (from Asheville case study)
+- ~97 new tests across 6 test files
+
+### Fixed
+- **Matilda GEDCOM link**: Corrected xref @I132423679471@ → @I132127360994@ with 9 regression tests
+- **Test fixture count**: Updated individuals_count for 3 new GEDCOM entries
+
+### Verified
+- 12/12 production pages PASS (browser verification of Session 80 changes)
+
 ## [v0.82.1] — 2026-02-28 (Session 80 continuation: Parallel Track Improvements)
 
 ### Added

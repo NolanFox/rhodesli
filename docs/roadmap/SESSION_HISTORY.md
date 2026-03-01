@@ -364,6 +364,21 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - AD-152. ~50 new tests. ~3450 total (2906 app + 538 ML).
 - Outstanding: 144 photo retry, Supabase table creation, migration script execution
 
+## Session 81: Connected App — Tree, Map, Location, Face Labels (2026-03-01) — v0.83.0
+- Photo→Tree smart navigation: BFS subtree logic, nuclear family detection, photo-person highlighting
+- Face identity labels: confirmed names as clickable links to /person/{id}, unidentified show "Face N"
+- Photo→Map + Person→Map navigation buttons
+- Location estimate display: confidence badges, evidence cards, embedded Leaflet maps (OpenStreetMap)
+- GEDCOM-enriched location prompts: residential history, children birth places, spouse events (AD-192)
+- Location data model + UX research (AD-193)
+- Relationship viz: thicker lines (shared photos), hover labels, generation bands
+- Matilda GEDCOM face link fix (a2889099 xref corrected)
+- Browser verification: 12/12 production pages PASS
+- PRODUCT-006 chatbot concept added to BACKLOG
+- 8 parallel subagents across 2 rounds, session recovered after interruption
+- ~97 new tests (34 tree nav, 15 face/map, 22 location, 15 GEDCOM, 9 consistency, 10 tree API)
+- Tests: ~3030 total
+
 ## Session 80 continuation: Parallel Track Improvements (2026-02-28) — v0.82.1
 - 5 parallel worktree subagents merged cleanly to main
 - Track A: Tree JS — per-person photo cycling (arrows + dot indicators), expand-from-any-node, multiple spouse support (children grouped by parent pair), text readability (17px names, text-shadow)
