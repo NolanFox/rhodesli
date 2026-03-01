@@ -62,7 +62,8 @@ class TestFindSimilarPage:
 
     def test_shows_back_link(self, client, mock_similar_data):
         resp = client.get("/people/id-leon/similar")
-        assert "Back to People" in resp.text
+        assert "Back to Profile" in resp.text
+        assert "All People" in resp.text
 
     def test_shows_similar_results(self, client, mock_similar_data):
         resp = client.get("/people/id-leon/similar")
@@ -84,3 +85,24 @@ class TestFindSimilarPage:
     def test_responsive_grid(self, client, mock_similar_data):
         resp = client.get("/people/id-leon/similar")
         assert "similar-grid" in resp.text
+
+    def test_share_button_on_similar_page(self, client, mock_similar_data):
+        """Share button should appear on similar page for confirmed, named identities."""
+        resp = client.get("/people/id-leon/similar")
+        assert "share-photo" in resp.text
+        assert "Jews of Rhodes Heritage Archive" in resp.text
+
+    def test_confidence_tier_colors(self, client, mock_similar_data):
+        """High confidence tier (0.95 distance) should use blue color."""
+        resp = client.get("/people/id-leon/similar")
+        assert "bg-blue-600" in resp.text
+
+    def test_back_to_profile_link_uses_person_route(self, client, mock_similar_data):
+        """Back link should point to /person/{id}, not /people/{id}."""
+        resp = client.get("/people/id-leon/similar")
+        assert "/person/id-leon" in resp.text
+
+    def test_share_script_included(self, client, mock_similar_data):
+        """Standalone similar page should include share JS handler."""
+        resp = client.get("/people/id-leon/similar")
+        assert "_sharePhotoUrl" in resp.text
