@@ -159,3 +159,10 @@
 - **P1: Acts 1-3 all modified app/main.py sequentially** — could not parallelize (Lesson 88)
 - **P1 RESOLVED: Browser verification done** — tree verified in production with floating-face design
 - **P2 RESOLVED: Profile button fixed** — /people/ → /person/ route, verified in browser
+
+### Act 8: Continuation — Parallel Tracks (Session 80 cont.)
+- [x] Track A: family-tree.js enhancements (photo cycling, expand-any, multi-spouse, text)
+- [x] Track B: find similar fix, share button, multi-face gallery
+- [x] Track C: GEDCOM matching for 25 remaining identities
+- [x] Track D: DD-005, AD-190, AD-191, session assessment
+- Executed via 4 parallel worktree subagents

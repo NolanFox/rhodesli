@@ -197,3 +197,51 @@ appear on interaction. Follows 2025-2026 glassmorphism trend.
 - AD-185: Original card-based tree layout
 - Session 80 feedback: docs/session_context/session-80-tree-feedback.md
 - Bug fix: /people/{id} -> /person/{id} (profile links from tree)
+
+---
+
+## DD-005: Photo-Dominant Identity Cards
+
+- **Date:** 2026-02-28
+- **Session:** 80 continuation
+- **Status:** Implemented
+
+### Problem
+
+Previous card design had too much text and buttons visible. The face was
+small relative to the card. Admin tools (confirm, reject, merge, rename,
+detach, skip, reset) dominated the visual hierarchy. User feedback:
+"cards broken/not to standard."
+
+### Decision
+
+Identity cards redesigned to be photo-dominant with the face as the hero
+element. Compact pill buttons (Photos, Similar, Tree, Profile) provide
+quick navigation. Admin tools are wrapped in a collapsible `<details>`
+section -- clean cards by default, admin workflow available on demand.
+
+### Rationale
+
+Heritage archive is fundamentally visual -- the face IS the data. Admin
+tools are needed for workflow but should not dominate the public-facing
+card. Collapsible admin follows the progressive disclosure pattern:
+show the most important content first, reveal complexity on request.
+
+### Implementation
+
+- `identity_card()` in `app/main.py`
+- Hero face uses `get_best_face_id()` for highest quality crop
+- Pills provide quick navigation without cluttering the card
+- Face count badge shows multi-face identities at a glance
+
+### Alternatives Rejected
+
+1. **Tab-based cards** -- too complex for a browse grid
+2. **Hover-reveal actions** -- not mobile-friendly
+3. **Separate admin view** -- creates maintenance burden of two card layouts
+
+### Breadcrumbs
+
+- DD-002: Face Card Layout Improvements (earlier iteration)
+- AD-189: Best-face selection for tree nodes (same `get_best_face_id` pattern)
+- Session 80 feedback: docs/session_context/session-80-tree-feedback.md
