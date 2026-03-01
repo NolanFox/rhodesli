@@ -69,19 +69,28 @@
 ### ACT 7C/7D: UX Review + Session Review Skills
 - These run as end-of-session skills. Deferred to when session fully wraps up.
 
+### Session 81 Continuation (Resume)
+- [x] Fixed: relationships.json + gedcom_matches.json removed from OPTIONAL_SYNC_FILES — Evidence: `scripts/init_railway_volume.py`
+- [x] Fixed: gedcom_matches.json working copy restored from HEAD (33→56 entries)
+- [x] Pushed to origin (18 commits) — Evidence: `git push origin main`
+- [x] All 3368 app tests pass (excluding pre-existing e2e flake) + 551 ML tests pass
+
 ## Red Flags
 
-### LOW: Pre-existing test failures (not from session 81)
-- `tests/e2e/test_discovery_layer.py::test_correction_flow_updates_source` — e2e flake
-- `tests/test_supabase_data.py::TestInitRailwayVolumeSyncList::test_relationships_not_in_sync_list` — relationships.json still in OPTIONAL_SYNC_FILES
-- **Fix**: These should be addressed in a separate cleanup session
+### LOW: Pre-existing e2e flake
+- `tests/e2e/test_discovery_layer.py::test_correction_flow_updates_source` — intermittent Playwright failure
+- **Fix**: Should be addressed in a separate cleanup session
 
-### LOW: Data file drift
+### RESOLVED: Sync list test failures
+- relationships.json and gedcom_matches.json removed from OPTIONAL_SYNC_FILES (both now in Supabase)
+- Fixed in continuation session
+
+### RESOLVED: Data file drift
 - Working copy of `data/gedcom_matches.json` was out of sync with HEAD (33 vs 56 entries)
-- **Fixed**: Restored from HEAD during session
+- Restored from HEAD in both original and continuation sessions
 
 ## Next Session Should Verify
 1. Run Gemini API call with enhanced GEDCOM prompt against Asheville photo
 2. Wire up location correction backend endpoint
-3. Fix pre-existing test failures (e2e flake + sync list)
+3. Fix pre-existing e2e test flake
 4. Browser verify all new navigation links in production
