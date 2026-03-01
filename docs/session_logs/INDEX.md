@@ -63,6 +63,15 @@
 | 74 | 2026-02-27 | [log](session-74-log.md) | [assess](../assessments/session-74-assessment.md) | [prompt](../prompts/session-74-prompt.md) | [ctx](../session_context/session-74-context.md) | Complete (Gemini) |
 | 74-eval | 2026-02-27 | - | [eval](../assessments/session-74-eval.md) | [prompt](../prompts/session-74-eval-prompt.md) | - | Complete (Claude eval) |
 | 77 | 2026-02-28 | [log](session-77-log.md), [audit](session_77_audit.md) | [assess](../assessments/session-77-assessment.md) | [prompt](../prompts/session-77-prompt.md) | [ctx](../session_context/session-77-context.md) | Complete (Codex) |
+| 75 | 2026-02-28 | [log](session-75-log.md) | [assess](../assessments/session-75-assessment.md) | [prompt](../prompts/session-75-prompt.md) | - | Complete |
+| 76a | 2026-02-28 | [log](session-76a-log.md) | [assess](../assessments/session-76a-assessment.md) | [prompt](../prompts/session-76a-prompt.md) | - | Complete |
+| 78 | 2026-02-28 | [log](session-78-log.md) | [assess](../assessments/session-78-assessment.md) | [prompt](../prompts/session-78-prompt.md) | - | Complete |
+| 79 | 2026-02-28 | [log](session-79-log.md) | [assess](../assessments/session-79-assessment.md) | [prompt](../prompts/session-79-prompt.md) | - | Complete |
+| 80 | 2026-02-28 | [log](session-80-log.md), [interactive](session-80-interactive-log.md) | [assess](../assessments/session-80-assessment.md), [cont](../assessments/session-80-continuation-assessment.md) | [prompt](../prompts/session-80-prompt.md) | - | Complete |
+| 81 | 2026-03-01 | [log](session-81-log.md) | [assess](../assessments/session-81-assessment.md) | [prompt](../prompts/session-81-prompt.md) | [ctx](../session_context/session_81_context.md) | Complete |
+| 81B | 2026-03-01 | - | [assess](../assessments/session-81b-assessment.md) | [prompt](../prompts/session-81b-prompt.md) | [analysis](../session_context/session-81c-analysis.md) | Complete |
+| 81C | 2026-03-01 | - | [assess](../assessments/session-81c-assessment.md) | - | [continuation](../session_context/session-81-continuation-plan.md) | Complete |
+| 81D | 2026-03-01 | - | [assess](../assessments/session-81d-assessment.md) | - | [verification](../session_context/session-81-browser-verification.md) | Complete (verification only) |
 
 ## B-Path Analysis
 
@@ -81,14 +90,16 @@ the original session scope was completed, blocked, or required follow-up work.
 | 64 | Yes (B,C,D) | Execute deferred | 64B=execute deferred, 64C=concerns, 64D=retry |
 | 65 | Yes (A-D) | Multi-phase | 65A=upload fix, 65B=GEDCOM, 65C=upload fix, 65D=disk space |
 | 66 | Yes (B) | Critical fix | 66B=upload silent data loss fix (cache + R2 race) |
+| 80 | Yes (cont) | Interactive | 80-cont=parallel track improvements (tree JS, face cards, GEDCOM) |
+| 81 | Yes (B,C,D) | Browser verification | 81B=fix real issues, 81C=data consistency, 81D=final verification |
 
 ## Session Analytics
-- **Total sessions tracked:** 46 (47B through 67)
-- **Complete** (has log): 18
+- **Total sessions tracked:** 56 (47B through 81D)
+- **Complete** (has log): 28
 - **Recovered** (from git history or /tmp): 4
 - **Stub** (log lost, artifacts exist): 14
 - **Missing** (limited/no artifacts in session_logs/): 7 (54, 54B, 54C, 54D, 54E, 54F, 55B)
 - **Planned:** 0
-- **Sessions with b-paths:** 10 (49, 51, 54, 55, 59, 60, 61, 64, 65, 66)
-- **Total b-path branches:** 24
+- **Sessions with b-paths:** 12 (49, 51, 54, 55, 59, 60, 61, 64, 65, 66, 80, 81)
+- **Total b-path branches:** 29
 - **Gap period:** Sessions 53-55B had weakest archival coverage

@@ -379,6 +379,26 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - ~97 new tests (34 tree nav, 15 face/map, 22 location, 15 GEDCOM, 9 consistency, 10 tree API)
 - Tests: ~3030 total
 
+## Session 81B: Fix Real Issues Found in Browser Verification (2026-03-01) — v0.83.1
+- Face label prefix fix: removed "Face N:" prefix from identified faces (commit `daa8c0d`)
+- Leaflet map fix: moved script outside `<details>`, polling-based CDN check replaces DOMContentLoaded (Lessons 90/91)
+- Tree subtree logic: removed `if pid in lookup` filter, include disconnected photo people (Lessons 92/93)
+- 7 new lessons documented (90-96)
+- 6 commits, all tests passing
+
+## Session 81C: Data Consistency + WCAG (2026-03-01) — v0.83.2
+- Fixed 21 truncated UUIDs in `data/gedcom_matches.json` (8-char → full UUIDs)
+- Added xref fallback resolution in `_build_tree_adjacency()` and `_build_tree_person_lookup()`
+- Synced 56 GEDCOM matches + 1240 relationships to Supabase
+- Arrow touch targets: radius 14→22 (44px WCAG minimum), font 14→18px
+- Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
+- Tests: 3917 total (3366 app + 551 ML)
+
+## Session 81D: Final Verification Gate (2026-03-01)
+- 13/13 feature verification PASS on production Chrome
+- Verified: face labels, Leaflet maps, tree rendering, photo cycling, expand/collapse, time slider, hover labels, generation bands, line thickness, date estimate, location estimate, scene description, people cards
+- Verification-only session (0 commits)
+
 ## Session 80 continuation: Parallel Track Improvements (2026-02-28) — v0.82.1
 - 5 parallel worktree subagents merged cleanly to main
 - Track A: Tree JS — per-person photo cycling (arrows + dot indicators), expand-from-any-node, multiple spouse support (children grouped by parent pair), text readability (17px names, text-shadow)
@@ -582,6 +602,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.83.2 | 2026-03-01 | 81C | 3366+551 |
+| v0.83.1 | 2026-03-01 | 81B | ~3366+551 |
+| v0.83.0 | 2026-03-01 | 81 | ~3030 |
+| v0.82.1 | 2026-02-28 | 80-cont | 2395+538 |
+| v0.82.0 | 2026-02-28 | 80 | ~3272 |
+| v0.81.0 | 2026-02-28 | 79 | 3246+538 |
+| v0.80.0 | 2026-02-28 | 78 | 3254+538 |
+| v0.79.1 | 2026-02-28 | 77 | ~3163 |
 | v0.79.0 | 2026-02-28 | 76a | 3205+537 |
 | v0.78.0 | 2026-02-28 | 75 | 2176+977 |
 | v0.77.1 | 2026-02-27 | 73 | 2166+1014 |
