@@ -2147,3 +2147,21 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Research**: Analyzed Google Photos timeline, MyHeritage family tree timeline, Clyfford Still Museum interactive exhibit, AgeLapse face scrubber, FamilySearch timeline. Docs: docs/research/timeline-slider-research.md, docs/research/reactive-tree-patterns.md.
 - **Rejected**: (1) WebGL canvas rendering — overengineered for current scale. (2) Fixed photo size with zoom-to-see — defeats purpose of face-dominant design. (3) Auto-play animation — distracting, user-controlled scrubbing is superior.
 - **Affects**: `app/static/js/family-tree.js`, `app/main.py` (tree page HTML/CSS, tree API face data).
+
+### AD-190: GEDCOM Relationship Import — Fox/Capeluto/Fogel/Waldorf Tree
+- **Date**: 2026-02-28
+- **Session**: 80 continuation
+- **Context**: Previous `relationships.json` had ~1000 xref-based relationships from wrong GEDCOM import. Abraham showed only 3 children instead of 7. Relationships used GEDCOM xref IDs (`@I123@`) instead of Rhodesli UUIDs, causing broken tree rendering.
+- **Decision**: Parse Fox/Capeluto/Fogel/Waldorf GEDCOM file, BFS 3-deep from 35 matched identities, extract HUSB/WIFE/CHIL relationships from FAMS/FAMC records, convert xrefs to UUIDs.
+- **Method**: GEDCOM parser reads FAM records for HUSB/WIFE/CHIL links. BFS traversal from matched identities captures 708 relevant people across 3 generations. Relationships mapped to UUID pairs via gedcom_matches.json lookup.
+- **Result**: 1221 correct GEDCOM-sourced relationships replacing 1000 incorrect xref-based ones. Abraham now shows all 7 children (Zeb, Victoria, David, Matilda, Morris, Lenora, Rachel). Tree renders correctly with proper parent-child and spouse connections.
+- **Affects**: `data/relationships.json`, `data/gedcom_matches.json`, tree API endpoints.
+
+### AD-191: Best-Face Selection for Tree Nodes and Identity Cards
+- **Date**: 2026-02-28
+- **Session**: 80 continuation
+- **Context**: User reported Big Leon showing worst quality photo instead of best. Photos varied significantly in quality (detection scores range from ~0.3 to ~0.99). First-face selection was arbitrary — depended on ingestion order, not quality.
+- **Decision**: Tree node avatars and identity card heroes use `get_best_face_id()` instead of first face in the anchor/candidate list.
+- **Method**: `get_best_face_id()` iterates through all face IDs for an identity, looks up each face's detection quality score from the embeddings cache, and returns the face with the highest score. Falls back to first face if no quality data is available.
+- **Result**: All tree nodes and identity cards now show the best available photo. Big Leon shows his clearest portrait instead of a low-quality newspaper crop.
+- **Affects**: `app/main.py` (`identity_card()`, tree API face data), `app/static/js/family-tree.js` (node avatar rendering).
