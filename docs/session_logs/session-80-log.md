@@ -47,6 +47,58 @@ Context: docs/session_context/session-80-context.md
 - [x] Find Similar — inline panel with results, distance scores, batch actions
 - [x] Compare — explicit deferral with AD-187
 
+## Act 8: Continuation — Parallel Tracks (5 worktree subagents)
+
+### Track A: family-tree.js (worktree-agent-aae033b6)
+- [x] Per-person photo cycling: left/right arrows + dot indicators on nodes with multiple faces
+- [x] Expand from ANY node: all nodes with `has_hidden_connections` show expand arrows (not just focal)
+- [x] Multiple spouse support: children grouped by parent pair, each spouse gets own T-connector
+- [x] Text readability: names 17px (was 11px), birth-death years brighter (#cbd5e1), text-shadow on all text
+- Committed: 6a59c3b
+
+### Track B: app/main.py (worktree-agent-a4638d38)
+- [x] Find Similar page: color-coded confidence tiers (green/blue/amber/gray), breadcrumb nav "Back to Profile" + "All People"
+- [x] Share button restored: Web Share API on identity cards, person page, Find Similar page; clipboard fallback
+- [x] Multi-face gallery: identities with 3+ faces show thumbnail strip (32px overlapping circles, +N badge)
+- [x] Profile link fix: compact card /people/ → /person/
+- [x] Share title: "Jews of Rhodes Heritage Archive"
+- Committed: ce11ca3
+
+### Track C: data/gedcom_matches.json (worktree-agent-a8aa40c4)
+- [x] 21 new GEDCOM matches added (56 total, was 35)
+- [x] 4 identities confirmed NOT in GEDCOM tree: Arlene Kessler, Eleanore Cohen, Herman Benson, Molly Benson
+- Committed: b98e3c4
+
+### Track D: docs (worktree-agent-a377061d)
+- [x] DD-005: Photo-Dominant Identity Cards in DESIGN_DECISIONS.md
+- [x] AD-190: GEDCOM Relationship Import in ALGORITHMIC_DECISIONS.md
+- [x] AD-191: Best-Face Selection in ALGORITHMIC_DECISIONS.md
+- [x] Session assessment: docs/assessments/session-80-continuation-assessment.md
+- Committed: 253e5a8
+
+### Track E: family-tree.js face cropping fix (worktree-agent-ad26d5b5)
+- [x] Rounded-rect clip paths replace circles (~35% more face visible)
+- [x] Squircle shape: 25% corner radius (PHOTO_R * 0.25)
+- [x] Updated: clipPath, focal glow, shadow, silhouette bg, gender ring, popup photo
+- [x] User feedback: "circles crop too much of the face" → resolved
+- Committed: 6076224
+
+### Merge
+- All 5 branches merged cleanly to main (no conflicts)
+- Order: docs → data → code (main.py) → tree JS (A) → tree JS (E)
+- Tests: 2933+ passing (2395 app + 538 ML)
+
+### User Feedback Status (20 items from session 80)
+Items NOW FIXED in this continuation: #6 Find Similar, #7 Share button, #11 Photo cycling, #13 Text readability, #14 Expand-any, #15 Multi-spouse, #19 GEDCOM matching, #20 Face cropping
+
+### Deferred
+- Supabase GEDCOM face link fix for Matilda (wrong xref in gedcom_face_links table)
+- Relationship visualization (thicker lines, hover labels, generation bands)
+- Browser verification of continuation changes
+
 ## Verification Gate
 - [x] All phases re-checked against original prompt
 - [x] Feature Reality Contract passed
+- [x] Assessment written with evidence
+- [x] CHANGELOG, ROADMAP, SESSION_HISTORY updated
+- [x] Tests passing (2933+)
