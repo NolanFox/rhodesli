@@ -7180,8 +7180,8 @@ def identity_card(
         quality_label_text = 'Excellent' if best_quality >= 30 else 'Good' if best_quality >= 20 else 'Fair' if best_quality >= 10 else 'Low'
 
     # --- Photo-dominant card design (DD-005) ---
-    # Hero face: the best face crop dominates the card
-    best_face = all_face_ids[0] if all_face_ids else None
+    # Hero face: use the BEST QUALITY face, not just first
+    best_face = best_face_id or (all_face_ids[0] if all_face_ids else None)
     hero_crop_url = resolve_face_image_url(best_face, crop_files) if best_face else None
     person_href = f"/person/{identity_id}" if state == "CONFIRMED" else f"/identify/{identity_id}"
 
@@ -18727,13 +18727,20 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry):
     try:
         ri = registry.get_identity(pid)
         if ri:
-            fids = ri.get("anchor_ids", []) or ri.get("candidate_ids", [])
+            fids = ri.get("anchor_ids", []) + ri.get("candidate_ids", [])
             for fid in fids:
                 url = resolve_face_image_url(fid, crop_files)
                 if url:
                     all_faces.append({"url": url, "face_id": fid})
-                    if not avatar:
-                        avatar = url
+            # Use highest-quality face as avatar (not just first)
+            if fids:
+                best = get_best_face_id(fids)
+                if best:
+                    best_url = resolve_face_image_url(best, crop_files)
+                    if best_url:
+                        avatar = best_url
+            if not avatar and all_faces:
+                avatar = all_faces[0]["url"]
     except (KeyError, IndexError):
         pass
     # Rels — only to included persons

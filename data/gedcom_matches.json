@@ -464,6 +464,34 @@
       "gedcom_birth_year": 1909,
       "gedcom_death_year": 1978,
       "gedcom_birth_place": "Rhodes, Dodecanese, Southern Aegean, Greece"
+    },
+    {
+      "status": "confirmed",
+      "updated_at": "2026-02-28T20:00:00.000000+00:00",
+      "gedcom_name": "Matilda Cap Capelouto",
+      "gedcom_xref": "@I132127360994@",
+      "identity_id": "a2889099-2d75-42ee-93b4-81232b9f4e16",
+      "match_layer": 1,
+      "match_score": 1.0,
+      "match_reason": "human-verified match; Matilda Capouano, daughter of Abraham",
+      "identity_name": "Mathilda Capouano Capelouto",
+      "gedcom_birth_year": 1897,
+      "gedcom_death_year": 1989,
+      "gedcom_birth_place": "Rodos, Dodecanese, Southern Aegean, Greece"
+    },
+    {
+      "status": "confirmed",
+      "updated_at": "2026-02-28T20:00:00.000000+00:00",
+      "gedcom_name": "Hanulah Musafir",
+      "gedcom_xref": "@I132127360991@",
+      "identity_id": "94a13283-4154-4afc-bb29-99eaa094f7be",
+      "match_layer": 1,
+      "match_score": 1.0,
+      "match_reason": "human-verified match; Abraham's wife",
+      "identity_name": "Hanula Mosafir Capuano",
+      "gedcom_birth_year": 1873,
+      "gedcom_death_year": 1945,
+      "gedcom_birth_place": "Greece"
     }
   ]
 }
