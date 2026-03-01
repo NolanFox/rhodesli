@@ -291,16 +291,13 @@ class TestLeafletMap:
             _clear_caches(main_module)
 
     def test_map_uses_carto_dark_tiles(self, date_labels_with_location, photo_locations_data):
-        """Map tile layer uses CARTO dark tiles to match theme."""
+        """Map tile layer uses CARTO dark tiles (in global Leaflet init script)."""
         import app.main as main_module
         from fasthtml.common import to_xml
-        _setup_caches(main_module, date_labels_with_location, photo_locations_data)
-        try:
-            section = main_module._build_ai_analysis_section("photo_loc_1")
-            html = to_xml(section)
-            assert "cartocdn.com/dark_all" in html
-        finally:
-            _clear_caches(main_module)
+        # CARTO dark tiles URL is in the global page header script
+        # (loaded dynamically via DOMContentLoaded + Leaflet onload)
+        hdrs_html = "".join(to_xml(h) for h in main_module.app.hdrs)
+        assert "cartocdn.com/dark_all" in hdrs_html
 
 
 # ---------------------------------------------------------------------------
@@ -370,26 +367,26 @@ class TestLocationAdminCorrection:
             _clear_caches(main_module)
 
     def test_admin_map_marker_draggable(self, date_labels_with_location, photo_locations_data):
-        """Admin gets a draggable map marker."""
+        """Admin gets a draggable map marker (data-draggable attribute)."""
         import app.main as main_module
         from fasthtml.common import to_xml
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1", is_admin=True)
             html = to_xml(section)
-            assert "draggable: true" in html
+            assert 'data-draggable="true"' in html
         finally:
             _clear_caches(main_module)
 
     def test_non_admin_map_marker_not_draggable(self, date_labels_with_location, photo_locations_data):
-        """Non-admin gets a non-draggable map marker."""
+        """Non-admin gets a non-draggable map marker (data-draggable=false)."""
         import app.main as main_module
         from fasthtml.common import to_xml
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1", is_admin=False)
             html = to_xml(section)
-            assert "draggable" not in html
+            assert 'data-draggable="false"' in html
         finally:
             _clear_caches(main_module)
 

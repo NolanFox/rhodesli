@@ -84,3 +84,13 @@ See also: `.claude/rules/ui-scalability.md`
 - **Mistake**: `#toast-container` had `z-50` while `#photo-modal` had `z-[9999]`. Non-admin "Suggest" button in the face tag dropdown POSTed successfully to `/api/annotations/submit`, annotation was saved, toast was returned — but the toast rendered BEHIND the photo modal. User saw "nothing happens."
 - **Rule**: Toast container must ALWAYS have the highest z-index in the app — above all modals, overlays, and dropdowns. Any action inside a modal that returns a toast will be invisible if the toast z-index is lower.
 - **Prevention**: Z-index hierarchy is now: toast(10001) > guest-modal(10000) > photo-modal(9999). Comment in `photo_modal()` documents the hierarchy.
+
+### Lesson 90: Script tags inside `<details>` elements don't execute reliably
+- **Mistake**: Placed an inline `<script>` tag (Leaflet map init) inside a `<details open>` element via FastHTML's `_field()` wrapper. The script never executed in production, leaving a grey map area. Manual JS execution via console worked fine.
+- **Rule**: Never place `<script>` tags inside `<details>` elements. Browsers may not execute them, even when the details element has the `open` attribute. Always place scripts outside collapsible containers.
+- **Prevention**: Separate script from content — put the container div (map placeholder) inside `<details>` for layout, but append the init script as a sibling AFTER the `<details>` wrapper. Session 81B.
+
+### Lesson 91: Leaflet CDN loading requires polling, not DOMContentLoaded
+- **Mistake**: Used `DOMContentLoaded` as fallback for Leaflet library loading. This fails on HTMX swaps (event already fired) and when the CDN `<script src>` loads asynchronously after the inline script runs.
+- **Rule**: When loading third-party libraries from CDN, use a polling approach (`setInterval`/`setTimeout` loop checking for the global) instead of relying on DOM events. Also call `map.invalidateSize()` after creation when the container may have been recently sized.
+- **Prevention**: Use `tryInit()` pattern: check `typeof L !== 'undefined'` every 100ms up to 50 attempts (5s timeout). Always add `invalidateSize()` after Leaflet map creation. Session 81B.
