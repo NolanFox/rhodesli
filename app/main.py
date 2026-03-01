@@ -19234,11 +19234,7 @@ def get(person_id: str = "", depth: int = 1, show_theory: str = "true",
             shared_photos_map = _compute_shared_photos(included, registry)
             nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files,
                                      registry, shared_photos_map)
-                     for pid in included if pid in lookup]
-            # Ensure focal person is in the returned nodes
-            node_ids = {n["id"] for n in nodes}
-            if focal not in node_ids and nodes:
-                focal = nodes[0]["id"]
+                     for pid in included]
             return JSONResponse({
                 "focal_person": focal,
                 "nodes": nodes,
