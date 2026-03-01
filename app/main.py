@@ -11876,7 +11876,8 @@ def public_person_page(
                         A("Timeline", href=f"/timeline?person={person_id}",
                           cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
                         A("Map", href=f"/map?person={person_id}",
-                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
+                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors",
+                          data_testid="person-map-link"),
                         A("Family Tree", href=f"/tree?person={person_id}",
                           cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
                         A("Connections", href=f"/connect?person_a={person_id}",
@@ -18711,10 +18712,10 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
     user = get_current_user(sess or {}) if is_auth_enabled() else None
 
     # If people param provided (from photo page), pick the first as the focused person
-    if people and not person:
-        person_ids = [p.strip() for p in people.split(",") if p.strip()]
-        if person_ids:
-            person = person_ids[0]
+    # but pass all of them to the JS for smart subtree computation
+    people_list = [p.strip() for p in people.split(",") if p.strip()] if people else []
+    if people_list and not person:
+        person = people_list[0]
 
     # Person name for title/OG
     person_name = ""
@@ -18861,10 +18862,10 @@ def get(person: str = "", show_theory: str = "true", photo_id: str = "", people:
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-tree.js?v=82c"),
+            Script(src="/static/js/family-tree.js?v=83a"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
-                    window.initRhodesliTree('{person}', '{show_theory}');
+                    window.initRhodesliTree('{person}', '{show_theory}', {json.dumps(people_list)});
                 }});
             """),
         ),
@@ -19057,13 +19058,176 @@ def _make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files, registry,
     }
 
 
+def _bfs_immediate_family(person_id, ptc, ctp, pts):
+    """Return the immediate family of a person: parents, spouses, children, siblings."""
+    family = {person_id}
+    # Parents
+    parents = ctp.get(person_id, set())
+    family.update(parents)
+    # Children
+    family.update(ptc.get(person_id, set()))
+    # Spouses
+    family.update(pts.get(person_id, set()))
+    # Siblings (share at least one parent)
+    for p in parents:
+        family.update(ptc.get(p, set()))
+    return family
+
+
+def _is_nuclear_family(person_ids, ptc, ctp, pts):
+    """Check if a set of people form a nuclear family (parents + their children).
+
+    Returns True if all people in person_ids are either:
+    - A parent-child pair, or
+    - All children of the same parent(s), or
+    - Parents + children of those parents
+    """
+    if len(person_ids) < 2:
+        return False
+
+    pids = set(person_ids)
+
+    # Find all parents and children within the group
+    parents_in_group = set()
+    children_in_group = set()
+    for pid in pids:
+        pid_children = ptc.get(pid, set())
+        pid_parents = ctp.get(pid, set())
+        if pid_children & pids:
+            parents_in_group.add(pid)
+        if pid_parents & pids:
+            children_in_group.add(pid)
+
+    # Nuclear family: at least one parent-child relationship within the group
+    if not parents_in_group and not children_in_group:
+        return False
+
+    # Every person is either a parent or a child of someone in the group
+    accounted = parents_in_group | children_in_group
+    # Spouses of parents are also accounted for
+    for p in list(parents_in_group):
+        spouses = pts.get(p, set()) & pids
+        accounted.update(spouses)
+
+    return accounted == pids
+
+
+def _bfs_shortest_path(person_a, person_b, ptc, ctp, pts, max_depth=10):
+    """BFS shortest path between two people using family relationships.
+
+    Returns list of person IDs in the path (including endpoints), or None.
+    """
+    if person_a == person_b:
+        return [person_a]
+
+    visited = {person_a}
+    queue = [(person_a, [person_a])]
+
+    while queue:
+        current, path = queue.pop(0)
+        if len(path) > max_depth:
+            continue
+
+        # All neighbors: parents, children, spouses
+        neighbors = set()
+        neighbors.update(ctp.get(current, set()))
+        neighbors.update(ptc.get(current, set()))
+        neighbors.update(pts.get(current, set()))
+
+        for neighbor in neighbors:
+            if neighbor in visited:
+                continue
+            visited.add(neighbor)
+            new_path = path + [neighbor]
+            if neighbor == person_b:
+                return new_path
+            queue.append((neighbor, new_path))
+
+    return None
+
+
+def compute_subtree_for_photo(person_ids, ptc, ctp, pts):
+    """Given person IDs from a photo, compute the best subtree to show.
+
+    Returns a set of person IDs to include in the tree view.
+    """
+    if not person_ids:
+        return set()
+
+    pids = [p for p in person_ids if p]
+    if not pids:
+        return set()
+
+    if len(pids) == 1:
+        return _bfs_immediate_family(pids[0], ptc, ctp, pts)
+
+    # Nuclear family: parents + children only, show the nuclear unit
+    if _is_nuclear_family(pids, ptc, ctp, pts):
+        subtree = set(pids)
+        # Add spouses of people in the group (to complete the family picture)
+        for pid in list(pids):
+            subtree.update(pts.get(pid, set()))
+        # Add parents of children in the group (to show full parentage)
+        for pid in list(pids):
+            subtree.update(ctp.get(pid, set()))
+        # Add children of parents in the group (to show full sibship)
+        for pid in list(subtree):
+            if ptc.get(pid, set()) & set(pids):
+                subtree.update(ptc.get(pid, set()))
+        return subtree
+
+    # Find connecting paths via BFS
+    path_union = set()
+    for i, p1 in enumerate(pids):
+        for p2 in pids[i + 1:]:
+            path = _bfs_shortest_path(p1, p2, ptc, ctp, pts)
+            if path:
+                path_union.update(path)
+
+    if path_union:
+        # Also add spouses for people along the path
+        for pid in list(path_union):
+            path_union.update(pts.get(pid, set()))
+        return path_union
+
+    # Fallback: side-by-side immediate families
+    combined = set()
+    for pid in pids:
+        combined.update(_bfs_immediate_family(pid, ptc, ctp, pts))
+    return combined
+
+
 @rt("/api/tree/data")
-def get(person_id: str = "", depth: int = 1, show_theory: str = "true"):
-    """Return tree data for a focal person + N levels of connections."""
+def get(person_id: str = "", depth: int = 1, show_theory: str = "true",
+        people: str = ""):
+    """Return tree data for a focal person + N levels of connections.
+
+    When `people` is provided (comma-separated IDs from photo navigation),
+    uses smart subtree computation to show the best family context for the
+    group of people in the photo.
+    """
     ptc, ctp, pts = _build_tree_adjacency(show_theory == "true")
     lookup = _build_tree_person_lookup()
     registry = load_registry()
     crop_files = get_crop_files()
+
+    # Smart subtree for multiple people (from photo navigation)
+    people_list = [p.strip() for p in people.split(",") if p.strip()] if people else []
+    if people_list and len(people_list) > 1:
+        # Use smart subtree computation
+        included = compute_subtree_for_photo(people_list, ptc, ctp, pts)
+        focal = person_id or people_list[0]
+
+        if included:
+            shared_photos_map = _compute_shared_photos(included, registry)
+            nodes = [_make_tree_node(pid, lookup, ptc, ctp, pts, included, crop_files,
+                                     registry, shared_photos_map)
+                     for pid in included if pid in lookup]
+            return JSONResponse({
+                "focal_person": focal,
+                "nodes": nodes,
+                "photo_people": people_list,
+            })
 
     # Default to most-connected person
     if not person_id:

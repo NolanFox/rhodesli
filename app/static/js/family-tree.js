@@ -13,6 +13,7 @@
     var allNodes = [];
     var currentPersonId = "";
     var showTheory = "true";
+    var photoPeople = []; // People from photo navigation (for smart subtree)
     var baseNodeIds = {};
     var expandedDirs = {};
     var isFirstRender = true; // Track first render for expand arrow pulse
@@ -59,9 +60,10 @@
     };
 
     // --- Initialization ---
-    window.initRhodesliTree = function(personId, theory) {
+    window.initRhodesliTree = function(personId, theory, peopleList) {
         currentPersonId = personId;
         showTheory = theory;
+        photoPeople = peopleList || [];
         setupSearch();
         setupPopupDismiss();
         setupKeyboard();
@@ -76,6 +78,7 @@
 
         var url = "/api/tree/data?depth=" + (depth || 1) + "&show_theory=" + showTheory;
         if (personId) url += "&person_id=" + encodeURIComponent(personId);
+        if (photoPeople && photoPeople.length > 1) url += "&people=" + encodeURIComponent(photoPeople.join(","));
 
         fetch(url)
             .then(function(r) { return r.json(); })
@@ -88,6 +91,10 @@
                 }
                 currentPersonId = data.focal_person;
                 allNodes = data.nodes;
+                // Track photo people for highlighting
+                if (data.photo_people && data.photo_people.length > 0) {
+                    photoPeople = data.photo_people;
+                }
                 baseNodeIds = {};
                 expandedDirs = {};
                 allNodes.forEach(function(n) { baseNodeIds[n.id] = true; });
@@ -696,8 +703,16 @@
             .attr("width", CARD_W).attr("height", CARD_H)
             .attr("rx", CARD_RX).attr("ry", CARD_RX)
             .attr("fill", COLORS.cardBg)
-            .attr("stroke", function(d) { return d.id === focalId ? COLORS.focalBorder : COLORS.cardBorder; })
-            .attr("stroke-width", function(d) { return d.id === focalId ? 2.5 : 1; });
+            .attr("stroke", function(d) {
+                if (d.id === focalId) return COLORS.focalBorder;
+                if (photoPeople && photoPeople.indexOf(d.id) >= 0) return "rgba(212, 165, 116, 0.5)";
+                return COLORS.cardBorder;
+            })
+            .attr("stroke-width", function(d) {
+                if (d.id === focalId) return 2.5;
+                if (photoPeople && photoPeople.indexOf(d.id) >= 0) return 2;
+                return 1;
+            });
 
         // Focal person outer glow
         cards.each(function(d) {
