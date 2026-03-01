@@ -80,8 +80,8 @@ class TestFaceCardArchivalStyle:
 class TestIdentityCardArchivalStyle:
     """DD-002: Verify identity cards use archival styling classes."""
 
-    def test_identity_card_has_archival_class(self):
-        """identity_card() returns an element with identity-card-archival class."""
+    def test_identity_card_has_card_styling(self):
+        """identity_card() returns photo-dominant card with modern styling (DD-005)."""
         from app.main import identity_card, to_xml
         identity = {
             "identity_id": "test-id-design-001",
@@ -92,7 +92,8 @@ class TestIdentityCardArchivalStyle:
         }
         crop_files = {"test-id-design-001_0.jpg"}
         html = to_xml(identity_card(identity, crop_files))
-        assert 'identity-card-archival' in html
+        assert 'identity-card' in html
+        assert 'rounded-2xl' in html
 
     def test_identity_card_name_uses_display_font(self):
         """identity_card name heading uses font-display class."""
@@ -150,12 +151,12 @@ class TestArchivalCSSDefinitions:
         assert response.status_code == 200
         assert '.face-card-archival' in response.text
 
-    def test_identity_card_archival_css_defined(self, client):
-        """CSS defines .identity-card-archival class."""
+    def test_identity_card_class_present(self, client):
+        """Identity cards use identity-card class (DD-005 redesign)."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/?section=confirmed")
         assert response.status_code == 200
-        assert '.identity-card-archival' in response.text
+        assert 'identity-card' in response.text
 
     def test_photo_card_frame_css_defined(self, client):
         """CSS defines .photo-card-frame class."""
@@ -168,8 +169,8 @@ class TestArchivalCSSDefinitions:
 class TestFaceGridDensity:
     """DD-002: Face grid uses more columns for compact cards."""
 
-    def test_face_grid_has_five_column_layout(self):
-        """Face grid in identity_card uses 5 columns at lg breakpoint (A2 fix)."""
+    def test_card_is_photo_dominant(self):
+        """Identity card has photo-dominant design with aspect-square hero (DD-005)."""
         from app.main import identity_card, to_xml
         identity = {
             "identity_id": "test-id-grid-001",
@@ -180,7 +181,7 @@ class TestFaceGridDensity:
         }
         crop_files = {"test-id-grid-001_0.jpg"}
         html = to_xml(identity_card(identity, crop_files))
-        assert 'lg:grid-cols-5' in html
+        assert 'aspect-square' in html
 
 
 class TestLandingPageDisplayFont:

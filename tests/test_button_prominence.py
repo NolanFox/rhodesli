@@ -32,15 +32,16 @@ class TestButtonProminence:
                 assert "rounded" in context
 
     def test_find_similar_is_styled_button(self, client):
-        """Find Similar renders as a styled button in the identity detail view."""
+        """Find Similar renders as a styled button (pill) in the identity detail view."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/?section=confirmed")
             assert response.status_code == 200
             html = response.text
-            if "Find Similar" in html:
-                idx = html.index("Find Similar")
-                context = html[max(0, idx - 200):idx + 50]
-                assert "border" in context
+            # Button text changed to compact "Similar" pill in DD-005 redesign
+            if "Similar" in html:
+                idx = html.index(">Similar<")
+                context = html[max(0, idx - 300):idx + 50]
+                # Should have pill styling (rounded-full, bg color)
                 assert "rounded" in context
 
     def test_buttons_not_underline_text(self, client):
@@ -48,8 +49,9 @@ class TestButtonProminence:
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/?section=confirmed")
             html = response.text
-            if "View All Photos" in html:
-                idx = html.index("View All Photos")
-                context = html[max(0, idx - 200):idx + 50]
+            if "Photos" in html and "hx-get" in html:
+                # Find the Photos button (View All Photos → Photos in DD-005)
+                idx = html.index(">Photos<")
+                context = html[max(0, idx - 300):idx + 50]
                 # Should NOT be just an underline text link
                 assert "underline" not in context

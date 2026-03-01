@@ -474,6 +474,10 @@
             var faces = d.node.data.all_faces || [];
             var photoUrl = faces.length > 0 ? faces[0].url : (d.node.data.avatar || d.node.data.photo_url);
 
+            // Gender — declare BEFORE use in silhouette fallback
+            var gender = d.node.data.gender || "U";
+            var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
+
             // Shadow
             el.append("circle")
                 .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R + 1)
@@ -489,7 +493,7 @@
                     .attr("href", photoUrl)
                     .attr("clip-path", "url(#" + clipId + ")")
                     .attr("preserveAspectRatio", "xMidYMid slice")
-                    .style("transition", "opacity 0.4s ease");
+                    .style("transition", "opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)");
                 // Secondary image layer for crossfade
                 if (faces.length > 1) {
                     el.append("image")
@@ -500,30 +504,37 @@
                         .attr("clip-path", "url(#" + clipId + ")")
                         .attr("preserveAspectRatio", "xMidYMid slice")
                         .style("opacity", "0")
-                        .style("transition", "opacity 0.4s ease");
+                        .style("transition", "opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)");
                 }
             } else {
                 // Gender silhouette avatar — Ancestry-style
                 var silColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
-                var silBg = gender === "M" ? "rgba(96,165,250,0.12)" : gender === "F" ? "rgba(249,168,212,0.12)" : "rgba(75,94,120,0.12)";
+                var silBg = gender === "M" ? "rgba(96,165,250,0.15)" : gender === "F" ? "rgba(249,168,212,0.15)" : "rgba(75,94,120,0.15)";
                 el.append("circle").attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
                     .attr("fill", silBg);
                 // Head
                 el.append("circle")
                     .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY - PHOTO_R * 0.18)
                     .attr("r", PHOTO_R * 0.32)
-                    .attr("fill", silColor).attr("opacity", 0.5);
+                    .attr("fill", silColor).attr("opacity", 0.55);
                 // Shoulders
                 el.append("ellipse")
                     .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY + PHOTO_R * 0.52)
                     .attr("rx", PHOTO_R * 0.52).attr("ry", PHOTO_R * 0.35)
-                    .attr("fill", silColor).attr("opacity", 0.35)
+                    .attr("fill", silColor).attr("opacity", 0.4)
                     .attr("clip-path", "url(#" + clipId + ")");
+                // Initial letter overlay for personalization
+                var initial = (d.node.data["first name"] || "?")[0].toUpperCase();
+                el.append("text")
+                    .attr("x", PHOTO_CX).attr("y", PHOTO_CY + PHOTO_R * 0.05)
+                    .attr("text-anchor", "middle").attr("dy", "0.35em")
+                    .attr("fill", silColor).attr("opacity", 0.25)
+                    .attr("font-size", PHOTO_R * 0.6 + "px").attr("font-weight", "700")
+                    .attr("font-family", "Georgia, serif")
+                    .text(initial);
             }
 
             // Gender ring — bold border
-            var gender = d.node.data.gender || "U";
-            var ringColor = gender === "M" ? COLORS.genderM : gender === "F" ? COLORS.genderF : COLORS.genderU;
             el.append("circle")
                 .attr("class", "photo-ring")
                 .attr("cx", PHOTO_CX).attr("cy", PHOTO_CY).attr("r", PHOTO_R)
@@ -695,16 +706,16 @@
         var ticksEl = document.getElementById("timeline-ticks");
         if (!bar || !slider) return;
 
-        // Find people with multiple faces to determine if timeline is useful
+        // Find people with multiple faces and parse birth years (API returns strings)
         var hasMulti = false;
-        var minYear = 2020, maxYear = 1870;
+        var minYear = 9999, maxYear = 0;
         allNodes.forEach(function(n) {
             var faces = n.data.all_faces || [];
             if (faces.length > 1) hasMulti = true;
-            var bday = n.data.birthday;
-            if (bday && typeof bday === "number") {
+            var bday = parseInt(n.data.birthday, 10);
+            if (bday && bday > 1800 && bday < 2030) {
                 if (bday < minYear) minYear = bday;
-                if (bday + 60 > maxYear) maxYear = bday + 60; // Estimated lifespan
+                if (bday + 60 > maxYear) maxYear = bday + 60;
             }
         });
 
@@ -713,13 +724,17 @@
             return;
         }
 
+        // Fallback defaults if no valid birth years found
+        if (minYear > maxYear) { minYear = 1890; maxYear = 1980; }
+
         // Show timeline for any tree with people
         bar.classList.remove("hidden");
-        minYear = Math.max(1870, minYear - 10);
+        minYear = Math.max(1860, minYear - 10);
         maxYear = Math.min(2025, maxYear + 10);
         slider.min = minYear;
         slider.max = maxYear;
-        slider.value = Math.round((minYear + maxYear) / 2);
+        // Start at the earliest photo era (beginning of range)
+        slider.value = minYear;
 
         var yearEl = document.getElementById("timeline-year");
         if (yearEl) yearEl.textContent = "c. " + slider.value;

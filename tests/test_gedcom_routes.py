@@ -490,7 +490,7 @@ class TestGedcomTreeButtonOnIdentityCard:
     """B3: Identity cards should show GEDCOM tree button for confirmed identities."""
 
     def test_confirmed_identity_shows_tree_link(self):
-        """Confirmed identity card shows 'Link to Tree' when not linked."""
+        """Confirmed identity card shows tree link when not linked (DD-005 compact pills)."""
         from app.main import identity_card, to_xml
         identity = {
             "identity_id": "test-id-gedcom-001",
@@ -502,11 +502,11 @@ class TestGedcomTreeButtonOnIdentityCard:
         crop_files = {"test-id-gedcom-001_0.jpg"}
         with patch("app.main._load_gedcom_face_links", return_value={}):
             html = to_xml(identity_card(identity, crop_files, is_admin=True))
-        assert "Link to Tree" in html
+        assert "Link Tree" in html
         assert f"/person/test-id-gedcom-001#gedcom" in html
 
     def test_linked_identity_shows_view_tree(self):
-        """Confirmed identity card shows 'View in Tree' when linked."""
+        """Confirmed identity card shows 'Tree' when linked (DD-005 compact pills)."""
         from app.main import identity_card, to_xml
         identity = {
             "identity_id": "test-id-gedcom-002",
@@ -519,7 +519,7 @@ class TestGedcomTreeButtonOnIdentityCard:
         linked = {"test-id-gedcom-002": {"gedcom_id": "@I2@"}}
         with patch("app.main._load_gedcom_face_links", return_value=linked):
             html = to_xml(identity_card(identity, crop_files, is_admin=True))
-        assert "View in Tree" in html
+        assert "Tree" in html
 
     def test_proposed_identity_no_tree_button(self):
         """Proposed identities should NOT show tree button."""

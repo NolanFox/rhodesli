@@ -4105,7 +4105,7 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
     if cards:
         content = Div(
             *cards,
-            cls="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
         )
     else:
         content = Div(
@@ -7111,10 +7111,13 @@ def identity_card(
         hx_trigger="change",
     )
 
+    # --- Compact pill-style action buttons for card layout (DD-005) ---
+    _pill = "px-2.5 py-1 text-xs font-medium rounded-full transition-all duration-200"
+
     # View All Photos button (opens photo modal)
     view_all_photos_btn = Button(
-        "\U0001f4f7 View All Photos",
-        cls="px-3 py-1.5 text-sm font-medium bg-amber-600/20 text-amber-300 border border-amber-500/30 rounded-lg hover:bg-amber-600/30 hover:border-amber-400/50 transition-colors",
+        "Photos",
+        cls=f"{_pill} bg-amber-500/15 text-amber-300 hover:bg-amber-500/25",
         hx_get=f"/api/identity/{identity_id}/photos?index=0",
         hx_target="#photo-modal-content",
         hx_swap="innerHTML",
@@ -7126,10 +7129,9 @@ def identity_card(
     view_public_link = None
     if state == "CONFIRMED" and not name.startswith("Unidentified") and not name.startswith("Identity "):
         view_public_link = A(
-            "\U0001f517 Public Page",
+            "Profile",
             href=f"/person/{identity_id}",
-            cls="px-3 py-1.5 text-sm font-medium text-slate-400 border border-slate-600 rounded-lg hover:text-indigo-300 hover:border-indigo-500/30 transition-colors",
-            target="_blank",
+            cls=f"{_pill} text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/15",
         )
 
     # GEDCOM Tree link button (B3)
@@ -7139,21 +7141,21 @@ def identity_card(
         gedcom_link = gedcom_links.get(identity_id)
         if gedcom_link:
             gedcom_tree_btn = A(
-                "\U0001f333 View in Tree",
-                href=f"/person/{identity_id}#gedcom",
-                cls="px-3 py-1.5 text-sm font-medium text-emerald-300 border border-emerald-500/30 rounded-lg hover:bg-emerald-600/20 transition-colors",
+                "Tree",
+                href=f"/tree?person={identity_id}",
+                cls=f"{_pill} text-emerald-300 hover:bg-emerald-500/15",
             )
         else:
             gedcom_tree_btn = A(
-                "\U0001f333 Link to Tree",
+                "Link Tree",
                 href=f"/person/{identity_id}#gedcom",
-                cls="px-3 py-1.5 text-sm font-medium text-slate-400 border border-slate-600 rounded-lg hover:text-emerald-300 hover:border-emerald-500/30 transition-colors",
+                cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
             )
 
-    # Find Similar button (loads neighbors via HTMX) -- scrolls into view after swap
+    # Find Similar button (loads neighbors via HTMX)
     find_similar_btn = Button(
-        "\U0001f50d Find Similar",
-        cls="px-3 py-1.5 text-sm font-medium bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 rounded-lg hover:bg-indigo-600/30 hover:border-indigo-400/50 transition-colors",
+        "Similar",
+        cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
         hx_get=f"/api/identity/{identity_id}/neighbors",
         hx_target=f"#neighbors-{identity_id}",
         hx_swap="innerHTML",
@@ -7193,53 +7195,113 @@ def identity_card(
     if best_quality and best_quality > 0:
         quality_label_text = 'Excellent' if best_quality >= 30 else 'Good' if best_quality >= 20 else 'Fair' if best_quality >= 10 else 'Low'
 
-    return Div(
-        # Compact header: name + state + face count + quality
-        Div(
-            Div(
-                name_display(identity_id, identity.get("name"), is_admin=is_admin,
-                             generation_qualifier=identity.get("generation_qualifier", "")),
-                state_badge(state),
-                _proposal_badge_inline(identity_id),
-                _promotion_badge(identity),
-                grouped_badge,
-                Span(
-                    f"{total_faces} face{'s' if total_faces != 1 else ''}",
-                    cls="text-xs text-slate-400 ml-2"
-                ),
-                Span(
-                    f" \u00b7 {quality_label_text}",
-                    cls=f"text-xs {'text-emerald-500' if best_quality and best_quality >= 20 else 'text-amber-500' if best_quality and best_quality >= 10 else 'text-slate-500'}",
-                ) if quality_label_text else None,
-                cls="flex items-center gap-2 flex-wrap"
+    # --- Photo-dominant card design (DD-005) ---
+    # Hero face: the best face crop dominates the card
+    best_face = all_face_ids[0] if all_face_ids else None
+    hero_crop_url = resolve_face_image_url(best_face, crop_files) if best_face else None
+    person_href = f"/person/{identity_id}" if state == "CONFIRMED" else f"/identify/{identity_id}"
+
+    # Share button for this person
+    person_share_btn = share_button(
+        url=f"/person/{identity_id}",
+        style="icon",
+        title=f"{name} — Rhodesli Heritage Archive",
+        text=f"Do you recognize {name}? Help us identify people in our heritage photo archive.",
+    ) if state == "CONFIRMED" and not name.startswith("Unidentified") else None
+
+    hero_section = Div(
+        # Face image — THE STAR of the card
+        A(
+            Img(
+                src=hero_crop_url,
+                alt=name,
+                cls="w-full aspect-square object-cover rounded-xl"
+                    " transition-all duration-300 hover:scale-[1.03]"
+                    " hover:shadow-[0_8px_30px_rgba(212,165,116,0.3)]",
+            ) if hero_crop_url else Div(
+                Span("?", cls="text-5xl text-slate-600"),
+                cls="w-full aspect-square bg-slate-800 rounded-xl flex items-center justify-center",
             ),
-            # Secondary tools row — compact
+            href=person_href,
+            cls="block overflow-hidden rounded-xl",
+        ),
+        # Face count badge (top-right overlay)
+        Span(
+            f"{total_faces}",
+            cls="absolute top-2 right-2 w-7 h-7 flex items-center justify-center"
+                " bg-amber-600/90 text-white text-xs font-bold rounded-full"
+                " shadow-lg backdrop-blur-sm",
+        ) if total_faces > 1 else None,
+        # Share button (top-left overlay)
+        Span(
+            person_share_btn,
+            cls="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+        ) if person_share_btn else None,
+        cls="relative group",
+    )
+
+    # Name + state row
+    name_section = Div(
+        A(
+            name,
+            href=person_href,
+            cls="text-base font-semibold text-slate-100 hover:text-amber-300"
+                " transition-colors block truncate",
+            title=name,
+        ),
+        Div(
+            state_badge(state),
+            _proposal_badge_inline(identity_id),
+            _promotion_badge(identity),
+            grouped_badge,
+            cls="flex items-center gap-1.5 mt-1",
+        ),
+        cls="mt-3 px-1",
+    )
+
+    # Action buttons — clean icon pills
+    action_section = Div(
+        view_all_photos_btn,
+        find_similar_btn,
+        gedcom_tree_btn,
+        view_public_link,
+        cls="flex flex-wrap gap-1.5 mt-3 px-1",
+    )
+
+    # Admin tools (sort, edit, return to inbox) — collapsed by default
+    admin_tools = None
+    if is_admin:
+        admin_tools = Div(
             Div(
                 sort_dropdown,
-                view_all_photos_btn,
-                find_similar_btn,
-                gedcom_tree_btn,
-                view_public_link,
-                cls="flex items-center gap-2 flex-wrap"
+                review_action_buttons(identity_id, state, is_admin=is_admin),
+                cls="flex flex-wrap items-center gap-2",
             ),
-            cls="identity-card-header flex items-center justify-between flex-wrap gap-2 mb-3"
-        ),
-        # Face grid (paginated) — faces are the hero visual
-        Div(
+            # Identity metadata (AN-012)
+            _identity_metadata_display(identity, is_admin=is_admin),
+            # Expandable face grid for multi-face identities
             Div(
-                *face_cards,
-                cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3",
-            ),
-            pagination,
-            id=f"faces-{identity_id}",
-        ),
-        # Identity metadata (AN-012)
-        _identity_metadata_display(identity, is_admin=is_admin),
-        # Action buttons based on state (admin only) — compact row
-        review_action_buttons(identity_id, state, is_admin=is_admin),
+                Div(
+                    *face_cards,
+                    cls="grid grid-cols-3 sm:grid-cols-4 gap-2",
+                ),
+                pagination,
+                id=f"faces-{identity_id}",
+                cls="mt-2",
+            ) if total_faces > 1 else None,
+            cls="mt-3 px-1 pt-3 border-t border-slate-700/50",
+        )
+
+    return Div(
+        hero_section,
+        name_section,
+        action_section,
+        admin_tools,
         # Neighbors container (shown when "Find Similar" is clicked)
         neighbors_container,
-        cls=f"identity-card identity-card-archival border-l-4 {border_colors.get(lane_color, '')} p-4 rounded-r mb-4 min-w-0 w-full",
+        cls=f"identity-card bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3"
+            f" hover:border-slate-600 hover:bg-slate-800/80 transition-all duration-300"
+            f" hover:shadow-lg hover:shadow-slate-900/50",
         id=f"identity-{identity_id}",
         data_name=(raw_name or "").lower()
     )
@@ -18585,7 +18647,7 @@ def get(person: str = "", show_theory: str = "true", sess=None):
             Div(id="tree-node-popup", cls="tree-node-popup hidden"),
             # family-chart library
             Script(src="https://d3js.org/d3.v7.min.js"),
-            Script(src="/static/js/family-tree.js?v=82b"),
+            Script(src="/static/js/family-tree.js?v=82c"),
             Script(f"""
                 document.addEventListener('DOMContentLoaded', function() {{
                     window.initRhodesliTree('{person}', '{show_theory}');

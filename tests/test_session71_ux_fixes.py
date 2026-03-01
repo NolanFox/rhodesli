@@ -78,17 +78,20 @@ class TestQualityScoreLabels:
 class TestFaceCardSize:
     """A2: Face cards should have minimum width for visible photos."""
 
-    def test_face_card_has_min_width(self, client):
-        """Face card container should have min-w-[150px]."""
+    def test_face_card_or_card_has_sizing(self, client):
+        """Face cards or identity cards have proper sizing (DD-005 photo-dominant)."""
         response = client.get("/?section=confirmed")
         assert response.status_code == 200
-        assert "min-w-[150px]" in response.text, "Face cards need minimum width of 150px"
+        # New design uses aspect-square hero images, old design uses min-w
+        assert ("aspect-square" in response.text or "min-w-[150px]" in response.text), \
+            "Cards need either aspect-square hero or minimum width"
 
-    def test_face_grid_uses_fewer_columns(self, client):
-        """Grid should use lg:grid-cols-5 (not 6) for larger face cards."""
+    def test_face_grid_uses_responsive_columns(self, client):
+        """Card grid uses responsive columns (DD-005 photo-dominant cards)."""
         response = client.get("/?section=confirmed")
         assert response.status_code == 200
-        assert "lg:grid-cols-5" in response.text, "Grid should use 5 columns max on large screens"
+        # The outer card grid uses xl:grid-cols-5 for the photo-dominant layout
+        assert "xl:grid-cols-5" in response.text, "Card grid should have 5 columns on xl screens"
         assert "lg:grid-cols-6" not in response.text, "Grid should NOT use 6 columns"
 
 
