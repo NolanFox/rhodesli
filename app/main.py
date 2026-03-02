@@ -4169,11 +4169,15 @@ def render_to_review_section(
             to_review = sorted(to_review, key=lambda x: (x.get("name") or "").lower())
         # default: newest (already sorted by created_at desc above)
 
-        cards = [
-            identity_card_compact(identity, crop_files, is_admin=is_admin)
-            for identity in to_review
-        ]
-        cards = [c for c in cards if c]  # Filter None
+        grid_items = []
+        for identity in to_review:
+            card = identity_card_compact(identity, crop_files, is_admin=is_admin)
+            if card:
+                grid_items.append(card)
+                # Expansion panel for inline Find Similar
+                _iid = identity["identity_id"]
+                grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
+        cards = [c for c in grid_items if c]  # Filter None
 
         if cards:
             content = Div(
@@ -4239,15 +4243,17 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
     else:  # default: name (A-Z)
         confirmed = sorted(confirmed, key=lambda x: (x.get("name") or "").lower())
 
-    cards = [
-        identity_card(identity, crop_files, lane_color="emerald", show_actions=False, is_admin=is_admin)
-        for identity in confirmed
-    ]
-    cards = [c for c in cards if c]
+    grid_items = []
+    for identity in confirmed:
+        card = identity_card(identity, crop_files, lane_color="emerald", show_actions=False, is_admin=is_admin)
+        if card:
+            grid_items.append(card)
+            _iid = identity["identity_id"]
+            grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
-    if cards:
+    if grid_items:
         content = Div(
-            *cards,
+            *grid_items,
             cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
         )
     else:
@@ -4366,9 +4372,11 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
                 hx_swap="innerHTML",
                 cls="ml-4 mt-1 mb-3",
             )
+            # Expansion panel for inline Find Similar
+            expand_panel = Div(id=f"expand-{make_css_id(identity_id)}", cls="expansion-panel")
             # Wrapper carries data-name so sidebar filter hides card+hint together
             raw_name = (identity.get("name") or "").lower()
-            cards.append(Div(badge, card, hint, cls="identity-card-wrapper", data_name=raw_name))
+            cards.append(Div(badge, card, hint, expand_panel, cls="identity-card-wrapper", data_name=raw_name))
 
     if cards:
         content = Div(
@@ -7164,9 +7172,22 @@ def identity_card_compact(
     )
 
     # Quick action links (visible, not buried)
+    # Admin: inline expansion via HTMX. Public: full-page link.
+    css_id = make_css_id(identity_id)
+    if is_admin:
+        similar_link = Button(
+            "Similar",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline",
+            hx_get=f"/api/find-similar/{identity_id}",
+            hx_target=f"#expand-{css_id}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+    else:
+        similar_link = A("Similar", href=f"/people/{identity_id}/similar",
+          cls="text-xs text-indigo-400 hover:text-indigo-300")
     quick_links = Div(
-        A("Similar", href=f"/people/{identity_id}/similar",
-          cls="text-xs text-indigo-400 hover:text-indigo-300"),
+        similar_link,
         Span("|", cls="text-xs text-slate-600"),
         A("Profile", href=f"/person/{identity_id}",
           cls="text-xs text-slate-400 hover:text-slate-300"),
@@ -7295,12 +7316,23 @@ def identity_card(
                 cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
             )
 
-    # Find Similar — link to full-page hero+grid layout
-    find_similar_btn = A(
-        "Similar",
-        href=f"/people/{identity_id}/similar",
-        cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
-    )
+    # Find Similar — admin: inline expansion, public: full-page link
+    _id_css = make_css_id(identity_id)
+    if is_admin:
+        find_similar_btn = Button(
+            "Similar",
+            cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
+            hx_get=f"/api/find-similar/{identity_id}",
+            hx_target=f"#expand-{_id_css}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+    else:
+        find_similar_btn = A(
+            "Similar",
+            href=f"/people/{identity_id}/similar",
+            cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
+        )
 
     # Pagination controls
     pagination = _face_pagination_controls(identity_id, 0, total_faces, "date")
@@ -9464,6 +9496,43 @@ def get(section: str = None, view: str = "focus", current: str = None,
         }
         .identity-card-archival:hover {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(61, 52, 40, 0.4);
+        }
+        /* Expansion panel for inline Find Similar (AD-194) */
+        .expansion-panel:empty {
+            display: none;
+        }
+        .expansion-panel:not(:empty) {
+            grid-column: 1 / -1;
+            padding: 1.25rem;
+            background: rgba(30, 26, 21, 0.95);
+            border: 1px solid rgba(61, 52, 40, 0.5);
+            border-radius: 0.5rem;
+            animation: panel-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes panel-fade-in {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .expansion-panel .similar-faces {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .expansion-panel .similar-face-tile {
+            flex: 0 0 auto;
+            width: 160px;
+            scroll-snap-align: start;
+        }
+        .expansion-panel .panel-close {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .expansion-panel .panel-close:hover {
+            opacity: 1;
         }
         /* Photo card frame — evoking a mounted print (DD-002) */
         .photo-card-frame {
@@ -13943,6 +14012,199 @@ def get(identity_id: str, sess=None):
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
+@rt("/api/find-similar/{identity_id}")
+def get(identity_id: str, sess=None):
+    """Inline Find Similar — returns HTML fragment for expansion panel (AD-194).
+
+    Admin-only HTMX endpoint. Returns hero face + scrollable similar faces
+    with Compare/Merge/Not Same actions. Designed to be swapped into an
+    expansion-panel div below the identity card.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = user and user.is_admin if user else not is_auth_enabled()
+
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    name = ensure_utf8_display(identity.get("name", ""))
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    crop_files = get_crop_files()
+
+    # Best face for hero
+    best_face = get_best_face_id(all_face_ids) if all_face_ids else (all_face_ids[0] if all_face_ids else "")
+    face_id = best_face if isinstance(best_face, str) else best_face.get("face_id", "") if best_face else ""
+    hero_url = resolve_face_image_url(face_id, crop_files) if face_id else ""
+
+    # Find similar
+    face_data = get_face_data()
+    photo_registry = load_photo_registry()
+    neighbors = []
+    try:
+        from core.neighbors import find_nearest_neighbors
+        neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=12
+        )
+    except Exception as e:
+        logging.warning(f"Find similar failed: {e}")
+
+    # Enhance neighbors with crop URLs
+    for n in neighbors:
+        nid = n["identity_id"]
+        try:
+            n_ident = registry.get_identity(nid)
+            n_faces = n_ident.get("anchor_ids", []) + n_ident.get("candidate_ids", [])
+            n_best = get_best_face_id(n_faces) if n_faces else (n_faces[0] if n_faces else "")
+            n_fid = n_best if isinstance(n_best, str) else n_best.get("face_id", "") if n_best else ""
+            n["crop_url"] = resolve_face_image_url(n_fid, crop_files)
+            n["name"] = ensure_utf8_display(n_ident.get("name", ""))
+            n["state"] = n_ident.get("state", "INBOX")
+        except KeyError:
+            n["crop_url"] = ""
+            n["name"] = "Unknown"
+            n["state"] = "INBOX"
+
+    # Confidence tier helper
+    def _tier(dist):
+        if dist < 0.80:
+            return ("Very High", "bg-emerald-600 text-white")
+        elif dist < 1.05:
+            return ("High", "bg-blue-600 text-white")
+        elif dist < 1.15:
+            return ("Moderate", "bg-amber-500 text-white")
+        elif dist < 1.30:
+            return ("Low", "bg-slate-500 text-white")
+        return ("Very Low", "bg-slate-600 text-slate-300")
+
+    # Build similar face tiles
+    css_id = make_css_id(identity_id)
+    tiles = []
+    for n in neighbors:
+        if not n.get("crop_url"):
+            continue
+        nid = n["identity_id"]
+        dist = n.get("distance", 99)
+        tier_label, tier_cls = _tier(dist)
+
+        # Action buttons
+        tile_actions = []
+        if is_admin:
+            # Compare
+            tile_actions.append(
+                Button(
+                    "Compare",
+                    cls="text-xs px-2 py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
+                    hx_get=f"/api/identity/{identity_id}/compare/{nid}",
+                    hx_target="#compare-modal-content",
+                    hx_swap="innerHTML",
+                    **{"_": "on click remove .hidden from #compare-modal"},
+                    type="button",
+                )
+            )
+            # Merge
+            if n.get("can_merge", True):
+                tile_actions.append(
+                    Button(
+                        "Merge",
+                        cls="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors",
+                        hx_post=f"/api/identity/{identity_id}/merge/{nid}",
+                        hx_target=f"#expand-{css_id}",
+                        hx_swap="innerHTML",
+                        type="button",
+                    )
+                )
+            # Not Same
+            tile_actions.append(
+                Button(
+                    "Not Same",
+                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    hx_post=f"/api/identity/{identity_id}/reject-match/{nid}",
+                    hx_target=f"#similar-tile-{make_css_id(nid)}",
+                    hx_swap="outerHTML",
+                    type="button",
+                )
+            )
+
+        tile = Div(
+            A(
+                Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full aspect-[3/4] object-cover rounded-lg", loading="lazy"),
+                href=f"/person/{nid}",
+                cls="block overflow-hidden",
+            ),
+            Div(
+                Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
+                Div(
+                    Span(tier_label, cls=f"text-[10px] px-1.5 py-0.5 rounded-full {tier_cls}"),
+                    Span(f"{dist:.2f}", cls="text-[10px] text-slate-500 ml-1") if is_admin else None,
+                    cls="flex items-center gap-1 mt-1",
+                ),
+                Div(*tile_actions, cls="flex flex-wrap gap-1 mt-2") if tile_actions else None,
+                cls="mt-2",
+            ),
+            cls="similar-face-tile",
+            id=f"similar-tile-{make_css_id(nid)}",
+        )
+        tiles.append(tile)
+
+    # Close button
+    close_btn = Button(
+        NotStr("&times;"),
+        cls="panel-close text-slate-400 hover:text-white text-xl font-bold bg-transparent border-0 p-1 leading-none",
+        **{"_": f"on click set innerHTML of #expand-{css_id} to ''"},
+        type="button",
+        title="Close",
+    )
+
+    # Build the fragment
+    hero_section = Div(
+        Img(src=hero_url, alt=name, cls="w-20 h-20 rounded-lg object-cover flex-shrink-0") if hero_url else None,
+        Div(
+            Span(name or "Unidentified", cls="text-lg font-semibold text-white block"),
+            Span(f"{len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}", cls="text-sm text-slate-400"),
+            A("View Profile", href=f"/person/{identity_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 block mt-1"),
+            cls="min-w-0",
+        ),
+        Div(cls="flex-1"),
+        close_btn,
+        cls="flex items-start gap-4 mb-4",
+    )
+
+    results_section = Div(
+        H4(f"{len(tiles)} Similar Face{'s' if len(tiles) != 1 else ''}", cls="text-sm font-medium text-slate-300 mb-3"),
+        Div(*tiles, cls="similar-faces") if tiles else
+        P("No similar faces found.", cls="text-sm text-slate-500"),
+    )
+
+    return Div(hero_section, results_section, data_testid="find-similar-panel")
+
+
+@rt("/api/identity/{identity_id}/reject-match/{neighbor_id}", methods=["POST"])
+def post(identity_id: str, neighbor_id: str, sess=None):
+    """Record a negative match between two identities and remove the tile."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = user and user.is_admin if user else not is_auth_enabled()
+    if not is_admin:
+        return Response("Forbidden", status_code=403)
+
+    registry = load_registry()
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    # Record bidirectional negative pair
+    try:
+        registry.reject_identity_pair(identity_id, neighbor_id, user_source="admin_inline")
+        save_registry(registry)
+    except KeyError:
+        pass  # Neighbor may have been merged/deleted
+
+    # Return empty div to remove the tile
+    return ""
 
 
 # ---- Collection Pages ----
