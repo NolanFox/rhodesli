@@ -11606,22 +11606,28 @@ def public_person_page(
     # --- Navigation ---
     nav_links = _public_nav_links(active="people", user=user)
 
-    # --- View toggle ---
+    # --- View toggle (HTMX partial swap for fast switching) ---
     faces_active = view != "photos"
     toggle = Div(
-        A(
+        Button(
             "Faces",
-            href=f"/person/{person_id}?view=faces&sort_by={sort_by}",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
                 "bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
+            hx_get=f"/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}",
+            hx_target="#person-gallery-container",
+            hx_swap="innerHTML",
+            type="button",
         ),
-        A(
+        Button(
             "Photos",
-            href=f"/person/{person_id}?view=photos&sort_by={sort_by}",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
                 "bg-indigo-600 text-white" if not faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
+            hx_get=f"/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}",
+            hx_target="#person-gallery-container",
+            hx_swap="innerHTML",
+            type="button",
         ),
         cls="flex gap-1 bg-slate-800/50 p-1 rounded-xl",
     )
@@ -11632,7 +11638,12 @@ def public_person_page(
         Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
         Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
         cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
-        onchange=f"window.location.href='/person/{person_id}?view={'faces' if faces_active else 'photos'}&sort_by=' + this.value",
+        hx_get=f"/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
+        hx_target="#person-gallery-container",
+        hx_swap="innerHTML",
+        hx_trigger="change",
+        hx_include="this",
+        name="sort_by",
         aria_label="Sort gallery",
     )
 
@@ -11974,25 +11985,30 @@ def public_person_page(
             # Gallery section
             Section(
                 Div(
-                    # Section header with toggle
+                    # Toggle + sort + gallery (HTMX partial swap target)
                     Div(
-                        H2(
-                            f"{'Faces' if faces_active else 'Photos'} of {display_name}",
-                            cls="text-xl font-serif font-semibold text-white",
-                        ),
+                        # Section header with toggle
                         Div(
-                            toggle,
-                            Div(
-                                Span("Sort:", cls="text-xs text-slate-500 mr-2"),
-                                sort_select,
-                                cls="flex items-center ml-3",
+                            H2(
+                                f"{'Faces' if faces_active else 'Photos'} of {display_name}",
+                                cls="text-xl font-serif font-semibold text-white",
+                                id="gallery-heading",
                             ),
-                            Span(f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}", cls="text-xs text-slate-500 ml-3 self-center"),
-                            cls="flex flex-wrap items-center",
+                            Div(
+                                toggle,
+                                Div(
+                                    Span("Sort:", cls="text-xs text-slate-500 mr-2"),
+                                    sort_select,
+                                    cls="flex items-center ml-3",
+                                ),
+                                Span(f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}", cls="text-xs text-slate-500 ml-3 self-center"),
+                                cls="flex flex-wrap items-center",
+                            ),
+                            cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
                         ),
-                        cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
+                        gallery_content,
+                        id="person-gallery-container",
                     ),
-                    gallery_content,
 
                     # Family relationships (from GEDCOM)
                     family_section if family_section else None,
@@ -13244,6 +13260,156 @@ def post(person_a: str, person_b: str, answer: str = "",
     return Div(
         P(messages[answer], cls="text-emerald-400 text-sm text-center py-2"),
         P(count_text, cls="text-slate-400 text-xs text-center mt-1"),
+    )
+
+
+# --- Person Gallery HTMX Partial (Phase 5: fast toggle) ---
+
+@rt("/api/person/{person_id}/gallery")
+def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None):
+    """Return gallery toggle + grid as HTMX partial for fast Faces/Photos switching."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(person_id)
+    except KeyError:
+        return Response("Not found", status_code=404)
+
+    display_name = ensure_utf8_display(identity.get("name", ""))
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    crop_files = get_crop_files()
+
+    face_id_strings = set()
+    for f in all_face_ids:
+        face_id_strings.add(f if isinstance(f, str) else f.get("face_id", ""))
+
+    # Build photo IDs from face-to-photo mapping
+    photo_ids = []
+    seen_photos = set()
+    for fid in face_id_strings:
+        pid = get_photo_id_for_face(fid)
+        if pid and pid not in seen_photos:
+            photo_ids.append(pid)
+            seen_photos.add(pid)
+
+    date_labels = _load_date_labels()
+
+    def _parse_year(value):
+        try:
+            return int(str(value)[:4])
+        except (TypeError, ValueError):
+            return None
+
+    def _parse_uploaded_timestamp(value):
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+        except (TypeError, ValueError):
+            return None
+
+    def _build_sort_meta(photo_id, pm):
+        pm = pm or {}
+        year = _parse_year((date_labels.get(photo_id) or {}).get("best_year_estimate"))
+        if year is None:
+            year = _parse_year(pm.get("date_taken"))
+        uploaded_ts = _parse_uploaded_timestamp(pm.get("created_at") or pm.get("updated_at"))
+        return {"year": year, "has_year": year is not None, "uploaded_ts": uploaded_ts, "has_uploaded_ts": uploaded_ts is not None}
+
+    def _gallery_sort_key(sort_meta, stable):
+        year = sort_meta["year"] if sort_meta["has_year"] else 0
+        uploaded_ts = sort_meta["uploaded_ts"] if sort_meta["has_uploaded_ts"] else 0.0
+        if sort_by == "date_desc":
+            return (0 if sort_meta["has_year"] else 1, -year, -uploaded_ts, stable)
+        if sort_by == "uploaded_desc":
+            return (0 if sort_meta["has_uploaded_ts"] else 1, -uploaded_ts, year if sort_meta["has_year"] else 9999, stable)
+        if sort_by == "uploaded_asc":
+            return (0 if sort_meta["has_uploaded_ts"] else 1, uploaded_ts, year if sort_meta["has_year"] else 9999, stable)
+        return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
+
+    faces_active = view != "photos"
+
+    if faces_active:
+        face_entries = []
+        for face_id_entry in all_face_ids:
+            fid = face_id_entry if isinstance(face_id_entry, str) else face_id_entry.get("face_id", "")
+            crop_url = resolve_face_image_url(fid, crop_files) if crop_files else None
+            if not crop_url:
+                continue
+            face_photo_id = get_photo_id_for_face(fid)
+            face_photo = get_photo_metadata(face_photo_id) if face_photo_id else None
+            source_label = ""
+            if face_photo:
+                source_label = face_photo.get("collection", "") or face_photo.get("source", "") or ""
+            face_entries.append({
+                "sort_key": _gallery_sort_key(_build_sort_meta(face_photo_id, face_photo), f"{face_photo_id or 'zz'}:{fid}"),
+                "item": A(
+                    Img(src=crop_url, alt=display_name, cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors", loading="lazy", onerror="this.style.display='none'"),
+                    P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]") if source_label else None,
+                    href=f"/photo/{face_photo_id}" if face_photo_id else "#",
+                    cls="flex flex-col items-center group",
+                ),
+            })
+        face_entries.sort(key=lambda e: e["sort_key"])
+        gallery_items = [e["item"] for e in face_entries]
+        grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"
+    else:
+        photo_entries = []
+        for pid in photo_ids:
+            pm = get_photo_metadata(pid)
+            if not pm:
+                continue
+            filename = pm["filename"]
+            collection_label = pm.get("collection", "") or ""
+            photo_entries.append({
+                "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
+                "item": A(
+                    Div(Img(src=photo_url(filename), alt=f"Photo of {display_name}", cls="w-full h-48 sm:h-56 object-cover rounded-lg", loading="lazy"), cls="relative overflow-hidden rounded-lg"),
+                    P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug") if collection_label else None,
+                    href=f"/photo/{pid}",
+                    cls="flex flex-col group",
+                ),
+            })
+        photo_entries.sort(key=lambda e: e["sort_key"])
+        gallery_items = [e["item"] for e in photo_entries]
+        grid_cls = "grid grid-cols-2 sm:grid-cols-3 gap-4"
+
+    gallery_count = len(gallery_items)
+
+    # Toggle buttons (HTMX swap)
+    toggle = Div(
+        Button("Faces", cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + ("bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"),
+               hx_get=f"/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}", hx_target="#person-gallery-container", hx_swap="innerHTML", type="button"),
+        Button("Photos", cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + ("bg-indigo-600 text-white" if not faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"),
+               hx_get=f"/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}", hx_target="#person-gallery-container", hx_swap="innerHTML", type="button"),
+        cls="flex gap-1 bg-slate-800/50 p-1 rounded-xl",
+    )
+
+    sort_select = Select(
+        Option("Earliest First", value="date_asc", selected=(sort_by == "date_asc")),
+        Option("Earliest Last", value="date_desc", selected=(sort_by == "date_desc")),
+        Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
+        Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
+        cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
+        hx_get=f"/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
+        hx_target="#person-gallery-container", hx_swap="innerHTML", hx_trigger="change", hx_include="this", name="sort_by",
+        aria_label="Sort gallery",
+    )
+
+    gallery_content = Div(*gallery_items, cls=grid_cls) if gallery_items else Div(P("No photos available yet.", cls="text-slate-500 text-center py-8"))
+
+    count_label = f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}"
+
+    return Div(
+        Div(
+            H2(f"{'Faces' if faces_active else 'Photos'} of {display_name}", cls="text-xl font-serif font-semibold text-white", id="gallery-heading"),
+            Div(toggle, Div(Span("Sort:", cls="text-xs text-slate-500 mr-2"), sort_select, cls="flex items-center ml-3"),
+                Span(count_label, cls="text-xs text-slate-500 ml-3 self-center"), cls="flex flex-wrap items-center"),
+            cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
+        ),
+        gallery_content,
     )
 
 
