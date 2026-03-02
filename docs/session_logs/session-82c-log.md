@@ -6,14 +6,14 @@ Prompt: docs/prompts/session-82c-prompt.md
 ## Phase Checklist
 - [x] Phase 0: Orient + Validate Existing Gemini State
 - [x] Phase 1: Asheville Litmus Test — 3-Variant Experiment
-- [ ] Phase 2: Assess Value + Decide Batch Approach
+- [x] Phase 2: Assess Value + Decide Batch Approach
 - [x] Phase 3: Batch Preparation (conditional)
-- [ ] Phase 4: Surface Results in App (conditional)
-- [ ] Phase 5: Documentation + PR
+- [x] Phase 4: Surface Results in App (conditional)
+- [x] Phase 5: Documentation + PR
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed
 
 ---
 
@@ -171,3 +171,62 @@ Proceed with `inbox_staged-20260210-182610_7_596771420.719238` as the Asheville 
 - Phase 3 cost: $0.22
 - Session total: $0.26 ($0.04 litmus + $0.22 batch)
 - Budget remaining: $9.74 of $10.00
+
+---
+
+## Phase 4: Surface Results in App
+
+### Enrichment Proposal Staging
+- Built `scripts/stage_enrichment_proposals.py` to transform batch results into proposals
+- Created `data/enrichment_proposals.json` with 18 proposals (pending admin review)
+- Gatekeeper pattern: all enrichment results staged as proposals, not auto-applied
+
+### Admin Review UI
+- Enrichment proposal banner on photo pages (admin-only, amber/pending)
+- Shows old→new location and date changes with evidence
+- GEDCOM badge for enriched photos
+- Accept/Reject buttons with HTMX swap
+
+### API Routes
+- `POST /api/enrichment/accept/{photo_id}` — updates date_labels + photo_locations, marks accepted
+- `POST /api/enrichment/reject/{photo_id}` — marks rejected, no data changes
+- Geocoding lookup for known diaspora cities (Asheville, NYC, Miami, Buenos Aires, Rhodes, etc.)
+
+### "Location Updated" Badge
+- Accepted proposals show green badge next to location on photo page
+
+### Tests
+- 23 new tests in `tests/test_enrichment_proposals.py`
+- All 3942 tests passing (3391 app + 551 ML)
+
+### Key Example: Asheville Fix
+- Photo `inbox_staged-20260210-182610_7_596771420.719238`
+- Old: Miami, Florida (incorrect)
+- New: Asheville, North Carolina (correct, via GEDCOM enrichment)
+- Admin can accept to update map pin from Miami → Asheville
+
+---
+
+## Phase 5: Documentation + PR
+
+### Budget Summary
+| Phase | Cost |
+|-------|------|
+| Phase 1 (Litmus Test) | $0.04 |
+| Phase 3 (Batch 20 photos) | $0.22 |
+| **Total** | **$0.26** |
+| Budget remaining | $9.74 of $10.00 |
+
+### Files Created
+- `scripts/asheville_litmus_test.py` — 3-variant experiment script
+- `scripts/run_gemini_enrichment.py` — Batch pipeline with budget gates
+- `scripts/stage_enrichment_proposals.py` — Proposal staging script
+- `results/asheville_litmus_test.json` — Litmus test results
+- `results/enrichment_82c_batch1.json` — First batch results (20 photos)
+- `data/enrichment_proposals.json` — 18 proposals for admin review
+- `tests/test_enrichment_proposals.py` — 23 tests
+
+### Files Modified
+- `app/main.py` — Enrichment proposal UI + API routes (+406 lines)
+- `docs/ml/ALGORITHMIC_DECISIONS.md` — AD-194
+- `.gitignore` — Whitelist enrichment_proposals.json

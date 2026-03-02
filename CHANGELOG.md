@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.83.3] — 2026-03-01 (Session 82c: Gemini Re-run with GEDCOM Enrichment)
+
+### Added
+- **Asheville litmus test**: 3-variant experiment proving curated GEDCOM context achieves 10/10 location accuracy (vs 2/10 without, 0/10 with full GEDCOM)
+- **Gemini enrichment batch pipeline**: `scripts/run_gemini_enrichment.py` with budget gates, resume support, privacy filtering, retry logic
+- **Enrichment proposal staging**: Gatekeeper pattern — all Gemini results staged as proposals for admin review
+- **Admin review UI**: Enrichment proposal banners on photo pages with Accept/Reject (old→new location/date comparison)
+- **"Location updated" badge**: Accepted proposals show green badge on photo pages
+- **Accept/Reject API**: `/api/enrichment/accept/{photo_id}` and `/api/enrichment/reject/{photo_id}` with geocoding
+- 23 new tests in `tests/test_enrichment_proposals.py`
+
+### Key Results
+- Curated GEDCOM (±15yr window) identified Asheville, NC perfectly; full GEDCOM confused Gemini with "later life" data
+- First batch: 20 photos processed, $0.22 total ($0.012/photo), 19/20 success
+- 18 enrichment proposals staged for admin review
+- AD-194: Gemini GEDCOM enrichment validated
+
 ## [v0.83.2] — 2026-03-01 (Session 81C+D: Tree Data Fix + Final Verification)
 
 ### Fixed
