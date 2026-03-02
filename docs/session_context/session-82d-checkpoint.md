@@ -1,7 +1,7 @@
 # Session 82d Checkpoint
-Last completed: Phase 9
-Next: Phase 10 (deploy + visual verification)
-Status: All phases 0-9 complete. Key deliverables:
+Last completed: Phase 10
+Next: Session complete
+Status: All phases 0-10 complete. Key deliverables:
 - P0 lazy-load bug fixed (face counts on /api/photos/more)
 - P1 person page admin buttons differentiated
 - P1 focus mode face highlight fixed

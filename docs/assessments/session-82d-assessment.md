@@ -17,23 +17,31 @@
 - [x] Phase 7: Tests verified — 3928 pass (1 pre-existing ML regression)
 - [x] Phase 9: AD-194, AD-195 documented in ALGORITHMIC_DECISIONS.md
 
+- [x] Phase 10: Deploy + visual verification — 9/10 checks PASS in production browser
+  - v0.84.0 deployed via `railway up`
+  - Inline Find Similar expansion confirmed working
+  - Multiple panels open simultaneously confirmed
+  - Not Same tile removal confirmed
+  - Person page HTMX gallery toggle confirmed
+  - All images load correctly
+  - See docs/screenshots/session-82d/VERIFICATION_LOG.md
+
 ## Deferred
 
 - Phase 2: Full face card consistency audit — share_button() already exists and is reusable. 14+ inline rendering locations exist but refactoring them is a multi-session effort.
 - Phase 3: share_button() already complete (line 6347, 4 variants). No new work needed.
 - Phase 8: Cross-site regression audit — workflow verification not done in browser yet.
-- Phase 10: Deploy + visual verification — requires git push and Chrome browser.
 
 ## Red Flags
 
 - [LOW] The pre-existing ML test_mls_score_range_exceeds_threshold failure needs investigation in a separate session.
 - [LOW] 14+ face card rendering locations still use bespoke inline code. Consolidation would reduce maintenance burden but is a large refactor.
 - [LOW] The expansion panel "Merge" action refreshes the entire panel. A more targeted approach would update just the affected tile.
+- [LOW] Deploy required manual `railway up` — git push to origin/main didn't trigger auto-build. May need Railway GitHub integration check.
 
 ## Next Session Should Verify
 
-1. Deploy and verify inline Find Similar works in production browser
-2. Test expansion panel animation smoothness
-3. Verify multiple panels open simultaneously
-4. Verify person page gallery toggle is fast (<300ms perceived)
-5. Test Merge and Not Same actions from expansion panel
+1. Merge action from expansion panel (skipped in verification to avoid data modification)
+2. Close button (X) on expansion panel clears content
+3. Public/non-admin visitors see full-page link (not HTMX) for Find Similar
+4. Expansion panel animation smoothness on slower connections
