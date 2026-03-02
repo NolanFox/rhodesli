@@ -394,6 +394,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 82e: UX Feature Sprint (2026-03-01) — v0.85.0
+- Mobile hamburger fix: sm→md breakpoint (768px), slide-from-right, ESC key close
+- Masonry photo grid: CSS columns layout on /photos, natural aspect ratios, 1-4 responsive columns
+- Help Needed page (/help): Top 50 unidentified faces sorted by quality, CTAs to /identify pages
+- Share for Help: OG meta tags on /identify pages with face crop images for social sharing
+- Identify Mode focus state: Toggle button, dark overlay, amber pulse animation, "?" badges on unidentified faces
+- Landing page: Help section with 6 mystery faces, "See All" counter linking to /help
+- Browser verified: 7/7 PASS. Tests: 2942 (2391 app + 551 ML). 22 new tests.
+
 ## Session 81D: Final Verification Gate (2026-03-01)
 - 13/13 feature verification PASS on production Chrome
 - Verified: face labels, Leaflet maps, tree rendering, photo cycling, expand/collapse, time slider, hover labels, generation bands, line thickness, date estimate, location estimate, scene description, people cards

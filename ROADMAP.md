@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.83.0 · ~3917 tests · 274 photos · 775 identities · 60 confirmed
+Current: v0.85.0 · ~2942 tests · 274 photos · 775 identities · 60 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -42,7 +42,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 ### Near-Term
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
-- [ ] FE-041: "Help Identify" mode for non-admin users
+- [x] 2026-03-01: FE-041: "Help Identify" mode — /help page, Identify Mode toggle, OG cards
 - [ ] Active learning pipeline
 
 ### Future Evaluation: Frontend Framework Migration
@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-01: **v0.85.0 — Session 82e**: UX Feature Sprint. Mobile hamburger fix (768px breakpoint). Masonry photo grid (CSS columns, natural aspect ratios). Help Needed page (/help, top 50 unidentified faces). Share for Help OG cards (og:image face crop). Identify Mode focus state (toggle, pulse animation, "?" badges). Landing page help section. Browser verified 7/7 PASS. 22 new tests. ~2942 tests.
 - [x] 2026-03-01: **v0.83.0 — Session 81**: Connected App — Tree, Map, Location, Face Labels. Photo→Tree smart nav (BFS subtree, nuclear family detect). Face identity labels (clickable links). Location estimate display (Leaflet maps, confidence badges). GEDCOM-enriched location prompts (AD-192, Asheville benchmark). Relationship viz (thicker lines, hover, generation bands). Matilda GEDCOM fix. Browser verification 12/12 PASS. AD-192/193. 8 parallel subagents across 2 rounds. ~3030 tests.
 - [x] 2026-02-28: **v0.82.1 — Session 80 cont.**: Parallel track improvements. Tree: photo cycling, expand-any-node, multi-spouse, rounded-rect faces (DD-005). Cards: share button restored, multi-face gallery. GEDCOM: 21 new matches (56 total). Docs: DD-005, AD-190/191. 5 parallel worktree subagents. ~2933 tests.
 - [x] 2026-02-28: **v0.82.0 — Session 80**: Fix Everything — Tree + Face Cards + UX. Tree: complete D3 rewrite with card-based layout, T-shape connections, expand arrows, search (AD-185). Graph unification: GEDCOM xrefs→UUIDs. Expand fix: source person in response. Face cards verified. Compare deferred AD-187. Lesson 89. ~3272 tests.

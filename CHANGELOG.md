@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.85.0] — 2026-03-01 (Session 82e: UX Feature Sprint)
+
+### Added
+- **Help Needed page** (`/help`): Public page showing top 50 unidentified faces sorted by quality, with CTAs linking to identify pages
+- **Masonry photo grid**: CSS columns layout on `/photos` preserving natural aspect ratios (was square-cropping all photos). Responsive: 1/2/3/4 columns.
+- **Identify Mode focus state**: Toggle button on photo pages dims background, highlights unidentified faces with amber pulse animation and "?" badges
+- **Share for Help OG cards**: Open Graph meta tags on `/identify` pages with face crop image for rich social sharing
+- **Landing page Help section**: "Help Identify People" CTA + "See All" counter linking to `/help`, 6 mystery faces
+- 22 new tests in test_session_82e_features.py
+
+### Fixed
+- **Mobile hamburger**: Upgraded breakpoint from sm (640px) to md (768px), menu slides from right, ESC key closes
+- **Masonry grid single-column bug**: Inline `style="column-count: 1"` was overriding CSS media queries
+- **Nav link order**: "Help Identify" now links to `/help` (was `/?section=skipped`)
+- **Collection name truncation**: Help page cards use `leading-snug` instead of `truncate`
+
 ## [v0.84.0] — 2026-03-01 (Session 82d: Inline Find Similar + Performance)
 
 ### Added
