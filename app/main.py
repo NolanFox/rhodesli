@@ -12690,18 +12690,25 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
     is_admin = user and user.is_admin if user else False
     submitted_by = (user.email if user else email.strip()) or "anonymous"
 
-    # If admin, apply name directly (no approval needed)
+    # If admin, apply name AND confirm directly (no approval needed)
     if is_admin:
         try:
             registry = load_registry()
             registry.rename_identity(person_id, name.strip(), user_source="admin_web")
+            # Also confirm the person so they move out of New Matches
+            identity = registry.get_identity(person_id)
+            if identity.get("state") != "CONFIRMED":
+                try:
+                    registry.confirm_identity(person_id, user_source="admin_web_identify")
+                except ValueError:
+                    pass  # Already confirmed or invalid state transition
             save_registry(registry)
-            logging.info(f"[identify] Admin direct-named {person_id} as '{name.strip()}'")
+            logging.info(f"[identify] Admin direct-named and confirmed {person_id} as '{name.strip()}'")
             return Div(
                 Div(
-                    P("Name applied!", cls="text-lg font-semibold text-emerald-400 mb-1"),
-                    P(f"This person has been named \"{name.strip()}\". ",
-                      A("View in admin \u2192", href=f"/admin/identity/{person_id}",
+                    P("Name applied and confirmed!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+                    P(f"This person has been named \"{name.strip()}\" and moved to People. ",
+                      A("View in People \u2192", href=f"/person/{person_id}",
                         cls="text-indigo-400 hover:text-indigo-300 underline"),
                       cls="text-slate-300 text-sm"),
                     cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",

@@ -32,6 +32,9 @@ Three core features were silently broken: Help Identify submissions disappeared,
 - Feedback log: docs/feedback/2026-03-02-claude-benatar.md
 - Screenshots: docs/screenshots/session-83a/ (5 screenshots)
 
+## Post-Review Fix
+- Admin direct-apply on Help Identify now also confirms (moves person to People)
+
 ## Deferred
 
 - P2-1: "Unidentified Person" contextual explanation

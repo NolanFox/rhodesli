@@ -63,3 +63,7 @@ Prompt: docs/prompts/session-83a-prompt.md
 - WS3 Compare: **PASS** — Improved "expired" 404 messaging; Railway logs confirm new results return 200
 - WS4 Card Search: **PASS** — "Search by name or person number..." input in Browse view
 - Screenshots: docs/screenshots/session-83a/ (5 screenshots)
+
+## Post-Review Fix
+- Admin direct-apply on Help Identify page now also CONFIRMS the person (moves to People)
+- Previously only renamed but left in New Matches — Nolan's explicit feedback: "Adding the name still leaves them in New Matches. It should also be confirming them."
