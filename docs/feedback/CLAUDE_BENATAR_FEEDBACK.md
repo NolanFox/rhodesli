@@ -41,6 +41,35 @@
 | 16 | "I cannot merge her with your pictures" — merge is admin-only | DONE | Non-admin users now get suggestion workflow via annotation system. Same UX (type name, click), but creates annotation for admin review instead of direct merge. |
 | 17 | Share button opens OS share sheet instead of copying URL | DONE | Share button now copies to clipboard first with "Link copied!" toast. Mobile still gets native share sheet after copy. |
 
+## Feedback Round 3 — March 2, 2026 (Session 83a)
+
+Claude Benatar messaged Nolan via Facebook Messenger:
+1. "Why does it say unidentified person?" — photo of Isaac Cohen with biographical text clearly visible
+2. "See if you can find a match with this picture..." — sent group family photo for face comparison
+
+### What Nolan Found When Investigating
+
+| Attempt | Result |
+|---------|--------|
+| Help Identify: submitted "Isaac Cohen" | "Thank you!" shown but submission never reached admin approvals — **silent failure** |
+| Admin naming: Edit Details form | Only "Maiden Name" field exists → saved as "née Isaac Cohen" → **impossible to set display name** |
+| Compare: uploaded group photo | Pipeline completed (all 5 green checks) but result page showed "Comparison Not Found" — **404** |
+
+### Fixes Deployed (Session 83a)
+
+| ID | Fix | AD |
+|----|-----|----|
+| P0-1 | Help Identify now writes to annotations system | AD-197 |
+| P0-2 | Compare results saved to comparison_results.json | AD-198 |
+| P0-3 | Display Name field added as primary name | AD-196 |
+| P1-1 | Find Similar button verified working | — |
+| P2-2 | Admin card search filter added | AD-199 |
+
+### Follow-up Items
+- P2-1: "Unidentified Person" label still confusing when photo contains a name — need contextual explanation
+- P2-9: Compare discoverability for "match this person with this photo" use case
+- P2-10: Help Identify page doesn't persist submission state across refresh
+
 ## Key Takeaways
 
 1. **Quality is the #1 complaint** — both image quality and browsing experience quality. The composite quality score + best-face selection addresses the browsing side. True image enhancement requires ML infrastructure (GFPGAN integration) without breaking face matching.

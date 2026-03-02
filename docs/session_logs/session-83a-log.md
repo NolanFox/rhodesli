@@ -7,9 +7,10 @@ Prompt: docs/prompts/session-83a-prompt.md
 - [x] WS2: HELP IDENTIFY — Wired submissions into annotations system (admin approvals)
 - [x] WS3: COMPARE — Fixed result storage (SSE now saves to comparison_results.json)
 - [x] WS4: FACE CARD UX — Added search filter, verified Find Similar wiring
-- [ ] Deploy + Chrome verification
-- [ ] Documentation updates (AD, SESSION_HISTORY, ROADMAP, feedback log)
-- [ ] Assessment
+- [x] Deploy — pushed to main, health 200
+- [ ] Chrome verification — extension not connecting
+- [x] Documentation updates (AD-196/197/198/199, SESSION_HISTORY, ROADMAP, CHANGELOG, feedback log)
+- [x] Assessment — docs/assessments/session-83a-assessment.md
 
 ## What Was Built
 
@@ -48,7 +49,15 @@ Prompt: docs/prompts/session-83a-prompt.md
 3. `b76ff68` fix: compare result page 404 — save results to comparison_results.json
 4. `f144a27` feat: add card search filter and face card UX improvements
 
-## Remaining
-- Deploy and verify in Chrome
-- Documentation: AD entries, SESSION_HISTORY, ROADMAP, feedback log
-- Assessment file
+## Documentation Committed
+- AD-196 (Display Name), AD-197 (Help Identify), AD-198 (Compare), AD-199 (Card Search)
+- CHANGELOG v0.86.0
+- SESSION_HISTORY.md entry
+- ROADMAP.md updated (v0.86.0, ~3961 tests)
+- docs/feedback/2026-03-02-claude-benatar.md
+- docs/assessments/session-83a-assessment.md
+
+## Chrome Verification
+- STATUS: BLOCKED — Chrome extension MCP server not connecting
+- Production health: 200 (verified via curl)
+- Need manual or next-session browser verification

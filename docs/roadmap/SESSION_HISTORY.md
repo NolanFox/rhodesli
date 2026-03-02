@@ -394,6 +394,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 83a: Critical UX Fixes — User Feedback Response (2026-03-02) — v0.86.0
+- Origin: Claude Benatar (Jews of Rhodes FB group admin) feedback — 3 core features silently broken
+- **WS1 Naming**: Added "Display Name" as primary field in Edit Details. Previously only "Maiden Name" existed with "née" prefix, making it impossible to name people (AD-196)
+- **WS2 Help Identify**: Wired submissions into annotations system. Root cause: saved to identification_responses.json instead of annotations.json. Now appears in admin Approvals. Admin direct-apply option. Error handling on failure (AD-197)
+- **WS3 Compare**: Fixed result page 404. Root cause: SSE handler never called _save_comparison_result(). UUID format fix (hyphens removed). Improved 404 messaging (AD-198)
+- **WS4 Face Cards**: Added client-side search filter (name or person number). Verified Find Similar wiring. Bidirectional admin/public links confirmed working (AD-199)
+- 12 new tests. AD-196/197/198/199.
+- Tests: ~3961 total
+
 ## Session 82f: Completion Audit + Fix Everything (2026-03-02) — v0.85.1
 - Exhaustive audit of all Session 82 work (82a-82e): 20 features shipped, 3 partially shipped, 4 dropped, 8 deferred
 - Browser verification: 16 features confirmed WORKING in production, 0 BROKEN

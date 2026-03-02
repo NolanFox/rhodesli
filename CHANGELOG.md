@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.86.0] — 2026-03-02 (Session 83a: Critical UX Fixes — User Feedback Response)
+
+### Fixed
+- **Display Name field**: Added primary "Display Name" field in Edit Details — previously only "Maiden Name" existed, making it impossible to name people (AD-196)
+- **Help Identify submissions**: Wired into annotations system — submissions now appear in admin Approvals tab instead of silently disappearing (AD-197)
+- **Compare result 404**: SSE handler now saves results to comparison_results.json — result pages load correctly (AD-198)
+- **Compare UUID format**: Fixed `str(uuid4())[:12]` including hyphens → `uuid4().hex[:12]` for clean IDs
+
+### Added
+- **Admin face card search filter**: Type name or person number to filter cards in Browse view (AD-199)
+- **Admin direct-apply**: Admin users on Help Identify page can apply names directly without approval queue
+- **Compare 404 messaging**: Shows "expired" instead of generic "not found"
+- 12 new tests across all workstreams
+
 ## [v0.85.1] — 2026-03-02 (Session 82f: Completion Audit)
 
 ### Fixed

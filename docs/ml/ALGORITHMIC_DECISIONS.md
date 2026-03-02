@@ -2220,3 +2220,35 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Decision**: Convert toggle to HTMX partial swap via new endpoint `GET /api/person/{id}/gallery?view=&sort_by=`. Returns toggle buttons + sort dropdown + gallery grid. Container div with `id="person-gallery-container"` is the swap target. Only the gallery section is rebuilt, not the entire page.
 - **Rejected**: (1) Tab preloading (load both views on initial render) — doubles initial page size. (2) Client-side DOM show/hide — requires all face and photo data in initial HTML. (3) JavaScript tab switching — goes against HTMX-first architecture.
 - **Affects**: `app/main.py` (new gallery endpoint, person page toggle refactoring).
+
+### AD-196: Display Name as Primary Identity Field
+- **Date**: 2026-03-02
+- **Session**: 83a
+- **Context**: Only name field in Edit Details was "Maiden Name" which prepended "née". Admin literally could not set a primary display name — confirmed people appeared nameless or as "née Isaac Cohen". First real user (Claude Benatar) hit this trying to identify Isaac Cohen.
+- **Decision**: Add "Display Name" / "Full Name" as the FIRST field in Edit Details metadata form. Posts to `/api/identity/{id}/metadata` with `display_name` param. Calls `registry.rename_identity()` to set the identity's primary name. OOB swap updates name header in real-time. "Maiden Name" remains as secondary/optional field.
+- **Rejected**: (1) Repurposing Maiden Name field — loses maiden name functionality for female identities. (2) Inline rename on face card — too complex for initial fix, Edit Details form is the right place.
+- **Affects**: `app/main.py` (Edit Details form, metadata endpoint), `core/registry.py`.
+
+### AD-197: Help Identify Submissions Wired to Annotations System
+- **Date**: 2026-03-02
+- **Session**: 83a
+- **Context**: `/api/identify/{person_id}/respond` saved to `identification_responses.json` (a separate file) but admin approvals read from `annotations.json`. Submissions silently disappeared — users got "Thank you!" but nothing reached admin. Claude Benatar was affected.
+- **Decision**: Help Identify now creates proper annotation entries in the annotations system (Supabase + JSON). Submissions appear in admin Approvals tab. Admin users submitting get direct apply option (skip approval queue). Email field hidden for logged-in users. Error shown on failure instead of false "Thank you!" success. Legacy `identification_responses.json` still written as audit trail.
+- **Rejected**: (1) Fixing identification_responses.json reader — wrong approach, annotations system is the canonical path. (2) Auto-approving all submissions — violates Gatekeeper pattern (AD-097).
+- **Affects**: `app/main.py` (identify respond endpoint, identify page template), `data/annotations.json`.
+
+### AD-198: Compare Result Storage Fix
+- **Date**: 2026-03-02
+- **Session**: 83a
+- **Context**: SSE compare handler called `_save_compare_upload()` (R2/local metadata) but never `_save_comparison_result()` (comparison_results.json). Result page looked up results in comparison_results.json → not found → 404. Every compare analysis completed successfully but results were unretrievable.
+- **Decision**: SSE handler now calls `_save_comparison_result()` with full result data (faces, matches, date estimate) at pipeline completion. UUID format fixed: `str(uuid4())[:12]` included hyphens → `uuid4().hex[:12]` for clean IDs. 404 page updated with "expired" messaging instead of generic "not found".
+- **Rejected**: (1) In-memory result cache only — wouldn't survive Railway restarts. (2) Database storage — premature, JSON file matches current pattern.
+- **Affects**: `app/main.py` (SSE compare handler, compare result page), `data/comparison_results.json`.
+
+### AD-199: Admin Face Card Search Filter
+- **Date**: 2026-03-02
+- **Session**: 83a
+- **Context**: Admin had to Cmd+F through hundreds of face cards to find a specific person by number or name. No built-in search/filter in Browse view.
+- **Decision**: Client-side search filter input in admin Browse view header. Filters cards by name (case-insensitive substring) or person number. Uses `data-name` and `data-number` attributes on card elements. Pure JavaScript, no server round-trip needed for responsive filtering. Hides non-matching cards via display:none.
+- **Rejected**: (1) Server-side search with HTMX — adds latency for a simple filter. (2) Full-text search with Supabase — overkill for ~660 cards. Client-side is instant and simple.
+- **Affects**: `app/main.py` (Browse view card rendering, search input component).
