@@ -1,4 +1,7 @@
 python-fasthtml
+# Pin fastcore<1.12.22: version 1.12.22 changed to_xml(*elms) signature,
+# breaking python-fasthtml's to_xml(resp, indent) positional call pattern.
+fastcore<1.12.22
 uvicorn
 numpy
 scipy
