@@ -16790,25 +16790,25 @@
       "metadata": {}
     },
     "f4d9c430-8100-4465-aa1d-171538d396d7": {
-      "identity_id": "f4d9c430-8100-4465-aa1d-171538d396d7",
       "name": "Unidentified Person 724",
-      "state": "INBOX",
+      "state": "CONFIRMED",
+      "metadata": {},
       "anchor_ids": [
         "inbox_2c63949434e1"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-02-14T14:51:47.354583+00:00",
-      "updated_at": "2026-02-14T14:51:47.354583+00:00",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "community-batch-20260214",
+        "source": "inbox_ingest",
         "filename": "debora_bogrotty_collection_508386638_10238348431516550_6185809834372817399_n.jpg",
         "ingested_at": "2026-02-14T14:51:47.354575+00:00",
         "grouped_faces": 1
       },
-      "metadata": {}
+      "updated_at": "2026-03-01T00:43:54.220678+00:00",
+      "version_id": 2,
+      "identity_id": "f4d9c430-8100-4465-aa1d-171538d396d7",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "c51cd05d-9ede-4d8a-94f2-e5052bc50240": {
       "identity_id": "c51cd05d-9ede-4d8a-94f2-e5052bc50240",
