@@ -13996,7 +13996,6 @@ def get(filter_collection: str = "", sort_by: str = "newest",
                     ),
                     # Photo grid — masonry layout via CSS columns
                     Div(*photo_cards, id="photo-grid",
-                        style="column-count: 1; column-gap: 1rem;",
                         cls="masonry-grid") if photo_cards else Div(
                         P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
                         A("Clear filters", href="/photos", cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2"),
