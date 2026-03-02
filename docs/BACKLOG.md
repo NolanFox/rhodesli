@@ -201,7 +201,7 @@ See: docs/session_context/session_49C_community_feedback.md
 - [ ] **UX-130**: Homepage visitor experience — non-admin landing page with CTAs (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-131**: Photo page admin tools below evidence — collapse behind toggle (P2). Source: Session 61B UX evaluation.
 - [ ] **UX-132**: Homepage "Compare a Face" CTA for non-admin visitors (P2). Source: Session 61B UX evaluation.
-- [ ] **FE-041**: "Help Identify" mode for non-admin users — Session 65 priority. Community identifications generate LoRA training data.
+- [x] **FE-041**: "Help Identify" mode for non-admin users — DONE 2026-03-01 (Session 82e). /help page, Identify Mode toggle, OG cards for sharing.
 - [ ] **DOC-001**: Portfolio documentation — Technical writeup of ML pipeline (InsightFace → CORAL → isotonic calibration → Gemini alignment → GEDCOM enrichment). Session 66. AD-158.
 - [ ] **ML-070**: LoRA fine-tuning — Fine-tune InsightFace final layers on confirmed identity pairs. Needs 50-100+ confirmed pairs. Stage 2 of PRD-023. Session 67+. AD-158.
 - [ ] **BE-031-033**: Upload moderation queue with rate limiting
@@ -211,6 +211,7 @@ See: docs/session_context/session_49C_community_feedback.md
 - [ ] **FE-061-063**: Quick Compare, batch confirmation, browser performance audit
 - [ ] **Overnight ML pipeline** — `scripts/ml_pipeline.py` with modes: overnight (full pipeline), interactive (quick), validate (re-check compare results). See session 54B context.
 - [ ] **Playwright MCP integration** — Browser-based production testing. `.mcp.json` configured, needs first test run.
+- [ ] **UX-134**: Mobile landing page horizontal overflow — `test_mobile_landing_page[chromium]` fails with 405px overflow (scrollWidth=780, clientWidth=375). Pre-existing, confirmed across multiple sessions. Source: Session 82e.
 - [ ] **COMMUNITY-001: Nancy Gormezano Beta Test**: Engage Nancy as first non-family beta tester. Source: Session 49C community thread.
 - [ ] **Production smoke test in CI** — Auto-run `scripts/production_smoke_test.py` on deploy
 - [x] **ML-070: MLflow Integration — CORAL Training**: MLflow Model Registry + Promotion Pipeline. Session 58, v0.60.0. AD-130.

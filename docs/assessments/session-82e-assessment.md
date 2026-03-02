@@ -38,8 +38,23 @@
 - **P3: Pre-existing e2e failure** — `test_mobile_landing_page[chromium]` fails with 405px horizontal overflow. Confirmed pre-existing (fails on prior commits too). Not caused by session 82e changes.
 - **P3: Pre-existing ML test timeout** — `test_mls_score_range_exceeds_threshold` times out under parallel execution. Passes in isolation.
 
+## Auto-Fix Summary (Session Review)
+
+- Issues found: 3
+- Auto-fixed: 2
+- Deferred: 1
+
+### AUTO-FIXED
+1. **FE-041 unchecked in BACKLOG.md** — was: `[ ] FE-041` in BACKLOG.md while ROADMAP showed `[x]`. Now: `[x]` with completion date 2026-03-01.
+2. **Pre-existing e2e failure not in BACKLOG** — was: `test_mobile_landing_page` 405px overflow not tracked. Now: added UX-134 to BACKLOG.md.
+
+### DEFERRED
+1. **Empty screenshots directory** — Chrome extension screenshots stored in extension memory, not as local files. Visual verification was done via live Chrome browser interaction (ss_3508rgjuw, ss_7450xhy07, ss_38566wzl8, ss_0862f9xpt, ss_0454kc6cl). These are transient IDs from the Chrome extension, not persisted files. Future: use Playwright for disk-persisted screenshots.
+
 ## Next Session Should Verify
 
 1. Mobile hamburger at 375px viewport in real device or responsive mode (Chrome resize via extension couldn't verify visual rendering)
 2. Masonry grid lazy-loading behavior (pagination sentinels work with column layout)
 3. Share button clipboard fallback (Web Share API only available on HTTPS, clipboard as fallback)
+4. OG tag tests should find INBOX/PROPOSED identity instead of skipping when first identity is CONFIRMED
+5. Landing page mystery faces: spec said "horizontal scroll" but implementation uses flex-wrap
