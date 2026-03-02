@@ -3237,10 +3237,11 @@ def _public_nav_links(active: str = "", user=None) -> list:
         A("Estimate", href="/estimate", cls=_active if active == "estimate" else _inactive),
     ]
     
-    # Help Identify CTS
+    # Help Identify CTA — links to dedicated /help page
     links.append(
-        A("Help Identify", href="/?section=skipped", 
-          cls="text-amber-400 hover:text-amber-300 font-medium text-sm transition-colors border border-amber-500/30 px-2 py-0.5 rounded ml-2")
+        A("Help Identify", href="/help",
+          cls=("text-amber-400 font-medium text-sm border-b-2 border-amber-500 pb-1 ml-2" if active == "help"
+               else "text-amber-400 hover:text-amber-300 font-medium text-sm transition-colors border border-amber-500/30 px-2 py-0.5 rounded ml-2"))
     )
     
     if is_auth_enabled() and not user:
@@ -8074,7 +8075,7 @@ def _compute_landing_stats() -> dict:
         if not i.get("merged_into")
     ]
     random.shuffle(unid_identities)
-    for identity in unid_identities[:6]:
+    for identity in unid_identities[:12]:
         face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
         if face_ids:
             url = resolve_face_image_url(face_ids[0], crop_files)
@@ -8083,7 +8084,7 @@ def _compute_landing_stats() -> dict:
                     "identity_id": identity["identity_id"],
                     "crop_url": url,
                 })
-        if len(unidentified_faces) >= 4:
+        if len(unidentified_faces) >= 6:
             break
     # Source collections
     sources = set()
@@ -8258,7 +8259,7 @@ def landing_page(stats, featured_photos):
                     loading="lazy",
                     cls="w-full h-full object-cover rounded-full border-2 border-amber-400/50 hover:border-amber-300 transition-all duration-300 hover:scale-110"
                 ),
-                href=f"/?section=to_review&current={face['identity_id']}",
+                href=f"/identify/{face['identity_id']}",
                 cls="block w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden flex-shrink-0"
             )
         )
@@ -8278,7 +8279,7 @@ def landing_page(stats, featured_photos):
         A("Compare", href="/compare", cls=_nav_cls),
         A("About", href="/about", cls=_nav_cls),
         
-        A("Help Identify", href="/?section=skipped", 
+        A("Help Identify", href="/help",
           cls="text-amber-400 hover:text-amber-300 font-medium text-sm md:text-base transition-colors border border-amber-500/30 px-3 py-1 rounded ml-2")
     ]
     if auth_enabled:
@@ -8697,8 +8698,8 @@ def landing_page(stats, featured_photos):
                           cls="text-base md:text-lg text-amber-100/60 mt-6 max-w-2xl mx-auto leading-relaxed"),
                         # CTA buttons
                         Div(
-                            A("Start Exploring", href="/?section=photos", cls="btn-primary"),
-                            A("Help Identify", href="/?section=skipped", cls="btn-secondary"),
+                            A("Start Exploring", href="/photos", cls="btn-primary"),
+                            A("Help Identify", href="/help", cls="btn-secondary"),
                             cls="mt-8 flex flex-wrap gap-4 justify-center"
                         ),
                         cls="text-center animate-fade-in-up"
@@ -8895,8 +8896,10 @@ def landing_page(stats, featured_photos):
                     cls="flex justify-center gap-5 md:gap-8 flex-wrap"
                 ) if mystery_faces else None,
                 Div(
-                    A("Help Identify People", href="/?section=skipped",
+                    A("Help Identify People", href="/help",
                       cls="btn-primary mt-8 inline-block"),
+                    A(f"See all {stats['needs_help']} \u2192", href="/help",
+                      cls="text-amber-400/60 hover:text-amber-300 text-sm ml-4 mt-8 inline-block"),
                     cls="text-center"
                 ),
                 cls="max-w-3xl mx-auto"
@@ -12259,6 +12262,130 @@ def _save_identification_responses(data: dict):
             pass
 
 
+@rt("/help")
+def get(sess=None):
+    """
+    Public 'Help Needed' page — top 50 unidentified faces sorted by quality.
+
+    No authentication required. Shows face cards with CTAs to identify.
+    Drives the growth loop: visitor -> recognize face -> share -> more visitors.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+
+    _build_caches()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    # Collect unidentified identities (INBOX, PROPOSED, SKIPPED; not merged)
+    unid_identities = []
+    for ident in registry.list_identities():
+        if ident.get("merged_into"):
+            continue
+        state = ident.get("state", "")
+        if state not in ("INBOX", "PROPOSED", "SKIPPED"):
+            continue
+        name = ident.get("name", "")
+        if state == "CONFIRMED" and not name.startswith("Unidentified"):
+            continue
+        face_ids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+        if not face_ids:
+            continue
+        best_fid = get_best_face_id(face_ids)
+        if not best_fid:
+            best_fid = face_ids[0] if isinstance(face_ids[0], str) else face_ids[0].get("face_id", "")
+        crop_url = resolve_face_image_url(best_fid, crop_files) if crop_files else None
+        if not crop_url:
+            continue
+        quality = get_face_quality(best_fid) or 0.0
+        photo_id = get_photo_id_for_face(best_fid)
+        collection = ""
+        if photo_id and _photo_cache:
+            pm = _photo_cache.get(photo_id, {})
+            collection = pm.get("collection", "")
+        unid_identities.append({
+            "identity_id": ident["identity_id"],
+            "crop_url": crop_url,
+            "quality": quality,
+            "collection": collection,
+        })
+
+    # Sort by quality (highest first), take top 50
+    unid_identities.sort(key=lambda x: x["quality"], reverse=True)
+    unid_identities = unid_identities[:50]
+
+    # Build face cards
+    face_cards = []
+    for item in unid_identities:
+        face_cards.append(
+            A(
+                Div(
+                    Img(src=item["crop_url"], alt="Unidentified person",
+                        cls="w-full h-full object-cover", loading="lazy"),
+                    cls="aspect-square overflow-hidden",
+                ),
+                Div(
+                    P("Do you recognize this person?",
+                      cls="text-xs text-amber-300/80 font-medium mb-1"),
+                    P(item["collection"], cls="text-[10px] text-slate-500 truncate") if item["collection"] else None,
+                    cls="p-2.5",
+                ),
+                href=f"/identify/{item['identity_id']}",
+                cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-amber-500/50 transition-colors group block",
+                data_testid="help-face-card",
+            )
+        )
+
+    nav_links = _public_nav_links(active="help", user=user)
+    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+
+    empty_state = Div(
+        Div(
+            H2("All faces have been identified!", cls="text-xl font-serif text-white mb-2"),
+            P("Thank you to everyone who contributed their knowledge.", cls="text-slate-400 text-sm"),
+            A("Browse the archive", href="/photos", cls="text-indigo-400 hover:text-indigo-300 text-sm mt-4 inline-block"),
+            cls="text-center",
+        ),
+        cls="py-20",
+    )
+
+    return (
+        Title("Help Identify \u2014 Rhodesli Heritage Archive"),
+        *og_tags("Help Identify People \u2014 Rhodesli",
+                 f"{len(unid_identities)} faces from the Rhodes Jewish community need your help.",
+                 canonical_url="/help"),
+        page_style,
+        Main(
+            _public_page_nav(nav_links, active="help", user=user, max_w="max-w-6xl"),
+            Section(
+                Div(
+                    H1("Help Us Identify", cls="text-3xl font-serif font-bold text-white mb-2"),
+                    P(f"{len(unid_identities)} face{'s' if len(unid_identities) != 1 else ''} awaiting identification. "
+                      "If you recognize anyone, click to share what you know.",
+                      cls="text-slate-400 text-sm"),
+                    cls="max-w-6xl mx-auto px-6 pt-10 pb-6",
+                ),
+            ),
+            Section(
+                Div(
+                    Div(*face_cards,
+                        cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4",
+                    ) if face_cards else empty_state,
+                    cls="max-w-6xl mx-auto px-6 pb-10",
+                ),
+            ),
+            Div(
+                Div(
+                    P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
+                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
+                ),
+                cls="py-8 border-t border-slate-800",
+            ),
+            cls="min-h-screen bg-slate-900",
+        ),
+    )
+
+
 @rt("/identify/{person_id}")
 def get(person_id: str, sess=None):
     """
@@ -12408,20 +12535,28 @@ def get(person_id: str, sess=None):
         data_share_text=f"Help us identify this person in the Rhodesli Heritage Archive",
     )
 
-    # OG tags
+    # OG tags — include collection context for better social sharing
     og_image = avatar_url or ""
     if og_image and not og_image.startswith("http"):
         og_image = f"{SITE_URL}{og_image}"
+    _og_collection = ""
+    if photo_ids:
+        _pm = (_photo_cache or {}).get(photo_ids[0], {})
+        _og_collection = _pm.get("collection", "")
+    _og_title = "Help identify this person from the Rhodes Jewish community"
+    _og_desc = (f"This photo is from {_og_collection}. Can you help us identify who this is?"
+                if _og_collection else
+                "Help us identify this person from the Rhodes Jewish Heritage Archive. Share with family members who might recognize them.")
     og_meta = (
-        Meta(property="og:title", content="Can you identify this person? — Rhodesli"),
-        Meta(property="og:description", content="Help us identify this person from the Rhodes Jewish Heritage Archive. Share with family members who might recognize them."),
+        Meta(property="og:title", content=_og_title),
+        Meta(property="og:description", content=_og_desc),
         Meta(property="og:image", content=og_image),
         Meta(property="og:url", content=share_url),
         Meta(property="og:type", content="website"),
-        Meta(property="og:site_name", content="Rhodesli — Heritage Photo Archive"),
+        Meta(property="og:site_name", content="Rhodesli \u2014 Heritage Photo Archive"),
         Meta(name="twitter:card", content="summary_large_image"),
-        Meta(name="twitter:title", content="Can you identify this person?"),
-        Meta(name="twitter:description", content="Help us identify this person from the Rhodes Jewish Heritage Archive."),
+        Meta(name="twitter:title", content=_og_title),
+        Meta(name="twitter:description", content=_og_desc),
         Meta(name="twitter:image", content=og_image),
     )
 
