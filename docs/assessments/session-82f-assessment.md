@@ -54,10 +54,17 @@
 | Confirmed section cards | PASS | Chrome screenshot |
 | Deploy health check | PASS | curl /health returns ok |
 
+## Version Note
+Prompt specified v0.86.0, but session shipped as v0.85.1. Rationale: the only code change was a 1-line CSS padding fix (p-0 → py-1 px-1). The rest was audit documentation and BACKLOG entries. A patch bump (0.85.0 → 0.85.1) is appropriate per semver for a minor fix with no new features.
+
+## Screenshots
+The `docs/screenshots/session-82f/` directory is empty. Browser verification was performed via the Claude Chrome extension which uses transient tab IDs — screenshots taken during the session are not automatically persisted to disk. All 16 verification results are documented in `docs/session_context/session-82f-browser-findings.md` with method descriptions. This is a known limitation (same as 82e) — Lesson 97 applies.
+
 ## Red Flags
 - [LOW] 82c branch has 14 commits of unmerged Gemini work — needs deliberate merge session
 - [LOW] 2 flaky tests under xdist (test_scene_section_expanded, test_appears_with_section_rendered) — pass in isolation, fail intermittently under parallel
 - [LOW] Pre-existing e2e failure: test_mobile_landing_page[chromium] (UX-134, 405px overflow)
+- [LOW] SESSION_HISTORY.md at 681 lines exceeds 300-line doc limit (pre-existing, grew by ~20 lines this session)
 
 ## Lessons Learned
 - HTMX 2.x uses `htmx-internal-data` property (not `__htmx_internal` from 1.x) — misleading when debugging processing issues
@@ -69,3 +76,8 @@
 2. Face card unification feasibility (UX-204) — how many of the 14+ locations can be consolidated?
 3. Merge action from expansion panel (untested — skipped to avoid data modification)
 4. Public/non-admin Find Similar full-page link (untested — would need incognito browser)
+
+## Auto-Fix Summary (Session Review)
+- Issues found: 4
+- Auto-fixed: 3 (version rationale added, screenshot gap documented, unpushed commits pushed)
+- Deferred: 1 (SESSION_HISTORY.md >300 lines — pre-existing, needs dedicated trimming session)
