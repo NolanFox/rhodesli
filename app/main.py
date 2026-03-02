@@ -750,6 +750,7 @@ _date_labels_cache = None
 _search_index_cache = None
 _birth_year_cache = None
 _ml_review_decisions_cache = None
+_enrichment_proposals_cache = None
 
 
 def _load_date_labels() -> dict:
@@ -803,6 +804,57 @@ def _load_date_labels() -> dict:
         logging.warning(f"Failed to load date labels: {e}")
 
     return _date_labels_cache
+
+
+def _load_enrichment_proposals() -> dict:
+    """Load enrichment proposals (Gatekeeper pattern: ML proposals await admin review).
+
+    Returns dict keyed by photo_id with proposal status, old/new values.
+    """
+    global _enrichment_proposals_cache
+    if _enrichment_proposals_cache is not None:
+        return _enrichment_proposals_cache
+
+    _enrichment_proposals_cache = {}
+    proposals_path = Path(DATA_DIR) / "enrichment_proposals.json"
+    if proposals_path.exists():
+        try:
+            data = json.loads(proposals_path.read_text())
+            _enrichment_proposals_cache = data.get("proposals", {})
+        except Exception:
+            pass
+    return _enrichment_proposals_cache
+
+
+def _save_enrichment_proposals(proposals_data: dict):
+    """Save enrichment proposals atomically (full file, not just proposals dict)."""
+    import tempfile
+    proposals_path = Path(DATA_DIR) / "enrichment_proposals.json"
+
+    # Load existing file structure (preserve metadata)
+    existing = {}
+    if proposals_path.exists():
+        try:
+            existing = json.loads(proposals_path.read_text())
+        except Exception:
+            pass
+
+    # Update proposals in the existing structure
+    existing["proposals"] = proposals_data
+
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(proposals_path.parent), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(existing, f, indent=2)
+        os.replace(tmp_path, str(proposals_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+    # Invalidate cache
+    global _enrichment_proposals_cache
+    _enrichment_proposals_cache = None
 
 
 def _load_search_index() -> list:
@@ -1346,6 +1398,135 @@ def _build_photo_date_badge(photo_id: str):
     )
 
 
+def _build_enrichment_proposal_banner(photo_id: str, proposal: dict):
+    """Build the enrichment proposal review banner (admin-only, Gatekeeper pattern).
+
+    Shows old vs new location/date with Accept/Reject buttons for pending proposals.
+    Green banner for accepted, red for rejected, amber for pending.
+    """
+    status = proposal.get("status", "pending")
+
+    if status == "accepted":
+        banner_cls = "bg-emerald-900/30 border border-emerald-500/40"
+        status_text = "Accepted"
+        status_icon = "\u2713"
+        status_cls = "text-emerald-400"
+    elif status == "rejected":
+        banner_cls = "bg-red-900/20 border border-red-500/30"
+        status_text = "Rejected"
+        status_icon = "\u2717"
+        status_cls = "text-red-400"
+    else:
+        banner_cls = "bg-amber-900/20 border border-amber-500/40"
+        status_text = "Pending Review"
+        status_icon = "\u26a0"
+        status_cls = "text-amber-400"
+
+    parts = []
+
+    # Header
+    parts.append(
+        Div(
+            Span(status_icon, cls="mr-2"),
+            Span("Enrichment Proposal", cls="font-semibold text-white text-sm"),
+            Span(f" \u2014 {status_text}", cls=f"text-xs {status_cls} ml-2"),
+            cls="flex items-center mb-3",
+        )
+    )
+
+    # Location change
+    if proposal.get("location_changed"):
+        old_loc = proposal.get("old_location", {}).get("place", "(unknown)")
+        new_loc = proposal.get("new_location", {}).get("place", "(unknown)")
+        evidence = proposal.get("new_location", {}).get("evidence", "")
+        parts.append(
+            Div(
+                Span("Location: ", cls="text-slate-400 text-xs"),
+                Span(old_loc, cls="text-red-400/80 text-xs line-through"),
+                Span(" \u2192 ", cls="text-slate-500 text-xs mx-1"),
+                Span(new_loc, cls="text-emerald-400 text-xs font-medium"),
+                cls="mb-1",
+                data_testid="enrichment-location-change",
+            )
+        )
+        if evidence:
+            parts.append(
+                P(evidence, cls="text-slate-500 text-[10px] italic ml-4 mb-2",
+                  data_testid="enrichment-evidence")
+            )
+
+    # Date change
+    if proposal.get("date_changed"):
+        old_yr = proposal.get("old_date", {}).get("year")
+        new_yr = proposal.get("new_date", {}).get("year")
+        old_str = str(old_yr) if old_yr else "(unknown)"
+        new_str = str(new_yr) if new_yr else "(unknown)"
+        parts.append(
+            Div(
+                Span("Date: ", cls="text-slate-400 text-xs"),
+                Span(old_str, cls="text-red-400/80 text-xs line-through"),
+                Span(" \u2192 ", cls="text-slate-500 text-xs mx-1"),
+                Span(new_str, cls="text-emerald-400 text-xs font-medium"),
+                cls="mb-1",
+                data_testid="enrichment-date-change",
+            )
+        )
+
+    # GEDCOM badge
+    if proposal.get("has_gedcom"):
+        assessment = proposal.get("gedcom_value_assessment", "")
+        parts.append(
+            Div(
+                Span("\U0001f9ec GEDCOM-enriched", cls="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400"),
+                Span(f" \u2014 {assessment}", cls="text-[10px] text-slate-500 ml-1") if assessment else None,
+                cls="mt-1 mb-2",
+            )
+        )
+
+    # Accept/Reject buttons (only for pending proposals)
+    if status == "pending":
+        parts.append(
+            Div(
+                Button(
+                    "Accept",
+                    cls="px-3 py-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded transition-colors",
+                    hx_post=f"/api/enrichment/accept/{photo_id}",
+                    hx_target=f"#enrichment-proposal-{photo_id[:8]}",
+                    hx_swap="outerHTML",
+                    data_testid="enrichment-accept",
+                ),
+                Button(
+                    "Reject",
+                    cls="ml-2 px-3 py-1 text-xs bg-red-600/70 hover:bg-red-500 text-white rounded transition-colors",
+                    hx_post=f"/api/enrichment/reject/{photo_id}",
+                    hx_target=f"#enrichment-proposal-{photo_id[:8]}",
+                    hx_swap="outerHTML",
+                    data_testid="enrichment-reject",
+                ),
+                cls="flex items-center mt-3",
+            )
+        )
+    elif status == "accepted":
+        reviewed_at = proposal.get("reviewed_at", "")
+        if reviewed_at:
+            parts.append(
+                P(f"Accepted on {reviewed_at[:10]}", cls="text-[10px] text-emerald-400/60 mt-1")
+            )
+    elif status == "rejected":
+        reviewed_at = proposal.get("reviewed_at", "")
+        if reviewed_at:
+            parts.append(
+                P(f"Rejected on {reviewed_at[:10]}", cls="text-[10px] text-red-400/60 mt-1")
+            )
+
+    return Div(
+        *parts,
+        cls=f"rounded-lg p-4 mb-3 {banner_cls}",
+        id=f"enrichment-proposal-{photo_id[:8]}",
+        data_testid="enrichment-proposal",
+    )
+
+
 def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     """Build the AI Analysis metadata panel for a photo detail page.
 
@@ -1394,6 +1575,21 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
         )
 
     sections = []
+
+    # Enrichment proposal banner (Gatekeeper pattern — admin-only)
+    enrichment_proposals = _load_enrichment_proposals()
+    proposal = enrichment_proposals.get(photo_id)
+    if proposal and is_admin:
+        sections.append(_build_enrichment_proposal_banner(photo_id, proposal))
+
+    # "Analysis Improved" badge for accepted enrichment proposals
+    enrichment_badge = None
+    if proposal and proposal.get("status") == "accepted":
+        enrichment_badge = Span(
+            "Location updated",
+            cls="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 ml-2",
+            data_testid="enrichment-accepted-badge",
+        )
 
     # Date estimate
     decade = label.get("estimated_decade")
@@ -1514,13 +1710,16 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
 
     if has_location:
         location_parts = []
-        # Location label
+        # Location label (with enrichment badge if accepted)
         if location_name:
             loc_label = location_name
             if location_region:
                 loc_label += f", {location_region}"
+            loc_label_elements = [P(loc_label, cls="text-lg font-serif text-amber-200 mb-1 inline")]
+            if enrichment_badge:
+                loc_label_elements.append(enrichment_badge)
             location_parts.append(
-                P(loc_label, cls="text-lg font-serif text-amber-200 mb-1")
+                Div(*loc_label_elements, cls="flex items-center flex-wrap")
             )
         # Confidence badge
         if location_confidence:
@@ -10350,6 +10549,209 @@ async def post(photo_id: str, correction_year: int = None, sess=None):
         id=f"date-section-{photo_id[:8]}",
         data_testid="verified-field",
     )
+
+
+# --- Enrichment Proposal Accept/Reject API (Gatekeeper pattern) ---
+
+# Known geocoding lookup for enrichment proposals (hardcoded for known diaspora cities)
+_ENRICHMENT_GEOCODE = {
+    "asheville": {"lat": 35.5951, "lng": -82.5515, "name": "Asheville, North Carolina", "region": "United States", "key": "asheville"},
+    "new york": {"lat": 40.7128, "lng": -74.0060, "name": "New York City", "region": "United States", "key": "nyc"},
+    "miami": {"lat": 25.7617, "lng": -80.1918, "name": "Miami, Florida", "region": "United States", "key": "miami"},
+    "buenos aires": {"lat": -34.6037, "lng": -58.3816, "name": "Buenos Aires", "region": "Argentina", "key": "buenos_aires"},
+    "rhodes": {"lat": 36.4349, "lng": 28.2176, "name": "Rhodes, Greece", "region": "Mediterranean", "key": "rhodes"},
+    "tampa": {"lat": 27.9506, "lng": -82.4572, "name": "Tampa, Florida", "region": "United States", "key": "tampa"},
+    "clearwater": {"lat": 27.9659, "lng": -82.8001, "name": "Clearwater, Florida", "region": "United States", "key": "clearwater"},
+    "florida": {"lat": 25.7617, "lng": -80.1918, "name": "Florida", "region": "United States", "key": "florida"},
+    "alabama": {"lat": 32.3182, "lng": -86.9023, "name": "Alabama", "region": "United States", "key": "alabama"},
+}
+
+
+def _geocode_enrichment_location(place: str) -> dict | None:
+    """Look up geocoding data for an enrichment location using simple keyword matching."""
+    place_lower = place.lower()
+    for key, geo in _ENRICHMENT_GEOCODE.items():
+        if key in place_lower:
+            return geo
+    return None
+
+
+@rt("/api/enrichment/accept/{photo_id}")
+async def post(photo_id: str, sess=None):
+    """Accept an enrichment proposal — update date_labels and photo_locations.
+
+    Admin-only. Updates data files with the enriched values from the proposal.
+    """
+    admin_check = _check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    proposals = _load_enrichment_proposals()
+    proposal = proposals.get(photo_id)
+    if not proposal:
+        return Response("Proposal not found", status_code=404)
+    if proposal.get("status") != "pending":
+        return Response("Proposal already reviewed", status_code=400)
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Update date_labels in-memory cache
+    if proposal.get("date_changed"):
+        labels = _load_date_labels()
+        label = labels.get(photo_id)
+        if label:
+            new_date = proposal.get("new_date", {})
+            if new_date.get("year"):
+                label["best_year_estimate"] = new_date["year"]
+            if new_date.get("decade"):
+                label["estimated_decade"] = new_date["decade"]
+            if new_date.get("confidence"):
+                label["confidence"] = new_date["confidence"]
+            if new_date.get("probable_range"):
+                label["probable_range"] = new_date["probable_range"]
+            if new_date.get("decade_probabilities"):
+                label["decade_probabilities"] = new_date["decade_probabilities"]
+
+    # Update photo_locations
+    if proposal.get("location_changed"):
+        new_loc = proposal.get("new_location", {})
+        new_place = new_loc.get("place", "")
+        if new_place:
+            geo = _geocode_enrichment_location(new_place)
+            locations = _load_photo_locations()
+            if geo:
+                locations[photo_id] = {
+                    "photo_id": photo_id,
+                    "lat": geo["lat"],
+                    "lng": geo["lng"],
+                    "location_name": geo["name"],
+                    "location_key": geo["key"],
+                    "region": geo["region"],
+                    "location_estimate": new_loc.get("evidence", new_place),
+                    "confidence": new_loc.get("confidence", "medium"),
+                    "all_matches": [{"key": geo["key"], "name": geo["name"]}],
+                    "enrichment_source": "session-82c",
+                }
+            else:
+                # Update location_estimate text even without geocoding
+                if photo_id in locations:
+                    locations[photo_id]["location_estimate"] = new_place
+                    locations[photo_id]["confidence"] = new_loc.get("confidence", "medium")
+
+            # Save photo_locations atomically
+            _save_photo_locations(locations)
+
+    # Update date_labels.json on disk
+    if proposal.get("date_changed"):
+        labels = _load_date_labels()
+        label = labels.get(photo_id)
+        if label:
+            # Also update the location_estimate field in date_labels if location changed
+            if proposal.get("location_changed"):
+                new_loc = proposal.get("new_location", {})
+                if new_loc.get("place"):
+                    label["location_estimate"] = new_loc.get("evidence", new_loc["place"])
+            _save_date_label(photo_id, label)
+
+    # Mark proposal as accepted
+    proposal["status"] = "accepted"
+    proposal["reviewed_at"] = now
+    proposal["reviewed_by"] = "admin"
+    _save_enrichment_proposals(proposals)
+
+    # Return updated banner
+    return _build_enrichment_proposal_banner(photo_id, proposal)
+
+
+@rt("/api/enrichment/reject/{photo_id}")
+async def post(photo_id: str, sess=None):
+    """Reject an enrichment proposal — no data changes.
+
+    Admin-only. Marks the proposal as rejected without modifying any data files.
+    """
+    admin_check = _check_admin(sess)
+    if admin_check:
+        return admin_check
+
+    proposals = _load_enrichment_proposals()
+    proposal = proposals.get(photo_id)
+    if not proposal:
+        return Response("Proposal not found", status_code=404)
+    if proposal.get("status") != "pending":
+        return Response("Proposal already reviewed", status_code=400)
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Mark proposal as rejected (no data changes)
+    proposal["status"] = "rejected"
+    proposal["reviewed_at"] = now
+    proposal["reviewed_by"] = "admin"
+    _save_enrichment_proposals(proposals)
+
+    # Return updated banner
+    return _build_enrichment_proposal_banner(photo_id, proposal)
+
+
+def _save_photo_locations(locations: dict):
+    """Save photo_locations.json atomically, preserving file metadata."""
+    import tempfile
+    locations_path = Path(DATA_DIR) / "photo_locations.json"
+
+    existing = {}
+    if locations_path.exists():
+        try:
+            existing = json.loads(locations_path.read_text())
+        except Exception:
+            pass
+
+    existing["photos"] = locations
+
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(locations_path.parent), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(existing, f, indent=2)
+        os.replace(tmp_path, str(locations_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+    # Invalidate cache
+    global _photo_locations_cache
+    _photo_locations_cache = None
+
+
+def _save_date_label(photo_id: str, updated_label: dict):
+    """Save an updated date label back to date_labels.json atomically."""
+    import tempfile
+    ml_data_path = data_path / "date_labels.json"
+    if not ml_data_path.exists():
+        return
+
+    with open(ml_data_path) as f:
+        data = json.load(f)
+
+    # Find and update the matching label
+    for i, label in enumerate(data.get("labels", [])):
+        if label.get("photo_id") == photo_id:
+            data["labels"][i] = updated_label
+            break
+
+    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(ml_data_path.parent), suffix=".json")
+    try:
+        with os.fdopen(tmp_fd, "w") as f:
+            json.dump(data, f, indent=2)
+        os.replace(tmp_path, str(ml_data_path))
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+        raise
+
+    # Invalidate date labels cache
+    global _date_labels_cache
+    _date_labels_cache = None
 
 
 # --- Face Alignment API (PRD-015 coordinate bridging) ---
@@ -30614,7 +31016,7 @@ async def post(request):
         }
 
     # Invalidate ALL in-memory caches so subsequent requests see the new data
-    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _ml_review_decisions_cache, _gedcom_matches_cache, _photo_locations_cache, _comparison_results_cache
+    global _photo_registry_cache, _face_data_cache, _proposals_cache, _skipped_neighbor_cache, _skipped_neighbor_cache_key, _photo_cache, _face_to_photo_cache, _annotations_cache, _date_labels_cache, _search_index_cache, _context_events_cache, _birth_year_cache, _ml_review_decisions_cache, _gedcom_matches_cache, _photo_locations_cache, _comparison_results_cache, _enrichment_proposals_cache
     _photo_registry_cache = None
     _face_data_cache = None
     _proposals_cache = None
@@ -30632,6 +31034,7 @@ async def post(request):
     _gedcom_matches_cache = None
     _photo_locations_cache = None
     _comparison_results_cache = None
+    _enrichment_proposals_cache = None
 
     # Prune old .bak files to prevent unbounded disk growth (AD-162).
     # Keep at most 3 of each type (identities, photo_index, annotations).

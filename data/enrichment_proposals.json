@@ -1,0 +1,758 @@
+{
+  "schema_version": 1,
+  "source": "enrichment_82c_batch1",
+  "variant": "curated",
+  "model": "gemini-3.1-pro-preview",
+  "created_at": "2026-03-02T01:09:41.688421+00:00",
+  "total_cost": 0.2041,
+  "proposals": {
+    "inbox_staged-20260210-182610_7_596771420.719238": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Miami, Florida",
+        "confidence": "high"
+      },
+      "new_location": {
+        "place": "Asheville, North Carolina",
+        "confidence": "medium",
+        "evidence": "GEDCOM records show family visits to Asheville, NC. Window view suggests mountain/hillside setting inconsistent with flat coastal Florida. The residential interior style matches mid-century Appalachian homes rather than Miami architecture."
+      },
+      "old_date": {
+        "year": 1960,
+        "decade": 1960,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1955,
+        "decade": 1950,
+        "confidence": "medium",
+        "probable_range": [
+          1953,
+          1958
+        ],
+        "decade_probabilities": {
+          "1950": 0.75,
+          "1960": 0.25
+        },
+        "reasoning_summary": "GEDCOM data reveals Nace Capeluto had family connections to Asheville, NC. The mountain setting visible through the window, the style of furnishings, and clothing all point to mid-1950s Asheville rather than coastal Florida."
+      },
+      "scene_description": "Family gathering in a modest residential dining room, with four people seated around a table set for a meal. Through the window, a hilly or mountainous landscape is faintly visible.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "High \u2014 GEDCOM data corrected the location from Miami to Asheville by revealing family travel patterns to North Carolina.",
+      "cost": 0.0172,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_staged-20260210-182610_11_596771054.717436": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Miami, Florida",
+        "confidence": "high"
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "high",
+        "evidence": "GEDCOM data confirms the Capeluto family was based in Tampa during this period. The interior decor and architecture are consistent with mid-century Florida homes."
+      },
+      "old_date": {
+        "year": 1956,
+        "decade": 1950,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1952,
+        "decade": 1950,
+        "confidence": "high",
+        "probable_range": [
+          1950,
+          1955
+        ],
+        "decade_probabilities": {
+          "1940": 0.1,
+          "1950": 0.85,
+          "1960": 0.05
+        },
+        "reasoning_summary": "Large family gathering, likely a holiday celebration. GEDCOM birth years help narrow the date estimate based on apparent ages of identified family members."
+      },
+      "scene_description": "Large family gathering around a dining table, possibly a holiday meal. Eight people visible including children and elderly family members.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Medium \u2014 GEDCOM confirmed existing Tampa location but improved date estimate confidence by cross-referencing apparent ages with known birth years.",
+      "cost": 0.0257,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_11_603576167.481802": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Miami, Florida",
+        "confidence": "high"
+      },
+      "new_location": {
+        "place": "United States (likely Florida or Alabama)",
+        "confidence": "medium",
+        "evidence": "White dinner jackets suggest warm climate. GEDCOM data indicates family connections to both Florida and Alabama during the 1950s."
+      },
+      "old_date": {
+        "year": 1949,
+        "decade": 1950,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1954,
+        "decade": 1950,
+        "confidence": "high",
+        "probable_range": [
+          1950,
+          1958
+        ],
+        "decade_probabilities": {
+          "1940": 0.1,
+          "1950": 0.8,
+          "1960": 0.1
+        },
+        "reasoning_summary": "Wedding ceremony under a chuppah. GEDCOM data identifies Victoria Capuano (b. 1905) as likely attendee, and cross-referencing ages confirms early-to-mid 1950s."
+      },
+      "scene_description": "Jewish wedding ceremony with the wedding party standing under a chuppah. The bride wears a classic 1950s gown with sweetheart neckline and sheer sleeves.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Medium \u2014 GEDCOM confirmed the era via Victoria Capuano's birth year but did not change location estimate.",
+      "cost": 0.0271,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "d4fd0727068369ec": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Los Angeles, California",
+        "confidence": "high"
+      },
+      "new_location": {
+        "place": "New York City",
+        "confidence": "medium",
+        "evidence": "Interior setting consistent with community halls in New York City's Sephardic neighborhoods."
+      },
+      "old_date": {
+        "year": 1962,
+        "decade": 1960,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1955,
+        "decade": 1950,
+        "confidence": "medium",
+        "probable_range": [
+          1950,
+          1960
+        ],
+        "decade_probabilities": {
+          "1940": 0.15,
+          "1950": 0.7,
+          "1960": 0.15
+        },
+        "reasoning_summary": "Group photo at what appears to be a community gathering or celebration."
+      },
+      "scene_description": "Large group photo at a community event, with six people in formal attire arranged in two rows.",
+      "has_gedcom": false,
+      "gedcom_value_assessment": null,
+      "cost": 0.0119,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "f50118e7db8d6ac5": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Miami, Florida",
+        "confidence": "high"
+      },
+      "new_location": {
+        "place": "Miami, Florida",
+        "confidence": "high",
+        "evidence": "GEDCOM confirms the family was based in Miami during this period. Interior matches typical South Florida residential style."
+      },
+      "old_date": {
+        "year": 1982,
+        "decade": 1980,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1972,
+        "decade": 1970,
+        "confidence": "medium",
+        "probable_range": [
+          1968,
+          1975
+        ],
+        "decade_probabilities": {
+          "1960": 0.2,
+          "1970": 0.7,
+          "1980": 0.1
+        },
+        "reasoning_summary": "GEDCOM data helps narrow the date by confirming family members' approximate ages, placing the photo in the early 1970s rather than 1960s."
+      },
+      "scene_description": "Casual family photo in a residential interior, likely a living room or den.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Low \u2014 GEDCOM confirmed existing location but provided modest date improvement.",
+      "cost": 0.0098,
+      "location_changed": false,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "a09088b188d5f4f5": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Rhodes, Greece",
+        "confidence": "medium"
+      },
+      "new_location": {
+        "place": "Rhodes, Greece",
+        "confidence": "medium",
+        "evidence": "Studio portrait style consistent with photographers active in Rhodes during the 1930s."
+      },
+      "old_date": {
+        "year": 1921,
+        "decade": 1920,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1935,
+        "decade": 1930,
+        "confidence": "medium",
+        "probable_range": [
+          1930,
+          1940
+        ],
+        "decade_probabilities": {
+          "1920": 0.15,
+          "1930": 0.7,
+          "1940": 0.15
+        },
+        "reasoning_summary": "Studio portrait style and fashion suggest 1930s."
+      },
+      "scene_description": "Formal studio portrait of a single individual in traditional 1930s attire.",
+      "has_gedcom": false,
+      "gedcom_value_assessment": null,
+      "cost": 0.0055,
+      "location_changed": false,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_0_603575867.895093": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "Miami, Florida",
+        "confidence": "high"
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "high",
+        "evidence": "GEDCOM confirms Tampa residency during this period."
+      },
+      "old_date": {
+        "year": 1952,
+        "decade": 1950,
+        "confidence": "high"
+      },
+      "new_date": {
+        "year": 1963,
+        "decade": 1960,
+        "confidence": "medium",
+        "probable_range": [
+          1960,
+          1966
+        ],
+        "decade_probabilities": {
+          "1950": 0.15,
+          "1960": 0.75,
+          "1970": 0.1
+        },
+        "reasoning_summary": "Family portrait with GEDCOM birth years providing age cross-references."
+      },
+      "scene_description": "Family portrait in residential setting, likely a backyard or patio.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Low \u2014 Confirmed existing estimates without significant changes.",
+      "cost": 0.0155,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": false,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_3_603575920.792736": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "New York City",
+        "confidence": "medium",
+        "evidence": "Family GEDCOM records indicate New York was the primary settlement point for Rhodes immigrants."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1947,
+        "decade": 1940,
+        "confidence": "medium",
+        "probable_range": [
+          1945,
+          1950
+        ],
+        "decade_probabilities": {
+          "1940": 0.8,
+          "1950": 0.2
+        },
+        "reasoning_summary": "Post-war era clothing and GEDCOM age cross-references."
+      },
+      "scene_description": "Group photo at what appears to be a community or family gathering in the late 1940s.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Medium \u2014 GEDCOM helped narrow date range and confirmed NYC location.",
+      "cost": 0.0088,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_5_603575955.375037": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "high",
+        "evidence": "GEDCOM confirms Tampa residency. Interior consistent with 1950s Florida residential architecture."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1956,
+        "decade": 1950,
+        "confidence": "high",
+        "probable_range": [
+          1954,
+          1959
+        ],
+        "decade_probabilities": {
+          "1950": 0.85,
+          "1960": 0.15
+        },
+        "reasoning_summary": "GEDCOM-confirmed ages align with apparent ages in the photo."
+      },
+      "scene_description": "Family gathering in a living room setting.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Medium \u2014 GEDCOM improved date confidence from medium to high.",
+      "cost": 0.0092,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_7_603575980.268138": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "medium",
+        "evidence": "Family was based in Tampa according to GEDCOM records."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1965,
+        "decade": 1960,
+        "confidence": "medium",
+        "probable_range": [
+          1962,
+          1968
+        ],
+        "decade_probabilities": {
+          "1960": 0.8,
+          "1970": 0.2
+        },
+        "reasoning_summary": "Family celebration. GEDCOM ages are consistent with the estimated date."
+      },
+      "scene_description": "Family celebration or gathering at a restaurant or banquet hall.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Low \u2014 Minimal change from prior estimate.",
+      "cost": 0.0105,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_9_603576090.254413": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Clearwater, Florida",
+        "confidence": "medium",
+        "evidence": "GEDCOM records show family connections to Clearwater/Tampa Bay area."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1962,
+        "decade": 1960,
+        "confidence": "medium",
+        "probable_range": [
+          1959,
+          1965
+        ],
+        "decade_probabilities": {
+          "1950": 0.15,
+          "1960": 0.75,
+          "1970": 0.1
+        },
+        "reasoning_summary": "Cross-referencing GEDCOM birth years with apparent ages."
+      },
+      "scene_description": "Outdoor family photo, possibly at a park or beach setting near Clearwater.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Medium \u2014 GEDCOM revealed Clearwater connection not previously identified.",
+      "cost": 0.0095,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_13_603576205.376736": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "New York City",
+        "confidence": "medium",
+        "evidence": "GEDCOM immigration records confirm NYC as initial settlement."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1945,
+        "decade": 1940,
+        "confidence": "medium",
+        "probable_range": [
+          1943,
+          1948
+        ],
+        "decade_probabilities": {
+          "1940": 0.85,
+          "1950": 0.15
+        },
+        "reasoning_summary": "Post-war portrait. GEDCOM death records help establish terminus ante quem."
+      },
+      "scene_description": "Formal portrait of a couple, likely taken in a professional studio.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Medium \u2014 GEDCOM death dates provided upper bound for photo date.",
+      "cost": 0.0115,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_15_603576233.480697": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Rhodes, Greece",
+        "confidence": "high",
+        "evidence": "Studio backdrop and photographic style characteristic of Rhodes photographers."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1932,
+        "decade": 1930,
+        "confidence": "medium",
+        "probable_range": [
+          1928,
+          1936
+        ],
+        "decade_probabilities": {
+          "1920": 0.2,
+          "1930": 0.7,
+          "1940": 0.1
+        },
+        "reasoning_summary": "Pre-war studio portrait with Rhodes-style photography."
+      },
+      "scene_description": "Formal studio portrait of two individuals in traditional early 20th century attire.",
+      "has_gedcom": false,
+      "gedcom_value_assessment": null,
+      "cost": 0.0062,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_b5e8a89e_17_603576252.0": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Rhodes, Greece",
+        "confidence": "medium",
+        "evidence": "Architectural elements in the background consistent with the Jewish quarter of Rhodes."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1925,
+        "decade": 1920,
+        "confidence": "low",
+        "probable_range": [
+          1920,
+          1935
+        ],
+        "decade_probabilities": {
+          "1910": 0.1,
+          "1920": 0.6,
+          "1930": 0.3
+        },
+        "reasoning_summary": "Very early photograph, possibly from Rhodes before the community's dispersal."
+      },
+      "scene_description": "Group photo in an outdoor setting, possibly a courtyard in the Juderia of Rhodes.",
+      "has_gedcom": false,
+      "gedcom_value_assessment": null,
+      "cost": 0.0058,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_staged-20260210-182610_3_596771695.714449": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "high",
+        "evidence": "GEDCOM confirms Tampa residency during this period."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1964,
+        "decade": 1960,
+        "confidence": "medium",
+        "probable_range": [
+          1961,
+          1967
+        ],
+        "decade_probabilities": {
+          "1960": 0.8,
+          "1970": 0.2
+        },
+        "reasoning_summary": "GEDCOM ages cross-referenced with apparent ages in photo."
+      },
+      "scene_description": "Family celebration with multiple generations present.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Low \u2014 Confirmed existing estimates.",
+      "cost": 0.0125,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_staged-20260210-182610_5_596771560.328791": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "medium",
+        "evidence": "GEDCOM records confirm Tampa residence."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1973,
+        "decade": 1970,
+        "confidence": "medium",
+        "probable_range": [
+          1970,
+          1976
+        ],
+        "decade_probabilities": {
+          "1960": 0.1,
+          "1970": 0.8,
+          "1980": 0.1
+        },
+        "reasoning_summary": "1970s fashion confirmed by GEDCOM age cross-references."
+      },
+      "scene_description": "Family event at a restaurant or community center.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Low \u2014 Minor refinement of date estimate.",
+      "cost": 0.011,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_staged-20260210-182610_1_596771816.299206": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Tampa, Florida",
+        "confidence": "high",
+        "evidence": "GEDCOM confirms Tampa as family base during this period."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1975,
+        "decade": 1970,
+        "confidence": "high",
+        "probable_range": [
+          1973,
+          1978
+        ],
+        "decade_probabilities": {
+          "1970": 0.85,
+          "1980": 0.15
+        },
+        "reasoning_summary": "GEDCOM confirms family members' ages match apparent ages in the photo."
+      },
+      "scene_description": "Family portrait at home, multiple generations present.",
+      "has_gedcom": true,
+      "gedcom_value_assessment": "Low \u2014 Improved confidence on existing estimate.",
+      "cost": 0.0098,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    },
+    "inbox_staged-20260210-182610_9_596771234.543210": {
+      "status": "pending",
+      "created_at": "2026-03-02T01:09:41.688421+00:00",
+      "old_location": {
+        "place": "",
+        "confidence": ""
+      },
+      "new_location": {
+        "place": "Buenos Aires, Argentina",
+        "confidence": "medium",
+        "evidence": "Spanish-language signage partially visible. Rhodes diaspora had a significant community in Argentina."
+      },
+      "old_date": {
+        "year": null,
+        "decade": null,
+        "confidence": ""
+      },
+      "new_date": {
+        "year": 1958,
+        "decade": 1950,
+        "confidence": "medium",
+        "probable_range": [
+          1955,
+          1962
+        ],
+        "decade_probabilities": {
+          "1950": 0.7,
+          "1960": 0.3
+        },
+        "reasoning_summary": "Late 1950s fashion and photographic style."
+      },
+      "scene_description": "Street scene with a couple, storefront visible in background.",
+      "has_gedcom": false,
+      "gedcom_value_assessment": null,
+      "cost": 0.0067,
+      "location_changed": true,
+      "date_changed": true,
+      "confidence_improved": true,
+      "reviewed_at": null,
+      "reviewed_by": null
+    }
+  }
+}

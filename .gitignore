@@ -70,6 +70,7 @@ data/*
 !data/golden_set.json
 !data/embeddings.npy
 !data/proposals.json
+!data/enrichment_proposals.json
 !data/surname_variants.json
 !data/date_labels.json
 !data/photo_search_index.json
