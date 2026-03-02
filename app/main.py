@@ -4235,8 +4235,39 @@ def render_to_review_section(
         section="to_review"
     )
     if view_mode == "browse":
+        # Client-side search filter for admin browse grid (Session 83a)
+        search_filter = Div(
+            Input(
+                type="text",
+                placeholder="Search by name or person number...",
+                cls="w-full px-3 py-2 text-sm bg-slate-800 border border-slate-700 rounded-lg"
+                    " text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                id="card-search-input",
+            ),
+            Script("""
+                document.addEventListener('input', function(e) {
+                    if (e.target.id !== 'card-search-input') return;
+                    var q = e.target.value.toLowerCase().trim();
+                    var cards = document.querySelectorAll('.identity-card');
+                    cards.forEach(function(card) {
+                        var name = (card.getAttribute('data-name') || '').toLowerCase();
+                        var id = card.id.replace('identity-', '');
+                        var text = card.textContent.toLowerCase();
+                        var match = !q || name.indexOf(q) !== -1 || id.indexOf(q) !== -1 || text.indexOf(q) !== -1;
+                        card.style.display = match ? '' : 'none';
+                        // Also hide the expansion panel after the card
+                        var next = card.nextElementSibling;
+                        if (next && next.classList.contains('expansion-panel')) {
+                            next.style.display = match ? '' : 'none';
+                        }
+                    });
+                });
+            """),
+            cls="mb-3",
+        ) if is_admin else None
         return Div(
             Div(header, _sort_control("to_review", sort_by, view_mode=view_mode), cls="flex items-center justify-between flex-wrap gap-2 mb-6"),
+            search_filter,
             triage_bar,
             content,
             cls="space-y-4"
