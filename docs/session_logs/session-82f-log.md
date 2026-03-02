@@ -5,8 +5,8 @@ Prompt: docs/prompts/session-82f-prompt.md
 ## Act Checklist
 - [x] Act 0: Orient + Full Audit
 - [x] Act 1: Browser Verification — Find Broken Features
-- [ ] Act 2: Fix All Broken Features
-- [ ] Act 3: Fix Remaining GREEN Features
+- [x] Act 2: Fix All Broken Features
+- [x] Act 3: Fix Remaining GREEN Features
 - [ ] Act 4: 82b/82c Gap Analysis
 - [ ] Act 5: Test + Deploy + Verify
 - [ ] Act 6: Documentation + Assessment
@@ -25,15 +25,16 @@ Prompt: docs/prompts/session-82f-prompt.md
 - WORKING count: 16 features confirmed working in production
 
 ### Act 2
-- Started:
-- Completed:
-- Fixes shipped:
+- Started: 2026-03-02
+- Completed: 2026-03-02
+- Fixes shipped: 1 (Similar button hit area padding: p-0 → py-1 px-1)
 
 ### Act 3
-- Started:
-- Completed:
-- Features implemented:
-- Features formally deferred:
+- Started: 2026-03-02
+- Completed: 2026-03-02
+- Features implemented: 0 (all evaluated, none under 30 min threshold)
+- Features already shipped: 1 (#22 Click-to-Target AI Bounding Boxes — already exists)
+- Features formally deferred: 3 (UX-201 Missing Info Table, UX-202 Bulk Confirm, UX-203 Relational Labels)
 
 ### Act 4
 - Started:
