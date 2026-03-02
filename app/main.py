@@ -23608,6 +23608,15 @@ def get(identity_id: str, sess=None):
         Form(
             Div(
                 Div(
+                    Label("Display Name", cls="text-xs text-slate-400"),
+                    Input(type="text", name="display_name", value=identity.get("name", ""),
+                          placeholder="e.g. Isaac Cohen", cls=_input_cls),
+                    cls="flex-1"
+                ),
+                cls="mb-1"
+            ),
+            Div(
+                Div(
                     Label("Maiden Name", cls="text-xs text-slate-400"),
                     Input(type="text", name="maiden_name", value=identity.get("maiden_name", ""),
                           placeholder="née ...", cls=_input_cls),
@@ -23695,7 +23704,7 @@ def get(identity_id: str, sess=None):
 
 
 @rt("/api/identity/{identity_id}/metadata")
-def post(identity_id: str, birth_year: str = "", death_year: str = "",
+def post(identity_id: str, display_name: str = "", birth_year: str = "", death_year: str = "",
          birth_place: str = "", death_place: str = "", maiden_name: str = "",
          generation_qualifier: str = "",
          relationship_notes: str = "", bio: str = "", sess=None):
@@ -23703,6 +23712,17 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
     denied = _check_admin(sess)
     if denied:
         return denied
+
+    # Handle display name rename separately (it's stored as identity "name", not metadata)
+    renamed = False
+    if display_name.strip():
+        try:
+            registry = load_registry()
+            registry.rename_identity(identity_id, display_name.strip(), user_source="admin_web")
+            save_registry(registry)
+            renamed = True
+        except KeyError:
+            return toast("Identity not found.", "error")
 
     metadata = {}
     if birth_year.strip():
@@ -23728,21 +23748,36 @@ def post(identity_id: str, birth_year: str = "", death_year: str = "",
     if bio.strip():
         metadata["bio"] = bio.strip()
 
-    if not metadata:
-        return toast("No metadata provided.", "warning")
+    if not metadata and not renamed:
+        return toast("No changes provided.", "warning")
 
     try:
-        registry = load_registry()
-        registry.set_metadata(identity_id, metadata, user_source="admin_web")
-        save_registry(registry)
+        registry = load_registry() if not renamed else registry
+        if metadata:
+            registry.set_metadata(identity_id, metadata, user_source="admin_web")
+            save_registry(registry)
         # Return updated display with success toast
         identity = registry.get_identity(identity_id)
         display = _identity_metadata_display(identity, is_admin=True)
+        changes = len(metadata) + (1 if renamed else 0)
+        msg = f"Updated ({changes} field{'s' if changes != 1 else ''})."
+        if renamed:
+            msg = f"Name set to \"{display_name.strip()}\". " + msg
         oob_toast = Div(
-            toast(f"Metadata updated ({len(metadata)} field(s)).", "success"),
+            toast(msg, "success"),
             hx_swap_oob="beforeend:#toast-container",
         )
-        return (display, oob_toast)
+        # Also update the name display header if renamed
+        oob_parts = [display, oob_toast]
+        if renamed:
+            updated_name = identity.get("name", "Unknown")
+            gen_qual = identity.get("generation_qualifier", "")
+            oob_name = Div(
+                name_display(identity_id, updated_name, is_admin=True, generation_qualifier=gen_qual),
+                hx_swap_oob=f"outerHTML:#name-{identity_id}",
+            )
+            oob_parts.append(oob_name)
+        return tuple(oob_parts)
     except KeyError:
         return toast("Identity not found.", "error")
 

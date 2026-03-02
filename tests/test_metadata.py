@@ -553,3 +553,83 @@ class TestMetadataFormNewFields:
             metadata = call_args[0][1]
             assert metadata["generation_qualifier"] == "Sr."
             assert metadata["death_place"] == "Auschwitz"
+
+
+class TestDisplayNameField:
+    """Tests for the Display Name field in the metadata form (Session 83a)."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def test_metadata_form_has_display_name_field(self, client):
+        """Metadata form includes Display Name as the first field."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Unidentified Person 41",
+            "state": "INBOX",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert response.status_code == 200
+            assert "Display Name" in response.text
+            assert "display_name" in response.text
+            # Display Name should appear before Maiden Name
+            dn_pos = response.text.index("Display Name")
+            mn_pos = response.text.index("Maiden Name")
+            assert dn_pos < mn_pos
+
+    def test_metadata_form_prefills_display_name(self, client):
+        """Display Name field pre-fills with existing identity name."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Isaac Cohen",
+            "state": "CONFIRMED",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg):
+            response = client.get("/api/identity/test-id-001/metadata-form")
+            assert "Isaac Cohen" in response.text
+
+    def test_metadata_post_display_name_renames_identity(self, client):
+        """Posting display_name renames the identity via registry.rename_identity."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Isaac Cohen",
+            "state": "CONFIRMED",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
+            response = client.post(
+                "/api/identity/test-id-001/metadata",
+                data={"display_name": "Isaac Cohen"}
+            )
+            assert response.status_code == 200
+            mock_reg.rename_identity.assert_called_once_with(
+                "test-id-001", "Isaac Cohen", user_source="admin_web"
+            )
+
+    def test_metadata_post_display_name_and_metadata(self, client):
+        """Posting display_name + metadata updates both."""
+        mock_reg = MagicMock()
+        mock_reg.get_identity.return_value = {
+            "identity_id": "test-id-001",
+            "name": "Isaac Cohen",
+            "state": "CONFIRMED",
+        }
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.load_registry", return_value=mock_reg), \
+             patch("app.main.save_registry"):
+            response = client.post(
+                "/api/identity/test-id-001/metadata",
+                data={"display_name": "Isaac Cohen", "birth_year": "1906"}
+            )
+            assert response.status_code == 200
+            mock_reg.rename_identity.assert_called_once()
+            mock_reg.set_metadata.assert_called_once()
