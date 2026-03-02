@@ -4,8 +4,8 @@ Branch: session-82c/gemini-rerun
 Prompt: docs/prompts/session-82c-prompt.md
 
 ## Phase Checklist
-- [ ] Phase 0: Orient + Validate Existing Gemini State
-- [ ] Phase 1: Asheville Litmus Test — 3-Variant Experiment
+- [x] Phase 0: Orient + Validate Existing Gemini State
+- [x] Phase 1: Asheville Litmus Test — 3-Variant Experiment
 - [ ] Phase 2: Assess Value + Decide Batch Approach
 - [ ] Phase 3: Batch Preparation (conditional)
 - [ ] Phase 4: Surface Results in App (conditional)
@@ -71,3 +71,41 @@ Prompt: docs/prompts/session-82c-prompt.md
 
 ### Decision
 Proceed with `inbox_staged-20260210-182610_7_596771420.719238` as the Asheville litmus test photo. Run 3-variant experiment in Phase 1.
+
+---
+
+## Phase 1: Asheville Litmus Test — 3-Variant Experiment
+
+### Photo Identity
+4 faces identified:
+1. Betty Capeluto Fox (GEDCOM: @I132123771036@) — daughter
+2. Big Leon Capeluto (GEDCOM: @I132126987005@) — husband/father
+3. Victoria Capuano Capeluto (GEDCOM: @I132126987020@) — wife/mother
+4. Debbie Fox Schapiro (no GEDCOM) — granddaughter
+
+### Experiment Results
+
+| Variant | Location Guess | Accuracy | Cost |
+|---------|---------------|----------|------|
+| A (no GEDCOM) | "Unknown, likely North America" | 2/10 | $0.0083 |
+| B (full GEDCOM) | "Clearwater, Florida" | 0/10 | $0.0122 |
+| **C (curated GEDCOM)** | **"Asheville, North Carolina"** | **10/10** | $0.0103 |
+| Meta-comparison | — | — | $0.0097 |
+| **Total** | | | **$0.0406** |
+
+### Key Findings
+1. **Curated GEDCOM (C) = PERFECT**: Exact match to ground truth
+2. **Full GEDCOM (B) = WORSE than baseline**: Confused by "later life" Clearwater data, scored 0/10
+3. **No GEDCOM (A) = Useless for interior photos**: Only got continent-level accuracy
+4. **Signal-to-noise confirmed**: Filtering GEDCOM to ±15yr window eliminates confusing data
+5. **Critical data point**: Leon's documented residence at 33 Elizabeth St, Asheville NC
+
+### Meta-Comparison Verdict
+- Winning variant: C (curated)
+- GEDCOM value: YES — "sole driver for pinpointing Asheville"
+- Visual clues: NONE (interior photo, no geographic markers)
+- Recommendation: Use curated variant for batch processing
+
+### Budget
+- Phase 1 total: $0.04 of $3.00 budget
+- Budget remaining: $2.96

@@ -1,0 +1,156 @@
+{
+  "experiment": "asheville_litmus_test",
+  "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+  "model": "gemini-3.1-pro-preview",
+  "ground_truth_location": "Asheville, North Carolina",
+  "total_cost": 0.0406,
+  "timestamp": "2026-03-01T19:24:12",
+  "variants": {
+    "A_no_gedcom": {
+      "result": {
+        "location": {
+          "place": "Unknown, likely North America",
+          "confidence": "low",
+          "visual_evidence": "Interior domestic setting, no distinct architectural or environmental clues visible outside the room.",
+          "reasoning": "The photograph shows an interior dining scene with no visible landmarks, signs, or distinct architectural features that would pinpoint a specific geographic location. The style of the home and the people's appearance suggest a North American setting, but this is speculative."
+        },
+        "date_estimation": {
+          "estimated_year": 1960,
+          "confidence": "medium",
+          "probable_range": [
+            1955,
+            1965
+          ],
+          "reasoning": "The clothing styles, particularly the women's patterned blouses and the man's short-sleeved button-down shirt, along with the hairstyles (the woman on the left's bouffant style and the older woman's short, curled hair), are characteristic of the late 1950s to early 1960s. The black-and-white photography also aligns with this era for casual family snapshots."
+        },
+        "people": {
+          "count": 4,
+          "descriptions": [
+            "A young woman on the left, smiling, wearing a patterned blouse with a high collar.",
+            "A man seated next to her, wearing glasses and a short-sleeved button-down shirt.",
+            "An older woman on the right, serving food, wearing a striped sleeveless top.",
+            "A young child seated next to the older woman, smiling, wearing a light-colored top."
+          ]
+        },
+        "visible_text": "None",
+        "scene_description": "A family of four is seated around a dining table, posing for a photograph during a meal. The table is set with various dishes, including what appears to be a roast, salads, and side dishes. The older woman is in the process of serving food. The setting is a domestic dining room, with a doorway visible in the background leading to another room or hallway."
+      },
+      "input_tokens": 1362,
+      "output_tokens": 465,
+      "cost": 0.008303999999999999,
+      "latency_seconds": 7.87,
+      "model": "gemini-3.1-pro-preview"
+    },
+    "B_full_gedcom": {
+      "result": {
+        "location": {
+          "place": "Clearwater, Florida, United States",
+          "confidence": "medium",
+          "visual_evidence": "The subjects are indoors but wearing relatively lightweight, casual clothing (the older woman is wearing a sleeveless striped top), suggesting a warm climate or summer season. The open door in the background reveals a dark exterior, possibly a warm evening.",
+          "biographical_evidence": "Genealogical records state that Leon and Victoria lived in Clearwater, Pinellas County, Florida in their 'later life'. Given their apparent ages in the photograph, this aligns with the later portion of their residential timeline.",
+          "reasoning": "The visual evidence of an indoor dining room is geographically generic, but the lightweight clothing suggests a warm environment. Combining this with the biographical data\u2014which places the couple in Clearwater, Florida during their later years\u2014makes Florida the most probable location for this family dinner, assuming they have already relocated from New York or North Carolina."
+        },
+        "date_estimation": {
+          "estimated_year": 1965,
+          "confidence": "medium",
+          "probable_range": [
+            1960,
+            1970
+          ],
+          "reasoning": "Big Leon Capeluto was born in 1904 and Victoria was born in 1905. In this photo, they appear to be in their late 50s to mid-60s, which places the photo roughly between 1960 and 1970. Visual clues such as Leon's thick dark-rimmed glasses and the women's short, set hairstyles are highly characteristic of the early to mid-1960s. The presence of a young child (likely a grandchild) alongside their adult daughter Betty further supports a timeline roughly 25-35 years after Betty's birth."
+        },
+        "people": {
+          "count": 4,
+          "descriptions": [
+            "Young adult woman on the far left, likely Betty Capeluto Fox, with dark hair wearing a patterned blouse.",
+            "Older man in the center-left, likely Big Leon Capeluto, wearing thick-rimmed glasses and a short-sleeved button-down shirt.",
+            "Older woman on the right, likely Victoria Capuano Capeluto, wearing a sleeveless striped top and serving food.",
+            "Young female child on the far right foreground, likely Betty's daughter and the granddaughter of Leon and Victoria."
+          ]
+        },
+        "visible_text": "",
+        "scene_description": "A candid snapshot of a family of four seated around a dining table sharing a meal. The table is set with plates, water glasses, a salad bowl, and a main dish that Victoria appears to be serving. The room is dimly lit, likely by a flash bulb, with an open door in the background leading to a dark exterior.",
+        "gedcom_value_assessment": "High. The visual evidence alone only provides a generic mid-century family dinner scene. The genealogical data provided the subjects' birth years, which allowed for a highly accurate date estimation based on their apparent ages. Furthermore, the residential history provided the only means to hypothesize a specific geographic location (Clearwater, FL) for an otherwise unidentifiable interior room."
+      },
+      "input_tokens": 1852,
+      "output_tokens": 707,
+      "cost": 0.012187999999999997,
+      "latency_seconds": 29.0,
+      "model": "gemini-3.1-pro-preview"
+    },
+    "C_curated_gedcom": {
+      "result": {
+        "location": {
+          "place": "Asheville, North Carolina",
+          "confidence": "medium",
+          "visual_evidence": "The photo shows an indoor dining scene in a home. There are no specific outdoor visual clues to pinpoint the location, but the setting is a typical mid-20th-century American dining room.",
+          "biographical_evidence": "The genealogical records indicate that Big Leon Capeluto and Victoria Capuano Capeluto had a documented residence at 33 Elizabeth Street, Asheville, Buncombe, North Carolina during this period.",
+          "reasoning": "Given the presence of Victoria, Big Leon, and their daughter Betty, and the documented residence in Asheville, NC, it is highly probable that this family dinner took place in their home in Asheville."
+        },
+        "date_estimation": {
+          "estimated_year": 1955,
+          "confidence": "medium",
+          "probable_range": [
+            1950,
+            1960
+          ],
+          "reasoning": "Victoria Capuano Capeluto (born 1905) and Big Leon Capeluto (born 1904) appear to be in their late 40s or 50s in this photo. Their daughter Betty appears to be a young adult, and there is a young child present. The clothing styles, particularly the women's dresses and the man's glasses, suggest the 1950s."
+        },
+        "people": {
+          "count": 4,
+          "descriptions": [
+            "A young woman with dark hair, wearing a patterned dress, seated on the left.",
+            "A middle-aged man with glasses, wearing a collared shirt, seated next to the young woman.",
+            "A middle-aged woman with dark hair, wearing a striped sleeveless top, seated on the right, serving food.",
+            "A young child with dark hair, wearing a light-colored top, seated next to the middle-aged woman."
+          ]
+        },
+        "visible_text": "",
+        "scene_description": "A family of four is seated around a dining table, enjoying a meal. The table is set with plates, glasses, and various dishes of food. The woman on the right is serving food from a bowl. The atmosphere appears relaxed and familial.",
+        "gedcom_value_assessment": "The genealogical data was crucial in identifying the individuals and providing a probable location (Asheville, NC) based on their documented residence. The visual evidence alone would only suggest a mid-20th-century American family dinner."
+      },
+      "input_tokens": 1721,
+      "output_tokens": 575,
+      "cost": 0.010342,
+      "latency_seconds": 7.84,
+      "model": "gemini-3.1-pro-preview"
+    },
+    "meta_comparison": {
+      "result": {
+        "accuracy_ratings": {
+          "A_no_gedcom": {
+            "score": 2,
+            "location_given": "Unknown, likely North America",
+            "distance_from_truth": "Continent level accuracy; correct but extremely broad."
+          },
+          "B_full_gedcom": {
+            "score": 0,
+            "location_given": "Clearwater, Florida, United States",
+            "distance_from_truth": "Incorrect state; approximately 600 miles away."
+          },
+          "C_curated_gedcom": {
+            "score": 10,
+            "location_given": "Asheville, North Carolina",
+            "distance_from_truth": "Exact match."
+          }
+        },
+        "winning_variant": "C",
+        "key_gedcom_data_points": [
+          "Documented residence at 33 Elizabeth Street, Asheville, Buncombe, North Carolina",
+          "Birth years of Big Leon (1904) and Victoria (1905) to estimate their ages in the photo",
+          "Timeline alignment matching their apparent ages to the years they lived in North Carolina rather than their later life in Florida"
+        ],
+        "visual_clues_for_asheville": [
+          "There are no specific geographic visual clues in the photo, as it is an interior shot.",
+          "The visual evidence (clothing, dining table, home interior) merely supports a generic mid-20th-century American domestic setting, making the GEDCOM data the sole driver for pinpointing Asheville."
+        ],
+        "recommendation_for_batch": "Variant C (curated genealogy data). Providing the full GEDCOM (Variant B) introduced noise, causing the model to incorrectly anchor to a 'later life' residence (Florida) because it slightly overestimated the subjects' ages. Curating the GEDCOM data to the relevant timeframe forces the model to use the correct historical context, yielding perfect accuracy.",
+        "gedcom_value_verdict": "yes"
+      },
+      "cost": 0.009738,
+      "input_tokens": 2127,
+      "output_tokens": 457,
+      "latency_seconds": 12.94
+    }
+  }
+}
