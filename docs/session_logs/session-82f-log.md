@@ -7,7 +7,7 @@ Prompt: docs/prompts/session-82f-prompt.md
 - [x] Act 1: Browser Verification — Find Broken Features
 - [x] Act 2: Fix All Broken Features
 - [x] Act 3: Fix Remaining GREEN Features
-- [ ] Act 4: 82b/82c Gap Analysis
+- [x] Act 4: 82b/82c Gap Analysis
 - [ ] Act 5: Test + Deploy + Verify
 - [ ] Act 6: Documentation + Assessment
 
@@ -37,10 +37,10 @@ Prompt: docs/prompts/session-82f-prompt.md
 - Features formally deferred: 3 (UX-201 Missing Info Table, UX-202 Bulk Confirm, UX-203 Relational Labels)
 
 ### Act 4
-- Started:
-- Completed:
-- 82b gaps:
-- 82c status:
+- Started: 2026-03-02
+- Completed: 2026-03-02
+- 82b gaps: Codex never ran. Remaining gap: face card unification (14+ inline renderers → UX-204). Other items done by 82d.
+- 82c status: All 6 phases completed on branch session-82c/gemini-rerun (14 commits). Never merged due to AD numbering conflicts + 82a artifact contamination. Added ML-100 to BACKLOG.
 
 ### Act 5
 - Started:

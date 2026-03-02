@@ -144,6 +144,12 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **DATA-003: Run alignment migration** — Execute `python scripts/migrate_alignments_to_supabase.py --execute` after tables created. Migrates 127 alignment records from JSON to Supabase. Source: Session 64.
 - [ ] **DATA-004: Retry 144 rate-limited photos** — Run `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`. Requires GEMINI_API_KEY. Estimated cost: ~$4 at $0.028/photo. Source: Session 64.
 
+### Face Card Consolidation (Session 82b gap, deferred 82f)
+- [ ] **UX-204: Unify face card rendering** — 14+ inline face card rendering locations in app/main.py use bespoke code. Consolidate into reusable `face_card()` component. Major refactor. Source: 82b Phase 2, 82d assessment.
+
+### 82c Gemini Branch Merge (Session 82c, stranded)
+- [ ] **ML-100: Merge session-82c/gemini-rerun to main** — Branch has 14 commits of Gemini enrichment pipeline work (Asheville litmus test, batch pipeline, Gatekeeper integration). Blocked by: AD numbering conflict (branch AD-194 vs main AD-194), 82a artifacts on branch need removal. Requires deliberate merge session with conflict resolution. Source: Session 82c.
+
 ### UX Features (Session 82a ideation, deferred 82f)
 - [ ] **UX-201: Missing Info Table View** — Admin view listing identities with missing metadata (no birth year, no GEDCOM link, no photos). ~30-45 min. Needs PRD. Source: 82a #21.
 - [ ] **UX-202: One-Click Bulk Tag Confirmation** — Confirm all faces in a high-confidence cluster at once. ~30-60 min. Risk: data writes. Source: 82a #30.
