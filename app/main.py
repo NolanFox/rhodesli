@@ -7214,7 +7214,7 @@ def identity_card_compact(
     if is_admin:
         similar_link = Button(
             "Similar",
-            cls="text-xs text-indigo-400 hover:text-indigo-300 bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 bg-transparent border-0 py-1 px-1 cursor-pointer underline-offset-2 hover:underline",
             hx_get=f"/api/find-similar/{identity_id}",
             hx_target=f"#expand-{css_id}",
             hx_swap="innerHTML",
@@ -7222,7 +7222,7 @@ def identity_card_compact(
         )
     else:
         similar_link = A("Similar", href=f"/people/{identity_id}/similar",
-          cls="text-xs text-indigo-400 hover:text-indigo-300")
+          cls="text-xs text-indigo-400 hover:text-indigo-300 py-1 px-1")
     quick_links = Div(
         similar_link,
         Span("|", cls="text-xs text-slate-600"),
