@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.83.4] — 2026-03-02 (Hotfix: fastcore pin)
+
+### Fixed
+- **Production 500 resolved**: `fastcore` 1.12.22 changed `to_xml(*elms)` signature, breaking FastHTML's `to_xml(resp, indent)` positional call. The `indent` bool was treated as an element, causing `TypeError: sequence item 1: expected str instance, bool found`. Pinned `fastcore<1.12.22` in `requirements.txt`.
+
 ## [v0.83.3] — 2026-03-01 (Session 82c: Gemini Re-run with GEDCOM Enrichment)
 
 ### Added
