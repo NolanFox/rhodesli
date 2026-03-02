@@ -3839,7 +3839,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                         cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                    hx_get=f"/photo/{main_photo_id}/partial?face={face_id}&identity_id={identity_id}" if main_photo_id else None,
+                    hx_get=f"/photo/{main_photo_id}/partial?face={best_face_id}&identity_id={identity_id}" if main_photo_id else None,
                     hx_target="#photo-modal-content",
                     **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
                     type="button",
@@ -4169,11 +4169,15 @@ def render_to_review_section(
             to_review = sorted(to_review, key=lambda x: (x.get("name") or "").lower())
         # default: newest (already sorted by created_at desc above)
 
-        cards = [
-            identity_card_compact(identity, crop_files, is_admin=is_admin)
-            for identity in to_review
-        ]
-        cards = [c for c in cards if c]  # Filter None
+        grid_items = []
+        for identity in to_review:
+            card = identity_card_compact(identity, crop_files, is_admin=is_admin)
+            if card:
+                grid_items.append(card)
+                # Expansion panel for inline Find Similar
+                _iid = identity["identity_id"]
+                grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
+        cards = [c for c in grid_items if c]  # Filter None
 
         if cards:
             content = Div(
@@ -4239,15 +4243,17 @@ def render_confirmed_section(confirmed: list, crop_files: set, counts: dict, is_
     else:  # default: name (A-Z)
         confirmed = sorted(confirmed, key=lambda x: (x.get("name") or "").lower())
 
-    cards = [
-        identity_card(identity, crop_files, lane_color="emerald", show_actions=False, is_admin=is_admin)
-        for identity in confirmed
-    ]
-    cards = [c for c in cards if c]
+    grid_items = []
+    for identity in confirmed:
+        card = identity_card(identity, crop_files, lane_color="emerald", show_actions=False, is_admin=is_admin)
+        if card:
+            grid_items.append(card)
+            _iid = identity["identity_id"]
+            grid_items.append(Div(id=f"expand-{make_css_id(_iid)}", cls="expansion-panel"))
 
-    if cards:
+    if grid_items:
         content = Div(
-            *cards,
+            *grid_items,
             cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
         )
     else:
@@ -4366,9 +4372,11 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
                 hx_swap="innerHTML",
                 cls="ml-4 mt-1 mb-3",
             )
+            # Expansion panel for inline Find Similar
+            expand_panel = Div(id=f"expand-{make_css_id(identity_id)}", cls="expansion-panel")
             # Wrapper carries data-name so sidebar filter hides card+hint together
             raw_name = (identity.get("name") or "").lower()
-            cards.append(Div(badge, card, hint, cls="identity-card-wrapper", data_name=raw_name))
+            cards.append(Div(badge, card, hint, expand_panel, cls="identity-card-wrapper", data_name=raw_name))
 
     if cards:
         content = Div(
@@ -7164,9 +7172,22 @@ def identity_card_compact(
     )
 
     # Quick action links (visible, not buried)
+    # Admin: inline expansion via HTMX. Public: full-page link.
+    css_id = make_css_id(identity_id)
+    if is_admin:
+        similar_link = Button(
+            "Similar",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 bg-transparent border-0 p-0 cursor-pointer underline-offset-2 hover:underline",
+            hx_get=f"/api/find-similar/{identity_id}",
+            hx_target=f"#expand-{css_id}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+    else:
+        similar_link = A("Similar", href=f"/people/{identity_id}/similar",
+          cls="text-xs text-indigo-400 hover:text-indigo-300")
     quick_links = Div(
-        A("Similar", href=f"/people/{identity_id}/similar",
-          cls="text-xs text-indigo-400 hover:text-indigo-300"),
+        similar_link,
         Span("|", cls="text-xs text-slate-600"),
         A("Profile", href=f"/person/{identity_id}",
           cls="text-xs text-slate-400 hover:text-slate-300"),
@@ -7295,12 +7316,23 @@ def identity_card(
                 cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
             )
 
-    # Find Similar — link to full-page hero+grid layout
-    find_similar_btn = A(
-        "Similar",
-        href=f"/people/{identity_id}/similar",
-        cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
-    )
+    # Find Similar — admin: inline expansion, public: full-page link
+    _id_css = make_css_id(identity_id)
+    if is_admin:
+        find_similar_btn = Button(
+            "Similar",
+            cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
+            hx_get=f"/api/find-similar/{identity_id}",
+            hx_target=f"#expand-{_id_css}",
+            hx_swap="innerHTML",
+            type="button",
+        )
+    else:
+        find_similar_btn = A(
+            "Similar",
+            href=f"/people/{identity_id}/similar",
+            cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
+        )
 
     # Pagination controls
     pagination = _face_pagination_controls(identity_id, 0, total_faces, "date")
@@ -9465,6 +9497,66 @@ def get(section: str = None, view: str = "focus", current: str = None,
         .identity-card-archival:hover {
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(61, 52, 40, 0.4);
         }
+        /* Expansion panel for inline Find Similar (AD-194) */
+        .expansion-panel:empty {
+            display: none;
+        }
+        .expansion-panel:not(:empty) {
+            grid-column: 1 / -1;
+            padding: 1.25rem;
+            background: rgba(30, 26, 21, 0.95);
+            border: 1px solid rgba(61, 52, 40, 0.5);
+            border-radius: 0.5rem;
+            animation: panel-fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes panel-fade-in {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .expansion-panel .similar-faces {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+        .expansion-panel .similar-face-tile {
+            flex: 0 0 auto;
+            width: 160px;
+            scroll-snap-align: start;
+        }
+        .expansion-panel .panel-close {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+        .expansion-panel .panel-close:hover {
+            opacity: 1;
+        }
+        /* Visual modernization — hover states, transitions, feedback */
+        .identity-card-archival,
+        .face-card-archival {
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        button:active, a.btn:active, [data-action]:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
+        }
+        /* HTMX loading indicator */
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 0.2s ease-in;
+        }
+        /* Smooth focus ring for keyboard navigation */
+        button:focus-visible, a:focus-visible {
+            outline: 2px solid rgba(99, 102, 241, 0.7);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
         /* Photo card frame — evoking a mounted print (DD-002) */
         .photo-card-frame {
             background: #2a241e;
@@ -11537,22 +11629,28 @@ def public_person_page(
     # --- Navigation ---
     nav_links = _public_nav_links(active="people", user=user)
 
-    # --- View toggle ---
+    # --- View toggle (HTMX partial swap for fast switching) ---
     faces_active = view != "photos"
     toggle = Div(
-        A(
+        Button(
             "Faces",
-            href=f"/person/{person_id}?view=faces&sort_by={sort_by}",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
                 "bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
+            hx_get=f"/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}",
+            hx_target="#person-gallery-container",
+            hx_swap="innerHTML",
+            type="button",
         ),
-        A(
+        Button(
             "Photos",
-            href=f"/person/{person_id}?view=photos&sort_by={sort_by}",
             cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + (
                 "bg-indigo-600 text-white" if not faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"
             ),
+            hx_get=f"/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}",
+            hx_target="#person-gallery-container",
+            hx_swap="innerHTML",
+            type="button",
         ),
         cls="flex gap-1 bg-slate-800/50 p-1 rounded-xl",
     )
@@ -11563,7 +11661,12 @@ def public_person_page(
         Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
         Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
         cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
-        onchange=f"window.location.href='/person/{person_id}?view={'faces' if faces_active else 'photos'}&sort_by=' + this.value",
+        hx_get=f"/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
+        hx_target="#person-gallery-container",
+        hx_swap="innerHTML",
+        hx_trigger="change",
+        hx_include="this",
+        name="sort_by",
         aria_label="Sort gallery",
     )
 
@@ -11875,7 +11978,7 @@ def public_person_page(
                           href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
                           cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
                         A("Find Similar",
-                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
+                          href=f"/people/{person_id}/similar",
                           cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
                         A("View in Admin",
                           href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
@@ -11905,25 +12008,30 @@ def public_person_page(
             # Gallery section
             Section(
                 Div(
-                    # Section header with toggle
+                    # Toggle + sort + gallery (HTMX partial swap target)
                     Div(
-                        H2(
-                            f"{'Faces' if faces_active else 'Photos'} of {display_name}",
-                            cls="text-xl font-serif font-semibold text-white",
-                        ),
+                        # Section header with toggle
                         Div(
-                            toggle,
-                            Div(
-                                Span("Sort:", cls="text-xs text-slate-500 mr-2"),
-                                sort_select,
-                                cls="flex items-center ml-3",
+                            H2(
+                                f"{'Faces' if faces_active else 'Photos'} of {display_name}",
+                                cls="text-xl font-serif font-semibold text-white",
+                                id="gallery-heading",
                             ),
-                            Span(f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}", cls="text-xs text-slate-500 ml-3 self-center"),
-                            cls="flex flex-wrap items-center",
+                            Div(
+                                toggle,
+                                Div(
+                                    Span("Sort:", cls="text-xs text-slate-500 mr-2"),
+                                    sort_select,
+                                    cls="flex items-center ml-3",
+                                ),
+                                Span(f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}", cls="text-xs text-slate-500 ml-3 self-center"),
+                                cls="flex flex-wrap items-center",
+                            ),
+                            cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
                         ),
-                        cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
+                        gallery_content,
+                        id="person-gallery-container",
                     ),
-                    gallery_content,
 
                     # Family relationships (from GEDCOM)
                     family_section if family_section else None,
@@ -13178,6 +13286,156 @@ def post(person_a: str, person_b: str, answer: str = "",
     )
 
 
+# --- Person Gallery HTMX Partial (Phase 5: fast toggle) ---
+
+@rt("/api/person/{person_id}/gallery")
+def get(person_id: str, view: str = "faces", sort_by: str = "date_asc", sess=None):
+    """Return gallery toggle + grid as HTMX partial for fast Faces/Photos switching."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
+
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(person_id)
+    except KeyError:
+        return Response("Not found", status_code=404)
+
+    display_name = ensure_utf8_display(identity.get("name", ""))
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    crop_files = get_crop_files()
+
+    face_id_strings = set()
+    for f in all_face_ids:
+        face_id_strings.add(f if isinstance(f, str) else f.get("face_id", ""))
+
+    # Build photo IDs from face-to-photo mapping
+    photo_ids = []
+    seen_photos = set()
+    for fid in face_id_strings:
+        pid = get_photo_id_for_face(fid)
+        if pid and pid not in seen_photos:
+            photo_ids.append(pid)
+            seen_photos.add(pid)
+
+    date_labels = _load_date_labels()
+
+    def _parse_year(value):
+        try:
+            return int(str(value)[:4])
+        except (TypeError, ValueError):
+            return None
+
+    def _parse_uploaded_timestamp(value):
+        if not value:
+            return None
+        try:
+            return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+        except (TypeError, ValueError):
+            return None
+
+    def _build_sort_meta(photo_id, pm):
+        pm = pm or {}
+        year = _parse_year((date_labels.get(photo_id) or {}).get("best_year_estimate"))
+        if year is None:
+            year = _parse_year(pm.get("date_taken"))
+        uploaded_ts = _parse_uploaded_timestamp(pm.get("created_at") or pm.get("updated_at"))
+        return {"year": year, "has_year": year is not None, "uploaded_ts": uploaded_ts, "has_uploaded_ts": uploaded_ts is not None}
+
+    def _gallery_sort_key(sort_meta, stable):
+        year = sort_meta["year"] if sort_meta["has_year"] else 0
+        uploaded_ts = sort_meta["uploaded_ts"] if sort_meta["has_uploaded_ts"] else 0.0
+        if sort_by == "date_desc":
+            return (0 if sort_meta["has_year"] else 1, -year, -uploaded_ts, stable)
+        if sort_by == "uploaded_desc":
+            return (0 if sort_meta["has_uploaded_ts"] else 1, -uploaded_ts, year if sort_meta["has_year"] else 9999, stable)
+        if sort_by == "uploaded_asc":
+            return (0 if sort_meta["has_uploaded_ts"] else 1, uploaded_ts, year if sort_meta["has_year"] else 9999, stable)
+        return (0 if sort_meta["has_year"] else 1, year if sort_meta["has_year"] else 9999, uploaded_ts, stable)
+
+    faces_active = view != "photos"
+
+    if faces_active:
+        face_entries = []
+        for face_id_entry in all_face_ids:
+            fid = face_id_entry if isinstance(face_id_entry, str) else face_id_entry.get("face_id", "")
+            crop_url = resolve_face_image_url(fid, crop_files) if crop_files else None
+            if not crop_url:
+                continue
+            face_photo_id = get_photo_id_for_face(fid)
+            face_photo = get_photo_metadata(face_photo_id) if face_photo_id else None
+            source_label = ""
+            if face_photo:
+                source_label = face_photo.get("collection", "") or face_photo.get("source", "") or ""
+            face_entries.append({
+                "sort_key": _gallery_sort_key(_build_sort_meta(face_photo_id, face_photo), f"{face_photo_id or 'zz'}:{fid}"),
+                "item": A(
+                    Img(src=crop_url, alt=display_name, cls="w-28 h-28 sm:w-32 sm:h-32 rounded-lg object-cover border-2 border-slate-700 hover:border-emerald-500/50 transition-colors", loading="lazy", onerror="this.style.display='none'"),
+                    P(source_label, cls="text-[10px] text-slate-500 mt-1 text-center truncate max-w-[120px]") if source_label else None,
+                    href=f"/photo/{face_photo_id}" if face_photo_id else "#",
+                    cls="flex flex-col items-center group",
+                ),
+            })
+        face_entries.sort(key=lambda e: e["sort_key"])
+        gallery_items = [e["item"] for e in face_entries]
+        grid_cls = "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4"
+    else:
+        photo_entries = []
+        for pid in photo_ids:
+            pm = get_photo_metadata(pid)
+            if not pm:
+                continue
+            filename = pm["filename"]
+            collection_label = pm.get("collection", "") or ""
+            photo_entries.append({
+                "sort_key": _gallery_sort_key(_build_sort_meta(pid, pm), pid),
+                "item": A(
+                    Div(Img(src=photo_url(filename), alt=f"Photo of {display_name}", cls="w-full h-48 sm:h-56 object-cover rounded-lg", loading="lazy"), cls="relative overflow-hidden rounded-lg"),
+                    P(collection_label, cls="text-[10px] text-slate-500 mt-1 text-center leading-snug") if collection_label else None,
+                    href=f"/photo/{pid}",
+                    cls="flex flex-col group",
+                ),
+            })
+        photo_entries.sort(key=lambda e: e["sort_key"])
+        gallery_items = [e["item"] for e in photo_entries]
+        grid_cls = "grid grid-cols-2 sm:grid-cols-3 gap-4"
+
+    gallery_count = len(gallery_items)
+
+    # Toggle buttons (HTMX swap)
+    toggle = Div(
+        Button("Faces", cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + ("bg-indigo-600 text-white" if faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"),
+               hx_get=f"/api/person/{person_id}/gallery?view=faces&sort_by={sort_by}", hx_target="#person-gallery-container", hx_swap="innerHTML", type="button"),
+        Button("Photos", cls="px-4 py-2 text-sm font-medium rounded-lg transition-colors " + ("bg-indigo-600 text-white" if not faces_active else "text-slate-400 hover:text-white hover:bg-slate-700/50"),
+               hx_get=f"/api/person/{person_id}/gallery?view=photos&sort_by={sort_by}", hx_target="#person-gallery-container", hx_swap="innerHTML", type="button"),
+        cls="flex gap-1 bg-slate-800/50 p-1 rounded-xl",
+    )
+
+    sort_select = Select(
+        Option("Earliest First", value="date_asc", selected=(sort_by == "date_asc")),
+        Option("Earliest Last", value="date_desc", selected=(sort_by == "date_desc")),
+        Option("Newest Uploads", value="uploaded_desc", selected=(sort_by == "uploaded_desc")),
+        Option("Oldest Uploads", value="uploaded_asc", selected=(sort_by == "uploaded_asc")),
+        cls="bg-slate-800/60 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500",
+        hx_get=f"/api/person/{person_id}/gallery?view={'faces' if faces_active else 'photos'}",
+        hx_target="#person-gallery-container", hx_swap="innerHTML", hx_trigger="change", hx_include="this", name="sort_by",
+        aria_label="Sort gallery",
+    )
+
+    gallery_content = Div(*gallery_items, cls=grid_cls) if gallery_items else Div(P("No photos available yet.", cls="text-slate-500 text-center py-8"))
+
+    count_label = f"{gallery_count} {'face' if gallery_count == 1 else 'faces'}" if faces_active else f"{gallery_count} {'photo' if gallery_count == 1 else 'photos'}"
+
+    return Div(
+        Div(
+            H2(f"{'Faces' if faces_active else 'Photos'} of {display_name}", cls="text-xl font-serif font-semibold text-white", id="gallery-heading"),
+            Div(toggle, Div(Span("Sort:", cls="text-xs text-slate-500 mr-2"), sort_select, cls="flex items-center ml-3"),
+                Span(count_label, cls="text-xs text-slate-500 ml-3 self-center"), cls="flex flex-wrap items-center"),
+            cls="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6",
+        ),
+        gallery_content,
+    )
+
+
 # --- Person Comments API ---
 
 # Rate limit storage for person comments (IP -> list of timestamps)
@@ -13575,17 +13833,11 @@ def photos_more(page: int = 2, filter_collection: str = "", sort_by: str = "newe
         if search_photo_ids is not None and photo_id_val not in search_photo_ids:
             continue
         filename = photo_data.get("filename", "unknown")
-        face_ids = photo_data.get("face_ids", [])
-        face_count = len(face_ids)
-        confirmed_face_ids = set()
-        for fid in face_ids:
-            identity = registry.find_identity_for_face(fid) if hasattr(registry, 'find_identity_for_face') else None
-            if identity and identity.get("state") == "CONFIRMED":
-                confirmed_face_ids.add(fid)
+        face_count = len(photo_data.get("faces", []))
         confirmed_count = 0
-        for fid in face_ids:
-            ident = registry.find_identity_for_face(fid) if hasattr(registry, 'find_identity_for_face') else None
-            if ident and ident.get("state") == "CONFIRMED":
+        for face in photo_data.get("faces", []):
+            identity = get_identity_for_face(registry, face.get("face_id", ""))
+            if identity and identity.get("state") == "CONFIRMED":
                 confirmed_count += 1
         photos.append({
             "photo_id": photo_id_val,
@@ -13949,6 +14201,199 @@ def get(identity_id: str, sess=None):
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
+@rt("/api/find-similar/{identity_id}")
+def get(identity_id: str, sess=None):
+    """Inline Find Similar — returns HTML fragment for expansion panel (AD-194).
+
+    Admin-only HTMX endpoint. Returns hero face + scrollable similar faces
+    with Compare/Merge/Not Same actions. Designed to be swapped into an
+    expansion-panel div below the identity card.
+    """
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = user and user.is_admin if user else not is_auth_enabled()
+
+    registry = load_registry()
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    name = ensure_utf8_display(identity.get("name", ""))
+    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    crop_files = get_crop_files()
+
+    # Best face for hero
+    best_face = get_best_face_id(all_face_ids) if all_face_ids else (all_face_ids[0] if all_face_ids else "")
+    face_id = best_face if isinstance(best_face, str) else best_face.get("face_id", "") if best_face else ""
+    hero_url = resolve_face_image_url(face_id, crop_files) if face_id else ""
+
+    # Find similar
+    face_data = get_face_data()
+    photo_registry = load_photo_registry()
+    neighbors = []
+    try:
+        from core.neighbors import find_nearest_neighbors
+        neighbors = find_nearest_neighbors(
+            identity_id, registry, photo_registry, face_data, limit=12
+        )
+    except Exception as e:
+        logging.warning(f"Find similar failed: {e}")
+
+    # Enhance neighbors with crop URLs
+    for n in neighbors:
+        nid = n["identity_id"]
+        try:
+            n_ident = registry.get_identity(nid)
+            n_faces = n_ident.get("anchor_ids", []) + n_ident.get("candidate_ids", [])
+            n_best = get_best_face_id(n_faces) if n_faces else (n_faces[0] if n_faces else "")
+            n_fid = n_best if isinstance(n_best, str) else n_best.get("face_id", "") if n_best else ""
+            n["crop_url"] = resolve_face_image_url(n_fid, crop_files)
+            n["name"] = ensure_utf8_display(n_ident.get("name", ""))
+            n["state"] = n_ident.get("state", "INBOX")
+        except KeyError:
+            n["crop_url"] = ""
+            n["name"] = "Unknown"
+            n["state"] = "INBOX"
+
+    # Confidence tier helper
+    def _tier(dist):
+        if dist < 0.80:
+            return ("Very High", "bg-emerald-600 text-white")
+        elif dist < 1.05:
+            return ("High", "bg-blue-600 text-white")
+        elif dist < 1.15:
+            return ("Moderate", "bg-amber-500 text-white")
+        elif dist < 1.30:
+            return ("Low", "bg-slate-500 text-white")
+        return ("Very Low", "bg-slate-600 text-slate-300")
+
+    # Build similar face tiles
+    css_id = make_css_id(identity_id)
+    tiles = []
+    for n in neighbors:
+        if not n.get("crop_url"):
+            continue
+        nid = n["identity_id"]
+        dist = n.get("distance", 99)
+        tier_label, tier_cls = _tier(dist)
+
+        # Action buttons
+        tile_actions = []
+        if is_admin:
+            # Compare
+            tile_actions.append(
+                Button(
+                    "Compare",
+                    cls="text-xs px-2 py-1 border border-amber-400/50 text-amber-400 rounded hover:bg-amber-500/20 transition-colors",
+                    hx_get=f"/api/identity/{identity_id}/compare/{nid}",
+                    hx_target="#compare-modal-content",
+                    hx_swap="innerHTML",
+                    **{"_": "on click remove .hidden from #compare-modal"},
+                    type="button",
+                )
+            )
+            # Merge
+            if n.get("can_merge", True):
+                tile_actions.append(
+                    Button(
+                        "Merge",
+                        cls="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors",
+                        hx_post=f"/api/identity/{identity_id}/merge/{nid}",
+                        hx_target=f"#expand-{css_id}",
+                        hx_swap="innerHTML",
+                        type="button",
+                    )
+                )
+            # Not Same
+            tile_actions.append(
+                Button(
+                    "Not Same",
+                    cls="text-xs px-2 py-1 border border-slate-500 text-slate-400 rounded hover:bg-red-500/20 hover:text-red-300 hover:border-red-500/50 transition-colors",
+                    hx_post=f"/api/identity/{identity_id}/reject-match/{nid}",
+                    hx_target=f"#similar-tile-{make_css_id(nid)}",
+                    hx_swap="outerHTML",
+                    type="button",
+                )
+            )
+
+        tile = Div(
+            A(
+                Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full aspect-[3/4] object-cover rounded-lg", loading="lazy"),
+                href=f"/person/{nid}",
+                cls="block overflow-hidden",
+            ),
+            Div(
+                Span(n.get("name", "Unknown"), cls="text-sm text-white font-medium truncate block"),
+                Div(
+                    Span(tier_label, cls=f"text-[10px] px-1.5 py-0.5 rounded-full {tier_cls}"),
+                    Span(f"{dist:.2f}", cls="text-[10px] text-slate-500 ml-1") if is_admin else None,
+                    cls="flex items-center gap-1 mt-1",
+                ),
+                Div(*tile_actions, cls="flex flex-wrap gap-1 mt-2") if tile_actions else None,
+                cls="mt-2",
+            ),
+            cls="similar-face-tile",
+            id=f"similar-tile-{make_css_id(nid)}",
+        )
+        tiles.append(tile)
+
+    # Close button
+    close_btn = Button(
+        NotStr("&times;"),
+        cls="panel-close text-slate-400 hover:text-white text-xl font-bold bg-transparent border-0 p-1 leading-none",
+        **{"_": f"on click set innerHTML of #expand-{css_id} to ''"},
+        type="button",
+        title="Close",
+    )
+
+    # Build the fragment
+    hero_section = Div(
+        Img(src=hero_url, alt=name, cls="w-20 h-20 rounded-lg object-cover flex-shrink-0") if hero_url else None,
+        Div(
+            Span(name or "Unidentified", cls="text-lg font-semibold text-white block"),
+            Span(f"{len(all_face_ids)} face{'s' if len(all_face_ids) != 1 else ''}", cls="text-sm text-slate-400"),
+            A("View Profile", href=f"/person/{identity_id}", cls="text-xs text-indigo-400 hover:text-indigo-300 block mt-1"),
+            cls="min-w-0",
+        ),
+        Div(cls="flex-1"),
+        close_btn,
+        cls="flex items-start gap-4 mb-4",
+    )
+
+    results_section = Div(
+        H4(f"{len(tiles)} Similar Face{'s' if len(tiles) != 1 else ''}", cls="text-sm font-medium text-slate-300 mb-3"),
+        Div(*tiles, cls="similar-faces") if tiles else
+        P("No similar faces found.", cls="text-sm text-slate-500"),
+    )
+
+    return Div(hero_section, results_section, data_testid="find-similar-panel")
+
+
+@rt("/api/identity/{identity_id}/reject-match/{neighbor_id}", methods=["POST"])
+def post(identity_id: str, neighbor_id: str, sess=None):
+    """Record a negative match between two identities and remove the tile."""
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = user and user.is_admin if user else not is_auth_enabled()
+    if not is_admin:
+        return Response("Forbidden", status_code=403)
+
+    registry = load_registry()
+    try:
+        registry.get_identity(identity_id)
+    except KeyError:
+        return Response("Identity not found", status_code=404)
+
+    # Record bidirectional negative pair
+    try:
+        registry.reject_identity_pair(identity_id, neighbor_id, user_source="admin_inline")
+        save_registry(registry)
+    except KeyError:
+        pass  # Neighbor may have been merged/deleted
+
+    # Return empty div to remove the tile
+    return ""
 
 
 # ---- Collection Pages ----

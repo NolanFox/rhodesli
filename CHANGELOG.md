@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.84.0] — 2026-03-01 (Session 82d: Inline Find Similar + Performance)
+
+### Added
+- **Inline Find Similar** (AD-194): Admin clicks "Similar" to expand HTMX panel below card with hero face, scrollable similar tiles, Compare/Merge/Not Same actions. Public visitors still get full-page link.
+- **Reject match endpoint**: POST /api/identity/{id}/reject-match/{neighbor_id} records bidirectional negative pair
+- **Person gallery HTMX toggle** (AD-195): Faces/Photos switch is now instant via HTMX partial swap instead of full page reload
+- **Visual modernization**: Card hover transitions, button active feedback (scale 0.97), keyboard focus rings, HTMX loading indicators
+- 10 new tests in test_inline_find_similar.py
+
+### Fixed
+- **P0: Lazy-load face counts**: /api/photos/more used wrong data key (face_ids→faces), showing 0 faces after page 1
+- **P1: Person page admin buttons**: "Find Similar" and "Edit Name" no longer point to same URL
+- **P1: Focus mode face highlight**: Main thumbnail click now highlights correct face (was using loop variable leak)
+
 ## [v0.83.2] — 2026-03-01 (Session 81C+D: Tree Data Fix + Final Verification)
 
 ### Fixed
