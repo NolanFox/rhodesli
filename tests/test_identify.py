@@ -169,9 +169,12 @@ class TestIdentifyPage:
 
 class TestIdentifyResponse:
 
-    def test_submit_identification(self, client):
-        """POST response saves identification for admin review."""
+    def test_submit_identification_creates_annotation(self, client):
+        """POST response creates annotation for admin review (Session 83a fix)."""
+        saved_annotations = {"schema_version": 1, "annotations": {}}
         patches = _patch_data()
+        patches.append(patch("app.main._load_annotations", return_value=saved_annotations))
+        patches.append(patch("app.main._save_annotations"))
         for p in patches:
             p.start()
         resp = client.post(
@@ -183,6 +186,56 @@ class TestIdentifyResponse:
         assert resp.status_code == 200
         assert "Thank you" in resp.text
         assert "Sarah Capeluto" in resp.text
+        # Verify annotation was created
+        assert len(saved_annotations["annotations"]) == 1
+        ann = list(saved_annotations["annotations"].values())[0]
+        assert ann["type"] == "name_suggestion"
+        assert ann["target_id"] == "unknown-1"
+        assert ann["value"] == "Sarah Capeluto"
+        assert ann["status"] == "pending_unverified"  # Anonymous user
+        assert ann["reason"] == "My grandmother"
+
+    def test_submit_identification_shows_thank_you(self, client):
+        """POST response shows confirmation message."""
+        patches = _patch_data()
+        patches.append(patch("app.main._load_annotations", return_value={"schema_version": 1, "annotations": {}}))
+        patches.append(patch("app.main._save_annotations"))
+        for p in patches:
+            p.start()
+        resp = client.post(
+            "/api/identify/unknown-1/respond",
+            data={"name": "Sarah Capeluto", "relationship": "My grandmother", "email": "test@example.com"},
+        )
+        for p in patches:
+            p.stop()
+        assert resp.status_code == 200
+        assert "Thank you" in resp.text
+        assert "submitted for review" in resp.text
+
+    def test_admin_direct_applies_name(self, client):
+        """Admin submission directly applies name without approval flow."""
+        from app.auth import User
+        admin_user = User(id="admin-1", email="admin@test.com", is_admin=True)
+        mock_reg = MagicMock()
+        mock_reg.get_identity = MagicMock()
+        patches = _patch_data()
+        patches.append(patch("app.main.is_auth_enabled", return_value=True))
+        patches.append(patch("app.main.get_current_user", return_value=admin_user))
+        patches.append(patch("app.main.load_registry", return_value=mock_reg))
+        patches.append(patch("app.main.save_registry"))
+        for p in patches:
+            p.start()
+        resp = client.post(
+            "/api/identify/unknown-1/respond",
+            data={"name": "Isaac Cohen"},
+        )
+        for p in patches:
+            p.stop()
+        assert resp.status_code == 200
+        assert "Name applied" in resp.text
+        mock_reg.rename_identity.assert_called_once_with(
+            "unknown-1", "Isaac Cohen", user_source="admin_web"
+        )
 
     def test_reject_empty_name(self, client):
         """POST with empty name shows error."""
@@ -197,6 +250,21 @@ class TestIdentifyResponse:
             p.stop()
         assert resp.status_code == 200
         assert "Please enter a name" in resp.text
+
+    def test_annotation_failure_shows_error(self, client):
+        """If annotation save fails, show error instead of false 'Thank you'."""
+        patches = _patch_data()
+        patches.append(patch("app.main._load_annotations", side_effect=Exception("disk full")))
+        for p in patches:
+            p.start()
+        resp = client.post(
+            "/api/identify/unknown-1/respond",
+            data={"name": "Sarah Capeluto", "email": "test@test.com"},
+        )
+        for p in patches:
+            p.stop()
+        assert resp.status_code == 200
+        assert "Something went wrong" in resp.text
 
 
 class TestMatchConfirmation:

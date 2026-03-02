@@ -12491,9 +12491,31 @@ def get(person_id: str, sess=None):
         cls="mb-10",
     ) if match_cards else None
 
-    # Response form
+    # Response form — different for admin vs logged-in vs anonymous
+    is_admin = user and user.is_admin if user else False
+    user_email = user.email if user else ""
+
+    # Admin gets direct apply option
+    form_heading = ("You're an admin \u2014 apply this name directly?" if is_admin
+                    else "Do you recognize this person?")
+    submit_label = ("Apply Name" if is_admin
+                    else "Yes, I know this person!")
+    submit_cls = ("w-full py-3 font-semibold rounded-lg transition-colors " +
+                  ("bg-indigo-600 hover:bg-indigo-500 text-white" if is_admin
+                   else "bg-emerald-600 hover:bg-emerald-500 text-white"))
+
+    # Hide email field for logged-in users (auto-filled from session)
+    email_field = Div(
+        Label("Your email (optional, for follow-up)", fr="resp_email", cls="text-sm text-slate-400 block mb-1"),
+        Input(type="email", name="email", id="resp_email",
+              value=user_email,
+              placeholder="you@example.com",
+              cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
+        cls="mb-6",
+    ) if not user else None  # Hide email entirely if logged in
+
     form_section = Div(
-        H3("Do you recognize this person?", cls="text-lg font-serif font-semibold text-white mb-4"),
+        H3(form_heading, cls="text-lg font-serif font-semibold text-white mb-4"),
         Form(
             Input(type="hidden", name="person_id", value=person_id),
             Div(
@@ -12508,14 +12530,8 @@ def get(person_id: str, sess=None):
                       cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
                 cls="mb-4",
             ),
-            Div(
-                Label("Your email (optional, for follow-up)", fr="resp_email", cls="text-sm text-slate-400 block mb-1"),
-                Input(type="email", name="email", id="resp_email", placeholder="you@example.com",
-                      cls="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none"),
-                cls="mb-6",
-            ),
-            Button("Yes, I know this person!", type="submit",
-                   cls="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-lg transition-colors"),
+            email_field,
+            Button(submit_label, type="submit", cls=submit_cls),
             hx_post=f"/api/identify/{person_id}/respond",
             hx_target="#identify-response-area",
             hx_swap="innerHTML",
@@ -12627,29 +12643,97 @@ def get(person_id: str, sess=None):
 
 @rt("/api/identify/{person_id}/respond")
 def post(person_id: str, name: str = "", relationship: str = "", email: str = "", sess=None):
-    """Save an identification response. No login required."""
+    """Save an identification response via the annotations system.
+
+    Creates an annotation that appears in admin approvals. Also saves to
+    identification_responses.json for backward compat / audit trail.
+    Session 83a: Fixed silent failure — submissions now reach admin approvals.
+    """
     if not name.strip():
         return Div(
             P("Please enter a name for this person.", cls="text-amber-400 text-sm"),
             cls="py-2",
         )
 
-    import hashlib
-    responses = _load_identification_responses()
-    responses["responses"].append({
-        "person_id": person_id,
-        "suggested_name": name.strip(),
-        "relationship": relationship.strip(),
-        "email": email.strip(),
-        "timestamp": datetime.now().isoformat(),
-        "status": "pending",
-    })
-    _save_identification_responses(responses)
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    is_admin = user and user.is_admin if user else False
+    submitted_by = (user.email if user else email.strip()) or "anonymous"
+
+    # If admin, apply name directly (no approval needed)
+    if is_admin:
+        try:
+            registry = load_registry()
+            registry.rename_identity(person_id, name.strip(), user_source="admin_web")
+            save_registry(registry)
+            logging.info(f"[identify] Admin direct-named {person_id} as '{name.strip()}'")
+            return Div(
+                Div(
+                    P("Name applied!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+                    P(f"This person has been named \"{name.strip()}\". ",
+                      A("View in admin \u2192", href=f"/admin/identity/{person_id}",
+                        cls="text-indigo-400 hover:text-indigo-300 underline"),
+                      cls="text-slate-300 text-sm"),
+                    cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
+                ),
+            )
+        except Exception as e:
+            logging.error(f"[identify] Admin direct-name failed for {person_id}: {e}")
+            return Div(
+                P(f"Error applying name: {e}", cls="text-red-400 text-sm text-center py-4"),
+            )
+
+    # For non-admin users: create an annotation for admin review
+    try:
+        ann_id = str(uuid.uuid4())
+        reason = relationship.strip() if relationship else ""
+        annotation = {
+            "annotation_id": ann_id,
+            "type": "name_suggestion",
+            "target_type": "identity",
+            "target_id": person_id,
+            "value": name.strip(),
+            "confidence": "likely",
+            "reason": reason,
+            "submitted_by": submitted_by,
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "status": "pending" if user else "pending_unverified",
+            "reviewed_by": None,
+            "reviewed_at": None,
+        }
+        annotations = _load_annotations()
+        annotations["annotations"][ann_id] = annotation
+        _save_annotations(annotations)
+
+        logging.info(f"[identify] Submission for {person_id}: name='{name.strip()}', by={submitted_by}, ann_id={ann_id}")
+    except Exception as e:
+        logging.error(f"[identify] Failed to save annotation for {person_id}: {e}")
+        return Div(
+            P("Something went wrong saving your response. Please try again.", cls="text-red-400 text-sm text-center py-4"),
+        )
+
+    # Also save to legacy identification_responses.json for audit trail
+    try:
+        responses = _load_identification_responses()
+        responses["responses"].append({
+            "person_id": person_id,
+            "suggested_name": name.strip(),
+            "relationship": relationship.strip(),
+            "email": email.strip(),
+            "timestamp": datetime.now().isoformat(),
+            "status": "pending",
+            "annotation_id": ann_id,
+        })
+        _save_identification_responses(responses)
+    except Exception:
+        pass  # Legacy file is a backup — annotation is the source of truth
 
     return Div(
         Div(
             P("Thank you!", cls="text-lg font-semibold text-emerald-400 mb-1"),
-            P(f"Your identification of this person as \"{name.strip()}\" has been submitted. An admin will review it shortly.", cls="text-slate-300 text-sm"),
+            P(f"Your identification of this person as \"{name.strip()}\" has been submitted for review.",
+              cls="text-slate-300 text-sm"),
+            P("An admin will review your suggestion shortly.",
+              cls="text-slate-500 text-xs mt-2"),
             cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
         ),
     )
