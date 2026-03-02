@@ -7,7 +7,7 @@ Prompt: docs/prompts/session-82c-prompt.md
 - [x] Phase 0: Orient + Validate Existing Gemini State
 - [x] Phase 1: Asheville Litmus Test — 3-Variant Experiment
 - [ ] Phase 2: Assess Value + Decide Batch Approach
-- [ ] Phase 3: Batch Preparation (conditional)
+- [x] Phase 3: Batch Preparation (conditional)
 - [ ] Phase 4: Surface Results in App (conditional)
 - [ ] Phase 5: Documentation + PR
 
@@ -130,3 +130,44 @@ Proceed with `inbox_staged-20260210-182610_7_596771420.719238` as the Asheville 
 - 33 identities have GEDCOM links
 - Only GEDCOM-linked photos benefit from enrichment
 - Remaining 194 photos: run baseline (no GEDCOM) for completeness
+
+---
+
+## Phase 3: Batch Preparation + First Batch
+
+### Pipeline Built
+`scripts/run_gemini_enrichment.py` with features:
+- Batch processing with configurable size
+- Budget gates (stops at --max-cost)
+- Incremental save (no data loss on crash)
+- Resume support (--resume skips completed photos)
+- Privacy filter (only deceased/pre-1930 people)
+- Retry logic for rate limits (60s/120s/180s backoff)
+- Gatekeeper pattern: all results are proposals
+
+### First Batch Results (20 photos processed)
+
+| Metric | Value |
+|--------|-------|
+| Photos processed | 20 (2 batches of 10) |
+| Successful | 19 |
+| Errors | 1 (rate limit, no retry at time) |
+| Total cost | $0.22 |
+| Avg cost/photo | $0.012 |
+| Projected full (77 photos) | $0.92 |
+
+### Location Confidence
+- High: 5 (New York, Miami, Buenos Aires, US, Asheville NC)
+- Medium: 10 (various US locations, Rhodes)
+- Low: 4 (unknown/ambiguous)
+
+### Notable Results
+- Asheville, NC identified again via GEDCOM (high confidence)
+- Multiple Miami/Florida locations for Betty Capeluto collection (correct)
+- Buenos Aires identified for one photo (high confidence — interesting!)
+- Rhodes identified for group photo (medium confidence)
+
+### Budget
+- Phase 3 cost: $0.22
+- Session total: $0.26 ($0.04 litmus + $0.22 batch)
+- Budget remaining: $9.74 of $10.00

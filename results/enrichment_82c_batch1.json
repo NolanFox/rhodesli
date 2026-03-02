@@ -1,0 +1,871 @@
+{
+  "experiment": "gemini_gedcom_enrichment",
+  "model": "gemini-3.1-pro-preview",
+  "variant": "curated",
+  "timestamp": "2026-03-01T19:35:03.466862",
+  "total_cost": 0.2214,
+  "photos_processed": 20,
+  "batch_info": {
+    "batch_size": 10,
+    "max_cost": 2.0,
+    "batches_completed": 2
+  },
+  "results": [
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1980,
+          "confidence": "high",
+          "probable_range": [
+            1978,
+            1983
+          ],
+          "evidence_summary": "STRONG: Biographical age correlation (Victor, born 1906, appears to be in his mid-70s; Betty, born 1953, appears to be in her late 20s). STRONG: Fashion markers, specifically Betty's voluminous feathered hairstyle (popularized in the late 1970s) and Victor's wide tuxedo lapels. MODERATE: The color film stock, indoor flash lighting, and large-framed glasses on the seated woman are highly characteristic of late 1970s to early 1980s event photography.",
+          "decade_probabilities": {
+            "1960": 0.0,
+            "1970": 0.6,
+            "1980": 0.4,
+            "1990": 0.0
+          }
+        },
+        "location": {
+          "place": "New York, New York, USA",
+          "confidence": "medium",
+          "visual_evidence": "The setting is a formal banquet hall, hotel ballroom, or synagogue event space, indicated by the patterned red and gold carpet, white paneled doors with gold trim, and striped upholstered chair. This is typical of American catering halls.",
+          "biographical_evidence": "Victor Capelluto died in New York, NY. Given his age in the photo, it is highly probable this family event took place in or near his primary residence.",
+          "reasoning": "The visual evidence strongly points to a formal event (likely a wedding, given the tuxedo and boutonniere) in the United States. Combining this with Victor's known later-life residence in New York makes the NY metropolitan area the most probable location for this family gathering."
+        },
+        "people": {
+          "count": 3,
+          "descriptions": [
+            "Older male standing on the left (identified as Victor Capelluto), approximately 70-75 years old. He is wearing a formal black tuxedo with wide 1970s-style lapels, a white dress shirt, black bow tie, white kippah (yarmulke), and a white floral boutonniere. He is holding a glass with a napkin.",
+            "Younger female standing on the right (identified as Betty Capeluto), approximately 25-30 years old. She has voluminous, feathered brown hair typical of the late 70s/early 80s. She is wearing a black dress with sheer, dotted overlay sleeves, a gold necklace, and hoop earrings.",
+            "Elderly female seated in the center, approximately 80-90 years old. She has white hair and is wearing large-framed glasses, a brown and white patterned dress, and a sheer blue scarf around her neck."
+          ]
+        },
+        "scene_description": "A formal portrait taken at an event, likely a wedding or Bar/Bat Mitzvah reception, inside a catering hall or hotel. An older man in a tuxedo and a younger woman stand behind an elderly seated woman. The room features a red and gold patterned carpet and white paneled doors.",
+        "visible_text": ""
+      },
+      "input_tokens": 1717,
+      "output_tokens": 743,
+      "cost": 0.01235,
+      "latency_seconds": 27.2,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "a3d2695fe0804844",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 76
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1928,
+          "confidence": "medium",
+          "probable_range": [
+            1924,
+            1932
+          ],
+          "evidence_summary": "The subjects appear to be in their early to mid-20s. Given the biographical data for Big Leon Capeluto (born 1904), an age of 20-28 places the photo between 1924 and 1932. The fashion strongly supports this: the men are wearing classic 1920s fedoras with high crowns, pointed shirt collars, and heavy overcoats with wide lapels. The sepia tone and painted studio backdrop are also highly characteristic of 1920s portraiture.",
+          "decade_probabilities": {
+            "1910": 0.05,
+            "1920": 0.75,
+            "1930": 0.2
+          }
+        },
+        "location": {
+          "place": "Unknown Studio (Likely United States or Turkey)",
+          "confidence": "low",
+          "visual_evidence": "Generic painted studio backdrop featuring indistinct foliage/trees. Heavy wool overcoats suggest a cooler climate or winter season.",
+          "biographical_evidence": "Leon Capeluto was born in Milas, Turkey (1904) and died in Florida, US. He likely emigrated during his youth or early adulthood, a common pattern for Sephardic Jews from this region in the 1910s-1920s.",
+          "reasoning": "The visual evidence lacks specific geographic markers due to the controlled studio environment. However, combining the estimated date (late 1920s) with the biographical data, this portrait was likely taken either shortly before emigration from the Ottoman Empire/Turkey or, more likely given the Westernized 'Roaring Twenties' attire and heavy coats, shortly after arriving in a US diaspora community (such as New York or Seattle) where such studio portraits were a common way to document success for relatives back home."
+        },
+        "people": {
+          "count": 3,
+          "descriptions": [
+            "Young man on the left, estimated age 20-25, wearing a lighter-colored suit jacket, a patterned tie, a pocket square, and a fedora. He is clean-shaven.",
+            "Young man in the center (possibly Leon Capeluto), estimated age 20-25, wearing a dark overcoat or heavy suit jacket, a dark tie, a white collared shirt, and a fedora. He is clean-shaven.",
+            "Young man on the right, estimated age 20-25, wearing a dark, heavy wool overcoat with wide lapels, a dark tie, and a fedora. He is clean-shaven."
+          ]
+        },
+        "scene_description": "A formal studio portrait of three young men standing close together, dressed in stylish 1920s winter or formal attire (suits, overcoats, and fedoras). They are posed in front of a painted backdrop depicting faint trees or foliage. The physical photograph shows significant signs of age and damage, including a prominent vertical crease and tear running down the center and right side of the image.",
+        "visible_text": null
+      },
+      "input_tokens": 1689,
+      "output_tokens": 739,
+      "cost": 0.012246,
+      "latency_seconds": 28.58,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "6f512d921837bc0c",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 44
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1964,
+          "confidence": "high",
+          "probable_range": [
+            1962,
+            1966
+          ],
+          "evidence_summary": "The young girl in the front right appears to be around 10-12 years old; if this is Betty Capeluto (born 1953), the year would be approximately 1963-1965. Fashion markers such as the women's cardigans, the young girl's structured box purse with a long strap, and the men's casual short-sleeve button-down and polo shirts strongly point to the early-to-mid 1960s. The black-and-white snapshot format with a white border is also typical of amateur photography from this era.",
+          "decade_probabilities": {
+            "1950": 0.1,
+            "1960": 0.85,
+            "1970": 0.05
+          }
+        },
+        "location": {
+          "place": "Miami, Florida, USA",
+          "confidence": "high",
+          "visual_evidence": "Tropical foliage including a prominent palm tree in the background, flat grassy terrain, and a modern, multi-story white building visible in the distance.",
+          "biographical_evidence": "Betty Capeluto was born in Havana, Cuba in 1953 and died in Miami, FL. Moise Capeluto also died in Miami, FL. The family likely emigrated from Cuba to Miami following the 1959 revolution, placing them in Florida during the estimated 1960s timeframe.",
+          "reasoning": "The visual presence of palm trees and modern architecture indicates a tropical or subtropical urban environment. When cross-referenced with the genealogical data showing the family's presence and eventual passing in Miami, Florida, it is highly probable this photograph was taken there after their relocation from Cuba."
+        },
+        "people": {
+          "count": 6,
+          "descriptions": [
+            "Older male standing far left, approximately 55-65 years old, wearing a short-sleeve polo shirt and dark trousers. His age aligns with Moise Capeluto (born 1905).",
+            "Older female standing middle-left, approximately 60-70 years old, with white hair, wearing a dark jacket and a patterned scarf or collar.",
+            "Older male standing middle-right, approximately 60-70 years old, wearing glasses, a plaid short-sleeve button-down shirt, and high-waisted trousers with a belt.",
+            "Older female standing far right, approximately 55-65 years old, dark hair pulled back, wearing a light-colored cardigan over a plaid dress, with her arms crossed.",
+            "Adult female kneeling front left, approximately 30-40 years old, wearing a light cardigan over a patterned dress and a pearl necklace.",
+            "Young girl kneeling front right, approximately 10-12 years old, wearing a cardigan over a dress and holding a dark, structured box purse with a long shoulder strap. Her apparent age strongly suggests this is Betty Capeluto (born 1953)."
+          ]
+        },
+        "scene_description": "An informal outdoor family portrait taken on a grassy lawn during the daytime. Six individuals are posed together, with four older adults standing in the back row and two younger females kneeling in the front. The background features tropical vegetation, a palm tree, and a distant modern building.",
+        "visible_text": null
+      },
+      "input_tokens": 1730,
+      "output_tokens": 804,
+      "cost": 0.013108,
+      "latency_seconds": 33.4,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "b9f591a56e25b71a",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 74
+    },
+    {
+      "photo_id": "6a62687aec225e39",
+      "status": "error",
+      "error": "429 RESOURCE_EXHAUSTED. {'error': {'code': 429, 'message': 'You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://ai.google.dev/gemini-api/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. \\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3.1-pro\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 0, model: gemini-3.1-pro\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3.1-pro\\n* Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_input_token_count, limit: 0, model: gemini-3.1-pro\\nPlease retry in 48.948046166s.', 'status': 'RESOURCE_EXHAUSTED', 'details': [{'@type': 'type.googleapis.com/google.rpc.Help', 'links': [{'description': 'Learn more about Gemini API quotas', 'url': 'https://ai.google.dev/gemini-api/docs/rate-limits'}]}, {'@type': 'type.googleapis.com/google.rpc.QuotaFailure', 'violations': [{'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerDayPerProjectPerModel-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.1-pro'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_requests', 'quotaId': 'GenerateRequestsPerMinutePerProjectPerModel-FreeTier', 'quotaDimensions': {'model': 'gemini-3.1-pro', 'location': 'global'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerMinute-FreeTier', 'quotaDimensions': {'model': 'gemini-3.1-pro', 'location': 'global'}}, {'quotaMetric': 'generativelanguage.googleapis.com/generate_content_free_tier_input_token_count', 'quotaId': 'GenerateContentInputTokensPerModelPerDay-FreeTier', 'quotaDimensions': {'location': 'global', 'model': 'gemini-3.1-pro'}}]}, {'@type': 'type.googleapis.com/google.rpc.RetryInfo', 'retryDelay': '48s'}]}}"
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1965,
+          "confidence": "medium",
+          "probable_range": [
+            1962,
+            1968
+          ],
+          "evidence_summary": "The woman's bouffant hairstyle and sleeveless, patterned shift dress are classic mid-1960s fashion markers. The child's dress and shoes also align with this era. The overall photographic style, including the lighting and contrast, is typical of mid-century snapshots.",
+          "decade_probabilities": {
+            "1950": 0.1,
+            "1960": 0.8,
+            "1970": 0.1
+          }
+        },
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "visual_evidence": "The background is a plain wall with a tiled floor, offering no specific geographic clues.",
+          "biographical_evidence": "None provided.",
+          "reasoning": "Without specific visual markers or biographical context, the location cannot be determined."
+        },
+        "people": {
+          "count": 2,
+          "descriptions": [
+            "A young woman, likely in her 20s, with a dark, voluminous bouffant hairstyle. She is wearing a sleeveless, patterned shift dress and smiling at the camera.",
+            "A young child, likely a toddler, being held by the woman. The child has dark hair and is wearing a light-colored dress with small polka dots and Mary Jane-style shoes."
+          ]
+        },
+        "scene_description": "A black and white photograph of a young woman holding a toddler. They are standing indoors against a plain, light-colored wall with a tiled floor visible at the bottom.",
+        "visible_text": ""
+      },
+      "input_tokens": 1539,
+      "output_tokens": 414,
+      "cost": 0.008046000000000001,
+      "latency_seconds": 7.44,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "a718d5fc861cef12",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1943,
+          "confidence": "high",
+          "probable_range": [
+            1943,
+            1943
+          ],
+          "evidence_summary": "The photograph is explicitly dated '2/12/43' in the top left corner. The subject is wearing a US Army uniform consistent with World War II era. The subject, Morris Mazal, born in 1923, would be approximately 20 years old in 1943, which aligns perfectly with his appearance in the photo.",
+          "decade_probabilities": {
+            "1940": 1.0
+          }
+        },
+        "location": {
+          "place": "United States",
+          "confidence": "high",
+          "visual_evidence": "The subject is wearing a US Army uniform, and the photo mount features a 'USA' eagle and flag motif.",
+          "biographical_evidence": "Morris Mazal was born in New York and died in Florida, USA. His service in the US military during WWII places him in the US or deployed overseas as part of the US armed forces.",
+          "reasoning": "The combination of the US military uniform, the patriotic 'USA' photo mount, and the subject's biographical background strongly indicates the photo was taken in the United States, likely before or during his military service."
+        },
+        "people": {
+          "count": 1,
+          "descriptions": [
+            "A young man, approximately 20 years old, wearing a US Army uniform with a peaked cap. He has dark hair and a serious expression."
+          ]
+        },
+        "scene_description": "A formal studio portrait of a young man in a US Army uniform, mounted in a decorative cardboard frame with patriotic 'USA' imagery. The photo is inscribed with a date and a personal message.",
+        "visible_text": "Top left: '2/12/43'. Top center: 'USA'. Bottom: 'With Love Your nephew Pvt M. Mazal'"
+      },
+      "input_tokens": 1675,
+      "output_tokens": 464,
+      "cost": 0.008918,
+      "latency_seconds": 10.76,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "b9aa84ba4717fbc9",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 34
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1924,
+          "confidence": "high",
+          "probable_range": [
+            1924,
+            1924
+          ],
+          "evidence_summary": "The photograph has a handwritten date of 'Junio 1/1924' on the front, providing a definitive date. The fashion, including the dark dresses with large collars and the hairstyles, is consistent with the early 1920s. The estimated ages of the subjects, Rosa (born 1909, making her ~15) and Sol (born 1910, making her ~14), align perfectly with their appearance in the photo.",
+          "decade_probabilities": {
+            "1910": 0.0,
+            "1920": 1.0,
+            "1930": 0.0
+          }
+        },
+        "location": {
+          "place": "Buenos Aires, Argentina",
+          "confidence": "high",
+          "visual_evidence": "The handwritten text on the photo explicitly states 'Bs. Aires', which is a common abbreviation for Buenos Aires.",
+          "biographical_evidence": "While the genealogical context notes they were born in Rhodes, the inscription clearly places them in Buenos Aires at the time the photo was taken or sent.",
+          "reasoning": "The location is explicitly written on the photograph itself as 'Bs. Aires', indicating Buenos Aires, Argentina."
+        },
+        "people": {
+          "count": 2,
+          "descriptions": [
+            "Young woman on the left, likely Rosa Sedikaro (born 1909, ~15 years old), with dark, wavy hair, wearing a dark dress with a large, embroidered collar. She is seated on the arm of the chair.",
+            "Young woman on the right, likely Sol Sedikaro (born 1910, ~14 years old), with long, dark, curly hair, wearing a dark dress with a collar and a bow. She is seated in the chair."
+          ]
+        },
+        "scene_description": "A formal studio portrait of two young women posing together. One is seated in an ornate wooden chair, while the other sits on the armrest. They are both wearing dark, long-sleeved dresses with prominent collars. The background is a plain, mottled studio backdrop.",
+        "visible_text": "Bs. Aires, Junio 1/1924\nA mi querida prima\nen prueba de nuestro\nafecto\nRosa y Sol\nSidicaro"
+      },
+      "input_tokens": 1684,
+      "output_tokens": 582,
+      "cost": 0.010352,
+      "latency_seconds": 10.35,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "1135ba51e1bf5a1a",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 44
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1945,
+          "confidence": "low",
+          "probable_range": [
+            1930,
+            1960
+          ],
+          "evidence_summary": "The photograph is a studio portrait of a baby, making it difficult to date precisely based on fashion. The style of the baby's clothing (a simple white gown) and the soft, slightly sepia-toned black and white photography suggest a mid-20th-century date, roughly between the 1930s and 1950s. The lack of distinct background details or specific technological markers limits further precision.",
+          "decade_probabilities": {
+            "1920": 0.05,
+            "1930": 0.25,
+            "1940": 0.4,
+            "1950": 0.25,
+            "1960": 0.05
+          }
+        },
+        "location": {
+          "place": "Unknown",
+          "confidence": "low",
+          "visual_evidence": "The image is a close-up studio portrait with a plain, draped fabric background, offering no geographical clues.",
+          "biographical_evidence": "None provided.",
+          "reasoning": "Without specific visual markers of a location or biographical context, it is impossible to determine where the photograph was taken."
+        },
+        "people": {
+          "count": 1,
+          "descriptions": [
+            "A baby, likely under a year old, with dark hair styled in a small tuft at the top, wearing a light-colored, possibly white, short-sleeved gown with smocking or gathering at the chest."
+          ]
+        },
+        "scene_description": "A studio portrait of a baby lying on a light-colored, satiny fabric. The baby is looking slightly off-camera with a neutral expression, one hand resting near its chest and the other near its side.",
+        "visible_text": ""
+      },
+      "input_tokens": 1539,
+      "output_tokens": 464,
+      "cost": 0.008646000000000001,
+      "latency_seconds": 10.31,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "a8a1730722a4cdeb",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 0
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1960,
+          "confidence": "high",
+          "probable_range": [
+            1960,
+            1960
+          ],
+          "evidence_summary": "STRONG: The photograph has a physical processing date stamp on the right border reading 'MAY 60'. STRONG: The apparent age of the young girl (approx. 6-7 years old) perfectly matches the birth date of Betty Capeluto (born Sept 1953). STRONG: The apparent age of the man on the right (approx. 55) matches Moise Capeluto (born 1905). MODERATE: Women's fashion, particularly the structured dark suit and handbag, is typical of the late 1950s to early 1960s.",
+          "decade_probabilities": {
+            "1950": 0.05,
+            "1960": 0.95
+          }
+        },
+        "location": {
+          "place": "Miami, Florida, USA",
+          "confidence": "medium",
+          "visual_evidence": "Tropical foliage (Plumeria/Frangipani tree), white stucco architecture, and jalousie windows which are highly characteristic of South Florida and Caribbean mid-century architecture. The Kodak-style date-stamped border is typical of US photo processing.",
+          "biographical_evidence": "Betty Capeluto was born in Havana, Cuba in 1953, and Moise Capeluto died in Miami, Florida. The 1960 date strongly aligns with the historical exodus of Jewish communities from Cuba to Miami following the 1959 revolution.",
+          "reasoning": "The combination of tropical architecture/flora and the US-style photo processing stamp points strongly to Miami. Given the family's trajectory from Havana to Miami, and the date of May 1960 (shortly after the Cuban Revolution), this photo likely captures the family in Miami. The young girl holding a small suitcase/train case further suggests recent travel or arrival."
+        },
+        "people": {
+          "count": 7,
+          "descriptions": [
+            "Young girl (front left, likely Betty Capeluto): Approximately 6-7 years old, wearing a plaid skirt and a light-colored cardigan, holding a small train case or suitcase.",
+            "Woman (left): Approximately 40s-50s, wearing a light cardigan over a patterned dress, standing with her hand protectively on the young girl's shoulder.",
+            "Older woman (center front): Approximately 60s-70s, wearing a heavy dark coat despite the apparent warm weather, holding a small clutch or wallet.",
+            "Woman (center back): Approximately 50s, wearing a light-colored top or dress, partially obscured by the older woman.",
+            "Woman (right center): Approximately 30s-40s, wearing a tailored dark skirt suit with a white blouse, holding a structured mid-century handbag.",
+            "Man (far right, likely Moise Capeluto): Approximately 55 years old, wearing a light-colored suit with a dark tie and white shirt, holding a cigar in his left hand.",
+            "Man (back right): Older man, partially obscured behind the woman in the dark suit, only his face is clearly visible."
+          ]
+        },
+        "scene_description": "A group portrait of seven individuals standing outdoors on a sunny day in front of a white stucco building with jalousie windows. A tropical Plumeria tree is visible behind them. The presence of a small suitcase held by the child suggests a theme of travel, arrival, or departure.",
+        "visible_text": "MAY 60 (printed vertically on the right white border)"
+      },
+      "input_tokens": 1731,
+      "output_tokens": 836,
+      "cost": 0.013494,
+      "latency_seconds": 26.77,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "2c611f120c15aa4a",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 74
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1932,
+            1938
+          ],
+          "evidence_summary": "The woman's dress features a high, ruffled collar, puffed sleeves, and a peplum-style waist detail, which are characteristic of mid-1930s fashion. The man's suit has wide lapels and a vest, typical of the 1930s. The overall style and the apparent age of Isaac Louza (born 1900, appearing in his mid-30s) support a mid-1930s date.",
+          "decade_probabilities": {
+            "1920": 0.05,
+            "1930": 0.85,
+            "1940": 0.1
+          }
+        },
+        "location": {
+          "place": "United States",
+          "confidence": "medium",
+          "visual_evidence": "The architecture of the house in the background, with its brick construction, prominent chimney, and large porch with classical columns and balustrade, is typical of American residential architecture from the early 20th century, possibly a Craftsman or Colonial Revival style home.",
+          "biographical_evidence": "Isaac Louza died in North Carolina, USA, suggesting he lived in the US. The architectural style strongly points to an American setting rather than Turkey or Rhodes.",
+          "reasoning": "The combination of American-style residential architecture and the biographical fact that Isaac Louza lived and died in the US strongly suggests the photo was taken in the United States."
+        },
+        "people": {
+          "count": 2,
+          "descriptions": [
+            "A woman in her late 20s to early 30s, wearing a dark, mid-calf length dress with a high, ruffled white collar, puffed sleeves, and a distinctive peplum or belted waist detail. She has dark, wavy, chin-length hair.",
+            "A man (identified as Isaac Louza), appearing to be in his mid-30s, wearing a dark three-piece suit with wide lapels, a light-colored shirt, and a tie. He has a boutonniere on his lapel and a pocket square. He has short, dark, receding hair."
+          ]
+        },
+        "scene_description": "A couple standing outdoors in front of a large brick house with a prominent porch. The man has his arm around the woman. They appear to be dressed up, possibly for a special occasion like a wedding or formal event, given the boutonniere. The photo is heavily creased and damaged.",
+        "visible_text": null
+      },
+      "input_tokens": 1684,
+      "output_tokens": 615,
+      "cost": 0.010747999999999999,
+      "latency_seconds": 9.34,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "7d0344045ba73cba",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 40
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1926,
+          "confidence": "high",
+          "probable_range": [
+            1924,
+            1929
+          ],
+          "evidence_summary": "The subjects' apparent ages (early to mid-20s) align perfectly with their birth years (1904/1905) for a mid-1920s wedding. The bride's Juliet cap veil, worn low across the forehead with side floral clusters, and her long pearl necklace are STRONG indicators of 1920s bridal fashion. The massive, cascading bouquet with long ribbons is also typical of this era. The groom's formal cutaway coat with a wing collar and white bow tie is a MODERATE indicator, as it was standard formal wear but fits the period perfectly.",
+          "decade_probabilities": {
+            "1910": 0.05,
+            "1920": 0.85,
+            "1930": 0.1
+          }
+        },
+        "location": {
+          "place": "Unknown (Likely United States or Rhodes)",
+          "confidence": "low",
+          "visual_evidence": "The photograph features a generic, mottled painted studio backdrop with no distinct architectural or geographic markers. The high quality of the studio portrait suggests a professional photography studio.",
+          "biographical_evidence": "Leon was born in Turkey (1904) and Victoria in Rhodes (1905). They died in Florida. Many Sephardic Jews from this region emigrated to the US (such as Seattle, Atlanta, or New York) in the 1910s and 1920s. This wedding portrait could have been taken in Rhodes prior to emigration, or in a US diaspora community shortly after arrival.",
+          "reasoning": "Without a studio watermark or specific architectural clues, the location must be inferred from the migration patterns of Sephardic Jews of this era. The 1920s was a peak time for emigration from Rhodes to the US, meaning the wedding could have occurred in either the old world or the new world."
+        },
+        "people": {
+          "count": 2,
+          "descriptions": [
+            "Groom (likely Big Leon Capeluto): A young man, estimated age 20-25, standing on the left. He has dark hair slicked back and parted on the side. He is wearing a formal dark cutaway coat (morning suit), a white wing-collar shirt, and a white bow tie.",
+            "Bride (likely Victoria Capuano Capeluto): A young woman, estimated age 19-24, seated on the right. She is wearing a 1920s-style wedding dress featuring an elaborate lace Juliet cap veil with floral appliques, and a long pearl necklace. She is holding a massive, cascading bouquet of roses and ferns tied with long ribbons."
+          ]
+        },
+        "scene_description": "A formal, sepia-toned studio wedding portrait. The groom stands attentively on the left with his hands clasped in front of him, while the bride sits on the right, looking directly at the camera. A massive floral bouquet rests on her lap, dominating the lower center of the composition. The background is a soft-focus, painted studio backdrop.",
+        "visible_text": ""
+      },
+      "input_tokens": 1761,
+      "output_tokens": 742,
+      "cost": 0.012426,
+      "latency_seconds": 30.42,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "4a9dee395e1150b2",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 95
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1915,
+          "confidence": "medium",
+          "probable_range": [
+            1913,
+            1920
+          ],
+          "evidence_summary": "The subject, Abraham Moussafer (born 1895), appears to be between 18 and 25 years old in this photograph, which strongly suggests a date between 1913 and 1920. The formal 'white tie' evening wear (tailcoat, deep U-shaped white waistcoat, wing collar, and white bow tie) was standard formal attire for special occasions in the 1910s. The physical format of the photograph, mounted on a textured card with an embossed border, is highly characteristic of studio portraits from the 1910s.",
+          "decade_probabilities": {
+            "1900": 0.05,
+            "1910": 0.8,
+            "1920": 0.15
+          }
+        },
+        "location": {
+          "place": "New York City, New York, USA",
+          "confidence": "high",
+          "visual_evidence": "The studio imprint on the bottom right of the mount clearly reads 'A. Smith / 351 GRAND ST. / - N.Y. -'.",
+          "biographical_evidence": "While the subject was born in Rhodes and died in Brazil, the studio mark places him in New York City at the time the photo was taken. Grand Street is located in the Lower East Side, which was a major hub for Jewish immigrants, including Sephardic Jews from the Ottoman Empire, during the early 20th century.",
+          "reasoning": "The physical studio mark provides an exact address. The Lower East Side location perfectly aligns with typical Sephardic immigrant settlement patterns in the United States during the 1910s."
+        },
+        "people": {
+          "count": 1,
+          "descriptions": [
+            "Young adult male, identified as Abraham Moussafer, approximately 18-25 years old. He has dark hair parted on the side and is clean-shaven. He is dressed in highly formal evening attire: a dark tailcoat with silk lapels, a white waistcoat, a stiff white shirt with a wing collar, and a white bow tie."
+          ]
+        },
+        "scene_description": "A formal studio portrait of a young man standing in front of a mottled, cloudy painted backdrop. He is positioned next to an ornate, dark wood pedestal table with a spiral-carved column. His right hand rests gently on the edge of the table. On top of the table sits a dark, glazed ceramic pot containing a spiky, palm-like plant. The photograph is mounted on a light-colored, textured card with a decorative embossed border.",
+        "visible_text": "A. Smith 351 GRAND ST. - N.Y. -"
+      },
+      "input_tokens": 1690,
+      "output_tokens": 657,
+      "cost": 0.011264,
+      "latency_seconds": 25.74,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "3e53fd3c015350c8",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 47
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1935,
+          "confidence": "medium",
+          "probable_range": [
+            1930,
+            1939
+          ],
+          "evidence_summary": "The women's bobbed hairstyles strongly indicate the late 1920s to mid-1930s. The man on the right is wearing a suit with wide lapels and a wide, boldly striped tie, which is characteristic of 1930s menswear. If the man on the right is Victor Capelluto (born 1906), his apparent age of 25-35 aligns well with a 1930s date.",
+          "decade_probabilities": {
+            "1920": 0.15,
+            "1930": 0.7,
+            "1940": 0.15
+          }
+        },
+        "location": {
+          "place": "Rhodes, Greece",
+          "confidence": "medium",
+          "visual_evidence": "Outdoor setting featuring warm-climate vegetation, specifically what appears to be large banana plant leaves behind the woman on the left and a slender-leaved tree (possibly eucalyptus) on the right.",
+          "biographical_evidence": "Victor Capelluto was born in Rhodes. While he died in New York, the tropical/Mediterranean vegetation strongly suggests this was taken in his birthplace prior to emigration, rather than in New York.",
+          "reasoning": "The combination of the subject's known birthplace and the distinct visual evidence of Mediterranean/subtropical flora (banana leaves) makes Rhodes the most probable location. The clothing styles suggest a date prior to the WWII destruction of the Rhodesli Jewish community."
+        },
+        "people": {
+          "count": 5,
+          "descriptions": [
+            "Man seated on the left, approximately 30s-40s, wearing a light-colored shirt and dark trousers with suspenders.",
+            "Woman standing back left, approximately 20s-30s, with a dark bobbed haircut typical of the era, wearing a light-colored dress or blouse.",
+            "Young girl standing center front, approximately 8-12 years old, wearing a light sleeveless dress and holding a small dark object.",
+            "Woman standing back right, approximately 30s-40s, wearing a light-colored dress with a v-neck or collar.",
+            "Man seated on the right (likely Victor Capelluto), approximately 25-35 years old, wearing a light-colored suit jacket, light shirt, and a wide striped tie."
+          ]
+        },
+        "scene_description": "An informal outdoor group portrait of five individuals (two men, two women, and a young girl) posing in a garden or yard. The background features a fence and Mediterranean or subtropical vegetation. The physical photograph is heavily damaged, with significant tearing, missing corners, and prominent creases across the subjects.",
+        "visible_text": ""
+      },
+      "input_tokens": 1687,
+      "output_tokens": 666,
+      "cost": 0.011366000000000001,
+      "latency_seconds": 30.57,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "dcba1494381b12cb",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 42
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1963,
+          "confidence": "high",
+          "probable_range": [
+            1963,
+            1963
+          ],
+          "evidence_summary": "The photo has a date stamp on the right border that says 'MAY 63'. The fashion, including the young girl's dress and cardigan, the women's suits, and the man's polo shirt, is consistent with the early 1960s. The young girl, Betty Capeluto, born in 1953, appears to be about 10 years old, which aligns perfectly with the 1963 date.",
+          "decade_probabilities": {
+            "1950": 0.0,
+            "1960": 1.0,
+            "1970": 0.0
+          }
+        },
+        "location": {
+          "place": "Miami, Florida, USA",
+          "confidence": "medium",
+          "visual_evidence": "The architecture features jalousie windows, which are very common in Florida and other warm climates. The foliage looks tropical or subtropical.",
+          "biographical_evidence": "Moise Capeluto died in Miami, Florida in 1978, and Betty Capeluto died in Miami-Dade County in 2021. It is highly probable the family was living in or visiting Miami in 1963.",
+          "reasoning": "The combination of the jalousie windows, tropical-looking foliage, and the known biographical data placing the family in Miami later in life strongly suggests the photo was taken in Miami, Florida."
+        },
+        "people": {
+          "count": 4,
+          "descriptions": [
+            "Older woman on the left, estimated age 60-70, wearing a dark, textured two-piece suit with a matching top underneath, holding a white handbag.",
+            "Man in the back center, identified as Moise Capeluto, estimated age 57 (born 1905), wearing a patterned polo shirt and smoking a cigar.",
+            "Young girl in the front center, identified as Betty Capeluto, estimated age 10 (born 1953), wearing a patterned dress with a cardigan sweater and a cross-body bag, looking down.",
+            "Woman on the right, estimated age 40-50, wearing a dark suit jacket over a patterned top, holding a dark handbag."
+          ]
+        },
+        "scene_description": "A group of four people, likely a family, standing outdoors in front of a building with jalousie windows and a low hedge. The photo appears to be a casual snapshot.",
+        "visible_text": "MAY 63 (printed vertically on the right border)"
+      },
+      "input_tokens": 1731,
+      "output_tokens": 631,
+      "cost": 0.011034,
+      "latency_seconds": 9.31,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "ff241a7e44f7d3c3",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 74
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1981,
+          "confidence": "high",
+          "probable_range": [
+            1978,
+            1984
+          ],
+          "evidence_summary": "The fashion markers strongly indicate the late 1970s to early 1980s: the younger woman on the left has feathered hair (Farrah Fawcett style), and the men's tuxedos feature wide lapels, large bowties, and ruffled/pleated shirts. Genealogically, Victor Capelluto (born 1906) appears to be in his mid-70s, and Laura Franco Capelluto (born 1918) appears to be in her early 60s, which perfectly aligns with a circa 1980-1982 date.",
+          "decade_probabilities": {
+            "1960": 0.0,
+            "1970": 0.35,
+            "1980": 0.65,
+            "1990": 0.0
+          }
+        },
+        "location": {
+          "place": "New York, NY, United States",
+          "confidence": "medium",
+          "visual_evidence": "The photograph is a standard American studio portrait with a painted canvas backdrop, typical of wedding photography in the US during this era.",
+          "biographical_evidence": "Both Victor and Laura Capelluto died in New York, NY, suggesting the family was established in the New York diaspora community during this period.",
+          "reasoning": "While the studio backdrop provides no specific geographic clues, the biographical data places the older couple in New York. The style of the wedding photography and attire is consistent with American trends of the late 1970s and early 1980s, making New York the most probable location for this family event."
+        },
+        "people": {
+          "count": 6,
+          "descriptions": [
+            "Young adult male, standing left, 20s-30s. Wearing a black tuxedo with wide lapels, a pleated shirt, and a large black bowtie. He has brown hair parted on the side with some volume.",
+            "Young adult male, standing center, 20s-30s. Wearing a black tuxedo with a vest, large bowtie, and a white boutonniere. He has dark, full hair.",
+            "Older adult male, standing right, estimated age 70-75 (likely Victor Capelluto). Wearing a classic black tuxedo with a white boutonniere. He is balding with grey hair.",
+            "Young adult female, seated left, 20s-30s. Wearing a white dress with pastel pink and green squiggly patterns and a long pearl necklace. She has brown hair styled in a feathered, flipped-back look typical of the era, and is holding a bouquet of purple flowers.",
+            "Young adult female, seated center, 20s-30s. Wearing a white dress with a lace overlay on the bodice and sleeves. She has long, straight brown hair parted in the middle and is holding a large bouquet of lilies and greenery. She is likely the bride.",
+            "Older adult female, seated right, estimated age 60-65 (likely Laura Franco Capelluto). Wearing a light grey or silver formal gown with a heavily beaded or sequined bodice. She has short, styled grey hair and is wearing a watch and rings."
+          ]
+        },
+        "scene_description": "A formal studio portrait of a family, likely taken at a wedding or significant formal event. Three men in tuxedos stand behind three seated women in formal dresses. They are posed in front of a painted canvas backdrop depicting a cloudy sky and a classical landscape featuring a gazebo or temple by the water. The lighting is soft and typical of late 20th-century professional studio photography.",
+        "visible_text": null
+      },
+      "input_tokens": 1718,
+      "output_tokens": 871,
+      "cost": 0.013888,
+      "latency_seconds": 30.22,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "0b5246f5b77a9ccb",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 70
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1953,
+          "confidence": "medium",
+          "probable_range": [
+            1950,
+            1955
+          ],
+          "evidence_summary": "The fashion, particularly the wide lapels on the men's suits, the women's hairstyles (short, curled), and the bold patterned ties, strongly suggest the early 1950s. The ages of the identified individuals align with this period. Nace Capeluto (born 1933) appears to be around 20, Anita (born 1931) around 22, Betty (born 1935) around 18, and Selma (born 1928) around 25. The parents, Victoria (born 1905) and Leon (born 1904), appear to be in their late 40s or early 50s. The older man on the left is likely a grandfather or older relative.",
+          "decade_probabilities": {
+            "1940": 0.1,
+            "1950": 0.8,
+            "1960": 0.1
+          }
+        },
+        "location": {
+          "place": "United States",
+          "confidence": "medium",
+          "visual_evidence": "The setting appears to be a banquet hall or restaurant, typical of mid-century American celebrations. The clothing and overall style are consistent with American fashion of the era.",
+          "biographical_evidence": "The family members were born and lived in the United States (North Carolina, Georgia, Florida) during this time period.",
+          "reasoning": "Given the biographical data placing the family in the US (specifically the Southeast) and the visual cues of a mid-century American social event, the location is highly likely within the United States, possibly in North Carolina or Florida where they resided."
+        },
+        "people": {
+          "count": 7,
+          "descriptions": [
+            "Older man on the far left, wearing glasses, a suit, and a patterned tie, holding a cigarette. He appears to be in his 60s or 70s.",
+            "Young woman standing back left, wearing a dark, patterned suit jacket and a pearl necklace. She appears to be in her early 20s (likely Selma Capeluto).",
+            "Young man standing center back, wearing a suit and a patterned tie, smiling broadly. He appears to be around 20 (likely Nace Capeluto).",
+            "Young woman standing back right, wearing a dark dress, smiling. She appears to be in her late teens or early 20s (likely Betty Capeluto Fox).",
+            "Man seated center, wearing a light-colored suit, glasses, and a patterned tie, smiling. He appears to be in his late 40s or early 50s (likely Big Leon Capeluto).",
+            "Woman seated right, wearing a dark dress with a floral corsage, smiling. She appears to be in her late 40s or early 50s (likely Victoria Capuano Capeluto).",
+            "Young woman leaning in from the far right, wearing a dark dress, smiling. She appears to be in her early 20s (likely Anita Capeluto Franco)."
+          ]
+        },
+        "scene_description": "A group of seven people, likely a family, gathered around a dining table at what appears to be a celebratory event, such as a wedding reception or anniversary dinner. The table is set with plates, glasses, and a centerpiece. The atmosphere is joyful and festive.",
+        "visible_text": ""
+      },
+      "input_tokens": 1928,
+      "output_tokens": 828,
+      "cost": 0.013792,
+      "latency_seconds": 12.33,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "fde6b60713d00574",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 234
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1963,
+          "confidence": "high",
+          "probable_range": [
+            1961,
+            1965
+          ],
+          "evidence_summary": "The young girl, likely Betty Capeluto (born 1953), appears to be around 8 to 12 years old, placing the photo in the early to mid-1960s. The older woman's sleeveless patterned shift dress and bouffant hairstyle are classic early 1960s fashion. The square print format with white borders is also highly characteristic of snapshot photography from this era.",
+          "decade_probabilities": {
+            "1950": 0.1,
+            "1960": 0.85,
+            "1970": 0.05
+          }
+        },
+        "location": {
+          "place": "Miami, Florida, USA",
+          "confidence": "medium",
+          "visual_evidence": "Tropical or subtropical vegetation is visible in the background, including what appears to be a banana leaf on the right and a citrus tree on the left. The flat, grassy residential yard is typical of South Florida.",
+          "biographical_evidence": "Betty Capeluto was born in Havana, Cuba in 1953 and died in Miami, Florida. Given her apparent age (post-1959 Cuban Revolution), it is highly probable the family had already migrated to the United States and settled in Miami, a common trajectory for Cuban-Jewish immigrants of this period.",
+          "reasoning": "The combination of tropical foliage, the subject's estimated age placing the photo after the 1959 Cuban revolution, and her known death place in Miami strongly points to a South Florida residential location."
+        },
+        "people": {
+          "count": 2,
+          "descriptions": [
+            "An adult woman, likely in her 30s or 40s, wearing a sleeveless, patterned shift dress and light-colored flats. She has a short, styled bouffant haircut typical of the early 1960s. She has her arm affectionately around the young girl.",
+            "A young girl, estimated age 8-12, likely Betty Capeluto. She is wearing a dress with a pleated skirt, a button-up cardigan sweater, white ankle socks, and dark shoes. She is carrying a small, dark cross-body purse and has her hair pulled back."
+          ]
+        },
+        "scene_description": "An outdoor snapshot taken in a residential yard. An adult woman and a young girl are posing together on a grassy lawn. Behind them are various tropical plants and bushes, and a garden hose is visible snaking across the grass in the foreground.",
+        "visible_text": null
+      },
+      "input_tokens": 1651,
+      "output_tokens": 622,
+      "cost": 0.010766,
+      "latency_seconds": 23.45,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "1ee4ffdef6743ff4",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 45
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1948,
+          "confidence": "high",
+          "probable_range": [
+            1946,
+            1950
+          ],
+          "evidence_summary": "The fashion, particularly the wedding dress with its long train and veil, the bridesmaids' dresses with sweetheart necklines and full skirts, and the men's wide lapels and bow ties, strongly suggest the late 1940s. The presence of Nace Capeluto (born 1933) appearing to be around 15 years old, and Anita Capeluto Franco (born 1931) appearing to be around 17, aligns perfectly with a date around 1948.",
+          "decade_probabilities": {
+            "1930": 0.05,
+            "1940": 0.85,
+            "1950": 0.1
+          }
+        },
+        "location": {
+          "place": "United States",
+          "confidence": "medium",
+          "visual_evidence": "The interior setting, with its formal architectural details (columns, sconce, large windows), suggests a catering hall or hotel ballroom typical of American weddings in the mid-20th century.",
+          "biographical_evidence": "The individuals identified (Moise, Anita, Victor, Victoria, Nace, Big Leon, Laura, Selma) were living in the United States (North Carolina, New York, Florida) during this time period.",
+          "reasoning": "Given the biographical data placing the family in the US and the typical American style of the wedding venue and attire, the location is highly likely within the United States, possibly New York or a southern state where the family resided."
+        },
+        "people": {
+          "count": 9,
+          "descriptions": [
+            "Young man on the far left, likely Nace Capeluto (born 1933), wearing a light-colored suit and tie, appearing around 15 years old.",
+            "Young woman next to him, likely Anita Capeluto Franco (born 1931), wearing a light-colored bridesmaid dress with a sweetheart neckline and a floral hairpiece, appearing around 17 years old.",
+            "Older man, likely Moise Capeluto (born 1905) or Big Leon Capeluto (born 1904), wearing a dark tuxedo with a bow tie.",
+            "Older woman, likely Victoria Capuano Capeluto (born 1905), wearing a dark, floor-length dress with floral appliques and long black gloves.",
+            "Groom, wearing a dark tuxedo with a bow tie and a boutonniere.",
+            "Bride, wearing a white, long-sleeved wedding gown with a sweetheart neckline, a long train, and a veil attached to a floral headpiece, holding a large bouquet.",
+            "Man to the right of the bride, likely Victor Capelluto (born 1906), wearing a dark tuxedo with a bow tie.",
+            "Woman next to him, likely Laura Franco Capelluto (born 1918), wearing a light-colored dress with a draped bodice and dark gloves.",
+            "Man on the far right, wearing a dark tuxedo with a bow tie.",
+            "Young woman on the far right, likely Selma Capeluto (born 1928), wearing a light-colored bridesmaid dress matching the other bridesmaid, appearing around 20 years old."
+          ]
+        },
+        "scene_description": "A formal wedding portrait of a bridal party and family members standing in a line indoors. The bride and groom are in the center, flanked by parents, bridesmaids, and groomsmen. The setting appears to be a formal hall with large windows, curtains, and architectural details.",
+        "visible_text": "ANSCO SAFETY FILM (printed on the edge of the negative)"
+      },
+      "input_tokens": 2019,
+      "output_tokens": 871,
+      "cost": 0.01449,
+      "latency_seconds": 13.53,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "fb6a846971b30f4b",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 289
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1930,
+          "confidence": "medium",
+          "probable_range": [
+            1925,
+            1935
+          ],
+          "evidence_summary": "The subject's age (born 1904, appears mid-20s to early 30s), hairstyle (slicked back, parted), and suit style (wide lapels, patterned tie) suggest the late 1920s to 1930s. The newspaper clipping context mentions 'Leon's Brass Rail' and 'Castle Club', which were active in Asheville, NC during this era.",
+          "decade_probabilities": {
+            "1920": 0.3,
+            "1930": 0.6,
+            "1940": 0.1
+          }
+        },
+        "location": {
+          "place": "Asheville, North Carolina, United States",
+          "confidence": "high",
+          "visual_evidence": "Newspaper text explicitly mentions 'Asheville's restaurant circles', 'West Pack Square', and 'Asheville's finest night club'.",
+          "biographical_evidence": "The subject is identified as Leon Capeluto, proprietor of Leon's Brass Rail in Asheville.",
+          "reasoning": "The text in the image clearly places the businesses mentioned (Leon's Brass Rail, Castle Club) in Asheville, NC. The caption under the photo identifies the man as Leon Capeluto, manager of Leon's Brass Rail in Asheville."
+        },
+        "people": {
+          "count": 1,
+          "descriptions": [
+            "A young adult male, likely in his mid-20s to early 30s, with dark, slicked-back hair parted on the side. He is wearing a dark suit jacket, a white collared shirt, and a patterned tie. He has a serious expression."
+          ]
+        },
+        "scene_description": "A newspaper clipping featuring two short articles and a portrait photograph. The top article is titled 'BRASS RAIL IS VERY POPULAR EATING PLACE' and the bottom is 'CASTLE CLUB HOST TO MANY XMAS PARTIES'. The photo shows a young man in a suit and tie, with the caption 'Leon Capeluto, popular owner-manager of Leon's Brass Rail, one of Asheville's busiest eating places.'",
+        "visible_text": "BRASS RAIL IS VERY POPULAR EATING PLACE\nOne of the most popular eating places in town is Leon's Brass Rail, on West Pack Square. Although it was only opened a short time ago it has gained in popularity from the day of its opening.\nLeon Capeluto, the proprietor, is well-known in Asheville's restaurant circles, having operated cafes in this city for a number of years.\nThe Brass Rail features rotisserie and grill cooked meats at low prices. All kinds of drinks are served. Grill cooked hamburgers and weiners are very popular with the after-show crowds.\nCASTLE CLUB HOST TO MANY XMAS PARTIES\nThe Castle Asheville's finest night club has made most unusual preparations for the Christmas Holidays in anticipation of a large crowd.\nThe entire establishment has been most tastefully decorated and the Christmas spirit prevails throughout.\nProprietor\nLeon Capeluto, popular owner-manager of Leon's Brass Rail, one of Asheville's busiest eating places."
+      },
+      "input_tokens": 1686,
+      "output_tokens": 758,
+      "cost": 0.012468,
+      "latency_seconds": 10.26,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "ca69d9decc37b0ec",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 44
+    },
+    {
+      "result": {
+        "date_estimation": {
+          "estimated_year": 1965,
+          "confidence": "medium",
+          "probable_range": [
+            1960,
+            1969
+          ],
+          "evidence_summary": "The clothing styles, particularly the women's dresses and hairstyles, strongly suggest the 1960s. The bouffant hairstyles, the shift dresses, and the man's narrow tie and lapels are characteristic of this decade. The presence of Laura Franco Capelluto (born 1918) and Victor Capelluto (born 1906) in the photo, appearing to be in their late 40s to early 60s, aligns with a date in the 1960s.",
+          "decade_probabilities": {
+            "1950": 0.1,
+            "1960": 0.8,
+            "1970": 0.1
+          }
+        },
+        "location": {
+          "place": "New York, NY, United States",
+          "confidence": "medium",
+          "visual_evidence": "The interior setting with formal drapery and furniture suggests a studio or a formal event space, which could be anywhere, but the style is consistent with mid-20th century American interiors.",
+          "biographical_evidence": "Both Laura Franco Capelluto and Victor Capelluto died in New York, suggesting they lived there for a significant portion of their lives, making it a likely location for this formal portrait.",
+          "reasoning": "Given the biographical data placing the identified individuals in New York later in life, and the typical American style of the clothing and setting for the 1960s, New York is a highly probable location."
+        },
+        "people": {
+          "count": 6,
+          "descriptions": [
+            "Woman on the far left, appearing to be in her 40s or 50s, wearing a dark, textured two-piece outfit with a matching handbag, and a bouffant hairstyle.",
+            "Woman second from the left, appearing to be in her 40s, wearing a light-colored, patterned coat dress and light-colored heels.",
+            "Young woman third from the left, face obscured by damage, wearing a light-colored sleeveless dress.",
+            "Young woman fourth from the left, face obscured by damage, wearing a light-colored sleeveless dress with a decorative pin.",
+            "Man second from the right, identified as Victor Capelluto, appearing to be in his late 50s or early 60s, wearing a dark suit with a narrow tie and a pocket square.",
+            "Older woman on the far right, appearing to be in her 60s or 70s, wearing a dark dress, glasses, and a necklace."
+          ]
+        },
+        "scene_description": "A formal group portrait of six individuals, four women, one man, and one older woman, standing in a row indoors against a backdrop of light-colored, patterned drapery. The photo has significant water or chemical damage in the upper center, obscuring the faces of two of the younger women.",
+        "visible_text": ""
+      },
+      "input_tokens": 1730,
+      "output_tokens": 714,
+      "cost": 0.012027999999999999,
+      "latency_seconds": 13.04,
+      "model": "gemini-3.1-pro-preview",
+      "photo_id": "ea94c703087befcf",
+      "status": "success",
+      "has_gedcom": true,
+      "gedcom_context_tokens": 70
+    }
+  ]
+}
