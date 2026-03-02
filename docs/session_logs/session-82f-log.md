@@ -3,8 +3,8 @@ Started: 2026-03-02
 Prompt: docs/prompts/session-82f-prompt.md
 
 ## Act Checklist
-- [ ] Act 0: Orient + Full Audit
-- [ ] Act 1: Browser Verification — Find Broken Features
+- [x] Act 0: Orient + Full Audit
+- [x] Act 1: Browser Verification — Find Broken Features
 - [ ] Act 2: Fix All Broken Features
 - [ ] Act 3: Fix Remaining GREEN Features
 - [ ] Act 4: 82b/82c Gap Analysis
@@ -14,15 +14,15 @@ Prompt: docs/prompts/session-82f-prompt.md
 ## Act Progress
 ### Act 0
 - Started: 2026-03-02
-- Completed:
-- Findings:
+- Completed: 2026-03-02
+- Findings: Full audit written to docs/session_context/session-82f-audit.md. 20 shipped, 3 partially shipped, 4 dropped, 8 deferred. 82b never executed, 82c never merged.
 
 ### Act 1
-- Started:
-- Completed:
-- BROKEN count:
-- INCONSISTENT count:
-- WORKING count:
+- Started: 2026-03-02
+- Completed: 2026-03-02
+- BROKEN count: 0
+- INCONSISTENT count: 3 (Similar button hit area, admin landing help section, flex-wrap spec deviation)
+- WORKING count: 16 features confirmed working in production
 
 ### Act 2
 - Started:
