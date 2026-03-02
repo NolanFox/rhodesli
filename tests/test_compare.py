@@ -134,3 +134,51 @@ def test_compare_pair_match_includes_cross_match_summary(client, tmp_path, monke
 
     assert response.status_code == 200
     assert "Top cross-photo matches" in response.text
+
+
+def test_upload_id_has_no_hyphens(tmp_path, monkeypatch):
+    """Upload IDs must be hex-only (no hyphens from str(uuid4))."""
+    import app.main as main_mod
+    from app.main import _save_compare_upload
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    with patch("core.storage.can_write_r2", return_value=False):
+        upload_id = _save_compare_upload(b"abc", "photo.jpg", [], [], status="uploaded")
+
+    assert "-" not in upload_id, f"Upload ID contains hyphen: {upload_id}"
+    assert len(upload_id) == 12
+
+
+def test_compare_result_not_found_shows_helpful_message(client):
+    """Missing result shows 'expired' message with link to try again."""
+    with patch("app.main._load_comparison_results", return_value={"results": {}}):
+        response = client.get("/compare/result/nonexistent1")
+    assert response.status_code == 200
+    assert "expired" in response.text.lower() or "not found" in response.text.lower()
+    assert "/compare" in response.text  # Link to try again
+
+
+def test_save_comparison_result_is_retrievable(tmp_path, monkeypatch):
+    """Saved comparison result can be retrieved by ID."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result, _load_comparison_results
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    # Reset cache
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "abc123def456",
+        "created_at": "2026-03-02T00:00:00Z",
+        "query_type": "compare_upload",
+        "matches": [{"identity_name": "Test", "distance": 0.5}],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+
+    # Reset cache and reload
+    main_mod._comparison_results_cache = None
+    data = _load_comparison_results()
+    assert "abc123def456" in data["results"]
+    assert data["results"]["abc123def456"]["matches"][0]["identity_name"] == "Test"

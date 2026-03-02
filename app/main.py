@@ -16937,7 +16937,7 @@ def _save_compare_upload(content: bytes, filename: str, faces: list, results: li
     from pathlib import Path as _Path
     from core.storage import can_write_r2, upload_bytes_to_r2
 
-    upload_id = str(_uuid.uuid4())[:12]
+    upload_id = _uuid.uuid4().hex[:12]
     suffix = _Path(filename).suffix or ".jpg"
     image_key = f"uploads/compare/{upload_id}{suffix}"
 
@@ -17607,6 +17607,24 @@ async def post(request):
 
             upload_id = _save_compare_upload(content, original_filename, faces, results)
 
+            # Save comparison result to comparison_results.json so the result page can find it
+            # Session 83a fix: SSE was saving upload metadata but NOT the result entry
+            try:
+                result_data = {
+                    "result_id": upload_id,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "query_type": "compare_upload" if flow == "compare" else "facecompare_upload",
+                    "query_name": original_filename,
+                    "matches": results,
+                    "date_estimate": date_estimate,
+                    "face_count": len(faces),
+                    "responses": [],
+                }
+                _save_comparison_result(result_data)
+                logging.info(f"[compare] Saved result {upload_id} with {len(results)} matches")
+            except Exception as e:
+                logging.error(f"[compare] Failed to save comparison result {upload_id}: {e}")
+
             # Save face embeddings for face selection
             import pickle
             from core.storage import can_write_r2, upload_bytes_to_r2
@@ -17842,8 +17860,12 @@ def get(result_id: str, sess=None):
         return Title("Not Found"), Main(
             Div(
                 H1("Comparison Not Found", cls="text-2xl font-serif text-white mb-4"),
-                P("This comparison result doesn't exist or has been removed.", cls="text-slate-400"),
-                A("Try Compare Faces", href="/compare", cls="text-indigo-400 hover:text-indigo-300 mt-4 inline-block"),
+                P("This comparison result may have expired or been removed after a server restart.",
+                  cls="text-slate-400 mb-2"),
+                P("Please upload your photo again to get fresh results.",
+                  cls="text-slate-500 text-sm mb-6"),
+                A("Upload a Photo to Compare \u2192", href="/compare",
+                  cls="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors inline-block"),
                 cls="max-w-4xl mx-auto px-6 py-20 text-center",
             ),
             cls="min-h-screen bg-slate-900",
@@ -19206,7 +19228,7 @@ async def post(photo: UploadFile = None, sess=None):
 
     # Save the upload
     import uuid as _uuid
-    upload_id = str(_uuid.uuid4())[:12]
+    upload_id = _uuid.uuid4().hex[:12]
     image_key = f"uploads/estimate/{upload_id}{suffix}"
 
     from core.storage import can_write_r2, upload_bytes_to_r2
