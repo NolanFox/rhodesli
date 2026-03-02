@@ -12326,7 +12326,7 @@ def get(sess=None):
                 Div(
                     P("Do you recognize this person?",
                       cls="text-xs text-amber-300/80 font-medium mb-1"),
-                    P(item["collection"], cls="text-[10px] text-slate-500 truncate") if item["collection"] else None,
+                    P(item["collection"], cls="text-[10px] text-slate-500 leading-snug") if item["collection"] else None,
                     cls="p-2.5",
                 ),
                 href=f"/identify/{item['identity_id']}",
@@ -20526,6 +20526,7 @@ def public_photo_page(
 
             _pub_overlay_base = f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;"
             _pub_overlay_style = _pub_overlay_base + (" display: block;" if is_admin else " display: none;")
+            _id_attr = "true" if fi["is_identified"] else "false"
             overlay_inner = A(
                 name_el,
                 href=click_href,
@@ -20533,11 +20534,13 @@ def public_photo_page(
                 style=_pub_overlay_style,
                 title=fi["display_name"],
                 id=f"overlay-{fi['identity_id']}" if fi["identity_id"] else None,
+                data_identified=_id_attr,
             ) if click_href else Div(
                 name_el,
                 cls=overlay_cls,
                 style=_pub_overlay_base + ("" if is_admin else " display: none;"),
                 title=fi["display_name"],
+                data_identified=_id_attr,
             )
             overlay = overlay_inner
             face_overlays.append(overlay)
@@ -20850,6 +20853,53 @@ def public_photo_page(
             opacity: 0;
             pointer-events: none;
         }
+        /* Identify Mode — highlights unidentified faces */
+        @keyframes identify-pulse {
+            0%, 100% { box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.4); }
+            50% { box-shadow: 0 0 16px 4px rgba(251, 191, 36, 0.7); }
+        }
+        .identify-mode .photo-hero-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            border-radius: 0.5rem;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .identify-mode .face-overlay-box {
+            display: block !important;
+            z-index: 2;
+        }
+        .identify-mode .face-overlay-box[data-identified="true"] {
+            border-color: rgba(52, 211, 153, 0.6);
+            border-style: solid;
+            opacity: 0.7;
+        }
+        .identify-mode .face-overlay-box[data-identified="false"] {
+            border-color: rgba(251, 191, 36, 0.9);
+            border-style: solid;
+            border-width: 3px;
+            animation: identify-pulse 2s ease-in-out infinite;
+            z-index: 3;
+        }
+        .identify-mode .face-overlay-box[data-identified="false"]::after {
+            content: '?';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background: #f59e0b;
+            color: #000;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 4;
+        }
     """)
 
     # Keyboard navigation script for carousel
@@ -20987,6 +21037,15 @@ def public_photo_page(
                             id="face-overlay-toggle-public",
                             data_overlays_hidden="false" if is_admin else "true",
                         ) if face_overlays else None,
+                        Button(
+                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'),
+                            Span("Identify Mode", id="identify-mode-text"),
+                            cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm rounded-lg transition-colors",
+                            type="button",
+                            data_action="toggle-identify-mode",
+                            id="identify-mode-toggle",
+                            data_testid="identify-mode-toggle",
+                        ) if face_overlays and (unidentified_count > 0 or is_admin) else None,
                         A(
                             NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-1.5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>'),
                             "Download",
@@ -21269,9 +21328,19 @@ def public_photo_page(
                         toggleBtn.textContent = isHidden ? 'Hide Faces' : 'Show Faces';
                         return;
                     }
+                    var idModeBtn = e.target.closest('[data-action="toggle-identify-mode"]');
+                    if (idModeBtn) {
+                        var container = document.querySelector('.photo-page-container');
+                        if (!container) return;
+                        var isActive = container.classList.toggle('identify-mode');
+                        var textEl = document.getElementById('identify-mode-text');
+                        if (textEl) textEl.textContent = isActive ? 'Exit Identify Mode' : 'Identify Mode';
+                        idModeBtn.style.background = isActive ? '#b45309' : '';
+                        return;
+                    }
                 });
             """),
-            cls="min-h-screen bg-slate-900"
+            cls="min-h-screen bg-slate-900 photo-page-container"
         ),
         keyboard_nav_script,
     )

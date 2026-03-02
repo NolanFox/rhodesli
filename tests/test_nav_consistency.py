@@ -30,6 +30,7 @@ class TestPublicNavLinks:
             assert "/connect" in hrefs
             assert "/compare" in hrefs
             assert "/estimate" in hrefs
+            assert "/help" in hrefs
 
     def test_active_link_highlighted(self):
         with patch("app.main.is_auth_enabled", return_value=False):
@@ -37,7 +38,7 @@ class TestPublicNavLinks:
             for link in links:
                 href = link.attrs.get("href", "")
                 cls = link.attrs.get("class", "")
-                if not href or href == "/?section=skipped":
+                if not href or href in ("/?section=skipped", "/help"):
                     continue
                 if href == "/map":
                     assert "text-white" in cls
@@ -69,8 +70,8 @@ class TestPublicNavLinks:
             links = _public_nav_links(active="")
             hrefs = [link.attrs.get("href", "") for link in links]
             expected_order = [
-                "/photos", "/collections", "/people", "/timeline", "/map", 
-                "", "/tree", "/connect", "/compare", "/estimate", "/?section=skipped"
+                "/photos", "/collections", "/people", "/timeline", "/map",
+                "", "/tree", "/connect", "/compare", "/estimate", "/help"
             ]
             assert hrefs == expected_order
 
