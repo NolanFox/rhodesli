@@ -11,7 +11,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
-from app.main import app, load_embeddings_for_photos, face_card
+from app.main import app, load_embeddings_for_photos, face_card, _build_face_cards_for_entries
 
 
 def get_real_photo_id():
@@ -98,6 +98,67 @@ class TestQualityScoreVisibility:
         )
         html = to_xml(card)
         assert "quality" not in html.lower()
+
+    def test_face_card_has_admin_actions(self):
+        """Admin face card has find similar, share, view photo, and edit/tag actions."""
+        from fasthtml.common import to_xml
+        card = face_card(
+            face_id="test-face",
+            crop_url="/static/crops/test.jpg",
+            quality=22,
+            identity_id="ident-123",
+            photo_id="photo-123",
+            is_admin=True,
+        )
+        html = to_xml(card)
+        assert "Find Similar" in html
+        assert "Share" in html
+        assert "View Photo" in html
+        assert "Edit/Tag" in html
+
+    def test_face_card_keeps_vertical_layout(self):
+        """Face card keeps vertical image-first layout."""
+        from fasthtml.common import to_xml
+        card = face_card(
+            face_id="test-face",
+            crop_url="/static/crops/test.jpg",
+            quality=22,
+            identity_id="ident-123",
+            photo_id="photo-123",
+            is_admin=True,
+        )
+        html = to_xml(card)
+        assert "min-h-[150px]" in html
+
+
+class TestFindSimilarInline:
+    def test_face_card_uses_inline_find_similar_endpoint(self):
+        """Admin face cards load find similar via HTMX inline endpoint."""
+        from fasthtml.common import to_xml
+        card = face_card(
+            face_id="test-face",
+            crop_url="/static/crops/test.jpg",
+            quality=22,
+            identity_id="ident-123",
+            photo_id="photo-123",
+            is_admin=True,
+        )
+        html = to_xml(card)
+        assert "/api/find-similar/test-face" in html
+        assert "expand-face-card-test-face" in html
+
+
+class TestExpansionPanels:
+    def test_expansion_panel_exists_for_each_face_card(self, monkeypatch):
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda face_id, crop_files: "/static/crops/test.jpg")
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda face_id: "photo-1")
+        monkeypatch.setattr("app.main.get_face_quality", lambda face_id: 22.0)
+        cards = _build_face_cards_for_entries(["face-a", "face-b"], set(), "identity-1", can_detach=False, is_admin=True)
+        from fasthtml.common import to_xml
+        html = ''.join(to_xml(c) for c in cards)
+        assert 'id="expand-face-card-face-a"' in html
+        assert 'id="expand-face-card-face-b"' in html
+
 
 
 class TestPersonCardInteraction:

@@ -884,7 +884,7 @@ def _load_birth_year_estimates() -> dict:
     return _birth_year_cache
 
 
-def _get_birth_year(identity_id: str, identity: dict = None, include_unreviewed: bool = True) -> tuple:
+def _get_birth_year(identity_id: str, identity: dict = None, include_unreviewed: bool = True):
     """Get birth year for an identity, checking metadata first then ML estimates.
 
     Args:
@@ -2055,7 +2055,7 @@ def _promotion_banner(identity: dict):
         icon_cls = "text-amber-400"
         border_cls = "border-amber-600/40 bg-amber-900/20"
 
-    return Div(
+    frag = Div(
         Div(
             Span("*", cls=f"text-lg font-bold {icon_cls}"),
             Div(
@@ -6484,32 +6484,14 @@ def face_card(
     show_detach: bool = False,
     is_admin: bool = True,
 ) -> Div:
-    """
-    Single face card with optional action buttons.
-    UX Intent: Face-first display with metadata secondary.
-
-    Args:
-        face_id: Canonical face identifier (for alt text)
-        crop_url: Resolved URL path to the crop image (from backend)
-        quality: Quality score (extracted from URL if not provided)
-        era: Era classification for badge display
-        identity_id: Parent identity ID
-        photo_id: Photo ID for "View Photo" button
-        show_actions: Whether to show action buttons
-        show_detach: Whether to show "Detach" button (only when identity has > 1 face)
-        is_admin: Whether to show admin-only info (quality score)
-    """
+    """Single vertical face card with inline expansion slot support."""
     if quality is None:
-        # Extract quality from URL: /crops/{name}_{quality}_{idx}.jpg
         quality = parse_quality_from_filename(crop_url)
     if quality == 0.0:
-        # Inbox crops don't encode quality in filename — look up from embeddings
         emb_quality = get_face_quality(face_id)
         if emb_quality is not None:
             quality = emb_quality
 
-    # View Photo button (only if photo_id is available)
-    # Pass identity_id for navigation context between identity's photos
     view_photo_btn = None
     if photo_id:
         _vp_url = f"/photo/{photo_id}/partial?face={face_id}"
@@ -6517,32 +6499,24 @@ def face_card(
             _vp_url += f"&identity_id={identity_id}"
         view_photo_btn = Button(
             "View Photo",
-            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1",
+            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1 transition-colors",
             hx_get=_vp_url,
             hx_target="#photo-modal-content",
             hx_swap="innerHTML",
-            # Show the modal when clicked
             **{"_": "on click remove .hidden from #photo-modal"},
             type="button",
         )
 
-    # Share button for public photo viewer
     full_page_link = None
     if photo_id:
-        full_page_link = Span(
-            share_button(photo_id, style="link", label="Share"),
-            cls="mt-1 ml-2",
-        )
+        full_page_link = Span(share_button(photo_id, style="link", label="Share"), cls="mt-1 ml-2")
 
-    # Detach button (only if show_detach is True)
     detach_btn = None
     if show_detach:
-        # Generate safe DOM ID for targeting
         safe_dom_id = make_css_id(face_id)
-
         detach_btn = Button(
             "Detach",
-            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2",
+            cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2 transition-colors",
             hx_post=f"/api/face/{quote(face_id)}/detach",
             hx_target=f"#{safe_dom_id}",
             hx_swap="outerHTML",
@@ -6550,44 +6524,116 @@ def face_card(
             type="button",
         )
 
-    # Quality label text
-    quality_word = None
     quality_label = None
     if quality > 0:
         quality_word = 'Excellent' if quality >= 30 else 'Good' if quality >= 20 else 'Fair' if quality >= 10 else 'Low'
         quality_label = f"{quality_word} quality"
 
+    expansion_id = f"expand-{make_css_id(face_id)}"
+    find_similar_btn = None
+    if identity_id:
+        find_similar_btn = Button(
+            "Find Similar",
+            cls="text-xs text-indigo-300 hover:text-indigo-200 underline mt-1 transition-colors",
+            hx_get=f"/api/find-similar/{quote(face_id)}",
+            hx_target=f"#{expansion_id}",
+            hx_swap="innerHTML",
+            **{"_": f"on click if #{expansion_id}.innerHTML.trim() is not '' set #{expansion_id}.innerHTML to '' then halt"},
+            type="button",
+        )
+
+    edit_btn = A("Edit/Tag", href=f"/photo/{photo_id}", cls="text-xs text-slate-400 hover:text-slate-300 underline mt-1 ml-2 transition-colors") if photo_id else None
+
     return Div(
-        # Face hero — dominant visual element (min 200px desktop, 150px mobile)
         Div(
-            Img(
-                src=crop_url,
-                alt=face_id,
-                cls="w-full h-full object-cover sepia-[.15] hover:sepia-0 transition-all duration-300"
-            ),
+            Img(src=crop_url, alt=face_id, cls="w-full h-full object-cover sepia-[.15] hover:sepia-0 transition-all duration-300"),
             era_badge(era) if era else None,
-            cls="relative border border-amber-900/30 rounded-sm overflow-hidden min-h-[150px] sm:min-h-[200px]"
+            cls="relative border border-amber-900/30 rounded-sm overflow-hidden min-h-[150px] sm:min-h-[200px]",
         ),
-        # Compact metadata: quality label + secondary actions on hover
         Div(
             Span(
                 quality_label,
                 cls=f"text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
                 title=f"Quality score: {quality:.2f}" if is_admin else None,
             ) if quality_label else None,
-            # Secondary actions (View Photo, Share, Detach) — visible on hover
             Div(
+                find_similar_btn,
                 view_photo_btn,
                 full_page_link,
+                edit_btn,
                 detach_btn,
-                cls="flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
-            ) if view_photo_btn or detach_btn or full_page_link else None,
-            cls="mt-1 px-0.5 flex items-center justify-between"
+                cls="flex flex-wrap items-center gap-x-2 gap-y-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            ) if (find_similar_btn or view_photo_btn or detach_btn or full_page_link or edit_btn) else None,
+            cls="mt-1 px-0.5 flex items-center justify-between",
         ),
-        cls="face-card-archival group p-1 rounded min-w-[150px]",
-        # Fix: Apply the safe ID to the container
-        id=make_css_id(face_id)
+        cls="face-card-archival group p-1 rounded min-w-[150px] hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200",
+        id=make_css_id(face_id),
     )
+
+
+@rt("/api/find-similar/{face_id}")
+def get(face_id: str, sess=None):
+    """Return inline HTML fragment for admin find-similar expansion panel."""
+    registry = load_registry()
+    photo_registry = load_photo_registry()
+    face_data = get_face_data()
+    crop_files = get_crop_files()
+    identity = get_identity_for_face(registry, face_id)
+    if not identity:
+        frag = Div(P("No identity found for this face.", cls="text-xs text-slate-400"), cls="p-3 bg-slate-800 rounded")
+        return HTMLResponse(to_xml(frag), status_code=200)
+
+    target_identity_id = identity.get("identity_id")
+    source_name = ensure_utf8_display(identity.get("name", "")) or "Unidentified"
+    source_faces = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+    source_best = get_best_face_id(source_faces)
+    source_crop = resolve_face_image_url(source_best, crop_files) if source_best else ""
+    expansion_id = f"expand-{make_css_id(face_id)}"
+
+    try:
+        from core.neighbors import find_nearest_neighbors
+        neighbors = find_nearest_neighbors(target_identity_id, registry, photo_registry, face_data, limit=10)
+    except Exception:
+        neighbors = []
+
+    tiles = []
+    for n in neighbors:
+        nid = n.get("identity_id")
+        if not nid:
+            continue
+        n_identity = registry.get_identity(nid)
+        n_name = ensure_utf8_display(n_identity.get("name", "")) or "Unidentified"
+        n_faces = n_identity.get("anchor_ids", []) + n_identity.get("candidate_ids", [])
+        n_face_id = get_best_face_id(n_faces)
+        n_crop = resolve_face_image_url(n_face_id, crop_files) if n_face_id else ""
+        conf = "High" if n.get("distance", 9) < 1.0 else "Moderate" if n.get("distance", 9) < 1.2 else "Low"
+        tiles.append(Div(
+            Img(src=n_crop, alt=n_name, cls="w-full h-36 object-cover rounded sepia-[.15] hover:sepia-0 transition-all duration-300") if n_crop else Div(cls="w-full h-36 bg-slate-700 rounded"),
+            P(n_name, cls="text-xs text-slate-200 truncate mt-1"),
+            Span(f"{conf} · {n.get('distance',0):.2f}", cls="text-[11px] text-slate-400"),
+            Div(
+                Button("Compare", cls="text-xs text-amber-300 hover:text-amber-200", hx_get=f"/api/identity/{target_identity_id}/compare/{nid}", hx_target="#compare-modal-content", hx_swap="innerHTML", **{"_":"on click remove .hidden from #compare-modal"}, type="button"),
+                Button("Merge", cls="text-xs text-emerald-300 hover:text-emerald-200", hx_post=f"/api/identity/{target_identity_id}/merge/{nid}", hx_target=f"#identity-{target_identity_id}", hx_swap="outerHTML", type="button"),
+                Button("Not Same", cls="text-xs text-red-300 hover:text-red-200", hx_post=f"/api/identity/{target_identity_id}/reject/{nid}", hx_target="closest .similar-face-tile", hx_swap="outerHTML", type="button"),
+                cls="flex items-center gap-2 mt-1",
+            ),
+            cls="similar-face-tile flex-shrink-0 w-[160px] p-2 rounded border border-slate-600 bg-slate-800",
+        ))
+
+    frag = Div(
+        Div(
+            Img(src=source_crop, alt=source_name, cls="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded border border-slate-600") if source_crop else None,
+            Div(
+                H4(source_name, cls="text-sm font-semibold text-white"),
+                P("Similar faces", cls="text-xs text-slate-400 mt-1"),
+                Button("✕ Close", cls="text-xs text-slate-400 hover:text-slate-200 underline mt-2", **{"_": f"on click set #{expansion_id}.innerHTML to ''"}, type="button"),
+            ),
+            cls="flex gap-3 items-start mb-3",
+        ),
+        Div(*tiles, cls="similar-faces flex gap-3 overflow-x-auto pb-1") if tiles else P("No similar faces found.", cls="text-xs text-slate-400"),
+        cls="p-3 bg-slate-800/80 border border-amber-900/40 rounded",
+    )
+    return HTMLResponse(to_xml(frag), status_code=200)
 
 
 def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "", focus_section: str = "", target_name: str = "") -> Div:
@@ -6964,6 +7010,7 @@ def _build_face_cards_for_entries(face_entries, crop_files, identity_id, can_det
                 show_detach=can_detach,
                 is_admin=is_admin,
             ))
+            cards.append(Div(id=f"expand-{make_css_id(face_id)}", cls="expansion-panel"))
         else:
             cards.append(Div(
                 Div(
@@ -7462,7 +7509,7 @@ def identity_card(
                 Div(
                     Div(
                         *face_cards,
-                        cls="grid grid-cols-3 sm:grid-cols-4 gap-2",
+                        cls="face-card-grid grid grid-cols-3 sm:grid-cols-4 gap-2",
                     ),
                     pagination,
                     id=f"faces-{identity_id}",
@@ -9306,7 +9353,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
         else:
             stats = _compute_landing_stats()
             featured_photos = _get_featured_photos(8)
-            return landing_page(stats, featured_photos)
+            page = landing_page(stats, featured_photos)
+            return HTMLResponse(to_xml(*page), status_code=200)
 
 
     user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
@@ -9455,6 +9503,24 @@ def get(section: str = None, view: str = "focus", current: str = None,
         .face-card-archival:hover {
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(61, 52, 40, 0.3);
             transform: translateY(-1px);
+        }
+        .expansion-panel:empty {
+            display: none;
+        }
+        .expansion-panel:not(:empty) {
+            grid-column: 1 / -1;
+            animation: fade-in 0.25s ease-out;
+        }
+        .similar-face-tile {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .similar-face-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+        }
+        button:active, a:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
         }
         /* Archival identity card — warm border with photograph feel (DD-002) */
         .identity-card-archival {
@@ -9660,7 +9726,7 @@ def get(section: str = None, view: str = "focus", current: str = None,
         id="mobile-tabs",
     )
 
-    return Title("Rhodesli Identity System"), style, Div(
+    page = (Title("Rhodesli Identity System"), style, Div(
         # Toast container for notifications
         toast_container(),
         # Mobile header
@@ -9965,7 +10031,8 @@ def get(section: str = None, view: str = "focus", current: str = None,
             });
         """),
         cls="h-full"
-    )
+    ))
+    return HTMLResponse(to_xml(*page), status_code=200)
 
 
 @rt("/confirm/{identity_id}")
@@ -20622,18 +20689,11 @@ def public_photo_page(
 
 @rt("/photo/{photo_id}")
 def get(photo_id: str, face: str = None, sess=None):
-    """
-    Public shareable photo page with face overlays and person cards.
-
-    This is the page people share on Facebook, WhatsApp, email, etc.
-    No authentication required — anyone can view.
-
-    Query params:
-    - face: Optional face_id to highlight
-    """
+    """Public shareable photo page with face overlays and person cards."""
     user = get_current_user(sess or {}) if is_auth_enabled() else None
     user_is_admin = (user.is_admin if user else False) if is_auth_enabled() else True
-    return public_photo_page(photo_id, selected_face_id=face, user=user, is_admin=user_is_admin)
+    page = public_photo_page(photo_id, selected_face_id=face, user=user, is_admin=user_is_admin)
+    return HTMLResponse(to_xml(*page), status_code=200)
 
 
 @rt("/photo/{photo_id}/partial")
@@ -22269,7 +22329,7 @@ def get(identity_id: str, sort: str = "date", page: int = 0):
     return Div(
         Div(
             *cards,
-            cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
+            cls="face-card-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3",
         ),
         pagination,
         id=f"faces-{identity_id}",

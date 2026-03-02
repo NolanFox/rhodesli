@@ -2203,3 +2203,27 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **UX patterns**: Embedded mini-map (Google Photos), confidence badge (internal date estimate pattern), evidence text (original to Rhodesli). Research: `docs/session_context/session_81_location_ux_research.md`.
 - **Rejected**: (1) Google Maps API — requires API key and billing. (2) Storing locations in Supabase only — premature, JSON file matches current date-labels pattern. (3) Full-page map only — embedded mini-map provides context without navigation.
 - **Affects**: `app/main.py` (`_build_ai_analysis_section`, `_load_photo_locations`), `data/photo_locations.json`, `tests/test_location_ux.py`.
+
+### AD-194: Retain Vertical Face Card Layout; Reject Horizontal Regression
+- **Date**: 2026-03-02
+- **Session**: 82b follow-up
+- **Context**: Session 82b introduced a horizontal face-card refactor that conflicted with the intended vertical visual system and degraded consistency with existing card grids.
+- **Decision**: Revert `face_card()` to the established vertical orientation and keep enhancements focused on interaction behavior, not orientation.
+- **Result**: Face cards remain image-first vertical tiles while regaining inline admin affordances.
+- **Affects**: `app/main.py`, `tests/test_photo_viewer_polish.py`.
+
+### AD-195: Inline Find Similar via Expandable Grid Slots
+- **Date**: 2026-03-02
+- **Session**: 82b follow-up
+- **Context**: Admin triage requires in-place Similar exploration; full-page navigation breaks throughput.
+- **Decision**: Use per-card expansion slots (`expand-{face_id}`) in the same grid, populated by `GET /api/find-similar/{face_id}` HTML fragments.
+- **Result**: Multiple panels can remain open concurrently; each panel spans full grid width and collapses by clearing slot content.
+- **Affects**: `app/main.py`.
+
+### AD-196: Animation Approach for HTMX Grid Expansions
+- **Date**: 2026-03-02
+- **Session**: 82b follow-up
+- **Context**: Evaluated animate-css-grid and View Transitions for panel reflow animation.
+- **Decision**: Use native CSS transition + fade/slide behavior as deterministic baseline with current HTMX swap semantics; defer third-party/view-transition integration until benchmarked need.
+- **Result**: Low-risk modernized interactions without adding runtime dependencies.
+- **Affects**: `app/main.py` styles, `docs/sdds/SDD-026_find_similar_inline_expansion.md`.
