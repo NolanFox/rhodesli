@@ -2203,3 +2203,19 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **UX patterns**: Embedded mini-map (Google Photos), confidence badge (internal date estimate pattern), evidence text (original to Rhodesli). Research: `docs/session_context/session_81_location_ux_research.md`.
 - **Rejected**: (1) Google Maps API — requires API key and billing. (2) Storing locations in Supabase only — premature, JSON file matches current date-labels pattern. (3) Full-page map only — embedded mini-map provides context without navigation.
 - **Affects**: `app/main.py` (`_build_ai_analysis_section`, `_load_photo_locations`), `data/photo_locations.json`, `tests/test_location_ux.py`.
+
+### AD-194: Gemini GEDCOM Enrichment — Curated Variant Validated
+- **Date**: 2026-03-01
+- **Session**: 82c
+- **Context**: Session 61C showed curated GEDCOM context improved Gemini location from vague→city-level on 20-photo test set. Session 82c ran targeted Asheville litmus test: photo of Victoria Capuano Capeluto family (4 faces, 3 GEDCOM-linked) known to be taken in Asheville, NC but previously unlocated.
+- **Experiment**: 3 variants × 1 photo + 1 meta-comparison = 4 Gemini API calls, $0.04 total.
+  - **Variant A (no GEDCOM)**: "Unknown, likely North America" — 2/10 accuracy
+  - **Variant B (full GEDCOM)**: "Clearwater, Florida" — 0/10 accuracy (WORSE than baseline!)
+  - **Variant C (curated GEDCOM ±15yr)**: "Asheville, North Carolina" — 10/10 accuracy (EXACT)
+- **Decision**: Use curated GEDCOM variant (±15yr window) for all batch enrichment. Full GEDCOM is counterproductive — it introduces noise from "later life" locations that confuses the model into anchoring on wrong time periods.
+- **Key mechanism**: Leon Capeluto's documented residence at 33 Elizabeth St, Asheville, NC combined with age-matched timeframe filtering eliminates competing Florida data.
+- **Batch scope**: 77 of 271 photos have GEDCOM-linked faces. Projected cost: ~$0.01/photo × 77 = $0.77. Budget: well under $10 cap.
+- **Privacy**: All GEDCOM data filtered to people born before 1930 or deceased. No living person data sent to Gemini.
+- **Gatekeeper**: All Gemini results are proposals — admin reviews and accepts/rejects before public display.
+- **Rejected**: (1) Full GEDCOM variant — 0/10 on litmus test, noise problem. (2) No GEDCOM — 2/10, useless for interior photos. (3) First-order variant — marginal improvement over curated per 61C, 2x token cost.
+- **Affects**: `scripts/asheville_litmus_test.py`, `scripts/run_gemini_enrichment.py` (Phase 3), `rhodesli_ml/gedcom_context.py`.

@@ -109,3 +109,24 @@ Proceed with `inbox_staged-20260210-182610_7_596771420.719238` as the Asheville 
 ### Budget
 - Phase 1 total: $0.04 of $3.00 budget
 - Budget remaining: $2.96
+
+---
+
+## Phase 2: Assess Value + Decide Batch Approach
+
+### Assessment
+1. **Does GEDCOM enrichment improve location accuracy?** YES — 2/10 → 10/10
+2. **Is curated better than full?** YES — full was counterproductive (0/10)
+3. **Per-photo cost?** ~$0.01/photo
+4. **Projected cost for batch?** 77 GEDCOM-linked photos × $0.01 = ~$0.77
+5. **Worth running at scale?** YES
+
+### Decision Gate: PROCEED to Phase 3
+- GEDCOM enrichment clearly helped (Asheville identified in C but not A or B)
+- Documented as AD-194
+
+### Scope
+- 77 of 271 photos have GEDCOM-linked faces
+- 33 identities have GEDCOM links
+- Only GEDCOM-linked photos benefit from enrichment
+- Remaining 194 photos: run baseline (no GEDCOM) for completeness
