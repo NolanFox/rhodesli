@@ -8,7 +8,7 @@ Prompt: docs/prompts/session-82f-prompt.md
 - [x] Act 2: Fix All Broken Features
 - [x] Act 3: Fix Remaining GREEN Features
 - [x] Act 4: 82b/82c Gap Analysis
-- [ ] Act 5: Test + Deploy + Verify
+- [x] Act 5: Test + Deploy + Verify
 - [ ] Act 6: Documentation + Assessment
 
 ## Act Progress
@@ -43,11 +43,11 @@ Prompt: docs/prompts/session-82f-prompt.md
 - 82c status: All 6 phases completed on branch session-82c/gemini-rerun (14 commits). Never merged due to AD numbering conflicts + 82a artifact contamination. Added ML-100 to BACKLOG.
 
 ### Act 5
-- Started:
-- Completed:
-- Test results:
-- Deploy status:
-- Verification results:
+- Started: 2026-03-02
+- Completed: 2026-03-02
+- Test results: 3398 app + 551 ML = 3949 tests passing. 1 pre-existing e2e skip (UX-134).
+- Deploy status: Pushed to main, Railway deployed. /health returns ok, 662 identities, 274 photos.
+- Verification results: Similar button padding fix confirmed in production (16px→24px height). Page loads correctly.
 
 ### Act 6
 - Started:
