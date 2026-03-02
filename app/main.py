@@ -343,10 +343,12 @@ app, rt = fast_app(
                     }
                 }
 
-                // ESC key closes mobile nav
-                document.addEventListener('keydown', function(e) {
+                // ESC key: hook into existing global keydown (no extra listener)
+                var _origOnKeydown = window.onkeydown;
+                window.onkeydown = function(e) {
                     if (e.key === 'Escape') closeMobileNav();
-                });
+                    if (_origOnKeydown) _origOnKeydown(e);
+                };
             });
         """),
     ),
@@ -13547,8 +13549,13 @@ def post(person_id: str, comment_id: str, sess=None):
     return Div(P("Comment hidden.", cls="text-xs text-slate-500 italic py-2"))
 
 
-def _build_photo_cards(photos: list) -> list:
-    """Build photo card elements for a list of photo dicts."""
+def _build_photo_cards(photos: list, masonry: bool = False) -> list:
+    """Build photo card elements for a list of photo dicts.
+
+    Args:
+        photos: List of photo dicts with photo_id, filename, face_count, etc.
+        masonry: If True, render cards at natural aspect ratio for masonry layout.
+    """
     cards = []
     for photo in photos:
         badge_cls = "bg-emerald-600/80" if photo["confirmed_count"] == photo["face_count"] and photo["face_count"] > 0 else "bg-black/70"
@@ -13572,6 +13579,26 @@ def _build_photo_cards(photos: list) -> list:
                 Span(f"Matched: {photo['match_reason']}", cls="text-[10px] text-indigo-300/70 italic"),
                 cls="px-2 pb-1", data_testid="match-reason",
             )
+
+        # For masonry layout, use natural aspect ratio; otherwise force 4:3
+        w = photo.get("width", 0)
+        h = photo.get("height", 0)
+        if masonry and w > 0 and h > 0:
+            img_container_cls = "overflow-hidden relative"
+            # Use aspect-ratio CSS for natural dimensions
+            aspect_style = f"aspect-ratio: {w}/{h};"
+        else:
+            img_container_cls = "aspect-[4/3] overflow-hidden relative"
+            aspect_style = ""
+
+        # Masonry cards need break-inside: avoid
+        card_cls = "bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition-colors group block"
+        if masonry:
+            card_cls += " mb-4"
+            card_style = "break-inside: avoid;"
+        else:
+            card_style = ""
+
         cards.append(
             A(
                 Div(
@@ -13582,12 +13609,14 @@ def _build_photo_cards(photos: list) -> list:
                         cls=f"absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm {badge_cls}",
                     ) if photo["face_count"] > 0 else None,
                     date_badge,
-                    cls="aspect-[4/3] overflow-hidden relative",
+                    cls=img_container_cls,
+                    style=aspect_style if aspect_style else None,
                 ),
                 Div(P(photo["collection"] or "", cls="text-xs text-slate-500 leading-snug"), cls="p-2") if photo["collection"] else None,
                 match_label,
                 href=f"/photo/{photo['photo_id']}",
-                cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-500 transition-colors group block",
+                cls=card_cls,
+                style=card_style if card_style else None,
             )
         )
     return cards
@@ -13646,6 +13675,8 @@ def get(filter_collection: str = "", sort_by: str = "newest",
             "face_count": face_count,
             "confirmed_count": confirmed_count,
             "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
+            "width": photo_data.get("width", 0),
+            "height": photo_data.get("height", 0),
         })
 
     collections = sorted(collections_set)
@@ -13660,7 +13691,7 @@ def get(filter_collection: str = "", sort_by: str = "newest",
 
     # Build photo cards (paginated — 24 per page for lazy loading)
     PHOTOS_PER_PAGE = 24
-    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE])
+    photo_cards = _build_photo_cards(photos[:PHOTOS_PER_PAGE], masonry=True)
 
     # Lazy loading sentinel: loads next page when scrolled into view
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -13676,7 +13707,8 @@ def get(filter_collection: str = "", sort_by: str = "newest",
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
                 P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
                 id="photos-lazy-sentinel",
-                cls="col-span-full flex flex-col items-center py-8",
+                cls="flex flex-col items-center py-8",
+                style="break-inside: avoid; column-span: all;",
                 hx_get=f"/api/photos/more?{_ue(_lazy_params)}",
                 hx_trigger="revealed",
                 hx_swap="outerHTML",
@@ -13754,7 +13786,13 @@ def get(filter_collection: str = "", sort_by: str = "newest",
     if active_filters:
         subtitle += f" matching {' + '.join(active_filters)}"
 
-    page_style = Style("html, body { margin: 0; } body { background-color: #0f172a; }")
+    page_style = Style("""
+        html, body { margin: 0; } body { background-color: #0f172a; }
+        .masonry-grid { column-count: 1; column-gap: 1rem; }
+        @media (min-width: 640px) { .masonry-grid { column-count: 2; } }
+        @media (min-width: 1024px) { .masonry-grid { column-count: 3; } }
+        @media (min-width: 1280px) { .masonry-grid { column-count: 4; } }
+    """)
 
     return (
         Title("Photos — Rhodesli Heritage Archive"),
@@ -13821,8 +13859,10 @@ def get(filter_collection: str = "", sort_by: str = "newest",
                         Span(f"{len(photos)} result{'s' if len(photos) != 1 else ''}", cls="text-xs text-slate-500 ml-auto"),
                         cls="flex flex-wrap items-center gap-3 mb-6",
                     ),
-                    # Photo grid
-                    Div(*photo_cards, id="photo-grid", cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4") if photo_cards else Div(
+                    # Photo grid — masonry layout via CSS columns
+                    Div(*photo_cards, id="photo-grid",
+                        style="column-count: 1; column-gap: 1rem;",
+                        cls="masonry-grid") if photo_cards else Div(
                         P("No photos match your filters.", cls="text-slate-500 text-center py-12"),
                         A("Clear filters", href="/photos", cls="text-indigo-400 hover:text-indigo-300 text-sm block text-center mt-2"),
                     ),
@@ -13880,6 +13920,8 @@ def photos_more(page: int = 2, filter_collection: str = "", sort_by: str = "newe
             "face_count": face_count,
             "confirmed_count": confirmed_count,
             "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
+            "width": photo_data.get("width", 0),
+            "height": photo_data.get("height", 0),
         })
 
     if sort_by == "oldest":
@@ -13897,7 +13939,7 @@ def photos_more(page: int = 2, filter_collection: str = "", sort_by: str = "newe
     if not page_photos:
         return ""  # No more photos
 
-    cards = _build_photo_cards(page_photos)
+    cards = _build_photo_cards(page_photos, masonry=True)
 
     # Add sentinel for next page if there are more
     total_pages = (len(photos) + PHOTOS_PER_PAGE - 1) // PHOTOS_PER_PAGE
@@ -13912,7 +13954,8 @@ def photos_more(page: int = 2, filter_collection: str = "", sort_by: str = "newe
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
                 P("Loading more photos...", cls="text-slate-500 text-xs mt-2"),
                 id="photos-lazy-sentinel",
-                cls="col-span-full flex flex-col items-center py-8",
+                cls="flex flex-col items-center py-8",
+                style="break-inside: avoid; column-span: all;",
                 hx_get=f"/api/photos/more?{_ue(_lazy_params)}",
                 hx_trigger="revealed",
                 hx_swap="outerHTML",
