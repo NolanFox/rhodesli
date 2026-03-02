@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.85.1] — 2026-03-02 (Session 82f: Completion Audit)
+
+### Fixed
+- **Similar button hit area**: Increased padding from 0 to 4px on all sides (38x16px → 46x24px) for mobile usability
+
+### Documentation
+- Exhaustive audit of all Session 82 work (82a-82e): 20 shipped, 3 partially shipped, 4 dropped, 8 deferred
+- Browser verification: 16 features confirmed WORKING in production, 0 BROKEN
+- Formally deferred 5 features to BACKLOG (UX-201 through UX-204, ML-100)
+- Gap analysis: 82b (Codex) never executed, 82c branch stranded with 14 commits
+
 ## [v0.85.0] — 2026-03-01 (Session 82e: UX Feature Sprint)
 
 ### Added

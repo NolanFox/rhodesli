@@ -394,6 +394,24 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 82f: Completion Audit + Fix Everything (2026-03-02) — v0.85.1
+- Exhaustive audit of all Session 82 work (82a-82e): 20 features shipped, 3 partially shipped, 4 dropped, 8 deferred
+- Browser verification: 16 features confirmed WORKING in production, 0 BROKEN
+- Fixed Similar button hit area (38x16px → 46x24px) for mobile usability
+- Formally deferred 5 features to BACKLOG: UX-201 (Missing Info Table), UX-202 (Bulk Confirm), UX-203 (Relational Labels), UX-204 (Face Card Unification), ML-100 (82c Branch Merge)
+- Gap analysis: 82b (Codex) never executed, 82c branch has 14 unmerged commits
+- Feature #22 (Click-to-Target Bounding Boxes) confirmed already exists
+- HTMX 2.x lesson: uses `htmx-internal-data` property (not `__htmx_internal` from 1.x)
+- Tests: 3949 (3398 app + 551 ML). Browser verified 16/16 PASS.
+
+## Session 82d: Inline Find Similar + Performance (2026-03-01) — v0.84.0
+- Inline Find Similar expansion panel (AD-194): Admin clicks "Similar" → HTMX panel with hero face, similar tiles, Compare/Merge/Not Same
+- Person gallery HTMX toggle (AD-195): Faces/Photos instant swap without page reload
+- Visual modernization: card hover transitions, button active feedback, keyboard focus rings
+- P0 lazy-load face counts fix, P1 admin button differentiation, P1 focus mode highlight fix
+- Reject match endpoint: POST /api/identity/{id}/reject-match/{neighbor_id}
+- 10 new tests in test_inline_find_similar.py
+
 ## Session 82e: UX Feature Sprint (2026-03-01) — v0.85.0
 - Mobile hamburger fix: sm→md breakpoint (768px), slide-from-right, ESC key close
 - Masonry photo grid: CSS columns layout on /photos, natural aspect ratios, 1-4 responsive columns
@@ -611,6 +629,9 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.85.1 | 2026-03-02 | 82f | 3398+551 |
+| v0.85.0 | 2026-03-01 | 82e | 2391+551 |
+| v0.84.0 | 2026-03-01 | 82d | ~3398+551 |
 | v0.83.2 | 2026-03-01 | 81C | 3366+551 |
 | v0.83.1 | 2026-03-01 | 81B | ~3366+551 |
 | v0.83.0 | 2026-03-01 | 81 | ~3030 |
