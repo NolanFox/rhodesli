@@ -4,11 +4,11 @@
 **Date:** 2026-03-01
 **Session evaluated:** 82a (Antigravity/Gemini)
 **Evaluation method:** Read-only file audit + content quality grading
-**Note:** Initial eval found zero files (1/40). Antigravity then exported artifacts from its brain cache. This is the updated eval with actual content graded.
+**Note:** Initial eval found zero files (1/40). Antigravity then exported artifacts from its brain cache. Further investigation found BACKLOG + AD commits on the wrong branch (82c). This is the final eval with all evidence.
 
 ## Executive Summary
 
-Session 82a produced 5 text deliverables and 5 Nano Banana mockup images, but only after manual intervention to export them from Antigravity's internal storage. The content is **structurally complete but shallow** — the audit report is 27 lines for an entire app, the competitor analysis covers 3 of 5+ requested sites with no screenshots, and the ideation hits 30 ideas but lacks truly wild divergence. The mockups are the standout deliverable: real AI-generated PNG images that effectively communicate design concepts. However, none use Rhodesli branding or real archive data. No files were ever committed to the git branch, no PR was created, and no BACKLOG/AD updates were made.
+Session 82a produced 5 text deliverables, 5 Nano Banana mockup images, 25 BACKLOG entries, and 1 AD entry — but the work was scattered across two wrong locations: Antigravity's internal brain cache (text + mockups) and the 82c branch (BACKLOG + AD + duplicate text + mockups). Nothing was committed to the designated 82a branch. The content is **structurally complete but shallow** — the audit report is 27 lines for an entire app, the competitor analysis covers 3 of 5+ requested sites with no screenshots, and the ideation hits 30 ideas but lacks truly wild divergence. The mockups are the standout deliverable: real AI-generated PNG images that effectively communicate design concepts. However, none use Rhodesli branding or real archive data.
 
 ## Scorecard
 
@@ -20,9 +20,9 @@ Session 82a produced 5 text deliverables and 5 Nano Banana mockup images, but on
 | Top 5 proposal quality | 2 | Reasonable selections, no rationale/pros/cons, one ignores existing tree work |
 | Mockup quality (Nano Banana) | 3 | Real PNG images, visually impressive, dark theme — but zero Rhodesli data/branding |
 | Implementation plan readiness | 2 | Some technical detail but misses existing implementations, no scope estimates |
-| Branch hygiene | 1 | Files never committed to branch; required manual export from Antigravity brain cache |
-| Harness compliance | 0 | No session log, no assessment, no AD updates, no BACKLOG updates, no commits |
-| **TOTAL** | **15/40** | Partial delivery with significant gaps |
+| Branch hygiene | 1 | Work committed to wrong branch (82c), then reset on 82a; required manual export |
+| Harness compliance | 1 | BACKLOG + AD entries exist (on wrong branch), but no session log, no assessment, no PR |
+| **TOTAL** | **16/40** | Partial delivery with significant workflow failures |
 
 ## Detailed Findings
 
@@ -43,7 +43,7 @@ After manual export, all 5 text files + 5 mockup PNGs are present:
 | `mockups/mockup_radial_tree.png` | Present | 656 KB |
 | `mockups/mockup_vertical_timeline.png` | Present | 519 KB |
 
-**Missing deliverables:** No PR created, no BACKLOG entries appended (25 ideas were supposed to be added), no ALGORITHMIC_DECISIONS update (AI Bounding Box rule was supposed to be logged).
+**Missing from current branch:** No PR created. However, BACKLOG entries (25 ideas) and an AD entry (AD-032) WERE committed — but to the **wrong branch** (`session-82c/gemini-rerun`, commit `2eb3d24`). The 82a text files were also cherry-picked to 82c (commits `382dd10`, `9fad706`, `025fb46`). The 82a branch itself was cherry-picked then **reset back** (reflog shows 3 cherry-picks followed by `git reset` to the starting point, likely due to the hung cherry-pick process).
 
 ### Audit Report (Phase 2)
 
@@ -154,15 +154,30 @@ Has a brief "Verification & Testing" section (3 items: unit tests, visual regres
 ### Branch Contamination (Phase 7)
 
 **Score: 1/5**
-Branch `session-82a/ux-audit` has no unique commits. All files were exported via Antigravity's internal file-writing API directly to the working tree of a different branch (`session-82d/find-similar-inline`), not to the 82a branch. No PR was created. The 82c merge contamination mentioned in the eval prompt did not occur (because nothing occurred on the branch at all).
+Branch `session-82a/ux-audit` has no unique commits (reflog shows 3 cherry-picks then a reset back to origin). The 82a work was committed to the **wrong branch** (`session-82c/gemini-rerun`) in commits `382dd10`, `9fad706`, `025fb46`, and `2eb3d24`. This is the opposite of the eval prompt's concern — instead of 82c contaminating 82a, **82a contaminated 82c**. The 82c branch now has 4 commits of 82a UX audit work interleaved with its Gemini enrichment pipeline work. This will need careful handling during merge.
+
+**Reflog evidence (82a branch):**
+```
+9dad59f @{0}: reset: moving to 9dad59f  (RESET to start)
+9d75c82 @{1}: cherry-pick: ideation doc
+7a92a4d @{2}: cherry-pick: competitor analysis
+d11798f @{3}: cherry-pick: audit report
+9dad59f @{4}: branch: Created from HEAD
+```
+Antigravity cherry-picked 3 of its commits onto the 82a branch, then reset them away (likely due to the hung cherry-pick process). The work remained only on 82c.
 
 ### BACKLOG Impact (Phase 8)
 
-**Score: 0/5**
-- BACKLOG.md is 301 lines (marginally over 300-line limit, not caused by 82a)
-- Zero of the expected 25 remaining ideas were appended
-- No source attribution entries added
-- No ALGORITHMIC_DECISIONS entry for AI Bounding Box UI rule (Phase 6 deliverable #7)
+**Score: 2/5**
+On the 82c branch (commit `2eb3d24`), Antigravity DID append 25 remaining ideas to BACKLOG.md under a "UX Ideation Backlog (Session 82a)" header. The entries are:
+- Properly numbered (skipping #2, #6, #14, #21, #22 which are the Top 5)
+- Include source attribution ("Session 82a")
+- Well-formatted with bold titles and descriptions
+
+However: BACKLOG.md goes from 301 to 331 lines on that branch — **31 lines over the 300-line harness limit**. Also, an AD entry was added as "AD-032" but this conflicts with existing numbering (AD-032 was likely already used; current entries go up to AD-194). The AD entry should have been AD-195+.
+
+**AD-032 content (on 82c branch):**
+> Click-to-Target AI Bounding Boxes — Transition frontend face tagging UI to use ML detection bounds. Clicking a face auto-snaps a resizable bounding box. Status: Proposed.
 
 ## Recommendations for Session 83
 
@@ -194,7 +209,7 @@ Based on Session 74 + 82a evidence:
 - **No React hallucinations** this time (improvement over Session 74)
 
 ### Confirmed Weaknesses
-- **Git workflow failure**: Work stayed in Antigravity's brain cache, never committed to git. Required manual export. This is a fundamental workflow gap.
+- **Git workflow failure**: Work was committed to the wrong branch (82c instead of 82a), then a cherry-pick to the correct branch failed and was reset. Required manual export from brain cache. Fundamental workflow gap.
 - **Shallow depth**: Each deliverable is thin — 27-66 lines where the prompt expected thorough analysis. Compare: the eval prompt alone is 357 lines, while the total audit output is ~192 lines.
 - **No production awareness**: Didn't acknowledge existing tree/timeline implementations from Sessions 75-81. Proposed features we already have.
 - **Generic output**: All mockups use placeholder branding ("PHOTO ARC", "GENEALOGYFINDER"), not Rhodesli. Table mockup uses "D-Day Landing" and "Moon Landing" instead of Rhodes Jewish community data.
