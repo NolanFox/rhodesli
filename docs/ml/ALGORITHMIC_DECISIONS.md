@@ -2203,3 +2203,20 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **UX patterns**: Embedded mini-map (Google Photos), confidence badge (internal date estimate pattern), evidence text (original to Rhodesli). Research: `docs/session_context/session_81_location_ux_research.md`.
 - **Rejected**: (1) Google Maps API — requires API key and billing. (2) Storing locations in Supabase only — premature, JSON file matches current date-labels pattern. (3) Full-page map only — embedded mini-map provides context without navigation.
 - **Affects**: `app/main.py` (`_build_ai_analysis_section`, `_load_photo_locations`), `data/photo_locations.json`, `tests/test_location_ux.py`.
+
+### AD-194: Inline Find Similar Expansion Panel
+- **Date**: 2026-03-01
+- **Session**: 82d
+- **Context**: Find Similar navigated to a full page (`/people/{id}/similar`), losing browse context. Admin loses scroll position and must use back button. Codex PR attempted to add expansion panels but never shipped.
+- **Decision**: Admin mode uses HTMX inline expansion panels. "Similar" button uses `hx-get` to fetch `/api/find-similar/{identity_id}` which returns an HTML fragment with hero face, scrollable similar face tiles (160px wide), and action buttons (Compare, Merge, Not Same). Panel spans full grid width via `grid-column: 1 / -1`. Multiple panels can be open simultaneously. Public visitors still get full-page link to `/people/{id}/similar`.
+- **Animation**: CSS `@keyframes panel-fade-in` (opacity 0→1, translateY -8px→0, 300ms cubic-bezier). Pure CSS approach chosen over animate-css-grid (4KB library overhead unnecessary) and View Transitions API (not supported in all browsers).
+- **Rejected**: (1) View Transitions API — browser support too limited (Chrome/Edge only). (2) animate-css-grid — unnecessary dependency for a simple fade-in. (3) CSS grid-template-rows 0fr→1fr — doesn't work well with dynamic HTMX content swaps.
+- **Affects**: `app/main.py` (new endpoint, expansion panel CSS, card grid rendering), `tests/test_inline_find_similar.py`.
+
+### AD-195: Person Page Gallery HTMX Partial Swap
+- **Date**: 2026-03-01
+- **Session**: 82d
+- **Context**: Person page Faces/Photos toggle used full page navigation (`<a href="/person/{id}?view=...">`), causing slow switching due to rebuilding the entire page (hero, metadata, connections, etc.).
+- **Decision**: Convert toggle to HTMX partial swap via new endpoint `GET /api/person/{id}/gallery?view=&sort_by=`. Returns toggle buttons + sort dropdown + gallery grid. Container div with `id="person-gallery-container"` is the swap target. Only the gallery section is rebuilt, not the entire page.
+- **Rejected**: (1) Tab preloading (load both views on initial render) — doubles initial page size. (2) Client-side DOM show/hide — requires all face and photo data in initial HTML. (3) JavaScript tab switching — goes against HTMX-first architecture.
+- **Affects**: `app/main.py` (new gallery endpoint, person page toggle refactoring).
