@@ -3839,7 +3839,7 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
                         cls="w-48 h-48 sm:w-72 sm:h-72 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center"
                     ),
                     cls="p-0 bg-transparent cursor-pointer hover:ring-2 hover:ring-indigo-400 rounded-lg transition-all",
-                    hx_get=f"/photo/{main_photo_id}/partial?face={face_id}&identity_id={identity_id}" if main_photo_id else None,
+                    hx_get=f"/photo/{main_photo_id}/partial?face={best_face_id}&identity_id={identity_id}" if main_photo_id else None,
                     hx_target="#photo-modal-content",
                     **{"_": "on click remove .hidden from #photo-modal"} if main_photo_id else {},
                     type="button",
@@ -11875,7 +11875,7 @@ def public_person_page(
                           href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
                           cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
                         A("Find Similar",
-                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
+                          href=f"/people/{person_id}/similar",
                           cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
                         A("View in Admin",
                           href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
@@ -13575,17 +13575,11 @@ def photos_more(page: int = 2, filter_collection: str = "", sort_by: str = "newe
         if search_photo_ids is not None and photo_id_val not in search_photo_ids:
             continue
         filename = photo_data.get("filename", "unknown")
-        face_ids = photo_data.get("face_ids", [])
-        face_count = len(face_ids)
-        confirmed_face_ids = set()
-        for fid in face_ids:
-            identity = registry.find_identity_for_face(fid) if hasattr(registry, 'find_identity_for_face') else None
-            if identity and identity.get("state") == "CONFIRMED":
-                confirmed_face_ids.add(fid)
+        face_count = len(photo_data.get("faces", []))
         confirmed_count = 0
-        for fid in face_ids:
-            ident = registry.find_identity_for_face(fid) if hasattr(registry, 'find_identity_for_face') else None
-            if ident and ident.get("state") == "CONFIRMED":
+        for face in photo_data.get("faces", []):
+            identity = get_identity_for_face(registry, face.get("face_id", ""))
+            if identity and identity.get("state") == "CONFIRMED":
                 confirmed_count += 1
         photos.append({
             "photo_id": photo_id_val,
