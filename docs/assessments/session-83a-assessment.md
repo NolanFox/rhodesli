@@ -26,11 +26,20 @@ Claude Benatar (Jews of Rhodes FB group admin) — first real external user feed
 - P2-10: Help Identify page submission persistence across refresh — not addressed
 - Full integration verification gate (Claude Benatar scenario replay) — Chrome extension not connecting, deferred
 
+## Browser Verification (Playwright)
+
+| WS | Feature | Result | Screenshot |
+|---|---|---|---|
+| WS1 | Display Name field | PASS | 02-display-name-field.png |
+| WS2 | Help Identify admin | PASS | 04-help-identify-admin.png |
+| WS3 | Compare expired msg | PASS | 03-compare-expired-message.png |
+| WS4 | Browse search filter | PASS | 05-browse-search-filter.png |
+
 ## Red Flags
 
-- [MEDIUM] **Chrome verification incomplete** — Chrome extension MCP server failed to connect throughout session. Production verified via curl (health 200) and code analysis but NOT via browser. Per CLAUDE.md rules, UX changes MUST be verified in production browser.
-  - Fix: Re-attempt Chrome verification in next session or manually verify
+- [LOW] **Chrome extension unavailable** — Used Playwright fallback for browser verification. All features verified in production browser via Playwright.
 - [LOW] **Test count approximate** — logged ~3961 but need exact count from make test-fast
+- [LOW] **Compare end-to-end not tested** — Verified improved 404 messaging and Railway logs showing 200 for result pages, but did not upload a new photo through the browser to test the full pipeline
 
 ## Next Session Should Verify
 

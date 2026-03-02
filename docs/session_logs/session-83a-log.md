@@ -7,8 +7,8 @@ Prompt: docs/prompts/session-83a-prompt.md
 - [x] WS2: HELP IDENTIFY — Wired submissions into annotations system (admin approvals)
 - [x] WS3: COMPARE — Fixed result storage (SSE now saves to comparison_results.json)
 - [x] WS4: FACE CARD UX — Added search filter, verified Find Similar wiring
-- [x] Deploy — pushed to main, health 200
-- [ ] Chrome verification — extension not connecting
+- [x] Deploy — pushed to main, health 200, Railway deploy SUCCESS
+- [x] Browser verification — Playwright (Chrome ext unavailable), all 4 WS PASS
 - [x] Documentation updates (AD-196/197/198/199, SESSION_HISTORY, ROADMAP, CHANGELOG, feedback log)
 - [x] Assessment — docs/assessments/session-83a-assessment.md
 
@@ -57,7 +57,9 @@ Prompt: docs/prompts/session-83a-prompt.md
 - docs/feedback/2026-03-02-claude-benatar.md
 - docs/assessments/session-83a-assessment.md
 
-## Chrome Verification
-- STATUS: BLOCKED — Chrome extension MCP server not connecting
-- Production health: 200 (verified via curl)
-- Need manual or next-session browser verification
+## Browser Verification (Playwright — Chrome extension unavailable)
+- WS1 Display Name: **PASS** — First field in Edit Details, pre-filled with current name
+- WS2 Help Identify: **PASS** — Admin direct-apply form, no email field for logged-in admin
+- WS3 Compare: **PASS** — Improved "expired" 404 messaging; Railway logs confirm new results return 200
+- WS4 Card Search: **PASS** — "Search by name or person number..." input in Browse view
+- Screenshots: docs/screenshots/session-83a/ (5 screenshots)
