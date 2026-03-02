@@ -9534,6 +9534,29 @@ def get(section: str = None, view: str = "focus", current: str = None,
         .expansion-panel .panel-close:hover {
             opacity: 1;
         }
+        /* Visual modernization — hover states, transitions, feedback */
+        .identity-card-archival,
+        .face-card-archival {
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+        }
+        button:active, a.btn:active, [data-action]:active {
+            transform: scale(0.97);
+            transition: transform 0.1s ease;
+        }
+        /* HTMX loading indicator */
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 0.2s ease-in;
+        }
+        /* Smooth focus ring for keyboard navigation */
+        button:focus-visible, a:focus-visible {
+            outline: 2px solid rgba(99, 102, 241, 0.7);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
         /* Photo card frame — evoking a mounted print (DD-002) */
         .photo-card-frame {
             background: #2a241e;
