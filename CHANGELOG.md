@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.87.1] — 2026-03-03 (Session 85b: Compare Navigation + PRD-025 Gap Closure)
+
+### Added
+- **Archive-to-compare flow**: `GET /api/compare/from-photo?photo_id=X&identity_id=Y` — compare an existing archive photo's faces against a specific person without re-uploading. Per-face L2 distance + calibrated confidence + tier classification.
+- **Direct compare URLs**: `/compare?photo_id=X&person_id=Y` auto-loads comparison via HTMX; `/compare?photo_id=X` shows faces + person search
+- **Photo page "Compare" links**: "Compare faces" in header + "Compare Faces" CTA button
+- **Person page "Compare with a photo"**: Button links to `/compare?person_id={id}` for pre-filled person search
+- **Reference context on result page**: Shareable `/compare/result/{id}` shows reference person's closest existing archive matches for context
+- **Merge/Not Same on result page**: Admin action buttons on each match card in shareable result pages
+- 11 new tests (33 total compare tests)
+
+### Fixed
+- **Disk-full crash in comparison save**: `_save_comparison_result` now catches OSError gracefully, continues with in-memory cache
+- **find_nearest_neighbors called with None**: Fixed 3 call sites to pass `load_photo_registry()`
+- **registry.identities private attribute**: Fixed 4 occurrences to use public API (`list_identities()`, `get_identity_for_face()`)
+- **Stale compare upload tests**: Updated 3 tests for unified pipeline behavior (session 85 rewrite)
+- **Startup cleanup enhanced**: Auto-backup pruning + lock file cleanup to free Railway volume space
+
 ## [v0.87.0] — 2026-03-03 (Session 85: Fix Compare — Unified Upload Pipeline)
 
 ### Changed

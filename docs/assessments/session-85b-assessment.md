@@ -3,6 +3,7 @@
 **Date:** 2026-03-03
 **Session:** 85b
 **Predecessor:** Session 85 (v0.87.0)
+**Version:** v0.87.1
 
 ## Shipped
 
@@ -22,39 +23,46 @@
   - Evidence: 8 new tests, all passing (30 total compare tests)
 
 - [x] **Phase 2: Navigation Links** — Compare actions on person/photo pages
-  - Photo page: "Compare faces" link in "People in this photo" section header
-  - Photo page: "Compare Faces" button in CTA area
-  - Person page: "Compare with a photo" link now passes `person_id` query param
+  - Photo page: "Compare faces" link + "Compare Faces" button
+  - Person page: "Compare with a photo" button (passes person_id param)
   - Evidence: `test_photo_page_has_compare_link`, `test_person_page_has_compare_link` PASS
+
+- [x] **Phase 3: PRD-025 Gap Closure** — Reference context + merge/reject on shareable result page
+  - Reference context section showing closest existing archive matches
+  - Merge/Not Same admin action buttons on each match card
+  - Evidence: 3 new tests PASS, browser verified in production
+
+- [x] **Phase 4: Isaac Cohen E2E** — Full browser verification + shareable link
+  - Compare URL: `/compare?photo_id=f86fdef4cd4051da&person_id=7a7effee-4372-4da4-af08-1feaa1a3beca`
+  - Shareable link: `https://rhodesli.nolanandrewfox.com/compare/result/edc67864978f`
+  - 9/9 browser verification checks PASS
+  - Evidence: Screenshots in docs/screenshots/session-85b/
+
+- [x] **Phase 5: Session Docs** — CHANGELOG, ROADMAP, assessment updated
+
+## Production Bugs Fixed
+1. **photo_registry=None** — `find_nearest_neighbors` crashed because from-photo/vs-person/result endpoints passed None. Fixed in 3 call sites.
+2. **registry.identities private attribute** — 4 places used `registry.identities` (private `_identities`). Fixed to public API.
+3. **Railway volume disk-full** — `_save_comparison_result` threw OSError. Made graceful with try/except + in-memory cache. Added auto_backup pruning at startup.
 
 ## Deferred
 
-- **Phase 3: PRD-025 Gap Closure** — Reference context on shareable result page, merge/reject on result page
-  - Reason: Session interrupted by Claude downtime, resumed with limited remaining context
-  - Note: The vs-person endpoint AND from-photo endpoint already have reference context and merge/reject. Only the shareable `/compare/result/{id}` page is missing these.
-
-- **Phase 4: Isaac Cohen E2E** — Browser verification
-  - Reason: Depends on deployment; can be verified after push
-  - The URL pattern `/compare?photo_id=f86fdef4cd4051da&person_id={isaac_id}` is ready
-
-- **Phase 5: Full session docs** — CHANGELOG, ROADMAP updates
-  - Reason: Partial session, will be completed when remaining phases ship
+- **Railway volume space cleanup** — Root cause of disk-full not addressed. Volume needs manual cleanup or expansion in future ops session.
+- **Stale test maintenance** — ~60 pre-existing failures in `test_skipped_focus.py`, 2 in `test_compare_intelligence.py`.
 
 ## Red Flags
 
-- **P2: Pre-existing test failures** — `test_skipped_focus.py` has ~60 failures, `test_compare_intelligence.py::TestCompareUploadPerformance` has 2 failures. All pre-existing, unrelated to this session's changes.
-  - Fix: Separate maintenance session to update stale tests
-
-- **P3: Fixed stale test timestamp** — `test_compare_status_starting` used a hardcoded timestamp from 2026-03-03T12:00:00 that was timing out. Fixed to use `datetime.now()`.
-
-## Next Session Should Verify
-
-1. **Deploy and verify** `/compare?photo_id=f86fdef4cd4051da&person_id={isaac_cohen_id}` in production browser
-2. **Add merge/reject actions to `/compare/result/{id}` page** (Phase 3 gap)
-3. **Add reference person context to `/compare/result/{id}` page** (Phase 3 gap)
-4. **Produce shareable link for Claude Benatar**
+- **P1: Railway volume disk full** — Comparison results can't persist to disk. In-memory cache works but results lost on redeploy. Needs ops attention.
+- **P2: Pre-existing test failures** — Unrelated to this session but should be addressed.
 
 ## Key Decisions
 
-- **Archive-to-compare uses HTMX lazy load** — When `/compare?photo_id=X` is visited, the comparison results are loaded via `hx-get` to `/api/compare/from-photo` on page load. This avoids duplicating the comparison logic inline in the page handler and keeps the compare page handler simple.
-- **Separate search-person-photo endpoint** — The from-photo flow uses links (`<a href>`) instead of `hx-post` buttons for person selection, since the comparison result is a full page URL (`/compare?photo_id=X&person_id=Y`). This makes results bookmarkable and shareable.
+- **Archive-to-compare uses HTMX lazy load** — When `/compare?photo_id=X` is visited, results load via `hx-get` on page load. Avoids duplicating logic and keeps compare page handler simple.
+- **Separate search-person-photo endpoint** — From-photo flow uses `<a>` links for person selection, making results bookmarkable and shareable.
+- **Graceful disk-full handling** — Comparison results saved to in-memory cache even when disk write fails, so the feature works without persistent storage.
+
+## Next Session Should Verify
+
+1. Railway volume space — check if startup cleanup freed enough space
+2. Shareable link persistence across deploys (results stored in-memory may be lost)
+3. Pre-existing test failures need cleanup session
