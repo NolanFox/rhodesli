@@ -402,15 +402,23 @@ def _startup_disk_cleanup(base_path: Path):
     import time
     now = time.time()
 
-    # Log disk usage
+    # Log disk usage — check BOTH root FS and volume mount
     try:
         import shutil as _shutil_disk
         total, used, free = _shutil_disk.disk_usage("/")
         free_mb = free / (1024 * 1024)
         used_pct = (used / total) * 100
-        logging.info(f"Disk usage at startup: {used_pct:.1f}% used, {free_mb:.0f}MB free")
-        if free_mb < 200:
-            logging.warning(f"LOW DISK SPACE: only {free_mb:.0f}MB free!")
+        logging.info(f"Root FS: {used_pct:.1f}% used, {free_mb:.0f}MB free")
+
+        storage_dir = os.environ.get("STORAGE_DIR", "")
+        if storage_dir and Path(storage_dir).exists():
+            vt, vu, vf = _shutil_disk.disk_usage(storage_dir)
+            vol_free_mb = vf / (1024 * 1024)
+            vol_used_pct = (vu / vt) * 100
+            vol_total_mb = vt / (1024 * 1024)
+            logging.info(f"Volume ({storage_dir}): {vol_used_pct:.1f}% used, {vol_free_mb:.0f}MB free of {vol_total_mb:.0f}MB total")
+            if vol_free_mb < 50:
+                logging.warning(f"LOW VOLUME SPACE: only {vol_free_mb:.0f}MB free on {storage_dir}!")
     except Exception:
         pass
 
@@ -7953,6 +7961,16 @@ def health():
             "free_mb": round(free / (1024 * 1024)),
             "used_pct": round((used / total) * 100, 1),
         }
+        # Also check the volume mount if it exists (separate from root FS)
+        storage_dir = os.environ.get("STORAGE_DIR", "")
+        if storage_dir and Path(storage_dir).exists():
+            vt, vu, vf = _shutil_health.disk_usage(storage_dir)
+            disk_info["volume"] = {
+                "mount": storage_dir,
+                "total_mb": round(vt / (1024 * 1024)),
+                "free_mb": round(vf / (1024 * 1024)),
+                "used_pct": round((vu / vt) * 100, 1),
+            }
     except Exception:
         disk_info = {"error": "unavailable"}
 
@@ -7967,6 +7985,86 @@ def health():
         "supabase": _ping_supabase(),
         "disk": disk_info,
     }
+
+
+@rt("/api/admin/disk-usage")
+def get(sess=None):
+    """Admin-only disk usage diagnostic. Shows volume contents and sizes."""
+    guard = _check_admin(sess)
+    if guard:
+        return guard
+
+    import shutil as _shutil_diag
+
+    storage_dir = os.environ.get("STORAGE_DIR", "")
+    result = {"storage_dir": storage_dir or "(not set)"}
+
+    # Root filesystem
+    try:
+        rt, ru, rf = _shutil_diag.disk_usage("/")
+        result["root"] = {
+            "total_mb": round(rt / (1024 * 1024)),
+            "free_mb": round(rf / (1024 * 1024)),
+            "used_pct": round((ru / rt) * 100, 1),
+        }
+    except Exception as e:
+        result["root"] = {"error": str(e)}
+
+    # Volume filesystem
+    if storage_dir and Path(storage_dir).exists():
+        try:
+            vt, vu, vf = _shutil_diag.disk_usage(storage_dir)
+            result["volume"] = {
+                "mount": storage_dir,
+                "total_mb": round(vt / (1024 * 1024)),
+                "free_mb": round(vf / (1024 * 1024)),
+                "used_pct": round((vu / vt) * 100, 1),
+            }
+        except Exception as e:
+            result["volume"] = {"error": str(e)}
+
+        # List top-level contents with sizes
+        items = []
+        base = Path(storage_dir)
+        for item in sorted(base.iterdir()):
+            try:
+                if item.is_file():
+                    size = item.stat().st_size
+                    items.append({"name": item.name, "type": "file", "size_mb": round(size / (1024 * 1024), 2)})
+                elif item.is_dir():
+                    total_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+                    file_count = sum(1 for f in item.rglob("*") if f.is_file())
+                    items.append({
+                        "name": item.name, "type": "dir",
+                        "size_mb": round(total_size / (1024 * 1024), 2),
+                        "file_count": file_count,
+                    })
+            except Exception as e:
+                items.append({"name": item.name, "error": str(e)})
+        result["contents"] = items
+
+        # Also check data/ subdirectory
+        data_dir = base / "data"
+        if data_dir.exists():
+            data_items = []
+            for item in sorted(data_dir.iterdir()):
+                try:
+                    if item.is_file():
+                        size = item.stat().st_size
+                        data_items.append({"name": item.name, "type": "file", "size_mb": round(size / (1024 * 1024), 2)})
+                    elif item.is_dir():
+                        total_size = sum(f.stat().st_size for f in item.rglob("*") if f.is_file())
+                        file_count = sum(1 for f in item.rglob("*") if f.is_file())
+                        data_items.append({
+                            "name": item.name, "type": "dir",
+                            "size_mb": round(total_size / (1024 * 1024), 2),
+                            "file_count": file_count,
+                        })
+                except Exception as e:
+                    data_items.append({"name": item.name, "error": str(e)})
+            result["data_contents"] = data_items
+
+    return result
 
 
 # =============================================================================
