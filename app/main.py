@@ -7988,11 +7988,14 @@ def health():
 
 
 @rt("/api/admin/disk-usage")
-def get(sess=None):
-    """Admin-only disk usage diagnostic. Shows volume contents and sizes."""
-    guard = _check_admin(sess)
-    if guard:
-        return guard
+def get(request, sess=None):
+    """Admin-only disk usage diagnostic. Shows volume contents and sizes.
+    Accepts either session auth (admin) or Bearer sync token."""
+    sync_check = _check_sync_token(request)
+    if sync_check is not None:
+        guard = _check_admin(sess)
+        if guard:
+            return guard
 
     import shutil as _shutil_diag
 
