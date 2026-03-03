@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.86.1] — 2026-03-02 (Session 84: Unified Face Cards + Restore Find Similar)
+
+### Changed
+- **Unified face cards**: Browse grid (New Matches) now uses the same `identity_card()` component as People section — restores Photos button, multi-face gallery, share button, quality display (DD-006)
+- **Find Similar → full neighbors_sidebar**: Clicking Similar now opens the complete panel with Select All, Merge Selected, Not Same Selected, Load More, Manual Search, Rejected matches review — replacing the simplified inline tiles (DD-006)
+- **Share button on all named identities**: Removed CONFIRMED-only restriction; share now appears for any identity with a real name
+- **Deprecated identity_card_compact()**: Replaced 190-line function with delegation to `identity_card(show_triage=True)`
+
+### Added
+- **Triage buttons on browse cards**: Labeled `✓ Confirm`, `⏸ Skip`, `✗ Reject` pill buttons visible directly on cards in New Matches browse view
+- **Card expansion animation**: Gold border highlight + subtle scale when Find Similar is active (`.find-similar-active` CSS class)
+- **container_id param for neighbors_sidebar**: Allows targeting browse expansion panels or focus view sidebar independently
+- 15 new tests (25 total in test_inline_find_similar.py)
+
+### Fixed
+- **Help Identify expansion panel width**: Moved expansion panel outside wrapper div so `grid-column: 1/-1` spans full grid width
+
 ## [v0.86.0] — 2026-03-02 (Session 83a: Critical UX Fixes — User Feedback Response)
 
 ### Fixed

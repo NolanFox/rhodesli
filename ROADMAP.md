@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-02: **v0.86.1 — Session 84**: Unified Face Cards + Restore Find Similar. Browse grid uses unified identity_card (DD-006). Find Similar wired to full neighbors_sidebar with Select All/Merge/Not Same/Load More/Search/Rejected. Triage buttons on browse cards. Share on all named identities. Card expansion animation. Help Identify panel full-width fix. 25 tests (up from 10). ~3976 tests.
 - [x] 2026-03-02: **v0.86.0 — Session 83a**: Critical UX Fixes (User Feedback Response). Display Name field (AD-196). Help Identify wired to annotations (AD-197). Compare result 404 fix (AD-198). Admin card search filter (AD-199). Origin: Claude Benatar feedback. 12 new tests. ~3961 tests.
 - [x] 2026-03-02: **v0.85.1 — Session 82f**: Completion Audit. Exhaustive audit of Session 82 (82a-82e): 20 features shipped, 0 broken. Fixed Similar button hit area (38x16px → 46x24px). Formally deferred 5 features (UX-201-204, ML-100). 82b (Codex) never executed, 82c branch stranded. Browser verified 16/16 PASS. 3949 tests.
 - [x] 2026-03-01: **v0.85.0 — Session 82e**: UX Feature Sprint. Mobile hamburger fix (768px breakpoint). Masonry photo grid (CSS columns, natural aspect ratios). Help Needed page (/help, top 50 unidentified faces). Share for Help OG cards (og:image face crop). Identify Mode focus state (toggle, pulse animation, "?" badges). Landing page help section. Browser verified 7/7 PASS. 22 new tests. ~2942 tests.

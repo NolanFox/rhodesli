@@ -245,3 +245,35 @@ show the most important content first, reveal complexity on request.
 - DD-002: Face Card Layout Improvements (earlier iteration)
 - AD-189: Best-face selection for tree nodes (same `get_best_face_id` pattern)
 - Session 80 feedback: docs/session_context/session-80-tree-feedback.md
+
+---
+
+## DD-006: Unified Face Cards + Full Find Similar Panel
+
+- **Date**: 2026-03-02
+- **Session**: 84
+- **Status**: Shipped
+
+### Problem
+
+Face cards were inconsistent across admin sections. The New Matches browse view used `identity_card_compact()` which stripped Photos button, Share button, multi-face gallery, quality display, and the full Find Similar panel. Clicking "Similar" loaded a simplified inline panel (`/api/find-similar/{id}`) that lacked Select All, Merge Selected, Not Same Selected, Load More, Manual Search, and Rejected matches — all of which existed in the full `neighbors_sidebar()`.
+
+### Decision
+
+1. **One card component**: All admin sections use `identity_card()` with a new `show_triage: bool` param for browse-specific Confirm/Skip/Reject buttons
+2. **Full Find Similar**: Admin Similar button targets `/api/identity/{id}/neighbors` (full `neighbors_sidebar()`) instead of simplified `/api/find-similar/{id}`
+3. **container_id param**: `neighbors_sidebar()` accepts `container_id` to target either browse expansion panels (`expand-{css_id}`) or focus sidebar (`neighbors-{id}`)
+4. **Share on all named**: Removed CONFIRMED-only restriction on share button
+5. **Card animation**: `.find-similar-active` CSS class with gold border + subtle scale on Similar click
+
+### Alternatives Rejected
+
+1. **Keep two card components** — maintenance burden, feature divergence was the original problem
+2. **Merge compact into full as a "mode"** — too many conditionals; cleaner to deprecate compact entirely
+3. **Custom inline panel for browse** — duplicated all the bulk action, search, and pagination logic already in `neighbors_sidebar()`
+
+### Breadcrumbs
+
+- DD-005: Photo-Dominant Identity Cards (preserved in unified card)
+- Session 84: docs/sessions/SESSION_084.md
+- Tests: tests/test_inline_find_similar.py (25 tests)
