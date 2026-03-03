@@ -154,6 +154,28 @@ No competitor offers "search a curated historical archive." Generic tools compar
 - Existing Rhodesli research: docs/research/compare_faces_competitive.md
 - Existing PRDs: 007, 016, 021
 
+## Nolan Feedback (Session Start, 2026-03-03)
+
+Additional requirements captured during Phase 1:
+
+1. **Person page navigation**: Every face in results (uploaded or archive) should link to
+   `/person/{identity_id}`. Must be able to navigate to person page from compare.
+2. **Photo page navigation**: Both uploaded and archive photos link to `/photo/{photo_id}`.
+   Need to switch between photo view and face view for comparison.
+3. **Face overlays on uploaded photo**: Standard face overlay toggle, clickable faces.
+4. **Find Similar context**: For compared faces, show how they rank against the person's
+   existing Find Similar results — not just the uploaded faces.
+5. **Merge/Reject/Not Same actions**: Same as neighbors_sidebar. If a face matches,
+   admin can merge/reject/not-same right from compare results.
+6. **Compare = Find Similar variant**: Compare is "Find Similar where you manually searched
+   the person." Uploaded faces are INBOX identities, archive person is the target.
+   Same merge/reject infrastructure, different entry point.
+
+### Architectural Implication
+Compare result page should embed neighbors_sidebar (or variant) for the reference person,
+with uploaded faces as neighbor candidates. This reuses merge/reject infrastructure and
+ensures consistent behavior across entry points.
+
 ## Predecessor
 - Session 84: Unified face cards + Find Similar panel (DD-006)
 - Session 83a: Compare result storage fix (AD-198), Display Name (AD-196)

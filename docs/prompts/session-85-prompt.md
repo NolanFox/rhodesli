@@ -248,6 +248,12 @@ the uploaded photo, without face context, and without interactivity.
 - [ ] Admin sees raw distance scores
 - [ ] Mobile responsive at 375px
 - [ ] Shared link renders complete interactive view for recipients
+- [ ] Every face links to its person page (`/person/{identity_id}`)
+- [ ] Every photo links to its photo page (`/photo/{photo_id}`)
+- [ ] Face overlay toggle on uploaded photo (photo view ↔ face view)
+- [ ] Find Similar context visible for compared faces
+- [ ] Merge/Reject/Not Same actions for admin (same as neighbors_sidebar)
+- [ ] Compare = Find Similar variant — uses neighbors_sidebar infrastructure
 
 **Commit**: `feat(compare): interactive shareable result page`
 

@@ -216,6 +216,31 @@ Uses same data path as Upload page:
 └─────────────────────────────────────────┘
 ```
 
+## Navigation and Actions (Nolan Feedback, 2026-03-03)
+
+### Navigation From Results
+Every face and photo in compare results MUST be navigable:
+- **Person page**: Every face (uploaded or archive) links to `/person/{identity_id}`
+- **Photo page**: Every photo links to `/photo/{photo_id}` — both uploaded and archive photos
+- **Photo view ↔ Face view**: Standard face overlay toggle on uploaded photo (same as photo page)
+- **Find Similar context**: For each compared face, ability to see how it ranks against
+  the person's existing Find Similar neighbors (not just the uploaded faces)
+
+### Merge/Reject/Not Same Actions (KEY INSIGHT)
+Compare is essentially "Find Similar where you manually searched the person."
+The uploaded faces become new INBOX identities. Comparing them against an archive person
+is the same action as viewing that person's neighbors — just initiated from Compare.
+
+Therefore, compare results MUST have the same admin actions as neighbors_sidebar:
+- **Merge**: If an uploaded face matches an archive person, merge them (same identity)
+- **Reject/Not Same**: Mark a face as definitely NOT the same person
+- **These actions update identities.json** — same as Find Similar merge/reject
+
+### Architectural Implication
+The compare result view should embed a variant of `neighbors_sidebar` for the reference
+person, with the uploaded faces shown as neighbor candidates. This reuses the existing
+merge/reject infrastructure and ensures behavioral consistency.
+
 ## Out of Scope
 
 - Feature-level similarity breakdown (eyes, nose, jawline)
@@ -230,6 +255,6 @@ Uses same data path as Upload page:
 
 1. Unified upload pipeline (foundation — nothing works without this)
 2. Compare against specific person + search (the Claude Benatar use case)
-3. Interactive result page with face overlays + context
-4. Shareable result URL
+3. Interactive result page with face overlays, navigation, and merge/reject actions
+4. Shareable result URL with full interactive view
 5. Mobile responsive verification
