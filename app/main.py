@@ -3348,9 +3348,7 @@ def _admin_bar(user=None) -> object:
     proposal_count = 0
     try:
         registry = load_registry()
-        for ident in registry.identities.values():
-            if ident.get("merged_into"):
-                continue
+        for ident in registry.list_identities():
             state = ident.get("state", "")
             if state == "INBOX":
                 pending_count += 1
@@ -17044,13 +17042,9 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
             limit=5, exclude_face_ids=set(face_ids),
         )
         # Get identity info for this face
-        identity_id = None
-        identity_name = None
-        for iid, ident in registry.identities.items():
-            if fid in ident.get("anchor_ids", []) or fid in ident.get("candidate_ids", []):
-                identity_id = iid
-                identity_name = ident.get("name", "Unknown")
-                break
+        face_ident = get_identity_for_face(registry, fid)
+        identity_id = face_ident.get("identity_id") if face_ident else None
+        identity_name = face_ident.get("name", "Unknown") if face_ident else None
         per_face_results.append({
             "face_id": fid,
             "identity_id": identity_id,
@@ -17754,13 +17748,9 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
             tier = "WEAK"
 
         # Get identity info for this face
-        face_identity_id = None
-        face_identity_name = None
-        for iid, ident in registry.identities.items():
-            if fid in ident.get("anchor_ids", []) or fid in ident.get("candidate_ids", []):
-                face_identity_id = iid
-                face_identity_name = ident.get("name", "Unknown")
-                break
+        face_identity = get_identity_for_face(registry, fid)
+        face_identity_id = face_identity.get("identity_id") if face_identity else None
+        face_identity_name = face_identity.get("name", "Unknown") if face_identity else None
 
         per_face_scores.append({
             "face_id": fid,
@@ -18159,13 +18149,9 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
         else:
             tier = "WEAK"
 
-        face_identity_id = None
-        face_identity_name = None
-        for iid, ident in registry.identities.items():
-            if fid in ident.get("anchor_ids", []) or fid in ident.get("candidate_ids", []):
-                face_identity_id = iid
-                face_identity_name = ident.get("name", "Unknown")
-                break
+        face_identity = get_identity_for_face(registry, fid)
+        face_identity_id = face_identity.get("identity_id") if face_identity else None
+        face_identity_name = face_identity.get("name", "Unknown") if face_identity else None
 
         per_face_scores.append({
             "face_id": fid,
