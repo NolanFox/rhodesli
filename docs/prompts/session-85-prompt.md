@@ -162,39 +162,56 @@ This is the flow Claude Benatar actually wanted: "Compare this uploaded photo ag
 
 ---
 
-## Phase 4: Fix Photo Persistence to Archive (30 min)
+## Phase 4: Unify Compare Upload with Main Upload Pipeline (45 min)
 
-Uploaded compare photos must be saveable to the Rhodesli archive, not just `uploads/compare/`.
+Every photo uploaded via Compare should go through the SAME pipeline as photos uploaded
+via the Upload page. No separate `uploads/compare/` silo.
 
-**Problem**: Photos uploaded via Compare live in a separate `uploads/compare/` directory. They never appear in the Photos section. For admin users, there should be a clear path: Upload → Compare → "Add to Archive" → Photo appears in Photos section with detected faces.
+**Problem**: Compare uploads currently live in a separate `uploads/compare/` directory
+with their own save logic (`_save_compare_upload`). They never appear in the Photos
+section. This is wrong — every uploaded photo should use the same mechanism as the
+Upload page, appearing in the archive with detected faces, crops, and identities.
+
+**Design principle**: Compare is a LENS on uploaded photos, not a separate storage system.
+The upload pipeline is the upload pipeline, regardless of entry point.
 
 **Spec:**
-1. For admin users: add "Save to Archive" button on the compare result page
-2. When clicked:
-   - Copy photo from `uploads/compare/` to main photo storage (R2 `raw_photos/`)
-   - Create entry in `photo_index.json` (via Supabase if available, or JSON fallback)
-   - Create face entries for each detected face
-   - Add face crops to R2 `crops/`
-   - Create INBOX identity entries for each detected face
-   - Show success message with link to the new photo page
-3. This follows the Gatekeeper pattern: admin explicitly approves adding to archive
-4. Non-admin users see "Contribute to Archive" which queues for admin review (existing flow)
-5. The auto-queue to `pending_uploads.json` (AD-182) continues to work as before
+1. Compare uploads MUST use the same storage path as Upload page uploads:
+   - Photo saved to R2 `raw_photos/` (not `uploads/compare/`)
+   - Entry created in photo_index (via Supabase or JSON)
+   - Face crops generated and saved to R2 `crops/`
+   - INBOX identity entries created for each detected face
+   - Embeddings stored in embeddings cache
+2. For admin users: this happens AUTOMATICALLY on upload (same as Upload page)
+3. For non-admin users: photo queued to `pending_uploads.json` for admin review
+   (same as Upload page behavior — Lesson 22: admin-only until moderation exists)
+4. After upload completes, the compare results overlay on top of the now-archived photo
+5. Remove the separate `_save_compare_upload()` function — replace with the standard
+   upload pipeline functions
+6. The compare result page should link to the photo's archive page (`/photo/{photo_id}`)
+7. Compare becomes: Upload photo (standard pipeline) → Run face comparison → Show results
+
+**Research first**: Study how the Upload page (`/upload`, `/api/upload/`) handles photos.
+Trace the full pipeline: file receipt → R2 storage → photo_index entry → face detection →
+crop generation → identity creation. Then wire Compare to use the SAME functions.
 
 **IMPORTANT**: This phase requires careful data handling. Mock all data writes in tests.
 Follow Lesson 51: Tests that POST to data-modifying routes MUST mock BOTH load AND save.
+Follow Lesson 19: Default to admin-only for new data-modifying features.
 
-**Files likely touched**: `app/main.py` (new route + button), `core/photo_registry.py`
+**Files likely touched**: `app/main.py` (compare upload handler, upload pipeline functions)
 
 **Acceptance criteria:**
-- [ ] Admin sees "Save to Archive" button on result page
-- [ ] Clicking it adds photo to main archive (photo_index, R2, crops)
-- [ ] New INBOX identities created for detected faces
-- [ ] Photo appears in Photos section after save
-- [ ] Non-admin users see "Contribute" (existing behavior)
+- [ ] Compare upload uses same storage path as Upload page
+- [ ] Photo appears in Photos section immediately (admin) or after approval (non-admin)
+- [ ] Face crops generated and stored in standard location
+- [ ] INBOX identities created for each detected face
+- [ ] Compare result page links to the archived photo page
+- [ ] `_save_compare_upload()` removed or refactored to use standard pipeline
 - [ ] Tests mock all data writes properly
+- [ ] Non-admin uploads queued for review (same as Upload page)
 
-**Commit**: `feat(compare): admin save-to-archive for uploaded photos`
+**Commit**: `feat(compare): unify upload pipeline with main Upload page`
 
 ---
 
@@ -235,8 +252,9 @@ Follow Lesson 51: Tests that POST to data-modifying routes MUST mock BOTH load A
    - [ ] Search for "Isaac Cohen" in the person selector
    - [ ] Verify per-face match scores against Isaac Cohen (screenshot)
    - [ ] Verify context shows Isaac Cohen's existing match distances
-   - [ ] Click "Save to Archive" (admin)
-   - [ ] Verify photo appears in Photos section (screenshot)
+   - [ ] Verify photo was automatically saved to archive (unified pipeline)
+   - [ ] Navigate to Photos section — verify the uploaded photo appears (screenshot)
+   - [ ] Click the photo — verify face crops and INBOX identities were created
    - [ ] Navigate to `/compare/result/{id}` — verify shareable link works
    - [ ] Check the result page on mobile viewport (375px) — responsive? (screenshot)
 

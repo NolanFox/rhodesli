@@ -80,7 +80,14 @@ one face. But the current compare result page (screenshot 4) shows all "Unlikely
 without distances — making it impossible to tell if any face actually matched well.
 
 ## Design Direction
-The compare page should support two primary flows:
+
+### Core Principle: One Upload Pipeline
+Every photo uploaded via Compare MUST go through the SAME pipeline as the Upload page.
+Compare is a LENS on uploaded photos, not a separate storage system. No more
+`uploads/compare/` silo — photos go straight to `raw_photos/`, get indexed, get crops,
+get INBOX identities. Compare results are an overlay on an already-archived photo.
+
+### Two Primary Flows
 1. **"Who is in this photo?"** — Upload photo, compare ALL faces against archive (current flow, needs polish)
 2. **"Is [Person X] in this photo?"** — Upload photo, select a known person, see per-face scores ranked against that person (NEW)
 
@@ -89,7 +96,7 @@ Flow 2 is what Claude Benatar actually wanted. It should:
 - Show the selected person's crop for reference
 - Show per-face match scores against that specific person
 - Show how those scores compare to the person's existing top matches (Find Similar context)
-- Allow saving the photo to the archive if admin approves
+- Link to the photo's archive page (since it's now in the archive via unified pipeline)
 
 ## Predecessor
 - Session 84: Unified face cards + Find Similar panel (DD-006)
