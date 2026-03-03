@@ -243,23 +243,20 @@ class TestCompareUploadProcessing:
         from starlette.testclient import TestClient
         self.client = TestClient(app)
 
-    def test_compare_no_insightface_saves_upload(self):
-        """Without InsightFace, upload is saved and shows honest message."""
+    def test_compare_upload_stages_photo(self):
+        """Upload saves file to staging and shows status (unified pipeline, session 85)."""
         import io
         img = io.BytesIO(b'\xff\xd8\xff\xe0' + b'\x00' * 100)  # minimal JPEG header
         with patch("app.main.is_auth_enabled", return_value=False), \
-             patch.dict("sys.modules", {"cv2": None, "insightface": None, "insightface.app": None}):
-            # Force ImportError for InsightFace detection check
+             patch("app.main.PROCESSING_ENABLED", False):
             response = self.client.post(
                 "/api/compare/upload",
                 files={"photo": ("test.jpg", img, "image/jpeg")},
             )
         assert response.status_code == 200
         html = response.text
-        # Should show honest messaging about offline processing
-        assert "Photo received" in html or "not yet available" in html
-        # Should NOT say "check back soon" with no mechanism
-        assert "check back soon" not in html.lower()
+        # Should show staging message (processing disabled = local pipeline needed)
+        assert "staged" in html.lower() or "processing" in html.lower()
 
     def test_compare_rejects_non_image(self):
         """Non-image files are rejected."""

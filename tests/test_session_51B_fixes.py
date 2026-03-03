@@ -40,13 +40,12 @@ class TestCompareUploadHonestMessaging:
 
         return patch.object(builtins, "__import__", side_effect=mock_import)
 
-    def test_upload_no_insightface_with_r2_shows_honest_message(self):
-        """When InsightFace unavailable + R2 available, show honest messaging."""
+    def test_upload_stages_photo_for_processing(self):
+        """Upload saves file to staging via unified pipeline (session 85 rewrite)."""
         fake_image = io.BytesIO(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
 
-        with self._make_insightface_unavailable(), \
-             patch("core.storage.can_write_r2", return_value=True), \
-             patch("app.main._save_compare_upload", return_value="test-upload-123"):
+        with patch("app.main.is_auth_enabled", return_value=False), \
+             patch("app.main.PROCESSING_ENABLED", False):
             resp = self.client.post(
                 "/api/compare/upload",
                 files={"photo": ("test.jpg", fake_image, "image/jpeg")},
@@ -55,24 +54,24 @@ class TestCompareUploadHonestMessaging:
         assert resp.status_code == 200
         html = resp.text
 
-        # Must show honest message
-        assert "Photo Received" in html
-        assert "24 hours" in html
+        # Unified pipeline stages photo (no InsightFace check needed)
+        assert "staged" in html.lower() or "processing" in html.lower()
 
-        # Must provide actionable alternative
-        assert "NolanFox@gmail.com" in html
-        assert "mailto:" in html
-
-        # Must NOT show misleading "check back soon"
+        # Must NOT show old misleading messages
         assert "Check back soon" not in html
         assert "processed shortly" not in html
 
-    def test_upload_no_insightface_no_r2_shows_email_fallback(self):
-        """When neither InsightFace nor R2, show email fallback."""
+    def test_non_admin_upload_shows_pending_message(self):
+        """Non-admin upload queues for review (session 85 rewrite)."""
         fake_image = io.BytesIO(b"\xff\xd8\xff\xe0" + b"\x00" * 100)
+        mock_user = MagicMock()
+        mock_user.is_admin = False
+        mock_user.email = "community@example.com"
 
-        with self._make_insightface_unavailable(), \
-             patch("core.storage.can_write_r2", return_value=False):
+        with patch("app.main.is_auth_enabled", return_value=True), \
+             patch("app.main.get_current_user", return_value=mock_user), \
+             patch("app.main._load_pending_uploads", return_value={"uploads": {}}), \
+             patch("app.main._save_pending_uploads"):
             resp = self.client.post(
                 "/api/compare/upload",
                 files={"photo": ("test.jpg", fake_image, "image/jpeg")},
@@ -80,14 +79,7 @@ class TestCompareUploadHonestMessaging:
 
         assert resp.status_code == 200
         html = resp.text
-
-        # Must provide actionable fallback
-        assert "NolanFox@gmail.com" in html
-        assert "mailto:" in html
-
-        # Must NOT show misleading messages
-        assert "Check back soon" not in html
-        assert "processed shortly" not in html
+        assert "Submitted" in html or "submitted" in html
 
     def test_upload_no_file_returns_error(self):
         """POST without file returns error message."""
