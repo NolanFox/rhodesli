@@ -17714,7 +17714,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
     # Get reference person's existing top archive matches (Find Similar context)
     from core.neighbors import find_similar_faces, find_nearest_neighbors
     ref_neighbors = find_nearest_neighbors(
-        identity_id, registry, None, face_data, limit=3,
+        identity_id, registry, load_photo_registry(), face_data, limit=3,
     )
 
     # Compute per-face distances against reference person
@@ -18037,11 +18037,14 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     if not photo_meta:
         return Div(P("Photo not found.", cls="text-red-400 text-sm"), id="compare-results")
 
-    face_ids = [f["face_id"] for f in photo_meta.get("faces", []) if f.get("face_id")]
+    # face_ids from photo_index (string list) or from cache (dict list with face_id key)
+    face_ids = photo_meta.get("face_ids", [])
+    if not face_ids:
+        face_ids = [f["face_id"] for f in photo_meta.get("faces", []) if isinstance(f, dict) and f.get("face_id")]
     if not face_ids:
         return Div(P("No faces found in this photo.", cls="text-amber-500 text-sm"), id="compare-results")
 
-    photo_url = storage.get_photo_url(photo_meta["filename"]) if photo_meta.get("filename") else None
+    photo_url = storage.get_photo_url(photo_meta.get("filename") or photo_meta.get("path", "")) if (photo_meta.get("filename") or photo_meta.get("path")) else None
 
     # If no identity_id, show the photo's faces + person search
     if not identity_id:
@@ -18123,7 +18126,8 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
 
     # Reference person's existing top archive matches
     from core.neighbors import find_nearest_neighbors
-    ref_neighbors = find_nearest_neighbors(identity_id, registry, None, face_data, limit=3)
+    photo_reg = load_photo_registry()
+    ref_neighbors = find_nearest_neighbors(identity_id, registry, photo_reg, face_data, limit=3)
 
     # Per-face distances
     per_face_scores = []
@@ -19113,7 +19117,7 @@ def get(result_id: str, sess=None):
             from core.neighbors import find_nearest_neighbors
             face_data = get_face_data()
             ref_neighbors = find_nearest_neighbors(
-                ref_id, load_registry(), None, face_data, limit=3,
+                ref_id, load_registry(), load_photo_registry(), face_data, limit=3,
             )
             if ref_neighbors:
                 context_parts = []
