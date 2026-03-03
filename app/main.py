@@ -16974,6 +16974,254 @@ def _save_compare_upload(content: bytes, filename: str, faces: list, results: li
     return upload_id
 
 
+def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> object:
+    """Build the interactive comparison results view after upload + ingest.
+
+    Called when background ingest completes. Shows:
+    - Uploaded photo with face bounding box overlays
+    - Per-face top archive matches with scores
+    - Person search box for targeted comparison
+    - Links to person pages and photo pages
+    """
+    from core.neighbors import find_similar_faces
+
+    _build_caches()
+    face_data = get_face_data()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
+    user_role = "admin" if user_is_admin else "viewer"
+
+    # Look up photo_id from face_ids
+    photo_id = None
+    photo_url = None
+    photo_data = None
+    for fid in face_ids:
+        pid = get_photo_id_for_face(fid)
+        if pid:
+            photo_id = pid
+            break
+
+    if photo_id:
+        photo_data = get_photo_metadata(photo_id)
+        if photo_data and photo_data.get("filename"):
+            photo_url = storage.get_photo_url(photo_data["filename"])
+
+    # Build per-face results
+    per_face_results = []
+    for fid in face_ids:
+        emb = face_data.get(fid)
+        if not emb or "mu" not in emb:
+            continue
+        matches = find_similar_faces(
+            emb["mu"], face_data, registry=registry,
+            limit=5, exclude_face_ids=set(face_ids),
+        )
+        # Get identity info for this face
+        identity_id = None
+        identity_name = None
+        for iid, ident in registry.identities.items():
+            if fid in ident.get("anchor_ids", []) or fid in ident.get("candidate_ids", []):
+                identity_id = iid
+                identity_name = ident.get("name", "Unknown")
+                break
+        per_face_results.append({
+            "face_id": fid,
+            "identity_id": identity_id,
+            "identity_name": identity_name or "Unknown",
+            "matches": matches,
+        })
+
+    parts = []
+
+    # Header
+    face_count = len(per_face_results)
+    parts.append(
+        Div(
+            H2(f"{face_count} face{'s' if face_count != 1 else ''} detected",
+               cls="text-xl font-serif text-white mb-1"),
+            P("Photo saved to archive. Select a face to see matches, or search for a specific person.",
+              cls="text-sm text-slate-400"),
+            cls="mb-6",
+        )
+    )
+
+    # Uploaded photo with face overlay data
+    if photo_url and photo_data:
+        photo_w = photo_data.get("width", 0)
+        photo_h = photo_data.get("height", 0)
+        photo_link = f"/photo/{photo_id}" if photo_id else "#"
+        parts.append(
+            Div(
+                A(
+                    Img(src=photo_url, cls="max-h-64 rounded-lg object-contain mx-auto",
+                        alt="Uploaded photo", data_testid="compare-uploaded-photo"),
+                    href=photo_link,
+                    cls="block",
+                ),
+                P(A("View photo page", href=photo_link,
+                    cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                  cls="text-center mt-2"),
+                cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+                data_testid="upload-preview",
+            )
+        )
+
+    # Person search box for targeted comparison
+    parts.append(
+        Div(
+            P("Compare against a specific person", cls="text-sm text-slate-300 mb-2 font-medium"),
+            Input(
+                type="text", name="q",
+                placeholder="Search by name (e.g., Isaac Cohen)...",
+                hx_get=f"/api/compare/search-person?job_id={job_id}",
+                hx_trigger="keyup changed delay:300ms",
+                hx_target="#compare-person-search-results",
+                hx_include="this",
+                cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
+                    "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                data_testid="compare-person-search",
+            ),
+            Div(id="compare-person-search-results", cls="mt-2"),
+            cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+        )
+    )
+
+    # Per-face results
+    for i, face_result in enumerate(per_face_results):
+        fid = face_result["face_id"]
+        iid = face_result["identity_id"]
+        iname = face_result["identity_name"]
+        matches = face_result["matches"]
+
+        # Face crop
+        crop_url = _resolve_crop_url(fid, crop_files)
+        person_link = f"/person/{iid}" if iid else "#"
+
+        match_cards = []
+        for m in matches[:5]:
+            m_crop_url = _resolve_crop_url(m.get("face_id", ""), crop_files)
+            m_iid = m.get("identity_id", "")
+            m_name = m.get("identity_name", "Unknown")
+            m_pct = m.get("confidence_pct", 0)
+            m_dist = m.get("distance", 99)
+            m_tier = m.get("tier", "WEAK")
+
+            # Color based on tier
+            if m_pct >= 85:
+                bar_color = "bg-emerald-500"
+                label_color = "text-emerald-400"
+            elif m_pct >= 70:
+                bar_color = "bg-amber-500"
+                label_color = "text-amber-400"
+            elif m_pct >= 50:
+                bar_color = "bg-blue-500"
+                label_color = "text-blue-400"
+            else:
+                bar_color = "bg-slate-600"
+                label_color = "text-slate-400"
+
+            tier_label = m_tier.replace("_", " ").title()
+            dist_str = f" (dist: {m_dist:.2f})" if user_is_admin else ""
+
+            match_cards.append(
+                Div(
+                    Div(
+                        Img(src=m_crop_url, cls="w-12 h-12 rounded-full object-cover border border-slate-600",
+                            alt=m_name) if m_crop_url else Div(cls="w-12 h-12 rounded-full bg-slate-700"),
+                        Div(
+                            A(m_name, href=f"/person/{m_iid}" if m_iid else "#",
+                              cls="text-sm text-white hover:text-indigo-300 font-medium"),
+                            Div(
+                                Div(
+                                    Div(cls=f"h-1.5 rounded-full {bar_color}", style=f"width: {m_pct}%"),
+                                    cls="flex-1 bg-slate-700 rounded-full h-1.5",
+                                ),
+                                Span(f"{m_pct}%", cls=f"text-xs {label_color} ml-2 font-mono min-w-[3rem] text-right"),
+                                cls="flex items-center gap-2 mt-1",
+                            ),
+                            Span(f"{tier_label}{dist_str}", cls=f"text-xs {label_color}"),
+                            cls="flex-1 min-w-0",
+                        ),
+                        cls="flex items-center gap-3",
+                    ),
+                    cls="p-3 bg-slate-800/50 rounded-lg border border-slate-700/30",
+                )
+            )
+
+        # Face section
+        parts.append(
+            Div(
+                Div(
+                    Div(
+                        Img(src=crop_url, cls="w-16 h-16 rounded-full object-cover border-2 border-slate-500",
+                            alt=iname) if crop_url else Div(cls="w-16 h-16 rounded-full bg-slate-700"),
+                        cls="flex-shrink-0",
+                    ),
+                    Div(
+                        A(iname, href=person_link,
+                          cls="text-white font-medium hover:text-indigo-300"),
+                        P(f"Face {i + 1} — Top archive matches",
+                          cls="text-xs text-slate-400 mt-0.5"),
+                        cls="min-w-0",
+                    ),
+                    cls="flex items-center gap-3 mb-3",
+                ),
+                Div(*match_cards, cls="space-y-2") if match_cards else P("No matches found", cls="text-slate-500 text-sm"),
+                cls="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50 mb-4",
+                data_testid=f"face-result-{i}",
+            )
+        )
+
+    # Save comparison result for sharing
+    result_data = {
+        "query_type": "compare_upload",
+        "query_name": f"Compare Upload ({face_count} faces)",
+        "photo_id": photo_id,
+        "face_ids": face_ids,
+        "job_id": job_id,
+        "matches": [],
+    }
+    for fr in per_face_results:
+        for m in fr["matches"][:3]:
+            result_data["matches"].append({
+                "face_id": m.get("face_id", ""),
+                "identity_id": m.get("identity_id", ""),
+                "identity_name": m.get("identity_name", "Unknown"),
+                "distance": m.get("distance", 99),
+                "confidence_pct": m.get("confidence_pct", 0),
+                "tier": m.get("tier", "WEAK"),
+            })
+    result_id = _save_comparison_result(result_data)
+
+    # Share link
+    share_url = f"{SITE_URL}/compare/result/{result_id}"
+    parts.append(
+        Div(
+            A("Share this comparison", href=share_url, target="_blank",
+              cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+            cls="text-center mt-4",
+            data_testid="compare-share-link",
+        )
+    )
+
+    return Div(*parts, id="compare-results", data_testid="compare-results-complete")
+
+
+def _resolve_crop_url(face_id: str, crop_files: set) -> str:
+    """Resolve crop URL for a face_id, handling both legacy and inbox formats."""
+    if not face_id:
+        return ""
+    # Try direct match
+    fname = f"{face_id}.jpg"
+    if fname in crop_files:
+        return storage.get_crop_url_by_filename(fname)
+    # Try identity-based crop
+    return resolve_face_image_url(face_id, crop_files)
+
+
 def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str) -> object:
     """Build a face selector UI for multi-face uploads."""
     face_buttons = []
@@ -17008,20 +17256,23 @@ def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str
 
 @rt("/api/compare/upload")
 async def post(photo: UploadFile = None, sess=None):
-    """Upload a photo for face comparison.
+    """Upload a photo for face comparison via the unified upload pipeline.
 
-    Persists uploads to uploads/compare/ for later retrieval.
-    Supports multi-face detection with face selection.
+    Uses the SAME staging + background ingest pipeline as the Upload page.
+    Photos persist to the archive: photo_index, identities, embeddings, R2.
+    Compare is a LENS on uploaded photos, not a separate storage system.
+
+    Admin: immediate processing via background thread (AD-161).
+    Non-admin: queued to pending_uploads for admin review (Lesson 19/22).
     """
-    import time as _time
-    t0 = _time.time()
+    import uuid
+    from datetime import datetime, timezone
 
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"),
                    id="compare-results")
 
     from pathlib import Path as _Path
-    import tempfile
 
     # Read upload content
     content = await photo.read()
@@ -17038,213 +17289,699 @@ async def post(photo: UploadFile = None, sess=None):
         return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"),
                    id="compare-results")
 
-    # Check if face detection is available (InsightFace — local dev only)
-    # Must probe the actual deferred dependencies (cv2, insightface), not just
-    # the function reference — core.ingest_inbox has only stdlib top-level imports
-    # so importing it always succeeds even without ML deps installed.
-    has_insightface = False
-    try:
-        import cv2  # noqa: F811
-        from insightface.app import FaceAnalysis  # noqa: F401
-        from core.ingest_inbox import extract_faces, extract_faces_hybrid
-        has_insightface = True
-    except ImportError:
-        pass
+    # Determine user and admin status (Lesson 19: admin-only for data modification)
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
 
-    if not has_insightface:
-        # Production mode: save to R2 for later local processing
-        from core.storage import can_write_r2
-        if can_write_r2():
-            upload_id = _save_compare_upload(content, original_filename, faces=[], results=[], status="awaiting_analysis")
-            return Div(
-                Div(
-                    Span("&#10003;", cls="text-3xl text-emerald-400"),
-                    cls="flex justify-center mb-3"
-                ),
-                P("Photo Received", cls="text-lg font-semibold text-white text-center"),
-                P("Face detection runs on specialized hardware and is processed in batches. "
-                  "Your photo will be analyzed within 24 hours.",
-                  cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto"),
-                Div(
-                    P("While you wait, try browsing faces already in the archive:",
-                      cls="text-sm text-slate-400 text-center mt-4"),
-                    Div(
-                        A("Browse People", href="/people", cls="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"),
-                        A("Browse Photos", href="/photos", cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"),
-                        cls="flex justify-center gap-3 mt-3",
-                    ),
-                ),
-                P("For immediate results, email ",
-                  A("NolanFox@gmail.com", href="mailto:NolanFox@gmail.com", cls="text-indigo-400 hover:text-indigo-300"),
-                  cls="text-xs text-slate-500 text-center mt-4"),
-                P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
-                cls="py-8 px-4",
-                id="compare-results",
-                data_testid="upload-saved-pending",
-            )
-        else:
-            return Div(
-                P("Photo comparison uploads are not yet available.",
-                  cls="text-amber-500 text-center py-4"),
-                P("Email your photo to ",
-                  A("NolanFox@gmail.com", href="mailto:NolanFox@gmail.com", cls="text-indigo-400 hover:text-indigo-300"),
-                  " and we'll run a comparison for you.",
-                  cls="text-slate-400 text-center text-sm mt-2"),
-                id="compare-results",
-            )
+    # Generate job ID and stage file — SAME as Upload page
+    job_id = str(uuid.uuid4())[:8]
+    job_dir = data_path / "staging" / job_id
+    job_dir.mkdir(parents=True, exist_ok=True)
 
-    # Face detection + comparison
-    # Save two copies: original for R2 display, resized for ML processing.
-    # InsightFace runs detection at det_size=(640,640) internally, so anything
-    # above 640px on the longest edge is wasted compute (AD-110).
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
-        tmp.write(content)
-        tmp_path = _Path(tmp.name)
+    # Sanitize and save file
+    safe_filename = original_filename.replace(" ", "_").replace("/", "_")
+    upload_path = job_dir / safe_filename
+    with open(upload_path, "wb") as out:
+        out.write(content)
 
-    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as ml_tmp:
-        ml_tmp.write(content)
-        ml_path = _Path(ml_tmp.name)
+    # Write metadata (same format as Upload page)
+    import json as _json_compare
+    uploader_email = user.email if user else "anonymous"
+    metadata = {
+        "job_id": job_id,
+        "source": "Compare Upload",
+        "collection": "",
+        "source_url": "",
+        "files": [safe_filename],
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "processing_enabled": PROCESSING_ENABLED,
+        "uploader_email": uploader_email,
+        "compare_mode": True,
+    }
+    with open(job_dir / "_metadata.json", "w") as f:
+        _json_compare.dump(metadata, f, indent=2)
 
-    try:
-        timings = {}
+    # Non-admin flow: queue for admin review (same as Upload page)
+    if not user_is_admin:
+        pending = _load_pending_uploads()
+        pending["uploads"][job_id] = {
+            "job_id": job_id,
+            "uploader_email": uploader_email,
+            "source": "Compare Upload",
+            "collection": "",
+            "source_url": "",
+            "files": [safe_filename],
+            "file_count": 1,
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "status": "pending",
+            "compare_mode": True,
+        }
+        _save_pending_uploads(pending)
 
-        t1 = _time.time()
-        img = cv2.imread(str(ml_path))
-        if img is not None:
-            h, w = img.shape[:2]
-            _ML_MAX_DIM = 640  # Match InsightFace det_size — no benefit above this
-            if max(h, w) > _ML_MAX_DIM:
-                scale = _ML_MAX_DIM / max(h, w)
-                new_w, new_h = int(w * scale), int(h * scale)
-                img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
-                cv2.imwrite(str(ml_path), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
-                print(f"[compare] ML resize {w}x{h} -> {new_w}x{new_h}")
-        timings['image_prep'] = _time.time() - t1
-        print(f"[compare] Image prep: {timings['image_prep']:.2f}s")
-
-        t1 = _time.time()
-        # Use hybrid detection (AD-114): det_500m for fast detection +
-        # w600k_r50 for archive-compatible embeddings. Falls back to
-        # full buffalo_l if hybrid models aren't available.
-        faces, _, _ = extract_faces_hybrid(ml_path)
-        timings['face_detection'] = _time.time() - t1
-        print(f"[compare] Face detection (hybrid): {timings['face_detection']:.2f}s ({len(faces)} faces)")
-        if not faces:
-            return Div(
-                P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
-                P("Try uploading a clearer photo with visible faces.", cls="text-slate-500 text-center text-sm mt-2"),
-                id="compare-results",
-            )
-
-        # Compare first face by default
-        t1 = _time.time()
-        query_embedding = faces[0]["mu"]
-        face_data = get_face_data()
-        registry = load_registry()
-        crop_files = get_crop_files()
-
-        from core.neighbors import find_similar_faces
-        results = find_similar_faces(
-            query_embedding, face_data, registry=registry,
-            limit=20,
+        return Div(
+            Div(
+                Span("&#10003;", cls="text-3xl text-emerald-400"),
+                cls="flex justify-center mb-3"
+            ),
+            P("Photo Submitted", cls="text-lg font-semibold text-white text-center"),
+            P("Your photo has been submitted for review. An admin will process it shortly.",
+              cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto"),
+            P(f"Reference: {job_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
+            cls="py-8 px-4",
+            id="compare-results",
+            data_testid="upload-saved-pending",
         )
-        timings['embedding_compare'] = _time.time() - t1
-        print(f"[compare] Embedding comparison: {timings['embedding_compare']:.2f}s ({len(face_data)} archive faces)")
 
-        # Persist original (not ML-resized) image to R2 for display
-        t1 = _time.time()
-        upload_content = tmp_path.read_bytes()
-        upload_id = _save_compare_upload(upload_content, original_filename, faces, results)
-        timings['save_upload'] = _time.time() - t1
-        print(f"[compare] Save upload: {timings['save_upload']:.2f}s ({len(upload_content)} bytes)")
+    # Admin + processing disabled: stage for local pipeline
+    if not PROCESSING_ENABLED:
+        return Div(
+            P("Photo staged for processing.", cls="text-slate-300 text-center py-4"),
+            P("Run the local pipeline to detect faces.", cls="text-slate-400 text-center text-sm mt-2"),
+            P(f"Reference: {job_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
+            id="compare-results",
+        )
 
-        # Save face embeddings for face selection (R2 or local)
-        t1 = _time.time()
-        import pickle
-        from core.storage import can_write_r2, upload_bytes_to_r2
-        face_save_data = [{"mu": f["mu"].tolist(), "bbox": f.get("bbox", [0,0,0,0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()} for f in faces]
-        faces_pkl = pickle.dumps(face_save_data)
+    # Admin + processing enabled: spawn background ingest thread (AD-161)
+    # SAME pipeline as Upload page — uses shared hybrid models, no OOM.
+    import threading
+    inbox_dir = data_path / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
 
-        if can_write_r2():
-            upload_bytes_to_r2(f"uploads/compare/{upload_id}_faces.pkl", faces_pkl)
+    initial_status = {
+        "status": "starting",
+        "started_at": datetime.now(timezone.utc).isoformat(),
+        "total_files": 1,
+        "files_succeeded": 0,
+        "files_failed": 0,
+    }
+    with open(inbox_dir / f"{job_id}.status.json", "w") as _sf:
+        _json_compare.dump(initial_status, _sf)
+
+    def _background_compare_ingest():
+        """Run face detection via unified pipeline, then run comparison.
+
+        Uses same process_directory as Upload page (AD-161, AD-165).
+        """
+        import logging as _bg_logging
+        log_path = inbox_dir / f"{job_id}.log"
+        try:
+            file_handler = _bg_logging.FileHandler(str(log_path))
+            file_handler.setLevel(_bg_logging.INFO)
+            _bg_logging.getLogger("core.ingest_inbox").addHandler(file_handler)
+
+            from core.ingest_inbox import process_directory
+            result = process_directory(
+                directory=job_dir,
+                job_id=job_id,
+                data_dir=data_path,
+                source="Compare Upload",
+                collection="",
+                prefer_hybrid=True,
+            )
+
+            # Upload to R2 (same as Upload page — AD-165)
+            from core.storage import can_write_r2, upload_bytes_to_r2
+            if can_write_r2() and result.get("status") in ("success", "partial"):
+                try:
+                    import mimetypes
+                    r2_count = 0
+                    for fpath in job_dir.iterdir():
+                        if fpath.is_file() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png"):
+                            ct = mimetypes.guess_type(fpath.name)[0] or "image/jpeg"
+                            upload_bytes_to_r2(f"raw_photos/{fpath.name}", fpath.read_bytes(), content_type=ct)
+                            r2_count += 1
+                    crops_dir = Path("app/static/crops")
+                    if crops_dir.exists():
+                        for fid in result.get("face_ids", []):
+                            crop_path = crops_dir / f"{fid}.jpg"
+                            if crop_path.exists():
+                                upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type="image/jpeg")
+                                r2_count += 1
+                    # Update status with R2 info
+                    status_path = inbox_dir / f"{job_id}.status.json"
+                    if status_path.exists():
+                        with open(status_path) as _rf:
+                            status_data = _json_compare.load(_rf)
+                        status_data["r2_uploaded"] = True
+                        status_data["r2_count"] = r2_count
+                        with open(status_path, "w") as _wf:
+                            _json_compare.dump(status_data, _wf, indent=2)
+                    print(f"[compare-upload] R2 upload complete: {r2_count} files for job {job_id}")
+                except Exception as e:
+                    print(f"[compare-upload] R2 upload error for job {job_id}: {e}")
+
+            # Invalidate caches so web app sees new data
+            global _photo_cache, _face_to_photo_cache, _photo_id_aliases
+            global _face_data_cache, _photo_registry_cache
+            _photo_cache = None
+            _face_to_photo_cache = None
+            _photo_id_aliases = None
+            _face_data_cache = None
+            _photo_registry_cache = None
+            print(f"[compare-upload] Caches invalidated for job {job_id}")
+
+        except Exception as e:
+            error_status = {
+                "job_id": job_id,
+                "status": "error",
+                "error": str(e),
+                "started_at": initial_status["started_at"],
+                "total_files": 1,
+                "files_succeeded": 0,
+                "files_failed": 1,
+            }
+            try:
+                with open(inbox_dir / f"{job_id}.status.json", "w") as _ef:
+                    _json_compare.dump(error_status, _ef)
+            except Exception:
+                pass
+            import traceback
+            try:
+                with open(log_path, "a") as _lf:
+                    traceback.print_exc(file=_lf)
+            except Exception:
+                pass
+        finally:
+            import shutil as _shutil_cleanup
+            try:
+                if job_dir.exists():
+                    _shutil_cleanup.rmtree(job_dir, ignore_errors=True)
+            except Exception:
+                pass
+
+    thread = threading.Thread(target=_background_compare_ingest, daemon=True, name=f"compare-ingest-{job_id}")
+    thread.start()
+
+    # Return polling component — polls compare-specific status endpoint
+    return Div(
+        Div(
+            P("Processing photo...", cls="text-slate-300 text-sm"),
+            Span("\u23f3", cls="animate-pulse"),
+            cls="flex items-center gap-2",
+        ),
+        P("Detecting faces and comparing against the archive",
+          cls="text-slate-400 text-xs mt-1"),
+        hx_get=f"/api/compare/status/{job_id}",
+        hx_trigger="every 2s",
+        hx_swap="outerHTML",
+        id="compare-results",
+        cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
+        data_testid="compare-processing",
+    )
+
+
+@rt("/api/compare/status/{job_id}")
+def get(job_id: str, sess=None):
+    """Poll compare upload status. On completion, show comparison results.
+
+    Uses the same status file as Upload page (data/inbox/{job_id}.status.json).
+    When ingest completes, reads face_ids, runs find_similar_faces per face,
+    and returns the interactive comparison view.
+    """
+    import json as _json_status
+    from datetime import datetime as _dt_cstatus, timezone as _tz_cstatus
+
+    status_path = data_path / "inbox" / f"{job_id}.status.json"
+
+    if not status_path.exists():
+        return Div(
+            P("Starting...", cls="text-slate-300 text-sm"),
+            Span("\u23f3", cls="animate-pulse"),
+            hx_get=f"/api/compare/status/{job_id}",
+            hx_trigger="every 2s",
+            hx_swap="outerHTML",
+            id="compare-results",
+            cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg flex items-center gap-2",
+        )
+
+    with open(status_path) as f:
+        status = _json_status.load(f)
+
+    # Handle error status
+    if status.get("status") == "error":
+        return Div(
+            P("Error processing photo.", cls="text-red-400 text-sm font-medium"),
+            P(status.get("error", "Unknown error"), cls="text-slate-400 text-xs mt-1"),
+            id="compare-results",
+            cls="p-4 bg-red-900/20 border border-red-500/30 rounded-lg",
+        )
+
+    # Still processing — show progress
+    if status.get("status") in ("starting", "processing"):
+        # Check for timeout (2 min for starting, 5 min for processing)
+        started_at = status.get("started_at", "")
+        try:
+            start_time = _dt_cstatus.fromisoformat(started_at)
+            elapsed = (_dt_cstatus.now(_tz_cstatus.utc) - start_time).total_seconds()
+        except (ValueError, TypeError):
+            elapsed = 0
+
+        timeout = 120 if status["status"] == "starting" else 300
+        if elapsed > timeout:
+            return Div(
+                P("Processing timed out.", cls="text-red-400 text-sm font-medium"),
+                P("Your photo was saved. An admin can process it later.",
+                  cls="text-slate-400 text-xs mt-1"),
+                id="compare-results",
+                cls="p-4 bg-red-900/20 border border-red-500/30 rounded-lg",
+            )
+
+        faces_so_far = status.get("faces_extracted", 0)
+        progress_text = "Detecting faces..." if faces_so_far == 0 else f"{faces_so_far} face{'s' if faces_so_far != 1 else ''} found, comparing..."
+        return Div(
+            Div(
+                P(progress_text, cls="text-slate-300 text-sm"),
+                Span("\u23f3", cls="animate-pulse"),
+                cls="flex items-center gap-2",
+            ),
+            hx_get=f"/api/compare/status/{job_id}",
+            hx_trigger="every 2s",
+            hx_swap="outerHTML",
+            id="compare-results",
+            cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
+        )
+
+    # SUCCESS — ingest complete, build comparison results
+    face_ids = status.get("face_ids", [])
+    if not face_ids:
+        return Div(
+            P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
+            P("Try uploading a clearer photo with visible faces.",
+              cls="text-slate-500 text-center text-sm mt-2"),
+            id="compare-results",
+        )
+
+    return _build_compare_results_view(face_ids, job_id, sess)
+
+
+@rt("/api/compare/search-person")
+def get(q: str = "", job_id: str = "", sess=None):
+    """Search for a person to compare against. Returns clickable results."""
+    if len(q.strip()) < 2:
+        return Div(id="compare-person-search-results")
+
+    registry = load_registry()
+    results = registry.search_identities(q.strip(), limit=8)
+    crop_files = get_crop_files()
+
+    if not results:
+        return Div(
+            P("No matching people found.", cls="text-slate-500 text-sm"),
+            id="compare-person-search-results",
+        )
+
+    cards = []
+    for r in results:
+        iid = r["identity_id"]
+        name = r["name"]
+        state = r.get("state", "INBOX")
+        preview_fid = r.get("preview_face_id", "")
+        crop_url = _resolve_crop_url(preview_fid, crop_files)
+
+        state_badge = ""
+        if state == "CONFIRMED":
+            state_badge = Span("Confirmed", cls="text-xs bg-emerald-900/50 text-emerald-400 px-1.5 py-0.5 rounded ml-2")
+        elif state == "PROPOSED":
+            state_badge = Span("Proposed", cls="text-xs bg-amber-900/50 text-amber-400 px-1.5 py-0.5 rounded ml-2")
+
+        cards.append(
+            Button(
+                Div(
+                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600",
+                        alt=name) if crop_url else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                    Div(
+                        Span(name, cls="text-sm text-white font-medium"),
+                        state_badge if state_badge else None,
+                        cls="flex items-center",
+                    ),
+                    cls="flex items-center gap-3",
+                ),
+                hx_post=f"/api/compare/vs-person?job_id={job_id}&identity_id={iid}",
+                hx_target="#compare-results",
+                hx_swap="innerHTML",
+                cls="w-full text-left p-2 hover:bg-slate-700/50 rounded-lg transition-colors cursor-pointer",
+                data_testid=f"compare-person-{iid}",
+            )
+        )
+
+    return Div(*cards, id="compare-person-search-results",
+               cls="space-y-1 max-h-64 overflow-y-auto")
+
+
+@rt("/api/compare/vs-person")
+def post(job_id: str = "", identity_id: str = "", sess=None):
+    """Compare all faces from a compare upload against a specific person.
+
+    Returns per-face match scores with context about the person's existing
+    top archive matches. Supports merge/reject actions.
+    """
+    import json as _json_vs
+
+    if not job_id or not identity_id:
+        return Div(P("Missing parameters.", cls="text-red-400 text-sm"), id="compare-results")
+
+    # Load the status to get face_ids
+    status_path = data_path / "inbox" / f"{job_id}.status.json"
+    if not status_path.exists():
+        return Div(P("Upload not found.", cls="text-red-400 text-sm"), id="compare-results")
+
+    with open(status_path) as f:
+        status = _json_vs.load(f)
+
+    face_ids = status.get("face_ids", [])
+    if not face_ids:
+        return Div(P("No faces found for this upload.", cls="text-amber-500 text-sm"), id="compare-results")
+
+    _build_caches()
+    face_data = get_face_data()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
+
+    # Get reference person info
+    ref_identity = registry.get_identity(identity_id)
+    if not ref_identity:
+        return Div(P("Person not found.", cls="text-red-400 text-sm"), id="compare-results")
+
+    ref_name = ref_identity.get("name", "Unknown")
+    ref_anchor_ids = ref_identity.get("anchor_ids", [])
+    ref_candidate_ids = ref_identity.get("candidate_ids", [])
+    ref_all_face_ids = ref_anchor_ids + ref_candidate_ids
+
+    # Get reference person's best crop
+    ref_crop_url = ""
+    if ref_anchor_ids:
+        ref_crop_url = _resolve_crop_url(ref_anchor_ids[0], crop_files)
+    elif ref_candidate_ids:
+        ref_crop_url = _resolve_crop_url(ref_candidate_ids[0], crop_files)
+
+    # Get reference person's embedding (best anchor)
+    ref_embeddings = []
+    for rfid in ref_all_face_ids:
+        emb = face_data.get(rfid)
+        if emb and "mu" in emb:
+            ref_embeddings.append(emb["mu"])
+
+    if not ref_embeddings:
+        return Div(P(f"No embeddings found for {ref_name}.", cls="text-amber-500 text-sm"), id="compare-results")
+
+    # Get reference person's existing top archive matches (Find Similar context)
+    from core.neighbors import find_similar_faces, find_nearest_neighbors
+    ref_neighbors = find_nearest_neighbors(
+        identity_id, registry, None, face_data, limit=3,
+    )
+
+    # Compute per-face distances against reference person
+    import numpy as np
+    per_face_scores = []
+    for fid in face_ids:
+        emb = face_data.get(fid)
+        if not emb or "mu" not in emb:
+            continue
+
+        # Distance against each reference embedding, take the best (minimum)
+        distances = []
+        for ref_emb in ref_embeddings:
+            dist = float(np.linalg.norm(emb["mu"] - ref_emb))
+            distances.append(dist)
+        best_dist = min(distances) if distances else 99.0
+
+        # Calibrate confidence
+        try:
+            from rhodesli_ml.similarity_calibration import SimilarityCalibrator
+            cal = SimilarityCalibrator()
+            cosine_sim = max(0.0, 1.0 - (best_dist ** 2) / 2.0)
+            prob = cal.predict(cosine_sim)
+            confidence_pct = int(prob * 100)
+        except Exception:
+            # Fallback sigmoid
+            confidence_pct = max(1, min(99, int(100 * (1.0 / (1.0 + np.exp(2.0 * (best_dist - 1.1)))))))
+
+        # Tier classification
+        if confidence_pct >= 85:
+            tier = "STRONG MATCH"
+        elif confidence_pct >= 70:
+            tier = "POSSIBLE MATCH"
+        elif confidence_pct >= 50:
+            tier = "SIMILAR"
         else:
-            upload_dir = _Path("uploads/compare")
-            upload_dir.mkdir(parents=True, exist_ok=True)
-            (upload_dir / f"{upload_id}_faces.pkl").write_bytes(faces_pkl)
-        timings['save_faces'] = _time.time() - t1
-        print(f"[compare] Save faces: {timings['save_faces']:.2f}s")
+            tier = "WEAK"
 
-        # Build response
-        t1 = _time.time()
-        parts = []
+        # Get identity info for this face
+        face_identity_id = None
+        face_identity_name = None
+        for iid, ident in registry.identities.items():
+            if fid in ident.get("anchor_ids", []) or fid in ident.get("candidate_ids", []):
+                face_identity_id = iid
+                face_identity_name = ident.get("name", "Unknown")
+                break
 
-        # Show the uploaded photo with face count
-        upload_image_url = storage.get_upload_url(f"uploads/compare/{upload_id}{suffix}")
+        per_face_scores.append({
+            "face_id": fid,
+            "identity_id": face_identity_id,
+            "identity_name": face_identity_name or "Unknown",
+            "distance": best_dist,
+            "confidence_pct": confidence_pct,
+            "tier": tier,
+        })
+
+    # Sort by confidence (best first)
+    per_face_scores.sort(key=lambda x: x["distance"])
+
+    # Look up photo info
+    photo_id = None
+    photo_url = None
+    for fid in face_ids:
+        pid = get_photo_id_for_face(fid)
+        if pid:
+            photo_id = pid
+            break
+    if photo_id:
+        photo_meta = get_photo_metadata(photo_id)
+        if photo_meta and photo_meta.get("filename"):
+            photo_url = storage.get_photo_url(photo_meta["filename"])
+
+    # Build the response
+    parts = []
+
+    # Header with reference person
+    parts.append(
+        Div(
+            H2(f"Comparing against {ref_name}", cls="text-xl font-serif text-white mb-1"),
+            P(f"{len(per_face_scores)} face{'s' if len(per_face_scores) != 1 else ''} scored",
+              cls="text-sm text-slate-400"),
+            cls="mb-4",
+        )
+    )
+
+    # Side-by-side: uploaded photo + reference person
+    ref_person_link = f"/person/{identity_id}"
+    photo_link = f"/photo/{photo_id}" if photo_id else "#"
+    parts.append(
+        Div(
+            # Uploaded photo
+            Div(
+                A(
+                    Img(src=photo_url, cls="max-h-48 rounded-lg object-contain",
+                        alt="Uploaded photo") if photo_url else Div("Photo", cls="w-32 h-32 bg-slate-700 rounded-lg flex items-center justify-center text-slate-500"),
+                    href=photo_link,
+                ),
+                P(A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                  cls="text-center mt-1"),
+                cls="flex-1 text-center",
+            ),
+            # Reference person
+            Div(
+                A(
+                    Img(src=ref_crop_url, cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
+                        alt=ref_name) if ref_crop_url else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
+                    href=ref_person_link,
+                ),
+                P(A(ref_name, href=ref_person_link,
+                    cls="text-white font-medium hover:text-indigo-300 text-sm"),
+                  cls="text-center mt-2"),
+                P("Reference person", cls="text-xs text-slate-500 text-center"),
+                cls="flex-1 text-center",
+            ),
+            cls="flex gap-4 items-center mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+            data_testid="compare-hero",
+        )
+    )
+
+    # Per-face match scores with merge/reject actions
+    for i, score in enumerate(per_face_scores):
+        fid = score["face_id"]
+        fiid = score["identity_id"]
+        fname = score["identity_name"]
+        dist = score["distance"]
+        pct = score["confidence_pct"]
+        tier = score["tier"]
+        crop_url = _resolve_crop_url(fid, crop_files)
+
+        # Color based on confidence
+        if pct >= 85:
+            bar_color = "bg-emerald-500"
+            label_color = "text-emerald-400"
+            border_color = "border-emerald-700/50"
+        elif pct >= 70:
+            bar_color = "bg-amber-500"
+            label_color = "text-amber-400"
+            border_color = "border-amber-700/50"
+        elif pct >= 50:
+            bar_color = "bg-blue-500"
+            label_color = "text-blue-400"
+            border_color = "border-blue-700/50"
+        else:
+            bar_color = "bg-slate-600"
+            label_color = "text-slate-400"
+            border_color = "border-slate-700/50"
+
+        tier_label = tier.replace("_", " ").title()
+        dist_str = f" (dist: {dist:.2f})" if user_is_admin else ""
+
+        # Admin actions (merge/reject) — same as Find Similar
+        action_buttons = []
+        if user_is_admin and fiid:
+            action_buttons.append(
+                Button(
+                    "Merge",
+                    hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
+                    hx_target=f"#compare-face-{i}",
+                    hx_swap="outerHTML",
+                    cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                    data_testid=f"merge-{i}",
+                )
+            )
+            action_buttons.append(
+                Button(
+                    "Not Same",
+                    hx_post=f"/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                    hx_target=f"#compare-face-{i}",
+                    hx_swap="outerHTML",
+                    cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                    data_testid=f"not-same-{i}",
+                )
+            )
+
+        person_link = f"/person/{fiid}" if fiid else "#"
+
         parts.append(
             Div(
                 Div(
-                    Img(src=upload_image_url, cls="max-h-48 rounded-lg object-contain mx-auto",
-                        alt="Your uploaded photo"),
-                    cls="flex justify-center mb-3",
-                ),
-                P(f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected",
-                  cls="text-sm text-slate-400 text-center"),
-                cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
-                data_testid="upload-preview",
-            )
-        )
-
-        # Multi-face selector (if more than one face)
-        if len(faces) > 1:
-            parts.append(_build_face_selector_for_upload(upload_id, faces, ""))
-
-        # Results grid
-        parts.append(_compare_results_grid(results, crop_files))
-        timings['response_build'] = _time.time() - t1
-        print(f"[compare] Response build: {timings['response_build']:.2f}s")
-
-        # Contribute CTA
-        user = get_current_user(sess or {}) if is_auth_enabled() else None
-        if user:
-            parts.append(
-                Div(
-                    P("Want to add this photo to the archive?", cls="text-sm text-slate-400 mb-2"),
-                    Button(
-                        "Contribute to Archive",
-                        hx_post=f"/api/compare/contribute?upload_id={upload_id}",
-                        hx_target="#contribute-cta-container",
-                        hx_swap="innerHTML",
-                        cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors",
+                    # Face crop
+                    A(
+                        Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600",
+                            alt=fname) if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                        href=person_link,
                     ),
-                    cls="text-center mt-6 p-4 bg-slate-800/30 rounded-lg border border-dashed border-slate-700",
-                    id="contribute-cta-container",
-                    data_testid="contribute-cta",
-                )
+                    # Score info
+                    Div(
+                        A(fname, href=person_link,
+                          cls="text-sm text-white hover:text-indigo-300 font-medium"),
+                        # Confidence bar
+                        Div(
+                            Div(
+                                Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
+                                cls="flex-1 bg-slate-700 rounded-full h-2",
+                            ),
+                            Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                            cls="flex items-center gap-2 mt-1",
+                        ),
+                        Span(f"{tier_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
+                        cls="flex-1 min-w-0",
+                    ),
+                    cls="flex items-center gap-3",
+                ),
+                # Admin actions
+                Div(*action_buttons, cls="flex gap-2 mt-2 justify-end") if action_buttons else None,
+                cls=f"p-4 bg-slate-800/50 rounded-lg border {border_color}",
+                id=f"compare-face-{i}",
+                data_testid=f"compare-face-score-{i}",
             )
-        elif is_auth_enabled():
-            parts.append(
-                Div(
-                    P("Sign in to contribute this photo to the archive", cls="text-sm text-slate-400 mb-2"),
-                    A("Sign In", href="/login",
-                      cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block"),
-                    cls="text-center mt-6 p-4 bg-slate-800/30 rounded-lg border border-dashed border-slate-700",
-                    data_testid="contribute-cta",
-                )
-            )
-
-        timings['total'] = _time.time() - t0
-        timing_str = " | ".join(f"{k}={v:.2f}s" for k, v in timings.items())
-        print(f"[compare] TIMING SUMMARY: {timing_str}")
-        return Div(*parts, id="compare-results")
-    except Exception as e:
-        print(f"[compare] Error after {_time.time()-t0:.2f}s: {e}")
-        return Div(
-            P(f"Error processing photo: {str(e)}", cls="text-red-500 text-center py-4"),
-            id="compare-results",
         )
-    finally:
-        tmp_path.unlink(missing_ok=True)
-        ml_path.unlink(missing_ok=True)
+
+    # Context: reference person's existing top matches
+    if ref_neighbors:
+        context_parts = []
+        for n in ref_neighbors[:3]:
+            n_name = n.get("name", "Unknown")
+            n_dist = n.get("distance", 99)
+            context_parts.append(f"{n_name} (dist: {n_dist:.2f})")
+        context_str = ", ".join(context_parts)
+
+        best_uploaded_dist = per_face_scores[0]["distance"] if per_face_scores else 99
+        best_uploaded_name = per_face_scores[0]["identity_name"] if per_face_scores else "Unknown"
+
+        parts.append(
+            Div(
+                P(f"Context: {ref_name}'s closest existing archive matches:",
+                  cls="text-sm text-slate-300 font-medium mb-1"),
+                P(context_str, cls="text-xs text-slate-400 mb-2"),
+                P(f"Your best match ({best_uploaded_name}) scores distance {best_uploaded_dist:.2f}.",
+                  cls="text-xs text-slate-400"),
+                cls="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700/30",
+                data_testid="compare-context",
+            )
+        )
+
+    # Save vs-person result for sharing
+    result_data = {
+        "query_type": "upload_vs_person",
+        "query_name": f"vs {ref_name}",
+        "photo_id": photo_id,
+        "face_ids": face_ids,
+        "job_id": job_id,
+        "reference_person": {
+            "identity_id": identity_id,
+            "name": ref_name,
+        },
+        "matches": [
+            {
+                "face_id": s["face_id"],
+                "identity_id": s.get("identity_id", ""),
+                "identity_name": s["identity_name"],
+                "distance": s["distance"],
+                "confidence_pct": s["confidence_pct"],
+                "tier": s["tier"],
+            }
+            for s in per_face_scores
+        ],
+    }
+    result_id = _save_comparison_result(result_data)
+    share_url = f"{SITE_URL}/compare/result/{result_id}"
+
+    parts.append(
+        Div(
+            Div(
+                A("Share this comparison", href=share_url, target="_blank",
+                  cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+                A("Find Similar for " + ref_name, href=f"/person/{identity_id}",
+                  cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block"),
+                cls="flex gap-3 justify-center flex-wrap",
+            ),
+            # Search for another person
+            Div(
+                P("Compare against another person:", cls="text-sm text-slate-400 mt-4 mb-2"),
+                Input(
+                    type="text", name="q",
+                    placeholder="Search by name...",
+                    hx_get=f"/api/compare/search-person?job_id={job_id}",
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target="#compare-person-search-results-2",
+                    hx_include="this",
+                    cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
+                        "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                ),
+                Div(id="compare-person-search-results-2", cls="mt-2"),
+            ),
+            cls="mt-6",
+            data_testid="compare-actions",
+        )
+    )
+
+    return Div(*parts, id="compare-results", data_testid="compare-vs-person-results")
 
 
 @rt("/api/compare/upload-multiple")

@@ -3,15 +3,24 @@
 from unittest.mock import patch
 
 
-def test_compare_upload_returns_results(client):
-    """Upload a photo → get face match results back."""
-    with patch("core.storage.can_write_r2", return_value=False):
-        response = client.post(
-            "/api/compare/upload",
-            files={"photo": ("test.jpg", b"fake-image", "image/jpeg")},
-        )
+def test_compare_upload_returns_results(client, tmp_path, monkeypatch):
+    """Upload a photo via unified pipeline → get processing status back."""
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    monkeypatch.setattr(main_mod, "PROCESSING_ENABLED", True)
+    (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+
+    response = client.post(
+        "/api/compare/upload",
+        files={"photo": ("test.jpg", b"fake-image", "image/jpeg")},
+    )
     assert response.status_code == 200
-    assert any(msg in response.text.lower() for msg in ["not yet available", "photo received", "error processing photo"])
+    # New unified pipeline returns polling component
+    assert any(msg in response.text.lower() for msg in [
+        "processing photo", "compare-processing", "/api/compare/status/",
+        "submitted", "staged",
+    ])
 
 
 def test_compare_pair_cross_matches(client):
