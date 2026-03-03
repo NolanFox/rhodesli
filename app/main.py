@@ -455,6 +455,33 @@ def _startup_disk_cleanup(base_path: Path):
     # Prune old .bak files
     _prune_bak_files(base_path, max_keep=3)
 
+    # Prune old auto_backups (keep only 3 most recent)
+    backup_dir = base_path / "auto_backups"
+    if backup_dir.exists():
+        try:
+            backups = sorted(backup_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
+            for old in backups[3:]:
+                try:
+                    if old.is_dir():
+                        import shutil
+                        shutil.rmtree(old, ignore_errors=True)
+                    else:
+                        old.unlink(missing_ok=True)
+                    cleaned += 1
+                except OSError:
+                    pass
+        except OSError:
+            pass
+
+    # Prune comparison_results.json lock files
+    for item in list(base_path.iterdir()):
+        try:
+            if item.suffix == ".lock" and item.is_file() and (now - item.stat().st_mtime) > 3600:
+                item.unlink(missing_ok=True)
+                cleaned += 1
+        except OSError:
+            pass
+
     if cleaned > 0:
         logging.info(f"Startup cleanup: removed {cleaned} stale temp files")
 
@@ -18967,17 +18994,24 @@ def _load_comparison_results() -> dict:
 
 
 def _save_comparison_result(result_data: dict) -> str:
-    """Save a comparison result and return its ID."""
+    """Save a comparison result and return its ID.
+
+    Gracefully handles disk-full errors — the comparison result is still
+    returned (cached in memory) even if disk write fails.
+    """
     global _comparison_results_cache
     data = _load_comparison_results()
     result_id = result_data["result_id"]
     data["results"][result_id] = result_data
-    path = data_path / "comparison_results.json"
-    import portalocker
-    with portalocker.Lock(str(path) + ".lock", timeout=5):
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
-    _comparison_results_cache = data
+    _comparison_results_cache = data  # Always update in-memory cache
+    try:
+        path = data_path / "comparison_results.json"
+        import portalocker
+        with portalocker.Lock(str(path) + ".lock", timeout=5):
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+    except OSError as e:
+        logging.warning(f"Could not save comparison result to disk: {e}")
     return result_id
 
 
