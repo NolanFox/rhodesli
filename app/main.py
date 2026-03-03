@@ -18611,6 +18611,8 @@ def get(result_id: str, sess=None):
     query_type = result.get("query_type", "archive")
     query_face_id = result.get("query_face_id", "")
     responses = result.get("responses", [])
+    ref_person = result.get("reference_person")
+    photo_id = result.get("photo_id")
 
     # Query face info
     query_face_url = None
@@ -18620,51 +18622,124 @@ def get(result_id: str, sess=None):
     if result.get("query_name"):
         query_name = result["query_name"]
 
+    # Photo URL for uploaded photo
+    photo_url = None
+    if photo_id:
+        photo_meta = get_photo_metadata(photo_id)
+        if photo_meta and photo_meta.get("filename"):
+            photo_url = storage.get_photo_url(photo_meta["filename"])
+
+    # Reference person info
+    ref_name = ref_person.get("name", "Unknown") if ref_person else None
+    ref_id = ref_person.get("identity_id", "") if ref_person else None
+    ref_crop_url = None
+    if ref_id:
+        try:
+            ref_identity = load_registry().get_identity(ref_id)
+            if ref_identity:
+                ref_face_ids = ref_identity.get("anchor_ids", []) + ref_identity.get("candidate_ids", [])
+                if ref_face_ids:
+                    ref_crop_url = _resolve_crop_url(ref_face_ids[0], crop_files)
+        except KeyError:
+            pass  # Reference person may have been deleted
+
     # Top match info for OG tags
     top_match = matches[0] if matches else {}
     top_confidence = top_match.get("confidence_pct", 0)
     top_name = top_match.get("identity_name", "Unknown")
 
-    og_title = f"{top_confidence}% Similar — {query_name} vs {top_name}" if matches else "Face Comparison — Rhodesli"
+    if ref_name and query_type == "upload_vs_person":
+        og_title = f"Comparing against {ref_name} — {top_confidence}% best match"
+    elif matches:
+        og_title = f"{top_confidence}% Similar — {query_name} vs {top_name}"
+    else:
+        og_title = "Face Comparison — Rhodesli"
     og_desc = f"Compare faces in the Rhodes Jewish heritage photo archive. {len(matches)} match{'es' if len(matches) != 1 else ''} found."
-    og_image = query_face_url or ""
+    og_image = ref_crop_url or query_face_url or ""
     result_og = og_tags(og_title, og_desc, og_image, f"/compare/result/{result_id}")
 
     nav_links = _public_nav_links(active="compare", user=user)
     share_url = f"{SITE_URL}/compare/result/{result_id}"
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
 
-    # Build match cards
+    # Build hero section for upload_vs_person
+    hero_section = None
+    if query_type == "upload_vs_person" and (photo_url or ref_crop_url):
+        hero_parts = []
+        if photo_url:
+            photo_link = f"/photo/{photo_id}" if photo_id else "#"
+            hero_parts.append(
+                Div(
+                    A(Img(src=photo_url, cls="max-h-40 rounded-lg object-contain mx-auto", alt="Uploaded photo"),
+                      href=photo_link),
+                    P(A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"), cls="text-center mt-1"),
+                    cls="flex-1 text-center",
+                )
+            )
+        if ref_crop_url and ref_id:
+            ref_link = f"/person/{ref_id}"
+            hero_parts.append(
+                Div(
+                    A(Img(src=ref_crop_url, cls="w-20 h-20 rounded-full object-cover border-2 border-indigo-500 mx-auto", alt=ref_name),
+                      href=ref_link),
+                    P(A(ref_name, href=ref_link, cls="text-white font-medium hover:text-indigo-300 text-sm"), cls="text-center mt-2"),
+                    P("Reference person", cls="text-xs text-slate-500 text-center"),
+                    cls="flex-1 text-center",
+                )
+            )
+        if hero_parts:
+            hero_section = Div(*hero_parts, cls="flex gap-4 items-center mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50")
+
+    # Build match cards with enhanced visualization
     result_cards = []
     for i, match in enumerate(matches[:10]):
         fid = match.get("face_id", "")
         match_url = resolve_face_image_url(fid, crop_files)
+        if not match_url:
+            match_url = _resolve_crop_url(fid, crop_files)
         pct = match.get("confidence_pct", 0)
         name = match.get("identity_name", f"Face #{i+1}")
-        identity_id = match.get("identity_id", "")
+        m_identity_id = match.get("identity_id", "")
+        dist = match.get("distance", 99)
 
         if pct >= 85:
             label = "Very likely same person"
             color = "text-emerald-400"
+            bar_color = "bg-emerald-500"
         elif pct >= 70:
             label = "Strong match"
             color = "text-amber-400"
+            bar_color = "bg-amber-500"
         elif pct >= 50:
             label = "Possible match"
             color = "text-blue-400"
+            bar_color = "bg-blue-500"
         else:
             label = "Unlikely match"
             color = "text-slate-400"
+            bar_color = "bg-slate-600"
 
-        person_link = A(name, href=f"/person/{identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm") if identity_id else Span(name, cls="text-sm text-white")
+        person_link = A(name, href=f"/person/{m_identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium") if m_identity_id else Span(name, cls="text-sm text-white font-medium")
+        dist_str = f" (dist: {dist:.2f})" if user_is_admin and dist < 99 else ""
 
         result_cards.append(Div(
-            Img(src=match_url, cls="w-16 h-16 rounded-full object-cover") if match_url else Div(cls="w-16 h-16 rounded-full bg-slate-700"),
+            Img(src=match_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600") if match_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
             Div(
                 person_link,
-                P(f"{pct}% — {label}", cls=f"text-xs {color}"),
-                cls="flex-1",
+                # Confidence bar
+                Div(
+                    Div(
+                        Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
+                        cls="flex-1 bg-slate-700 rounded-full h-2",
+                    ),
+                    Span(f"{pct}%", cls=f"text-sm {color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                    cls="flex items-center gap-2 mt-1",
+                ),
+                P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5"),
+                cls="flex-1 min-w-0",
             ),
             cls="flex items-center gap-4 p-3 bg-slate-800/70 rounded-lg",
+            data_testid=f"result-card-{i}",
         ))
 
     # Response form (no login required)
@@ -18711,6 +18786,9 @@ def get(result_id: str, sess=None):
                 Div(
                     H1("Face Comparison Result", cls="text-2xl font-serif font-bold text-white mb-2"),
                     P(og_desc, cls="text-slate-400 text-sm mb-6"),
+
+                    # Hero section (uploaded photo + reference person)
+                    hero_section if hero_section else None,
 
                     # Match list
                     Div(*result_cards, cls="space-y-3") if result_cards else P("No matches found.", cls="text-slate-500"),

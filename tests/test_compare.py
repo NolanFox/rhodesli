@@ -191,3 +191,195 @@ def test_save_comparison_result_is_retrievable(tmp_path, monkeypatch):
     data = _load_comparison_results()
     assert "abc123def456" in data["results"]
     assert data["results"]["abc123def456"]["matches"][0]["identity_name"] == "Test"
+
+
+# ---- Session 85: Unified Pipeline Tests ----
+
+
+def test_compare_upload_stages_file(tmp_path, monkeypatch):
+    """Compare upload stages file to data/staging/{job_id}/ (same as Upload page)."""
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    monkeypatch.setattr(main_mod, "PROCESSING_ENABLED", False)
+    (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+    from starlette.testclient import TestClient
+    tc = TestClient(main_mod.app)
+
+    response = tc.post(
+        "/api/compare/upload",
+        files={"photo": ("test_photo.jpg", b"fake-image-data", "image/jpeg")},
+    )
+    assert response.status_code == 200
+    # PROCESSING_ENABLED=False → staged message
+    assert "staged" in response.text.lower()
+    # Verify file was staged
+    staging_dirs = list((tmp_path / "staging").iterdir())
+    assert len(staging_dirs) == 1
+    job_dir = staging_dirs[0]
+    assert (job_dir / "test_photo.jpg").exists()
+    assert (job_dir / "_metadata.json").exists()
+
+
+def test_compare_upload_nonadmin_queued(tmp_path, monkeypatch):
+    """Non-admin compare upload queued for review (Lesson 19)."""
+    import json
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    monkeypatch.setattr(main_mod, "PROCESSING_ENABLED", True)
+    # Make auth enabled + non-admin
+    monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: True)
+    monkeypatch.setattr(main_mod, "get_current_user", lambda sess: type("U", (), {"email": "user@test.com", "is_admin": False})())
+    (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
+    from starlette.testclient import TestClient
+    tc = TestClient(main_mod.app)
+
+    response = tc.post(
+        "/api/compare/upload",
+        files={"photo": ("test.jpg", b"fake", "image/jpeg")},
+    )
+    assert response.status_code == 200
+    assert "submitted" in response.text.lower()
+    # Check pending_uploads.json
+    pending_path = tmp_path / "pending_uploads.json"
+    assert pending_path.exists()
+    data = json.loads(pending_path.read_text())
+    uploads = data.get("uploads", {})
+    assert len(uploads) == 1
+    entry = list(uploads.values())[0]
+    assert entry["status"] == "pending"
+    assert entry.get("compare_mode") is True
+
+
+def test_compare_status_starting(tmp_path, monkeypatch, client):
+    """Status endpoint returns polling HTML when job is starting."""
+    import json
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
+
+    status = {"status": "starting", "started_at": "2026-03-03T12:00:00+00:00", "total_files": 1}
+    (tmp_path / "inbox" / "test1234.status.json").write_text(json.dumps(status))
+
+    response = client.get("/api/compare/status/test1234")
+    assert response.status_code == 200
+    assert "every 2s" in response.text or "detecting" in response.text.lower()
+
+
+def test_compare_status_error(tmp_path, monkeypatch, client):
+    """Status endpoint shows error when job fails."""
+    import json
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
+
+    status = {"status": "error", "error": "OOM", "total_files": 1}
+    (tmp_path / "inbox" / "errjob01.status.json").write_text(json.dumps(status))
+
+    response = client.get("/api/compare/status/errjob01")
+    assert response.status_code == 200
+    assert "error" in response.text.lower()
+
+
+def test_compare_status_no_faces(tmp_path, monkeypatch, client):
+    """Status endpoint shows friendly message when no faces detected."""
+    import json
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
+
+    status = {"status": "success", "face_ids": [], "faces_extracted": 0}
+    (tmp_path / "inbox" / "noface01.status.json").write_text(json.dumps(status))
+
+    response = client.get("/api/compare/status/noface01")
+    assert response.status_code == 200
+    assert "no faces" in response.text.lower()
+
+
+def test_compare_search_person_returns_results(client, monkeypatch):
+    """Person search endpoint returns matching people."""
+    import app.main as main_mod
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.search_identities.return_value = [
+        {"identity_id": "id1", "name": "Isaac Cohen", "state": "CONFIRMED", "preview_face_id": "f1"},
+    ]
+    monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+
+    response = client.get("/api/compare/search-person?q=Isaac&job_id=test123")
+    assert response.status_code == 200
+    assert "Isaac Cohen" in response.text
+    assert "vs-person" in response.text  # Contains the compare action
+
+
+def test_compare_search_person_short_query(client):
+    """Short search query returns empty results."""
+    response = client.get("/api/compare/search-person?q=I")
+    assert response.status_code == 200
+    # Should be empty div
+    assert "compare-person-search-results" in response.text
+
+
+def test_compare_result_page_shows_photo_link(tmp_path, monkeypatch, client):
+    """Result page links to photo page when photo_id is available."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "photo_result01",
+        "query_type": "upload_vs_person",
+        "query_name": "vs Isaac Cohen",
+        "photo_id": "inbox_abc_0_test",
+        "reference_person": {"identity_id": "id123", "name": "Isaac Cohen"},
+        "matches": [
+            {"face_id": "f1", "identity_id": "id456", "identity_name": "Face 1",
+             "distance": 1.15, "confidence_pct": 42, "tier": "POSSIBLE MATCH"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+
+    main_mod._comparison_results_cache = None
+    response = client.get("/compare/result/photo_result01")
+    assert response.status_code == 200
+    # Should contain person links
+    assert "/person/id456" in response.text
+    assert "42%" in response.text
+
+
+def test_compare_result_page_confidence_bars(tmp_path, monkeypatch, client):
+    """Result page shows confidence bars with proper tier colors."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "confbar_test1",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
+             "distance": 0.7, "confidence_pct": 90, "tier": "STRONG MATCH"},
+            {"face_id": "f2", "identity_id": "id2", "identity_name": "Person B",
+             "distance": 1.3, "confidence_pct": 30, "tier": "WEAK"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+
+    main_mod._comparison_results_cache = None
+    response = client.get("/compare/result/confbar_test1")
+    assert response.status_code == 200
+    # Should have confidence percentage text
+    assert "90%" in response.text
+    assert "30%" in response.text
+    # Should have tier labels
+    assert "Very likely same person" in response.text
+    assert "Unlikely match" in response.text
