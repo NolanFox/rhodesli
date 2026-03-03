@@ -4446,11 +4446,11 @@ def render_skipped_section(skipped: list, crop_files: set, counts: dict,
                 hx_swap="innerHTML",
                 cls="ml-4 mt-1 mb-3",
             )
-            # Expansion panel for inline Find Similar
-            expand_panel = Div(id=f"expand-{make_css_id(identity_id)}", cls="expansion-panel")
             # Wrapper carries data-name so sidebar filter hides card+hint together
             raw_name = (identity.get("name") or "").lower()
-            cards.append(Div(badge, card, hint, expand_panel, cls="identity-card-wrapper", data_name=raw_name))
+            cards.append(Div(badge, card, hint, cls="identity-card-wrapper", data_name=raw_name))
+            # Expansion panel OUTSIDE wrapper — direct grid child so grid-column: 1/-1 works
+            cards.append(Div(id=f"expand-{make_css_id(identity_id)}", cls="expansion-panel"))
 
     if cards:
         content = Div(
