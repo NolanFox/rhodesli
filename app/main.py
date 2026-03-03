@@ -11961,7 +11961,7 @@ def public_person_page(
                           cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
                         A("Connections", href=f"/connect?person_a={person_id}",
                           cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
-                        A("Compare with a photo", href="/compare",
+                        A("Compare with a photo", href=f"/compare?person_id={person_id}",
                           cls="px-3 py-1.5 text-xs rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
                           data_testid="compare-cta"),
                         cls="flex flex-wrap justify-center gap-2 mb-8",
@@ -16159,7 +16159,7 @@ def get(offset: int = 3, person: str = "", people: str = "", start: int = None,
 
 
 @rt("/compare")
-def get(face_id: str = "", sess=None):
+def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     """
     Face comparison page — find similar faces in the archive.
 
@@ -16168,6 +16168,8 @@ def get(face_id: str = "", sess=None):
 
     Query params:
         face_id: optional face_id to pre-select for comparison
+        photo_id: optional archive photo to compare
+        person_id: optional person to pre-fill as comparison target
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
 
@@ -16207,6 +16209,29 @@ def get(face_id: str = "", sess=None):
                 "responses": [],
             })
             results_html = _compare_results_grid(results, crop_files, result_id=rid)
+
+    # If photo_id provided, show archive photo comparison (with optional person_id)
+    if photo_id and not results_html:
+        # Render archive photo vs person comparison inline
+        # Uses HTMX to load from /api/compare/from-photo on page load
+        if person_id:
+            results_html = Div(
+                Div(P("Loading comparison...", cls="text-slate-300 text-sm animate-pulse"),
+                    cls="p-4 text-center"),
+                hx_get=f"/api/compare/from-photo?photo_id={photo_id}&identity_id={person_id}",
+                hx_trigger="load",
+                hx_swap="outerHTML",
+                id="compare-results",
+            )
+        else:
+            results_html = Div(
+                Div(P("Loading photo...", cls="text-slate-300 text-sm animate-pulse"),
+                    cls="p-4 text-center"),
+                hx_get=f"/api/compare/from-photo?photo_id={photo_id}",
+                hx_trigger="load",
+                hx_swap="outerHTML",
+                id="compare-results",
+            )
 
     # Build face selector — confirmed identities with face crops
     confirmed = [
@@ -17981,6 +18006,398 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
     )
 
     return Div(*parts, id="compare-results", data_testid="compare-vs-person-results")
+
+
+@rt("/api/compare/from-photo")
+def get(photo_id: str = "", identity_id: str = "", sess=None):
+    """Compare an existing archive photo's faces against a specific person.
+
+    This enables the archive-to-compare flow: click "Compare" on a photo page,
+    select a person, and see per-face match scores. No upload needed.
+
+    Reuses the same vs-person scoring engine (L2 distance + calibration).
+    Saves result for sharing via /compare/result/{id}.
+    """
+    import json as _json_fp
+    import numpy as np
+
+    if not photo_id:
+        return Div(P("Missing photo_id.", cls="text-red-400 text-sm"), id="compare-results")
+
+    _build_caches()
+    face_data = get_face_data()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
+
+    # Get photo metadata and face IDs
+    photo_meta = get_photo_metadata(photo_id)
+    if not photo_meta:
+        return Div(P("Photo not found.", cls="text-red-400 text-sm"), id="compare-results")
+
+    face_ids = [f["face_id"] for f in photo_meta.get("faces", []) if f.get("face_id")]
+    if not face_ids:
+        return Div(P("No faces found in this photo.", cls="text-amber-500 text-sm"), id="compare-results")
+
+    photo_url = storage.get_photo_url(photo_meta["filename"]) if photo_meta.get("filename") else None
+
+    # If no identity_id, show the photo's faces + person search
+    if not identity_id:
+        parts = []
+        parts.append(
+            Div(
+                H2(f"{len(face_ids)} face{'s' if len(face_ids) != 1 else ''} in this photo",
+                   cls="text-xl font-serif text-white mb-1"),
+                P("Search for a person to compare against.",
+                  cls="text-sm text-slate-400"),
+                cls="mb-4",
+            )
+        )
+        if photo_url:
+            parts.append(
+                Div(
+                    A(Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto",
+                           alt="Archive photo"), href=f"/photo/{photo_id}"),
+                    P(A("View photo page", href=f"/photo/{photo_id}",
+                        cls="text-indigo-400 hover:text-indigo-300 text-xs"), cls="text-center mt-2"),
+                    cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+                )
+            )
+        # Face thumbnails
+        face_thumbs = []
+        for fid in face_ids:
+            crop_url = _resolve_crop_url(fid, crop_files)
+            if crop_url:
+                face_thumbs.append(
+                    Img(src=crop_url, cls="w-12 h-12 rounded-full object-cover border border-slate-600", alt="Face")
+                )
+        if face_thumbs:
+            parts.append(Div(*face_thumbs, cls="flex gap-2 justify-center mb-4"))
+
+        parts.append(
+            Div(
+                P("Compare against a specific person", cls="text-sm text-slate-300 mb-2 font-medium"),
+                Input(
+                    type="text", name="q",
+                    placeholder="Search by name (e.g., Isaac Cohen)...",
+                    hx_get=f"/api/compare/search-person-photo?photo_id={photo_id}",
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target="#compare-person-search-results",
+                    hx_include="this",
+                    cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
+                        "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                    data_testid="compare-person-search",
+                ),
+                Div(id="compare-person-search-results", cls="mt-2"),
+                cls="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+            )
+        )
+        return Div(*parts, id="compare-results", data_testid="compare-from-photo-select")
+
+    # --- Full comparison: photo_id + identity_id ---
+    ref_identity = registry.get_identity(identity_id)
+    if not ref_identity:
+        return Div(P("Person not found.", cls="text-red-400 text-sm"), id="compare-results")
+
+    ref_name = ref_identity.get("name", "Unknown")
+    ref_anchor_ids = ref_identity.get("anchor_ids", [])
+    ref_candidate_ids = ref_identity.get("candidate_ids", [])
+    ref_all_face_ids = ref_anchor_ids + ref_candidate_ids
+
+    ref_crop_url = ""
+    if ref_anchor_ids:
+        ref_crop_url = _resolve_crop_url(ref_anchor_ids[0], crop_files)
+    elif ref_candidate_ids:
+        ref_crop_url = _resolve_crop_url(ref_candidate_ids[0], crop_files)
+
+    ref_embeddings = []
+    for rfid in ref_all_face_ids:
+        emb = face_data.get(rfid)
+        if emb and "mu" in emb:
+            ref_embeddings.append(emb["mu"])
+
+    if not ref_embeddings:
+        return Div(P(f"No embeddings found for {ref_name}.", cls="text-amber-500 text-sm"), id="compare-results")
+
+    # Reference person's existing top archive matches
+    from core.neighbors import find_nearest_neighbors
+    ref_neighbors = find_nearest_neighbors(identity_id, registry, None, face_data, limit=3)
+
+    # Per-face distances
+    per_face_scores = []
+    for fid in face_ids:
+        emb = face_data.get(fid)
+        if not emb or "mu" not in emb:
+            continue
+        distances = []
+        for ref_emb in ref_embeddings:
+            dist = float(np.linalg.norm(emb["mu"] - ref_emb))
+            distances.append(dist)
+        best_dist = min(distances) if distances else 99.0
+
+        try:
+            from rhodesli_ml.similarity_calibration import SimilarityCalibrator
+            cal = SimilarityCalibrator()
+            cosine_sim = max(0.0, 1.0 - (best_dist ** 2) / 2.0)
+            prob = cal.predict(cosine_sim)
+            confidence_pct = int(prob * 100)
+        except Exception:
+            confidence_pct = max(1, min(99, int(100 * (1.0 / (1.0 + np.exp(2.0 * (best_dist - 1.1)))))))
+
+        if confidence_pct >= 85:
+            tier = "STRONG MATCH"
+        elif confidence_pct >= 70:
+            tier = "POSSIBLE MATCH"
+        elif confidence_pct >= 50:
+            tier = "SIMILAR"
+        else:
+            tier = "WEAK"
+
+        face_identity_id = None
+        face_identity_name = None
+        for iid, ident in registry.identities.items():
+            if fid in ident.get("anchor_ids", []) or fid in ident.get("candidate_ids", []):
+                face_identity_id = iid
+                face_identity_name = ident.get("name", "Unknown")
+                break
+
+        per_face_scores.append({
+            "face_id": fid,
+            "identity_id": face_identity_id,
+            "identity_name": face_identity_name or "Unknown",
+            "distance": best_dist,
+            "confidence_pct": confidence_pct,
+            "tier": tier,
+        })
+
+    per_face_scores.sort(key=lambda x: x["distance"])
+
+    # Build the response — reuse vs-person layout
+    parts = []
+    ref_person_link = f"/person/{identity_id}"
+    photo_link = f"/photo/{photo_id}"
+
+    parts.append(
+        Div(
+            H2(f"Comparing against {ref_name}", cls="text-xl font-serif text-white mb-1"),
+            P(f"{len(per_face_scores)} face{'s' if len(per_face_scores) != 1 else ''} in photo scored",
+              cls="text-sm text-slate-400"),
+            cls="mb-4",
+        )
+    )
+
+    parts.append(
+        Div(
+            Div(
+                A(Img(src=photo_url, cls="max-h-48 rounded-lg object-contain",
+                       alt="Archive photo") if photo_url else Div("Photo", cls="w-32 h-32 bg-slate-700 rounded-lg"),
+                  href=photo_link),
+                P(A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                  cls="text-center mt-1"),
+                cls="flex-1 text-center",
+            ),
+            Div(
+                A(Img(src=ref_crop_url, cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
+                       alt=ref_name) if ref_crop_url else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
+                  href=ref_person_link),
+                P(A(ref_name, href=ref_person_link, cls="text-white font-medium hover:text-indigo-300 text-sm"),
+                  cls="text-center mt-2"),
+                P("Reference person", cls="text-xs text-slate-500 text-center"),
+                cls="flex-1 text-center",
+            ),
+            cls="flex gap-4 items-center mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
+            data_testid="compare-hero",
+        )
+    )
+
+    # Per-face scores
+    for i, score in enumerate(per_face_scores):
+        fid = score["face_id"]
+        fiid = score["identity_id"]
+        fname = score["identity_name"]
+        dist = score["distance"]
+        pct = score["confidence_pct"]
+        tier = score["tier"]
+        crop_url = _resolve_crop_url(fid, crop_files)
+
+        if pct >= 85:
+            bar_color, label_color, border_color = "bg-emerald-500", "text-emerald-400", "border-emerald-700/50"
+        elif pct >= 70:
+            bar_color, label_color, border_color = "bg-amber-500", "text-amber-400", "border-amber-700/50"
+        elif pct >= 50:
+            bar_color, label_color, border_color = "bg-blue-500", "text-blue-400", "border-blue-700/50"
+        else:
+            bar_color, label_color, border_color = "bg-slate-600", "text-slate-400", "border-slate-700/50"
+
+        tier_label = tier.replace("_", " ").title()
+        dist_str = f" (dist: {dist:.2f})" if user_is_admin else ""
+
+        action_buttons = []
+        if user_is_admin and fiid:
+            action_buttons.append(
+                Button("Merge",
+                       hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
+                       hx_target=f"#compare-face-{i}", hx_swap="outerHTML",
+                       cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                       data_testid=f"merge-{i}"))
+            action_buttons.append(
+                Button("Not Same",
+                       hx_post=f"/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                       hx_target=f"#compare-face-{i}", hx_swap="outerHTML",
+                       cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                       data_testid=f"not-same-{i}"))
+
+        person_link_face = f"/person/{fiid}" if fiid else "#"
+        parts.append(
+            Div(
+                Div(
+                    A(Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600",
+                           alt=fname) if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                      href=person_link_face),
+                    Div(
+                        A(fname, href=person_link_face, cls="text-sm text-white hover:text-indigo-300 font-medium"),
+                        Div(Div(Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
+                                cls="flex-1 bg-slate-700 rounded-full h-2"),
+                            Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                            cls="flex items-center gap-2 mt-1"),
+                        Span(f"{tier_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
+                        cls="flex-1 min-w-0",
+                    ),
+                    cls="flex items-center gap-3",
+                ),
+                Div(*action_buttons, cls="flex gap-2 mt-2 justify-end") if action_buttons else None,
+                cls=f"p-4 bg-slate-800/50 rounded-lg border {border_color}",
+                id=f"compare-face-{i}",
+                data_testid=f"compare-face-score-{i}",
+            )
+        )
+
+    # Context
+    if ref_neighbors:
+        context_parts = []
+        for n in ref_neighbors[:3]:
+            n_name = n.get("name", "Unknown")
+            n_dist = n.get("distance", 99)
+            context_parts.append(f"{n_name} (dist: {n_dist:.2f})")
+        context_str = ", ".join(context_parts)
+        best_uploaded_dist = per_face_scores[0]["distance"] if per_face_scores else 99
+        best_uploaded_name = per_face_scores[0]["identity_name"] if per_face_scores else "Unknown"
+        parts.append(
+            Div(
+                P(f"Context: {ref_name}'s closest existing archive matches:",
+                  cls="text-sm text-slate-300 font-medium mb-1"),
+                P(context_str, cls="text-xs text-slate-400 mb-2"),
+                P(f"Best match in this photo ({best_uploaded_name}) scores distance {best_uploaded_dist:.2f}.",
+                  cls="text-xs text-slate-400"),
+                cls="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700/30",
+                data_testid="compare-context",
+            )
+        )
+
+    # Save result for sharing
+    rid = _generate_result_id()
+    result_data = {
+        "result_id": rid,
+        "created_at": datetime.now().isoformat(),
+        "query_type": "archive_vs_person",
+        "query_name": f"Photo vs {ref_name}",
+        "photo_id": photo_id,
+        "face_ids": face_ids,
+        "reference_person": {"identity_id": identity_id, "name": ref_name},
+        "matches": [
+            {"face_id": s["face_id"], "identity_id": s.get("identity_id", ""),
+             "identity_name": s["identity_name"], "distance": s["distance"],
+             "confidence_pct": s["confidence_pct"], "tier": s["tier"]}
+            for s in per_face_scores
+        ],
+        "responses": [],
+    }
+    result_id = _save_comparison_result(result_data)
+    share_url = f"{SITE_URL}/compare/result/{result_id}"
+
+    parts.append(
+        Div(
+            Div(
+                A("Share this comparison", href=share_url, target="_blank",
+                  cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+                A(f"Find Similar for {ref_name}", href=f"/person/{identity_id}",
+                  cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block"),
+                cls="flex gap-3 justify-center flex-wrap",
+            ),
+            Div(
+                P("Compare against another person:", cls="text-sm text-slate-400 mt-4 mb-2"),
+                Input(
+                    type="text", name="q",
+                    placeholder="Search by name...",
+                    hx_get=f"/api/compare/search-person-photo?photo_id={photo_id}",
+                    hx_trigger="keyup changed delay:300ms",
+                    hx_target="#compare-person-search-results-2",
+                    hx_include="this",
+                    cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
+                        "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                ),
+                Div(id="compare-person-search-results-2", cls="mt-2"),
+            ),
+            cls="mt-6",
+            data_testid="compare-actions",
+        )
+    )
+
+    return Div(*parts, id="compare-results", data_testid="compare-from-photo-results")
+
+
+@rt("/api/compare/search-person-photo")
+def get(q: str = "", photo_id: str = "", sess=None):
+    """Search for a person to compare an archive photo against. Returns clickable results."""
+    if len(q.strip()) < 2:
+        return Div(id="compare-person-search-results")
+
+    registry = load_registry()
+    results = registry.search_identities(q.strip(), limit=8)
+    crop_files = get_crop_files()
+
+    if not results:
+        return Div(
+            P("No matching people found.", cls="text-slate-500 text-sm"),
+            id="compare-person-search-results",
+        )
+
+    cards = []
+    for r in results:
+        iid = r["identity_id"]
+        name = r["name"]
+        state = r.get("state", "INBOX")
+        preview_fid = r.get("preview_face_id", "")
+        crop_url = _resolve_crop_url(preview_fid, crop_files)
+
+        state_badge = ""
+        if state == "CONFIRMED":
+            state_badge = Span("Confirmed", cls="text-xs bg-emerald-900/50 text-emerald-400 px-1.5 py-0.5 rounded ml-2")
+        elif state == "PROPOSED":
+            state_badge = Span("Proposed", cls="text-xs bg-amber-900/50 text-amber-400 px-1.5 py-0.5 rounded ml-2")
+
+        cards.append(
+            A(
+                Div(
+                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600",
+                        alt=name) if crop_url else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                    Div(
+                        Span(name, cls="text-sm text-white font-medium"),
+                        state_badge if state_badge else None,
+                        cls="flex items-center",
+                    ),
+                    cls="flex items-center gap-3",
+                ),
+                href=f"/compare?photo_id={photo_id}&person_id={iid}",
+                cls="block w-full text-left p-2 hover:bg-slate-700/50 rounded-lg transition-colors cursor-pointer",
+                data_testid=f"compare-person-{iid}",
+            )
+        )
+
+    return Div(*cards, id="compare-person-search-results",
+               cls="space-y-1 max-h-64 overflow-y-auto")
 
 
 @rt("/api/compare/upload-multiple")
@@ -22132,9 +22549,15 @@ def public_photo_page(
             # People in this photo
             Section(
                 Div(
-                    H2(
-                        f"{'People' if total_faces != 1 else 'Person'} in this photo",
-                        cls="text-lg font-serif font-semibold text-white mb-4"
+                    Div(
+                        H2(
+                            f"{'People' if total_faces != 1 else 'Person'} in this photo",
+                            cls="text-lg font-serif font-semibold text-white"
+                        ),
+                        A("Compare faces", href=f"/compare?photo_id={photo_id}",
+                          cls="text-xs text-indigo-400 hover:text-indigo-300 transition-colors",
+                          data_testid="compare-photo-link"),
+                        cls="flex items-center justify-between mb-4",
                     ),
                     Div(
                         *person_cards,
@@ -22180,6 +22603,12 @@ def public_photo_page(
                                  if identified_count == 0 and total_faces > 0
                                  else "inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-500 transition-colors"),
                             data_testid="help-identify-cta",
+                        ),
+                        A(
+                            "Compare Faces",
+                            href=f"/compare?photo_id={photo_id}",
+                            cls="inline-block px-6 py-3 border border-indigo-600 text-indigo-300 font-medium rounded-lg hover:border-indigo-400 hover:text-white transition-colors",
+                            data_testid="compare-photo-link",
                         ),
                         A(
                             "Browse All Photos",

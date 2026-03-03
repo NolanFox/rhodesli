@@ -258,7 +258,8 @@ def test_compare_status_starting(tmp_path, monkeypatch, client):
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
     (tmp_path / "inbox").mkdir(parents=True, exist_ok=True)
 
-    status = {"status": "starting", "started_at": "2026-03-03T12:00:00+00:00", "total_files": 1}
+    from datetime import datetime, timezone
+    status = {"status": "starting", "started_at": datetime.now(timezone.utc).isoformat(), "total_files": 1}
     (tmp_path / "inbox" / "test1234.status.json").write_text(json.dumps(status))
 
     response = client.get("/api/compare/status/test1234")
@@ -383,3 +384,178 @@ def test_compare_result_page_confidence_bars(tmp_path, monkeypatch, client):
     # Should have tier labels
     assert "Very likely same person" in response.text
     assert "Unlikely match" in response.text
+
+
+# ---- Session 85b: Archive Photo → Compare Tests ----
+
+
+def test_compare_from_photo_returns_scores(client, monkeypatch):
+    """GET /api/compare/from-photo with photo_id + identity_id returns per-face scores."""
+    import numpy as np
+    import app.main as main_mod
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    identity = {
+        "identity_id": "isaac-id",
+        "name": "Isaac Cohen",
+        "state": "CONFIRMED",
+        "anchor_ids": ["ref-face-1"],
+        "candidate_ids": [],
+    }
+    mock_registry.get_identity.return_value = identity
+    mock_registry.identities = {
+        "face-id-1": {"anchor_ids": [], "candidate_ids": ["uploaded-face-1"], "name": "Face 1"},
+    }
+
+    monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+    monkeypatch.setattr(main_mod, "_resolve_crop_url", lambda fid, cf: f"https://example.com/{fid}.jpg")
+    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
+        "filename": "test.jpg",
+        "faces": [{"face_id": "uploaded-face-1", "bbox": [0, 0, 100, 100]}],
+    })
+
+    # Mock face_data with embeddings
+    mock_embedding = np.random.randn(512).astype(np.float32)
+    ref_embedding = np.random.randn(512).astype(np.float32)
+    monkeypatch.setattr(main_mod, "get_face_data", lambda: {
+        "uploaded-face-1": {"mu": mock_embedding},
+        "ref-face-1": {"mu": ref_embedding},
+    })
+    monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
+
+    # Mock find_nearest_neighbors (imported inside route handler from core.neighbors)
+    with patch("core.neighbors.find_nearest_neighbors", return_value=[]):
+        response = client.get("/api/compare/from-photo?photo_id=test-photo&identity_id=isaac-id")
+
+    assert response.status_code == 200
+    assert "Isaac Cohen" in response.text
+    assert "compare-face-score-0" in response.text
+    assert "compare-hero" in response.text
+
+
+def test_compare_from_photo_invalid_photo_404(client, monkeypatch):
+    """GET /api/compare/from-photo with invalid photo_id returns error."""
+    import app.main as main_mod
+    monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
+    monkeypatch.setattr(main_mod, "get_face_data", lambda: {})
+    monkeypatch.setattr(main_mod, "load_registry", lambda: type("R", (), {"identities": {}})())
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: None)
+
+    response = client.get("/api/compare/from-photo?photo_id=nonexistent")
+    assert response.status_code == 200
+    assert "not found" in response.text.lower()
+
+
+def test_compare_from_photo_invalid_person_404(client, monkeypatch):
+    """GET /api/compare/from-photo with invalid identity_id returns error."""
+    import app.main as main_mod
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.get_identity.return_value = None
+
+    monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
+    monkeypatch.setattr(main_mod, "get_face_data", lambda: {})
+    monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
+        "filename": "test.jpg",
+        "faces": [{"face_id": "f1"}],
+    })
+
+    response = client.get("/api/compare/from-photo?photo_id=test-photo&identity_id=nonexistent")
+    assert response.status_code == 200
+    assert "not found" in response.text.lower()
+
+
+def test_compare_direct_url_with_photo_and_person(client, monkeypatch):
+    """GET /compare?photo_id=X&person_id=Y loads comparison via HTMX."""
+    response = client.get("/compare?photo_id=test-photo&person_id=test-person")
+    assert response.status_code == 200
+    # Should contain HTMX trigger to load from-photo comparison
+    assert "/api/compare/from-photo" in response.text
+    assert "photo_id=test-photo" in response.text
+    assert "identity_id=test-person" in response.text
+
+
+def test_compare_direct_url_photo_only(client):
+    """GET /compare?photo_id=X shows photo selector without auto-comparing."""
+    response = client.get("/compare?photo_id=test-photo")
+    assert response.status_code == 200
+    assert "/api/compare/from-photo" in response.text
+    assert "photo_id=test-photo" in response.text
+
+
+def test_photo_page_has_compare_link(client, monkeypatch):
+    """Photo page includes a 'Compare faces' link."""
+    import app.main as main_mod
+
+    # Use a simple mock for public_photo_page to check route handler
+    # The link should be embedded in the photo page HTML
+    monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
+        "photo_id": "test-photo",
+        "filename": "test.jpg",
+        "width": 800,
+        "height": 600,
+        "faces": [{"face_id": "f1", "bbox": [10, 10, 100, 100]}],
+        "collection": "Test Collection",
+        "source": "Test",
+    })
+    monkeypatch.setattr(main_mod, "get_identity_for_face", lambda reg, fid: {
+        "identity_id": "id1", "name": "Test Person", "state": "INBOX",
+        "anchor_ids": [], "candidate_ids": ["f1"],
+    })
+    monkeypatch.setattr(main_mod, "resolve_face_image_url", lambda fid, cf: "https://example.com/crop.jpg")
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+    monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
+
+    response = client.get("/photo/test-photo")
+    assert response.status_code == 200
+    assert "compare?photo_id=test-photo" in response.text
+
+
+def test_person_page_has_compare_link(client, monkeypatch):
+    """Person page 'Compare with a photo' link includes person_id."""
+    import app.main as main_mod
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.get_identity.return_value = {
+        "identity_id": "person1",
+        "name": "Test Person",
+        "state": "CONFIRMED",
+        "anchor_ids": ["f1"],
+        "candidate_ids": [],
+    }
+    mock_registry.list_identities.return_value = []
+    monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+    monkeypatch.setattr(main_mod, "_build_caches", lambda: None)
+    monkeypatch.setattr(main_mod, "load_photo_registry", lambda: type("PR", (), {"get_photos_for_faces": lambda s, fids: []})())
+    monkeypatch.setattr(main_mod, "get_best_face_id", lambda faces: "f1")
+    monkeypatch.setattr(main_mod, "resolve_face_image_url", lambda fid, cf: "https://example.com/crop.jpg")
+
+    response = client.get("/person/person1")
+    assert response.status_code == 200
+    assert "compare?person_id=person1" in response.text
+
+
+def test_compare_search_person_photo(client, monkeypatch):
+    """Search-person-photo endpoint returns clickable links with photo_id."""
+    import app.main as main_mod
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.search_identities.return_value = [
+        {"identity_id": "id1", "name": "Isaac Cohen", "state": "CONFIRMED", "preview_face_id": "f1"},
+    ]
+    monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
+    monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
+
+    response = client.get("/api/compare/search-person-photo?q=Isaac&photo_id=photo123")
+    assert response.status_code == 200
+    assert "Isaac Cohen" in response.text
+    assert "photo_id=photo123" in response.text
