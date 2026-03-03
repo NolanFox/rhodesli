@@ -7,11 +7,11 @@ Context: docs/session_context/session-85-context.md
 
 ## Phase Checklist
 - [x] Phase 0: Orient
-- [ ] Phase 1: Diagnose + Architecture Plan
-- [ ] Phase 2: Unify Compare Upload with Main Upload Pipeline
-- [ ] Phase 3: Compare Against Specific Person (Search + Per-Face Scores)
-- [ ] Phase 4: Fix Compare Result Page — Interactive Shareable View
-- [ ] Phase 5: Tests + Regression Check
+- [x] Phase 1: Diagnose + Architecture Plan
+- [x] Phase 2: Unify Compare Upload with Main Upload Pipeline
+- [x] Phase 3: Compare Against Specific Person (Search + Per-Face Scores)
+- [x] Phase 4: Fix Compare Result Page — Interactive Shareable View
+- [x] Phase 5: Tests + Regression Check
 - [ ] Phase 6: Deploy + Browser Verification
 - [ ] Phase 7: Session Docs
 
@@ -73,6 +73,38 @@ Context: docs/session_context/session-85-context.md
 - Face overlay toggle on uploaded photo
 - Find Similar context for compared faces
 - Updated PRD-025 and context file to capture all requirements
+
+## Phase 2: Unify Compare Upload with Main Upload Pipeline
+- Replaced `POST /api/compare/upload` handler with staging + `_background_ingest` pattern
+- Compare uploads now go through same pipeline as Upload page: staging → process_directory → photo_index → identities → embeddings → crops → R2
+- Added `_build_compare_results_view()` for interactive results after ingest
+- Added `GET /api/compare/status/{job_id}` polling endpoint
+- Non-admin uploads queued to `pending_uploads.json` (Lesson 19/22)
+- Admin uploads processed immediately via background thread
+
+## Phase 3: Compare Against Specific Person
+- Added `GET /api/compare/search-person` with autocomplete
+- Added `POST /api/compare/vs-person` endpoint
+- Per-face distance computation against reference person's anchor embeddings
+- Calibrated confidence via SimilarityCalibrator (isotonic regression)
+- Context section showing reference person's existing top archive matches
+- Merge/Not Same action buttons for admin
+- Shareable result saved via `_save_comparison_result()`
+
+## Phase 4: Fix Compare Result Page
+- Hero section: uploaded photo + reference person crop side-by-side
+- Confidence bars with dual encoding (colored bar + percentage + tier label)
+- Person page links (/person/{id}) for all faces
+- Photo page links (/photo/{id}) for uploaded photos
+- Defensive KeyError handling for deleted reference persons
+- Tier colors: green (>=85%), amber (>=70%), blue (>=50%), gray (<50%)
+
+## Phase 5: Tests + Regression Check
+- 22 compare tests passing (was 13)
+- 9 new tests: staging, non-admin queuing, status polling (starting/error/no-faces),
+  person search, result page photo links, confidence bars
+- 1 pre-existing xdist flaky failure (test_search_result_identity_id_in_url) — passes in isolation
+- Full suite: 1907 passed, 2 skipped
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
