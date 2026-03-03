@@ -19106,7 +19106,40 @@ def get(result_id: str, sess=None):
         if hero_parts:
             hero_section = Div(*hero_parts, cls="flex gap-4 items-center mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50")
 
-    # Build match cards with enhanced visualization
+    # Reference person context — show top archive neighbors for comparison
+    ref_context_section = None
+    if ref_id and matches:
+        try:
+            from core.neighbors import find_nearest_neighbors
+            face_data = get_face_data()
+            ref_neighbors = find_nearest_neighbors(
+                ref_id, load_registry(), None, face_data, limit=3,
+            )
+            if ref_neighbors:
+                context_parts = []
+                for n in ref_neighbors[:3]:
+                    n_name = n.get("name", "Unknown")
+                    n_dist = n.get("distance", 99)
+                    context_parts.append(f"{n_name} (dist: {n_dist:.2f})")
+                context_str = ", ".join(context_parts)
+
+                best_match = matches[0]
+                best_dist = best_match.get("distance", 99)
+                best_name = best_match.get("identity_name", "Unknown")
+
+                ref_context_section = Div(
+                    P(f"Context: {ref_name}'s closest existing archive matches:",
+                      cls="text-sm text-slate-300 font-medium mb-1"),
+                    P(context_str, cls="text-xs text-slate-400 mb-2"),
+                    P(f"Your best match ({best_name}) scores distance {best_dist:.2f}.",
+                      cls="text-xs text-slate-400"),
+                    cls="mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700/30",
+                    data_testid="result-reference-context",
+                )
+        except Exception:
+            pass  # Reference context is supplementary, don't break the page
+
+    # Build match cards with enhanced visualization + admin actions
     result_cards = []
     for i, match in enumerate(matches[:10]):
         fid = match.get("face_id", "")
@@ -19138,23 +19171,52 @@ def get(result_id: str, sess=None):
         person_link = A(name, href=f"/person/{m_identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium") if m_identity_id else Span(name, cls="text-sm text-white font-medium")
         dist_str = f" (dist: {dist:.2f})" if user_is_admin and dist < 99 else ""
 
+        # Admin merge/not-same actions (same pattern as vs-person endpoint)
+        action_buttons = []
+        if user_is_admin and m_identity_id and ref_id:
+            action_buttons.append(
+                Button(
+                    "Merge",
+                    hx_post=f"/api/identity/{ref_id}/merge/{m_identity_id}?source=compare",
+                    hx_target=f"#result-face-{i}",
+                    hx_swap="outerHTML",
+                    cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                    data_testid=f"result-merge-{i}",
+                )
+            )
+            action_buttons.append(
+                Button(
+                    "Not Same",
+                    hx_post=f"/api/identity/{ref_id}/not-same/{m_identity_id}?source=compare",
+                    hx_target=f"#result-face-{i}",
+                    hx_swap="outerHTML",
+                    cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                    data_testid=f"result-not-same-{i}",
+                )
+            )
+
         result_cards.append(Div(
-            Img(src=match_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600") if match_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
             Div(
-                person_link,
-                # Confidence bar
+                Img(src=match_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600") if match_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
                 Div(
+                    person_link,
+                    # Confidence bar
                     Div(
-                        Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
-                        cls="flex-1 bg-slate-700 rounded-full h-2",
+                        Div(
+                            Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
+                            cls="flex-1 bg-slate-700 rounded-full h-2",
+                        ),
+                        Span(f"{pct}%", cls=f"text-sm {color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                        cls="flex items-center gap-2 mt-1",
                     ),
-                    Span(f"{pct}%", cls=f"text-sm {color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
-                    cls="flex items-center gap-2 mt-1",
+                    P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5"),
+                    cls="flex-1 min-w-0",
                 ),
-                P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5"),
-                cls="flex-1 min-w-0",
+                cls="flex items-center gap-4",
             ),
-            cls="flex items-center gap-4 p-3 bg-slate-800/70 rounded-lg",
+            Div(*action_buttons, cls="flex gap-2 mt-2 justify-end") if action_buttons else None,
+            cls="p-3 bg-slate-800/70 rounded-lg",
+            id=f"result-face-{i}",
             data_testid=f"result-card-{i}",
         ))
 
@@ -19205,6 +19267,9 @@ def get(result_id: str, sess=None):
 
                     # Hero section (uploaded photo + reference person)
                     hero_section if hero_section else None,
+
+                    # Reference person context (archive neighbors)
+                    ref_context_section if ref_context_section else None,
 
                     # Match list
                     Div(*result_cards, cls="space-y-3") if result_cards else P("No matches found.", cls="text-slate-500"),

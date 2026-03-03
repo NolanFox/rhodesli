@@ -559,3 +559,97 @@ def test_compare_search_person_photo(client, monkeypatch):
     assert response.status_code == 200
     assert "Isaac Cohen" in response.text
     assert "photo_id=photo123" in response.text
+
+
+# ---- Session 85b Phase 3: PRD-025 Gap Closure Tests ----
+
+
+def test_compare_result_shows_reference_context(tmp_path, monkeypatch, client):
+    """Result page shows reference person's closest archive matches for context."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "refctx_test01",
+        "query_type": "upload_vs_person",
+        "query_name": "vs Isaac Cohen",
+        "photo_id": "test_photo_1",
+        "reference_person": {"identity_id": "isaac-id", "name": "Isaac Cohen"},
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Face 1",
+             "distance": 1.05, "confidence_pct": 55, "tier": "SIMILAR"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    # Mock find_nearest_neighbors to return reference context
+    with patch("core.neighbors.find_nearest_neighbors", return_value=[
+        {"identity_id": "neighbor1", "name": "David Cohen", "distance": 0.9},
+        {"identity_id": "neighbor2", "name": "Sarah Levi", "distance": 1.1},
+    ]):
+        response = client.get("/compare/result/refctx_test01")
+    assert response.status_code == 200
+    assert "result-reference-context" in response.text
+    assert "David Cohen" in response.text
+    assert "Isaac Cohen" in response.text
+
+
+def test_compare_result_merge_action(tmp_path, monkeypatch, client):
+    """Admin sees merge button on result page match cards."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "merge_test01",
+        "query_type": "upload_vs_person",
+        "query_name": "vs Isaac Cohen",
+        "reference_person": {"identity_id": "ref-id", "name": "Isaac Cohen"},
+        "matches": [
+            {"face_id": "f1", "identity_id": "match-id", "identity_name": "Unknown Person",
+             "distance": 0.9, "confidence_pct": 78, "tier": "POSSIBLE MATCH"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/merge_test01")
+    assert response.status_code == 200
+    assert "result-merge-0" in response.text
+    assert "Merge" in response.text
+
+
+def test_compare_result_not_same_action(tmp_path, monkeypatch, client):
+    """Admin sees 'Not Same' button on result page match cards."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "notsame_test01",
+        "query_type": "upload_vs_person",
+        "query_name": "vs Isaac Cohen",
+        "reference_person": {"identity_id": "ref-id", "name": "Isaac Cohen"},
+        "matches": [
+            {"face_id": "f1", "identity_id": "match-id", "identity_name": "Unknown Person",
+             "distance": 1.2, "confidence_pct": 35, "tier": "WEAK"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/notsame_test01")
+    assert response.status_code == 200
+    assert "result-not-same-0" in response.text
+    assert "Not Same" in response.text
