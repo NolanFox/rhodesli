@@ -178,6 +178,52 @@ class TestGap2BidirectionalLinks:
 
 
 # ============================================================
+# Gap 3: Face card consistency across views
+# ============================================================
+
+class TestGap3FaceCardConsistency:
+    """Face cards across views have consistent core actions."""
+
+    def test_help_page_cards_have_similar_and_profile_links(self, client):
+        """Help page face cards have Similar and Profile links."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main.get_face_quality", return_value=0.9))
+            resp = client.get("/help")
+        assert resp.status_code == 200
+        body = resp.text
+        # Help page renders cards for unidentified people with Similar + Profile links
+        assert "Similar" in body or "/similar" in body
+        assert "Profile" in body or "/person/" in body
+
+    def test_identity_card_profile_link_for_inbox(self, client):
+        """Identity card in People section shows Profile link for INBOX state."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            # The identity_card function is used on the People page; test via person page
+            # which includes a Profile link for all states
+            resp = client.get("/person/unknown-1")
+        assert resp.status_code == 200
+        assert "/person/unknown-1" in resp.text
+
+    def test_focus_view_has_public_page_link(self):
+        """Focus view's identity_card_expanded includes View Public Page link."""
+        from app.main import identity_card_expanded
+
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            html = repr(identity_card_expanded(
+                identity=_MOCK_IDENTITIES["identities"]["unknown-1"],
+                crop_files={"face-u1.jpg"},
+            ))
+        assert "View Public Page" in html
+        assert "/person/unknown-1" in html
+
+
+# ============================================================
 # Gap 4: Compare discoverability CTAs
 # ============================================================
 

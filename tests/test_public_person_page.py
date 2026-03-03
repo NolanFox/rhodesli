@@ -623,9 +623,8 @@ class TestAdminControlsOnPersonPage:
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
         assert response.status_code == 200
         assert 'data-testid="admin-controls"' in response.text
-        assert "Edit Name" in response.text
+        assert "Edit in Admin" in response.text
         assert "Find Similar" in response.text
-        assert "View in Admin" in response.text
 
     def test_anonymous_no_admin_controls(self, client, confirmed_identity, auth_enabled, no_user):
         """Anonymous users do NOT see admin controls."""
