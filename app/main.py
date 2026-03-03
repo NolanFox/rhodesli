@@ -4214,7 +4214,7 @@ def render_to_review_section(
 
         grid_items = []
         for identity in to_review:
-            card = identity_card_compact(identity, crop_files, is_admin=is_admin)
+            card = identity_card(identity, crop_files, lane_color="amber", show_actions=False, is_admin=is_admin, show_triage=True)
             if card:
                 grid_items.append(card)
                 # Expansion panel for inline Find Similar
@@ -4225,7 +4225,7 @@ def render_to_review_section(
         if cards:
             content = Div(
                 *cards,
-                cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"
+                cls="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
             )
         else:
             content = Div(
@@ -6914,7 +6914,9 @@ def manual_search_section(identity_id: str) -> Div:
     )
 
 
-def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False, focus_section: str = "", target_name: str = "") -> Div:
+def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset: int = 0, has_more: bool = False, rejected_count: int = 0, user_role: str = "admin", from_focus: bool = False, focus_section: str = "", target_name: str = "", container_id: str = "") -> Div:
+    # container_id allows targeting the browse expansion panel or the focus sidebar
+    _target_id = container_id or f"neighbors-{identity_id}"
     toggle_btn = Button(
         "▾ Collapse",
         cls="text-sm text-slate-400 hover:text-slate-300",
@@ -6928,9 +6930,10 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
     mergeable = [n for n in neighbors if n.get("can_merge")]
     cards = [neighbor_card(n, identity_id, crop_files, user_role=user_role, from_focus=from_focus, focus_section=focus_section, target_name=target_name) for n in neighbors]
     _focus_section_param = f"&focus_section={focus_section}" if focus_section else ""
+    _container_param = f"&container_id={container_id}" if container_id else ""
     focus_param = f"&from_focus=true{_focus_section_param}" if from_focus else ""
     load_more = Button("Load More", cls="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/50 rounded hover:bg-indigo-500/20",
-                       hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}{focus_param}", hx_target=f"#neighbors-{identity_id}", hx_swap="innerHTML") if has_more else None
+                       hx_get=f"/api/identity/{identity_id}/neighbors?offset={offset+len(neighbors)}{focus_param}{_container_param}", hx_target=f"#{_target_id}", hx_swap="innerHTML") if has_more else None
 
     # Bulk actions (only if there are mergeable neighbors)
     bulk_actions = None
@@ -6961,13 +6964,13 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
                 Button("Merge Selected", type="button",
                        hx_post=f"/api/identity/{identity_id}/bulk-merge",
                        hx_include="closest form",
-                       hx_target=f"#neighbors-{identity_id}",
+                       hx_target=f"#{_target_id}",
                        hx_swap="innerHTML",
                        cls="px-3 py-1.5 text-xs font-bold bg-blue-600 text-white rounded hover:bg-blue-500"),
                 Button("Not Same Selected", type="button",
                        hx_post=f"/api/identity/{identity_id}/bulk-reject",
                        hx_include="closest form",
-                       hx_target=f"#neighbors-{identity_id}",
+                       hx_target=f"#{_target_id}",
                        hx_swap="innerHTML",
                        cls="px-3 py-1.5 text-xs font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20"),
                 cls="flex gap-2",
@@ -6982,8 +6985,19 @@ def neighbors_sidebar(identity_id: str, neighbors: list, crop_files: set, offset
                        Button("Review", cls="text-xs text-indigo-400 hover:text-indigo-300 ml-2", hx_get=f"/api/identity/{identity_id}/rejected", hx_target=f"#rejected-list-{identity_id}", hx_swap="innerHTML"),
                        cls="flex items-center justify-between"), Div(id=f"rejected-list-{identity_id}"), cls="mt-4 pt-3 border-t border-slate-600") if rejected_count > 0 else None
 
+    # Close button for browse expansion panels
+    close_btn = None
+    if container_id and container_id.startswith("expand-"):
+        close_btn = Button(
+            NotStr("&times;"),
+            cls="panel-close text-slate-400 hover:text-white text-xl font-bold bg-transparent border-0 p-1 leading-none",
+            **{"_": f"on click set innerHTML of #{container_id} to '' then remove .find-similar-active from closest .identity-card"},
+            type="button",
+            title="Close",
+        )
+
     return Div(
-        Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-white"), toggle_btn, cls="flex items-center justify-between mb-3"),
+        Div(H4("Similar Identities", cls="text-lg font-serif font-bold text-white"), toggle_btn, close_btn, cls="flex items-center justify-between mb-3"),
         Div(
             bulk_actions,
             Div(*cards), Div(load_more, cls="mt-3") if load_more else None, manual_search, rejected,
@@ -7110,190 +7124,8 @@ def identity_card_compact(
     crop_files: set,
     is_admin: bool = True,
 ) -> Div:
-    """Compact identity card for browse/review grid.
-
-    Face-dominant layout: large face image (60%+ of card), one-line name,
-    icon-only action buttons. Secondary actions in overflow menu.
-    Designed for scanning 20+ cards quickly.
-    """
-    identity_id = identity["identity_id"]
-    raw_name = ensure_utf8_display(identity.get("name"))
-    name = raw_name or f"Identity {identity_id[:8]}..."
-    state = identity["state"]
-
-    all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
-    total_faces = len(all_face_ids)
-    if total_faces == 0:
-        return None
-
-    # Pick representative face (best quality)
-    best_face_id = get_best_face_id(all_face_ids) if all_face_ids else all_face_ids[0]
-    if not best_face_id and all_face_ids:
-        best_face_id = all_face_ids[0] if isinstance(all_face_ids[0], str) else all_face_ids[0].get("face_id", "")
-
-    face_id = best_face_id if isinstance(best_face_id, str) else best_face_id.get("face_id", "")
-    crop_url = resolve_face_image_url(face_id, crop_files)
-    if not crop_url:
-        return None
-
-    photo_id = get_photo_id_for_face(face_id)
-
-    # Confirm button
-    confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
-    confirm_btn = Button(
-        NotStr("&#10003;"),
-        cls="w-8 h-8 flex items-center justify-center rounded bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition-colors",
-        hx_post=confirm_url,
-        hx_target=f"#identity-{identity_id}",
-        hx_swap="outerHTML",
-        title="Confirm identity",
-        type="button",
-    ) if state in ("INBOX", "PROPOSED", "SKIPPED") and is_admin else None
-
-    # Reject button
-    reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
-    reject_btn = Button(
-        NotStr("&#10007;"),
-        cls="w-8 h-8 flex items-center justify-center rounded border border-red-500 text-red-400 hover:bg-red-500/20 text-sm font-bold transition-colors",
-        hx_post=reject_url,
-        hx_target=f"#identity-{identity_id}",
-        hx_swap="outerHTML",
-        title="Wrong person",
-        type="button",
-    ) if state in ("INBOX", "PROPOSED", "SKIPPED") and is_admin else None
-
-    # Skip button
-    skip_btn = Button(
-        NotStr("&#9197;"),
-        cls="w-8 h-8 flex items-center justify-center rounded border border-slate-500 text-slate-400 hover:bg-slate-600 text-sm transition-colors",
-        hx_post=f"/identity/{identity_id}/skip",
-        hx_target=f"#identity-{identity_id}",
-        hx_swap="outerHTML",
-        title="Review later",
-        type="button",
-    ) if state in ("INBOX", "PROPOSED") and is_admin else None
-
-    # Overflow menu (secondary actions)
-    overflow_items = []
-    if photo_id:
-        _vp_url = f"/photo/{photo_id}/partial?face={face_id}"
-        if identity_id:
-            _vp_url += f"&identity_id={identity_id}"
-        overflow_items.append(A(
-            "View Photo",
-            cls="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600 cursor-pointer",
-            hx_get=_vp_url,
-            hx_target="#photo-modal-content",
-            hx_swap="innerHTML",
-            **{"_": "on click remove .hidden from #photo-modal then set @open of closest <details/> to false"},
-        ))
-    overflow_items.append(A(
-        "Find Similar",
-        cls="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600 cursor-pointer",
-        hx_get=f"/api/identity/{identity_id}/neighbors",
-        hx_target=f"#neighbors-{identity_id}",
-        hx_swap="innerHTML",
-        **{"_": "on click set @open of closest <details/> to false"},
-    ))
-    if is_admin:
-        overflow_items.append(A(
-            "Edit Details",
-            href=f"/person/{identity_id}",
-            cls="block px-3 py-1.5 text-xs text-slate-300 hover:bg-slate-600",
-        ))
-
-    overflow_menu = Details(
-        Summary(
-            NotStr("&#8943;"),
-            cls="w-8 h-8 flex items-center justify-center rounded border border-slate-600 text-slate-400 hover:bg-slate-600 text-sm cursor-pointer list-none transition-colors",
-        ),
-        Div(
-            *overflow_items,
-            cls="absolute right-0 bottom-full mb-1 bg-slate-700 border border-slate-600 rounded shadow-lg py-1 min-w-[120px] z-10",
-        ),
-        cls="relative",
-    ) if overflow_items else None
-
-    # Match count text
-    match_text = f"{total_faces} face{'s' if total_faces != 1 else ''}" if total_faces > 1 else ""
-
-    # Loading indicator
-    loading = Span(
-        "...",
-        id=f"loading-{identity_id}",
-        cls="htmx-indicator text-slate-400 animate-pulse text-xs",
-    )
-
-    # Face count badge
-    face_badge = Span(
-        f"{total_faces}",
-        cls="absolute top-1.5 right-1.5 bg-black/70 text-white text-xs px-1.5 py-0.5 rounded-full font-medium",
-    ) if total_faces > 1 else None
-
-    # Make face image clickable → go to full photo
-    photo_link_url = f"/photo/{photo_id}" if photo_id else f"/people/{identity_id}"
-    face_hero = A(
-        Img(
-            src=crop_url,
-            alt=name,
-            cls="w-full h-full object-cover",
-            loading="lazy",
-        ),
-        face_badge,
-        href=photo_link_url,
-        cls="relative block aspect-[3/4] overflow-hidden bg-slate-800",
-        title="View full photo",
-    )
-
-    # Quick action links (visible, not buried)
-    # Admin: inline expansion via HTMX. Public: full-page link.
-    css_id = make_css_id(identity_id)
-    if is_admin:
-        similar_link = Button(
-            "Similar",
-            cls="text-xs text-indigo-400 hover:text-indigo-300 bg-transparent border-0 py-1 px-1 cursor-pointer underline-offset-2 hover:underline",
-            hx_get=f"/api/find-similar/{identity_id}",
-            hx_target=f"#expand-{css_id}",
-            hx_swap="innerHTML",
-            type="button",
-        )
-    else:
-        similar_link = A("Similar", href=f"/people/{identity_id}/similar",
-          cls="text-xs text-indigo-400 hover:text-indigo-300 py-1 px-1")
-    quick_links = Div(
-        similar_link,
-        Span("|", cls="text-xs text-slate-600"),
-        A("Profile", href=f"/person/{identity_id}",
-          cls="text-xs text-slate-400 hover:text-slate-300"),
-        cls="flex items-center gap-2",
-    )
-
-    return Div(
-        face_hero,
-        # Name + metadata row
-        Div(
-            Div(
-                Span(name, cls="text-sm text-white font-medium truncate block"),
-                Span("Not yet confirmed", cls="text-[10px] text-amber-400/60 block") if state != "CONFIRMED" else None,
-                quick_links,
-                cls="min-w-0 flex-1",
-            ),
-            cls="px-2.5 pt-2 pb-1",
-        ),
-        # Compact action row
-        Div(
-            confirm_btn,
-            reject_btn,
-            skip_btn,
-            Div(cls="flex-1"),
-            loading,
-            overflow_menu,
-            cls="flex items-center gap-1.5 px-2.5 pb-2.5",
-        ),
-        cls="identity-card identity-card-archival rounded-lg overflow-hidden",
-        id=f"identity-{identity_id}",
-        data_name=(raw_name or "").lower(),
-    )
+    """Deprecated: delegates to identity_card(show_triage=True) for backward compat."""
+    return identity_card(identity, crop_files, show_triage=True, is_admin=is_admin)
 
 
 def identity_card(
@@ -7302,6 +7134,7 @@ def identity_card(
     lane_color: str = "stone",
     show_actions: bool = False,
     is_admin: bool = True,
+    show_triage: bool = False,
 ) -> Div:
     """
     Identity group card showing all faces (anchors + candidates).
@@ -7389,16 +7222,17 @@ def identity_card(
                 cls=f"{_pill} text-slate-500 hover:text-emerald-300 hover:bg-emerald-500/15",
             )
 
-    # Find Similar — admin: inline expansion, public: full-page link
+    # Find Similar — admin: inline expansion with full neighbors_sidebar, public: full-page link
     _id_css = make_css_id(identity_id)
     if is_admin:
         find_similar_btn = Button(
             "Similar",
             cls=f"{_pill} bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25",
-            hx_get=f"/api/find-similar/{identity_id}",
+            hx_get=f"/api/identity/{identity_id}/neighbors?container_id=expand-{_id_css}",
             hx_target=f"#expand-{_id_css}",
             hx_swap="innerHTML",
             type="button",
+            **{"_": "on click toggle .find-similar-active on closest .identity-card"},
         )
     else:
         find_similar_btn = A(
@@ -7433,13 +7267,13 @@ def identity_card(
     hero_crop_url = resolve_face_image_url(best_face, crop_files) if best_face else None
     person_href = f"/person/{identity_id}" if state == "CONFIRMED" else f"/identify/{identity_id}"
 
-    # Share button for this person
+    # Share button for this person — show for any named identity
     person_share_btn = share_button(
         url=f"/person/{identity_id}",
         style="icon",
         title=f"{name} — Jews of Rhodes Heritage Archive",
         text=f"Do you recognize {name}? Help us identify people in our heritage photo archive.",
-    ) if state == "CONFIRMED" and not name.startswith("Unidentified") else None
+    ) if not name.startswith("Unidentified") and not name.startswith("Identity ") else None
 
     # Multi-face gallery thumbnails for identities with 3+ faces
     multi_face_gallery = None
@@ -7548,6 +7382,44 @@ def identity_card(
         cls="flex flex-wrap gap-1.5 mt-3 px-1",
     )
 
+    # Triage buttons — visible labeled row for quick review (when show_triage=True)
+    triage_section = None
+    if show_triage and is_admin and state in ("INBOX", "PROPOSED", "SKIPPED"):
+        _triage_pill = "px-3 py-1.5 text-xs font-bold rounded-full transition-all duration-200 min-h-[32px]"
+        confirm_url = f"/inbox/{identity_id}/confirm" if state == "INBOX" else f"/confirm/{identity_id}"
+        reject_url = f"/inbox/{identity_id}/reject" if state == "INBOX" else f"/reject/{identity_id}"
+        triage_btns = [
+            Button(
+                "\u2713 Confirm",
+                cls=f"{_triage_pill} bg-emerald-600 text-white hover:bg-emerald-500",
+                hx_post=confirm_url,
+                hx_target=f"#identity-{identity_id}",
+                hx_swap="outerHTML",
+                type="button",
+            ),
+        ]
+        if state in ("INBOX", "PROPOSED"):
+            triage_btns.append(Button(
+                "\u23f8 Skip",
+                cls=f"{_triage_pill} bg-amber-600/80 text-white hover:bg-amber-500",
+                hx_post=f"/identity/{identity_id}/skip",
+                hx_target=f"#identity-{identity_id}",
+                hx_swap="outerHTML",
+                type="button",
+            ))
+        triage_btns.append(Button(
+            "\u2717 Reject",
+            cls=f"{_triage_pill} border border-red-500/60 text-red-400 hover:bg-red-500/20",
+            hx_post=reject_url,
+            hx_target=f"#identity-{identity_id}",
+            hx_swap="outerHTML",
+            type="button",
+        ))
+        triage_section = Div(
+            *triage_btns,
+            cls="flex flex-wrap gap-1.5 mt-2 px-1",
+        )
+
     # Admin tools — collapsible to keep cards clean
     admin_tools = None
     if is_admin:
@@ -7581,6 +7453,7 @@ def identity_card(
         hero_section,
         name_section,
         action_section,
+        triage_section,
         admin_tools,
         cls=f"identity-card bg-slate-800/60 border border-slate-700/50 rounded-2xl p-3"
             f" hover:border-slate-600 hover:bg-slate-800/80 transition-all duration-300"
@@ -9608,6 +9481,15 @@ def get(section: str = None, view: str = "focus", current: str = None,
         }
         .expansion-panel .panel-close:hover {
             opacity: 1;
+        }
+        /* Card highlight when Find Similar is active */
+        .identity-card {
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .identity-card.find-similar-active {
+            border: 2px solid rgba(212, 165, 116, 0.5);
+            transform: scale(1.02);
+            z-index: 1;
         }
         /* Visual modernization — hover states, transitions, feedback */
         .identity-card-archival,
@@ -21648,7 +21530,7 @@ def get(photo_id: str):
 # =============================================================================
 
 @rt("/api/identity/{identity_id}/neighbors")
-def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = False, focus_section: str = "", sess=None):
+def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = False, focus_section: str = "", container_id: str = "", sess=None):
     """
     Get nearest neighbor identities for potential merge.
 
@@ -21745,6 +21627,7 @@ def get(identity_id: str, limit: int = 5, offset: int = 0, from_focus: bool = Fa
         from_focus=from_focus,
         focus_section=focus_section,
         target_name=target_name,
+        container_id=container_id,
     )
 
 
