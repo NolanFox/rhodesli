@@ -7364,14 +7364,12 @@ def identity_card(
         type="button",
     ) if total_faces > 0 else None
 
-    # View Public Page link (for confirmed identities with real names)
-    view_public_link = None
-    if state == "CONFIRMED" and not name.startswith("Unidentified") and not name.startswith("Identity "):
-        view_public_link = A(
-            "Profile",
-            href=f"/person/{identity_id}",
-            cls=f"{_pill} text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/15",
-        )
+    # View Public Page link (Gap 3: always show Profile link)
+    view_public_link = A(
+        "Profile",
+        href=f"/person/{identity_id}",
+        cls=f"{_pill} text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/15",
+    )
 
     # GEDCOM Tree link button (B3)
     gedcom_tree_btn = None
@@ -12358,24 +12356,36 @@ def get(sess=None):
     unid_identities.sort(key=lambda x: x["quality"], reverse=True)
     unid_identities = unid_identities[:50]
 
-    # Build face cards
+    # Build face cards (Gap 3: consistent actions across all views)
     face_cards = []
     for item in unid_identities:
+        _iid = item['identity_id']
         face_cards.append(
-            A(
-                Div(
-                    Img(src=item["crop_url"], alt="Unidentified person",
-                        cls="w-full h-full object-cover", loading="lazy"),
-                    cls="aspect-square overflow-hidden",
+            Div(
+                A(
+                    Div(
+                        Img(src=item["crop_url"], alt="Unidentified person",
+                            cls="w-full h-full object-cover", loading="lazy"),
+                        cls="aspect-square overflow-hidden",
+                    ),
+                    Div(
+                        P("Do you recognize this person?",
+                          cls="text-xs text-amber-300/80 font-medium mb-1"),
+                        P(item["collection"], cls="text-[10px] text-slate-500 leading-snug") if item["collection"] else None,
+                        cls="p-2.5",
+                    ),
+                    href=f"/identify/{_iid}",
+                    cls="block",
                 ),
                 Div(
-                    P("Do you recognize this person?",
-                      cls="text-xs text-amber-300/80 font-medium mb-1"),
-                    P(item["collection"], cls="text-[10px] text-slate-500 leading-snug") if item["collection"] else None,
-                    cls="p-2.5",
+                    A("Similar", href=f"/people/{_iid}/similar",
+                      cls="text-[10px] text-indigo-400 hover:text-indigo-300"),
+                    Span("|", cls="text-[10px] text-slate-600"),
+                    A("Profile", href=f"/person/{_iid}",
+                      cls="text-[10px] text-slate-400 hover:text-slate-300"),
+                    cls="flex items-center justify-center gap-1.5 px-2.5 pb-2",
                 ),
-                href=f"/identify/{item['identity_id']}",
-                cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-amber-500/50 transition-colors group block",
+                cls="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-amber-500/50 transition-colors group",
                 data_testid="help-face-card",
             )
         )
