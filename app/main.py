@@ -460,26 +460,41 @@ def _startup_disk_cleanup(base_path: Path):
         except OSError:
             pass
 
-    # Prune old .bak files
-    _prune_bak_files(base_path, max_keep=3)
+    # Prune old .bak files (keep 1 per type to save space)
+    _prune_bak_files(base_path, max_keep=1)
 
-    # Prune old auto_backups (keep only 3 most recent)
-    backup_dir = base_path / "auto_backups"
-    if backup_dir.exists():
-        try:
-            backups = sorted(backup_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
-            for old in backups[3:]:
-                try:
-                    if old.is_dir():
-                        import shutil
-                        shutil.rmtree(old, ignore_errors=True)
-                    else:
-                        old.unlink(missing_ok=True)
+    # Prune data/backups/ — the BIGGEST space consumer on the volume.
+    # These are full snapshot backups. Keep only the 2 most recent.
+    for dir_name in ("backups", "auto_backups", "cleanup_backups"):
+        bk_dir = base_path / dir_name
+        if bk_dir.exists():
+            try:
+                items = sorted(bk_dir.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)
+                keep = 2 if dir_name == "backups" else 3
+                for old in items[keep:]:
+                    try:
+                        if old.is_dir():
+                            import shutil
+                            shutil.rmtree(old, ignore_errors=True)
+                        else:
+                            old.unlink(missing_ok=True)
+                        cleaned += 1
+                    except OSError:
+                        pass
+            except OSError:
+                pass
+
+    # Clean stale upload job directories (older than 24 hours)
+    uploads_dir = base_path / "uploads"
+    if uploads_dir.exists():
+        for item in list(uploads_dir.iterdir()):
+            try:
+                if item.is_dir() and (now - item.stat().st_mtime) > 86400:
+                    import shutil
+                    shutil.rmtree(item, ignore_errors=True)
                     cleaned += 1
-                except OSError:
-                    pass
-        except OSError:
-            pass
+            except OSError:
+                pass
 
     # Prune comparison_results.json lock files
     for item in list(base_path.iterdir()):
