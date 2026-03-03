@@ -7268,6 +7268,7 @@ def identity_card_compact(
         Div(
             Div(
                 Span(name, cls="text-sm text-white font-medium truncate block"),
+                Span("Not yet confirmed", cls="text-[10px] text-amber-400/60 block") if state != "CONFIRMED" else None,
                 quick_links,
                 cls="min-w-0 flex-1",
             ),
@@ -7283,7 +7284,7 @@ def identity_card_compact(
             overflow_menu,
             cls="flex items-center gap-1.5 px-2.5 pb-2.5",
         ),
-        cls="identity-card-archival rounded-lg overflow-hidden",
+        cls="identity-card identity-card-archival rounded-lg overflow-hidden",
         id=f"identity-{identity_id}",
         data_name=(raw_name or "").lower(),
     )
@@ -11970,6 +11971,15 @@ def public_person_page(
                         badge,
                         cls="text-center mb-3",
                     ),
+                    # Contextual explanation for unidentified persons (Gap 1, Session 83a-cont)
+                    Div(
+                        P("This person hasn't been identified yet — the AI detected a face but doesn't know who they are. Can you help?",
+                          cls="text-amber-300/80 text-sm"),
+                        A("Help identify this person", href=f"/identify/{person_id}",
+                          cls="inline-block mt-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium"),
+                        cls="text-center mb-4 bg-amber-500/5 border border-amber-500/20 rounded-lg px-4 py-3 max-w-lg mx-auto",
+                        data_testid="unidentified-explanation",
+                    ) if not is_confirmed else None,
                     # Stats line
                     P(stats_line, cls="text-slate-400 text-sm text-center mb-4") if stats_line else None,
                     # Life details (birth/death/place with prompts for unknowns)
@@ -12655,6 +12665,8 @@ def get(person_id: str, sess=None):
             Section(
                 Div(
                     H1("Can you identify this person?", cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2"),
+                    P("The AI found this face in a heritage photo but couldn't determine their name.",
+                      cls="text-amber-300/60 text-xs text-center mb-1", data_testid="identify-ai-note"),
                     P("This person appears in photos from the Rhodes Jewish Heritage Archive. If you recognize them, please let us know.",
                       cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto"),
                     face_section,
