@@ -119,6 +119,41 @@ get INBOX identities. Compare results are an overlay on an already-archived phot
 4. Context: Isaac Cohen's nearest archive match is ~1.22 distance (Low)
 5. Share link with Claude → she sees interactive comparison view
 
+## UX Research Summary (March 2026)
+
+### Key Competitive Patterns
+- **FamilySearch Compare-a-Face**: Upload one photo → compare against ancestors in tree → ranked percentages. Linear flow, no side-by-side overlay.
+- **MyHeritage Photo Tagger**: Split-view (face crop left, full photo right). Auto-grouping across photos. Context enrichment (place, date, other tagged people).
+- **Google Photos**: Automatic grouping, merge suggestions ("Same person?") with simple Same/Different/Not sure buttons. Never shows confidence percentages to users.
+- **Civil War Photo Sleuth** (MOST RELEVANT): Upload portrait → auto face detection → user tags visual clues → system filters candidates → face recognition on narrowed pool → pan-and-zoom comparison tool. Crowdsourced identification. Heritage archive context.
+- **CaraComp**: Drag-drop upload, 1-3s processing, similarity scores with visual overlays, batch gallery comparison with similarity matrices.
+
+### Key UX Best Practices
+1. **Upload always above the fold** — no competitor buries it below a gallery
+2. **Side-by-side hero comparison** — query face + top match face shown together at top of results
+3. **Dual visual encoding** — percentage + colored bar (not just a text badge)
+4. **Full photo context toggle** — face crop + full photo with face highlighted (MyHeritage pattern)
+5. **Composite OG image for sharing** — side-by-side face image in og:image makes social shares more compelling
+6. **Action-oriented CTAs** — "Share this match", "I know this person", "Try another photo"
+7. **Human-readable labels always** — never raw distance scores to non-admin users
+
+### Rhodesli's Unique Differentiator
+No competitor offers "search a curated historical archive." Generic tools compare two uploaded photos. Rhodesli searches against identified people with family context, GEDCOM data, and historical photos.
+
+### High-Priority UX Gaps to Fix
+1. Side-by-side hero comparison on result page (query face | score | top match)
+2. Full uploaded photo visible with face overlays (currently missing from result page)
+3. Visual confidence bar alongside percentage badge
+4. Composite OG image for compelling social sharing
+5. Context about how the match score compares to existing known matches
+
+### Sources
+- FamilySearch Compare-a-Face, MyHeritage Photo Tagger, Google Photos
+- Civil War Photo Sleuth (ACM IUI 2019 Best Paper)
+- AI UX Design Guide confidence visualization patterns
+- Existing Rhodesli research: docs/research/compare_faces_competitive.md
+- Existing PRDs: 007, 016, 021
+
 ## Predecessor
 - Session 84: Unified face cards + Find Similar panel (DD-006)
 - Session 83a: Compare result storage fix (AD-198), Display Name (AD-196)

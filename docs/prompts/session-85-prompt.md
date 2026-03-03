@@ -4,7 +4,8 @@
 - **Session**: 85
 - **Predecessor**: Session 84 (unified face cards + Find Similar panel)
 - **Goal**: Make Compare functional end-to-end. Three comparison modes must work: (1) any two faces in the archive, (2) upload a photo and compare its faces against any archive face, (3) upload two photos and compare faces across them. All uploads persist to the archive. All comparisons are shareable. Search-aided person selection throughout. Validate with the Isaac Cohen test case in production browser.
-- **Context file**: `docs/session_context/session-85-context.md` (READ THIS FIRST)
+- **PRD**: `docs/prds/025_compare_functional_rebuild.md` (READ — source of truth for specs)
+- **Context file**: `docs/session_context/session-85-context.md` (READ — research + design)
 - **Assessment file**: `docs/assessments/session-85-assessment.md` (MANDATORY)
 - **Session log**: `docs/sessions/SESSION_085.md`
 - **Test use case**: Upload `~/Downloads/claude_rhodesli_feedback/isaac_cohen_potential_4c9141db-13ec-4e7c-b9f9-ec65d6f63338.jpeg`, compare its faces against Isaac Cohen, share an interactive link showing those comparisons.
@@ -229,10 +230,13 @@ the uploaded photo, without face context, and without interactivity.
    - Confidence tier label with color
 4. If multi-face photo: allow selecting different faces to see their matches
 5. For admin: show raw distance scores
-6. Match context: how this score ranks vs. the person's existing top matches
-7. Share button (already exists) + "Do you recognize anyone?" form (already exists)
-8. Link to the archived photo page (`/photo/{photo_id}`)
-9. Mobile responsive (already partially exists, verify at 375px)
+6. **Confidence visualization** (UX research): Use dual encoding — colored bar (width
+   proportional to confidence_pct) + percentage text + tier label. Not just a text badge.
+   See PRD-025 result page layout wireframe for exact design.
+7. Match context: how this score ranks vs. the person's existing top matches
+8. Share button (already exists) + "Do you recognize anyone?" form (already exists)
+9. Link to the archived photo page (`/photo/{photo_id}`)
+10. Mobile responsive (already partially exists, verify at 375px)
 
 **Files likely touched**: `app/main.py` (compare result route at line 17846)
 
@@ -366,7 +370,8 @@ A partial fix that's validated > a complete fix that's untested.
 | File | Purpose |
 |------|---------|
 | `docs/prompts/session-85-prompt.md` | This file — re-read after every `/clear` |
-| `docs/session_context/session-85-context.md` | Research, screenshots, design direction |
+| `docs/prds/025_compare_functional_rebuild.md` | PRD — source of truth for specs |
+| `docs/session_context/session-85-context.md` | Research, screenshots, UX analysis |
 | `docs/sessions/SESSION_085.md` | Session progress log |
 | `docs/assessments/session-85-assessment.md` | Self-evaluation (MANDATORY) |
 | `docs/feedback/2026-03-02-claude-benatar.md` | Original user feedback |
