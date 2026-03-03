@@ -16326,7 +16326,6 @@ def get(face_id: str = "", sess=None):
             hx_swap="innerHTML show:#compare-results:top",
             hx_indicator="#upload-spinner",
             data_testid="upload-form",
-            onsubmit="if(typeof startProgressUpload==='function'){return startProgressUpload(this,'compare')}",
         ),
         Div(
             Div(
