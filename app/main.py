@@ -3894,9 +3894,15 @@ def identity_card_expanded(identity: dict, crop_files: set, is_admin: bool = Tru
             # Right: Details + Actions
             Div(
                 H3(name, cls="text-xl font-semibold text-white font-display"),
-                P(
-                    f"{face_count} face{'s' if face_count != 1 else ''}",
-                    cls="text-sm text-slate-400 mt-1"
+                Div(
+                    P(
+                        f"{face_count} face{'s' if face_count != 1 else ''}",
+                        cls="text-sm text-slate-400",
+                    ),
+                    A("View Public Page", href=f"/person/{identity_id}",
+                      cls="text-xs text-indigo-400 hover:text-indigo-300 ml-3",
+                      data_testid="view-public-page"),
+                    cls="flex items-center mt-1",
                 ),
                 # Proposal banner — shows ML match suggestion if one exists
                 _proposal_banner(identity_id),
@@ -12052,17 +12058,15 @@ def public_person_page(
                         share_btn,
                         cls="flex justify-center gap-3 mb-4",
                     ),
-                    # UX-039: Admin controls on person page
+                    # UX-039: Admin controls on person page (Gap 2: consolidated links)
                     Div(
-                        A("Edit Name",
+                        A("Edit in Admin",
                           href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
-                          cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
+                          cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors",
+                          data_testid="edit-in-admin-link"),
                         A("Find Similar",
                           href=f"/people/{person_id}/similar",
                           cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
-                        A("View in Admin",
-                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
-                          cls="px-3 py-1.5 text-xs rounded-full bg-slate-700/50 text-slate-400 hover:text-white border border-slate-600/50 hover:border-slate-500 transition-colors"),
                         cls="flex flex-wrap justify-center gap-2 mb-4",
                         data_testid="admin-controls",
                     ) if is_admin else None,
@@ -12670,6 +12674,14 @@ def get(person_id: str, sess=None):
                     P("This person appears in photos from the Rhodes Jewish Heritage Archive. If you recognize them, please let us know.",
                       cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto"),
                     face_section,
+                    # Gap 2: Admin quick-nav on identify page
+                    Div(
+                        A("View in Admin",
+                          href=f"/?section=to_review&current={person_id}&view=focus",
+                          cls="text-xs text-indigo-400 hover:text-indigo-300 underline",
+                          data_testid="identify-admin-link"),
+                        cls="text-center mb-6",
+                    ) if is_admin else None,
                     photos_section,
                     matches_section,
                     form_section,

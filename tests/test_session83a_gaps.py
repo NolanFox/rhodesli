@@ -165,9 +165,13 @@ class TestGap2BidirectionalLinks:
 
     def test_identify_page_admin_sees_admin_link(self, client):
         """Admin user sees admin link on identify page."""
+        from app.auth import User
+        admin_user = User(id="test", email="admin@test.com", is_admin=True)
         with ExitStack() as stack:
             for p in _base_patches():
                 stack.enter_context(p)
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.main.get_current_user", return_value=admin_user))
             resp = client.get("/identify/unknown-1")
         assert resp.status_code == 200
         assert "View in Admin" in resp.text
