@@ -12079,6 +12079,9 @@ def public_person_page(
                           cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
                         A("Connections", href=f"/connect?person_a={person_id}",
                           cls="px-3 py-1.5 text-xs rounded-full bg-slate-800/60 text-slate-300 hover:text-white border border-slate-700/50 hover:border-indigo-500/50 transition-colors"),
+                        A("Compare with a photo", href="/compare",
+                          cls="px-3 py-1.5 text-xs rounded-full bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/30 hover:border-amber-500/50 transition-colors",
+                          data_testid="compare-cta"),
                         cls="flex flex-wrap justify-center gap-2 mb-8",
                         data_testid="person-action-bar",
                     ),
@@ -12650,8 +12653,18 @@ def get(person_id: str, sess=None):
           href="/timeline",
           cls="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-medium rounded-lg transition-colors border border-slate-700 min-h-[44px] flex items-center"),
     ])
+    # Gap 4: Compare CTA on identify page
+    compare_suggestion = Div(
+        P("Have a photo that might be this person?", cls="text-sm text-slate-400 mb-2"),
+        A("Compare faces with our photo tool",
+          href="/compare",
+          cls="text-amber-300 hover:text-amber-200 text-sm font-medium",
+          data_testid="identify-compare-cta"),
+        cls="text-center mt-6 mb-2 bg-amber-500/5 border border-amber-500/20 rounded-lg px-4 py-3",
+    )
     explore_section = Div(
-        H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4"),
+        compare_suggestion,
+        H3("Explore the Archive", cls="text-lg font-serif font-semibold text-white text-center mb-4 mt-6"),
         P("Hundreds of photos from the Rhodes Jewish community await identification.",
           cls="text-sm text-slate-400 text-center mb-5"),
         Div(*explore_links, cls="flex flex-wrap justify-center gap-3"),
