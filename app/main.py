@@ -12445,13 +12445,17 @@ def get(sess=None):
 
 
 @rt("/identify/{person_id}")
-def get(person_id: str, sess=None):
+def get(person_id: str, submitted: str = "", name: str = "", sess=None):
     """
     Shareable 'Can you identify this person?' page.
 
     No authentication required. Shows the face, source photos, best matches,
     and a simple response form. This is the URL you share in Facebook groups
     and family chats to crowdsource identification.
+
+    Query params for submission persistence (Gap 5):
+    - submitted: "true" if user just submitted an identification
+    - name: the name they submitted
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
 
@@ -12597,6 +12601,28 @@ def get(person_id: str, sess=None):
         id="identify-response-area",
         cls="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50 max-w-md mx-auto",
     )
+
+    # Gap 5: Submission persistence — show success banner if submitted=true query param
+    from urllib.parse import unquote_plus
+    submitted_name = unquote_plus(name) if name else ""
+    if submitted == "true":
+        submission_banner = Div(
+            Div(
+                P("Thank you!", cls="text-lg font-semibold text-emerald-400 mb-1"),
+                P(f"Your identification of this person as \"{submitted_name}\" has been submitted for review."
+                  if submitted_name else
+                  "Your identification has been submitted for review.",
+                  cls="text-slate-300 text-sm"),
+                P("An admin will review your suggestion shortly.",
+                  cls="text-slate-500 text-xs mt-2"),
+                cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
+            ),
+            id="submission-success-banner",
+            cls="max-w-md mx-auto mb-6",
+            data_testid="submission-success-banner",
+        )
+        # Replace the form with the success banner
+        form_section = Div(submission_banner, form_section)
 
     # Share button
     share_url = f"{SITE_URL}/identify/{person_id}"
@@ -12812,6 +12838,9 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
     except Exception:
         pass  # Legacy file is a backup — annotation is the source of truth
 
+    # Gap 5: Update URL so refresh preserves submission state
+    from urllib.parse import quote_plus
+    _encoded_name = quote_plus(name.strip())
     return Div(
         Div(
             P("Thank you!", cls="text-lg font-semibold text-emerald-400 mb-1"),
@@ -12821,6 +12850,7 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
               cls="text-slate-500 text-xs mt-2"),
             cls="bg-emerald-900/20 border border-emerald-800/50 rounded-xl p-6 text-center",
         ),
+        Script(f"history.replaceState(null, '', '/identify/{person_id}?submitted=true&name={_encoded_name}');"),
     )
 
 
