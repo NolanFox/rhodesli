@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.87.0] — 2026-03-03 (Session 85: Fix Compare — Unified Upload Pipeline)
+
+### Changed
+- **Compare upload uses unified pipeline**: Uploads via Compare now go through the same staging → `process_directory` → photo_index → identities → embeddings → R2 pipeline as the Upload page. No more separate `uploads/compare/` silo.
+- **Compare result page enhanced**: Confidence bars with dual encoding (colored bar + percentage + tier label), person page links for all faces, photo page links, tier-colored labels (green/amber/blue/gray)
+- **Removed SSE interceptor**: Compare form now uses HTMX `hx-post` directly instead of JS-intercepted SSE streaming
+
+### Added
+- **Compare vs. specific person**: `POST /api/compare/vs-person` — search for a person and see per-face match scores against them, with calibrated confidence and context showing their existing top archive matches
+- **Person search in compare**: `GET /api/compare/search-person` — autocomplete person search for targeted comparison
+- **Compare status polling**: `GET /api/compare/status/{job_id}` — HTMX polling endpoint for background ingest progress
+- **Non-admin upload queuing**: Compare uploads by non-admin users queued to `pending_uploads.json` for review (same as Upload page)
+- 9 new compare tests (22 total, was 13)
+
+### Fixed
+- **Compare uploads not persisting to archive**: Photos uploaded via Compare now appear in the Photos section with INBOX identities created for each detected face
+- **Defensive KeyError handling**: Compare result page handles deleted reference persons gracefully
+
 ## [v0.86.1] — 2026-03-02 (Session 84: Unified Face Cards + Restore Find Similar)
 
 ### Changed

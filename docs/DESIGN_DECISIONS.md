@@ -248,6 +248,26 @@ show the most important content first, reveal complexity on request.
 
 ---
 
+## DD-007: Compare = Find Similar Variant (Unified Upload Pipeline)
+
+- **Date**: 2026-03-03
+- **Session**: 85
+- **Status**: Shipped
+
+**What:** Compare is "Find Similar where you manually searched the person." All uploads via Compare go through the same staging → process_directory pipeline as the Upload page. No separate `uploads/compare/` silo. Photos persist to archive with photo_index entries, INBOX identities, embeddings, and R2 crops.
+
+**Why:** Compare uploads were invisible to the rest of the platform — photos never appeared in Photos, faces never got identities, embeddings were never stored. Users expected uploaded photos to persist (Claude Benatar use case). Unifying the pipeline means every photo enriches the archive regardless of entry point.
+
+**Key additions:**
+- `POST /api/compare/vs-person` — per-face distance against selected person's anchors
+- `GET /api/compare/search-person` — autocomplete person search for targeted comparison
+- `GET /api/compare/status/{job_id}` — HTMX polling for background ingest progress
+- Enhanced result page with confidence bars (dual encoding), person/photo links
+
+**Origin:** Claude Benatar feedback (2026-03-02): "see if you can find a match with this picture" against Isaac Cohen. Nolan direction: "Compare = Find Similar variant, same merge/reject."
+
+---
+
 ## DD-006: Unified Face Cards + Full Find Similar Panel
 
 - **Date**: 2026-03-02
