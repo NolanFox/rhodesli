@@ -87,16 +87,37 @@ Compare is a LENS on uploaded photos, not a separate storage system. No more
 `uploads/compare/` silo — photos go straight to `raw_photos/`, get indexed, get crops,
 get INBOX identities. Compare results are an overlay on an already-archived photo.
 
-### Two Primary Flows
-1. **"Who is in this photo?"** — Upload photo, compare ALL faces against archive (current flow, needs polish)
-2. **"Is [Person X] in this photo?"** — Upload photo, select a known person, see per-face scores ranked against that person (NEW)
+### Three Comparison Modes
 
-Flow 2 is what Claude Benatar actually wanted. It should:
-- Show the uploaded photo with face bounding boxes
-- Show the selected person's crop for reference
-- Show per-face match scores against that specific person
-- Show how those scores compare to the person's existing top matches (Find Similar context)
-- Link to the photo's archive page (since it's now in the archive via unified pipeline)
+**Mode A: Archive vs. Archive**
+- Compare any two faces already in the platform
+- Search by name to find each person
+- Example: "Compare Isaac Cohen to Unidentified Person 090"
+
+**Mode B: Upload vs. Archive (PRIMARY for Session 85)**
+- Upload a photo → persists to archive → identities created for each face
+- Compare one or more faces from that photo against any archive face (found by search)
+- Example: "Upload this family photo. Compare each face against Isaac Cohen."
+- The shareable link shows: person crop, all uploaded face crops, per-face scores
+
+**Mode C: Upload vs. Upload**
+- Upload two photos → both persist → identities created for all faces
+- Compare any face from Photo A against any face from Photo B
+- Example: "Upload two wedding photos. Are any of the same people in both?"
+- `/compare/pair` already partially implements this
+
+### Shared Principles
+- Every upload persists via the standard pipeline
+- Search-aided person/face selection throughout
+- Every comparison produces a shareable interactive URL
+- Match scores shown with calibrated confidence tiers + context (vs. existing top matches)
+
+### Claude Benatar Use Case (Flow B)
+1. Upload family photo (5 people) → 5 faces detected → 5 INBOX identities created
+2. Search "Isaac Cohen" → select him
+3. See per-face match scores against Isaac Cohen
+4. Context: Isaac Cohen's nearest archive match is ~1.22 distance (Low)
+5. Share link with Claude → she sees interactive comparison view
 
 ## Predecessor
 - Session 84: Unified face cards + Find Similar panel (DD-006)

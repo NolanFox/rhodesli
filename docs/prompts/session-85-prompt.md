@@ -3,11 +3,46 @@
 ## SESSION IDENTITY
 - **Session**: 85
 - **Predecessor**: Session 84 (unified face cards + Find Similar panel)
-- **Goal**: Make Compare functional end-to-end. A community member should be able to upload a family photo, compare faces against a specific known person (Isaac Cohen), see meaningful match scores with context, and have the photo saved to the archive. Validate with real photo in production browser.
+- **Goal**: Make Compare functional end-to-end. Three comparison modes must work: (1) any two faces in the archive, (2) upload a photo and compare its faces against any archive face, (3) upload two photos and compare faces across them. All uploads persist to the archive. All comparisons are shareable. Search-aided person selection throughout. Validate with the Isaac Cohen test case in production browser.
 - **Context file**: `docs/session_context/session-85-context.md` (READ THIS FIRST)
 - **Assessment file**: `docs/assessments/session-85-assessment.md` (MANDATORY)
 - **Session log**: `docs/sessions/SESSION_085.md`
-- **Test use case**: Upload `~/Downloads/claude_rhodesli_feedback/isaac_cohen_potential_4c9141db-13ec-4e7c-b9f9-ec65d6f63338.jpeg`, compare against Isaac Cohen
+- **Test use case**: Upload `~/Downloads/claude_rhodesli_feedback/isaac_cohen_potential_4c9141db-13ec-4e7c-b9f9-ec65d6f63338.jpeg`, compare its faces against Isaac Cohen, share an interactive link showing those comparisons.
+
+---
+
+## PRODUCT VISION — Compare
+
+Compare lets you answer: "Are these the same person?" Three modes:
+
+### Mode A: Archive vs. Archive
+Compare any two faces already in the platform. Search by name to find each person.
+Example: "Compare Isaac Cohen to Unidentified Person 090"
+
+### Mode B: Upload vs. Archive
+Upload a photo (which persists to the archive, creating identities for each face).
+Compare one or more faces from that photo against any archive face (found by search).
+Example: "Upload this family photo. Compare each face against Isaac Cohen."
+
+### Mode C: Upload vs. Upload
+Upload two photos (both persist, identities created for all faces).
+Compare any face from Photo A against any face from Photo B.
+Example: "Upload these two wedding photos. Are any of the same people in both?"
+
+### Shared Principles (ALL Modes)
+- **Every upload persists**: Same pipeline as the Upload page — photos go to `raw_photos/`, faces get crops, INBOX identities created. Compare is a LENS, not a separate storage system.
+- **Search-aided selection**: Person/face picker uses name search throughout.
+- **Shareable results**: Every comparison produces a shareable URL showing an interactive view with the compared faces, scores, and context.
+- **Match context**: Scores shown with calibrated confidence tiers AND context about how the score ranks against the person's existing top matches from Find Similar.
+
+### Isaac Cohen Test Case (End-to-End Validation)
+1. Go to `/compare`
+2. Upload `isaac_cohen_potential_...jpeg` (5-person family photo)
+3. Photo persists → 5 faces detected → 5 INBOX identities created
+4. Search "Isaac Cohen" → select him
+5. See per-face match scores: each of the 5 faces compared against Isaac Cohen
+6. See context: Isaac Cohen's nearest existing archive match is distance ~1.22
+7. Share a link with Claude Benatar → she sees the interactive comparison view
 
 ---
 
@@ -28,7 +63,7 @@
 
 ### Browser Verification
 - **Primary**: Claude Chrome browser plugin (admin is logged in)
-- **Fallback**: Playwright with `mcp__playwright__browser_navigate` (if Chrome extension unavailable due to claude.ai outage)
+- **Fallback**: Playwright with `mcp__playwright__browser_navigate` (if Chrome extension unavailable)
 - Take screenshots for ALL visual changes to `docs/screenshots/session-85/`
 - "Auth required" is NOT a valid reason to skip — admin is logged in on both
 - Wait for Railway deploy to complete before verification (Lesson 94)
@@ -58,122 +93,46 @@
 
 ---
 
-## Phase 1: Diagnose — What's Actually Broken (15 min)
+## Phase 1: Diagnose + Architecture Plan (20 min)
 
-Before fixing anything, build a complete picture of what's broken vs. what's working.
+Before fixing anything, build a complete picture of what's broken and plan the architecture.
 
 **Spec:**
 - Test the upload flow end-to-end in browser (Claude Chrome or Playwright fallback)
-- Navigate to `/compare`, upload the test image
-- Document what happens at each step (screenshot each)
+- Navigate to `/compare`, upload the test image, document what happens (screenshot each step)
 - Navigate to `/compare/result/28f18514d9d3` — document what it shows
-- Navigate to Isaac Cohen's person page, click "Similar" — document what it shows
-- Check Railway deploy logs for any compare-related errors
-- Check `comparison_results.json` on production — does it have results?
-- Review the compare upload handler code (`app/main.py:17009`) — trace the full flow
+- Navigate to Isaac Cohen's person page, click "Similar" — document Find Similar scores
+- Review the Upload page pipeline (`/upload`, `/api/upload/`) — trace the FULL flow:
+  file receipt → R2 storage → photo_index entry → face detection → crop generation → identity creation
+- Review the Compare upload pipeline (`/api/compare/upload`) — identify where it diverges from Upload
+- Plan the unified architecture: how to wire Compare uploads through the same pipeline
 
 **Record findings in session log under "Phase 1: Diagnosis"**
 
 **Key questions to answer:**
-1. Does face detection actually run on the uploaded photo? (or does production lack InsightFace?)
-2. Are results saved to `comparison_results.json`?
-3. Does the result page render the uploaded photo?
-4. Can the user select a specific person to compare against?
-5. Does the uploaded photo get added to the main photo archive?
+1. Does face detection run on uploaded photos in production? (InsightFace availability?)
+2. What's the exact Upload page pipeline? Which functions handle each step?
+3. Where does Compare's upload pipeline diverge from Upload's?
+4. What data does a comparison result need to store to be shareable?
+5. What API endpoints already exist for person search / face selection?
 
-**Commit**: `docs: session 85 phase 1 — compare diagnosis`
-
----
-
-## Phase 2: Fix Compare Result Page UX (30 min)
-
-The result page (`/compare/result/{result_id}`) is missing critical context.
-
-**Problem**: Result page shows a flat list of "Unlikely match" entries without:
-- The uploaded photo itself
-- Which face in the photo was compared
-- Face bounding box overlays on the uploaded photo
-- Distance/score context (how does this score compare to known matches?)
-- The ability to select a different face from a multi-face upload
-
-**Spec:**
-1. Show the uploaded photo at the top of the result page with face bounding box overlay
-2. If multi-face photo: show face selector thumbnails (which face was compared)
-3. Show the compared face crop prominently next to the uploaded photo
-4. For each match card, show:
-   - Match face crop (already exists)
-   - Identity name with link to person page (already exists)
-   - Confidence percentage with tier label (already exists)
-   - **NEW**: Raw distance score (for admin users only)
-   - **NEW**: Context line: "This person's top archive match is X at Y distance" (helps user understand if this is a good or bad score)
-5. Sort matches by confidence (highest first) — verify this is happening
-6. Limit to top 10 matches (already exists) but make the threshold meaningful
-7. Add "Compare against a specific person" link that opens the person search
-
-**Files likely touched**: `app/main.py` (compare result route at line 17846)
-
-**Acceptance criteria:**
-- [ ] Uploaded photo visible on result page
-- [ ] Face bounding box overlay on uploaded photo
-- [ ] Multi-face selector works if photo has >1 face
-- [ ] Admin users see raw distance scores
-- [ ] Context line shows how score compares to existing matches
-- [ ] Tests updated for new result page elements
-
-**Commit**: `feat(compare): show uploaded photo + face context on result page`
+**Commit**: `docs: session 85 phase 1 — compare diagnosis + architecture plan`
 
 ---
 
-## Phase 3: Add "Compare Against Specific Person" Flow (45 min)
+## Phase 2: Unify Compare Upload with Main Upload Pipeline (45 min)
 
-This is the flow Claude Benatar actually wanted: "Compare this uploaded photo against Isaac Cohen."
+**This is the foundation phase — everything else depends on it.**
 
-**Problem**: Currently, uploading a photo compares against ALL archive faces. There's no way to say "I think this might be Isaac Cohen — show me how each face in this photo matches him."
+Every photo uploaded via Compare MUST go through the SAME pipeline as the Upload page.
+No separate `uploads/compare/` silo.
 
-**Spec:**
-1. On the `/compare` page, AFTER uploading a photo and seeing results, add a section:
-   "Compare against a specific person" with a search box (reuse existing identity search)
-2. When user selects a person (e.g., Isaac Cohen):
-   - Show the selected person's best crop prominently
-   - For EACH face detected in the uploaded photo, show:
-     - Face crop thumbnail
-     - Match score against the selected person
-     - Confidence tier label
-     - Visual indicator (green/amber/red) based on match strength
-   - Show context: "Isaac Cohen's closest archive matches are at distance X-Y"
-   - This helps the user understand: is 1.15 a good score or bad score for Isaac Cohen?
-3. Add a new API endpoint: `POST /api/compare/upload/vs-person`
-   - Params: `upload_id` (from previous upload), `identity_id` (selected person)
-   - Returns: per-face match scores against that person + Find Similar context
-4. Wire the person selector to this endpoint via HTMX
-5. The "Or search by person in the archive" section on `/compare` already exists —
-   wire it to work WITH an uploaded photo (not just as standalone archive search)
-
-**Files likely touched**: `app/main.py` (compare routes)
-
-**Acceptance criteria:**
-- [ ] After uploading, user can search for a specific person
-- [ ] Per-face match scores shown against selected person
-- [ ] Context shows the person's existing top matches for comparison
-- [ ] Works with the Isaac Cohen test case
-- [ ] Tests cover the new vs-person endpoint
-
-**Commit**: `feat(compare): add compare-against-specific-person flow`
-
----
-
-## Phase 4: Unify Compare Upload with Main Upload Pipeline (45 min)
-
-Every photo uploaded via Compare should go through the SAME pipeline as photos uploaded
-via the Upload page. No separate `uploads/compare/` silo.
-
-**Problem**: Compare uploads currently live in a separate `uploads/compare/` directory
-with their own save logic (`_save_compare_upload`). They never appear in the Photos
-section. This is wrong — every uploaded photo should use the same mechanism as the
-Upload page, appearing in the archive with detected faces, crops, and identities.
+**Problem**: Compare uploads use `_save_compare_upload()` which saves to a separate
+`uploads/compare/` directory. Photos never appear in the Photos section. Face identities
+are never created. This means compare uploads are invisible to the rest of the platform.
 
 **Design principle**: Compare is a LENS on uploaded photos, not a separate storage system.
-The upload pipeline is the upload pipeline, regardless of entry point.
+Upload is upload, regardless of which page you came from.
 
 **Spec:**
 1. Compare uploads MUST use the same storage path as Upload page uploads:
@@ -185,19 +144,15 @@ The upload pipeline is the upload pipeline, regardless of entry point.
 2. For admin users: this happens AUTOMATICALLY on upload (same as Upload page)
 3. For non-admin users: photo queued to `pending_uploads.json` for admin review
    (same as Upload page behavior — Lesson 22: admin-only until moderation exists)
-4. After upload completes, the compare results overlay on top of the now-archived photo
-5. Remove the separate `_save_compare_upload()` function — replace with the standard
-   upload pipeline functions
-6. The compare result page should link to the photo's archive page (`/photo/{photo_id}`)
-7. Compare becomes: Upload photo (standard pipeline) → Run face comparison → Show results
+4. After upload + face detection, the compare results layer on top of the archived photo
+5. Remove or refactor `_save_compare_upload()` to use the standard upload pipeline
+6. The compare result page links to the photo's archive page (`/photo/{photo_id}`)
 
 **Research first**: Study how the Upload page (`/upload`, `/api/upload/`) handles photos.
-Trace the full pipeline: file receipt → R2 storage → photo_index entry → face detection →
-crop generation → identity creation. Then wire Compare to use the SAME functions.
+Identify the reusable functions. Wire Compare to call them.
 
-**IMPORTANT**: This phase requires careful data handling. Mock all data writes in tests.
-Follow Lesson 51: Tests that POST to data-modifying routes MUST mock BOTH load AND save.
-Follow Lesson 19: Default to admin-only for new data-modifying features.
+**IMPORTANT**: Follow Lesson 51 (mock BOTH load AND save in tests).
+Follow Lesson 19 (admin-only for data-modifying features).
 
 **Files likely touched**: `app/main.py` (compare upload handler, upload pipeline functions)
 
@@ -207,11 +162,90 @@ Follow Lesson 19: Default to admin-only for new data-modifying features.
 - [ ] Face crops generated and stored in standard location
 - [ ] INBOX identities created for each detected face
 - [ ] Compare result page links to the archived photo page
-- [ ] `_save_compare_upload()` removed or refactored to use standard pipeline
-- [ ] Tests mock all data writes properly
+- [ ] Existing compare tests updated to reflect unified pipeline
 - [ ] Non-admin uploads queued for review (same as Upload page)
 
 **Commit**: `feat(compare): unify upload pipeline with main Upload page`
+
+---
+
+## Phase 3: Compare Against Specific Person (Search + Per-Face Scores) (45 min)
+
+This is the core UX Claude Benatar needed: "Compare this photo against Isaac Cohen."
+
+**Problem**: Currently, uploading a photo runs a blind comparison against ALL archive faces.
+There's no way to say "I think this might be Isaac Cohen" and see per-face match scores
+against that specific person.
+
+**Spec — The "Upload vs. Archive" Flow:**
+1. After uploading a photo and seeing initial results, show a search box:
+   "Compare against a specific person" (reuse existing identity search component)
+2. When user selects a person (e.g., Isaac Cohen):
+   - Show the selected person's best crop prominently as reference
+   - For EACH face detected in the uploaded photo, show:
+     - Face crop thumbnail (from the uploaded photo)
+     - Match score against the selected person (distance + calibrated confidence)
+     - Confidence tier label with color (green/amber/red)
+   - **Context section**: "Isaac Cohen's closest existing matches in the archive are
+     at distance X-Y (Low/Moderate confidence). Your best uploaded face scores Z."
+     This tells the user whether their match is better or worse than existing matches.
+3. New API endpoint: `POST /api/compare/vs-person`
+   - Params: `photo_id` (from the now-archived upload), `identity_id` (selected person)
+   - Returns: per-face match scores + selected person's existing Find Similar context
+4. Wire the person selector to this endpoint via HTMX partial swap
+5. **Shareable**: This comparison is saved with a result_id and shareable URL.
+   The shared link shows the interactive view: the person, all faces from the photo,
+   all scores. The recipient can see the comparison without uploading anything.
+
+**Files likely touched**: `app/main.py` (new API endpoint, compare page UI)
+
+**Acceptance criteria:**
+- [ ] After uploading, user can search for a specific person
+- [ ] Per-face match scores shown against selected person
+- [ ] Context shows the person's existing top archive matches for comparison
+- [ ] Result is shareable via URL
+- [ ] Works with the Isaac Cohen test case (5 faces scored against Isaac Cohen)
+- [ ] Tests cover the vs-person endpoint and shareable result
+
+**Commit**: `feat(compare): compare-against-specific-person with search + shareable results`
+
+---
+
+## Phase 4: Fix Compare Result Page — Interactive Shareable View (30 min)
+
+The result page (`/compare/result/{result_id}`) needs to become the interactive
+shareable view that Claude Benatar (or any community member) receives.
+
+**Problem**: Current result page is a flat list of "Unlikely match" entries without
+the uploaded photo, without face context, and without interactivity.
+
+**Spec:**
+1. Show the uploaded photo at the top with face bounding box overlays
+2. If comparing against a specific person: show that person's crop as the reference
+3. For each detected face in the uploaded photo:
+   - Face crop thumbnail (clickable to select)
+   - Match score against the reference person (if vs-person mode)
+   - OR top archive match (if general mode)
+   - Confidence tier label with color
+4. If multi-face photo: allow selecting different faces to see their matches
+5. For admin: show raw distance scores
+6. Match context: how this score ranks vs. the person's existing top matches
+7. Share button (already exists) + "Do you recognize anyone?" form (already exists)
+8. Link to the archived photo page (`/photo/{photo_id}`)
+9. Mobile responsive (already partially exists, verify at 375px)
+
+**Files likely touched**: `app/main.py` (compare result route at line 17846)
+
+**Acceptance criteria:**
+- [ ] Uploaded photo visible on result page with face overlays
+- [ ] Reference person shown when in vs-person mode
+- [ ] Per-face match scores visible and clear
+- [ ] Multi-face selector works
+- [ ] Admin sees raw distance scores
+- [ ] Mobile responsive at 375px
+- [ ] Shared link renders complete interactive view for recipients
+
+**Commit**: `feat(compare): interactive shareable result page`
 
 ---
 
@@ -221,15 +255,16 @@ Follow Lesson 19: Default to admin-only for new data-modifying features.
 1. Run full test suite: `make test-fast` (both app + ML)
 2. Verify existing compare tests still pass: `pytest tests/test_compare.py -v`
 3. Add/update tests for:
-   - [ ] Result page shows uploaded photo element
-   - [ ] Result page shows face bounding box data
+   - [ ] Upload via compare creates photo_index entry (mocked)
+   - [ ] Upload via compare creates INBOX identities (mocked)
    - [ ] vs-person endpoint returns per-face scores
    - [ ] vs-person endpoint includes Find Similar context
-   - [ ] Save-to-archive creates photo_index entry (mocked)
-   - [ ] Save-to-archive creates INBOX identities (mocked)
-   - [ ] Non-admin cannot trigger save-to-archive (403)
+   - [ ] Result page shows uploaded photo element
+   - [ ] Result page shows face bounding box data
+   - [ ] Non-admin upload queued for review (403 on direct save)
    - [ ] Multi-face upload shows face selector on result page
-4. Verify no regressions in other compare flows (pair compare, multi-upload)
+   - [ ] Shareable result URL loads with full comparison data
+4. Verify no regressions in pair compare or multi-upload flows
 
 **Commit**: `test(compare): session 85 — comprehensive compare tests`
 
@@ -246,17 +281,16 @@ Follow Lesson 19: Default to admin-only for new data-modifying features.
    **Test the Isaac Cohen use case end-to-end:**
    - [ ] Navigate to `/compare`
    - [ ] Upload `~/Downloads/claude_rhodesli_feedback/isaac_cohen_potential_4c9141db-13ec-4e7c-b9f9-ec65d6f63338.jpeg`
-   - [ ] Verify face detection completes (5 faces expected)
-   - [ ] Verify uploaded photo visible on result page (screenshot)
-   - [ ] Verify face bounding boxes visible on uploaded photo
-   - [ ] Search for "Isaac Cohen" in the person selector
+   - [ ] Verify face detection completes (5 faces expected) (screenshot)
+   - [ ] Verify photo was saved to archive (navigate to Photos, find it) (screenshot)
+   - [ ] Verify 5 INBOX identities created
+   - [ ] Search for "Isaac Cohen" in the compare person selector
    - [ ] Verify per-face match scores against Isaac Cohen (screenshot)
    - [ ] Verify context shows Isaac Cohen's existing match distances
-   - [ ] Verify photo was automatically saved to archive (unified pipeline)
-   - [ ] Navigate to Photos section — verify the uploaded photo appears (screenshot)
-   - [ ] Click the photo — verify face crops and INBOX identities were created
-   - [ ] Navigate to `/compare/result/{id}` — verify shareable link works
-   - [ ] Check the result page on mobile viewport (375px) — responsive? (screenshot)
+   - [ ] Copy the shareable link
+   - [ ] Open the shareable link in a new tab (or incognito)
+   - [ ] Verify the shared view shows the full interactive comparison (screenshot)
+   - [ ] Check mobile viewport (375px) (screenshot)
 
 6. Take all screenshots to `docs/screenshots/session-85/`
 
@@ -266,23 +300,12 @@ Follow Lesson 19: Default to admin-only for new data-modifying features.
 
 ## Phase 7: Session Docs (15 min)
 
-1. Write `docs/assessments/session-85-assessment.md`:
-   ```
-   # Session 85 Assessment
-   ## Shipped
-   - [x] Phase N: [feature] — Evidence: [test/screenshot]
-   ## Deferred
-   - Phase M: [feature] — Reason: [why] — BACKLOG: [ID]
-   ## Red Flags
-   - [Severity] [description] — Fix: [action]
-   ## Next Session Should Verify
-   1. [highest priority]
-   ```
+1. Write `docs/assessments/session-85-assessment.md`
 2. Update `CHANGELOG.md` with version entry
 3. Update `ROADMAP.md` — check boxes, move to Recently Completed
 4. Update `docs/BACKLOG.md` — Status column updates
 5. Update `docs/ml/ALGORITHMIC_DECISIONS.md` if any ML decisions made
-6. Update `docs/DESIGN_DECISIONS.md` if any design decisions made
+6. Update `docs/DESIGN_DECISIONS.md` — Compare redesign decisions
 7. Create/update `docs/sessions/SESSION_085.md` session log
 
 **Commit**: `docs: session 85 — assessment, changelog, roadmap`
@@ -296,8 +319,8 @@ Follow Lesson 19: Default to admin-only for new data-modifying features.
 
 However, within Phase 1 (diagnosis), research can be parallelized:
 - **Agent A**: Read compare code in app/main.py (routes, handlers)
-- **Agent B**: Check production state (curl endpoints, read logs)
-- **Agent C**: Read test file + existing PRDs
+- **Agent B**: Read Upload page pipeline code in app/main.py
+- **Agent C**: Check production state (curl endpoints, browser test)
 
 Phase 5 (tests) can partially overlap with Phase 6 (deploy) since tests run locally
 while deploy goes to Railway.
@@ -310,21 +333,27 @@ while deploy goes to Railway.
 ## SCOPE CONTROL
 
 **In scope:**
-- Fix compare result page to show uploaded photo + face context
-- Add compare-against-specific-person flow
-- Fix photo persistence (admin save-to-archive)
+- Unify compare upload with main Upload pipeline (photo persistence + identity creation)
+- Compare-against-specific-person flow with search and per-face scores
+- Interactive shareable result page showing uploaded photo + face context
 - End-to-end validation with Isaac Cohen test case
 - Tests for all new functionality
 
 **Out of scope (do NOT touch):**
 - ML pipeline changes (face detection model, embeddings)
-- Gemini API calls
+- Gemini API calls or enrichment
 - Compare Tier 2 standalone product (AD-117)
 - Real-time GPU inference on Railway (AD-187)
-- Multi-photo compare improvements (PRD-021 — already working)
-- Pair compare (/compare/pair) changes
+- Mode A (Archive vs. Archive) — this mostly works already via Find Similar
+- Mode C (Upload vs. Upload pair compare) — `/compare/pair` already exists, polish later
 - Data migrations or schema changes
 - GEDCOM, Tree, Map, or other feature areas
+
+**Priority order if time is short:**
+1. Phase 2 (unified upload) — foundation, nothing works without this
+2. Phase 3 (vs-person + search) — the core Claude Benatar use case
+3. Phase 4 (result page) — makes it shareable
+4. Phases 5-7 (tests, deploy, docs) — mandatory but last
 
 **If something in scope turns out to be >45 min for a single phase:**
 Split it. Ship what works, defer the rest with a BACKLOG entry.
@@ -343,8 +372,9 @@ A partial fix that's validated > a complete fix that's untested.
 | `docs/feedback/2026-03-02-claude-benatar.md` | Original user feedback |
 | `tests/test_compare.py` | Compare test suite (25 tests) |
 | `app/main.py:16161` | Compare page route |
-| `app/main.py:17009` | Upload handler |
-| `app/main.py:17846` | Result page route |
+| `app/main.py:17009` | Compare upload handler |
+| `app/main.py:17846` | Compare result page route |
+| `app/main.py:18246` | Pair compare page route |
 | `CLAUDE.md` | Project rules |
 | `tasks/lessons.md` | 99 lessons — read at session start |
 | `docs/BACKLOG.md` | Feature status and priorities |
@@ -358,3 +388,4 @@ A partial fix that's validated > a complete fix that's untested.
 - Should detect 5 faces
 - Compare each face against Isaac Cohen (confirmed identity in archive)
 - Isaac Cohen's existing nearest archive matches are at distance ~1.22 (Low confidence)
+- The shareable link should show: Isaac Cohen's crop, all 5 face crops, per-face scores
