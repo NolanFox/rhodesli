@@ -178,6 +178,67 @@ class TestGap2BidirectionalLinks:
 
 
 # ============================================================
+# UX-039: Person page inline admin controls
+# ============================================================
+
+class TestUX039PersonPageAdminControls:
+    """Admin sees inline rename, state actions, and merge search on person page."""
+
+    def test_admin_sees_rename_form(self, client):
+        """Admin sees inline rename form on person page."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            resp = client.get("/person/confirmed-1")
+        assert resp.status_code == 200
+        assert 'data-testid="inline-rename-form"' in resp.text
+        assert 'name="name"' in resp.text
+
+    def test_admin_sees_state_actions_for_inbox(self, client):
+        """Admin sees confirm/skip/reject buttons for INBOX identity."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            resp = client.get("/person/unknown-1")
+        assert resp.status_code == 200
+        assert 'data-testid="person-state-actions"' in resp.text
+        assert "Confirm" in resp.text
+
+    def test_admin_sees_merge_search(self, client):
+        """Admin sees merge search input on person page."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            resp = client.get("/person/confirmed-1")
+        assert resp.status_code == 200
+        assert 'data-testid="merge-search"' in resp.text
+        assert "Search to merge" in resp.text
+
+    def test_no_admin_controls_for_anonymous(self, client):
+        """Anonymous user does NOT see admin controls."""
+        from app.auth import User
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.main.get_current_user", return_value=None))
+            resp = client.get("/person/confirmed-1")
+        assert resp.status_code == 200
+        assert 'data-testid="admin-controls"' not in resp.text
+        assert 'data-testid="inline-rename-form"' not in resp.text
+
+    def test_no_state_actions_for_confirmed(self, client):
+        """Confirmed identity should NOT show confirm/skip/reject buttons."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            resp = client.get("/person/confirmed-1")
+        assert resp.status_code == 200
+        # Confirmed identity shouldn't have state action buttons
+        assert 'data-testid="person-state-actions"' not in resp.text
+
+
+# ============================================================
 # Gap 3: Face card consistency across views
 # ============================================================
 

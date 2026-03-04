@@ -12012,16 +12012,72 @@ def public_person_page(
                         share_btn,
                         cls="flex justify-center gap-3 mb-4",
                     ),
-                    # UX-039: Admin controls on person page (Gap 2: consolidated links)
+                    # UX-039: Admin controls — inline rename, state actions, merge search
                     Div(
-                        A("Edit in Admin",
-                          href=f"/?section={'confirmed' if is_confirmed else 'to_review'}&current={person_id}&view=focus",
-                          cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors",
-                          data_testid="edit-in-admin-link"),
-                        A("Find Similar",
-                          href=f"/people/{person_id}/similar",
-                          cls="px-3 py-1.5 text-xs rounded-full bg-indigo-500/10 text-indigo-400 hover:text-white border border-indigo-500/30 hover:border-indigo-500 hover:bg-indigo-500/20 transition-colors"),
-                        cls="flex flex-wrap justify-center gap-2 mb-4",
+                        # State badge + nav links
+                        Div(
+                            Span(state, cls="text-xs px-2 py-0.5 rounded-full font-medium "
+                                 + ("bg-emerald-500/20 text-emerald-400" if state == "CONFIRMED"
+                                    else "bg-amber-500/20 text-amber-400" if state in ("INBOX", "PROPOSED")
+                                    else "bg-slate-500/20 text-slate-400")),
+                            A("Edit in Admin",
+                              href=f"/?section={_section_for_state(state)}&current={person_id}&view=focus",
+                              cls="text-xs text-indigo-400 hover:text-white",
+                              data_testid="edit-in-admin-link"),
+                            A("Find Similar",
+                              href=f"/people/{person_id}/similar",
+                              cls="text-xs text-indigo-400 hover:text-white"),
+                            cls="flex items-center justify-center gap-3 mb-3",
+                        ),
+                        # Inline rename
+                        Form(
+                            Input(name="name", value=display_name, placeholder="Enter name...",
+                                  cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-indigo-400 focus:outline-none"),
+                            Button("Rename", type="submit",
+                                   cls="px-2 py-1 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded"),
+                            Span(id=f"rename-status-{person_id}", cls="text-xs text-emerald-400 ml-1"),
+                            hx_post=f"/api/identity/{person_id}/rename",
+                            hx_target=f"#rename-status-{person_id}",
+                            hx_swap="innerHTML",
+                            cls="flex items-center justify-center gap-2 mb-3",
+                            data_testid="inline-rename-form",
+                        ),
+                        # State actions (confirm/skip/reject) — only for unresolved states
+                        Div(
+                            Button("\u2713 Confirm",
+                                   cls="px-3 py-1.5 text-xs font-bold bg-emerald-600 text-white rounded hover:bg-emerald-700",
+                                   hx_post=f"/{'inbox/' + person_id + '/confirm' if state == 'INBOX' else 'confirm/' + person_id}",
+                                   hx_target="#person-admin-status",
+                                   hx_swap="innerHTML",
+                                   type="button") if state in ("INBOX", "PROPOSED", "SKIPPED") else None,
+                            Button("\u23f8 Skip",
+                                   cls="px-3 py-1.5 text-xs font-bold bg-amber-500 text-white rounded hover:bg-amber-600",
+                                   hx_post=f"/identity/{person_id}/skip",
+                                   hx_target="#person-admin-status",
+                                   hx_swap="innerHTML",
+                                   type="button") if state in ("INBOX", "PROPOSED") else None,
+                            Button("\u2717 Reject",
+                                   cls="px-3 py-1.5 text-xs font-bold border border-red-500 text-red-500 rounded hover:bg-red-500/20",
+                                   hx_post=f"/{'inbox/' + person_id + '/reject' if state == 'INBOX' else 'reject/' + person_id}",
+                                   hx_target="#person-admin-status",
+                                   hx_swap="innerHTML",
+                                   type="button") if state in ("INBOX", "PROPOSED", "SKIPPED") else None,
+                            Span(id="person-admin-status", cls="text-xs ml-2"),
+                            cls="flex items-center justify-center gap-2 mb-3",
+                            data_testid="person-state-actions",
+                        ) if state in ("INBOX", "PROPOSED", "SKIPPED") else None,
+                        # Merge search
+                        Div(
+                            Input(name="q", placeholder="Search to merge...", autocomplete="off",
+                                  hx_get=f"/api/identity/{person_id}/search-merge",
+                                  hx_trigger="keyup changed delay:300ms",
+                                  hx_target=f"#merge-search-results-{person_id}",
+                                  cls="bg-slate-700 border border-slate-600 rounded px-2 py-1 text-sm text-white w-48 focus:ring-2 focus:ring-blue-400 focus:outline-none"),
+                            Div(id=f"merge-search-results-{person_id}"),
+                            cls="flex flex-col items-center gap-1 mb-3",
+                            data_testid="merge-search",
+                        ),
+                        cls="bg-slate-800/50 rounded-lg p-4 border border-indigo-500/20 mb-4",
                         data_testid="admin-controls",
                     ) if is_admin else None,
                     # Cross-feature action bar
