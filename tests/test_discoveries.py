@@ -637,3 +637,191 @@ class TestDiscoveryCacheInvalidation:
         """The discovery threshold is distance < 1.30 (Session 79, raised from 1.05)."""
         from app.main import DISCOVERY_DISTANCE_THRESHOLD
         assert DISCOVERY_DISTANCE_THRESHOLD == 1.30
+
+
+# ---------------------------------------------------------------------------
+# Test: Filter controls (Act 5a — Session 87)
+# ---------------------------------------------------------------------------
+
+class TestDiscoveriesFilterControls:
+    """Tests for the discoveries page filter controls."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def test_discoveries_page_has_filter_controls(self, client):
+        """The /discoveries page renders filter controls."""
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")), \
+             patch("app.main._count_discoveries", return_value=5), \
+             patch("app.main._compute_discoveries", return_value=[]):
+            response = client.get("/discoveries")
+
+        assert response.status_code == 200
+        html = response.text
+        # Confidence filter buttons exist
+        assert "Strong (70%+)" in html
+        assert "Possible (50%+)" in html
+        # Photo filter dropdown exists
+        assert "discovery-photo-filter" in html
+        assert "All photos" in html
+
+    def test_api_discoveries_sorted_by_confidence_descending(self, client):
+        """Discoveries sorted by confidence_pct descending (highest first)."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Low Confidence",
+                "target_id": "conf1",
+                "target_name": "Known A",
+                "distance": 1.2,  # Lower confidence
+                "confidence": "LOW",
+            },
+            {
+                "source_id": "inbox2",
+                "source_name": "High Confidence",
+                "target_id": "conf1",
+                "target_name": "Known A",
+                "distance": 0.5,  # Higher confidence
+                "confidence": "VERY HIGH",
+            },
+        ]
+        source1 = _make_identity("inbox1", "Low Confidence", "INBOX", candidate_ids=["face1"])
+        source2 = _make_identity("inbox2", "High Confidence", "INBOX", candidate_ids=["face2"])
+        registry = _make_registry_mock([source1, source2])
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_registry", return_value=registry):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        # High confidence card should appear before low confidence card
+        high_pos = html.find("discovery-card-inbox2")
+        low_pos = html.find("discovery-card-inbox1")
+        assert high_pos < low_pos, "High confidence discovery should appear first"
+
+    def test_api_discoveries_min_confidence_filter(self, client):
+        """min_confidence filter excludes low-confidence items."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Low Match",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 1.25,  # Very low confidence
+                "confidence": "LOW",
+            },
+            {
+                "source_id": "inbox2",
+                "source_name": "High Match",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.4,  # Very high confidence
+                "confidence": "VERY HIGH",
+            },
+        ]
+        source1 = _make_identity("inbox1", "Low Match", "INBOX", candidate_ids=["face1"])
+        source2 = _make_identity("inbox2", "High Match", "INBOX", candidate_ids=["face2"])
+        registry = _make_registry_mock([source1, source2])
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_registry", return_value=registry):
+            response = client.get("/api/discoveries?min_confidence=70")
+
+        html = response.text
+        # High match should be present, low match excluded
+        assert "discovery-card-inbox2" in html
+        assert "discovery-card-inbox1" not in html
+
+    def test_api_discoveries_empty_with_filter_shows_filter_message(self, client):
+        """When filters exclude all items, show 'No matches' instead of 'All reviewed'."""
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=[]), \
+             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
+             patch("app.main.get_crop_files", return_value=set()):
+            response = client.get("/api/discoveries?min_confidence=70")
+
+        html = response.text
+        assert "No matches" in html
+
+    def test_api_discoveries_photo_filter(self, client):
+        """photo_id filter restricts to discoveries from a specific photo."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Match A",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.5,
+                "confidence": "VERY HIGH",
+            },
+            {
+                "source_id": "inbox2",
+                "source_name": "Match B",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.6,
+                "confidence": "VERY HIGH",
+            },
+        ]
+        source1 = _make_identity("inbox1", "Match A", "INBOX", candidate_ids=["face_a"])
+        source2 = _make_identity("inbox2", "Match B", "INBOX", candidate_ids=["face_b"])
+        registry = _make_registry_mock([source1, source2])
+
+        def mock_photo_for_face(fid):
+            return "photo_X" if fid == "face_a" else "photo_Y"
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
+             patch("app.main.get_photo_id_for_face", side_effect=mock_photo_for_face), \
+             patch("app.main.load_registry", return_value=registry):
+            response = client.get("/api/discoveries?photo_id=photo_X")
+
+        html = response.text
+        assert "discovery-card-inbox1" in html
+        assert "discovery-card-inbox2" not in html
+
+    def test_api_discoveries_photo_options_endpoint(self, client):
+        """Photo options endpoint returns Option elements."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Match",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.5,
+                "confidence": "VERY HIGH",
+            },
+        ]
+        source1 = _make_identity("inbox1", "Match", "INBOX", candidate_ids=["face_a"])
+        registry = _make_registry_mock([source1])
+        photo_data = {"collection": "Test Collection", "path": "test.jpg"}
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
+             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
+             patch("app.main.get_photo_id_for_face", return_value="photo123"), \
+             patch("app.main.get_photo_metadata", return_value=photo_data), \
+             patch("app.main.load_registry", return_value=registry):
+            response = client.get("/api/discoveries/photo-options")
+
+        assert response.status_code == 200
+        html = response.text
+        assert "All photos" in html
+        assert "Test Collection" in html

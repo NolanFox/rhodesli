@@ -23128,6 +23128,59 @@ def get(sess=None):
                     ) if (tier_1_count + tier_2_count) > 0 else None,
                     cls="mb-6"
                 ),
+                # Filter controls
+                Div(
+                    Div(
+                        # Confidence filter buttons
+                        Span("Confidence:", cls="text-xs text-slate-400 mr-2"),
+                        Button("All",
+                               cls="text-xs px-3 py-1.5 rounded-full bg-slate-600 text-white font-medium min-h-[32px]",
+                               hx_get="/api/discoveries",
+                               hx_target="#discoveries-list",
+                               hx_swap="innerHTML",
+                               hx_include="#discovery-photo-filter",
+                               data_action="discovery-filter",
+                               type="button"),
+                        Button("Strong (70%+)",
+                               cls="text-xs px-3 py-1.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium min-h-[32px]",
+                               hx_get="/api/discoveries?min_confidence=70",
+                               hx_target="#discoveries-list",
+                               hx_swap="innerHTML",
+                               hx_include="#discovery-photo-filter",
+                               data_action="discovery-filter",
+                               type="button"),
+                        Button("Possible (50%+)",
+                               cls="text-xs px-3 py-1.5 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 font-medium min-h-[32px]",
+                               hx_get="/api/discoveries?min_confidence=50",
+                               hx_target="#discoveries-list",
+                               hx_swap="innerHTML",
+                               hx_include="#discovery-photo-filter",
+                               data_action="discovery-filter",
+                               type="button"),
+                        cls="flex items-center flex-wrap gap-2"
+                    ),
+                    Div(
+                        Span("Photo:", cls="text-xs text-slate-400 mr-2"),
+                        Select(
+                            Option("All photos", value=""),
+                            id="discovery-photo-filter",
+                            name="photo_id",
+                            cls="text-xs border border-slate-600 bg-slate-700 text-slate-300 rounded px-2 py-1.5 min-h-[32px]",
+                            hx_get="/api/discoveries",
+                            hx_target="#discoveries-list",
+                            hx_swap="innerHTML",
+                            hx_trigger="change",
+                        ),
+                        cls="flex items-center mt-2"
+                    ),
+                    cls="mb-4 p-3 bg-slate-800/50 border border-slate-700/50 rounded-xl",
+                    id="discovery-filters",
+                    hx_get="/api/discoveries/photo-options",
+                    hx_trigger="load",
+                    hx_target="#discovery-photo-filter",
+                    hx_swap="innerHTML",
+                    hx_select="#discovery-photo-filter > *",
+                ),
                 Div(
                     id="discoveries-list",
                     hx_get="/api/discoveries",
@@ -23144,7 +23197,7 @@ def get(sess=None):
 
 
 @rt("/api/discoveries")
-def get(sess=None):
+def get(sess=None, photo_id: str = "", min_confidence: int = 0):
     """HTMX endpoint: render discovery cards for the discoveries page.
 
     Merges two sources:
@@ -23152,10 +23205,16 @@ def get(sess=None):
     2. Discovery log (data/discovery_log.json) — Tier 2 suggestions from auto-clustering
 
     Shows cards with tier labels and appropriate actions (AD-179).
+
+    Filter params:
+      photo_id: filter to discoveries whose source face is in this photo
+      min_confidence: minimum confidence_pct (0=all, 50=possible+, 70=strong+)
     """
     denied = _check_admin(sess)
     if denied:
         return denied
+
+    from core.confidence import compute_confidence_pct
 
     registry = load_registry()
     discoveries = _compute_discoveries(registry)
@@ -23178,31 +23237,61 @@ def get(sess=None):
                 "confidence": _confidence_tier(distance),
                 "from_log": True,
             })
-    discoveries.sort(key=lambda d: d["distance"])
+
+    # Compute confidence_pct for each discovery and sort by it descending
+    for d in discoveries:
+        d["confidence_pct"] = compute_confidence_pct(d.get("distance", 999))
+    discoveries.sort(key=lambda d: d.get("confidence_pct", 0), reverse=True)
 
     # Also include pending Tier 1 entries (auto-clustered, needs confirmation)
     all_items = []
     for entry in tier_1_entries:
+        dist = entry.get("distance", 0)
         all_items.append({
             "source_id": entry.get("source_identity_id", ""),
             "source_name": entry.get("source_identity_name", ""),
             "target_id": entry.get("target_identity_id", ""),
             "target_name": entry.get("target_identity_name", ""),
-            "distance": entry.get("distance", 0),
+            "distance": dist,
             "face_id": entry.get("face_id", ""),
             "tier": 1,
+            "confidence_pct": compute_confidence_pct(dist),
         })
     for d in discoveries:
         d["tier"] = 2
         all_items.append(d)
 
+    # --- Apply filters ---
+    # Resolve source face → photo_id for photo filter
+    if photo_id:
+        filtered = []
+        for item in all_items:
+            src_id = item.get("source_id", "")
+            source_identity = _safe_get_identity(registry, src_id)
+            if source_identity:
+                face_ids = source_identity.get("anchor_ids", []) + source_identity.get("candidate_ids", [])
+                for f in face_ids:
+                    fid = f if isinstance(f, str) else f.get("face_id", "")
+                    if fid:
+                        pid = get_photo_id_for_face(fid)
+                        if pid == photo_id:
+                            filtered.append(item)
+                            break
+        all_items = filtered
+
+    # Confidence filter
+    if min_confidence > 0:
+        all_items = [d for d in all_items if d.get("confidence_pct", 0) >= min_confidence]
+
     if not all_items:
+        filter_msg = "No matches found with current filters." if (photo_id or min_confidence > 0) else \
+            "No high-confidence matches found. New discoveries will appear here when uploaded faces match confirmed identities."
         return Div(
             Div(
                 Span("\u2705", cls="text-4xl mb-3 block"),
-                H3("All discoveries reviewed!", cls="text-lg font-semibold text-white mb-1"),
-                P("No high-confidence matches found. New discoveries will appear here when uploaded faces match confirmed identities.",
-                  cls="text-sm text-slate-400"),
+                H3("All discoveries reviewed!" if not (photo_id or min_confidence > 0) else "No matches",
+                   cls="text-lg font-semibold text-white mb-1"),
+                P(filter_msg, cls="text-sm text-slate-400"),
                 cls="text-center py-12"
             ),
             cls="bg-slate-800/50 border border-slate-700/50 rounded-xl",
@@ -23233,7 +23322,7 @@ def get(sess=None):
                 cls="mb-8"
             ))
 
-    # Tier 2 section: Suggested matches (accept/reject)
+    # Tier 2 section: Suggested matches (accept/reject) — sorted by confidence descending
     tier_2_items = [d for d in all_items if d.get("tier") == 2]
     if tier_2_items:
         tier_2_cards = []
@@ -23262,6 +23351,52 @@ def get(sess=None):
         cls="bg-slate-800/50 border border-slate-700/50 rounded-xl",
         data_testid="discoveries-empty-state"
     )
+
+
+@rt("/api/discoveries/photo-options")
+def get(sess=None):
+    """HTMX endpoint: populate the photo filter dropdown for discoveries.
+
+    Returns Option elements listing all unique photos that have discovery matches.
+    """
+    denied = _check_admin(sess)
+    if denied:
+        return denied
+
+    registry = load_registry()
+    discoveries = _compute_discoveries(registry)
+    tier_1_entries, tier_2_entries = _get_pending_discovery_entries()
+
+    # Collect all source identity IDs
+    source_ids = {d["source_id"] for d in discoveries}
+    for entry in tier_1_entries + tier_2_entries:
+        src_id = entry.get("source_identity_id", "")
+        if src_id:
+            source_ids.add(src_id)
+
+    # Map source identities → photos
+    photo_map = {}  # photo_id → photo label
+    for src_id in source_ids:
+        identity = _safe_get_identity(registry, src_id)
+        if not identity:
+            continue
+        face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+        for f in face_ids:
+            fid = f if isinstance(f, str) else f.get("face_id", "")
+            if fid:
+                pid = get_photo_id_for_face(fid)
+                if pid and pid not in photo_map:
+                    photo_data = get_photo_metadata(pid)
+                    if photo_data:
+                        label = photo_data.get("collection", "") or photo_data.get("path", pid[:12])
+                        photo_map[pid] = label
+                break  # only need first face per identity
+
+    options = [Option("All photos", value="")]
+    for pid, label in sorted(photo_map.items(), key=lambda x: x[1]):
+        options.append(Option(f"{label} ({pid[:8]}...)", value=pid))
+
+    return tuple(options)
 
 
 def _build_discovery_card(d, registry, crop_files, tier=2):
