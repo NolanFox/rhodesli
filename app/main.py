@@ -20730,6 +20730,38 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                 best_face_idx = fi
                 best_target_idx = ti
 
+    # Compute per-target context: best existing match + rank
+    target_context = {}  # target_id -> {best_pct, best_name, matches_ranked}
+    from core.neighbors import find_similar_faces
+    for fr in results_by_face:
+        for tr in fr["targets"]:
+            tid = tr["target_id"]
+            if tid in target_context:
+                continue
+            if tr["target_type"] == "person" and tid:
+                try:
+                    t_ident = registry.get_identity(tid)
+                except (KeyError, Exception):
+                    t_ident = None
+                if t_ident:
+                    t_fids = t_ident.get("anchor_ids", []) + t_ident.get("candidate_ids", [])
+                    t_fid = t_fids[0] if t_fids else ""
+                    if isinstance(t_fid, dict):
+                        t_fid = t_fid.get("face_id", "")
+                    t_emb = face_data.get(t_fid, {}).get("mu") if t_fid else None
+                    if t_emb is not None:
+                        t_matches = find_similar_faces(
+                            t_emb, face_data, registry=registry,
+                            limit=5, exclude_face_ids=set(t_fids if isinstance(t_fids[0], str) else [f.get("face_id", "") for f in t_fids] if t_fids else []),
+                        )
+                        if t_matches:
+                            target_context[tid] = {
+                                "best_pct": t_matches[0].get("confidence_pct", 0),
+                                "best_name": t_matches[0].get("identity_name", "Unknown"),
+                            }
+            if tid not in target_context:
+                target_context[tid] = {"best_pct": 0, "best_name": ""}
+
     # Build source entity name
     source_name = "Upload"
     if source_type == "person":
@@ -20829,6 +20861,18 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
 
             dist_str = f" · dist: {tr['distance']:.2f}" if user_is_admin else ""
 
+            # Build context line
+            ctx = target_context.get(tr["target_id"], {})
+            ctx_parts = []
+            ctx_best_pct = ctx.get("best_pct", 0)
+            ctx_best_name = ctx.get("best_name", "")
+            if ctx_best_pct > 0 and tr["target_type"] == "person":
+                if pct > ctx_best_pct:
+                    ctx_parts.append(f"Better than any existing match!")
+                elif ctx_best_name:
+                    ctx_parts.append(f"{tr['target_name']}'s best is {ctx_best_pct}% ({ctx_best_name})")
+            context_line = " · ".join(ctx_parts) if ctx_parts else ""
+
             # Target link
             target_link = "#"
             if tr["target_type"] == "person" and tr["target_id"]:
@@ -20875,6 +20919,8 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                                 cls="flex items-center gap-2 mt-1",
                             ),
                             Span(f"{conf_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
+                            Span(context_line, cls="text-[11px] text-slate-500 mt-0.5 block",
+                                 data_testid=f"context-{fi}-{ti}") if context_line else None,
                             cls="flex-1 min-w-0",
                         ),
                         cls="flex items-center gap-3",
@@ -20923,6 +20969,35 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                 style=f"animation-delay: {fi * 100}ms",
             )
         )
+
+    # Smart defaults: empathetic message if all unlikely
+    all_pcts = [tr["confidence_pct"] for fr in results_by_face for tr in fr["targets"]]
+    if all_pcts and max(all_pcts) < 50:
+        parts.append(
+            Div(
+                P("No strong matches found.", cls="text-slate-300 text-sm font-medium"),
+                P("Try uploading a clearer photo or comparing against different people.",
+                  cls="text-slate-500 text-xs mt-1"),
+                cls="p-3 bg-slate-800/30 rounded-lg border border-slate-700/20 text-center compare-fade-in",
+                data_testid="compare-no-strong-matches",
+            )
+        )
+
+    # Cross-target insight: face matches multiple targets strongly
+    if n_targets > 1 and n_faces > 0:
+        for fi, fr in enumerate(results_by_face):
+            strong_targets = [tr for tr in fr["targets"] if tr["confidence_pct"] >= 70]
+            if len(strong_targets) >= 2:
+                names = " and ".join(ensure_utf8_display(t["target_name"]) for t in strong_targets[:3])
+                parts.append(
+                    Div(
+                        P(f"Face {fi + 1} strongly matches both {names}.",
+                          cls="text-sm text-amber-300"),
+                        P("These people may be related.", cls="text-xs text-slate-500 mt-0.5"),
+                        cls="p-3 bg-amber-950/20 border border-amber-500/20 rounded-lg compare-fade-in",
+                        data_testid=f"cross-target-insight-{fi}",
+                    )
+                )
 
     # Share + try again footer
     share_url = f"{SITE_URL}/compare/result/{rid}"
