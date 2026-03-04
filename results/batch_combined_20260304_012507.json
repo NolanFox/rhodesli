@@ -1,0 +1,35 @@
+{
+  "batch_id": "batch_combined_20260304_012507",
+  "model": "gemini-2.5-flash",
+  "mode": "live",
+  "total_photos": 2,
+  "success": 2,
+  "errors": 0,
+  "skipped": 0,
+  "gedcom_enriched": 0,
+  "total_cost": 0.0004,
+  "results": [
+    {
+      "photo_id": "9411826ba358db3c",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 6.0,
+      "input_tokens": 719,
+      "output_tokens": 223,
+      "cost": 0.0002,
+      "has_gedcom": false
+    },
+    {
+      "photo_id": "81bf7f85ec9814bc",
+      "status": "success",
+      "faces_detected": 1,
+      "faces_described": 1,
+      "elapsed": 5.2,
+      "input_tokens": 721,
+      "output_tokens": 201,
+      "cost": 0.0002,
+      "has_gedcom": false
+    }
+  ]
+}

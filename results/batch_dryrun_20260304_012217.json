@@ -1,0 +1,35 @@
+{
+  "batch_id": "batch_dryrun_20260304_012217",
+  "model": "gemini-3.1-pro-preview",
+  "mode": "dry-run",
+  "total_photos": 2,
+  "success": 2,
+  "errors": 0,
+  "skipped": 0,
+  "gedcom_enriched": 0,
+  "total_cost": 0,
+  "results": [
+    {
+      "photo_id": "9411826ba358db3c",
+      "status": "dry_run",
+      "faces_count": 1,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 418,
+      "identified_faces": [],
+      "photo_path": "Image 914_compress.jpg"
+    },
+    {
+      "photo_id": "81bf7f85ec9814bc",
+      "status": "dry_run",
+      "faces_count": 1,
+      "has_gedcom": false,
+      "gedcom_token_count": 0,
+      "enrichment_level": "none",
+      "prompt_token_count": 419,
+      "identified_faces": [],
+      "photo_path": "Image 018_compress.jpg"
+    }
+  ]
+}
