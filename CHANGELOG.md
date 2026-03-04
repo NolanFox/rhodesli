@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.91.1] — 2026-03-04 (Session 88: Fix Scoring & Card Failures)
+
+### Fixed
+- **Scoring divergence** — Isotonic calibrator `f_=None` crash fixed (rebuild interp1d from stored thresholds). Switched to sigmoid CDF as priority 1 (10-breakpoint isotonic too coarse — 99% for everything above dist ~1.22). Batch NN override in neighbors.py removed. Same distance now truly gives same % everywhere.
+- **Compare link from Discoveries** — Was `/compare?source=&target=` (404), now `/compare?face_id=&person_id=` matching actual route params.
+- **Accordion headers** — Compare per-face sections now show "Face N — X matches (best: Name Pct%)" instead of just "Face N".
+
+### Changed
+- **Admin badge** — Per-card "Admin" text replaced with subtle gear icon SVG. Admin status shown globally in sidebar.
+- **Discovery cards** — Distance metric now visible ("dist: 0.80"). Shared `match_info_bar()` component.
+
 ## [v0.91.0] — 2026-03-04 (Session 87: Compare & Discoveries UX Overhaul)
 
 ### Added

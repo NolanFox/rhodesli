@@ -8,12 +8,12 @@ Predecessor: Session 87 (v0.91.0)
 - [x] Act 2: Fix Scoring — isotonic f_ bug fixed, batch override removed, sigmoid CDF auto-loads, commit 528abf3
 - [x] Act 3: Quick Fixes — accordion headers with match preview, compare link params fixed, admin gear icon, commit c2e325e
 - [x] Act 4: Unified match_info_bar + discovery distance — commit 5c9aced
-- [ ] Act 5: Verify & Close
+- [x] Act 5: Verify & Close — browser verified, assessment written, docs updated
 
 ## Verification Gate
-- [ ] All acts re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] Browser verification screenshots
+- [x] All acts re-checked against original prompt
+- [x] Feature Reality Contract passed
+- [x] Browser verification (Discoveries scoring, distance, compare link, admin badge)
 
 ## Act 2 Details
 - Root cause: isotonic calibrator `f_=None` crashed predict(), fell to linear (43%). Batch NN in neighbors.py overrode to 62%.
