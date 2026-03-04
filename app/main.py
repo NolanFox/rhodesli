@@ -16819,7 +16819,6 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         ),
         Div(id="ws-target-upload-result", data_testid="ws-target-upload-result"),
         data_target_panel="upload",
-        cls="hidden",
         data_testid="target-upload-panel",
     )
 
@@ -16839,6 +16838,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Div(id="target-person-results", cls="mt-2 max-h-48 overflow-y-auto",
             data_testid="target-person-results"),
         data_target_panel="person",
+        cls="hidden",
         data_testid="target-person-panel",
     )
 
@@ -16865,18 +16865,18 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         H3("Compare With", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
         # Tabs (mirrors source slot)
         Div(
-            Button("Person", data_target_tab="person",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors"),
-            Button("Photo", data_target_tab="photo",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
             Button("Upload", data_target_tab="upload",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors"),
+            Button("Person", data_target_tab="person",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            Button("Photo", data_target_tab="photo",
                    cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
             cls="flex gap-2 mb-4",
             data_testid="target-tabs",
         ),
+        target_upload_panel,
         target_person_panel,
         target_photo_panel,
-        target_upload_panel,
         # Target pills
         Div(id="target-pills", cls="flex flex-wrap gap-2 mt-3", data_testid="target-pills"),
         # All Archive button
