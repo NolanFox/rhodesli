@@ -889,6 +889,189 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
         id="compare-results",
         data_testid="compare-results",
     )
+
+
+def _compare_summary_section(results_by_face: list, crop_files: set, user_is_admin: bool,
+                              registry, rid: str = "") -> object | None:
+    """Build a Best Matches summary section aggregating top matches across all faces.
+
+    Collects matches where confidence >= 40%, sorts by confidence descending
+    with CONFIRMED identities first. Shows source + matched crop side by side
+    with large confidence badge, name, and share/admin action buttons.
+
+    Returns None if no matches meet the threshold.
+    """
+    # Collect all matches across all faces where confidence >= 40%
+    summary_matches = []
+    for fr in results_by_face:
+        source_crop = fr.get("crop_url", "")
+        source_face_id = fr.get("face_id", "")
+        for tr in fr.get("targets", []):
+            pct = tr.get("confidence_pct", 0)
+            if pct < 40:
+                continue
+            # Look up identity state
+            state = ""
+            if tr.get("target_type") == "person" and tr.get("target_id"):
+                try:
+                    ident = registry.get_identity(tr["target_id"])
+                    state = ident.get("state", "") if ident else ""
+                except (KeyError, Exception):
+                    pass
+            summary_matches.append({
+                "source_crop": source_crop,
+                "source_face_id": source_face_id,
+                "target_name": tr.get("target_name", "Unknown"),
+                "target_id": tr.get("target_id", ""),
+                "target_type": tr.get("target_type", ""),
+                "target_crop_url": tr.get("target_crop_url", ""),
+                "matched_face_id": tr.get("matched_face_id", ""),
+                "confidence_pct": pct,
+                "tier": tr.get("tier", "WEAK"),
+                "distance": tr.get("distance", 99),
+                "state": state,
+            })
+
+    if not summary_matches:
+        return None
+
+    # Sort: CONFIRMED first, then by confidence descending
+    def _sort_key(m):
+        confirmed_priority = 0 if m["state"] == "CONFIRMED" else 1
+        return (confirmed_priority, -m["confidence_pct"])
+    summary_matches.sort(key=_sort_key)
+
+    # Build summary cards
+    cards = []
+    for i, m in enumerate(summary_matches[:8]):  # Cap at 8 best matches
+        pct = m["confidence_pct"]
+
+        # Color and label based on tier
+        if pct >= 85:
+            badge_bg = "bg-emerald-600"
+            badge_text = "text-white"
+            border_cls = "border-emerald-700/50"
+            conf_label = "Very likely same person"
+        elif pct >= 70:
+            badge_bg = "bg-amber-600"
+            badge_text = "text-white"
+            border_cls = "border-amber-700/50"
+            conf_label = "Strong match"
+        elif pct >= 50:
+            badge_bg = "bg-blue-600"
+            badge_text = "text-white"
+            border_cls = "border-blue-700/50"
+            conf_label = "Possible match"
+        else:
+            badge_bg = "bg-slate-600"
+            badge_text = "text-slate-200"
+            border_cls = "border-slate-700/50"
+            conf_label = "Worth investigating"
+
+        # State badge
+        state_badge = None
+        if m["state"] == "CONFIRMED":
+            state_badge = Span("Identified",
+                               cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30")
+
+        # Target link
+        target_link = "#"
+        if m["target_type"] == "person" and m["target_id"]:
+            target_link = f"/person/{m['target_id']}"
+        elif m["target_type"] == "photo" and m["target_id"]:
+            target_link = f"/photo/{m['target_id']}"
+
+        display_name = ensure_utf8_display(m["target_name"])
+
+        # Share button for this match
+        share_btn = None
+        if rid:
+            share_btn = _main_mod.share_button(
+                url=f"/compare/result/{rid}",
+                style="icon",
+                label="Share",
+                title=f"Could this be {display_name}? {pct}% match",
+                text=f"Check out this {pct}% face match in the Rhodes archive",
+            )
+
+        # Admin actions: Merge / Not Same
+        admin_actions = []
+        if user_is_admin and m["target_type"] == "person" and m["target_id"] and m["source_face_id"]:
+            face_identity = _main_mod.get_identity_for_face(registry, m["source_face_id"])
+            face_iid = face_identity.get("identity_id") if face_identity else None
+            if face_iid and face_iid != m["target_id"]:
+                _face_name = face_identity.get("name", "") if face_identity else ""
+                _target_name = m.get("target_name", "")
+                _merge_confirm = f"Merge {_face_name} into {_target_name}? All faces will be combined." if _target_name and not _target_name.startswith("Unidentified") else "Merge these identities? This can be undone."
+                admin_actions.append(
+                    Button("Merge",
+                           hx_post=f"/api/identity/{m['target_id']}/merge/{face_iid}?source=compare",
+                           hx_target=f"#summary-card-{i}",
+                           hx_swap="outerHTML",
+                           hx_confirm=_merge_confirm,
+                           cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                           data_testid=f"summary-merge-{i}"))
+                admin_actions.append(
+                    Button("Not Same",
+                           hx_post=f"/api/identity/{m['target_id']}/not-same/{face_iid}?source=compare",
+                           hx_target=f"#summary-card-{i}",
+                           hx_swap="outerHTML",
+                           cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                           data_testid=f"summary-not-same-{i}"))
+
+        card = Div(
+            # Side-by-side face images
+            Div(
+                # Source face
+                Div(
+                    Img(src=m["source_crop"], cls="w-[150px] h-[150px] rounded-lg object-cover border border-slate-600",
+                        alt="Source face") if m["source_crop"] else Div(cls="w-[150px] h-[150px] rounded-lg bg-slate-700"),
+                    P("Source", cls="text-[10px] text-slate-500 text-center mt-1"),
+                    cls="text-center",
+                ),
+                # Arrow / VS indicator
+                Div(
+                    Span(f"{pct}%", cls=f"text-2xl font-bold {badge_bg} {badge_text} px-3 py-1 rounded-lg"),
+                    P(conf_label, cls="text-[11px] text-slate-400 text-center mt-1"),
+                    cls="flex flex-col items-center justify-center px-3",
+                ),
+                # Matched face
+                Div(
+                    A(
+                        Img(src=m["target_crop_url"], cls="w-[150px] h-[150px] rounded-lg object-cover border border-slate-600",
+                            alt=display_name) if m["target_crop_url"] else Div(cls="w-[150px] h-[150px] rounded-lg bg-slate-700"),
+                        href=target_link,
+                    ),
+                    P(A(display_name, href=target_link, cls="text-white hover:text-indigo-300 text-sm font-medium"),
+                      cls="text-center mt-1"),
+                    state_badge if state_badge else None,
+                    cls="text-center",
+                ),
+                cls="flex items-center justify-center gap-2 sm:gap-4",
+            ),
+            # Actions row
+            Div(
+                share_btn if share_btn else None,
+                *(admin_actions if admin_actions else []),
+                cls="flex items-center justify-center gap-2 mt-3",
+            ) if (share_btn or admin_actions) else None,
+            cls=f"p-4 bg-slate-800/70 rounded-xl border {border_cls} compare-card compare-section-animate",
+            id=f"summary-card-{i}",
+            data_testid=f"summary-card-{i}",
+            style=f"animation-delay: {i * 80}ms",
+        )
+        cards.append(card)
+
+    return Div(
+        H3("Best Matches", cls="text-lg font-serif text-white mb-1"),
+        P(f"{len(summary_matches)} match{'es' if len(summary_matches) != 1 else ''} above 40% confidence",
+          cls="text-xs text-slate-400 mb-4"),
+        Div(*cards, cls="space-y-4"),
+        cls="mb-6 pb-6 border-b border-slate-700/50",
+        data_testid="compare-summary-section",
+    )
+
+
 @rt("/api/compare")
 def get(face_id: str = "", limit: int = 20, sess=None):
     """API endpoint for face comparison — returns results HTML partial."""
@@ -3870,6 +4053,14 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
             data_testid="compare-results-header",
         )
     )
+
+    # Best Matches summary section (above per-face details)
+    summary_section = _compare_summary_section(
+        results_by_face, crop_files, user_is_admin, registry, rid=rid,
+    )
+    has_summary = summary_section is not None
+    if has_summary:
+        parts.append(summary_section)
 
     # Per-face sections
     for fi, fr in enumerate(results_by_face):

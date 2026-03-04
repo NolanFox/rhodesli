@@ -1,6 +1,7 @@
 """Golden coverage for compare upload and result UX."""
 
 from unittest.mock import patch
+from fasthtml.common import Span
 
 
 def test_compare_upload_returns_results(client, tmp_path, monkeypatch):
@@ -656,3 +657,167 @@ def test_compare_result_not_same_action(tmp_path, monkeypatch, client):
     assert response.status_code == 200
     assert "result-not-same-0" in response.text
     assert "Not Same" in response.text
+
+
+# ---- Session 87: Best Matches Summary Section Tests ----
+
+
+def test_compare_summary_section_collects_above_40pct(monkeypatch):
+    """Summary section only includes matches with confidence >= 40%."""
+    from app.compare_routes import _compare_summary_section
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.get_identity.return_value = {"state": "CONFIRMED"}
+
+    results_by_face = [
+        {
+            "face_id": "f1",
+            "crop_url": "https://example.com/f1.jpg",
+            "targets": [
+                {"target_id": "id1", "target_type": "person", "target_name": "Person A",
+                 "target_crop_url": "https://example.com/a.jpg", "matched_face_id": "fa1",
+                 "confidence_pct": 85, "tier": "STRONG MATCH", "distance": 0.7},
+                {"target_id": "id2", "target_type": "person", "target_name": "Person B",
+                 "target_crop_url": "https://example.com/b.jpg", "matched_face_id": "fb1",
+                 "confidence_pct": 30, "tier": "WEAK", "distance": 1.5},
+            ],
+        },
+    ]
+
+    monkeypatch.setattr("app.main.get_identity_for_face", lambda reg, fid: None)
+    monkeypatch.setattr("app.main.share_button", lambda **kw: Span("share"))
+
+    section = _compare_summary_section(results_by_face, set(), True, mock_registry, rid="test1")
+    assert section is not None
+    html = repr(section)
+    # Person A (85%) should be included
+    assert "Person A" in html
+    assert "85%" in html
+    # Person B (30%) should NOT be included
+    assert "Person B" not in html
+
+
+def test_compare_summary_section_returns_none_when_no_matches():
+    """Summary section returns None when no matches >= 40%."""
+    from app.compare_routes import _compare_summary_section
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+
+    results_by_face = [
+        {
+            "face_id": "f1",
+            "crop_url": "https://example.com/f1.jpg",
+            "targets": [
+                {"target_id": "id1", "target_type": "person", "target_name": "Weak Person",
+                 "target_crop_url": "", "matched_face_id": "fa",
+                 "confidence_pct": 20, "tier": "WEAK", "distance": 1.8},
+            ],
+        },
+    ]
+
+    section = _compare_summary_section(results_by_face, set(), True, mock_registry)
+    assert section is None
+
+
+def test_compare_summary_section_confirmed_first(monkeypatch):
+    """Summary section sorts CONFIRMED identities before others."""
+    from app.compare_routes import _compare_summary_section
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+
+    def mock_get_identity(iid):
+        if iid == "confirmed_id":
+            return {"state": "CONFIRMED"}
+        return {"state": "PROPOSED"}
+
+    mock_registry.get_identity.side_effect = mock_get_identity
+
+    results_by_face = [
+        {
+            "face_id": "f1",
+            "crop_url": "https://example.com/f1.jpg",
+            "targets": [
+                {"target_id": "proposed_id", "target_type": "person", "target_name": "Proposed Person",
+                 "target_crop_url": "https://example.com/p.jpg", "matched_face_id": "fp",
+                 "confidence_pct": 90, "tier": "STRONG MATCH", "distance": 0.5},
+                {"target_id": "confirmed_id", "target_type": "person", "target_name": "Confirmed Person",
+                 "target_crop_url": "https://example.com/c.jpg", "matched_face_id": "fc",
+                 "confidence_pct": 75, "tier": "POSSIBLE MATCH", "distance": 0.9},
+            ],
+        },
+    ]
+
+    monkeypatch.setattr("app.main.get_identity_for_face", lambda reg, fid: None)
+    monkeypatch.setattr("app.main.share_button", lambda **kw: Span("share"))
+
+    section = _compare_summary_section(results_by_face, set(), False, mock_registry, rid="test2")
+    html = repr(section)
+    # Confirmed should appear first (lower index)
+    conf_pos = html.find("Confirmed Person")
+    prop_pos = html.find("Proposed Person")
+    assert conf_pos < prop_pos, "CONFIRMED should appear before PROPOSED in summary"
+
+
+def test_compare_summary_section_admin_actions(monkeypatch):
+    """Admin sees Merge/Not Same buttons in summary cards."""
+    from app.compare_routes import _compare_summary_section
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.get_identity.return_value = {"state": "CONFIRMED"}
+
+    monkeypatch.setattr("app.main.get_identity_for_face", lambda reg, fid: {
+        "identity_id": "source_iid", "name": "Source Person"
+    })
+    monkeypatch.setattr("app.main.share_button", lambda **kw: Span("share"))
+
+    results_by_face = [
+        {
+            "face_id": "f1",
+            "crop_url": "https://example.com/f1.jpg",
+            "targets": [
+                {"target_id": "target_iid", "target_type": "person", "target_name": "Target Person",
+                 "target_crop_url": "https://example.com/t.jpg", "matched_face_id": "ft",
+                 "confidence_pct": 80, "tier": "POSSIBLE MATCH", "distance": 0.8},
+            ],
+        },
+    ]
+
+    section = _compare_summary_section(results_by_face, set(), True, mock_registry, rid="test3")
+    html = repr(section)
+    assert "summary-merge-0" in html
+    assert "summary-not-same-0" in html
+    assert "Merge" in html
+    assert "Not Same" in html
+
+
+def test_compare_summary_section_no_admin_actions_for_viewers(monkeypatch):
+    """Non-admin viewers do not see Merge/Not Same buttons."""
+    from app.compare_routes import _compare_summary_section
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.get_identity.return_value = {"state": "CONFIRMED"}
+
+    monkeypatch.setattr("app.main.share_button", lambda **kw: Span("share"))
+
+    results_by_face = [
+        {
+            "face_id": "f1",
+            "crop_url": "https://example.com/f1.jpg",
+            "targets": [
+                {"target_id": "target_iid", "target_type": "person", "target_name": "Target Person",
+                 "target_crop_url": "https://example.com/t.jpg", "matched_face_id": "ft",
+                 "confidence_pct": 80, "tier": "POSSIBLE MATCH", "distance": 0.8},
+            ],
+        },
+    ]
+
+    # user_is_admin=False
+    section = _compare_summary_section(results_by_face, set(), False, mock_registry, rid="test4")
+    html = repr(section)
+    assert "summary-merge-0" not in html
+    assert "summary-not-same-0" not in html
