@@ -8742,9 +8742,10 @@ def landing_page(stats, featured_photos):
                             Span("of the Jewish Community of Rhodes", cls="block text-amber-200"),
                             cls="text-3xl md:text-5xl lg:text-6xl font-bold text-amber-50 leading-tight tracking-tight font-display"
                         ),
-                        P("A digital archive using face recognition to reconnect generations of a Ladino-speaking "
-                          "Sephardic community scattered by history. Browse photographs, identify faces, and help "
-                          "preserve a living record.",
+                        P("For over 450 years, a Sephardic community thrived on the island of Rhodes \u2014 speaking Ladino, "
+                          "preserving ancient traditions, and filling the Juderia with life. In July 1944, nearly all were "
+                          "deported to Auschwitz. Only 151 survived. This archive uses face recognition to reconnect their "
+                          "descendants with the faces and stories that remain.",
                           cls="text-base md:text-lg text-amber-100/60 mt-6 max-w-2xl mx-auto leading-relaxed"),
                         # CTA buttons
                         Div(
@@ -9009,29 +9010,29 @@ def landing_page(stats, featured_photos):
                 Div(cls="ornament mb-8"),
                 H2("About This Archive", cls="text-2xl md:text-3xl font-bold text-amber-50 text-center mb-6"),
                 Div(
-                    P("For over two thousand years, a Jewish community flourished on the island of Rhodes, "
-                      "at the crossroads of the Aegean. After the expulsion from Spain in 1492, Sephardic families "
-                      "settled in the walled quarter known as ",
+                    P("After the expulsion from Spain in 1492, Sephardic families settled on the island of Rhodes, "
+                      "building a vibrant community in the walled quarter known as ",
                       Em("La Juderia"),
-                      ", bringing with them the Ladino language, rabbinical traditions, and a vibrant culture of "
-                      "merchants, craftsmen, and scholars. By the late 19th century, the community numbered several "
-                      "thousand. Six synagogues stood in La Juderia, and the narrow arched streets rang with "
-                      "Judeo-Spanish songs and the bustle of the ",
-                      Em("cortijos"),
-                      ", the shared courtyards where families gathered.",
+                      ". They spoke Ladino \u2014 a form of medieval Spanish interwoven with Hebrew, Arabic, Greek, "
+                      "and Turkish \u2014 and preserved centuries of folklore, ballads, and traditions in remarkable "
+                      "isolation. By 1920, over 4,000 Jews called Rhodes home, a quarter of the town\u2019s population. "
+                      "The ",
+                      Em("Kahal Shalom"),
+                      " synagogue and the great ",
+                      Em("Kal Grande"),
+                      " stood at the heart of communal life, the latter housing an 800-year-old Torah scroll.",
                       cls="text-amber-100/60 leading-relaxed mb-4"),
                     P("Beginning in the early 20th century, Rhodesli Jews emigrated in waves \u2014 first to nearby "
-                      "communities, then further abroad as the Italian occupation of 1912 and later the racial laws "
-                      "of 1938 uprooted families. Chain migration carried them to specific cities worldwide: Seattle "
-                      "and Los Angeles, Montgomery, Atlanta, and New York, Buenos Aires and S\u00e3o Paulo, "
-                      "communities in Africa, the Middle East, and beyond. The Holocaust of July 1944 devastated "
-                      "those who remained \u2014 of the 1,673 Jews deported from Rhodes and Kos to Auschwitz, "
-                      "only 151 survived.",
+                      "communities, then further abroad as the Italian occupation of 1912 and the racial laws "
+                      "of 1938 uprooted families. Chain migration carried them to Seattle and Los Angeles, Montgomery "
+                      "and Atlanta, Buenos Aires and S\u00e3o Paulo, and communities across Africa and beyond. "
+                      "In July 1944, the Germans deported nearly all 1,800 remaining Jews to Auschwitz. Only 151 "
+                      "survived. About 40 more were saved by the Turkish consul, who vouched for their citizenship.",
                       cls="text-amber-100/60 leading-relaxed mb-4"),
-                    P("Rhodesli is a digital preservation project that uses machine learning to reconnect faces "
-                      "and stories scattered across family collections worldwide. The photographs come from "
-                      "descendants around the world. Every identification you make \u2014 every name you recognize, "
-                      "every story you share \u2014 helps preserve this heritage.",
+                    P("Rhodesli is a digital preservation project that uses AI face recognition to reconnect "
+                      "descendants with the faces in these photographs. The images come from family collections "
+                      "around the world. Every face you identify \u2014 every name you recognize, every story you "
+                      "share \u2014 helps preserve what the survivors and their descendants have fought to keep alive.",
                       cls="text-amber-100/60 leading-relaxed mb-4"),
                     A("Read more about the project \u2192", href="/about",
                       cls="text-amber-300/70 hover:text-amber-200 text-sm inline-block"),
