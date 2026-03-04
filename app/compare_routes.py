@@ -4269,11 +4269,18 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
         # Face section with hide/show toggle
         face_section_parts = []
         if show_face_header:
+            # Build informative header: "Face N — X matches (best: Name Pct%)"
+            n_targets = len(fr["targets"])
+            best_target = fr["targets"][0] if fr["targets"] else None
+            if best_target:
+                header_text = f"Face {fi + 1} — {n_targets} match{'es' if n_targets != 1 else ''} (best: {best_target['target_name']} {best_target['confidence_pct']}%)"
+            else:
+                header_text = f"Face {fi + 1} — no matches"
             face_section_parts.append(
                 Div(
                     Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-600",
                         alt=f"Face {fi+1}") if crop_url else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
-                    Span(f"Face {fi + 1}", cls="text-sm text-white font-medium ml-3"),
+                    Span(header_text, cls="text-sm text-white font-medium ml-3"),
                     # Hide/show toggle
                     Button(
                         NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 face-collapse-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'),

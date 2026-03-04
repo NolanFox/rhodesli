@@ -872,7 +872,7 @@ class TestDiscoveriesCardEnhancements:
         """Each discovery card has an inline Compare link."""
         html = self._get_discovery_html(client)
         assert 'data-testid="discovery-compare-link"' in html
-        assert "/compare?source=inbox1&amp;target=conf1" in html
+        assert "/compare?face_id=face_inbox1&amp;person_id=conf1" in html
 
     def test_discovery_card_uses_rounded_lg(self, client):
         """Face images use rounded-lg instead of rounded-full for better visibility."""
