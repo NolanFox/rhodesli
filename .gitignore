@@ -106,3 +106,4 @@ docs/ux_audit/session_findings/screenshots/
 .claude/worktrees/
 .claude/parallel_session_active
 notebookllm/
+scripts/extract_routes.py
