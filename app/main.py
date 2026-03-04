@@ -10950,7 +10950,8 @@ def photo_view_content(
                 seq_highlight = " ring-2 ring-indigo-400 ring-offset-1 ring-offset-black/50"
 
             _overlay_style = f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;"
-            if not is_admin:
+            # Face labels: confirmed faces visible for ALL users, others admin-only
+            if not is_admin and state != "CONFIRMED":
                 _overlay_style += " display: none;"
             overlay = Div(
                 hover_tooltip,

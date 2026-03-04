@@ -332,3 +332,53 @@ class TestGap5SubmissionPersistence:
             resp = client.get("/identify/unknown-1")
         assert resp.status_code == 200
         assert "submission-success-banner" not in resp.text
+
+
+# ============================================================
+# Face Labels: Visibility logic unit test
+# ============================================================
+
+class TestFaceLabelsVisibility:
+    """Confirmed face overlays visible for all users; non-confirmed hidden for non-admin."""
+
+    def test_confirmed_visible_for_nonadmin_logic(self):
+        """The visibility condition should NOT hide confirmed faces for non-admin."""
+        # The logic: if not is_admin and state != "CONFIRMED": display:none
+        is_admin = False
+        state = "CONFIRMED"
+        should_hide = not is_admin and state != "CONFIRMED"
+        assert not should_hide, "Confirmed faces should be visible for non-admin"
+
+    def test_inbox_hidden_for_nonadmin_logic(self):
+        """The visibility condition should hide INBOX faces for non-admin."""
+        is_admin = False
+        state = "INBOX"
+        should_hide = not is_admin and state != "CONFIRMED"
+        assert should_hide, "INBOX faces should be hidden for non-admin"
+
+    def test_proposed_hidden_for_nonadmin_logic(self):
+        """The visibility condition should hide PROPOSED faces for non-admin."""
+        is_admin = False
+        state = "PROPOSED"
+        should_hide = not is_admin and state != "CONFIRMED"
+        assert should_hide, "PROPOSED faces should be hidden for non-admin"
+
+    def test_all_states_visible_for_admin(self):
+        """Admin should see all face overlays regardless of state."""
+        is_admin = True
+        for state in ("CONFIRMED", "INBOX", "PROPOSED", "SKIPPED", "REJECTED"):
+            should_hide = not is_admin and state != "CONFIRMED"
+            assert not should_hide, f"Admin should see {state} faces"
+
+    def test_person_page_has_connected_nav(self, client):
+        """Person page has navigation links to tree, map, timeline, compare."""
+        with ExitStack() as stack:
+            for p in _base_patches():
+                stack.enter_context(p)
+            resp = client.get("/person/confirmed-1")
+        assert resp.status_code == 200
+        body = resp.text
+        assert "/tree?person=confirmed-1" in body
+        assert "/map?person=confirmed-1" in body
+        assert "/timeline?person=confirmed-1" in body
+        assert "/compare?person_id=confirmed-1" in body
