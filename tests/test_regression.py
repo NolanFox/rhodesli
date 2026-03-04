@@ -514,3 +514,92 @@ class TestMergeRemovesSourceCard:
         # Response should include the target identity card
         assert f'id="identity-{target_id}"' in response.text, \
             "Merge response missing updated target card"
+
+
+class TestMergeConfirmationModal:
+    """UX-037: Merge buttons should have hx-confirm showing merge direction."""
+
+    def test_neighbor_card_merge_has_confirm(self):
+        """Neighbor card merge button includes hx-confirm with names."""
+        from unittest.mock import patch, MagicMock
+        from app.main import neighbor_card
+
+        neighbor = {
+            "identity_id": "nbr-123",
+            "name": "Leon Capeluto",
+            "distance": 0.75,
+            "percentile": 95,
+            "state": "CONFIRMED",
+            "anchor_face_ids": ["face_a"],
+            "candidate_face_ids": [],
+            "co_occurrence": 0,
+            "can_merge": True,
+        }
+        crop_files = set()
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"), \
+             patch("app.main.get_best_face_id", return_value="face_a"):
+            result = neighbor_card(
+                neighbor=neighbor,
+                target_identity_id="tgt-456",
+                target_name="Vida Capeluto",
+                crop_files=crop_files,
+                user_role="admin",
+            )
+        html = repr(result)
+        assert "hx-confirm" in html, "Merge button missing hx-confirm attribute"
+        assert "Leon Capeluto" in html, "Confirm should mention source name"
+        assert "Vida Capeluto" in html, "Confirm should mention target name"
+
+    def test_neighbor_card_unidentified_target_generic_confirm(self):
+        """When target is unidentified, use generic confirmation message."""
+        from unittest.mock import patch
+        from app.main import neighbor_card
+
+        neighbor = {
+            "identity_id": "nbr-123",
+            "name": "Unknown Person",
+            "distance": 0.75,
+            "percentile": 95,
+            "state": "PROPOSED",
+            "anchor_face_ids": ["face_a"],
+            "candidate_face_ids": [],
+            "co_occurrence": 0,
+            "can_merge": True,
+        }
+        crop_files = set()
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"), \
+             patch("app.main.get_best_face_id", return_value="face_a"):
+            result = neighbor_card(
+                neighbor=neighbor,
+                target_identity_id="tgt-456",
+                target_name="Unidentified Person 42",
+                crop_files=crop_files,
+                user_role="admin",
+            )
+        html = repr(result)
+        assert "hx-confirm" in html, "Merge button should still have hx-confirm"
+        assert "This can be undone" in html, "Generic confirm should mention undo"
+
+    def test_search_result_merge_has_confirm(self):
+        """Manual search merge button has hx-confirm."""
+        from unittest.mock import patch
+        from app.main import search_result_card
+
+        result = {
+            "identity_id": "src-789",
+            "name": "Isaac Cohen",
+            "face_count": 3,
+            "preview_face_id": "face_x",
+        }
+        with patch("app.main.resolve_face_image_url", return_value="/crops/test.jpg"):
+            card = search_result_card(
+                result=result,
+                target_identity_id="tgt-456",
+                crop_files=set(),
+                user_role="admin",
+                target_name="Leon Capeluto",
+            )
+        html = repr(card)
+        assert "hx-confirm" in html, "Search merge button missing hx-confirm"
+        assert "Isaac Cohen" in html
+        assert "Leon Capeluto" in html

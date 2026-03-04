@@ -6714,9 +6714,11 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     else:
         # UX-037: Show merge direction — neighbor merges INTO target
         _merge_label = f"Merge \u2192 {target_name}" if target_name and not target_name.startswith("Unidentified") else "Merge"
+        _confirm_msg = f"Merge {name} into {target_name}? All faces will be combined." if target_name and not target_name.startswith("Unidentified") else "Merge these identities? This can be undone."
         merge_btn = Button(_merge_label, cls="px-3 py-1 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
                            hx_post=f"/api/identity/{target_identity_id}/merge/{neighbor_id}{focus_suffix}", hx_target=merge_target,
                            hx_swap=merge_swap, data_auth_action="merge these identities",
+                           hx_confirm=_confirm_msg,
                            title=f"Merge {name} into {target_name}" if target_name else "Merge these identities")
 
     # Compare button -- opens side-by-side comparison modal
@@ -6780,7 +6782,7 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
         id=f"neighbor-{neighbor_id}", cls="p-3 bg-slate-700 border border-slate-600 rounded shadow-md mb-2 hover:shadow-lg overflow-hidden"
     )
 
-def search_result_card(result: dict, target_identity_id: str, crop_files: set, user_role: str = "admin") -> Div:
+def search_result_card(result: dict, target_identity_id: str, crop_files: set, user_role: str = "admin", target_name: str = "") -> Div:
     """
     Card for a manual search result.
     Similar styling to neighbor_card but simpler (no distance/percentile).
@@ -6825,6 +6827,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
             data_auth_action="suggest a merge",
         )
     else:
+        _confirm_msg = f"Merge {name} into {target_name}? All faces will be combined." if target_name and not target_name.startswith("Unidentified") else "Merge these identities? This can be undone."
         merge_btn = Button(
             "Merge",
             cls="px-2 py-1 text-xs font-bold border border-blue-500/50 text-blue-400 rounded hover:bg-blue-500/20",
@@ -6832,6 +6835,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
             hx_target=f"#identity-{target_identity_id}",
             hx_swap="outerHTML",
             data_auth_action="merge these identities",
+            hx_confirm=_confirm_msg,
         )
 
     # Navigation hyperscript (same as neighbor_card)
@@ -6853,7 +6857,7 @@ def search_result_card(result: dict, target_identity_id: str, crop_files: set, u
     )
 
 
-def search_results_panel(results: list, target_identity_id: str, crop_files: set, user_role: str = "admin") -> Div:
+def search_results_panel(results: list, target_identity_id: str, crop_files: set, user_role: str = "admin", target_name: str = "") -> Div:
     """Panel showing manual search results."""
     if not results:
         return Div(
@@ -6861,7 +6865,7 @@ def search_results_panel(results: list, target_identity_id: str, crop_files: set
             id=f"search-results-{target_identity_id}"
         )
 
-    cards = [search_result_card(r, target_identity_id, crop_files, user_role=user_role) for r in results]
+    cards = [search_result_card(r, target_identity_id, crop_files, user_role=user_role, target_name=target_name) for r in results]
     return Div(
         *cards,
         id=f"search-results-{target_identity_id}"
@@ -14658,6 +14662,8 @@ def get(identity_id: str, sess=None):
             )
             # Merge
             if n.get("can_merge", True):
+                _n_name = n.get("name", "")
+                _merge_confirm = f"Merge {_n_name} into {name}? All faces will be combined." if name and not name.startswith("Unidentified") else "Merge these identities? This can be undone."
                 tile_actions.append(
                     Button(
                         "Merge",
@@ -14665,6 +14671,7 @@ def get(identity_id: str, sess=None):
                         hx_post=f"/api/identity/{identity_id}/merge/{nid}",
                         hx_target=f"#expand-{css_id}",
                         hx_swap="innerHTML",
+                        hx_confirm=_merge_confirm,
                         type="button",
                     )
                 )
@@ -18351,6 +18358,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
         # Admin actions (merge/reject) — same as Find Similar
         action_buttons = []
         if user_is_admin and fiid:
+            _merge_confirm = f"Merge {fname} into {ref_name}? All faces will be combined." if ref_name and not ref_name.startswith("Unidentified") else "Merge these identities? This can be undone."
             action_buttons.append(
                 Button(
                     "Merge",
@@ -18359,6 +18367,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
                     hx_swap="outerHTML",
                     cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
                     data_testid=f"merge-{i}",
+                    hx_confirm=_merge_confirm,
                 )
             )
             action_buttons.append(
@@ -18719,10 +18728,12 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
 
         action_buttons = []
         if user_is_admin and fiid:
+            _merge_confirm = f"Merge {fname} into {ref_name}? All faces will be combined." if ref_name and not ref_name.startswith("Unidentified") else "Merge these identities? This can be undone."
             action_buttons.append(
                 Button("Merge",
                        hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
                        hx_target=f"#compare-face-{i}", hx_swap="outerHTML",
+                       hx_confirm=_merge_confirm,
                        cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
                        data_testid=f"merge-{i}"))
             action_buttons.append(
@@ -19664,12 +19675,14 @@ def get(result_id: str, sess=None):
         # Admin merge/not-same actions (same pattern as vs-person endpoint)
         action_buttons = []
         if user_is_admin and m_identity_id and ref_id:
+            _merge_confirm = f"Merge {name} into {ref_name}? All faces will be combined." if ref_name and ref_name != "Unknown" else "Merge these identities? This can be undone."
             action_buttons.append(
                 Button(
                     "Merge",
                     hx_post=f"/api/identity/{ref_id}/merge/{m_identity_id}?source=compare",
                     hx_target=f"#result-face-{i}",
                     hx_swap="outerHTML",
+                    hx_confirm=_merge_confirm,
                     cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
                     data_testid=f"result-merge-{i}",
                 )
@@ -20960,9 +20973,13 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
             face_identity = get_identity_for_face(registry, face_id)
             face_iid = face_identity.get("identity_id") if face_identity else None
             if user_is_admin and tr["target_type"] == "person" and tr["target_id"] and face_iid:
+                _face_name = face_identity.get("name", "") if face_identity else ""
+                _target_name = tr.get("target_name", "")
+                _merge_confirm = f"Merge {_face_name} into {_target_name}? All faces will be combined." if _target_name and not _target_name.startswith("Unidentified") else "Merge these identities? This can be undone."
                 action_btns.append(
                     Button("Merge", hx_post=f"/api/identity/{tr['target_id']}/merge/{face_iid}?source=compare",
                            hx_target=f"#compare-row-{fi}-{ti}", hx_swap="outerHTML",
+                           hx_confirm=_merge_confirm,
                            cls="px-2 py-0.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded"))
                 action_btns.append(
                     Button("Not Same", hx_post=f"/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
@@ -24337,12 +24354,14 @@ def get(identity_id: str):
             type="button",
             **{"_": "on click remove .hidden from #compare-modal"},
         )
+        _merge_confirm = f"Merge with {name}? All faces will be combined." if name and not name.startswith("Unidentified") else "Merge these identities? This can be undone."
         merge_btn = Button(
             "Merge",
             cls="text-[10px] px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded transition-colors",
             hx_post=f"/api/identity/{neighbor_id}/merge/{identity_id}",
             hx_target="#focus-container",
             hx_swap="outerHTML",
+            hx_confirm=_merge_confirm,
             type="button",
         ) if tier_dots >= 3 else None  # Only show merge for Moderate+ confidence
 
@@ -24395,8 +24414,15 @@ def get(identity_id: str, q: str = "", sess=None):
     # Search for matching identities
     results = registry.search_identities(q, exclude_id=identity_id)
 
+    # Get target name for merge confirmation
+    try:
+        target_data = registry.get_identity(identity_id)
+        _target_name = ensure_utf8_display(target_data.get("name", ""))
+    except (KeyError, TypeError):
+        _target_name = ""
+
     crop_files = get_crop_files()
-    return search_results_panel(results, identity_id, crop_files, user_role=_get_user_role(sess))
+    return search_results_panel(results, identity_id, crop_files, user_role=_get_user_role(sess), target_name=_target_name)
 
 
 @rt("/api/search")
@@ -25956,8 +25982,10 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
             hx_post=f"/api/identity/{target_id}/suggest-merge/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
             **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
     else:
+        _merge_confirm = f"Merge {n_name} into {t_name}? All faces will be combined." if t_name and not t_name.startswith("Unidentified") and not t_name.startswith("Identity ") else "Merge these identities? This can be undone."
         m_btn = Button("Merge", cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
             hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_id}", hx_swap="outerHTML",
+            hx_confirm=_merge_confirm,
             **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
     ns_btn = Button("Not Same", cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
         hx_post=f"/api/identity/{target_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
