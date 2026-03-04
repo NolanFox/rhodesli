@@ -16,6 +16,12 @@ import json
 import logging
 import os
 import sys
+# Ensure project root is on sys.path for cross-module imports (compare_routes, estimate_routes).
+# When running `python app/main.py`, sys.path[0] = app/ not project root.
+from pathlib import Path as _PathEarly
+_project_root = str(_PathEarly(__file__).resolve().parent.parent)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
 if not os.environ.get("RAILWAY_ENVIRONMENT") and "pytest" not in sys.modules:
     from dotenv import load_dotenv
     load_dotenv()
