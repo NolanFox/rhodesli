@@ -892,3 +892,17 @@ class TestDiscoveriesCardEnhancements:
         html = self._get_discovery_html(client)
         assert "w-28" in html
         assert "h-28" in html
+
+    def test_discovery_card_shows_distance(self, client):
+        """Session 88: Discovery cards now show distance metric."""
+        html = self._get_discovery_html(client, distance=0.92)
+        assert 'data-testid="discovery-distance"' in html
+        assert "0.92" in html
+
+    def test_discovery_card_correct_compare_url(self, client):
+        """Session 88: Compare link uses face_id + person_id params."""
+        html = self._get_discovery_html(client)
+        assert "face_id=" in html
+        assert "person_id=conf1" in html
+        # Should NOT use old source=/target= params
+        assert "source=inbox1" not in html

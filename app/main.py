@@ -6665,6 +6665,44 @@ def face_card(
     )
 
 
+def match_info_bar(distance: float, confidence_gap: float = 0.0, co_occurrence: int = 0,
+                   show_distance: bool = True) -> Div:
+    """Shared match metrics bar — used by neighbor_card and discovery cards.
+
+    Session 88: Unified component so all match displays show the same info.
+    """
+    from core.confidence import compute_face_confidence
+    conf = compute_face_confidence(distance)
+    pct = conf["confidence_pct"]
+    label = conf["short_label"]
+
+    _similarity_classes = {
+        "Very High": "bg-emerald-500/30 text-emerald-300",
+        "High": "bg-emerald-500/20 text-emerald-400",
+        "Moderate": "bg-amber-500/20 text-amber-400",
+        "Low": "bg-amber-500/15 text-amber-500",
+        "Very Low": "bg-slate-600 text-slate-400",
+    }
+    similarity_class = _similarity_classes.get(label, "bg-slate-600 text-slate-400")
+
+    badge = Span(f"{pct}% match", cls=f"text-xs px-2 py-0.5 rounded {similarity_class}")
+
+    details = []
+    if show_distance:
+        details.append(Span(f"Dist: {distance:.2f}", cls="text-xs font-data text-slate-400 bg-slate-700 px-1 rounded"))
+    if confidence_gap > 0:
+        details.append(Span(f"+{confidence_gap}% gap", cls="text-xs font-data text-emerald-400/70 bg-emerald-900/30 px-1 rounded"))
+    if co_occurrence > 0:
+        details.append(Span(f"Seen together in {co_occurrence} photo{'s' if co_occurrence != 1 else ''}", cls="text-[10px] text-amber-400 italic"))
+
+    return Div(
+        badge,
+        Div(*details, cls="flex items-center flex-wrap gap-1") if details else None,
+        cls="flex flex-col gap-0.5",
+        data_testid="match-info-bar",
+    )
+
+
 def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show_checkbox: bool = True, user_role: str = "admin", from_focus: bool = False, triage_filter: str = "", focus_section: str = "", target_name: str = "") -> Div:
     neighbor_id = neighbor["identity_id"]
     # UI BOUNDARY: sanitize name for safe rendering
@@ -23624,6 +23662,9 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                 Span(confidence_label,
                      cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
                      title=f"Distance: {distance:.2f} ({confidence})"),
+                # Match metrics — distance + gap (Session 88: was missing from discovery cards)
+                Span(f"dist: {distance:.2f}", cls="text-[10px] text-slate-500 font-mono",
+                     data_testid="discovery-distance"),
                 compare_link,
                 cls="flex flex-col items-center gap-1.5 px-4"
             ),

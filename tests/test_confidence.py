@@ -300,3 +300,28 @@ class TestScoringConsistencySession88:
         # This verifies the batch override in neighbors.py is gone
         result = compute_face_confidence(1.13)
         assert "calibrated_score" not in result
+
+
+class TestMatchInfoBar:
+    """Session 88: Tests for the shared match_info_bar component."""
+
+    def test_match_info_bar_renders(self):
+        from app.main import match_info_bar
+        bar = match_info_bar(distance=0.8, confidence_gap=15.3, co_occurrence=2)
+        html = repr(bar)
+        assert "match-info-bar" in html
+        assert "0.80" in html  # distance
+        assert "+15.3% gap" in html
+        assert "2 photos" in html
+
+    def test_match_info_bar_no_gap(self):
+        from app.main import match_info_bar
+        bar = match_info_bar(distance=1.0, confidence_gap=0.0)
+        html = repr(bar)
+        assert "% gap" not in html
+
+    def test_match_info_bar_hide_distance(self):
+        from app.main import match_info_bar
+        bar = match_info_bar(distance=1.0, show_distance=False)
+        html = repr(bar)
+        assert "Dist:" not in html
