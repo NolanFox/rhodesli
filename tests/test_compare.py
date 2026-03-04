@@ -78,7 +78,7 @@ def test_compare_loading_indicator_present(client):
 
 def test_compare_confidence_tiers_calibrated(monkeypatch):
     """Confidence labels match calibrated score ranges."""
-    from app.main import _compare_result_card
+    from app.compare_routes import _compare_result_card
 
     monkeypatch.setattr("app.main.resolve_face_image_url", lambda *_: "https://example.com/crop.jpg")
     monkeypatch.setattr("app.main.get_photo_id_for_face", lambda *_: "photo-1")
@@ -201,8 +201,9 @@ def test_save_comparison_result_is_retrievable(tmp_path, monkeypatch):
 def test_compare_upload_stages_file(tmp_path, monkeypatch):
     """Compare upload stages file to data/staging/{job_id}/ (same as Upload page)."""
     import app.main as main_mod
+    import app.compare_routes as compare_mod
     monkeypatch.setattr(main_mod, "data_path", tmp_path)
-    monkeypatch.setattr(main_mod, "PROCESSING_ENABLED", False)
+    monkeypatch.setattr(compare_mod, "PROCESSING_ENABLED", False)
     (tmp_path / "staging").mkdir(parents=True, exist_ok=True)
     from starlette.testclient import TestClient
     tc = TestClient(main_mod.app)
@@ -412,7 +413,8 @@ def test_compare_from_photo_returns_scores(client, monkeypatch):
 
     monkeypatch.setattr(main_mod, "load_registry", lambda: mock_registry)
     monkeypatch.setattr(main_mod, "get_crop_files", lambda: set())
-    monkeypatch.setattr(main_mod, "_resolve_crop_url", lambda fid, cf: f"https://example.com/{fid}.jpg")
+    import app.compare_routes as compare_mod
+    monkeypatch.setattr(compare_mod, "_resolve_crop_url", lambda fid, cf: f"https://example.com/{fid}.jpg")
     monkeypatch.setattr(main_mod, "get_photo_metadata", lambda pid: {
         "filename": "test.jpg",
         "faces": [{"face_id": "uploaded-face-1", "bbox": [0, 0, 100, 100]}],

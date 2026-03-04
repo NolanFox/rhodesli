@@ -186,7 +186,7 @@ class TestCalibratedLabels:
 
     def test_result_card_very_likely_at_85_plus(self):
         """Confidence 85%+ shows 'Very likely same person'."""
-        from app.main import _compare_result_card
+        from app.compare_routes import _compare_result_card
         # Use inbox_ prefix face ID so resolve_face_image_url maps to inbox_face_a.jpg
         result = {"face_id": "inbox_face_a", "distance": 0.5, "tier": "STRONG MATCH",
                   "confidence_pct": 90, "identity_name": "Test", "state": "CONFIRMED",
@@ -199,7 +199,7 @@ class TestCalibratedLabels:
 
     def test_result_card_strong_match_at_70_84(self):
         """Confidence 70-84% shows 'Strong match'."""
-        from app.main import _compare_result_card
+        from app.compare_routes import _compare_result_card
         result = {"face_id": "inbox_face_b", "distance": 0.8, "tier": "STRONG MATCH",
                   "confidence_pct": 75, "identity_name": "Test", "state": "CONFIRMED",
                   "identity_id": "id_1"}
@@ -212,7 +212,7 @@ class TestCalibratedLabels:
 
     def test_result_card_possible_at_50_69(self):
         """Confidence 50-69% shows 'Possible match'."""
-        from app.main import _compare_result_card
+        from app.compare_routes import _compare_result_card
         result = {"face_id": "inbox_face_c", "distance": 1.1, "tier": "POSSIBLE MATCH",
                   "confidence_pct": 60, "identity_name": "Test", "state": "PROPOSED",
                   "identity_id": "id_1"}
@@ -224,7 +224,7 @@ class TestCalibratedLabels:
 
     def test_result_card_unlikely_below_50(self):
         """Confidence below 50% shows 'Unlikely match'."""
-        from app.main import _compare_result_card
+        from app.compare_routes import _compare_result_card
         result = {"face_id": "inbox_face_d", "distance": 1.6, "tier": "WEAK",
                   "confidence_pct": 30, "identity_name": "Test", "state": "INBOX",
                   "identity_id": "id_1"}
@@ -236,7 +236,7 @@ class TestCalibratedLabels:
 
     def test_results_grid_has_ctas(self):
         """Results grid includes action CTAs (Share, Try Another)."""
-        from app.main import _compare_results_grid
+        from app.compare_routes import _compare_results_grid
         # Grid generates cards but they'll be empty (no crop files)
         # The CTAs appear regardless of card count
         results = [
@@ -253,7 +253,7 @@ class TestCalibratedLabels:
 
     def test_tier_labels_not_misleading(self):
         """Tier section title no longer says 'Very likely' for strong match tier."""
-        from app.main import _compare_results_grid
+        from app.compare_routes import _compare_results_grid
         results = [
             {"face_id": "inbox_f1", "distance": 0.9, "tier": "STRONG MATCH",
              "confidence_pct": 60, "identity_name": "A", "state": "CONFIRMED",

@@ -207,7 +207,7 @@ class TestCompareExecute:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "test-person-1"}), \
              patch("app.main.get_photo_metadata", return_value=None), \
              patch("core.neighbors.find_similar_faces", return_value=[]):
@@ -228,7 +228,7 @@ class TestCompareExecute:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "test-person-1"}), \
              patch("app.main.get_photo_metadata", return_value=None), \
              patch("core.neighbors.find_similar_faces", return_value=[]):
@@ -256,7 +256,7 @@ class TestCompareExecute:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "test-person-1"}), \
              patch("core.neighbors.find_similar_faces", return_value=mock_matches):
             resp = client.post("/api/compare/execute", data={
@@ -284,7 +284,7 @@ class TestCompareExecute:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "test-person-1"}), \
              patch("app.main.get_photo_metadata", return_value=None), \
              patch("core.neighbors.find_similar_faces", return_value=[]):
@@ -305,7 +305,7 @@ class TestCompareExecute:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "test-person-1"}), \
              patch("app.main.get_photo_metadata", return_value=None), \
              patch("core.neighbors.find_similar_faces", return_value=[]):
@@ -337,7 +337,7 @@ class TestCompareExecute:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "multi-face"}), \
              patch("app.main.get_photo_metadata", return_value=None), \
              patch("core.neighbors.find_similar_faces", return_value=[]):
@@ -376,7 +376,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"):
             resp = client.get("/api/compare/search-unified?q=Isaac&types=person")
         assert resp.status_code == 200
         assert "Isaac Cohen" in resp.text
@@ -392,7 +392,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"):
             resp = client.get("/api/compare/search-unified?q=Unidentified&types=person")
         assert resp.status_code == 200
         assert "Unidentified" in resp.text
@@ -407,7 +407,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value=""):
+             patch("app.compare_routes._resolve_crop_url", return_value=""):
             resp = client.get("/api/compare/search-unified?q=Test&types=photo")
         assert resp.status_code == 200
         assert "Photo" in resp.text
@@ -422,7 +422,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"):
             resp = client.get("/api/compare/search-unified?q=Isaac&types=person&slot=source")
         assert resp.status_code == 200
         assert 'data-action="select-compare-source"' in resp.text
@@ -437,7 +437,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"):
             resp = client.get("/api/compare/search-unified?q=Isaac&types=person&slot=target")
         assert resp.status_code == 200
         assert 'data-action="select-compare-target"' in resp.text
@@ -466,7 +466,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"):
             # Source person search
             resp = client.get("/api/compare/search-unified?q=Isaac&types=person&slot=source")
             assert "source-person-results" in resp.text
@@ -488,7 +488,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"):
             resp = client.get("/api/compare/search-unified?q=Barouh&types=person&slot=target")
         assert resp.status_code == 200
         # Should contain the person result
@@ -516,7 +516,7 @@ class TestUnifiedSearch:
 
         with patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
-             patch("app.main._resolve_crop_url", return_value=""):
+             patch("app.compare_routes._resolve_crop_url", return_value=""):
             resp = client.get("/api/compare/search-unified?q=TestPhoto&types=photo&slot=target")
         assert resp.status_code == 200
         assert "3 faces" in resp.text
@@ -701,7 +701,7 @@ class TestContextIntelligence:
              patch("app.main.load_registry", return_value=registry), \
              patch("app.main.get_crop_files", return_value={}), \
              patch("app.main.is_auth_enabled", return_value=False), \
-             patch("app.main._resolve_crop_url", return_value="/crop.jpg"), \
+             patch("app.compare_routes._resolve_crop_url", return_value="/crop.jpg"), \
              patch("app.main.get_identity_for_face", return_value={"identity_id": "p1"}), \
              patch("app.main.get_photo_metadata", return_value=None), \
              patch("core.neighbors.find_similar_faces", return_value=[]):

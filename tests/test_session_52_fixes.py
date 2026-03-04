@@ -500,7 +500,7 @@ class TestEstimateUploadProcessing:
              patch("core.storage.can_write_r2", return_value=False), \
              patch.dict("os.environ", {"GEMINI_API_KEY": "test-key"}, clear=False), \
              patch.dict("sys.modules", {"cv2": None, "insightface": None, "insightface.app": None}), \
-             patch("app.main._call_gemini_date_estimate", return_value=mock_gemini_result):
+             patch("app.estimate_routes._call_gemini_date_estimate", return_value=mock_gemini_result):
             response = self.client.post(
                 "/api/estimate/upload",
                 files={"photo": ("test.jpg", img, "image/jpeg")},
