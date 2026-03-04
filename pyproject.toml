@@ -4,3 +4,15 @@ markers = [
     "slow: marks tests as slow (integration, e2e, browser, ML model loading)",
 ]
 addopts = "--strict-markers"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.ruff.lint]
+# Only enable safe, non-disruptive rules
+select = ["F", "E9", "W1"]  # Pyflakes errors + syntax errors + indentation
+ignore = ["E501"]  # Line length handled by formatter

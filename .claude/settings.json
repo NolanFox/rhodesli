@@ -10,6 +10,11 @@
             "type": "command",
             "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo unknown); if echo \"$S\" | grep -qi merge; then echo \"Merge session — assessment not required\"; else if [ ! -f \"docs/assessments/session-${S}-assessment.md\" ]; then echo \"BLOCKED: Assessment file missing for session ${S}\" >&2; exit 2; fi; if [ ! -f \"docs/sessions/SESSION_0${S}.md\" ]; then echo \"BLOCKED: Session log missing: docs/sessions/SESSION_0${S}.md\" >&2; exit 2; fi; fi; if [ -n \"$(git status --porcelain)\" ]; then echo \"BLOCKED: Uncommitted files\" >&2; git status --porcelain >&2; exit 2; fi; exit 0'",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'WARN=0; for f in $(git diff --name-only HEAD~1 2>/dev/null | grep \"\\.py$\"); do HITS=$(grep -nE \"^[^#]*\\bprint\\(|^[^#]*\\bbreakpoint\\(\" \"$f\" 2>/dev/null); if [ -n \"$HITS\" ]; then echo \"WARNING: debug statements in $f:\" >&2; echo \"$HITS\" >&2; WARN=1; fi; done; if [ $WARN -eq 1 ]; then echo \"Consider removing debug print()/breakpoint() before session end.\" >&2; fi; exit 0'",
+            "timeout": 10
           }
         ]
       }
@@ -52,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --git-common-dir 2>/dev/null | xargs dirname); PYTEST=\"${REPO}/venv/bin/pytest\"; [ ! -f \"$PYTEST\" ] && PYTEST=venv/bin/pytest; $PYTEST tests/ -x -q -n auto -m \"not slow\" --timeout=10 2>&1 | tail -5; fi'"
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); bash \"$REPO/scripts/test-gate.sh\" fast 2>&1 | tail -5; fi'"
           }
         ]
       }
@@ -76,6 +81,11 @@
           {
             "type": "command",
             "command": "bash -c 'INPUT=$(cat); FILE=$(echo \"$INPUT\" | python3 -c \"import sys,json; d=json.load(sys.stdin).get(\\\"tool_input\\\",{}); print(d.get(\\\"file_path\\\",d.get(\\\"path\\\",\\\"\\\")))\" 2>/dev/null); if echo \"$FILE\" | grep -qE \"(rhodesli_ml|core)/.*\\.py$\"; then echo \"REMINDER: Update ALGORITHMIC_DECISIONS.md if this changes ML behavior.\" >&2; fi'"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-format.sh\"",
+            "timeout": 10
           }
         ]
       },
@@ -84,7 +94,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"git commit|git merge\"; then echo \"══════════════════════════════════════════════\"; echo \"🔴 SESSION 81: /clear GATE\"; echo \"══════════════════════════════════════════════\"; echo \"You just committed. You MUST now:\"; echo \"  1. Run /clear (NOT /compact)\"; echo \"  2. Re-read ONLY next act from docs/prompts/session-81-prompt.md\"; echo \"  3. Re-read context: head -40 docs/session_context/session_81_context.md\"; echo \"  4. Check progress: cat /tmp/session_81_checklist.md\"; echo \"══════════════════════════════════════════════\"; if [ -f /tmp/session_81_checklist.md ]; then cat /tmp/session_81_checklist.md; fi; echo \"REMINDER: Run make test-fast before proceeding.\"; fi; exit 0'"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-commit-gate.sh\"",
+            "timeout": 10
           }
         ]
       }
@@ -95,7 +106,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'osascript -e \"display notification \\\"Session 81: Awaiting input\\\" with title \\\"Claude Code\\\"\" 2>/dev/null; exit 0'"
+            "command": "bash -c 'S=$(cat .claude/current_session.txt 2>/dev/null || echo \"?\"); osascript -e \"display notification \\\"Session ${S}: Awaiting input\\\" with title \\\"Claude Code\\\"\" 2>/dev/null; exit 0'"
           }
         ]
       }

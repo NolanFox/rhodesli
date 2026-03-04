@@ -531,3 +531,28 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 3. **FastHTML + surgical JS embeds** — ACCEPTED. Keep all routing, auth, data, HTMX partials. Add standalone JS only where HTMX falls short. No build step, no npm, files served from static/js/.
 **Consequences:** Tree visualization gets D3/SVG. Mobile gets CSS transitions + vanilla JS event listeners. Face cards get CSS animations. All server communication stays HTMX. JS files are self-contained, no framework dependency.
 **Review Trigger:** If 3+ components need complex state management, or mobile UX still underperforms after Session 74, revisit full frontend framework. Track in ROADMAP.md as a future evaluation item.
+
+## HD-024: ECC-Inspired Harness Improvements (Session 88)
+
+**Date:** 2026-03-04
+**Status:** IMPLEMENTED
+**Decision:** Adopt 6 improvements from evaluating `affaan-m/everything-claude-code` (3.4K stars) against our harness. Focus on mechanical enforcement over prose rules.
+
+**Research:** Full repo analysis via `gh api` — 50+ skills, 14 agents, 35 commands, full hooks system. Most content is framework-specific boilerplate (Django, Spring Boot, Swift, Go) irrelevant to our Python/FastHTML stack. Codex PR #5 attempted this comparison but was blocked by proxy (403) and produced internal retrospection only — closed without merge.
+
+**Changes Implemented:**
+1. **Post-edit ruff auto-format** (`.claude/hooks/post-edit-format.sh`) — Runs `ruff format` + `ruff check --fix` on Python files after every Edit/Write. Catches formatting drift immediately. Inspired by ECC's Biome/Prettier PostToolUse hook.
+2. **De-hardcoded hooks** (`.claude/hooks/post-commit-gate.sh`) — Replaced session-81 hardcoded text in PostToolUse Bash and Notification hooks with dynamic session number from `.claude/current_session.txt`.
+3. **Debug statement audit** (Stop hook addition) — Scans git-modified `.py` files for `print()` and `breakpoint()` at session end. Warning only (not blocking). Inspired by ECC's console.log audit pattern.
+4. **Unified test gate** (`scripts/test-gate.sh`) — Extracts pytest logic from PreToolUse hook into a shared script. Supports `fast|full|ml|all` modes. Hooks call the script instead of embedding pytest inline.
+5. **`/simplify` enforcement** (session-run.md update) — Added as mandatory post-implementation step. The skill existed but was never systematically invoked. ECC's "de-sloppify" pattern confirms this is standard practice.
+6. **`/verify` skill** (`.claude/skills/verify.md`) — Formalized build-test-fix loop with max 3 iterations. Inspired by ECC's verification-loop skill.
+
+**What We Rejected from ECC:**
+- **Instinct/continuous-learning system** — Marked `enabled: false` in their own config. Too experimental, adds complexity for unproven value.
+- **Session transcript auto-parsing** — Our manual session logs + assessment protocol are more reliable and auditable.
+- **Tool-call counting for compaction** — Our `/compact` ban (Lesson 89) is a better strategy than threshold-based suggestions.
+- **Framework-specific skills** — Django, Spring Boot, Swift, Go, Java, C++ skills irrelevant to our stack.
+- **Content/business skills** — Investor materials, article writing, market research not relevant.
+
+**Breadcrumbs:** `.claude/settings.json`, `.claude/hooks/post-edit-format.sh`, `.claude/hooks/post-commit-gate.sh`, `scripts/test-gate.sh`, `.claude/skills/verify.md`, `.claude/skills/session-run.md`, `pyproject.toml`
