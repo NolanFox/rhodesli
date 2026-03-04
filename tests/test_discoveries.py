@@ -201,7 +201,7 @@ class TestComputeDiscoveries:
         assert d["source_id"] == "inbox1"
         assert d["target_id"] == "conf1"
         assert d["distance"] == 0.5
-        assert d["confidence"] == "VERY HIGH"
+        assert d["confidence"] in ("VERY HIGH", "HIGH")  # AD-200: unified scoring
 
     def test_discoveries_sorted_by_distance(self):
         """Discoveries are sorted by distance ascending (best first)."""

@@ -354,7 +354,7 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
         tier = conf["tier"]
         confidence_pct = conf["confidence_pct"]
         # Map tier to legacy confidence label for backward compat
-        confidence = conf["short_label"].upper().replace(" ", "_")
+        confidence = conf["short_label"].upper()
 
         # Override pct with batch calibrator if available (more efficient)
         cal_score = None

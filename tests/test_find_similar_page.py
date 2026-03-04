@@ -71,8 +71,8 @@ class TestFindSimilarPage:
 
     def test_shows_confidence_tier(self, client, mock_similar_data):
         resp = client.get("/people/id-leon/similar")
-        # 0.95 distance = High confidence tier
-        assert "High" in resp.text
+        # 0.95 distance = Moderate tier under unified scoring (AD-200)
+        assert "Moderate" in resp.text
 
     def test_404_for_unknown(self, client, mock_similar_data):
         resp = client.get("/people/unknown-id/similar")
@@ -93,9 +93,9 @@ class TestFindSimilarPage:
         assert "Jews of Rhodes Heritage Archive" in resp.text
 
     def test_confidence_tier_colors(self, client, mock_similar_data):
-        """High confidence tier (0.95 distance) should use blue color."""
+        """Moderate confidence tier (0.95 distance) should use amber color (AD-200)."""
         resp = client.get("/people/id-leon/similar")
-        assert "bg-blue-600" in resp.text
+        assert "bg-amber-500" in resp.text
 
     def test_back_to_profile_link_uses_person_route(self, client, mock_similar_data):
         """Back link should point to /person/{id}, not /people/{id}."""

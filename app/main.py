@@ -3671,7 +3671,8 @@ def _proposal_banner(identity_id: str):
     confidence = best.get("confidence", "")
     target_name = best.get("target_identity_name", "Unknown")
     distance = best.get("distance", 0)
-    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+    from core.confidence import compute_confidence_pct
+    confidence_pct = compute_confidence_pct(distance)
 
     color_cls = {
         "VERY HIGH": "bg-emerald-900/30 border-emerald-500/50 text-emerald-300",
@@ -5063,14 +5064,12 @@ def _resolve_match_crop(target_id: str, crop_files: set):
 
 
 def _confidence_tier(distance: float) -> str:
-    """Map embedding distance to confidence tier."""
-    if distance < 0.80:
-        return "VERY HIGH"
-    elif distance < 1.00:
-        return "HIGH"
-    elif distance < 1.20:
-        return "MODERATE"
-    return "LOW"
+    """Map embedding distance to confidence tier. Uses unified scoring (AD-200)."""
+    from core.confidence import compute_face_confidence
+    conf = compute_face_confidence(distance)
+    # Map unified short_label → legacy tier names for backward compat
+    _label_to_tier = {"Very High": "VERY HIGH", "High": "HIGH", "Moderate": "MODERATE", "Low": "LOW", "Very Low": "LOW"}
+    return _label_to_tier.get(conf["short_label"], "LOW")
 
 
 _CONFIDENCE_RING = {"VERY HIGH": "ring-emerald-400", "HIGH": "ring-blue-400", "MODERATE": "ring-amber-400"}
@@ -6678,35 +6677,20 @@ def neighbor_card(neighbor: dict, target_identity_id: str, crop_files: set, show
     face_count = neighbor.get("face_count", 0)
     co_occurrence = neighbor.get("co_occurrence", 0)
 
-    # --- CALIBRATION: AD-013 Evidence-Based Thresholds + AD-149 Isotonic ---
-    if distance < MATCH_THRESHOLD_VERY_HIGH:
-        similarity_class = "bg-emerald-500/30 text-emerald-300"
-        similarity_label = "Very High"
-    elif distance < MATCH_THRESHOLD_HIGH:
-        similarity_class = "bg-emerald-500/20 text-emerald-400"
-        similarity_label = "High"
-    elif distance < MATCH_THRESHOLD_MODERATE:
-        similarity_class = "bg-amber-500/20 text-amber-400"
-        similarity_label = "Moderate"
-    elif distance < MATCH_THRESHOLD_MEDIUM:
-        similarity_class = "bg-amber-500/15 text-amber-500"
-        similarity_label = "Medium"
-    else:
-        similarity_class = "bg-slate-600 text-slate-400"
-        similarity_label = "Low"
+    # --- Unified confidence scoring (AD-200) ---
+    from core.confidence import compute_face_confidence
+    _disc_conf = compute_face_confidence(distance)
+    similarity_label = _disc_conf["short_label"]
+    calibrated_pct = _disc_conf["confidence_pct"]
 
-    # Calibrated probability (AD-149: isotonic regression)
-    calibrated_pct = None
-    try:
-        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-        cal = SimilarityCalibrator()
-        # Convert Euclidean distance → cosine similarity: s = 1 - d²/2
-        cosine_sim = max(0.0, 1.0 - (distance ** 2) / 2.0)
-        prob = cal.predict(cosine_sim)
-        if prob is not None:
-            calibrated_pct = int(prob * 100)
-    except Exception:
-        pass  # Graceful degradation — show threshold labels only
+    _similarity_classes = {
+        "Very High": "bg-emerald-500/30 text-emerald-300",
+        "High": "bg-emerald-500/20 text-emerald-400",
+        "Moderate": "bg-amber-500/20 text-amber-400",
+        "Low": "bg-amber-500/15 text-amber-500",
+        "Very Low": "bg-slate-600 text-slate-400",
+    }
+    similarity_class = _similarity_classes.get(similarity_label, "bg-slate-600 text-slate-400")
     # -----------------------------------------------
 
     # Merge button -- role-aware: admin merges directly, contributor suggests
@@ -14544,23 +14528,14 @@ def get(identity_id: str, sess=None):
             n["face_count"] = 0
 
     # Confidence tier for distance — color-coded labels
-    def _confidence_tier(dist):
-        if dist < 0.80:
-            return ("Very High", "bg-emerald-600")
-        elif dist < 1.05:
-            return ("High", "bg-blue-600")
-        elif dist < 1.15:
-            return ("Moderate", "bg-amber-500")
-        elif dist < 1.30:
-            return ("Low", "bg-slate-500")
-        return ("Very Low", "bg-slate-600")
+    from core.confidence import confidence_tier_from_distance
 
     # Build result grid cards
     result_cards = []
     for n in neighbors:
         if not n.get("crop_url"):
             continue
-        tier_label, tier_cls = _confidence_tier(n.get("distance", 99))
+        tier_label, tier_cls = confidence_tier_from_distance(n.get("distance", 99))
         card = Div(
             A(
                 Img(src=n["crop_url"], alt=n.get("name", ""), cls="w-full h-full object-cover", loading="lazy"),
@@ -19313,17 +19288,7 @@ def get(identity_id: str):
 
     # Map distance to confidence tier for visual display
     # Uses config constants for consistency with neighbor_card (AD-013)
-    def _confidence_tier(dist):
-        if dist < MATCH_THRESHOLD_VERY_HIGH:
-            return ("Very High", "bg-emerald-500", 5)
-        elif dist < MATCH_THRESHOLD_HIGH:
-            return ("High", "bg-green-500", 4)
-        elif dist < MATCH_THRESHOLD_MODERATE:
-            return ("Moderate", "bg-amber-500", 3)
-        elif dist < MATCH_THRESHOLD_LOW:
-            return ("Low", "bg-orange-500", 2)
-        else:
-            return ("Very Low", "bg-red-500", 1)
+    from core.confidence import confidence_tier_with_dots
 
     # Build suggestion cards with visual confidence and action buttons
     crop_files = get_crop_files()
@@ -19332,7 +19297,7 @@ def get(identity_id: str):
         name = ensure_utf8_display(n.get("name", "Unknown"))
         dist = n.get("distance", 0)
         neighbor_id = n.get("identity_id", "")
-        tier_label, tier_color, tier_dots = _confidence_tier(dist)
+        tier_label, tier_color, tier_dots = confidence_tier_with_dots(dist)
 
         # Face thumbnail — use enriched anchor/candidate face IDs (same pattern as neighbor_card)
         thumb = Div(cls="w-10 h-10 rounded-full bg-slate-600 flex-shrink-0")
@@ -29142,8 +29107,10 @@ def get(filter: str = "", sess=None):
     faces_b = neighbor_b.get("face_count", 0)
 
     # Confidence calculation (inverse distance, clamped 0-100)
-    # Distance 0.0 = 100% confidence, distance 2.0 = 0%
-    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+    # Unified confidence scoring (AD-200)
+    from core.confidence import compute_face_confidence
+    _conf = compute_face_confidence(distance)
+    confidence_pct = _conf["confidence_pct"]
 
     # Color based on confidence
     if confidence_pct >= 70:
