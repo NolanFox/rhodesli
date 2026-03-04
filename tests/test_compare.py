@@ -385,9 +385,9 @@ def test_compare_result_page_confidence_bars(tmp_path, monkeypatch, client):
     # Should have confidence percentage text
     assert "90%" in response.text
     assert "30%" in response.text
-    # Should have tier labels
-    assert "Very likely same person" in response.text
-    assert "Unlikely match" in response.text
+    # Should have tier labels (positive framing — Act 4a redesign)
+    assert "Very likely the same person" in response.text
+    assert "Some similarity" in response.text
 
 
 # ---- Session 85b: Archive Photo → Compare Tests ----
@@ -853,3 +853,147 @@ def test_compare_summary_section_no_admin_actions_for_viewers(monkeypatch):
     html = repr(section)
     assert "summary-merge-0" not in html
     assert "summary-not-same-0" not in html
+
+
+# ---- Session 87: Shareable Result Page Redesign Tests ----
+
+
+def test_result_page_hero_200px_images(tmp_path, monkeypatch, client):
+    """Result page hero section uses 200px side-by-side face images."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    monkeypatch.setattr(main_mod, "resolve_face_image_url", lambda fid, cf: f"https://example.com/{fid}.jpg")
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "hero_200px_test",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "query_face_id": "source_face",
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
+             "distance": 0.7, "confidence_pct": 85, "tier": "STRONG MATCH"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/hero_200px_test")
+    assert response.status_code == 200
+    # Hero should have 200px images
+    assert "w-[200px]" in response.text
+    assert "h-[200px]" in response.text
+    # Hero question framing
+    assert "result-hero-question" in response.text
+
+
+def test_result_page_positive_framing(tmp_path, monkeypatch, client):
+    """Result page uses positive/curious framing instead of 'Unlikely match'."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "framing_test01",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
+             "distance": 1.5, "confidence_pct": 25, "tier": "WEAK"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/framing_test01")
+    assert response.status_code == 200
+    # Should NOT have "Unlikely match" (old framing)
+    assert "Unlikely match" not in response.text
+    # Should have positive framing
+    assert "Some similarity" in response.text
+
+
+def test_result_page_no_raw_distance_for_viewers(tmp_path, monkeypatch, client):
+    """Non-admin viewers do not see raw distance numbers."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    monkeypatch.setattr(main_mod, "is_auth_enabled", lambda: True)
+    monkeypatch.setattr(main_mod, "get_current_user", lambda sess: type("U", (), {"email": "user@test.com", "is_admin": False})())
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "nodist_viewer1",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Person A",
+             "distance": 0.85, "confidence_pct": 78, "tier": "POSSIBLE MATCH"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/nodist_viewer1")
+    assert response.status_code == 200
+    # Viewer should NOT see raw distance
+    assert "dist:" not in response.text
+    assert "0.85" not in response.text
+
+
+def test_result_page_empty_state(tmp_path, monkeypatch, client):
+    """Empty result page shows helpful 'can you help?' message."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "empty_state_t1",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "matches": [],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/empty_state_t1")
+    assert response.status_code == 200
+    assert "result-empty-state" in response.text
+    assert "can you help" in response.text.lower()
+
+
+def test_result_page_og_title_positive_framing(tmp_path, monkeypatch, client):
+    """OG title uses 'Could this be [Name]?' framing."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "og_framing_t1",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Isaac Cohen",
+             "distance": 0.6, "confidence_pct": 92, "tier": "STRONG MATCH"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/og_framing_t1")
+    assert response.status_code == 200
+    assert "Could this be Isaac Cohen" in response.text
