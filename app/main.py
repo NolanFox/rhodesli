@@ -27,12 +27,16 @@ if _project_root not in sys.path:
 # (not a duplicate). Without this, compare_routes would get a different rt/app object.
 if "app.main" not in sys.modules:
     sys.modules["app.main"] = sys.modules[__name__]
+    print(f"[module-fix] Registered {__name__} as app.main (id={id(sys.modules[__name__])})")
     # Also ensure 'app' package is importable
     if "app" not in sys.modules:
         import types
         _app_pkg = types.ModuleType("app")
         _app_pkg.__path__ = [str(_PathEarly(__file__).resolve().parent)]
         sys.modules["app"] = _app_pkg
+        print(f"[module-fix] Created synthetic app package with __path__={_app_pkg.__path__}")
+else:
+    print(f"[module-fix] app.main already in sys.modules (id={id(sys.modules['app.main'])}), __name__={__name__} (id={id(sys.modules[__name__])})")
 if not os.environ.get("RAILWAY_ENVIRONMENT") and "pytest" not in sys.modules:
     from dotenv import load_dotenv
     load_dotenv()
@@ -30470,8 +30474,12 @@ def get(filename: str):
 
 
 # --- Route module imports (triggers route registration via @rt decorators) ---
+print(f"[route-import] About to import route modules. rt id={id(rt)}, app id={id(app)}")
 from app import compare_routes  # noqa: E402, F401
+print(f"[route-import] compare_routes imported. compare rt id={id(compare_routes.rt)}, same? {compare_routes.rt is rt}")
 from app import estimate_routes  # noqa: E402, F401
+print(f"[route-import] estimate_routes imported. estimate rt id={id(estimate_routes.rt)}, same? {estimate_routes.rt is rt}")
+print(f"[route-import] App routes: {[r.path for r in app.routes[:5]]}... (total: {len(app.routes)})")
 
 if __name__ == "__main__":
     # Startup diagnostics
