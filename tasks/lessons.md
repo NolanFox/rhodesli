@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-99 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+100 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -140,3 +140,4 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 97 | **Self-assessment must include visual verification evidence — "PASS" without screenshots is theater** |
 | 98 | **UUID/ID fields must be validated before write — truncated IDs cause silent cascade failures** |
 | 99 | **Session log + INDEX.md update must happen atomically with session completion** |
+| 100 | **Planning sessions must create context/prompt/log files BEFORE implementation** |
