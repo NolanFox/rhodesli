@@ -23463,7 +23463,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
     """
     from urllib.parse import quote
 
-    from core.confidence import compute_confidence_pct
+    from core.confidence import compute_confidence_pct, compute_face_confidence
 
     source_id = d["source_id"]
     target_id = d["target_id"]
@@ -23499,6 +23499,17 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                 break
 
     face_id_encoded = quote(first_face_id, safe="")
+
+    # Compute co-occurrence (how many photos these two identities share)
+    co_occurrence = 0
+    try:
+        photo_reg = load_photo_registry()
+        co_occurrence = _compute_co_occurrence(source_id, target_id, registry, photo_reg)
+    except Exception:
+        pass
+
+    # Confidence gap from discovery data (computed during _compute_discoveries)
+    confidence_gap = d.get("confidence_gap", 0.0)
 
     # Resolve photo context for source face
     photo_context_el = None
@@ -23662,9 +23673,8 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                 Span(confidence_label,
                      cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
                      title=f"Distance: {distance:.2f} ({confidence})"),
-                # Match metrics — distance + gap (Session 88: was missing from discovery cards)
-                Span(f"dist: {distance:.2f}", cls="text-[10px] text-slate-500 font-mono",
-                     data_testid="discovery-distance"),
+                # Shared match metrics bar — same component as neighbor_card (Session 88 parity fix)
+                match_info_bar(distance, confidence_gap=confidence_gap, co_occurrence=co_occurrence),
                 compare_link,
                 cls="flex flex-col items-center gap-1.5 px-4"
             ),

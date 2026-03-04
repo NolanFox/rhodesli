@@ -451,6 +451,8 @@ class TestApiDiscoveriesRoute:
              patch("app.main._resolve_identity_crop", return_value=None), \
              patch("app.main._safe_get_identity", return_value=source_identity), \
              patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_photo_registry"), \
+             patch("app.main._compute_co_occurrence", return_value=0), \
              patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
             response = client.get("/api/discoveries")
 
@@ -483,6 +485,8 @@ class TestApiDiscoveriesRoute:
              patch("app.main._resolve_identity_crop", return_value=None), \
              patch("app.main._safe_get_identity", return_value=source_identity), \
              patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_photo_registry"), \
+             patch("app.main._compute_co_occurrence", return_value=0), \
              patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
             response = client.get("/api/discoveries")
 
@@ -516,6 +520,8 @@ class TestApiDiscoveriesRoute:
              patch("app.main._resolve_identity_crop", return_value=None), \
              patch("app.main._safe_get_identity", return_value=source_identity), \
              patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_photo_registry"), \
+             patch("app.main._compute_co_occurrence", return_value=0), \
              patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
             response = client.get("/api/discoveries")
 
@@ -862,6 +868,8 @@ class TestDiscoveriesCardEnhancements:
              patch("app.main._resolve_identity_crop", return_value=None), \
              patch("app.main._safe_get_identity", return_value=source_identity), \
              patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_photo_registry"), \
+             patch("app.main._compute_co_occurrence", return_value=0), \
              patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
             response = client.get("/api/discoveries")
 
@@ -894,9 +902,9 @@ class TestDiscoveriesCardEnhancements:
         assert "h-28" in html
 
     def test_discovery_card_shows_distance(self, client):
-        """Session 88: Discovery cards now show distance metric."""
+        """Session 88: Discovery cards show distance via match_info_bar."""
         html = self._get_discovery_html(client, distance=0.92)
-        assert 'data-testid="discovery-distance"' in html
+        assert 'data-testid="match-info-bar"' in html
         assert "0.92" in html
 
     def test_discovery_card_correct_compare_url(self, client):
@@ -906,3 +914,32 @@ class TestDiscoveriesCardEnhancements:
         assert "person_id=conf1" in html
         # Should NOT use old source=/target= params
         assert "source=inbox1" not in html
+
+    def test_discovery_card_shows_co_occurrence(self, client):
+        """Session 88: Discovery cards show co-occurrence when present."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Test Person",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": 0.6,
+                "confidence": "VERY HIGH",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Test Person", "INBOX", candidate_ids=["face_inbox1"])
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", return_value=source_identity), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_photo_registry"), \
+             patch("app.main._compute_co_occurrence", return_value=3), \
+             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+            response = client.get("/api/discoveries")
+
+        assert response.status_code == 200
+        html = response.text
+        assert "3 photos" in html
