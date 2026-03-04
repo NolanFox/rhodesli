@@ -261,6 +261,7 @@ def get(photo: str = "", sess=None):
                             hx_swap="innerHTML show:#estimate-upload-result:top",
                             hx_indicator="#estimate-upload-spinner",
                             data_testid="estimate-upload-form",
+                            **{"hx-on::after-request": "if(event.detail.successful) this.reset()"},
                         ),
                         Div(id="estimate-upload-spinner", cls="htmx-indicator text-center py-3",
                             children=[
@@ -466,7 +467,7 @@ async def post(photo: UploadFile = None, sess=None):
     upload_id = _uuid.uuid4().hex[:12]
     image_key = f"uploads/estimate/{upload_id}{suffix}"
 
-    from core.storage import can_write_r2, upload_bytes_to_r2
+    from core.storage import can_write_r2, upload_bytes_to_r2, get_upload_url
     import mimetypes
     content_type = mimetypes.guess_type(original_filename)[0] or "image/jpeg"
 
@@ -476,6 +477,9 @@ async def post(photo: UploadFile = None, sess=None):
         upload_dir = _Path("uploads/estimate")
         upload_dir.mkdir(parents=True, exist_ok=True)
         (_Path("uploads/estimate") / f"{upload_id}{suffix}").write_bytes(content)
+
+    # UX-053: Build photo preview URL for results display
+    photo_preview_url = get_upload_url(image_key)
 
     # Check for existing date labels matching the filename
     labels = _main_mod._load_date_labels()
@@ -494,6 +498,13 @@ async def post(photo: UploadFile = None, sess=None):
         clues_text = ", ".join(clues[:4]) if clues else "Based on visual analysis"
 
         return Div(
+            # UX-053: Photo preview
+            Div(
+                Img(src=photo_preview_url, alt="Uploaded photo",
+                    cls="max-h-48 rounded-lg mx-auto border border-slate-600/50 shadow-lg",
+                    data_testid="estimate-photo-preview"),
+                cls="flex justify-center mb-4",
+            ),
             Div(
                 Span("~", cls="text-2xl text-amber-400 font-serif"),
                 cls="flex justify-center mb-2",
@@ -502,12 +513,19 @@ async def post(photo: UploadFile = None, sess=None):
             P(f"Range: {conf_range[0]}–{conf_range[1]}" if len(conf_range) >= 2 else "",
               cls="text-sm text-slate-400 text-center mt-1"),
             P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic"),
+            # UX-056: CTAs
             Div(
-                A("View in archive", href="/photos",
-                  cls="text-indigo-400 hover:text-indigo-300 text-sm"),
-                cls="flex justify-center mt-4",
+                Button("Try Another Photo",
+                       onclick="var form=document.querySelector('[data-testid=\"estimate-upload-form\"]');if(form){form.reset();var p=document.getElementById('estimate-preview');if(p){p.classList.add('hidden');p.src=''}var i=document.getElementById('estimate-upload-icon');if(i)i.classList.remove('hidden');var t=document.getElementById('estimate-upload-text');if(t)t.textContent='Upload a photo to estimate its date';document.getElementById('estimate-upload-result').innerHTML=''}",
+                       cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors cursor-pointer",
+                       data_testid="estimate-try-another"),
+                A("Browse the Archive", href="/photos",
+                  cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors"),
+                cls="flex flex-wrap justify-center gap-3 mt-6 pt-4 border-t border-slate-700/50",
+                data_testid="estimate-ctas",
             ),
             cls="py-4",
+            data_testid="estimate-upload-result",
         )
 
     # --- Real-time processing: face detection + CORAL model + Gemini ---
@@ -694,16 +712,28 @@ async def post(photo: UploadFile = None, sess=None):
     if not parts:
         parts.append(P("Photo saved.", cls="text-sm text-slate-400 text-center py-4"))
 
+    # UX-053: Photo preview at the top of results
+    photo_preview = Div(
+        Img(src=photo_preview_url, alt="Uploaded photo",
+            cls="max-h-48 rounded-lg mx-auto border border-slate-600/50 shadow-lg",
+            data_testid="estimate-photo-preview"),
+        cls="flex justify-center mb-4",
+    )
+
     # UX-056: CTAs after estimate results
-    parts.append(Div(
-        A("Estimate Another Photo", href="/estimate",
-          cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors"),
-        A("Compare This Photo", href="/compare",
-          cls="px-4 py-2 text-sm border border-indigo-500/50 text-indigo-400 rounded-lg hover:bg-indigo-500/10 transition-colors"),
+    cta_section = Div(
+        Button("Try Another Photo",
+               onclick="var form=document.querySelector('[data-testid=\"estimate-upload-form\"]');if(form){form.reset();var p=document.getElementById('estimate-preview');if(p){p.classList.add('hidden');p.src=''}var i=document.getElementById('estimate-upload-icon');if(i)i.classList.remove('hidden');var t=document.getElementById('estimate-upload-text');if(t)t.textContent='Upload a photo to estimate its date';document.getElementById('estimate-upload-result').innerHTML=''}",
+               cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors cursor-pointer",
+               data_testid="estimate-try-another"),
+        Button("Share Estimate",
+               onclick="if(navigator.share){navigator.share({title:'Photo Date Estimate',text:'Check out this date estimate from the Rhodesli archive!',url:window.location.href}).catch(()=>{})}else{navigator.clipboard.writeText(window.location.href).then(()=>{this.textContent='Link copied!';setTimeout(()=>{this.textContent='Share Estimate'},2000)})}",
+               cls="px-4 py-2 text-sm border border-indigo-500/50 text-indigo-400 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer",
+               data_testid="estimate-share"),
         A("Browse the Archive", href="/photos",
           cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors"),
         cls="flex flex-wrap justify-center gap-3 mt-6 pt-4 border-t border-slate-700/50",
         data_testid="estimate-ctas",
-    ))
+    )
 
-    return Div(*parts, cls="py-4", data_testid="estimate-upload-result")
+    return Div(photo_preview, *parts, cta_section, cls="py-4", data_testid="estimate-upload-result")

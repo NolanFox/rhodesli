@@ -188,7 +188,7 @@ class TestEstimateUploadCORAL:
         )
         html = response.text
         assert "estimate-ctas" in html
-        assert "Estimate Another Photo" in html
+        assert "Try Another Photo" in html
 
     def test_estimate_upload_coral_model_unavailable_falls_back(self):
         """When CORAL model is unavailable, falls back gracefully."""
