@@ -23279,7 +23279,9 @@ def public_photo_page(
                 click_href = None
 
             _pub_overlay_base = f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;"
-            _pub_overlay_style = _pub_overlay_base + (" display: block;" if is_admin else " display: none;")
+            # Face labels: confirmed/identified faces visible for ALL users, others admin-only
+            _show_overlay = is_admin or fi["is_identified"]
+            _pub_overlay_style = _pub_overlay_base + (" display: block;" if _show_overlay else " display: none;")
             _id_attr = "true" if fi["is_identified"] else "false"
             overlay_inner = A(
                 name_el,
@@ -23292,7 +23294,7 @@ def public_photo_page(
             ) if click_href else Div(
                 name_el,
                 cls=overlay_cls,
-                style=_pub_overlay_base + ("" if is_admin else " display: none;"),
+                style=_pub_overlay_base + ("" if _show_overlay else " display: none;"),
                 title=fi["display_name"],
                 data_identified=_id_attr,
             )
@@ -23726,7 +23728,7 @@ def public_photo_page(
                                     Span("Unidentified", cls="text-slate-300"),
                                     cls="absolute bottom-3 right-3 bg-black/70 rounded-lg px-3 py-1.5 flex items-center gap-1 text-xs backdrop-blur-sm face-overlay-legend-public",
                                     id="face-overlay-legend-public",
-                                    style="" if is_admin else "display: none;",
+                                    style="" if (is_admin or any(fi["is_identified"] for fi in face_info_list)) else "display: none;",
                                 ) if face_overlays else None,
                                 cls="photo-flip-front relative group" if has_back else "relative group",
                             ),
