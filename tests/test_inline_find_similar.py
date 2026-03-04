@@ -169,9 +169,11 @@ class TestRejectMatch:
         """Reject match removes tile by returning empty content."""
         from app.main import load_registry, save_registry
         registry = load_registry()
-        ids = list(registry._identities.keys())
+        # Filter out merged identities (UX-038: merged identities redirect)
+        ids = [iid for iid in registry._identities.keys()
+               if not registry._identities[iid].get("merged_into")]
         if len(ids) < 2:
-            pytest.skip("Need at least 2 identities")
+            pytest.skip("Need at least 2 non-merged identities")
 
         with patch("app.main.save_registry"):
             response = client.post(f"/api/identity/{ids[0]}/reject-match/{ids[1]}")

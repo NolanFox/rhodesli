@@ -10110,6 +10110,10 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+
     try:
         identity = registry.get_identity(identity_id)
     except KeyError:
@@ -11233,6 +11237,21 @@ def photo_view_content(
             cls="p-4 md:p-8 max-w-6xl mx-auto bg-slate-900 min-h-screen"
         ),
     )
+
+
+def _check_merged_identity(identity_id: str, registry) -> tuple:
+    """Returns (is_merged, canonical_id) — use to guard POST identity operations.
+
+    UX-038: POST operations on merged-away identities should redirect to the
+    canonical identity instead of silently succeeding on stale data.
+    """
+    try:
+        identity = registry.get_identity(identity_id)
+    except KeyError:
+        return False, None
+    if identity and identity.get("merged_into"):
+        return True, identity["merged_into"]
+    return False, None
 
 
 def public_person_page(
@@ -14806,6 +14825,9 @@ def post(identity_id: str, neighbor_id: str, sess=None):
         return Response("Forbidden", status_code=403)
 
     registry = load_registry()
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
     try:
         registry.get_identity(identity_id)
     except KeyError:
@@ -20029,6 +20051,14 @@ def post(source_id: str, target_id: str, sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    # Guard merged identities (UX-038)
+    is_merged, canonical_id = _check_merged_identity(source_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+    is_merged, canonical_id = _check_merged_identity(target_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+
     # Validate both identities exist
     try:
         registry.get_identity(source_id)
@@ -20079,6 +20109,14 @@ def post(source_id: str, target_id: str, sess=None):
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    # Guard merged identities (UX-038)
+    is_merged, canonical_id = _check_merged_identity(source_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+    is_merged, canonical_id = _check_merged_identity(target_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     # Validate both identities exist
     try:
@@ -20218,6 +20256,14 @@ def post(target_id: str, source_id: str, source: str = "web",
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    # Guard merged identities (UX-038)
+    is_merged, canonical_id = _check_merged_identity(target_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+    is_merged, canonical_id = _check_merged_identity(source_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     # Validate both identities exist
     try:
@@ -20548,6 +20594,11 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    # Guard merged target identity (UX-038)
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+
     photo_registry = load_photo_registry()
 
     merged_count = 0
@@ -20603,6 +20654,11 @@ def post(identity_id: str, bulk_ids: list[str] = None, sess=None):
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    # Guard merged identity (UX-038)
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     rejected_count = 0
     for target_id in bulk_ids:
@@ -20858,6 +20914,10 @@ def post(identity_id: str, name: str = "", sess=None):
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
@@ -21934,6 +21994,10 @@ def post(id: str, sess=None):
     denied = _check_admin(sess)
     if denied:
         return denied
+    registry = load_registry()
+    is_merged, canonical_id = _check_merged_identity(id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
     get_event_recorder().record("SKIP", {"identity_id": id})
     # No return needed as this is fire-and-forget for logging
     # The UI handles the DOM move client-side
@@ -23511,6 +23575,9 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
 
         # Tag the face to the target identity (same as /api/face/tag)
         registry = load_registry()
+        is_merged, canonical_id = _check_merged_identity(target_id, registry)
+        if is_merged:
+            return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
         target = registry.get_identity(target_id)
         if target:
             candidates = registry._identities[target_id].get("candidate_ids", [])
@@ -23978,6 +24045,10 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+
     try:
         registry.get_identity(identity_id)
     except KeyError:
@@ -24028,6 +24099,10 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
@@ -24084,6 +24159,10 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
 
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
+
     try:
         registry.get_identity(identity_id)
     except KeyError:
@@ -24129,6 +24208,10 @@ def post(identity_id: str, sess=None):
     denied = _check_admin(sess)
     if denied:
         return denied
+    registry = load_registry()
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
     return (
         get_next_skipped_focus_card(exclude_id=identity_id),
         toast("Skipped for now.", "info"),
@@ -24222,6 +24305,10 @@ def post(identity_id: str, sess=None):
             status_code=423,
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"}
         )
+
+    is_merged, canonical_id = _check_merged_identity(identity_id, registry)
+    if is_merged:
+        return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     try:
         registry.get_identity(identity_id)
