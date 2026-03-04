@@ -5,7 +5,7 @@ Context: docs/session_context/session-87-context.md
 
 ## Act Checklist
 - [ ] Act 1: Orient & Setup
-- [ ] Act 2: Unify Confidence Scoring (AD-200)
+- [x] Act 2: Unify Confidence Scoring (AD-200)
 - [ ] Act 3: Compare "Best Matches" Summary View
 - [ ] Act 4: Shareable Result Page Overhaul
 - [ ] Act 5: Discoveries Page Improvements
@@ -30,6 +30,15 @@ Context: docs/session_context/session-87-context.md
 - Added Lesson 100
 
 ## Act 2: Unify Confidence Scoring
+- Completed: 2026-03-04
+- Created core/confidence.py with unified compute_face_confidence()
+- Priority chain: calibrator → sigmoid CDF → linear fallback
+- Wired into core/neighbors.py (replaced tier classification + inline scoring)
+- Wired into app/compare_routes.py (replaced 4 scoring paths, removed all SimilarityCalibrator imports)
+- Wired into app/main.py (replaced 3 _confidence_tier() defs + 2 inline confidence_pct calculations)
+- Updated test assertions in test_discoveries.py, test_find_similar_page.py
+- 35 new tests in tests/test_confidence.py
+- 4 commits: 74aaa10, c856ec3, b3808c6, 63cccda
 
 ## Act 3: Compare Summary View
 
