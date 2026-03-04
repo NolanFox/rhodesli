@@ -23410,6 +23410,8 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
     """
     from urllib.parse import quote
 
+    from core.confidence import compute_confidence_pct
+
     source_id = d["source_id"]
     target_id = d["target_id"]
     source_name = d.get("source_name") or f"Identity {source_id[:8]}..."
@@ -23417,6 +23419,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
     distance = d.get("distance", 999)
     confidence = d.get("confidence") or _confidence_tier(distance)
     confidence_label = _CONFIDENCE_LABEL.get(confidence, "Match")
+    confidence_pct = d.get("confidence_pct") or compute_confidence_pct(distance)
 
     source_crop = _resolve_identity_crop(source_id, crop_files)
     target_crop = _resolve_identity_crop(target_id, crop_files)
@@ -23487,15 +23490,15 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                 if context_parts:
                     photo_context_el = Div(*context_parts, cls="flex flex-col gap-1 px-4 py-2 border-t border-slate-700/50")
 
-    # Face images — larger than before (w-24 h-24 = 96px)
+    # Face images — w-28 h-28 = 112px, rounded-lg for better face visibility
     source_img_el = Img(
         src=source_crop or "/static/placeholder.jpg",
         alt=source_name,
-        cls=f"w-24 h-24 rounded-full object-cover {ring_cls}",
+        cls=f"w-28 h-28 rounded-lg object-cover {ring_cls}",
         loading="lazy"
     ) if source_crop else Div(
         Span("?", cls="text-2xl text-slate-500"),
-        cls=f"w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center {ring_cls}"
+        cls=f"w-28 h-28 rounded-lg bg-slate-700 flex items-center justify-center {ring_cls}"
     )
     source_img = A(source_img_el, href=f"/person/{source_id}",
                    cls="block cursor-pointer hover:opacity-80 transition-opacity",
@@ -23504,11 +23507,11 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
     target_img_el = Img(
         src=target_crop or "/static/placeholder.jpg",
         alt=target_name,
-        cls="w-24 h-24 rounded-full object-cover ring-2 ring-green-400/50",
+        cls="w-28 h-28 rounded-lg object-cover ring-2 ring-green-400/50",
         loading="lazy"
     ) if target_crop else Div(
         Span("?", cls="text-2xl text-slate-500"),
-        cls="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
+        cls="w-28 h-28 rounded-lg bg-slate-700 flex items-center justify-center ring-2 ring-green-400/50"
     )
     target_img = A(target_img_el, href=f"/person/{target_id}",
                    cls="block cursor-pointer hover:opacity-80 transition-opacity",
@@ -23570,6 +23573,18 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
     # Tier indicator border
     tier_border = "border-l-2 border-l-emerald-500" if tier == 1 else "border-l-2 border-l-blue-500"
 
+    # Compare link — opens compare workspace with source and target pre-filled
+    compare_link = A(
+        Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
+                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"),
+            cls="w-3.5 h-3.5", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+        Span("Compare"),
+        href=f"/compare?source={source_id}&target={target_id}",
+        cls="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-300 transition-colors",
+        title="Compare side-by-side",
+        data_testid="discovery-compare-link",
+    )
+
     return Div(
         Div(
             Div(
@@ -23588,9 +23603,13 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                 Svg(Path(stroke_linecap="round", stroke_linejoin="round", stroke_width="2",
                          d="M14 5l7 7m0 0l-7 7m7-7H3"),
                     cls="w-6 h-6 text-slate-400", fill="none", stroke="currentColor", viewBox="0 0 24 24"),
+                Span(f"{confidence_pct}%",
+                     cls=f"text-lg font-bold {badge_cls.split()[-1].replace('border-', 'text-').replace('/30', '')}",
+                     data_testid="discovery-confidence-pct"),
                 Span(confidence_label,
                      cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
                      title=f"Distance: {distance:.2f} ({confidence})"),
+                compare_link,
                 cls="flex flex-col items-center gap-1.5 px-4"
             ),
             Div(

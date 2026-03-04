@@ -463,8 +463,8 @@ class TestApiDiscoveriesRoute:
         # Reject button present
         assert "/api/discovery/reject" in html
 
-    def test_api_discoveries_shows_confidence_label_not_percentage(self, client):
-        """Discovery cards show confidence labels (AD-173), not misleading percentages."""
+    def test_api_discoveries_shows_confidence_label_and_percentage(self, client):
+        """Discovery cards show BOTH confidence label AND unified percentage (AD-200)."""
         discoveries = [
             {
                 "source_id": "inbox1",
@@ -487,9 +487,12 @@ class TestApiDiscoveriesRoute:
             response = client.get("/api/discoveries")
 
         html = response.text
-        # Should show "Good match" label, NOT "54% match"
+        # Should show "Good match" label alongside confidence percentage
         assert "Good match" in html
-        assert "54%" not in html
+        # Unified confidence percentage is shown (data-testid for identification)
+        assert 'data-testid="discovery-confidence-pct"' in html
+        # Percentage symbol present
+        assert "%" in html
         # Admin tooltip should show raw distance
         assert "Distance: 0.91" in html
 
@@ -825,3 +828,67 @@ class TestDiscoveriesFilterControls:
         html = response.text
         assert "All photos" in html
         assert "Test Collection" in html
+
+
+# ---------------------------------------------------------------------------
+# Test: Inline compare links, larger faces, confidence percentage (Act 5b)
+# ---------------------------------------------------------------------------
+
+class TestDiscoveriesCardEnhancements:
+    """Tests for discovery card visual improvements (Session 87 Act 5b)."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+        return TestClient(app)
+
+    def _get_discovery_html(self, client, distance=0.6):
+        """Helper to render a discovery card and return HTML."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Test Person",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": distance,
+                "confidence": "VERY HIGH",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Test Person", "INBOX", candidate_ids=["face_inbox1"])
+
+        with patch("app.main._check_admin", return_value=None), \
+             patch("app.main._compute_discoveries", return_value=discoveries), \
+             patch("app.main.get_crop_files", return_value=set()), \
+             patch("app.main._resolve_identity_crop", return_value=None), \
+             patch("app.main._safe_get_identity", return_value=source_identity), \
+             patch("app.main.get_photo_id_for_face", return_value=None), \
+             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+            response = client.get("/api/discoveries")
+
+        assert response.status_code == 200
+        return response.text
+
+    def test_discovery_card_has_compare_link(self, client):
+        """Each discovery card has an inline Compare link."""
+        html = self._get_discovery_html(client)
+        assert 'data-testid="discovery-compare-link"' in html
+        assert "/compare?source=inbox1&amp;target=conf1" in html
+
+    def test_discovery_card_uses_rounded_lg(self, client):
+        """Face images use rounded-lg instead of rounded-full for better visibility."""
+        html = self._get_discovery_html(client)
+        assert "rounded-lg" in html
+        assert "rounded-full" not in html or html.count("rounded-full") < html.count("rounded-lg")
+
+    def test_discovery_card_shows_confidence_pct(self, client):
+        """Discovery cards show numeric confidence percentage."""
+        html = self._get_discovery_html(client, distance=0.6)
+        assert 'data-testid="discovery-confidence-pct"' in html
+        # Should contain a percentage number
+        assert "%" in html
+
+    def test_discovery_card_face_size_at_least_112px(self, client):
+        """Face images are at least w-28 (112px) for better visibility."""
+        html = self._get_discovery_html(client)
+        assert "w-28" in html
+        assert "h-28" in html
