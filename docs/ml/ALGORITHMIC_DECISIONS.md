@@ -2261,3 +2261,12 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Decision**: Client-side search filter input in admin Browse view header. Filters cards by name (case-insensitive substring) or person number. Uses `data-name` and `data-number` attributes on card elements. Pure JavaScript, no server round-trip needed for responsive filtering. Hides non-matching cards via display:none.
 - **Rejected**: (1) Server-side search with HTMX — adds latency for a simple filter. (2) Full-text search with Supabase — overkill for ~660 cards. Client-side is instant and simple.
 - **Affects**: `app/main.py` (Browse view card rendering, search input component).
+
+### AD-200: Unified Confidence Scoring
+- **Date**: 2026-03-04
+- **Session**: 87
+- **Context**: 6+ divergent scoring paths produced different confidence percentages for the same Euclidean distance. Distance 1.13 showed 62% in archive compare (neighbors.py CDF), 48% in vs-person compare (sigmoid fallback), and 43% in pair compare (linear). Users saw "Possible match" in one place and "Unlikely match" in another for the same match. Root cause: 3 different formulas (isotonic calibrator, sigmoid CDF, linear), 3 different tier systems (distance-based vs pct-based), and inline code duplication across 12+ locations.
+- **Decision**: Single `core/confidence.py` module with `compute_face_confidence(distance)` as sole entry point. Returns `{confidence_pct, tier, label, short_label, tier_color, dots}`. Priority chain: (1) isotonic calibrator via SimilarityCalibrator, (2) sigmoid CDF with same_person stats, (3) linear fallback `(2-d)/2*100`. Tier boundaries based on confidence_pct (85%+ Strong, 70%+ Possible, 50%+ Similar, &lt;50% Weak) per AD-091.
+- **Rejected**: (1) Keeping distance-based tiers alongside pct-based — creates exactly the inconsistency we're fixing. (2) Always using linear — loses calibration model quality. (3) Removing fallbacks — calibrator may not be available in all environments.
+- **Affects**: `core/confidence.py` (new), `core/neighbors.py`, `app/compare_routes.py`, `app/main.py`. Removed all `SimilarityCalibrator` imports from compare_routes. Removed 3 local `_confidence_tier()` definitions from main.py.
+- **Tests**: 35 tests in `tests/test_confidence.py` covering all priority paths, boundary conditions, and consistency invariant.
