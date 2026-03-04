@@ -394,6 +394,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 88: Fix Scoring & Card Failures (2026-03-04) — v0.91.1
+- Fix scoring divergence: isotonic calibrator f_=None crash, switched to sigmoid CDF priority, removed batch NN override in neighbors.py
+- Fix compare link from Discoveries: was source=/target= (404), now face_id=/person_id= matching route params
+- Accordion headers: "Face N — X matches (best: Name Pct%)" instead of just "Face N"
+- Admin badge: per-card "Admin" text → subtle gear icon SVG, admin status shown globally
+- Discovery cards: distance metric visible, shared match_info_bar() component, co-occurrence computed
+- HD-024: Harness improvements — ruff format hook, dynamic session hooks, test gate script, /verify skill
+- Browser verified 5/5 PASS (Playwright). ~4,122 tests.
+
 ## Session 87: Compare & Discoveries UX Overhaul (2026-03-04) — v0.91.0
 - AD-200: Unified confidence scoring — single core/confidence.py replaces 12+ divergent scoring paths
 - Compare best-matches summary section (top matches across all faces >= 40%)
@@ -703,6 +712,8 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.91.1 | 2026-03-04 | 88 | ~3571+551 |
+| v0.91.0 | 2026-03-04 | 87 | ~3571+551 |
 | v0.90.0 | 2026-03-04 | 86b | ~3508+551 |
 | v0.89.0 | 2026-03-04 | 86 | ~4023 |
 | v0.88.0 | 2026-03-03 | 85c | ~3434+551 |

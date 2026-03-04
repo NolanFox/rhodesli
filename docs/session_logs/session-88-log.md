@@ -35,7 +35,21 @@ Predecessor: Session 87 (v0.91.0)
 - FIX 2: co_occurrence computed in _compute_discoveries() (cached) not per-render (was causing slow load)
 - FIX 3: Removed duplicate "60% match" badge — discovery card shows its own large pct
 - Commits: fb32385 (initial match_info_bar integration), 4c02ea8 (badge fix + perf fix)
-- REMAINING: Browser verify final state after deploy, update assessment, /session-review
+- Commits: fb32385 (initial match_info_bar integration), 4c02ea8 (badge fix + perf fix)
+
+## Completion (continuation session 2)
+- Merged session-88/harness-improvements branch (HD-024): ruff format hook, dynamic hooks, test gate, verify skill
+- Tests: 551 ML pass, 129 session-88-specific tests pass, ~2587 app tests pass (21 xdist-flaky pre-existing)
+- Pushed to origin, Railway deploy successful
+- Browser verification (Playwright):
+  1. Discoveries page: 58%/57% scores (sigmoid CDF consistent) — PASS
+  2. Discovery cards: "Dist: 0.83" / "Dist: 0.84" visible — PASS
+  3. Compare links: all use face_id=/person_id= params — PASS
+  4. Person page: no per-card "Admin" text, global admin bar only — PASS
+  5. match_info_bar: percentage + quality label + distance integrated — PASS
+- Screenshots: docs/screenshots/session-88/
+- Updated ROADMAP, SESSION_HISTORY, assessment
+- /session-review run
 
 ## Notes
 - VIOLATION: Did not /clear between Act 1 and Act 2, or Act 2 and Act 3. User called this out.

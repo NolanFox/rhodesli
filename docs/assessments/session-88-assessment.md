@@ -35,11 +35,19 @@ Predecessor: Session 87 (v0.91.0)
   4. Unified test gate script (`scripts/test-gate.sh`)
   5. `/simplify` enforcement in session-run.md
   6. `/verify` skill for test-fix loops
-- Branch ready to merge: `session-88/harness-improvements` (worktree at `.claude/worktrees/harness-improvements`)
+- Branch MERGED to main (commit f25f0c4). Worktree cleaned up.
+
+## Final Browser Verification (Playwright, post-deploy)
+1. Discoveries page: 58%/57% scores (consistent sigmoid CDF) — PASS
+2. Discovery cards: "Dist: 0.83" / "Dist: 0.84" visible — PASS
+3. Compare links: all use face_id=/person_id= params (verified 100+ links) — PASS
+4. Person page (Morris Franco): no per-card "Admin" text, global admin bar only — PASS
+5. match_info_bar: percentage + quality label + distance integrated — PASS
+Screenshots: docs/screenshots/session-88/
 
 ## Next Session Should Verify
-1. Merge `session-88/harness-improvements` branch to main
-2. Verify ruff format hook triggers on Python file edits
-3. Verify post-commit gate shows dynamic session number
-4. Run a multi-face photo comparison in browser to visually confirm accordion headers
-5. Verify scoring consistency on New Matches page (not just Discoveries)
+1. Verify ruff format hook triggers on Python file edits
+2. Verify post-commit gate shows dynamic session number
+3. Run a multi-face photo comparison in browser to visually confirm accordion headers
+4. Verify scoring consistency on New Matches page (not just Discoveries)
+5. Address xdist test flakiness (21 ordering-dependent failures in parallel runs)
