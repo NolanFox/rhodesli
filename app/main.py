@@ -6649,12 +6649,13 @@ def face_card(
                 cls=f"text-xs font-data {'text-emerald-500' if quality >= 20 else 'text-amber-500' if quality >= 10 else 'text-slate-500'}",
                 title=f"Quality score: {quality:.2f}" if is_admin else None,
             ) if quality_label else None,
-            # Secondary actions (View Photo, Share, Detach) — visible on hover
+            # Secondary actions (View Photo, Share, Detach)
+            # Detach is always visible for admin; other actions visible on hover
             Div(
                 view_photo_btn,
                 full_page_link,
                 detach_btn,
-                cls="flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
+                cls="flex items-center" + ("" if show_detach else " opacity-0 group-hover:opacity-100 transition-opacity")
             ) if view_photo_btn or detach_btn or full_page_link else None,
             cls="mt-1 px-0.5 flex items-center justify-between"
         ),
@@ -7178,6 +7179,18 @@ def identity_card(
         type="button",
     ) if total_faces > 0 else None
 
+    # Faces button — for multi-face identities, opens the admin face gallery
+    _faces_detail_id = f"admin-details-{make_css_id(identity_id)}"
+    faces_btn = None
+    if total_faces > 1:
+        faces_btn = Button(
+            f"Faces ({total_faces})",
+            cls=f"{_pill} bg-purple-500/15 text-purple-300 hover:bg-purple-500/25",
+            type="button",
+            data_testid="faces-button",
+            onclick=f"var el=document.getElementById('{_faces_detail_id}');if(el)el.open=true;",
+        )
+
     # View Public Page link (Gap 3: always show Profile link)
     view_public_link = A(
         "Profile",
@@ -7357,6 +7370,7 @@ def identity_card(
     # Action buttons — clean icon pills
     action_section = Div(
         view_all_photos_btn,
+        faces_btn,
         find_similar_btn,
         gedcom_tree_btn,
         view_public_link,
@@ -7428,6 +7442,7 @@ def identity_card(
                 ) if total_faces > 1 else None,
                 cls="mt-2 px-1 pt-2 border-t border-slate-700/50",
             ),
+            id=_faces_detail_id,
         )
 
     return Div(

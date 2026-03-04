@@ -197,3 +197,99 @@ class TestLandingPageDisplayFont:
         response = client.get("/")
         assert response.status_code == 200
         assert 'font-display' in response.text
+
+
+# ---------------------------------------------------------------------------
+# Test: Faces button + visible detach (Session 87 Act 6a)
+# ---------------------------------------------------------------------------
+
+class TestIdentityCardFacesButton:
+    """Tests for the Faces button on multi-face identity cards."""
+
+    def test_faces_button_shown_for_multi_face_identity(self):
+        """Identity cards with >1 face show a 'Faces (N)' button."""
+        from app.main import identity_card
+        from fastcore.xml import to_xml
+
+        identity = {
+            "identity_id": "test-multi-face-001",
+            "name": "Multi Face Person",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-a", "face-b", "face-c"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-multi-face-001_0.jpg"}
+        html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert 'data-testid="faces-button"' in html
+        assert "Faces (3)" in html
+
+    def test_faces_button_not_shown_for_single_face_identity(self):
+        """Identity cards with only 1 face do NOT show a Faces button."""
+        from app.main import identity_card
+        from fastcore.xml import to_xml
+
+        identity = {
+            "identity_id": "test-single-face-001",
+            "name": "Single Face Person",
+            "state": "CONFIRMED",
+            "anchor_ids": ["face-a"],
+            "candidate_ids": [],
+        }
+        crop_files = {"test-single-face-001_0.jpg"}
+        html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        assert 'data-testid="faces-button"' not in html
+
+    def test_faces_button_targets_admin_details(self):
+        """Faces button opens the admin details section via JS onclick."""
+        from app.main import identity_card
+        from fastcore.xml import to_xml
+
+        identity = {
+            "identity_id": "test-detail-open-001",
+            "name": "Detail Person",
+            "state": "PROPOSED",
+            "anchor_ids": ["face-a"],
+            "candidate_ids": ["face-b"],
+        }
+        crop_files = {"test-detail-open-001_0.jpg"}
+        html = to_xml(identity_card(identity, crop_files, is_admin=True))
+        # The details element should have an ID that the Faces button targets
+        assert "admin-details-" in html
+        assert 'data-testid="faces-button"' in html
+
+
+class TestDetachButtonVisibility:
+    """Tests for detach button visibility on face cards."""
+
+    def test_detach_button_visible_for_admin_multi_face(self):
+        """Detach button is always visible (not hover-only) for admin on multi-face identities."""
+        from app.main import face_card
+        from fastcore.xml import to_xml
+
+        html = to_xml(face_card(
+            face_id="test-face-detach-001",
+            crop_url="/static/crops/test.jpg",
+            show_detach=True,
+            is_admin=True,
+            identity_id="test-id-001",
+        ))
+        # Detach button should be present
+        assert "Detach" in html
+        # Should NOT have opacity-0 (hover-only) class when show_detach=True
+        assert "opacity-0" not in html
+
+    def test_detach_button_hover_only_when_not_detachable(self):
+        """When show_detach is False, secondary actions are still hover-only."""
+        from app.main import face_card
+        from fastcore.xml import to_xml
+
+        html = to_xml(face_card(
+            face_id="test-face-no-detach-001",
+            crop_url="/static/crops/test.jpg",
+            show_detach=False,
+            is_admin=True,
+            identity_id="test-id-001",
+            photo_id="photo-001",
+        ))
+        # Should have opacity-0 class (hover-only) since show_detach is False
+        assert "opacity-0" in html
