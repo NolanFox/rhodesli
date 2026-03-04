@@ -772,7 +772,7 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
 
     return Div(
         A(
-            Img(src=crop_url, cls=f"w-20 h-20 rounded-full object-cover mx-auto {style['ring']}"),
+            Img(src=crop_url, cls=f"w-28 h-28 rounded-lg object-cover mx-auto {style['ring']}"),
             href=photo_link,
             cls="block",
         ),
@@ -1257,8 +1257,8 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
             match_cards.append(
                 Div(
                     Div(
-                        Img(src=m_crop_url, cls="w-12 h-12 rounded-full object-cover border border-slate-600",
-                            alt=m_name) if m_crop_url else Div(cls="w-12 h-12 rounded-full bg-slate-700"),
+                        Img(src=m_crop_url, cls="w-16 h-16 rounded-lg object-cover border border-slate-600",
+                            alt=m_name) if m_crop_url else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                         Div(
                             A(m_name, href=f"/person/{m_iid}" if m_iid else "#",
                               cls="text-sm text-white hover:text-indigo-300 font-medium"),
@@ -1284,8 +1284,8 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
             Div(
                 Div(
                     Div(
-                        Img(src=crop_url, cls="w-16 h-16 rounded-full object-cover border-2 border-slate-500",
-                            alt=iname) if crop_url else Div(cls="w-16 h-16 rounded-full bg-slate-700"),
+                        Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-500",
+                            alt=iname) if crop_url else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
                         cls="flex-shrink-0",
                     ),
                     Div(
@@ -4150,8 +4150,8 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                     Div(
                         # Target crop + name
                         Div(
-                            Img(src=tr["target_crop_url"], cls="w-10 h-10 rounded-full object-cover border border-slate-600",
-                                alt=tr["target_name"]) if tr["target_crop_url"] else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                            Img(src=tr["target_crop_url"], cls="w-16 h-16 rounded-lg object-cover border border-slate-600",
+                                alt=tr["target_name"]) if tr["target_crop_url"] else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                             cls="flex-shrink-0",
                         ),
                         Div(
@@ -4186,8 +4186,8 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
         if show_face_header:
             face_section_parts.append(
                 Div(
-                    Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border-2 border-slate-600",
-                        alt=f"Face {fi+1}") if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                    Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-600",
+                        alt=f"Face {fi+1}") if crop_url else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
                     Span(f"Face {fi + 1}", cls="text-sm text-white font-medium ml-3"),
                     # Hide/show toggle
                     Button(
@@ -4202,17 +4202,20 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
             )
 
         # Wrap target rows in collapsible container
+        # Collapse per-face detail sections when summary is showing best matches
+        collapsed_cls = " face-section-collapsed" if has_summary else ""
+        content_style = "max-height: 0" if has_summary else f"max-height: {len(target_rows) * 120}px"
         content_div = Div(
             *target_rows,
-            cls="face-section-content space-y-2",
-            style=f"max-height: {len(target_rows) * 120}px",
+            cls=f"face-section-content space-y-2",
+            style=content_style,
             data_testid=f"compare-face-content-{fi}",
         )
 
         parts.append(
             Div(
                 *(face_section_parts + [content_div]),
-                cls="p-4 bg-slate-800/50 rounded-xl border border-slate-700/30 compare-section-animate compare-card",
+                cls=f"p-4 bg-slate-800/50 rounded-xl border border-slate-700/30 compare-section-animate compare-card{collapsed_cls}",
                 id=f"compare-face-section-{fi}",
                 data_testid=f"compare-face-section-{fi}",
                 style=f"animation-delay: {fi * 100}ms",

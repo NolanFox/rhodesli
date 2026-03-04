@@ -794,6 +794,38 @@ def test_compare_summary_section_admin_actions(monkeypatch):
     assert "Not Same" in html
 
 
+def test_compare_summary_section_testid_present(monkeypatch):
+    """Summary section includes data-testid for testing."""
+    from app.compare_routes import _compare_summary_section
+    from unittest.mock import MagicMock
+
+    mock_registry = MagicMock()
+    mock_registry.get_identity.return_value = {"state": "PROPOSED"}
+
+    results_by_face = [
+        {
+            "face_id": "f1",
+            "crop_url": "https://example.com/f1.jpg",
+            "targets": [
+                {"target_id": "id1", "target_type": "person", "target_name": "Person A",
+                 "target_crop_url": "https://example.com/a.jpg", "matched_face_id": "fa1",
+                 "confidence_pct": 60, "tier": "SIMILAR", "distance": 1.1},
+            ],
+        },
+    ]
+
+    monkeypatch.setattr("app.main.get_identity_for_face", lambda reg, fid: None)
+    monkeypatch.setattr("app.main.share_button", lambda **kw: Span("share"))
+
+    section = _compare_summary_section(results_by_face, set(), False, mock_registry, rid="t5")
+    html = repr(section)
+    assert "compare-summary-section" in html
+    assert "summary-card-0" in html
+    # Check 150px image sizes
+    assert "w-[150px]" in html
+    assert "h-[150px]" in html
+
+
 def test_compare_summary_section_no_admin_actions_for_viewers(monkeypatch):
     """Non-admin viewers do not see Merge/Not Same buttons."""
     from app.compare_routes import _compare_summary_section
