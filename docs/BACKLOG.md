@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 40.0 — March 4, 2026
-**Status**: ~4023 tests passing, v0.89.0, 274 photos, 665 identities, 60 confirmed
+**Version**: 41.0 — March 4, 2026
+**Status**: ~4059 tests passing, v0.90.0, 274 photos, 665 identities, 60 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -22,11 +22,14 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 ### P1 — Significant Friction
 - ~~**UX-103**: Full-bleed photo view has no CTAs, overlays, or metadata~~ FIXED (Session 68)
 - ~~**UX-037**: Merge direction unintuitive~~ FIXED (Session 86) — hx_confirm on all merge buttons with both identity names
-- **UX-038**: Operations on merged-away IDs return 200 silently
+- ~~**UX-038**: Operations on merged-away IDs return 200 silently~~ FIXED (Session 86b) — POST guards with HX-Redirect to canonical
 - ~~**UX-039**: No admin controls on /person/ page~~ FIXED (Session 86) — inline rename, confirm/skip/reject, merge search
 - **UX-042**: /identify/{id} shareable page has no link to source photo (critical for community onboarding)
 - **UX-045-046**: No loading indicator + no auto-scroll on compare upload results
-- **UX-053-057**: Estimate upload: no photo preview, no loading, no CTAs, dead end
+- ~~**UX-053**: Estimate upload: no photo preview~~ FIXED (Session 86b)
+- **UX-054-055**: Estimate upload: no loading indicator, no auto-scroll
+- ~~**UX-056**: Estimate upload: no CTAs (dead end)~~ FIXED (Session 86b)
+- ~~**UX-057**: Estimate upload: file input doesn't reset~~ FIXED (Session 86b)
 - **UX-080**: 404 page unstyled — Tailwind not loading
 - **UX-081**: About page missing navbar
 - **UX-092**: Birth year Save Edit race condition (click interference)

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.90.0] — 2026-03-04 (Session 86b: Route Extraction + Deferred UX Fixes)
+
+### Changed
+- **Monolith split**: Extracted compare routes (4,642 lines) and estimate routes (739 lines) from app/main.py into app/compare_routes.py and app/estimate_routes.py. main.py reduced from ~35,800 to ~30,573 lines.
+
+### Fixed
+- **UX-038**: POST operations on merged identities now return HX-Redirect to canonical identity instead of silently succeeding. Guards added to ~15 POST routes.
+- **UX-053**: Estimate upload results now include uploaded photo preview
+- **UX-056**: "Try Another Photo" and "Share Estimate" CTAs added after estimate results
+- **UX-057**: Estimate upload form auto-resets after successful upload via hx-on::after-request
+- **Deploy**: Fixed production 404 for /compare and /estimate caused by FastHTML serve() creating duplicate module instances
+
 ## [v0.89.0] — 2026-03-04 (Session 86: P1 UX Fixes + MLS Experiment + Gemini Completion)
 
 ### Added

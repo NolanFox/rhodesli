@@ -394,6 +394,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 86b: Route Extraction + Deferred UX Fixes (2026-03-04) — v0.90.0
+- Extracted compare routes (4,642 lines) and estimate routes (739 lines) from app/main.py
+- app/main.py reduced from ~35,800 to ~30,573 lines
+- UX-038: POST operations on merged identities redirect to canonical (~15 routes guarded)
+- UX-053: Estimate upload photo preview
+- UX-056: "Try Another Photo" + "Share Estimate" CTAs
+- UX-057: Estimate form auto-reset after upload
+- Deploy fix: FastHTML serve() appname parameter to prevent duplicate module import
+- Browser verified: 6/6 PASS (Playwright)
+- 13 new tests. ~4,059 total.
+
 ## Session 86: P1 UX Fixes + MLS Experiment + Gemini Completion (2026-03-04) — v0.89.0
 - Extracted app/utils.py (8 pure functions, zero deps) — partial monolith split
 - MLS vs Euclidean resolved (AD-027): Euclidean AUC 0.9903 vs MLS 0.9454 — keep Euclidean
@@ -684,6 +695,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.90.0 | 2026-03-04 | 86b | ~3508+551 |
 | v0.89.0 | 2026-03-04 | 86 | ~4023 |
 | v0.88.0 | 2026-03-03 | 85c | ~3434+551 |
 | v0.87.1 | 2026-03-03 | 85b | ~3434+551 |

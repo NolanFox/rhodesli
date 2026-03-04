@@ -59,7 +59,7 @@
 |----|---|-------|------------|-------|
 | UX-036 | P0 | Merge button 404 — `&` instead of `?` in focus mode URL | ✅ FIXED (S49D) | Already fixed in S49B commit 4693203. Regression tests added. |
 | UX-037 | P1 | Merge direction unintuitive — neighbor survives, not target | ✅ FIXED (S86) | hx_confirm on all merge buttons with both names. |
-| UX-038 | P1 | Operations on merged-away identities return 200 silently | 📋 BACKLOG | Should error or redirect to survivor. |
+| UX-038 | P1 | Operations on merged-away identities return 200 silently | ✅ FIXED (S86b) | POST guards with HX-Redirect to canonical. ~15 routes guarded. |
 | UX-039 | P1 | No admin controls on /person/ page | ✅ FIXED (S86) | Inline rename, confirm/skip/reject, merge search. |
 | UX-040 | P1 | Identity tagging is 5+ steps with no batching | 📋 BACKLOG | Need "Identify This Person" single form. |
 | UX-041 | P1 | /photo/ → identity system disconnect | 📋 BACKLOG | Clicking unidentified face has no path to name it. |
@@ -84,11 +84,11 @@
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
 | UX-052 | P0 | Estimate upload not in pending queue | ✅ FIXED (S49D) | Same fix as UX-044. |
-| UX-053 | P1 | No uploaded photo preview in estimate results | 📋 BACKLOG | Text-only results. Archive flow shows photo. |
+| UX-053 | P1 | No uploaded photo preview in estimate results | ✅ FIXED (S86b) | Photo preview via get_upload_url(). |
 | UX-054 | P1 | No loading indicator visible during estimate upload | 📋 BACKLOG | #estimate-upload-spinner CSS issue. |
 | UX-055 | P1 | No auto-scroll to estimate results | 📋 BACKLOG | Same pattern as UX-046. |
-| UX-056 | P1 | No CTAs after estimate upload (dead end) | 📋 BACKLOG | Archive flow has Share/View/Try Another. |
-| UX-057 | P1 | Upload area doesn't reset after estimate | 📋 BACKLOG | |
+| UX-056 | P1 | No CTAs after estimate upload (dead end) | ✅ FIXED (S86b) | "Try Another Photo" + "Share Estimate" CTAs. |
+| UX-057 | P1 | Upload area doesn't reset after estimate | ✅ FIXED (S86b) | hx-on::after-request form reset. |
 | UX-058 | P1 | Two completely different result formats (upload vs archive) | 📋 BACKLOG | Should be unified layout. |
 | UX-059 | P1 | No face-by-face breakdown for uploads | 📋 BACKLOG | Upload says "17 faces" but shows nothing per-face. |
 | UX-060 | P2 | Confidence disagrees between upload and archive flows | 📋 BACKLOG | Gemini vs internal pipeline. |
