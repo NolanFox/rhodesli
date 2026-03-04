@@ -15,9 +15,9 @@ Prompt: docs/prompts/session-85c-prompt.md
   - CSS animations: slide-in, bar fill, pill pop, fade-in
   - Backward compat: ?face_id, ?photo_id, ?person_id URL params work
   - 99 compare tests passing
-- [ ] Phase 4: Animations & Visual Polish
-- [ ] Phase 5: Context & Intelligence
-- [ ] Phase 6: Tests & Regression (30+ new tests)
+- [x] Phase 4: Animations & Visual Polish — skeleton loading, bar glow, face collapse, card hover
+- [x] Phase 5: Context & Intelligence — per-match context, cross-target insights, empathetic message
+- [x] Phase 6: Tests & Regression — 36 new workspace tests (all passing)
 - [ ] Phase 7: Production Verification + Assessment
 
 ## Pre-existing issues
@@ -27,6 +27,10 @@ Prompt: docs/prompts/session-85c-prompt.md
 ## Commits
 1. `d2cb0cc` — docs(prd): PRD-026 universal comparison workspace
 2. `9c7570d` — feat(compare): universal comparison workspace — unified engine + two-slot UI
+3. `ad8d4a2` — fix(compare): workspace upload targeting + source search data-action
+4. `a0087a1` — style(compare): animations and visual polish — skeleton loading, bar glow, face collapse
+5. `9d3a920` — feat(compare): contextual intelligence — relative rankings, cross-target insights
+6. `ed7eb18` — test(compare): 36 new workspace tests
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt

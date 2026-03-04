@@ -21,12 +21,21 @@ Evidence: 99 compare tests passing, app imports cleanly
 - xdist test flakiness: different tests fail each parallel run, all pass individually (test isolation)
 - 3 brittle source-scanning tests fixed (checked for exact log strings removed in prior sessions)
 
-## Red Flags
-- [LOW] Upload tab in source slot posts to old `/api/compare/upload` — results go to `#compare-results` (hidden div), not `#compare-results-area`. Needs wiring fix.
-- [LOW] Source person/photo search results use `data-action="select-compare-target"` instead of `"select-compare-source"` — needs fix for source selection to work via search.
+## Red Flags (FIXED)
+- [FIXED] Upload tab now targets #ws-upload-result, handles ws=1 mode through upload/status endpoints
+- [FIXED] Source search uses slot=source parameter, produces data-action="select-compare-source"
+
+## Phases 4-6 (completed in continuation)
+- [x] Phase 4: Animations — skeleton loading, bar glow per tier, face collapse toggle, card hover, photo appear
+- [x] Phase 5: Context — per-match target's best %, cross-target insights, empathetic "no strong matches" msg
+- [x] Phase 6: Tests — 36 new tests (all passing), 6 old tests updated for workspace UI
+
+## Remaining
+- [ ] Phase 7: Deploy, browser verification (14 checks), final assessment, ROADMAP/CHANGELOG/BACKLOG updates
 
 ## Next Session Should Verify
-1. Upload flow in workspace actually works end-to-end
-2. Source person/photo selection populates state correctly
-3. All 9 entity combinations work via execute endpoint
-4. Backward compat URLs auto-trigger comparison
+1. Deploy and browser-verify all 14 checks from prompt
+2. Upload flow works end-to-end in production
+3. Source person/photo selection populates state correctly
+4. Face collapse toggle works in browser
+5. Context lines display for person targets
