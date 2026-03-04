@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.88.0] — 2026-03-03 (Session 85c: Universal Comparison Workspace)
+
+### Changed
+- **Compare page completely redesigned**: Two-slot workspace (Source + Compare With) replaces old single-upload form. Source slot has Upload/Person/Photo tabs. Target slot supports multi-select (up to 5) with search.
+- **Unified comparison engine**: `POST /api/compare/execute` handles all entity combinations (person/photo/upload × person/photo/upload/archive) through one endpoint.
+- **Unified search**: `GET /api/compare/search-unified` returns both people AND photos with type badges, state badges (Confirmed/Proposed/Unidentified), face counts.
+
+### Added
+- **Multi-target comparison**: Compare source against up to 5 targets simultaneously. Results show matrix with per-target confidence bars.
+- **Per-match context**: Each comparison shows target's best existing match % and source rank among target's matches. "Better than any existing match!" highlight.
+- **Cross-target insights**: When source matches multiple targets strongly, note potential relationship.
+- **Smart defaults**: Single-face sources skip face headers; single targets skip labels; all-archive groups by tier.
+- **CSS animations**: Slide-in sections, animated confidence bars with tier-colored glow, pill pop/remove, skeleton loading, face collapse toggle.
+- **Visual similarity auto-populate**: `GET /api/compare/find-similar-targets` populates target pills from nearest neighbors.
+- **Empathetic empty state**: "No strong matches found" with suggestions when all scores are low.
+- 36 new workspace tests (99 total compare tests), 4 stale tests updated
+
+### Fixed
+- 4 stale compare tests updated for workspace UI (old page elements replaced)
+
 ## [v0.87.1] — 2026-03-03 (Session 85b: Compare Navigation + PRD-025 Gap Closure)
 
 ### Added

@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.87.1 · ~3985 tests · 274 photos · 662 identities · 60 confirmed
+Current: v0.88.0 · ~3985 tests · 274 photos · 665 identities · 60 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-03: **v0.88.0 — Session 85c**: Universal Comparison Workspace. Two-slot design (Source + Compare With), all entity combinations, multi-target (up to 5), unified search (people + photos), per-match context (target's best %, rank), CSS animations (bar glow, skeleton loading, face collapse), backward-compat URLs. PRD-026. 36 new tests (99 total compare). Browser verified 14/14 PASS. ~3985 tests.
 - [x] 2026-03-03: **v0.87.1 — Session 85b**: Compare Navigation + PRD-025 Gap Closure. Archive-to-compare flow (from-photo endpoint), direct compare URLs, photo/person page navigation links, reference context on shareable result page, merge/not-same admin actions on result page. Isaac Cohen E2E verified with shareable link. Disk-full resilience. 11 new tests (33 total compare). ~3985 tests.
 - [x] 2026-03-03: **v0.87.0 — Session 85**: Fix Compare — Unified Upload Pipeline. Compare uploads now use same staging → process_directory pipeline as Upload page. New vs-person comparison with search + per-face scores. Enhanced result page with confidence bars (dual encoding), person/photo links. Removed SSE interceptor for HTMX-based flow. 9 new tests (22 total compare). ~3985 tests.
 - [x] 2026-03-02: **v0.86.1 — Session 84**: Unified Face Cards + Restore Find Similar. Browse grid uses unified identity_card (DD-006). Find Similar wired to full neighbors_sidebar with Select All/Merge/Not Same/Load More/Search/Rejected. Triage buttons on browse cards. Share on all named identities. Card expansion animation. Help Identify panel full-width fix. 25 tests (up from 10). ~3976 tests.

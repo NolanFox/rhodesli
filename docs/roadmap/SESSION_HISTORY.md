@@ -394,6 +394,40 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 85c: Universal Comparison Workspace (2026-03-03) — v0.88.0
+- Complete /compare page redesign: two-slot workspace (Source + Compare With)
+- Source slot: Upload/Person/Photo tabs with live search
+- Target slot: multi-select up to 5 targets with face crop pills, "All Archive" option
+- Unified comparison engine: POST /api/compare/execute handles all 9 entity combinations
+- Unified search: GET /api/compare/search-unified returns people + photos with type/state badges
+- Per-match context: target's best existing match %, rank, cross-target insights
+- CSS animations: confidence bar glow by tier, skeleton loading, face collapse, staggered reveal
+- Smart defaults: single-face/single-target simplification, empathetic "no strong matches"
+- Backward compat: ?face_id, ?photo_id, ?person_id URL params, /compare/result/{id} links preserved
+- PRD-026 written. 36 new tests (99 total compare). 4 stale tests updated. Browser verified 14/14 PASS.
+- Tests: ~3985 total
+
+## Session 85b: Compare Navigation + PRD-025 Gap Closure (2026-03-03) — v0.87.1
+- Archive-to-compare flow: GET /api/compare/from-photo, direct compare URLs
+- Photo/person page navigation links to Compare
+- Reference context on shareable result page, admin Merge/Not Same on results
+- Isaac Cohen E2E verified with shareable link
+- 11 new tests (33 total compare). ~3985 tests.
+
+## Session 85: Fix Compare — Unified Upload Pipeline (2026-03-03) — v0.87.0
+- Compare uploads use same staging → process_directory pipeline as Upload page
+- New vs-person comparison with search + per-face scores
+- Enhanced result page with confidence bars (dual encoding), person/photo links
+- Removed SSE interceptor for HTMX-based flow
+- 9 new tests (22 total compare). ~3985 tests.
+
+## Session 84: Unified Face Cards + Restore Find Similar (2026-03-02) — v0.86.1
+- Browse grid uses unified identity_card (DD-006)
+- Find Similar wired to full neighbors_sidebar
+- Triage buttons on browse cards, share on all named identities
+- Card expansion animation, Help Identify panel full-width fix
+- 25 tests (up from 10). ~3976 tests.
+
 ## Session 83a: Critical UX Fixes — User Feedback Response (2026-03-02) — v0.86.0
 - Origin: Claude Benatar (Jews of Rhodes FB group admin) feedback — 3 core features silently broken
 - **WS1 Naming**: Added "Display Name" as primary field in Edit Details. Previously only "Maiden Name" existed with "née" prefix, making it impossible to name people (AD-196)
@@ -638,6 +672,11 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.88.0 | 2026-03-03 | 85c | ~3434+551 |
+| v0.87.1 | 2026-03-03 | 85b | ~3434+551 |
+| v0.87.0 | 2026-03-03 | 85 | ~3434+551 |
+| v0.86.1 | 2026-03-02 | 84 | ~3425+551 |
+| v0.86.0 | 2026-03-02 | 83a | ~3410+551 |
 | v0.85.1 | 2026-03-02 | 82f | 3398+551 |
 | v0.85.0 | 2026-03-01 | 82e | 2391+551 |
 | v0.84.0 | 2026-03-01 | 82d | ~3398+551 |

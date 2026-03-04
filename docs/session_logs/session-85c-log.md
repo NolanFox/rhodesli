@@ -17,12 +17,13 @@ Prompt: docs/prompts/session-85c-prompt.md
   - 99 compare tests passing
 - [x] Phase 4: Animations & Visual Polish — skeleton loading, bar glow, face collapse, card hover
 - [x] Phase 5: Context & Intelligence — per-match context, cross-target insights, empathetic message
-- [x] Phase 6: Tests & Regression — 36 new workspace tests (all passing)
-- [ ] Phase 7: Production Verification + Assessment
+- [x] Phase 6: Tests & Regression — 36 new workspace tests (all passing), 4 stale tests fixed
+- [x] Phase 7: Production Verification + Assessment — 14/14 browser PASS, assessment written, docs updated
 
 ## Pre-existing issues
 - xdist test flakiness: different tests fail on each parallel run (test isolation issue), all pass individually
 - Fixed 3 pre-existing brittle source-scanning tests (checked for exact log strings removed in prior sessions)
+- Fixed 4 stale compare tests for workspace UI redesign
 
 ## Commits
 1. `d2cb0cc` — docs(prd): PRD-026 universal comparison workspace
@@ -31,7 +32,25 @@ Prompt: docs/prompts/session-85c-prompt.md
 4. `a0087a1` — style(compare): animations and visual polish — skeleton loading, bar glow, face collapse
 5. `9d3a920` — feat(compare): contextual intelligence — relative rankings, cross-target insights
 6. `ed7eb18` — test(compare): 36 new workspace tests
+7. `3afa276` — docs(session): session 85c progress — phases 4-6 complete, phase 7 remaining
+8. `0f0d81a` — fix(tests): update stale compare tests for workspace redesign
+
+## Browser Verification (14/14 PASS)
+1. [x] Workspace loads — two-slot design (Source + Compare With)
+2. [x] Upload source — drag-drop zone renders
+3. [x] Person source — Isaac Cohen found via search
+4. [x] Photo source — Photo tab with search
+5. [x] Add target — Haim Capelouto pill (1/5)
+6. [x] Multi-target — 2 pills, 2/5 counter
+7. [x] Results — confidence bars with tier colors
+8. [x] Context — "Better than any existing match!", "best is 41%"
+9. [x] Animations — bars animate, sections slide in
+10. [x] Shareable link — /compare/result/86b29fdb16c8 → 200
+11. [x] URL params — ?person_id auto-populates target
+12. [x] Mobile 375px — stacked layout
+13. [x] Search unidentified — INBOX identities with badge
+14. [x] Admin actions — Merge/Not Same buttons
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed
