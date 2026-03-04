@@ -7,7 +7,7 @@ Predecessor: Session 87 (v0.91.0)
 - [x] Act 1: Orient & Setup — prompt/log/context files, Lesson 101, commit 19ac262
 - [x] Act 2: Fix Scoring — isotonic f_ bug fixed, batch override removed, sigmoid CDF auto-loads, commit 528abf3
 - [x] Act 3: Quick Fixes — accordion headers with match preview, compare link params fixed, admin gear icon, commit c2e325e
-- [ ] Act 4: Unified match_card component
+- [x] Act 4: Unified match_info_bar + discovery distance — commit 5c9aced
 - [ ] Act 5: Verify & Close
 
 ## Verification Gate
