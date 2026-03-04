@@ -174,12 +174,21 @@ All data science and algorithmic decisions for the Rhodesli face recognition pip
 - **Config**: `rhodesli_ml/config/date_estimation.yaml`.
 - **Affects**: `rhodesli_ml/data/augmentations.py` (placeholder, uses torchvision.transforms v2).
 
-### AD-027: MLS vs Euclidean — Open Experiment
-- **Date**: 2026-02-11
+### AD-027: MLS vs Euclidean — RESOLVED: Euclidean Wins
+- **Date**: 2026-02-11 (opened), 2026-03-04 (resolved)
 - **Context**: AD-003 specifies MLS as the distance metric, but the audit (docs/ml/current_ml_audit.md) found ALL runtime code uses Euclidean. sigma_sq is computed but ignored.
-- **Status**: OPEN EXPERIMENT. Need golden set evaluation comparing MLS vs Euclidean to determine if sigma_sq actually helps for this archive's face quality distribution.
+- **Status**: RESOLVED. Euclidean is the correct metric for this archive.
 - **Hypothesis**: MLS may improve matching for low-quality heritage photos where sigma_sq should down-weight uncertain embeddings. But since all sigma_sq values are scalar-uniform (not per-dimension), the benefit may be minimal.
-- **Affects**: `core/neighbors.py` (if MLS proves better), `scripts/cluster_new_faces.py`, `core/grouping.py`.
+- **Evaluation** (scripts/evaluate_mls_vs_euclidean.py, seed=42):
+  - Dataset: 221 same-identity pairs (10 confirmed identities, 8 with 2+ valid faces), 500 cross-identity pairs
+  - All 1,061 embeddings have scalar/uniform sigma_sq (not per-dimension)
+  - **ROC AUC**: Euclidean=0.9903, MLS=0.9454 (Euclidean wins by +0.0449)
+  - **Precision@Recall=0.95**: Euclidean=0.8367, MLS=0.5966
+  - **Optimal F1**: Euclidean=0.9464, MLS=0.8040
+  - **Separation (d')**: Euclidean=3.13, MLS=2.25
+  - MLS same-identity scores have high variance (std=0.94) due to the scalar sigma path amplifying distance differences through the 1/(sigma1+sigma2) term, which makes MLS less discriminative when sigma values vary across face quality levels.
+- **Decision**: Keep Euclidean distance in `core/neighbors.py`. MLS with scalar sigma_sq provides no benefit and actively degrades discrimination. The sigma_sq values computed by `core/pfe.py:compute_sigma_sq()` remain available if per-dimension PFE embeddings are added in the future.
+- **Affects**: No production code changes. `core/neighbors.py` remains frozen with Euclidean metric.
 
 ### AD-028: Surname Variant Matching — Bidirectional Lookup via Data Registry
 - **Date**: 2026-02-11
