@@ -531,3 +531,28 @@ For deployment decisions, see: docs/ops/OPS_DECISIONS.md
 3. **FastHTML + surgical JS embeds** — ACCEPTED. Keep all routing, auth, data, HTMX partials. Add standalone JS only where HTMX falls short. No build step, no npm, files served from static/js/.
 **Consequences:** Tree visualization gets D3/SVG. Mobile gets CSS transitions + vanilla JS event listeners. Face cards get CSS animations. All server communication stays HTMX. JS files are self-contained, no framework dependency.
 **Review Trigger:** If 3+ components need complex state management, or mobile UX still underperforms after Session 74, revisit full frontend framework. Track in ROADMAP.md as a future evaluation item.
+
+## HD-023: External Harness Benchmarking + Cross-Tool Reliability Hardening
+
+- **Date:** 2026-03-04
+- **Session:** Codex benchmark session
+- **Decision:** Adopt a formal benchmark-and-intake pattern for harness improvements, with immediate focus on cross-tool reliability gaps surfaced by Rhodesli retrospectives:
+  1. Create a cross-tool preflight contract (environment capability snapshot)
+  2. Centralize test gating into a shared script (avoid tool-specific drift)
+  3. Remove session-specific hardcoded hook instructions from global hooks
+  4. Require persisted browser verification artifacts where applicable
+  5. Run periodic external harness benchmark reviews with a fixed rubric
+- **Trigger:** Repeated multi-session iteration patterns (partial scope delivery, stale hook behavior, unverifiable browser checks) documented in lessons and assessments.
+- **Rationale:** Rhodesli already has strong architecture (canonical source + adapters), but reliability still degrades when quality gates vary by tool or when hooks encode one-off session details. A benchmark protocol plus script-level standardization improves determinism without touching runtime application code.
+- **Alternatives considered:**
+  - Keep current hook-only enforcement: Rejected, because current hooks are uneven across tools and include stale session-specific messaging.
+  - Add more narrative rules only: Rejected, because repeated failures show mechanical gates outperform prose reminders.
+  - Full harness rewrite: Rejected as high-risk and unnecessary given existing foundation quality.
+- **Breadcrumbs:** docs/harness/everything-claude-code-gap-analysis.md,
+  tasks/lessons/harness-lessons.md,
+  docs/assessments/session-77-assessment.md,
+  docs/assessments/session-82f-assessment.md,
+  docs/roadmap/CLAUDE_OPUS_EVALUATION_2026-03.md,
+  .claude/settings.json,
+  scripts/run_session.sh,
+  scripts/sync-harness.sh
