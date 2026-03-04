@@ -25,8 +25,14 @@ if _project_root not in sys.path:
 # When running as __main__ (python app/main.py), register this module as 'app.main'
 # so that `from app.main import rt` in route modules gets the SAME module instance
 # (not a duplicate). Without this, compare_routes would get a different rt/app object.
-if __name__ == "__main__" and "app.main" not in sys.modules:
+if "app.main" not in sys.modules:
     sys.modules["app.main"] = sys.modules[__name__]
+    # Also ensure 'app' package is importable
+    if "app" not in sys.modules:
+        import types
+        _app_pkg = types.ModuleType("app")
+        _app_pkg.__path__ = [str(_PathEarly(__file__).resolve().parent)]
+        sys.modules["app"] = _app_pkg
 if not os.environ.get("RAILWAY_ENVIRONMENT") and "pytest" not in sys.modules:
     from dotenv import load_dotenv
     load_dotenv()
