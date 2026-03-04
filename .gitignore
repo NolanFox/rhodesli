@@ -105,3 +105,4 @@ docs/ux_audit/session_findings/screenshots/
 # Claude Code worktrees
 .claude/worktrees/
 .claude/parallel_session_active
+notebookllm/
