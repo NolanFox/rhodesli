@@ -5173,6 +5173,16 @@ def _compute_discoveries(registry=None) -> list:
         except (ImportError, Exception) as e:
             logging.warning(f"[discoveries] Batch neighbor computation failed: {e}")
 
+    # Batch-compute co-occurrence for all discoveries (cheaper than per-card)
+    try:
+        photo_reg = load_photo_registry()
+        for disc in discoveries:
+            disc["co_occurrence"] = _compute_co_occurrence(
+                disc["source_id"], disc["target_id"], registry, photo_reg
+            )
+    except Exception:
+        pass
+
     discoveries.sort(key=lambda d: d["distance"])
     _discovery_cache = discoveries
     _discovery_cache_key = cache_key
@@ -6666,10 +6676,12 @@ def face_card(
 
 
 def match_info_bar(distance: float, confidence_gap: float = 0.0, co_occurrence: int = 0,
-                   show_distance: bool = True) -> Div:
+                   show_distance: bool = True, show_badge: bool = True) -> Div:
     """Shared match metrics bar — used by neighbor_card and discovery cards.
 
     Session 88: Unified component so all match displays show the same info.
+    Args:
+        show_badge: If False, skip the "X% match" badge (caller already shows pct).
     """
     from core.confidence import compute_face_confidence
     conf = compute_face_confidence(distance)
@@ -6685,7 +6697,7 @@ def match_info_bar(distance: float, confidence_gap: float = 0.0, co_occurrence: 
     }
     similarity_class = _similarity_classes.get(label, "bg-slate-600 text-slate-400")
 
-    badge = Span(f"{pct}% match", cls=f"text-xs px-2 py-0.5 rounded {similarity_class}")
+    badge = Span(f"{pct}% match", cls=f"text-xs px-2 py-0.5 rounded {similarity_class}") if show_badge else None
 
     details = []
     if show_distance:
@@ -23500,15 +23512,8 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
 
     face_id_encoded = quote(first_face_id, safe="")
 
-    # Compute co-occurrence (how many photos these two identities share)
-    co_occurrence = 0
-    try:
-        photo_reg = load_photo_registry()
-        co_occurrence = _compute_co_occurrence(source_id, target_id, registry, photo_reg)
-    except Exception:
-        pass
-
-    # Confidence gap from discovery data (computed during _compute_discoveries)
+    # Co-occurrence and confidence gap from discovery data
+    co_occurrence = d.get("co_occurrence", 0)
     confidence_gap = d.get("confidence_gap", 0.0)
 
     # Resolve photo context for source face
@@ -23674,7 +23679,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                      cls=f"text-xs font-semibold px-2 py-0.5 rounded-full border {badge_cls}",
                      title=f"Distance: {distance:.2f} ({confidence})"),
                 # Shared match metrics bar — same component as neighbor_card (Session 88 parity fix)
-                match_info_bar(distance, confidence_gap=confidence_gap, co_occurrence=co_occurrence),
+                match_info_bar(distance, confidence_gap=confidence_gap, co_occurrence=co_occurrence, show_badge=False),
                 compare_link,
                 cls="flex flex-col items-center gap-1.5 px-4"
             ),

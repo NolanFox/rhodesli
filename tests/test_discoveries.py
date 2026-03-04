@@ -925,6 +925,7 @@ class TestDiscoveriesCardEnhancements:
                 "target_name": "Known Person",
                 "distance": 0.6,
                 "confidence": "VERY HIGH",
+                "co_occurrence": 3,
             }
         ]
         source_identity = _make_identity("inbox1", "Test Person", "INBOX", candidate_ids=["face_inbox1"])
@@ -936,7 +937,7 @@ class TestDiscoveriesCardEnhancements:
              patch("app.main._safe_get_identity", return_value=source_identity), \
              patch("app.main.get_photo_id_for_face", return_value=None), \
              patch("app.main.load_photo_registry"), \
-             patch("app.main._compute_co_occurrence", return_value=3), \
+             patch("app.main._compute_co_occurrence", return_value=0), \
              patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
             response = client.get("/api/discoveries")
 
