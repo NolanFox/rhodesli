@@ -6,7 +6,7 @@ Predecessor: Session 87 (v0.91.0)
 ## Phase Checklist
 - [x] Act 1: Orient & Setup — prompt/log/context files, Lesson 101, commit 19ac262
 - [x] Act 2: Fix Scoring — isotonic f_ bug fixed, batch override removed, sigmoid CDF auto-loads, commit 528abf3
-- [ ] Act 3: Quick Fixes (accordion, compare link, admin badge)
+- [x] Act 3: Quick Fixes — accordion headers with match preview, compare link params fixed, admin gear icon, commit c2e325e
 - [ ] Act 4: Unified match_card component
 - [ ] Act 5: Verify & Close
 
@@ -23,5 +23,10 @@ Predecessor: Session 87 (v0.91.0)
 - Isotonic too coarse (10 breakpoints → 99% for everything above dist ~1.22). Sigmoid CDF with empirical stats gives proper 1-99 range.
 - Tests: 39 confidence + 551 ML pass. 2 tests updated (match_mode, neighbors calibrator)
 
+## Act 3 Details
+- Accordion: "Face N — X matches (best: Name Pct%)" from fr["targets"][0] data
+- Compare link: /compare?face_id={encoded}&person_id={target_id} (was source=/target= which doesn't match route)
+- Admin badge: SVG gear icon replaces "Admin" Span. 1 test updated (discovery compare link URL).
+
 ## Notes
-- VIOLATION: Did not /clear between Act 1 and Act 2, or Act 2 and Act 3. Correcting now.
+- VIOLATION: Did not /clear between Act 1 and Act 2, or Act 2 and Act 3. User called this out.
