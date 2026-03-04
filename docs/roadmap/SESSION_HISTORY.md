@@ -394,6 +394,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 86: P1 UX Fixes + MLS Experiment + Gemini Completion (2026-03-04) — v0.89.0
+- Extracted app/utils.py (8 pure functions, zero deps) — partial monolith split
+- MLS vs Euclidean resolved (AD-027): Euclidean AUC 0.9903 vs MLS 0.9454 — keep Euclidean
+- Gemini alignment completed: 271/271 photos (last 2 processed, $0.0004)
+- UX-037: Merge confirmation dialogs on all ~10 merge buttons with both identity names
+- UX-039: Person page inline admin controls (rename, confirm/skip/reject, merge search)
+- Face labels visible for all users (confirmed faces on public photo pages)
+- Connected navigation: person page action bar (Timeline, Map, Tree, Connections, Compare)
+- Browser verification: 6/6 PASS (curl-based, Chrome extension unavailable)
+- Deferred: data_loaders extraction, compare/estimate route extraction, Track A UX fixes (UX-045/046/053-057)
+- 38+ new tests. ~4023 total.
+
 ## Session 85c: Universal Comparison Workspace (2026-03-03) — v0.88.0
 - Complete /compare page redesign: two-slot workspace (Source + Compare With)
 - Source slot: Upload/Person/Photo tabs with live search
@@ -672,6 +684,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 | Version | Date | Session | Test Count |
 |---------|------|---------|------------|
+| v0.89.0 | 2026-03-04 | 86 | ~4023 |
 | v0.88.0 | 2026-03-03 | 85c | ~3434+551 |
 | v0.87.1 | 2026-03-03 | 85b | ~3434+551 |
 | v0.87.0 | 2026-03-03 | 85 | ~3434+551 |

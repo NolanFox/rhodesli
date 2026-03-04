@@ -1,7 +1,7 @@
 # Rhodesli: Project Backlog
 
-**Version**: 39.0 — February 28, 2026
-**Status**: ~3752 tests passing, v0.79.1, 274 photos, 60 confirmed identities, 775 total identities, 267 geocoded
+**Version**: 40.0 — March 4, 2026
+**Status**: ~4023 tests passing, v0.89.0, 274 photos, 665 identities, 60 confirmed
 **Live**: https://rhodesli.nolanandrewfox.com
 
 ---
@@ -21,8 +21,9 @@ Rhodesli is an ML-powered family photo archive for the Rhodes/Capeluto Jewish he
 
 ### P1 — Significant Friction
 - ~~**UX-103**: Full-bleed photo view has no CTAs, overlays, or metadata~~ FIXED (Session 68)
-- **UX-037-038**: Merge direction unintuitive + operations on merged-away IDs return 200 silently
-- **UX-039**: No admin controls on /person/ page (no rename/confirm/merge)
+- ~~**UX-037**: Merge direction unintuitive~~ FIXED (Session 86) — hx_confirm on all merge buttons with both identity names
+- **UX-038**: Operations on merged-away IDs return 200 silently
+- ~~**UX-039**: No admin controls on /person/ page~~ FIXED (Session 86) — inline rename, confirm/skip/reject, merge search
 - **UX-042**: /identify/{id} shareable page has no link to source photo (critical for community onboarding)
 - **UX-045-046**: No loading indicator + no auto-scroll on compare upload results
 - **UX-053-057**: Estimate upload: no photo preview, no loading, no CTAs, dead end

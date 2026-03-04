@@ -58,9 +58,9 @@
 | ID | P | Issue | Disposition | Notes |
 |----|---|-------|------------|-------|
 | UX-036 | P0 | Merge button 404 — `&` instead of `?` in focus mode URL | ✅ FIXED (S49D) | Already fixed in S49B commit 4693203. Regression tests added. |
-| UX-037 | P1 | Merge direction unintuitive — neighbor survives, not target | 📋 BACKLOG | Caused metadata loss twice. |
+| UX-037 | P1 | Merge direction unintuitive — neighbor survives, not target | ✅ FIXED (S86) | hx_confirm on all merge buttons with both names. |
 | UX-038 | P1 | Operations on merged-away identities return 200 silently | 📋 BACKLOG | Should error or redirect to survivor. |
-| UX-039 | P1 | No admin controls on /person/ page | 📋 BACKLOG | No rename/confirm/merge/detach buttons. |
+| UX-039 | P1 | No admin controls on /person/ page | ✅ FIXED (S86) | Inline rename, confirm/skip/reject, merge search. |
 | UX-040 | P1 | Identity tagging is 5+ steps with no batching | 📋 BACKLOG | Need "Identify This Person" single form. |
 | UX-041 | P1 | /photo/ → identity system disconnect | 📋 BACKLOG | Clicking unidentified face has no path to name it. |
 | UX-042 | P1 | /identify/{id} shareable page has no link to source photo | ✅ FIXED (S49D) | Added "See full photo →" links on photo cards. |
