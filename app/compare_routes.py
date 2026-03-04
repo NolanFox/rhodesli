@@ -1744,26 +1744,11 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
             distances.append(dist)
         best_dist = min(distances) if distances else 99.0
 
-        # Calibrate confidence
-        try:
-            from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-            cal = SimilarityCalibrator()
-            cosine_sim = max(0.0, 1.0 - (best_dist ** 2) / 2.0)
-            prob = cal.predict(cosine_sim)
-            confidence_pct = int(prob * 100)
-        except Exception:
-            # Fallback sigmoid
-            confidence_pct = max(1, min(99, int(100 * (1.0 / (1.0 + np.exp(2.0 * (best_dist - 1.1)))))))
-
-        # Tier classification
-        if confidence_pct >= 85:
-            tier = "STRONG MATCH"
-        elif confidence_pct >= 70:
-            tier = "POSSIBLE MATCH"
-        elif confidence_pct >= 50:
-            tier = "SIMILAR"
-        else:
-            tier = "WEAK"
+        # Unified confidence scoring (AD-200)
+        from core.confidence import compute_face_confidence
+        conf = compute_face_confidence(best_dist)
+        confidence_pct = conf["confidence_pct"]
+        tier = conf["tier"]
 
         # Get identity info for this face
         face_identity = _main_mod.get_identity_for_face(registry, fid)
@@ -2149,23 +2134,11 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
             distances.append(dist)
         best_dist = min(distances) if distances else 99.0
 
-        try:
-            from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-            cal = SimilarityCalibrator()
-            cosine_sim = max(0.0, 1.0 - (best_dist ** 2) / 2.0)
-            prob = cal.predict(cosine_sim)
-            confidence_pct = int(prob * 100)
-        except Exception:
-            confidence_pct = max(1, min(99, int(100 * (1.0 / (1.0 + np.exp(2.0 * (best_dist - 1.1)))))))
-
-        if confidence_pct >= 85:
-            tier = "STRONG MATCH"
-        elif confidence_pct >= 70:
-            tier = "POSSIBLE MATCH"
-        elif confidence_pct >= 50:
-            tier = "SIMILAR"
-        else:
-            tier = "WEAK"
+        # Unified confidence scoring (AD-200)
+        from core.confidence import compute_face_confidence
+        conf = compute_face_confidence(best_dist)
+        confidence_pct = conf["confidence_pct"]
+        tier = conf["tier"]
 
         face_identity = _main_mod.get_identity_for_face(registry, fid)
         face_identity_id = face_identity.get("identity_id") if face_identity else None
@@ -3435,29 +3408,20 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
     mu_a = np.array(faces_a[face_a]["mu"])
     mu_b = np.array(faces_b[face_b]["mu"])
     distance = float(np.linalg.norm(mu_a - mu_b))
-    cosine_sim = max(0.0, 1.0 - (distance ** 2) / 2.0)
-    confidence_pct = max(0, min(100, int((1 - distance / 2.0) * 100)))
+    from core.confidence import compute_face_confidence, compute_confidence_pct, distance_to_cosine_sim
+    cosine_sim = distance_to_cosine_sim(distance)
 
-    calibrated_pct = None
-    try:
-        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-        cal = SimilarityCalibrator()
-        prob = cal.predict(cosine_sim)
-        if prob is not None:
-            calibrated_pct = int(prob * 100)
-    except Exception:
-        pass
+    # Unified confidence scoring (AD-200)
+    conf = compute_face_confidence(distance)
+    display_pct = conf["confidence_pct"]
 
-    display_pct = calibrated_pct if calibrated_pct is not None else confidence_pct
-
-    if display_pct >= 85:
-        label, badge_cls, bar_color = "Very Likely Match", "text-green-400 border-green-500/30 bg-green-900/20", "bg-green-500"
-    elif display_pct >= 70:
-        label, badge_cls, bar_color = "Strong Match", "text-blue-400 border-blue-500/30 bg-blue-900/20", "bg-blue-500"
-    elif display_pct >= 50:
-        label, badge_cls, bar_color = "Possible Match", "text-amber-400 border-amber-500/30 bg-amber-900/20", "bg-amber-500"
-    else:
-        label, badge_cls, bar_color = "Unlikely Match", "text-slate-400 border-slate-500/30 bg-slate-800", "bg-slate-500"
+    _tier_ui = {
+        "STRONG MATCH": ("Very Likely Match", "text-green-400 border-green-500/30 bg-green-900/20", "bg-green-500"),
+        "POSSIBLE MATCH": ("Strong Match", "text-blue-400 border-blue-500/30 bg-blue-900/20", "bg-blue-500"),
+        "SIMILAR": ("Possible Match", "text-amber-400 border-amber-500/30 bg-amber-900/20", "bg-amber-500"),
+        "WEAK": ("Unlikely Match", "text-slate-400 border-slate-500/30 bg-slate-800", "bg-slate-500"),
+    }
+    label, badge_cls, bar_color = _tier_ui.get(conf["tier"], _tier_ui["WEAK"])
 
     crop_a_url = get_upload_url(f"uploads/compare/{upload_a}_face{face_a}.jpg")
     crop_b_url = get_upload_url(f"uploads/compare/{upload_b}_face{face_b}.jpg")
@@ -3469,7 +3433,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
         for idx_b, fb in enumerate(faces_b):
             mu_vec_b = np.array(fb["mu"])
             d = float(np.linalg.norm(mu_vec_a - mu_vec_b))
-            pct = max(0, min(100, int((1 - d / 2.0) * 100)))
+            pct = compute_confidence_pct(d)
             cross_pairs.append({"face_a": idx_a, "face_b": idx_b, "distance": d, "confidence_pct": pct})
     cross_pairs.sort(key=lambda p: p["distance"])
 
@@ -3580,7 +3544,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
             Div(
                 P(f"Euclidean distance: {distance:.3f}", cls="text-[10px] text-slate-600"),
                 P(f"Cosine similarity: {cosine_sim:.4f}", cls="text-[10px] text-slate-600"),
-                P(f"{'Calibrated' if calibrated_pct is not None else 'Estimated'} confidence", cls="text-[10px] text-slate-600"),
+                P("Confidence", cls="text-[10px] text-slate-600"),
                 cls="text-center",
             ),
             Button(
@@ -3674,28 +3638,11 @@ def _compute_comparison_score(source_emb, target_embs: list) -> dict:
     distances = [float(np.linalg.norm(source_emb - t)) for t in target_embs]
     best_dist = min(distances)
 
-    # Calibrated confidence
-    try:
-        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-        cal = SimilarityCalibrator()
-        cosine_sim = max(0.0, 1.0 - (best_dist ** 2) / 2.0)
-        prob = cal.predict(cosine_sim)
-        confidence_pct = max(1, min(99, int(prob * 100)))
-    except Exception:
-        import numpy as np
-        confidence_pct = max(1, min(99, int(100 * (1.0 / (1.0 + np.exp(2.0 * (best_dist - 1.1)))))))
+    # Unified confidence scoring (AD-200)
+    from core.confidence import compute_face_confidence
+    conf = compute_face_confidence(best_dist)
 
-    # Tier classification
-    if confidence_pct >= 85:
-        tier = "STRONG MATCH"
-    elif confidence_pct >= 70:
-        tier = "POSSIBLE MATCH"
-    elif confidence_pct >= 50:
-        tier = "SIMILAR"
-    else:
-        tier = "WEAK"
-
-    return {"distance": best_dist, "confidence_pct": confidence_pct, "tier": tier}
+    return {"distance": best_dist, "confidence_pct": conf["confidence_pct"], "tier": conf["tier"]}
 @rt("/api/compare/execute")
 def post(source_type: str = "", source_id: str = "", target_type: str = "",
          target_ids: str = "", sess=None):
