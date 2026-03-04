@@ -16394,11 +16394,18 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes barFill { from { width: 0; } }
         @keyframes pillPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes photoAppear { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        @keyframes barColorIn { from { filter: saturate(0); } to { filter: saturate(1); } }
 
         .compare-section-animate { animation: slideIn 0.3s ease-out both; }
-        .compare-bar-animate { animation: barFill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .compare-bar-animate { animation: barFill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both, barColorIn 0.8s ease-out both; }
         .compare-pill-animate { animation: pillPop 0.2s ease-out both; }
         .compare-fade-in { animation: fadeIn 0.3s ease-out both; }
+        .compare-photo-appear { animation: photoAppear 0.4s ease-out both; }
+        .compare-face-thumb { animation: slideUp 0.25s ease-out both; }
+        .compare-pulse { animation: pulse 2s ease-in-out infinite; }
 
         /* Upload drag state */
         .upload-zone-drag { border-color: rgb(99 102 241) !important; background-color: rgba(99, 102, 241, 0.05); }
@@ -16410,6 +16417,32 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             background-size: 200px 100%;
             animation: shimmer 1.5s infinite;
         }
+
+        /* Skeleton loading */
+        .skeleton-block {
+            background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 0.5rem;
+        }
+
+        /* Confidence bar inner glow */
+        .bar-glow-emerald { box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.3); }
+        .bar-glow-amber { box-shadow: inset 0 0 6px rgba(245, 158, 11, 0.3); }
+        .bar-glow-blue { box-shadow: inset 0 0 6px rgba(59, 130, 246, 0.3); }
+
+        /* Card hover effects */
+        .compare-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .compare-card:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+
+        /* Face section collapse */
+        .face-section-content { transition: max-height 0.3s ease, opacity 0.2s ease; overflow: hidden; }
+        .face-section-collapsed .face-section-content { max-height: 0 !important; opacity: 0; }
+        .face-section-collapsed .face-collapse-icon { transform: rotate(-90deg); }
+        .face-collapse-icon { transition: transform 0.2s ease; }
+
+        /* Best match highlight */
+        .best-match-glow { box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.3), 0 0 12px rgba(251, 191, 36, 0.08); }
     """)
 
     # Workspace JS — event delegation for all interactions
@@ -16573,6 +16606,15 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             }
         });
 
+        // Toggle face section collapse
+        document.addEventListener('click', function(e) {
+            var el = e.target.closest('[data-action="toggle-face-section"]');
+            if (!el) return;
+            var idx = el.getAttribute('data-face-idx');
+            var section = document.getElementById('compare-face-section-' + idx);
+            if (section) section.classList.toggle('face-section-collapsed');
+        });
+
         function triggerCompare() {
             if (!state.sourceType || !state.sourceId) return;
             if (!state.allArchive && state.targets.length === 0) return;
@@ -16583,8 +16625,17 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             var area = document.getElementById('compare-results-area');
             if (!area) return;
 
-            // Show loading
-            area.innerHTML = '<div class="text-center py-8"><div class="inline-block w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div><p class="text-slate-400 text-sm">Computing comparisons...</p></div>';
+            // Show skeleton loading UI
+            area.innerHTML = '<div class="space-y-4">' +
+                '<div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30">' +
+                  '<div class="flex items-center gap-3 mb-3"><div class="skeleton-block w-14 h-14 rounded-full"></div><div class="skeleton-block h-4 w-24"></div></div>' +
+                  '<div class="space-y-2"><div class="flex items-center gap-3"><div class="skeleton-block w-10 h-10 rounded-full"></div><div class="flex-1"><div class="skeleton-block h-3 w-32 mb-2"></div><div class="skeleton-block h-2 w-full"></div></div></div></div>' +
+                '</div>' +
+                '<div class="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30 opacity-60" style="animation-delay:100ms">' +
+                  '<div class="flex items-center gap-3"><div class="skeleton-block w-10 h-10 rounded-full"></div><div class="flex-1"><div class="skeleton-block h-3 w-28 mb-2"></div><div class="skeleton-block h-2 w-3/4"></div></div></div>' +
+                '</div>' +
+                '<p class="text-slate-500 text-xs text-center">Computing comparisons...</p>' +
+              '</div>';
 
             htmx.ajax('POST', '/api/compare/execute', {
                 target: '#compare-results-area',
@@ -17837,8 +17888,8 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str) -> object:
                     alt=f"Face {i+1}") if crop_url else
                 Div(f"F{i+1}", cls="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400"),
                 Span(f"Face {i+1}", cls="text-[10px] text-slate-500 mt-0.5 block text-center"),
-                cls="compare-fade-in",
-                style=f"animation-delay: {i * 80}ms",
+                cls="compare-face-thumb",
+                style=f"animation-delay: {i * 50}ms",
             )
         )
 
@@ -20748,19 +20799,23 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
             tier = tr["tier"]
             is_best = (fi == best_face_idx and ti == best_target_idx)
 
-            # Color based on tier
+            # Color based on tier (with glow classes for visual polish)
             if pct >= 85:
                 bar_color = "bg-emerald-500"
                 label_color = "text-emerald-400"
+                bar_glow = "bar-glow-emerald"
             elif pct >= 70:
                 bar_color = "bg-amber-500"
                 label_color = "text-amber-400"
+                bar_glow = "bar-glow-amber"
             elif pct >= 50:
                 bar_color = "bg-blue-500"
                 label_color = "text-blue-400"
+                bar_glow = "bar-glow-blue"
             else:
                 bar_color = "bg-slate-600"
                 label_color = "text-slate-400"
+                bar_glow = ""
 
             # Confidence label
             if pct >= 85:
@@ -20795,7 +20850,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                            hx_target=f"#compare-row-{fi}-{ti}", hx_swap="outerHTML",
                            cls="px-2 py-0.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"))
 
-            highlight_cls = "ring-1 ring-amber-500/40 bg-amber-950/10" if is_best else ""
+            highlight_cls = "best-match-glow bg-amber-950/10" if is_best else ""
 
             target_rows.append(
                 Div(
@@ -20809,12 +20864,12 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                         Div(
                             A(tr["target_name"], href=target_link,
                               cls="text-sm text-white hover:text-indigo-300 font-medium truncate block"),
-                            # Confidence bar
+                            # Confidence bar with inner glow
                             Div(
                                 Div(
-                                    Div(cls=f"h-2 rounded-full {bar_color} compare-bar-animate",
+                                    Div(cls=f"h-2.5 rounded-full {bar_color} {bar_glow} compare-bar-animate",
                                         style=f"width: {pct}%"),
-                                    cls="flex-1 bg-slate-700 rounded-full h-2",
+                                    cls=f"flex-1 bg-slate-700/80 rounded-full h-2.5",
                                 ),
                                 Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
                                 cls="flex items-center gap-2 mt-1",
@@ -20831,24 +20886,38 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                 )
             )
 
-        # Face section
+        # Face section with hide/show toggle
         face_section_parts = []
         if show_face_header:
             face_section_parts.append(
                 Div(
-                    Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600",
+                    Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border-2 border-slate-600",
                         alt=f"Face {fi+1}") if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
                     Span(f"Face {fi + 1}", cls="text-sm text-white font-medium ml-3"),
-                    cls="flex items-center mb-3",
+                    # Hide/show toggle
+                    Button(
+                        NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 face-collapse-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'),
+                        cls="ml-auto text-slate-500 hover:text-white transition-colors p-1",
+                        data_action="toggle-face-section",
+                        data_face_idx=str(fi),
+                    ),
+                    cls="flex items-center mb-3 cursor-pointer",
                     data_testid=f"compare-face-header-{fi}",
                 )
             )
-        face_section_parts.extend(target_rows)
+
+        # Wrap target rows in collapsible container
+        content_div = Div(
+            *target_rows,
+            cls="face-section-content space-y-2",
+            style=f"max-height: {len(target_rows) * 120}px",
+            data_testid=f"compare-face-content-{fi}",
+        )
 
         parts.append(
             Div(
-                *face_section_parts,
-                cls="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30 space-y-2 compare-section-animate",
+                *(face_section_parts + [content_div]),
+                cls="p-4 bg-slate-800/50 rounded-xl border border-slate-700/30 compare-section-animate compare-card",
                 id=f"compare-face-section-{fi}",
                 data_testid=f"compare-face-section-{fi}",
                 style=f"animation-delay: {fi * 100}ms",
