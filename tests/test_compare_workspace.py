@@ -79,7 +79,7 @@ def _mock_photo_cache():
         "photo-001": {
             "filename": "Image_001.jpg",
             "path": "Image_001.jpg",
-            "face_ids": ["face_a1"],
+            "faces": [{"face_id": "face_a1"}],
             "collection": "Test Collection",
             "width": 800,
             "height": 600,
@@ -87,7 +87,7 @@ def _mock_photo_cache():
         "photo-002": {
             "filename": "Image_002.jpg",
             "path": "Image_002.jpg",
-            "face_ids": ["face_b1"],
+            "faces": [{"face_id": "face_b1"}],
             "collection": "Test Collection",
             "width": 1024,
             "height": 768,
@@ -359,11 +359,11 @@ class TestUnifiedSearch:
 
     def test_search_requires_min_2_chars(self, client):
         """Search requires at least 2 characters."""
-        resp = client.get("/api/compare/search-unified?q=a")
+        resp = client.get("/api/compare/search-unified?q=a&types=person&slot=target")
         assert resp.status_code == 200
-        # Should return empty results container (no actual search results)
+        # Should return empty results container with slot-specific ID
         text = resp.text
-        assert "compare-search-results" in text
+        assert "target-person-results" in text
         assert "search-result-person" not in text
 
     def test_search_returns_people(self, client, monkeypatch):
@@ -455,6 +455,125 @@ class TestUnifiedSearch:
             resp = client.get("/api/compare/search-unified?q=ZZZZZZZ&types=person")
         assert resp.status_code == 200
         assert "No results found" in resp.text
+
+    def test_search_result_id_matches_slot_and_type(self, client, monkeypatch):
+        """Result container ID is slot-specific (not generic compare-search-results)."""
+        registry = _mock_registry()
+        import app.main as m
+        monkeypatch.setattr(m, "_photo_cache", {})
+        monkeypatch.setattr(m, "_face_to_photo_cache", {})
+        monkeypatch.setattr(m, "_photo_id_aliases", {})
+
+        with patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value={}), \
+             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+            # Source person search
+            resp = client.get("/api/compare/search-unified?q=Isaac&types=person&slot=source")
+            assert "source-person-results" in resp.text
+            # Target person search
+            resp = client.get("/api/compare/search-unified?q=Isaac&types=person&slot=target")
+            assert "target-person-results" in resp.text
+            # Source photo search
+            monkeypatch.setattr(m, "_photo_cache", _mock_photo_cache())
+            resp = client.get("/api/compare/search-unified?q=Test&types=photo&slot=source")
+            assert "source-photo-results" in resp.text
+
+    def test_search_person_returns_tagged_photos(self, client, monkeypatch):
+        """Searching a person name also returns photos containing that person."""
+        registry = _mock_registry()
+        import app.main as m
+        monkeypatch.setattr(m, "_photo_cache", _mock_photo_cache())
+        monkeypatch.setattr(m, "_face_to_photo_cache", {"face_b1": "photo-002"})
+        monkeypatch.setattr(m, "_photo_id_aliases", {})
+
+        with patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value={}), \
+             patch("app.main._resolve_crop_url", return_value="/crop.jpg"):
+            resp = client.get("/api/compare/search-unified?q=Barouh&types=person&slot=target")
+        assert resp.status_code == 200
+        # Should contain the person result
+        assert "Barouh" in resp.text
+        assert 'data-entity-type="person"' in resp.text
+        # Should also contain the photo that has Barouh's face
+        assert 'data-entity-type="photo"' in resp.text
+        assert "Contains Barouh" in resp.text
+
+    def test_search_photo_face_count_uses_faces_key(self, client, monkeypatch):
+        """Photo search uses 'faces' key (not 'face_ids') for face count."""
+        import app.main as m
+        photo_cache = {
+            "photo-999": {
+                "filename": "TestPhoto.jpg",
+                "path": "TestPhoto.jpg",
+                "faces": [{"face_id": "f1"}, {"face_id": "f2"}, {"face_id": "f3"}],
+                "collection": "Test",
+            }
+        }
+        monkeypatch.setattr(m, "_photo_cache", photo_cache)
+        monkeypatch.setattr(m, "_face_to_photo_cache", {})
+        monkeypatch.setattr(m, "_photo_id_aliases", {})
+        registry = _mock_registry()
+
+        with patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_crop_files", return_value={}), \
+             patch("app.main._resolve_crop_url", return_value=""):
+            resp = client.get("/api/compare/search-unified?q=TestPhoto&types=photo&slot=target")
+        assert resp.status_code == 200
+        assert "3 faces" in resp.text
+
+
+# ============ Target Slot UI Tests ============
+
+class TestTargetSlotUI:
+    """Tests for the symmetric target slot with tabs."""
+
+    def test_target_has_tabs(self, client):
+        """Target slot has Person/Photo/Upload tabs."""
+        resp = client.get("/compare")
+        assert "target-tabs" in resp.text
+
+    def test_target_has_person_panel(self, client):
+        """Target has person search panel."""
+        resp = client.get("/compare")
+        assert "target-person-panel" in resp.text
+        assert "target-search-input" in resp.text
+
+    def test_target_has_photo_panel(self, client):
+        """Target has photo search panel."""
+        resp = client.get("/compare")
+        assert "target-photo-panel" in resp.text
+        assert "target-photo-search" in resp.text
+
+    def test_target_has_upload_panel(self, client):
+        """Target has upload panel."""
+        resp = client.get("/compare")
+        assert "target-upload-panel" in resp.text
+        assert "ws-target-upload-form" in resp.text
+        assert "ws-target-upload-input" in resp.text
+
+    def test_target_upload_sends_target_ws(self, client):
+        """Target upload form includes target_ws=1 hidden field."""
+        resp = client.get("/compare")
+        assert 'hx-target="#ws-target-upload-result"' in resp.text
+
+    def test_target_search_uses_slot_target(self, client):
+        """Target search inputs use slot=target parameter."""
+        resp = client.get("/compare")
+        assert "slot=target" in resp.text
+
+    def test_target_tab_js_exists(self, client):
+        """JS tab switching for target slot is present."""
+        resp = client.get("/compare")
+        assert "data-target-tab" in resp.text
+        assert "data-target-panel" in resp.text
+
+    def test_target_upload_returns_target_result_id(self, client):
+        """Upload with target_ws=1 returns ws-target-upload-result container."""
+        resp = client.post("/api/compare/upload",
+                           data={"ws": "1", "target_ws": "1"},
+                           files={})
+        assert resp.status_code == 200
+        assert "ws-target-upload-result" in resp.text
 
 
 # ============ Upload in Workspace Mode Tests ============

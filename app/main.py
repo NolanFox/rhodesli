@@ -16496,6 +16496,26 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             }
         });
 
+        // Tab switching for target slot
+        document.addEventListener('click', function(e) {
+            var tab = e.target.closest('[data-target-tab]');
+            if (tab) {
+                var tabName = tab.getAttribute('data-target-tab');
+                document.querySelectorAll('[data-target-tab]').forEach(function(t) {
+                    t.classList.remove('bg-indigo-600', 'text-white');
+                    t.classList.add('bg-slate-700', 'text-slate-300');
+                });
+                tab.classList.remove('bg-slate-700', 'text-slate-300');
+                tab.classList.add('bg-indigo-600', 'text-white');
+
+                document.querySelectorAll('[data-target-panel]').forEach(function(p) {
+                    p.classList.add('hidden');
+                });
+                var panel = document.querySelector('[data-target-panel="' + tabName + '"]');
+                if (panel) panel.classList.remove('hidden');
+            }
+        });
+
         // Select source from search results
         document.addEventListener('click', function(e) {
             var el = e.target.closest('[data-action="select-compare-source"]');
@@ -16528,11 +16548,13 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             });
             updateTargetPills();
             triggerCompare();
-            // Clear search
+            // Clear target search inputs and results
             var searchInput = document.getElementById('target-search-input');
             if (searchInput) { searchInput.value = ''; }
-            var searchResults = document.getElementById('compare-search-results');
-            if (searchResults) { searchResults.innerHTML = ''; }
+            ['target-person-results', 'target-photo-results'].forEach(function(rid) {
+                var el = document.getElementById(rid);
+                if (el) el.innerHTML = '';
+            });
         });
 
         // Remove target pill
@@ -16659,6 +16681,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         // Expose functions globally for upload completion callback
         window.triggerCompare = triggerCompare;
         window.updateSourceDisplay = updateSourceDisplay;
+        window.updateTargetPills = updateTargetPills;
 
         // Initialize display if pre-populated
         if (state.sourceType) updateSourceDisplay();
@@ -16762,21 +16785,98 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         data_testid="source-slot",
     )
 
-    # Target slot
-    target_slot = Div(
-        H3("Compare With", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
+    # Target upload form (mirrors source upload form but targets target slot)
+    target_upload_panel = Div(
+        Form(
+            Div(
+                Div(
+                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    P("Drop a photo here", cls="text-slate-400 text-sm"),
+                    P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs mt-0.5"),
+                    Input(type="file", name="photo", accept="image/jpeg,image/png",
+                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                          data_testid="ws-target-upload-input",
+                          onchange="var f=this.files[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)||f.size>10*1024*1024)return;this.closest('form').requestSubmit()"),
+                    cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-lg p-6 transition-colors cursor-pointer text-center",
+                ),
+            ),
+            Input(type="hidden", name="ws", value="1"),
+            Input(type="hidden", name="target_ws", value="1"),
+            action="/api/compare/upload",
+            method="post",
+            enctype="multipart/form-data",
+            hx_encoding="multipart/form-data",
+            hx_post="/api/compare/upload",
+            hx_target="#ws-target-upload-result",
+            hx_swap="innerHTML",
+            hx_indicator="#ws-target-upload-spinner",
+            data_testid="ws-target-upload-form",
+        ),
+        Div(
+            Div(cls="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"),
+            P("Processing...", cls="text-slate-400 text-xs mt-2"),
+            id="ws-target-upload-spinner", cls="htmx-indicator text-center py-4",
+        ),
+        Div(id="ws-target-upload-result", data_testid="ws-target-upload-result"),
+        data_target_panel="upload",
+        cls="hidden",
+        data_testid="target-upload-panel",
+    )
+
+    # Person search for target slot
+    target_person_panel = Div(
         Input(
             type="text", name="q",
             id="target-search-input",
-            placeholder="Search people or photos...",
-            hx_get="/api/compare/search-unified",
+            placeholder="Search by name...",
+            hx_get="/api/compare/search-unified?types=person&slot=target",
             hx_trigger="keyup changed delay:300ms",
-            hx_target="#compare-search-results",
+            hx_target="#target-person-results",
             hx_include="this",
-            cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none mb-3",
+            cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
             data_testid="target-search-input",
         ),
-        Div(id="compare-search-results", cls="max-h-48 overflow-y-auto"),
+        Div(id="target-person-results", cls="mt-2 max-h-48 overflow-y-auto",
+            data_testid="target-person-results"),
+        data_target_panel="person",
+        data_testid="target-person-panel",
+    )
+
+    # Photo search for target slot
+    target_photo_panel = Div(
+        Input(
+            type="text", name="q",
+            placeholder="Search photos by name or collection...",
+            hx_get="/api/compare/search-unified?types=photo&slot=target",
+            hx_trigger="keyup changed delay:300ms",
+            hx_target="#target-photo-results",
+            hx_include="this",
+            cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+            data_testid="target-photo-search",
+        ),
+        Div(id="target-photo-results", cls="mt-2 max-h-48 overflow-y-auto"),
+        data_target_panel="photo",
+        cls="hidden",
+        data_testid="target-photo-panel",
+    )
+
+    # Target slot
+    target_slot = Div(
+        H3("Compare With", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
+        # Tabs (mirrors source slot)
+        Div(
+            Button("Person", data_target_tab="person",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors"),
+            Button("Photo", data_target_tab="photo",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            Button("Upload", data_target_tab="upload",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            cls="flex gap-2 mb-4",
+            data_testid="target-tabs",
+        ),
+        target_person_panel,
+        target_photo_panel,
+        target_upload_panel,
         # Target pills
         Div(id="target-pills", cls="flex flex-wrap gap-2 mt-3", data_testid="target-pills"),
         # All Archive button
@@ -17632,7 +17732,7 @@ def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str
 
 
 @rt("/api/compare/upload")
-async def post(photo: UploadFile = None, ws: str = "", sess=None):
+async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess=None):
     """Upload a photo for face comparison via the unified upload pipeline.
 
     Uses the SAME staging + background ingest pipeline as the Upload page.
@@ -17642,12 +17742,18 @@ async def post(photo: UploadFile = None, ws: str = "", sess=None):
     Admin: immediate processing via background thread (AD-161).
     Non-admin: queued to pending_uploads for admin review (Lesson 19/22).
     ws=1: workspace mode — results go to #ws-upload-result instead of #compare-results.
+    target_ws=1: target workspace mode — results go to #ws-target-upload-result.
     """
     import uuid
     from datetime import datetime, timezone
 
-    # Workspace mode: upload form in comparison workspace targets #ws-upload-result
-    result_id = "ws-upload-result" if ws == "1" else "compare-results"
+    # Workspace mode: determine correct result container
+    if target_ws == "1":
+        result_id = "ws-target-upload-result"
+    elif ws == "1":
+        result_id = "ws-upload-result"
+    else:
+        result_id = "compare-results"
 
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"),
@@ -17854,7 +17960,12 @@ async def post(photo: UploadFile = None, ws: str = "", sess=None):
     thread.start()
 
     # Return polling component — polls compare-specific status endpoint
-    ws_param = "&ws=1" if ws == "1" else ""
+    poll_params = []
+    if ws == "1":
+        poll_params.append("ws=1")
+    if target_ws == "1":
+        poll_params.append("target_ws=1")
+    poll_suffix = "?" + "&".join(poll_params) if poll_params else ""
     return Div(
         Div(
             P("Processing photo...", cls="text-slate-300 text-sm"),
@@ -17863,7 +17974,7 @@ async def post(photo: UploadFile = None, ws: str = "", sess=None):
         ),
         P("Detecting faces and comparing against the archive",
           cls="text-slate-400 text-xs mt-1"),
-        hx_get=f"/api/compare/status/{job_id}?ws={ws}" if ws == "1" else f"/api/compare/status/{job_id}",
+        hx_get=f"/api/compare/status/{job_id}{poll_suffix}",
         hx_trigger="every 2s",
         hx_swap="outerHTML",
         id=result_id,
@@ -17872,10 +17983,11 @@ async def post(photo: UploadFile = None, ws: str = "", sess=None):
     )
 
 
-def _build_workspace_upload_complete(face_ids: list, job_id: str) -> object:
-    """Build workspace source panel content after upload + ingest completes.
+def _build_workspace_upload_complete(face_ids: list, job_id: str, target_mode: bool = False) -> object:
+    """Build workspace panel content after upload + ingest completes.
 
-    Shows detected face thumbnails and sets JS state so comparison can trigger.
+    Shows detected face thumbnails and sets JS state.
+    target_mode=True: adds photo as target instead of source.
     """
     _build_caches()
     crop_files = get_crop_files()
@@ -17895,6 +18007,36 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str) -> object:
         )
 
     face_count = len(face_ids)
+
+    if target_mode:
+        # Add uploaded photo as a target
+        js_script = Script(f"""
+            if (window.compareState && window.compareState.targets.length < 5) {{
+                window.compareState.allArchive = false;
+                window.compareState.targets.push({{
+                    type: 'upload',
+                    id: '{job_id}',
+                    name: 'Uploaded Photo',
+                    crop: ''
+                }});
+                if (window.updateTargetPills) window.updateTargetPills();
+                if (window.triggerCompare) window.triggerCompare();
+            }}
+        """)
+        container_id = "ws-target-upload-result"
+    else:
+        # Set as source
+        js_script = Script(f"""
+            if (window.compareState) {{
+                window.compareState.sourceType = 'upload';
+                window.compareState.sourceId = '{job_id}';
+                window.compareState.sourceName = 'Uploaded Photo';
+                if (window.updateSourceDisplay) window.updateSourceDisplay();
+                if (window.triggerCompare) window.triggerCompare();
+            }}
+        """)
+        container_id = "ws-upload-result"
+
     return Div(
         Div(
             Span("&#10003;", cls="text-emerald-400 text-lg"),
@@ -17903,36 +18045,38 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str) -> object:
             cls="flex items-center gap-2 mb-3",
         ),
         Div(*face_thumbs, cls="flex flex-wrap gap-3 justify-center"),
-        # Script to set workspace source state and trigger comparison if targets exist
-        Script(f"""
-            if (window.compareState) {{
-                window.compareState.sourceType = 'upload';
-                window.compareState.sourceId = '{job_id}';
-                window.compareState.sourceName = 'Uploaded Photo';
-                if (window.updateSourceDisplay) window.updateSourceDisplay();
-                if (window.triggerCompare) window.triggerCompare();
-            }}
-        """),
-        id="ws-upload-result",
+        js_script,
+        id=container_id,
         cls="p-3 bg-emerald-900/10 border border-emerald-500/20 rounded-lg",
         data_testid="ws-upload-complete",
     )
 
 
 @rt("/api/compare/status/{job_id}")
-def get(job_id: str, ws: str = "", sess=None):
+def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
     """Poll compare upload status. On completion, show comparison results.
 
     Uses the same status file as Upload page (data/inbox/{job_id}.status.json).
     When ingest completes, reads face_ids, runs find_similar_faces per face,
     and returns the interactive comparison view.
     ws=1: workspace mode — results go to #ws-upload-result, sets JS source state on success.
+    target_ws=1: target workspace mode — results go to #ws-target-upload-result, adds as target.
     """
     import json as _json_status
     from datetime import datetime as _dt_cstatus, timezone as _tz_cstatus
 
-    result_id = "ws-upload-result" if ws == "1" else "compare-results"
-    ws_suffix = "?ws=1" if ws == "1" else ""
+    if target_ws == "1":
+        result_id = "ws-target-upload-result"
+    elif ws == "1":
+        result_id = "ws-upload-result"
+    else:
+        result_id = "compare-results"
+    poll_params = []
+    if ws == "1":
+        poll_params.append("ws=1")
+    if target_ws == "1":
+        poll_params.append("target_ws=1")
+    ws_suffix = "?" + "&".join(poll_params) if poll_params else ""
 
     status_path = data_path / "inbox" / f"{job_id}.status.json"
 
@@ -18004,7 +18148,9 @@ def get(job_id: str, ws: str = "", sess=None):
             id=result_id,
         )
 
-    # Workspace mode: show face thumbnails + set JS source state
+    # Workspace mode: show face thumbnails + set JS state
+    if target_ws == "1":
+        return _build_workspace_upload_complete(face_ids, job_id, target_mode=True)
     if ws == "1":
         return _build_workspace_upload_complete(face_ids, job_id)
 
@@ -21024,12 +21170,29 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
     Returns type-badged results with preview images.
     slot=source: results use data-action="select-compare-source" for source slot selection.
     slot=target (default): results use data-action="select-compare-target" for target slot.
+    Result container ID matches the slot+types so HTMX targets the correct panel.
     """
+    # Determine correct result container ID based on slot and types
+    type_list = [t.strip() for t in types.split(",")]
+    if slot == "source":
+        if type_list == ["person"]:
+            result_id = "source-person-results"
+        elif type_list == ["photo"]:
+            result_id = "source-photo-results"
+        else:
+            result_id = "source-person-results"
+    else:
+        if type_list == ["person"]:
+            result_id = "target-person-results"
+        elif type_list == ["photo"]:
+            result_id = "target-photo-results"
+        else:
+            result_id = "target-person-results"
+
     if len(q.strip()) < 2:
-        return Div(id="compare-search-results")
+        return Div(id=result_id)
 
     query = q.strip()
-    type_list = [t.strip() for t in types.split(",")]
     data_action = "select-compare-source" if slot == "source" else "select-compare-target"
     results_html = []
 
@@ -21037,7 +21200,11 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
     registry = load_registry()
     crop_files = get_crop_files()
 
+    # Track photo IDs already shown (to avoid duplicates when person search adds tagged photos)
+    shown_photo_ids = set()
+
     # Search people (all states: CONFIRMED, PROPOSED, INBOX)
+    matched_people = []
     if "person" in type_list:
         for state in [IdentityState.CONFIRMED, IdentityState.PROPOSED, IdentityState.INBOX]:
             identities = registry.list_identities(state=state)
@@ -21047,6 +21214,7 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
                 name = ident.get("name", "")
                 if query.lower() not in name.lower():
                     continue
+                matched_people.append(ident)
                 iid = ident["identity_id"]
                 state_str = ident.get("state", "INBOX")
                 all_fids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
@@ -21093,17 +21261,64 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
                     )
                 )
 
-    # Search photos
+    # Also find photos containing matched people's faces (Bug 4 fix)
+    if matched_people and _face_to_photo_cache and _photo_cache:
+        for ident in matched_people:
+            person_name = ensure_utf8_display(ident.get("name", ""))
+            all_fids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+            for entry in all_fids:
+                fid = entry if isinstance(entry, str) else entry.get("face_id", "")
+                pid = _face_to_photo_cache.get(fid)
+                if not pid or pid in shown_photo_ids:
+                    continue
+                shown_photo_ids.add(pid)
+                pmeta = _photo_cache.get(pid, {})
+                fname = pmeta.get("filename") or pmeta.get("path", "")
+                if not fname:
+                    continue
+                photo_url = storage.get_photo_url(fname)
+                collection = pmeta.get("collection", "")
+                faces = pmeta.get("faces", [])
+                face_count = len(faces)
+
+                results_html.append(
+                    Div(
+                        Img(src=photo_url, cls="w-10 h-10 rounded object-cover border border-slate-600",
+                            alt=fname) if photo_url else Div(cls="w-10 h-10 rounded bg-slate-700"),
+                        Div(
+                            Span(fname[:30] + ("..." if len(fname) > 30 else ""), cls="text-sm text-white font-medium truncate block"),
+                            Div(
+                                Span("Photo", cls="text-[10px] bg-purple-900/50 text-purple-400 px-1.5 py-0.5 rounded"),
+                                Span(f"Contains {person_name[:15]}", cls="text-[10px] text-slate-400 truncate"),
+                                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"),
+                                cls="flex items-center gap-1.5 mt-0.5",
+                            ),
+                            cls="min-w-0 flex-1",
+                        ),
+                        cls="flex items-center gap-3 p-2 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors",
+                        data_entity_type="photo",
+                        data_entity_id=pid,
+                        data_entity_name=fname,
+                        data_entity_crop=photo_url or "",
+                        data_testid=f"search-result-photo-{pid}",
+                        data_action=data_action,
+                    )
+                )
+
+    # Search photos by filename/collection
     if "photo" in type_list and _photo_cache:
         for pid, pmeta in _photo_cache.items():
+            if pid in shown_photo_ids:
+                continue
             fname = pmeta.get("filename") or pmeta.get("path", "")
             collection = pmeta.get("collection", "")
-            face_ids = pmeta.get("face_ids", [])
+            faces = pmeta.get("faces", [])
             searchable = f"{fname} {collection}".lower()
             if query.lower() not in searchable:
                 continue
+            shown_photo_ids.add(pid)
             photo_url = storage.get_photo_url(fname) if fname else ""
-            face_count = len(face_ids)
+            face_count = len(faces)
 
             results_html.append(
                 Div(
@@ -21131,10 +21346,10 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
 
     if not results_html:
         return Div(P("No results found.", cls="text-sm text-slate-500 py-2"),
-                   id="compare-search-results")
+                   id=result_id)
 
     # Limit to 10 results
-    return Div(*results_html[:10], id="compare-search-results",
+    return Div(*results_html[:10], id=result_id,
                cls="space-y-1 max-h-64 overflow-y-auto")
 
 
