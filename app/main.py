@@ -16436,6 +16436,9 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             allArchive: false
         };
 
+        // Expose state globally so upload completion can set source
+        window.compareState = state;
+
         // Pre-populate target if URL param provided
         """ + js_target_push + """
 
@@ -16601,6 +16604,10 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             return div.innerHTML;
         }
 
+        // Expose functions globally for upload completion callback
+        window.triggerCompare = triggerCompare;
+        window.updateSourceDisplay = updateSourceDisplay;
+
         // Initialize display if pre-populated
         if (state.sourceType) updateSourceDisplay();
         if (state.targets.length > 0) updateTargetPills();
@@ -16622,12 +16629,13 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-lg p-6 transition-colors cursor-pointer text-center",
                 ),
             ),
+            Input(type="hidden", name="ws", value="1"),
             action="/api/compare/upload",
             method="post",
             enctype="multipart/form-data",
             hx_encoding="multipart/form-data",
             hx_post="/api/compare/upload",
-            hx_target="#compare-results",
+            hx_target="#ws-upload-result",
             hx_swap="innerHTML",
             hx_indicator="#ws-upload-spinner",
             data_testid="ws-upload-form",
@@ -16637,6 +16645,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             P("Processing...", cls="text-slate-400 text-xs mt-2"),
             id="ws-upload-spinner", cls="htmx-indicator text-center py-4",
         ),
+        # Container for upload results (faces detected, state updates)
+        Div(id="ws-upload-result", data_testid="ws-upload-result"),
         data_source_panel="upload",
         data_testid="source-upload-panel",
     )
@@ -16646,7 +16656,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Input(
             type="text", name="q",
             placeholder="Search by name...",
-            hx_get="/api/compare/search-unified?types=person",
+            hx_get="/api/compare/search-unified?types=person&slot=source",
             hx_trigger="keyup changed delay:300ms",
             hx_target="#source-person-results",
             hx_include="this",
@@ -16666,7 +16676,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Input(
             type="text", name="q",
             placeholder="Search photos by name or collection...",
-            hx_get="/api/compare/search-unified?types=photo",
+            hx_get="/api/compare/search-unified?types=photo&slot=source",
             hx_trigger="keyup changed delay:300ms",
             hx_target="#source-photo-results",
             hx_include="this",
@@ -16781,8 +16791,6 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
                         data_testid="compare-results-area",
                         **auto_compare_attrs,
                     ),
-                    # Keep old compare-results div for backward compat with upload endpoint
-                    Div(id="compare-results", cls="hidden"),
                     cls="max-w-6xl mx-auto px-6 pb-8",
                 ),
             ),
@@ -17572,7 +17580,7 @@ def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str
 
 
 @rt("/api/compare/upload")
-async def post(photo: UploadFile = None, sess=None):
+async def post(photo: UploadFile = None, ws: str = "", sess=None):
     """Upload a photo for face comparison via the unified upload pipeline.
 
     Uses the SAME staging + background ingest pipeline as the Upload page.
@@ -17581,13 +17589,17 @@ async def post(photo: UploadFile = None, sess=None):
 
     Admin: immediate processing via background thread (AD-161).
     Non-admin: queued to pending_uploads for admin review (Lesson 19/22).
+    ws=1: workspace mode — results go to #ws-upload-result instead of #compare-results.
     """
     import uuid
     from datetime import datetime, timezone
 
+    # Workspace mode: upload form in comparison workspace targets #ws-upload-result
+    result_id = "ws-upload-result" if ws == "1" else "compare-results"
+
     if not photo:
         return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"),
-                   id="compare-results")
+                   id=result_id)
 
     from pathlib import Path as _Path
 
@@ -17599,12 +17611,12 @@ async def post(photo: UploadFile = None, sess=None):
     # Server-side file type validation
     if suffix not in (".jpg", ".jpeg", ".png"):
         return Div(P("Please upload a JPG or PNG image.", cls="text-red-400 text-center py-4"),
-                   id="compare-results")
+                   id=result_id)
 
     # Server-side file size validation (10 MB)
     if len(content) > 10 * 1024 * 1024:
         return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"),
-                   id="compare-results")
+                   id=result_id)
 
     # Determine user and admin status (Lesson 19: admin-only for data modification)
     user = get_current_user(sess or {}) if is_auth_enabled() else None
@@ -17665,7 +17677,7 @@ async def post(photo: UploadFile = None, sess=None):
               cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto"),
             P(f"Reference: {job_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
             cls="py-8 px-4",
-            id="compare-results",
+            id=result_id,
             data_testid="upload-saved-pending",
         )
 
@@ -17675,7 +17687,7 @@ async def post(photo: UploadFile = None, sess=None):
             P("Photo staged for processing.", cls="text-slate-300 text-center py-4"),
             P("Run the local pipeline to detect faces.", cls="text-slate-400 text-center text-sm mt-2"),
             P(f"Reference: {job_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
-            id="compare-results",
+            id=result_id,
         )
 
     # Admin + processing enabled: spawn background ingest thread (AD-161)
@@ -17790,6 +17802,7 @@ async def post(photo: UploadFile = None, sess=None):
     thread.start()
 
     # Return polling component — polls compare-specific status endpoint
+    ws_param = "&ws=1" if ws == "1" else ""
     return Div(
         Div(
             P("Processing photo...", cls="text-slate-300 text-sm"),
@@ -17798,25 +17811,76 @@ async def post(photo: UploadFile = None, sess=None):
         ),
         P("Detecting faces and comparing against the archive",
           cls="text-slate-400 text-xs mt-1"),
-        hx_get=f"/api/compare/status/{job_id}",
+        hx_get=f"/api/compare/status/{job_id}?ws={ws}" if ws == "1" else f"/api/compare/status/{job_id}",
         hx_trigger="every 2s",
         hx_swap="outerHTML",
-        id="compare-results",
+        id=result_id,
         cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
         data_testid="compare-processing",
     )
 
 
+def _build_workspace_upload_complete(face_ids: list, job_id: str) -> object:
+    """Build workspace source panel content after upload + ingest completes.
+
+    Shows detected face thumbnails and sets JS state so comparison can trigger.
+    """
+    _build_caches()
+    crop_files = get_crop_files()
+
+    face_thumbs = []
+    for i, fid in enumerate(face_ids):
+        crop_url = _resolve_crop_url(fid, crop_files)
+        face_thumbs.append(
+            Div(
+                Img(src=crop_url, cls="w-12 h-12 rounded-lg object-cover border border-slate-600",
+                    alt=f"Face {i+1}") if crop_url else
+                Div(f"F{i+1}", cls="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400"),
+                Span(f"Face {i+1}", cls="text-[10px] text-slate-500 mt-0.5 block text-center"),
+                cls="compare-fade-in",
+                style=f"animation-delay: {i * 80}ms",
+            )
+        )
+
+    face_count = len(face_ids)
+    return Div(
+        Div(
+            Span("&#10003;", cls="text-emerald-400 text-lg"),
+            Span(f"{face_count} face{'s' if face_count != 1 else ''} detected",
+                 cls="text-sm text-white font-medium"),
+            cls="flex items-center gap-2 mb-3",
+        ),
+        Div(*face_thumbs, cls="flex flex-wrap gap-3 justify-center"),
+        # Script to set workspace source state and trigger comparison if targets exist
+        Script(f"""
+            if (window.compareState) {{
+                window.compareState.sourceType = 'upload';
+                window.compareState.sourceId = '{job_id}';
+                window.compareState.sourceName = 'Uploaded Photo';
+                if (window.updateSourceDisplay) window.updateSourceDisplay();
+                if (window.triggerCompare) window.triggerCompare();
+            }}
+        """),
+        id="ws-upload-result",
+        cls="p-3 bg-emerald-900/10 border border-emerald-500/20 rounded-lg",
+        data_testid="ws-upload-complete",
+    )
+
+
 @rt("/api/compare/status/{job_id}")
-def get(job_id: str, sess=None):
+def get(job_id: str, ws: str = "", sess=None):
     """Poll compare upload status. On completion, show comparison results.
 
     Uses the same status file as Upload page (data/inbox/{job_id}.status.json).
     When ingest completes, reads face_ids, runs find_similar_faces per face,
     and returns the interactive comparison view.
+    ws=1: workspace mode — results go to #ws-upload-result, sets JS source state on success.
     """
     import json as _json_status
     from datetime import datetime as _dt_cstatus, timezone as _tz_cstatus
+
+    result_id = "ws-upload-result" if ws == "1" else "compare-results"
+    ws_suffix = "?ws=1" if ws == "1" else ""
 
     status_path = data_path / "inbox" / f"{job_id}.status.json"
 
@@ -17824,10 +17888,10 @@ def get(job_id: str, sess=None):
         return Div(
             P("Starting...", cls="text-slate-300 text-sm"),
             Span("\u23f3", cls="animate-pulse"),
-            hx_get=f"/api/compare/status/{job_id}",
+            hx_get=f"/api/compare/status/{job_id}{ws_suffix}",
             hx_trigger="every 2s",
             hx_swap="outerHTML",
-            id="compare-results",
+            id=result_id,
             cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg flex items-center gap-2",
         )
 
@@ -17839,7 +17903,7 @@ def get(job_id: str, sess=None):
         return Div(
             P("Error processing photo.", cls="text-red-400 text-sm font-medium"),
             P(status.get("error", "Unknown error"), cls="text-slate-400 text-xs mt-1"),
-            id="compare-results",
+            id=result_id,
             cls="p-4 bg-red-900/20 border border-red-500/30 rounded-lg",
         )
 
@@ -17859,7 +17923,7 @@ def get(job_id: str, sess=None):
                 P("Processing timed out.", cls="text-red-400 text-sm font-medium"),
                 P("Your photo was saved. An admin can process it later.",
                   cls="text-slate-400 text-xs mt-1"),
-                id="compare-results",
+                id=result_id,
                 cls="p-4 bg-red-900/20 border border-red-500/30 rounded-lg",
             )
 
@@ -17871,10 +17935,10 @@ def get(job_id: str, sess=None):
                 Span("\u23f3", cls="animate-pulse"),
                 cls="flex items-center gap-2",
             ),
-            hx_get=f"/api/compare/status/{job_id}",
+            hx_get=f"/api/compare/status/{job_id}{ws_suffix}",
             hx_trigger="every 2s",
             hx_swap="outerHTML",
-            id="compare-results",
+            id=result_id,
             cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
         )
 
@@ -17885,8 +17949,12 @@ def get(job_id: str, sess=None):
             P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
             P("Try uploading a clearer photo with visible faces.",
               cls="text-slate-500 text-center text-sm mt-2"),
-            id="compare-results",
+            id=result_id,
         )
+
+    # Workspace mode: show face thumbnails + set JS source state
+    if ws == "1":
+        return _build_workspace_upload_complete(face_ids, job_id)
 
     return _build_compare_results_view(face_ids, job_id, sess)
 
@@ -20805,16 +20873,19 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
 
 
 @rt("/api/compare/search-unified")
-def get(q: str = "", types: str = "person,photo", sess=None):
+def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=None):
     """Unified search across people and photos for the comparison workspace.
 
     Returns type-badged results with preview images.
+    slot=source: results use data-action="select-compare-source" for source slot selection.
+    slot=target (default): results use data-action="select-compare-target" for target slot.
     """
     if len(q.strip()) < 2:
         return Div(id="compare-search-results")
 
     query = q.strip()
     type_list = [t.strip() for t in types.split(",")]
+    data_action = "select-compare-source" if slot == "source" else "select-compare-target"
     results_html = []
 
     _build_caches()
@@ -20873,7 +20944,7 @@ def get(q: str = "", types: str = "person,photo", sess=None):
                         data_entity_name=ensure_utf8_display(name),
                         data_entity_crop=crop_url or "",
                         data_testid=f"search-result-person-{iid}",
-                        data_action="select-compare-target",
+                        data_action=data_action,
                     )
                 )
 
@@ -20909,7 +20980,7 @@ def get(q: str = "", types: str = "person,photo", sess=None):
                     data_entity_name=fname,
                     data_entity_crop=photo_url or "",
                     data_testid=f"search-result-photo-{pid}",
-                    data_action="select-compare-target",
+                    data_action=data_action,
                 )
             )
 

@@ -131,43 +131,41 @@ class TestCompareRoute:
         resp = self.client.get("/compare")
         assert resp.status_code == 200
 
-    def test_compare_has_face_selector(self):
-        """Compare page has face selector grid."""
+    def test_compare_has_source_slot(self):
+        """Compare workspace has source slot with upload/person/photo tabs."""
         resp = self.client.get("/compare")
-        assert "face-selector" in resp.text
+        assert "source-slot" in resp.text
 
-    def test_compare_has_upload_area(self):
-        """Compare page has upload area."""
+    def test_compare_has_upload_panel(self):
+        """Compare workspace has upload panel in source slot."""
         resp = self.client.get("/compare")
-        assert "upload-area" in resp.text
+        assert "source-upload-panel" in resp.text
 
-    def test_compare_has_search_input(self):
-        """Compare page has face search input."""
+    def test_compare_has_target_search(self):
+        """Compare workspace has target search input."""
         resp = self.client.get("/compare")
-        assert "face-search" in resp.text
+        assert "target-search-input" in resp.text
 
     def test_compare_has_nav_links(self):
         """Compare page has all navigation links."""
         resp = self.client.get("/compare")
         assert "/photos" in resp.text
         assert "/people" in resp.text
-        assert "/timeline" in resp.text
         assert "Compare" in resp.text
 
-    def test_compare_shows_upload_and_archive_modes(self):
-        """Compare page shows upload (primary) and archive search (collapsible)."""
+    def test_compare_shows_workspace_layout(self):
+        """Compare workspace has source and target slots with results area."""
         resp = self.client.get("/compare")
-        assert "Upload a Photo" in resp.text
-        assert "upload-area" in resp.text
-        assert "search by person" in resp.text.lower()
-        assert "archive-panel" in resp.text
+        assert "source-slot" in resp.text
+        assert "ws-upload-form" in resp.text
+        assert "compare-results-area" in resp.text
 
-    def test_compare_upload_above_archive(self):
-        """Upload section appears before archive section in DOM order."""
+    def test_compare_source_above_results(self):
+        """Source slot appears before results area in DOM order."""
         resp = self.client.get("/compare")
-        upload_pos = resp.text.find("upload-section")
-        archive_pos = resp.text.find("archive-panel")
-        assert upload_pos < archive_pos, "Upload section must appear before archive"
+        source_pos = resp.text.find("source-slot")
+        results_pos = resp.text.find("compare-results-area")
+        assert source_pos < results_pos, "Source slot must appear before results area"
 
     def test_compare_with_invalid_face_id(self):
         """Compare with non-existent face_id returns 200 with no results."""

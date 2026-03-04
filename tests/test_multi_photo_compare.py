@@ -53,27 +53,28 @@ class TestMultiPhotoUploadEndpoint:
 
 
 class TestMultiPhotoUI:
-    """Tests for multi-photo upload UI elements."""
+    """Tests for workspace upload UI elements (replaced multi-upload zone in Session 85c)."""
 
-    def test_compare_page_has_multi_upload_zone(self, client):
-        """Compare page includes multi-upload zone."""
+    def test_compare_page_has_workspace_upload(self, client):
+        """Compare page workspace includes upload source panel."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
             assert response.status_code == 200
-            assert "multi-upload-zone" in response.text
-            assert "Compare Multiple Photos" in response.text
+            assert "source-upload-panel" in response.text
+            assert "Compare Faces" in response.text
 
-    def test_multi_upload_form_targets_correct_endpoint(self, client):
-        """Multi-upload form POSTs to /api/compare/upload-multiple."""
+    def test_workspace_upload_form_targets_upload_endpoint(self, client):
+        """Workspace upload form POSTs to /api/compare/upload."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert "/api/compare/upload-multiple" in response.text
+            assert "/api/compare/upload" in response.text
 
-    def test_multi_upload_input_has_multiple_attribute(self, client):
-        """File input has multiple attribute for multi-file selection."""
+    def test_workspace_has_source_and_target_slots(self, client):
+        """Workspace has source slot and target slot."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert 'multi-upload-input' in response.text
+            assert "source-slot" in response.text
+            assert "target-search-input" in response.text
 
 
 class TestCrossComparison:

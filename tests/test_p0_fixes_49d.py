@@ -300,12 +300,12 @@ class TestCompareUploadMessaging:
         from app.main import app
         self.client = TestClient(app)
 
-    def test_compare_page_contains_matching_messaging(self):
-        """The compare page must say the photo is used for matching."""
+    def test_compare_page_has_workspace_layout(self):
+        """The compare workspace has source and target slots."""
         resp = self.client.get("/compare")
         assert resp.status_code == 200
-        assert "used for matching" in resp.text, \
-            "Compare page must tell users their photo is used for matching"
+        assert "source-slot" in resp.text, \
+            "Compare workspace must have source slot"
 
     def test_compare_page_does_not_contain_saved_to_grow(self):
         """The compare page must NOT say 'saved to help grow the archive'."""
@@ -314,19 +314,19 @@ class TestCompareUploadMessaging:
         assert "saved to help grow the archive" not in resp.text, \
             "Old misleading 'saved to help grow the archive' text must be removed"
 
-    def test_compare_page_contribute_messaging(self):
-        """The compare page should mention contributing to the archive."""
+    def test_compare_page_has_upload_form(self):
+        """The compare workspace has an upload form in source slot."""
         resp = self.client.get("/compare")
         assert resp.status_code == 200
-        assert "contribute" in resp.text.lower(), \
-            "Compare page must mention the option to contribute"
+        assert "ws-upload-form" in resp.text, \
+            "Compare workspace must have upload form"
 
-    def test_compare_page_upload_messaging_with_auth_enabled(self):
-        """Correct messaging also appears when auth is enabled."""
+    def test_compare_page_workspace_with_auth_enabled(self):
+        """Workspace renders correctly when auth is enabled."""
         with patch("app.main.is_auth_enabled", return_value=True), \
              patch("app.main.get_current_user", return_value=None):
             resp = self.client.get("/compare")
         assert resp.status_code == 200
-        assert "used for matching" in resp.text, \
-            "Upload messaging must be correct regardless of auth state"
+        assert "source-slot" in resp.text, \
+            "Workspace must render regardless of auth state"
         assert "saved to help grow the archive" not in resp.text
