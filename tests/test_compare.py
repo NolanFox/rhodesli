@@ -997,3 +997,60 @@ def test_result_page_og_title_positive_framing(tmp_path, monkeypatch, client):
     response = client.get("/compare/result/og_framing_t1")
     assert response.status_code == 200
     assert "Could this be Isaac Cohen" in response.text
+    # OG title should include the person name and confidence
+    assert "92% match in Rhodes Archive" in response.text
+
+
+def test_result_page_og_fallback_for_unknown(tmp_path, monkeypatch, client):
+    """OG title falls back to generic when no named person."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "og_fallback_t1",
+        "query_type": "compare_upload",
+        "query_name": "Test Upload",
+        "matches": [
+            {"face_id": "f1", "identity_id": "", "identity_name": "Unknown",
+             "distance": 1.2, "confidence_pct": 35, "tier": "WEAK"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/og_fallback_t1")
+    assert response.status_code == 200
+    # Should use generic fallback title
+    assert "Rhodes Jewish Heritage Archive" in response.text
+
+
+def test_result_page_og_uses_ref_person_name(tmp_path, monkeypatch, client):
+    """OG title uses reference person name when top match is Unknown."""
+    import app.main as main_mod
+    from app.main import _save_comparison_result
+
+    monkeypatch.setattr(main_mod, "data_path", tmp_path)
+    main_mod._comparison_results_cache = None
+
+    result_data = {
+        "result_id": "og_ref_name_t1",
+        "query_type": "upload_vs_person",
+        "query_name": "vs Isaac Cohen",
+        "reference_person": {"identity_id": "ref-id", "name": "Isaac Cohen"},
+        "matches": [
+            {"face_id": "f1", "identity_id": "id1", "identity_name": "Unknown",
+             "distance": 1.1, "confidence_pct": 45, "tier": "SIMILAR"},
+        ],
+        "responses": [],
+    }
+    _save_comparison_result(result_data)
+    main_mod._comparison_results_cache = None
+
+    response = client.get("/compare/result/og_ref_name_t1")
+    assert response.status_code == 200
+    # Should use reference person name since top match is Unknown
+    assert "Could this be Isaac Cohen" in response.text

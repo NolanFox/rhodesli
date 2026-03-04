@@ -2972,13 +2972,16 @@ def get(result_id: str, sess=None):
     top_name = ensure_utf8_display(top_match.get("identity_name", "Unknown"))
     top_identity_id = top_match.get("identity_id", "")
 
-    # Positive/curious framing for OG tags
-    if top_confidence >= 70 and top_name and top_name != "Unknown":
-        og_title = f"Could this be {top_name}? {top_confidence}% match in Rhodes Archive"
-    elif ref_name and query_type == "upload_vs_person":
-        og_title = f"Could this be {ref_name}? {top_confidence}% match in Rhodes Archive"
-    elif matches and top_name and top_name != "Unknown":
-        og_title = f"Could this be {top_name}? {top_confidence}% match in Rhodes Archive"
+    # Positive/curious framing for OG tags: "Could this be [Name]? [N]% match"
+    # Determine the best name to feature in the OG title
+    og_person_name = None
+    if top_name and top_name != "Unknown":
+        og_person_name = top_name
+    elif ref_name and ref_name != "Unknown":
+        og_person_name = ref_name
+
+    if og_person_name and matches:
+        og_title = f"Could this be {og_person_name}? {top_confidence}% match in Rhodes Archive"
     else:
         og_title = "Face Comparison — Rhodes Jewish Heritage Archive"
     og_desc = f"Help identify people in the Rhodes Jewish heritage photo archive. {len(matches)} potential match{'es' if len(matches) != 1 else ''} found."
