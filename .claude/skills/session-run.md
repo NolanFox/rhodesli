@@ -14,12 +14,18 @@ description: "Framework for overnight/autonomous Claude Code sessions. Use when 
 
 ## Commit Discipline
 - Atomic commits: one logical change per commit
-- Run tests before commit: `pytest tests/ -x -q --ignore=tests/e2e/`
+- Run tests before commit: `scripts/test-gate.sh fast`
 - Format: `feat|fix|docs(scope): description`
+
+## Post-Implementation Quality Gate
+After each implementation phase (not docs-only phases):
+1. Run /simplify to review changed code for reuse, quality, and efficiency
+2. Fix any issues found by /simplify before committing
+3. This catches debug prints, dead code, and quality regressions early
 
 ## Verification Gate (end of every track)
 - Re-read the original prompt
 - Check each phase: completed/skipped/partial
 - List any deviations with reasoning
-- Run full test suite
+- Run `scripts/test-gate.sh all` (both app + ML tests)
 - Log results to session history
