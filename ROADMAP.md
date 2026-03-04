@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.88.0 · ~3985 tests · 274 photos · 665 identities · 60 confirmed
+Current: v0.89.0 · ~4023 tests · 274 photos · 665 identities · 60 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-04: **v0.89.0 — Session 86**: P1 UX Fixes + MLS Experiment + Gemini Completion. Merge confirmation dialogs (UX-037). Person page inline admin controls (UX-039). Confirmed face labels visible for all users. Connected navigation (person→tree/map/timeline/compare). MLS vs Euclidean resolved: Euclidean wins AUC 0.9903 vs 0.9454 (AD-027). Gemini 271/271 complete. app/utils.py extraction. 38+ new tests. ~4023 tests.
 - [x] 2026-03-03: **v0.88.0 — Session 85c**: Universal Comparison Workspace. Two-slot design (Source + Compare With), all entity combinations, multi-target (up to 5), unified search (people + photos), per-match context (target's best %, rank), CSS animations (bar glow, skeleton loading, face collapse), backward-compat URLs. PRD-026. 36 new tests (99 total compare). Browser verified 14/14 PASS. ~3985 tests.
 - [x] 2026-03-03: **v0.87.1 — Session 85b**: Compare Navigation + PRD-025 Gap Closure. Archive-to-compare flow (from-photo endpoint), direct compare URLs, photo/person page navigation links, reference context on shareable result page, merge/not-same admin actions on result page. Isaac Cohen E2E verified with shareable link. Disk-full resilience. 11 new tests (33 total compare). ~3985 tests.
 - [x] 2026-03-03: **v0.87.0 — Session 85**: Fix Compare — Unified Upload Pipeline. Compare uploads now use same staging → process_directory pipeline as Upload page. New vs-person comparison with search + per-face scores. Enhanced result page with confidence bars (dual encoding), person/photo links. Removed SSE interceptor for HTMX-based flow. 9 new tests (22 total compare). ~3985 tests.

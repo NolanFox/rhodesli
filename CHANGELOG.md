@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.89.0] — 2026-03-04 (Session 86: P1 UX Fixes + MLS Experiment + Gemini Completion)
+
+### Added
+- **UX-037: Merge confirmation dialogs** on all merge buttons — shows which identity survives, both names included
+- **UX-039: Person page inline admin controls** — rename form, confirm/skip/reject buttons, merge search (admin-only)
+- **Face labels for all users** — confirmed face overlays (name labels) visible to non-admin visitors on photo pages
+- **Connected navigation** — person page action bar with Timeline, Map, Family Tree, Connections, Compare links
+- **MLS vs Euclidean evaluation** (AD-027) — comprehensive benchmark with 38 tests. Euclidean wins (AUC 0.9903 vs 0.9454)
+- **app/utils.py** — extracted 8 pure utility functions from main.py for modularization
+
+### Fixed
+- Confirmed face overlays were hidden from non-admin users on public photo pages
+- Gemini alignment completed for last 2 blocked photos (271/271 now complete)
+
 ## [v0.88.0] — 2026-03-03 (Session 85c: Universal Comparison Workspace)
 
 ### Changed

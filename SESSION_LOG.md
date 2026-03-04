@@ -1,59 +1,54 @@
-# Session 85b Log — Compare Navigation + PRD-025 Gap Closure
-## Mission: Close PRD-025 gaps, archive-to-compare navigation, Isaac Cohen shareable link
-## Started: 2026-03-03
-## Version: v0.87.0 → v0.87.1
-## Context: docs/session_context/session-85b-context.md
-## Predecessor: Session 85 (v0.87.0)
-## Detailed log: docs/sessions/SESSION_085b.md
+# Session 86 Log — P1 UX Fixes + MLS Experiment + Gemini Completion
+## Mission: Fix P1 UX bugs, resolve AD-027 (MLS vs Euclidean), complete Gemini alignments
+## Started: 2026-03-04
+## Version: v0.88.0 → v0.89.0
+## Predecessor: Session 85c (v0.88.0)
+## Detailed log: docs/session_logs/session-86-log.md
 
-### Phase 0: Orient
-- [x] Set `.claude/current_session.txt` to `85b`
-- [x] Read PRD-025, session 85 assessment, lessons
+### Act 0: Orient + Data Sync
+- [x] Set `.claude/current_session.txt` to `86`
+- [x] Synced production data: 17 new photos, 73 new identities
+- [x] Commit: d69460b
 
-### Phase 1: Archive Photo → Compare
-- [x] New `GET /api/compare/from-photo` route (from-photo endpoint)
-- [x] `/compare?photo_id=X&person_id=Y` auto-loads comparison
-- [x] `/compare?photo_id=X` shows photo faces + person search
-- [x] 8 new tests (30 total compare tests)
-- [x] Commit: 1cc6e43
+### Act 1: Partial Monolith Split
+- [x] Extracted app/utils.py — 8 pure functions, zero deps
+- [x] Skipped data_loaders extraction (48+ functions, circular dep risk)
+- [x] Commit: fefee23
 
-### Phase 2: Navigation Links
-- [x] Photo page: "Compare faces" link + CTA button
-- [x] Person page: "Compare with a photo" button
-- [x] Commit: 1cc6e43 (combined with Phase 1)
+### Act 2: Parallel Tracks
+- [x] Track B (MLS experiment): Euclidean AUC 0.9903 vs MLS 0.9454. AD-027 resolved.
+- [x] Track C (Gemini retry): 2/2 remaining photos processed. 271/271 complete.
+- [x] Commits: 8e3a65d, 4d582a7
 
-### Phase 3: PRD-025 Gap Closure
-- [x] Reference context on shareable result page
-- [x] Merge/Not Same admin actions on result page
+### Act 3: UX-037 — Merge Confirmation
+- [x] hx_confirm on ~10 merge buttons with both identity names
 - [x] 3 new tests
-- [x] Commit: 31f4624
+- [x] Commit: 07fe04f
 
-### Phase 4: Isaac Cohen E2E + Browser Verification
-- [x] Compare URL verified in production (5 faces scored)
-- [x] Shareable link: `https://rhodesli.nolanandrewfox.com/compare/result/edc67864978f`
-- [x] Shareable link works without auth (curl 200)
-- [x] Photo page "Compare" link verified
-- [x] Person page "Compare with a photo" button verified
-- [x] 3 production bugs fixed (photo_registry=None, registry.identities private, disk-full)
-- [x] Commits: e514375, 00a9876, 0d67095
+### Act 4: UX-039 — Person Page Admin Controls
+- [x] Inline rename form, confirm/skip/reject buttons, merge search
+- [x] 5 new tests (admin + non-admin)
+- [x] Commit: e22939f
 
-### Phase 5: Session Docs
-- [x] Assessment updated
-- [x] CHANGELOG updated (v0.87.1)
-- [x] ROADMAP updated
-- [x] SESSION_LOG updated
+### Act 5: Face Labels + Connected Navigation
+- [x] Confirmed face overlays visible for ALL users (admin + public photo pages)
+- [x] Person page action bar: Timeline, Map, Tree, Connections, Compare
+- [x] 6 new tests
+- [x] Commits: d210a55, 817d9af
 
-### Browser Verification Summary (9/9 PASS)
-- [x] Compare page with photo_id + person_id loads
-- [x] 5 faces scored with confidence bars
-- [x] Merge/Not Same buttons visible
-- [x] Reference context section present
-- [x] Share link opens result page
-- [x] Shareable URL works unauthenticated
-- [x] Photo page has Compare link
-- [x] Person page has Compare button
-- [x] Result page has response form
+### Act 6: Merge Parallel Tracks
+- [x] Cherry-picked MLS evaluation and Gemini results
+- [x] Cleaned up 3 worktrees
+
+### Act 7: Browser Verification (6/6 PASS)
+- [x] Person page action bar verified
+- [x] Compare CTA on person page verified
+- [x] Tree link with person_id verified
+- [x] No admin controls for unauthenticated (correct)
+- [x] Face overlay legend visible
+- [x] Confirmed face overlays display:block for all users
 
 ### Red Flags
-- P1: Railway volume disk full — results can't persist. Graceful fallback added but needs ops attention.
-- P2: Pre-existing test failures in test_skipped_focus.py (~60)
+- Pre-existing test ordering failures under xdist
+- data_loaders/compare/estimate extraction deferred
+- Chrome extension unavailable — curl verification used
