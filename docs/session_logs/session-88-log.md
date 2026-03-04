@@ -28,5 +28,14 @@ Predecessor: Session 87 (v0.91.0)
 - Compare link: /compare?face_id={encoded}&person_id={target_id} (was source=/target= which doesn't match route)
 - Admin badge: SVG gear icon replaces "Admin" Span. 1 test updated (discovery compare link URL).
 
+## Act 5 Details (continuation session)
+- Browser verified: scoring (60%/58%), distance (dist: 0.80), compare link params (face_id/person_id), admin badge gone
+- FOUND: Discovery cards lacked parity with neighbor_card. match_info_bar NOT used, co-occurrence NOT computed
+- FIX 1: match_info_bar() used in discovery card with show_badge=False (card already shows large %)
+- FIX 2: co_occurrence computed in _compute_discoveries() (cached) not per-render (was causing slow load)
+- FIX 3: Removed duplicate "60% match" badge — discovery card shows its own large pct
+- Commits: fb32385 (initial match_info_bar integration), 4c02ea8 (badge fix + perf fix)
+- REMAINING: Browser verify final state after deploy, update assessment, /session-review
+
 ## Notes
 - VIOLATION: Did not /clear between Act 1 and Act 2, or Act 2 and Act 3. User called this out.
