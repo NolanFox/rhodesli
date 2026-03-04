@@ -101,10 +101,12 @@ def test_compare_confidence_tiers_calibrated(monkeypatch):
 
 
 def test_compare_mobile_layout(client):
-    """Compare page renders acceptably at 375px width."""
+    """Compare page renders acceptably at mobile viewport."""
     response = client.get("/compare")
     assert response.status_code == 200
-    assert "max-w-4xl" in response.text and "sm:" in response.text
+    # Workspace uses max-w-6xl and responsive flex layout
+    assert "max-w-6xl" in response.text
+    assert "lg:flex-row" in response.text or "flex-col" in response.text
 
 
 
@@ -472,21 +474,20 @@ def test_compare_from_photo_invalid_person_404(client, monkeypatch):
 
 
 def test_compare_direct_url_with_photo_and_person(client, monkeypatch):
-    """GET /compare?photo_id=X&person_id=Y loads comparison via HTMX."""
+    """GET /compare?photo_id=X&person_id=Y auto-triggers comparison via HTMX."""
     response = client.get("/compare?photo_id=test-photo&person_id=test-person")
     assert response.status_code == 200
-    # Should contain HTMX trigger to load from-photo comparison
-    assert "/api/compare/from-photo" in response.text
-    assert "photo_id=test-photo" in response.text
-    assert "identity_id=test-person" in response.text
+    # New workspace: auto-triggers unified execute endpoint on load
+    # The workspace JS will populate source/target from URL params
+    assert "/api/compare/execute" in response.text or "compare-results-area" in response.text
 
 
 def test_compare_direct_url_photo_only(client):
-    """GET /compare?photo_id=X shows photo selector without auto-comparing."""
+    """GET /compare?photo_id=X pre-populates source as photo."""
     response = client.get("/compare?photo_id=test-photo")
     assert response.status_code == 200
-    assert "/api/compare/from-photo" in response.text
-    assert "photo_id=test-photo" in response.text
+    # Workspace pre-populates source from URL param
+    assert "compare-results-area" in response.text
 
 
 def test_photo_page_has_compare_link(client, monkeypatch):

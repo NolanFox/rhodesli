@@ -16302,97 +16302,83 @@ def get(offset: int = 3, person: str = "", people: str = "", start: int = None,
 @rt("/compare")
 def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     """
-    Face comparison page — find similar faces in the archive.
+    Universal Comparison Workspace (PRD-026).
 
-    Users can select an existing face from the archive to find matches,
-    or upload a photo (local dev only, InsightFace required).
+    Two-slot design: Source (left) + Targets (right) → Results (below).
+    Supports all entity combinations: Person, Photo, Upload.
 
-    Query params:
-        face_id: optional face_id to pre-select for comparison
-        photo_id: optional archive photo to compare
-        person_id: optional person to pre-fill as comparison target
+    Query params for backward compat:
+        face_id: pre-select person as source (find identity for face)
+        photo_id: pre-select photo as source
+        person_id: pre-select person as target
     """
     user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
 
     _build_caches()
     registry = load_registry()
     crop_files = get_crop_files()
 
-    # If face_id provided, run comparison immediately
-    results_html = None
-    selected_face_url = None
-    selected_identity_name = None
-    if face_id:
-        face_data = get_face_data()
-        if face_id in face_data:
-            from core.neighbors import find_similar_faces
-            selected_face_url = resolve_face_image_url(face_id, crop_files)
-            # Find the identity name for this face
-            ident = get_identity_for_face(registry, face_id)
-            if ident:
-                selected_identity_name = ensure_utf8_display(ident.get("name", "Unknown"))
-            results = find_similar_faces(
-                face_data[face_id]["mu"], face_data, registry=registry,
-                limit=20, exclude_face_ids={face_id},
-            )
-            # Save shareable result
-            rid = _generate_result_id()
-            _save_comparison_result({
-                "result_id": rid,
-                "created_at": datetime.now().isoformat(),
-                "query_type": "archive",
-                "query_face_id": face_id,
-                "query_name": selected_identity_name or "Unknown",
-                "matches": [{"face_id": r["face_id"], "identity_id": r.get("identity_id", ""),
-                             "identity_name": r.get("identity_name", ""), "distance": r["distance"],
-                             "confidence_pct": r.get("confidence_pct", 0), "tier": r.get("tier", "WEAK")}
-                            for r in results[:10]],
-                "responses": [],
-            })
-            results_html = _compare_results_grid(results, crop_files, result_id=rid)
-
-    # If photo_id provided, show archive photo comparison (with optional person_id)
-    if photo_id and not results_html:
-        # Render archive photo vs person comparison inline
-        # Uses HTMX to load from /api/compare/from-photo on page load
-        if person_id:
-            results_html = Div(
-                Div(P("Loading comparison...", cls="text-slate-300 text-sm animate-pulse"),
-                    cls="p-4 text-center"),
-                hx_get=f"/api/compare/from-photo?photo_id={photo_id}&identity_id={person_id}",
-                hx_trigger="load",
-                hx_swap="outerHTML",
-                id="compare-results",
-            )
-        else:
-            results_html = Div(
-                Div(P("Loading photo...", cls="text-slate-300 text-sm animate-pulse"),
-                    cls="p-4 text-center"),
-                hx_get=f"/api/compare/from-photo?photo_id={photo_id}",
-                hx_trigger="load",
-                hx_swap="outerHTML",
-                id="compare-results",
-            )
-
-    # Build face selector — confirmed identities with face crops
-    confirmed = [
-        i for i in registry.list_identities(state=IdentityState.CONFIRMED)
-        if not i.get("name", "").startswith("Unidentified") and not i.get("merged_into")
-    ]
-    confirmed.sort(key=lambda x: (x.get("name") or "").lower())
-
-    face_options = []
-    for ident in confirmed:
-        name = ensure_utf8_display(ident.get("name", ""))
-        faces = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
-        for entry in faces[:1]:  # Just first face per identity
-            fid = entry if isinstance(entry, str) else entry.get("face_id", "")
-            crop_url = resolve_face_image_url(fid, crop_files)
-            if crop_url:
-                face_options.append({"face_id": fid, "name": name, "crop_url": crop_url})
-
-    # Navigation
     nav_links = _public_nav_links(active="compare", user=user)
+
+    # Resolve backward-compat URL params
+    pre_source_type = ""
+    pre_source_id = ""
+    pre_source_name = ""
+    pre_source_crop = ""
+    pre_target_id = ""
+    pre_target_name = ""
+    pre_target_crop = ""
+
+    if face_id:
+        # Find identity for this face → use as source person
+        ident = get_identity_for_face(registry, face_id)
+        if ident:
+            pre_source_type = "person"
+            pre_source_id = ident["identity_id"]
+            pre_source_name = ensure_utf8_display(ident.get("name", "Unknown"))
+            fids = ident.get("anchor_ids", [])
+            if fids:
+                first_fid = fids[0] if isinstance(fids[0], str) else fids[0].get("face_id", "")
+                pre_source_crop = _resolve_crop_url(first_fid, crop_files)
+
+    if photo_id:
+        photo_meta = get_photo_metadata(photo_id)
+        if photo_meta:
+            pre_source_type = "photo"
+            pre_source_id = photo_id
+            pre_source_name = photo_meta.get("filename", photo_meta.get("path", "Photo"))
+            fname = photo_meta.get("filename") or photo_meta.get("path", "")
+            pre_source_crop = storage.get_photo_url(fname) if fname else ""
+
+    if person_id:
+        try:
+            ident = registry.get_identity(person_id)
+        except (KeyError, Exception):
+            ident = None
+        if ident:
+            pre_target_id = person_id
+            pre_target_name = ensure_utf8_display(ident.get("name", "Unknown"))
+            fids = ident.get("anchor_ids", [])
+            if fids:
+                first_fid = fids[0] if isinstance(fids[0], str) else fids[0].get("face_id", "")
+                pre_target_crop = _resolve_crop_url(first_fid, crop_files)
+
+    # Auto-trigger comparison if both source and target are pre-populated
+    auto_compare_attrs = {}
+    if pre_source_type and pre_source_id and pre_target_id:
+        auto_compare_attrs = {
+            "hx_post": "/api/compare/execute",
+            "hx_trigger": "load",
+            "hx_target": "#compare-results-area",
+            "hx_swap": "innerHTML",
+            "hx_vals": json.dumps({
+                "source_type": pre_source_type,
+                "source_id": pre_source_id,
+                "target_type": "person",
+                "target_ids": pre_target_id,
+            }),
+        }
 
     page_style = Style("""
         html, body { margin: 0; }
@@ -16402,86 +16388,239 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         .htmx-request.htmx-indicator { display: inline; }
         div.htmx-request.htmx-indicator,
         .htmx-request div.htmx-indicator { display: block; }
-        form.htmx-request button[type="submit"] {
-            opacity: 0.5;
-            pointer-events: none;
+
+        /* Workspace animations */
+        @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes barFill { from { width: 0; } }
+        @keyframes pillPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+        .compare-section-animate { animation: slideIn 0.3s ease-out both; }
+        .compare-bar-animate { animation: barFill 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .compare-pill-animate { animation: pillPop 0.2s ease-out both; }
+        .compare-fade-in { animation: fadeIn 0.3s ease-out both; }
+
+        /* Upload drag state */
+        .upload-zone-drag { border-color: rgb(99 102 241) !important; background-color: rgba(99, 102, 241, 0.05); }
+
+        /* Progress shimmer */
+        @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: calc(200px + 100%) 0; } }
+        .progress-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
         }
     """)
 
-    # Face selector grid
-    face_grid = Div(
-        *[
-            A(
-                Div(
-                    Img(src=opt["crop_url"], cls="w-16 h-16 rounded-full object-cover"),
-                    P(opt["name"], cls="text-[10px] text-slate-400 mt-1 text-center truncate w-20"),
-                    cls="flex flex-col items-center",
-                ),
-                href=f"/compare?face_id={opt['face_id']}",
-                cls=f"p-2 rounded-lg hover:bg-slate-700/50 transition-colors {'bg-amber-900/30 ring-1 ring-amber-500/50' if opt['face_id'] == face_id else ''}",
-                data_testid="face-option",
-            )
-            for opt in face_options
-        ],
-        cls="flex flex-wrap gap-3 justify-center",
-        data_testid="face-selector",
-    )
-
-    # Search/filter for face selector
-    face_search = Div(
-        Input(
-            type="text",
-            placeholder="Search by name...",
-            cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2 w-full max-w-xs",
-            data_testid="face-search",
-            oninput="var q=this.value.toLowerCase();document.querySelectorAll('[data-testid=face-option]').forEach(function(el){el.style.display=el.textContent.toLowerCase().includes(q)?'':'none'})",
-        ),
-        cls="flex justify-center mb-4",
-    )
-
-    # Selected face display
-    selected_section = None
-    if selected_face_url:
-        selected_section = Div(
-            H3("Comparing", cls="text-sm text-slate-400 mb-2"),
-            Div(
-                Img(src=selected_face_url, cls="w-24 h-24 rounded-full object-cover ring-2 ring-amber-500"),
-                P(selected_identity_name or "Unknown", cls="text-sm text-white mt-2 font-medium"),
-                cls="flex flex-col items-center",
-            ),
-            cls="text-center mb-6",
+    # Workspace JS — event delegation for all interactions
+    # Pre-compute escaped JS strings (no backslashes in f-strings)
+    js_source_name = pre_source_name.replace("'", "\\'")
+    js_target_name = pre_target_name.replace("'", "\\'")
+    js_target_push = ""
+    if pre_target_id:
+        js_target_push = (
+            "state.targets.push({"
+            f"type: 'person', id: '{pre_target_id}', "
+            f"name: '{js_target_name}', crop: '{pre_target_crop}'"
+            "});"
         )
 
-    # Upload section — above the fold, primary action (PRD-016)
-    upload_section = Div(
-        Div(
-            H2("Upload a Photo", cls="text-xl font-serif text-white mb-1"),
-            P("Upload a photo to find matching faces in our archive of "
-              f"{len(face_options)} identified people.",
-              cls="text-sm text-slate-400 mb-4"),
-            cls="text-center",
-        ),
+    workspace_js = Script("""
+    (function() {
+        // State
+        var state = {
+            sourceType: '""" + pre_source_type + """',
+            sourceId: '""" + pre_source_id + """',
+            sourceName: '""" + js_source_name + """',
+            targets: [],
+            allArchive: false
+        };
+
+        // Pre-populate target if URL param provided
+        """ + js_target_push + """
+
+        // Tab switching for source slot
+        document.addEventListener('click', function(e) {
+            var tab = e.target.closest('[data-source-tab]');
+            if (tab) {
+                var tabName = tab.getAttribute('data-source-tab');
+                document.querySelectorAll('[data-source-tab]').forEach(function(t) {
+                    t.classList.remove('bg-indigo-600', 'text-white');
+                    t.classList.add('bg-slate-700', 'text-slate-300');
+                });
+                tab.classList.remove('bg-slate-700', 'text-slate-300');
+                tab.classList.add('bg-indigo-600', 'text-white');
+
+                document.querySelectorAll('[data-source-panel]').forEach(function(p) {
+                    p.classList.add('hidden');
+                });
+                var panel = document.querySelector('[data-source-panel="' + tabName + '"]');
+                if (panel) panel.classList.remove('hidden');
+            }
+        });
+
+        // Select source from search results
+        document.addEventListener('click', function(e) {
+            var el = e.target.closest('[data-action="select-compare-source"]');
+            if (!el) return;
+            e.preventDefault();
+            state.sourceType = el.getAttribute('data-entity-type');
+            state.sourceId = el.getAttribute('data-entity-id');
+            state.sourceName = el.getAttribute('data-entity-name');
+            updateSourceDisplay();
+            triggerCompare();
+        });
+
+        // Select target from search results
+        document.addEventListener('click', function(e) {
+            var el = e.target.closest('[data-action="select-compare-target"]');
+            if (!el) return;
+            e.preventDefault();
+            if (state.targets.length >= 5) return;
+            var tid = el.getAttribute('data-entity-id');
+            // Don't add duplicates
+            for (var i = 0; i < state.targets.length; i++) {
+                if (state.targets[i].id === tid) return;
+            }
+            state.allArchive = false;
+            state.targets.push({
+                type: el.getAttribute('data-entity-type'),
+                id: tid,
+                name: el.getAttribute('data-entity-name'),
+                crop: el.getAttribute('data-entity-crop') || ''
+            });
+            updateTargetPills();
+            triggerCompare();
+            // Clear search
+            var searchInput = document.getElementById('target-search-input');
+            if (searchInput) { searchInput.value = ''; }
+            var searchResults = document.getElementById('compare-search-results');
+            if (searchResults) { searchResults.innerHTML = ''; }
+        });
+
+        // Remove target pill
+        document.addEventListener('click', function(e) {
+            var el = e.target.closest('[data-action="remove-target"]');
+            if (!el) return;
+            var idx = parseInt(el.getAttribute('data-target-index'));
+            state.targets.splice(idx, 1);
+            updateTargetPills();
+            if (state.targets.length > 0) triggerCompare();
+            else {
+                var area = document.getElementById('compare-results-area');
+                if (area) area.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Select targets to compare against.</p>';
+            }
+        });
+
+        // All Archive button
+        document.addEventListener('click', function(e) {
+            var el = e.target.closest('[data-action="compare-all-archive"]');
+            if (!el) return;
+            state.allArchive = true;
+            state.targets = [];
+            updateTargetPills();
+            triggerCompare();
+        });
+
+        function updateSourceDisplay() {
+            var display = document.getElementById('source-selected-display');
+            if (!display) return;
+            if (state.sourceType && state.sourceId) {
+                display.innerHTML = '<div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-indigo-500/30">' +
+                    '<span class="text-sm text-white font-medium">' + escapeHtml(state.sourceName) + '</span>' +
+                    '<span class="text-xs bg-indigo-900/50 text-indigo-400 px-1.5 py-0.5 rounded">' + state.sourceType + '</span>' +
+                    '</div>';
+            }
+        }
+
+        function updateTargetPills() {
+            var container = document.getElementById('target-pills');
+            if (!container) return;
+
+            if (state.allArchive) {
+                container.innerHTML = '<div class="flex items-center gap-2 px-3 py-1.5 bg-indigo-600/20 border border-indigo-500/30 rounded-full compare-pill-animate">' +
+                    '<span class="text-xs text-indigo-300 font-medium">All Archive</span>' +
+                    '<button data-action="clear-all-archive" class="text-indigo-400 hover:text-white text-xs ml-1">&times;</button>' +
+                    '</div>';
+                return;
+            }
+
+            var html = '';
+            for (var i = 0; i < state.targets.length; i++) {
+                var t = state.targets[i];
+                html += '<div class="flex items-center gap-1.5 px-2 py-1 bg-slate-700 rounded-full compare-pill-animate" style="animation-delay: ' + (i * 50) + 'ms">';
+                if (t.crop) html += '<img src="' + t.crop + '" class="w-5 h-5 rounded-full object-cover" alt="' + escapeHtml(t.name) + '">';
+                html += '<span class="text-xs text-white truncate max-w-[120px]">' + escapeHtml(t.name) + '</span>';
+                html += '<button data-action="remove-target" data-target-index="' + i + '" class="text-slate-400 hover:text-white text-xs ml-0.5">&times;</button>';
+                html += '</div>';
+            }
+            if (state.targets.length > 0) {
+                html += '<span class="text-[10px] text-slate-500">' + state.targets.length + '/5</span>';
+            }
+            container.innerHTML = html;
+        }
+
+        // Clear all archive
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('[data-action="clear-all-archive"]')) {
+                state.allArchive = false;
+                updateTargetPills();
+                var area = document.getElementById('compare-results-area');
+                if (area) area.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">Select targets to compare against.</p>';
+            }
+        });
+
+        function triggerCompare() {
+            if (!state.sourceType || !state.sourceId) return;
+            if (!state.allArchive && state.targets.length === 0) return;
+
+            var targetType = state.allArchive ? 'archive' : (state.targets[0] ? state.targets[0].type : 'person');
+            var targetIds = state.targets.map(function(t) { return t.id; }).join(',');
+
+            var area = document.getElementById('compare-results-area');
+            if (!area) return;
+
+            // Show loading
+            area.innerHTML = '<div class="text-center py-8"><div class="inline-block w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-3"></div><p class="text-slate-400 text-sm">Computing comparisons...</p></div>';
+
+            htmx.ajax('POST', '/api/compare/execute', {
+                target: '#compare-results-area',
+                swap: 'innerHTML',
+                values: {
+                    source_type: state.sourceType,
+                    source_id: state.sourceId,
+                    target_type: targetType,
+                    target_ids: targetIds
+                }
+            });
+        }
+
+        function escapeHtml(s) {
+            var div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        // Initialize display if pre-populated
+        if (state.sourceType) updateSourceDisplay();
+        if (state.targets.length > 0) updateTargetPills();
+    })();
+    """)
+
+    # Upload form for source slot
+    upload_panel = Div(
         Form(
             Div(
-                # Drag-and-drop zone with photo preview (UX-053)
                 Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-slate-500 mb-3 mx-auto" id="compare-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
-                    Img(id="compare-preview", cls="hidden max-h-32 rounded-lg mx-auto mb-2 border border-slate-600", alt="Selected photo"),
-                    P("Drop a photo here or click to browse", id="compare-upload-text", cls="text-slate-400 text-sm mb-1"),
-                    P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
+                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" id="ws-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    P("Drop a photo here", cls="text-slate-400 text-sm"),
+                    P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs mt-0.5"),
                     Input(type="file", name="photo", accept="image/jpeg,image/png",
                           cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}var preview=document.getElementById('compare-preview');var icon=document.getElementById('compare-upload-icon');var txt=document.getElementById('compare-upload-text');if(preview){var r=new FileReader();r.onload=function(e){preview.src=e.target.result;preview.classList.remove('hidden');if(icon)icon.classList.add('hidden');if(txt)txt.textContent='Photo selected - uploading...'};r.readAsDataURL(f)}this.closest('form').requestSubmit();setTimeout(function(){var s=document.getElementById('upload-spinner');if(s){s.scrollIntoView({behavior:'smooth',block:'center'})}},100)",
-                          data_testid="upload-input"),
-                    cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-8 transition-colors cursor-pointer",
+                          data_testid="ws-upload-input",
+                          onchange="var f=this.files[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)||f.size>10*1024*1024)return;this.closest('form').requestSubmit()"),
+                    cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-lg p-6 transition-colors cursor-pointer text-center",
                 ),
-                cls="mb-4",
-            ),
-            Button(
-                NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>'),
-                "Search Archive",
-                type="submit",
-                cls="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 transition-colors inline-flex items-center",
             ),
             action="/api/compare/upload",
             method="post",
@@ -16489,100 +16628,112 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             hx_encoding="multipart/form-data",
             hx_post="/api/compare/upload",
             hx_target="#compare-results",
-            hx_swap="innerHTML show:#compare-results:top",
-            hx_indicator="#upload-spinner",
-            data_testid="upload-form",
+            hx_swap="innerHTML",
+            hx_indicator="#ws-upload-spinner",
+            data_testid="ws-upload-form",
         ),
         Div(
-            Div(
-                NotStr('<svg class="animate-spin h-10 w-10 text-indigo-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>'),
-                P("Analyzing your photo for faces...", cls="text-white font-medium mb-1"),
-                P("This may take 10\u201330 seconds for group photos.", cls="text-slate-400 text-sm"),
-            ),
-            id="upload-spinner", cls="htmx-indicator text-center py-8",
+            Div(cls="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"),
+            P("Processing...", cls="text-slate-400 text-xs mt-2"),
+            id="ws-upload-spinner", cls="htmx-indicator text-center py-4",
         ),
-        Div(
-            Div(
-                _upload_stage_item("received", "Photo received", "pending"),
-                _upload_stage_item("detecting", "Detecting faces", "pending"),
-                _upload_stage_item("comparing", "Searching archive", "pending"),
-                _upload_stage_item("estimating", "Estimating date", "pending"),
-                _upload_stage_item("complete", "Analysis complete", "pending"),
-                cls="text-left max-w-xs mx-auto space-y-3",
-                id="stage-list",
-            ),
-            id="upload-progress", cls="hidden text-center py-6",
-            data_testid="upload-progress",
-        ),
-        P("Your photo is used for matching. Sign in to contribute it to the archive.", cls="text-xs text-slate-600 mt-3 text-center"),
-        # Multi-photo compare link
-        Div(
-            P("Have multiple photos? ",
-              A("Compare 2-5 photos at once →",
-                href="#multi-upload",
-                cls="text-indigo-400 hover:text-indigo-300 underline",
-                onclick="document.getElementById('multi-upload-zone').classList.toggle('hidden');return false"),
-              cls="text-xs text-slate-500 text-center mt-4"),
-        ),
-        # Multi-photo upload zone (hidden by default)
-        Div(
-            Form(
-                H3("Compare Multiple Photos", cls="text-base font-serif text-white mb-2"),
-                P("Upload 2-5 photos to cross-compare faces between them and search the archive.",
-                  cls="text-xs text-slate-400 mb-4"),
-                Input(type="file", name="photos", accept="image/jpeg,image/png",
-                      multiple=True,
-                      cls="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 mb-4",
-                      data_testid="multi-upload-input"),
-                Button(
-                    "Compare All Photos",
-                    type="submit",
-                    cls="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-500 transition-colors w-full",
-                ),
-                action="/api/compare/upload-multiple",
-                method="post",
-                enctype="multipart/form-data",
-                hx_encoding="multipart/form-data",
-                hx_post="/api/compare/upload-multiple",
-                hx_target="#compare-results",
-                hx_swap="innerHTML show:#compare-results:top",
-                hx_indicator="#upload-spinner",
-                data_testid="multi-upload-form",
-            ),
-            id="multi-upload-zone",
-            cls="hidden mt-4 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
-        ),
-        cls="bg-slate-800/50 rounded-2xl p-8 max-w-lg mx-auto",
-        data_testid="upload-area",
+        data_source_panel="upload",
+        data_testid="source-upload-panel",
     )
 
-    # Archive search section — collapsed below upload
-    archive_section = Div(
-        # Expander header
+    # Person search for source slot
+    person_panel = Div(
+        Input(
+            type="text", name="q",
+            placeholder="Search by name...",
+            hx_get="/api/compare/search-unified?types=person",
+            hx_trigger="keyup changed delay:300ms",
+            hx_target="#source-person-results",
+            hx_include="this",
+            cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+            data_testid="source-person-search",
+        ),
+        Div(id="source-person-results", cls="mt-2 max-h-48 overflow-y-auto",
+            data_testid="source-person-results"),
+        Div(id="source-selected-display", cls="mt-2"),
+        data_source_panel="person",
+        cls="hidden",
+        data_testid="source-person-panel",
+    )
+
+    # Photo search/browse for source slot
+    photo_panel = Div(
+        Input(
+            type="text", name="q",
+            placeholder="Search photos by name or collection...",
+            hx_get="/api/compare/search-unified?types=photo",
+            hx_trigger="keyup changed delay:300ms",
+            hx_target="#source-photo-results",
+            hx_include="this",
+            cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+            data_testid="source-photo-search",
+        ),
+        Div(id="source-photo-results", cls="mt-2 max-h-48 overflow-y-auto"),
+        data_source_panel="photo",
+        cls="hidden",
+        data_testid="source-photo-panel",
+    )
+
+    # Source slot
+    source_slot = Div(
+        H3("Source", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
+        # Tabs
         Div(
+            Button("Upload", data_source_tab="upload",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors"),
+            Button("Person", data_source_tab="person",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            Button("Photo", data_source_tab="photo",
+                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            cls="flex gap-2 mb-4",
+            data_testid="source-tabs",
+        ),
+        upload_panel,
+        person_panel,
+        photo_panel,
+        cls="bg-slate-800/50 rounded-xl p-5 border border-slate-700/30",
+        data_testid="source-slot",
+    )
+
+    # Target slot
+    target_slot = Div(
+        H3("Compare With", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
+        Input(
+            type="text", name="q",
+            id="target-search-input",
+            placeholder="Search people or photos...",
+            hx_get="/api/compare/search-unified",
+            hx_trigger="keyup changed delay:300ms",
+            hx_target="#compare-search-results",
+            hx_include="this",
+            cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none mb-3",
+            data_testid="target-search-input",
+        ),
+        Div(id="compare-search-results", cls="max-h-48 overflow-y-auto"),
+        # Target pills
+        Div(id="target-pills", cls="flex flex-wrap gap-2 mt-3", data_testid="target-pills"),
+        # All Archive button
+        Div(
+            Div(cls="border-t border-slate-700/50 my-3"),
             Button(
-                Span("Or search by person in the archive", cls="text-slate-300 text-sm font-medium"),
-                NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500 ml-2 transition-transform" id="archive-expand-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'),
-                type="button",
-                cls="flex items-center justify-center w-full py-3 hover:text-white transition-colors",
-                onclick="var panel=document.getElementById('archive-panel');var icon=document.getElementById('archive-expand-icon');if(panel.classList.contains('hidden')){panel.classList.remove('hidden');icon.style.transform='rotate(180deg)'}else{panel.classList.add('hidden');icon.style.transform=''}",
+                "Compare against all archive",
+                data_action="compare-all-archive",
+                cls="w-full px-3 py-2 bg-slate-700/50 text-slate-300 text-sm rounded-lg hover:bg-slate-600 transition-colors border border-slate-600/50",
+                data_testid="compare-all-archive",
             ),
-            cls="border-t border-slate-800 mt-6",
         ),
-        # Collapsible panel (hidden by default, open if face_id provided)
-        Div(
-            face_search,
-            selected_section if selected_section else None,
-            face_grid,
-            cls="" if face_id else "hidden",
-            id="archive-panel",
-            data_testid="archive-panel",
-        ),
+        cls="bg-slate-800/50 rounded-xl p-5 border border-slate-700/30",
+        data_testid="target-slot",
     )
 
     compare_og = og_tags(
         "Compare Faces \u2014 Rhodesli Heritage Archive",
-        "Find similar faces in the Rhodes Jewish heritage photo archive",
+        "Find connections across the Rhodes Jewish heritage photo archive",
         canonical_url="/compare",
     )
 
@@ -16604,45 +16755,50 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             Section(
                 Div(
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P("Upload a photo to search our archive, or compare people already in the collection.",
+                    P("Find connections across the Rhodes Jewish heritage archive.",
                       cls="text-slate-400 text-sm"),
-                    P(A("Compare two photos side-by-side \u2192", href="/compare/pair",
-                        cls="text-indigo-400 hover:text-indigo-300 underline"),
-                      cls="text-sm mt-2"),
-                    cls="max-w-4xl mx-auto px-6 pt-6 pb-6",
+                    cls="max-w-6xl mx-auto px-6 pt-6 pb-4",
                 ),
             ),
-            # Upload — above the fold, primary action
-            Section(
-                Div(upload_section, cls="max-w-4xl mx-auto px-6 pb-4"),
-                data_testid="upload-section",
-            ),
-            # Archive search — collapsed below
-            Section(
-                Div(archive_section, cls="max-w-4xl mx-auto px-6 pb-6"),
-            ),
-            # Results
+            # Workspace: Source + Target slots
             Section(
                 Div(
-                    results_html if results_html else Div(
-                        P("Upload a photo or select a person to find similar faces.",
-                          cls="text-slate-500 text-center py-8"),
-                        id="compare-results",
+                    Div(source_slot, cls="flex-1 min-w-[300px]"),
+                    Div(target_slot, cls="flex-1 min-w-[300px]"),
+                    cls="flex flex-col lg:flex-row gap-4",
+                ),
+                cls="max-w-6xl mx-auto px-6 pb-4",
+                data_testid="workspace-slots",
+            ),
+            # Results area
+            Section(
+                Div(
+                    Div(
+                        P("Select a source and one or more targets to begin comparing.",
+                          cls="text-slate-500 text-center py-8") if not (pre_source_type and pre_target_id) else
+                        P("Loading comparison...", cls="text-slate-300 text-sm animate-pulse text-center py-8"),
+                        id="compare-results-area",
+                        data_testid="compare-results-area",
+                        **auto_compare_attrs,
                     ),
-                    cls="max-w-4xl mx-auto px-6 pb-8",
+                    # Keep old compare-results div for backward compat with upload endpoint
+                    Div(id="compare-results", cls="hidden"),
+                    cls="max-w-6xl mx-auto px-6 pb-8",
                 ),
             ),
             # Footer
             Div(
                 Div(
                     P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
-                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    P("Preserving the memory of the Jewish community of Rhodes",
+                      cls="text-[10px] text-slate-600 italic"),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
                 ),
                 cls="py-8 border-t border-slate-800",
             ),
             cls="min-h-screen bg-slate-900",
         ),
+        workspace_js,
     )
 
 
@@ -20205,6 +20361,633 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
         *archive_sections,
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-3xl mx-auto mt-4",
         data_testid="pair-comparison-result",
+    )
+
+
+# =============================================================================
+# UNIFIED COMPARISON ENGINE (PRD-026, Session 85c)
+# =============================================================================
+
+
+def _resolve_entity_faces(entity_type: str, entity_id: str, face_data: dict, registry=None) -> list:
+    """Resolve face embeddings from any entity type.
+
+    Returns list of dicts: {face_id, embedding, crop_url}
+    """
+    crop_files = get_crop_files()
+    faces = []
+
+    if entity_type == "person":
+        if not registry:
+            return []
+        try:
+            ident = registry.get_identity(entity_id)
+        except (KeyError, Exception):
+            return []
+        if not ident:
+            return []
+        all_fids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+        for entry in all_fids:
+            fid = entry if isinstance(entry, str) else entry.get("face_id", "")
+            emb = face_data.get(fid)
+            if emb and "mu" in emb:
+                faces.append({
+                    "face_id": fid,
+                    "embedding": emb["mu"],
+                    "crop_url": _resolve_crop_url(fid, crop_files),
+                })
+
+    elif entity_type == "photo":
+        photo_meta = get_photo_metadata(entity_id)
+        if not photo_meta:
+            return []
+        face_ids = photo_meta.get("face_ids", [])
+        if not face_ids:
+            face_ids = [f["face_id"] for f in photo_meta.get("faces", []) if isinstance(f, dict) and f.get("face_id")]
+        for fid in face_ids:
+            emb = face_data.get(fid)
+            if emb and "mu" in emb:
+                faces.append({
+                    "face_id": fid,
+                    "embedding": emb["mu"],
+                    "crop_url": _resolve_crop_url(fid, crop_files),
+                })
+
+    elif entity_type == "upload":
+        import json as _json_resolve
+        status_path = data_path / "inbox" / f"{entity_id}.status.json"
+        if not status_path.exists():
+            return []
+        with open(status_path) as f:
+            status = _json_resolve.load(f)
+        face_ids = status.get("face_ids", [])
+        for fid in face_ids:
+            emb = face_data.get(fid)
+            if emb and "mu" in emb:
+                faces.append({
+                    "face_id": fid,
+                    "embedding": emb["mu"],
+                    "crop_url": _resolve_crop_url(fid, crop_files),
+                })
+
+    return faces
+
+
+def _compute_comparison_score(source_emb, target_embs: list) -> dict:
+    """Compute best match score between a source embedding and list of target embeddings.
+
+    Returns: {distance, confidence_pct, tier}
+    """
+    import numpy as np
+
+    if not target_embs:
+        return {"distance": 99.0, "confidence_pct": 0, "tier": "WEAK"}
+
+    distances = [float(np.linalg.norm(source_emb - t)) for t in target_embs]
+    best_dist = min(distances)
+
+    # Calibrated confidence
+    try:
+        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
+        cal = SimilarityCalibrator()
+        cosine_sim = max(0.0, 1.0 - (best_dist ** 2) / 2.0)
+        prob = cal.predict(cosine_sim)
+        confidence_pct = max(1, min(99, int(prob * 100)))
+    except Exception:
+        import numpy as np
+        confidence_pct = max(1, min(99, int(100 * (1.0 / (1.0 + np.exp(2.0 * (best_dist - 1.1)))))))
+
+    # Tier classification
+    if confidence_pct >= 85:
+        tier = "STRONG MATCH"
+    elif confidence_pct >= 70:
+        tier = "POSSIBLE MATCH"
+    elif confidence_pct >= 50:
+        tier = "SIMILAR"
+    else:
+        tier = "WEAK"
+
+    return {"distance": best_dist, "confidence_pct": confidence_pct, "tier": tier}
+
+
+@rt("/api/compare/execute")
+def post(source_type: str = "", source_id: str = "", target_type: str = "",
+         target_ids: str = "", sess=None):
+    """Unified comparison endpoint — any entity type against any other.
+
+    Supports: person/photo/upload as source, person/photo/upload/archive as target.
+    Multiple targets supported (comma-separated IDs, max 5).
+    Returns HTMX fragment with matrix results.
+    """
+    import numpy as np
+
+    if not source_type or not source_id:
+        return Div(P("Select a source to compare.", cls="text-slate-400 text-sm text-center py-8"),
+                   id="compare-results-area", data_testid="compare-empty")
+
+    if not target_type and not target_ids:
+        return Div(P("Select one or more targets to compare against.",
+                     cls="text-slate-400 text-sm text-center py-8"),
+                   id="compare-results-area", data_testid="compare-empty")
+
+    _build_caches()
+    face_data = get_face_data()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    user = get_current_user(sess or {}) if is_auth_enabled() else None
+    user_is_admin = user and user.is_admin if is_auth_enabled() else True
+
+    # Resolve source faces
+    source_faces = _resolve_entity_faces(source_type, source_id, face_data, registry)
+    if not source_faces:
+        return Div(P("No faces found in the source.", cls="text-amber-500 text-sm text-center py-8"),
+                   id="compare-results-area")
+
+    # Resolve targets
+    results_by_face = []  # [{face_id, crop_url, targets: [{name, id, type, distance, pct, tier}]}]
+
+    if target_type == "archive":
+        # Compare against entire archive — use find_similar_faces
+        from core.neighbors import find_similar_faces
+        for sf in source_faces:
+            matches = find_similar_faces(
+                sf["embedding"], face_data, registry=registry,
+                limit=10, exclude_face_ids={sf["face_id"]},
+            )
+            results_by_face.append({
+                "face_id": sf["face_id"],
+                "crop_url": sf["crop_url"],
+                "targets": [{
+                    "target_id": m.get("identity_id", ""),
+                    "target_type": "person",
+                    "target_name": m.get("identity_name", "Unknown"),
+                    "target_crop_url": _resolve_crop_url(m["face_id"], crop_files),
+                    "distance": m["distance"],
+                    "confidence_pct": m.get("confidence_pct", 0),
+                    "tier": m.get("tier", "WEAK"),
+                    "matched_face_id": m["face_id"],
+                } for m in matches],
+            })
+    else:
+        # Specific targets
+        tid_list = [t.strip() for t in target_ids.split(",") if t.strip()][:5]
+        if not tid_list:
+            return Div(P("No targets selected.", cls="text-slate-400 text-sm text-center py-8"),
+                       id="compare-results-area")
+
+        # Build target info
+        targets_info = []
+        for tid in tid_list:
+            ttype = target_type
+            target_faces = _resolve_entity_faces(ttype, tid, face_data, registry)
+            target_name = "Unknown"
+            target_crop = ""
+            if ttype == "person":
+                try:
+                    ident = registry.get_identity(tid)
+                except (KeyError, Exception):
+                    ident = None
+                if ident:
+                    target_name = ensure_utf8_display(ident.get("name", "Unknown"))
+                    # Get best crop
+                    anchor_ids = ident.get("anchor_ids", [])
+                    if anchor_ids:
+                        first_fid = anchor_ids[0] if isinstance(anchor_ids[0], str) else anchor_ids[0].get("face_id", "")
+                        target_crop = _resolve_crop_url(first_fid, crop_files)
+            elif ttype == "photo":
+                pmeta = get_photo_metadata(tid)
+                if pmeta:
+                    target_name = pmeta.get("filename", pmeta.get("path", "Photo"))
+                    target_crop = storage.get_photo_url(pmeta.get("filename") or pmeta.get("path", "")) if (pmeta.get("filename") or pmeta.get("path")) else ""
+
+            targets_info.append({
+                "id": tid,
+                "type": ttype,
+                "name": target_name,
+                "crop_url": target_crop,
+                "faces": target_faces,
+            })
+
+        # Compute matrix: source face × target
+        for sf in source_faces:
+            face_targets = []
+            for ti in targets_info:
+                target_embs = [f["embedding"] for f in ti["faces"]]
+                score = _compute_comparison_score(sf["embedding"], target_embs)
+
+                # Find best matching target face
+                best_face_id = ""
+                if ti["faces"] and target_embs:
+                    dists = [float(np.linalg.norm(sf["embedding"] - t)) for t in target_embs]
+                    best_idx = int(np.argmin(dists))
+                    best_face_id = ti["faces"][best_idx]["face_id"]
+
+                face_targets.append({
+                    "target_id": ti["id"],
+                    "target_type": ti["type"],
+                    "target_name": ti["name"],
+                    "target_crop_url": ti["crop_url"],
+                    "distance": score["distance"],
+                    "confidence_pct": score["confidence_pct"],
+                    "tier": score["tier"],
+                    "matched_face_id": best_face_id,
+                })
+
+            results_by_face.append({
+                "face_id": sf["face_id"],
+                "crop_url": sf["crop_url"],
+                "targets": face_targets,
+            })
+
+    # Find best overall match
+    best_pct = 0
+    best_face_idx = -1
+    best_target_idx = -1
+    for fi, fr in enumerate(results_by_face):
+        for ti, tr in enumerate(fr["targets"]):
+            if tr["confidence_pct"] > best_pct:
+                best_pct = tr["confidence_pct"]
+                best_face_idx = fi
+                best_target_idx = ti
+
+    # Build source entity name
+    source_name = "Upload"
+    if source_type == "person":
+        try:
+            si = registry.get_identity(source_id)
+        except (KeyError, Exception):
+            si = None
+        if si:
+            source_name = ensure_utf8_display(si.get("name", "Unknown"))
+    elif source_type == "photo":
+        pm = get_photo_metadata(source_id)
+        if pm:
+            source_name = pm.get("filename", pm.get("path", "Photo"))
+
+    # Count targets
+    n_targets = len(results_by_face[0]["targets"]) if results_by_face else 0
+    n_faces = len(results_by_face)
+
+    # Save result for sharing
+    result_data = {
+        "result_id": _generate_result_id(),
+        "created_at": datetime.now().isoformat(),
+        "query_type": "unified",
+        "source_type": source_type,
+        "source_id": source_id,
+        "source_name": source_name,
+        "matches": [],
+        "responses": [],
+    }
+    for fr in results_by_face:
+        for tr in fr["targets"]:
+            result_data["matches"].append({
+                "face_id": fr["face_id"],
+                "target_id": tr["target_id"],
+                "target_name": tr["target_name"],
+                "distance": tr["distance"],
+                "confidence_pct": tr["confidence_pct"],
+                "tier": tr["tier"],
+            })
+    rid = _save_comparison_result(result_data)
+
+    # --- Build results HTML ---
+    parts = []
+
+    # Header
+    target_label = "the archive" if target_type == "archive" else f"{n_targets} target{'s' if n_targets != 1 else ''}"
+    parts.append(
+        Div(
+            H3(f"Comparing {n_faces} face{'s' if n_faces != 1 else ''} against {target_label}",
+               cls="text-lg font-serif text-white"),
+            cls="mb-4",
+            data_testid="compare-results-header",
+        )
+    )
+
+    # Per-face sections
+    for fi, fr in enumerate(results_by_face):
+        face_id = fr["face_id"]
+        crop_url = fr["crop_url"]
+
+        # Skip face section header if only 1 face
+        show_face_header = n_faces > 1
+
+        target_rows = []
+        for ti, tr in enumerate(fr["targets"]):
+            pct = tr["confidence_pct"]
+            tier = tr["tier"]
+            is_best = (fi == best_face_idx and ti == best_target_idx)
+
+            # Color based on tier
+            if pct >= 85:
+                bar_color = "bg-emerald-500"
+                label_color = "text-emerald-400"
+            elif pct >= 70:
+                bar_color = "bg-amber-500"
+                label_color = "text-amber-400"
+            elif pct >= 50:
+                bar_color = "bg-blue-500"
+                label_color = "text-blue-400"
+            else:
+                bar_color = "bg-slate-600"
+                label_color = "text-slate-400"
+
+            # Confidence label
+            if pct >= 85:
+                conf_label = "Strong match"
+            elif pct >= 70:
+                conf_label = "Possible match"
+            elif pct >= 50:
+                conf_label = "Similar"
+            else:
+                conf_label = "Unlikely"
+
+            dist_str = f" · dist: {tr['distance']:.2f}" if user_is_admin else ""
+
+            # Target link
+            target_link = "#"
+            if tr["target_type"] == "person" and tr["target_id"]:
+                target_link = f"/person/{tr['target_id']}"
+            elif tr["target_type"] == "photo" and tr["target_id"]:
+                target_link = f"/photo/{tr['target_id']}"
+
+            # Admin action buttons
+            action_btns = []
+            face_identity = get_identity_for_face(registry, face_id)
+            face_iid = face_identity.get("identity_id") if face_identity else None
+            if user_is_admin and tr["target_type"] == "person" and tr["target_id"] and face_iid:
+                action_btns.append(
+                    Button("Merge", hx_post=f"/api/identity/{tr['target_id']}/merge/{face_iid}?source=compare",
+                           hx_target=f"#compare-row-{fi}-{ti}", hx_swap="outerHTML",
+                           cls="px-2 py-0.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded"))
+                action_btns.append(
+                    Button("Not Same", hx_post=f"/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
+                           hx_target=f"#compare-row-{fi}-{ti}", hx_swap="outerHTML",
+                           cls="px-2 py-0.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"))
+
+            highlight_cls = "ring-1 ring-amber-500/40 bg-amber-950/10" if is_best else ""
+
+            target_rows.append(
+                Div(
+                    Div(
+                        # Target crop + name
+                        Div(
+                            Img(src=tr["target_crop_url"], cls="w-10 h-10 rounded-full object-cover border border-slate-600",
+                                alt=tr["target_name"]) if tr["target_crop_url"] else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                            cls="flex-shrink-0",
+                        ),
+                        Div(
+                            A(tr["target_name"], href=target_link,
+                              cls="text-sm text-white hover:text-indigo-300 font-medium truncate block"),
+                            # Confidence bar
+                            Div(
+                                Div(
+                                    Div(cls=f"h-2 rounded-full {bar_color} compare-bar-animate",
+                                        style=f"width: {pct}%"),
+                                    cls="flex-1 bg-slate-700 rounded-full h-2",
+                                ),
+                                Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                                cls="flex items-center gap-2 mt-1",
+                            ),
+                            Span(f"{conf_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
+                            cls="flex-1 min-w-0",
+                        ),
+                        cls="flex items-center gap-3",
+                    ),
+                    Div(*action_btns, cls="flex gap-2 mt-2 justify-end") if action_btns else None,
+                    cls=f"p-3 rounded-lg {highlight_cls}",
+                    id=f"compare-row-{fi}-{ti}",
+                    data_testid=f"compare-row-{fi}-{ti}",
+                )
+            )
+
+        # Face section
+        face_section_parts = []
+        if show_face_header:
+            face_section_parts.append(
+                Div(
+                    Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600",
+                        alt=f"Face {fi+1}") if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                    Span(f"Face {fi + 1}", cls="text-sm text-white font-medium ml-3"),
+                    cls="flex items-center mb-3",
+                    data_testid=f"compare-face-header-{fi}",
+                )
+            )
+        face_section_parts.extend(target_rows)
+
+        parts.append(
+            Div(
+                *face_section_parts,
+                cls="p-4 bg-slate-800/50 rounded-lg border border-slate-700/30 space-y-2 compare-section-animate",
+                id=f"compare-face-section-{fi}",
+                data_testid=f"compare-face-section-{fi}",
+                style=f"animation-delay: {fi * 100}ms",
+            )
+        )
+
+    # Share + try again footer
+    share_url = f"{SITE_URL}/compare/result/{rid}"
+    parts.append(
+        Div(
+            A("Share this comparison", href=share_url, target="_blank",
+              cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+            Button("Try another comparison", onclick="location.href='/compare'",
+                   cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors"),
+            cls="flex gap-3 justify-center flex-wrap mt-6",
+            data_testid="compare-results-actions",
+        )
+    )
+
+    return Div(*parts, id="compare-results-area", cls="space-y-4",
+               data_testid="compare-results-area")
+
+
+@rt("/api/compare/search-unified")
+def get(q: str = "", types: str = "person,photo", sess=None):
+    """Unified search across people and photos for the comparison workspace.
+
+    Returns type-badged results with preview images.
+    """
+    if len(q.strip()) < 2:
+        return Div(id="compare-search-results")
+
+    query = q.strip()
+    type_list = [t.strip() for t in types.split(",")]
+    results_html = []
+
+    _build_caches()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    # Search people (all states: CONFIRMED, PROPOSED, INBOX)
+    if "person" in type_list:
+        for state in [IdentityState.CONFIRMED, IdentityState.PROPOSED, IdentityState.INBOX]:
+            identities = registry.list_identities(state=state)
+            for ident in identities:
+                if ident.get("merged_into"):
+                    continue
+                name = ident.get("name", "")
+                if query.lower() not in name.lower():
+                    continue
+                iid = ident["identity_id"]
+                state_str = ident.get("state", "INBOX")
+                all_fids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+                preview_fid = ""
+                if all_fids:
+                    entry = all_fids[0]
+                    preview_fid = entry if isinstance(entry, str) else entry.get("face_id", "")
+                crop_url = _resolve_crop_url(preview_fid, crop_files)
+
+                state_badge_cls = {
+                    "CONFIRMED": "bg-emerald-900/50 text-emerald-400",
+                    "PROPOSED": "bg-amber-900/50 text-amber-400",
+                    "INBOX": "bg-slate-700 text-slate-400",
+                }.get(state_str, "bg-slate-700 text-slate-400")
+                state_label = {
+                    "CONFIRMED": "Confirmed",
+                    "PROPOSED": "Proposed",
+                    "INBOX": "Unidentified",
+                }.get(state_str, state_str)
+
+                face_count = len(all_fids)
+
+                results_html.append(
+                    Div(
+                        Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600",
+                            alt=name) if crop_url else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                        Div(
+                            Span(ensure_utf8_display(name), cls="text-sm text-white font-medium truncate block"),
+                            Div(
+                                Span("Person", cls="text-[10px] bg-indigo-900/50 text-indigo-400 px-1.5 py-0.5 rounded"),
+                                Span(state_label, cls=f"text-[10px] {state_badge_cls} px-1.5 py-0.5 rounded"),
+                                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"),
+                                cls="flex items-center gap-1.5 mt-0.5",
+                            ),
+                            cls="min-w-0 flex-1",
+                        ),
+                        cls="flex items-center gap-3 p-2 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors",
+                        data_entity_type="person",
+                        data_entity_id=iid,
+                        data_entity_name=ensure_utf8_display(name),
+                        data_entity_crop=crop_url or "",
+                        data_testid=f"search-result-person-{iid}",
+                        data_action="select-compare-target",
+                    )
+                )
+
+    # Search photos
+    if "photo" in type_list and _photo_cache:
+        for pid, pmeta in _photo_cache.items():
+            fname = pmeta.get("filename") or pmeta.get("path", "")
+            collection = pmeta.get("collection", "")
+            face_ids = pmeta.get("face_ids", [])
+            searchable = f"{fname} {collection}".lower()
+            if query.lower() not in searchable:
+                continue
+            photo_url = storage.get_photo_url(fname) if fname else ""
+            face_count = len(face_ids)
+
+            results_html.append(
+                Div(
+                    Img(src=photo_url, cls="w-10 h-10 rounded object-cover border border-slate-600",
+                        alt=fname) if photo_url else Div(cls="w-10 h-10 rounded bg-slate-700"),
+                    Div(
+                        Span(fname[:30] + ("..." if len(fname) > 30 else ""), cls="text-sm text-white font-medium truncate block"),
+                        Div(
+                            Span("Photo", cls="text-[10px] bg-purple-900/50 text-purple-400 px-1.5 py-0.5 rounded"),
+                            Span(collection[:20] if collection else "No collection", cls="text-[10px] text-slate-500 truncate"),
+                            Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"),
+                            cls="flex items-center gap-1.5 mt-0.5",
+                        ),
+                        cls="min-w-0 flex-1",
+                    ),
+                    cls="flex items-center gap-3 p-2 hover:bg-slate-700/50 rounded-lg cursor-pointer transition-colors",
+                    data_entity_type="photo",
+                    data_entity_id=pid,
+                    data_entity_name=fname,
+                    data_entity_crop=photo_url or "",
+                    data_testid=f"search-result-photo-{pid}",
+                    data_action="select-compare-target",
+                )
+            )
+
+    if not results_html:
+        return Div(P("No results found.", cls="text-sm text-slate-500 py-2"),
+                   id="compare-search-results")
+
+    # Limit to 10 results
+    return Div(*results_html[:10], id="compare-search-results",
+               cls="space-y-1 max-h-64 overflow-y-auto")
+
+
+@rt("/api/compare/find-similar-targets")
+def get(identity_id: str = "", face_id: str = "", sess=None):
+    """Find visually similar people to auto-populate target pills.
+
+    Returns target entities as pills for the comparison workspace.
+    """
+    _build_caches()
+    face_data = get_face_data()
+    registry = load_registry()
+    crop_files = get_crop_files()
+
+    query_emb = None
+    if face_id and face_id in face_data:
+        query_emb = face_data[face_id]["mu"]
+    elif identity_id:
+        try:
+            ident = registry.get_identity(identity_id)
+        except (KeyError, Exception):
+            ident = None
+        if ident:
+            fids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+            for entry in fids:
+                fid = entry if isinstance(entry, str) else entry.get("face_id", "")
+                if fid in face_data:
+                    query_emb = face_data[fid]["mu"]
+                    break
+
+    if query_emb is None:
+        return Div(P("No embedding found.", cls="text-sm text-slate-500"), id="compare-similar-results")
+
+    from core.neighbors import find_similar_faces
+    results = find_similar_faces(query_emb, face_data, registry=registry, limit=5)
+
+    pills = []
+    seen_ids = set()
+    for r in results:
+        iid = r.get("identity_id", "")
+        if not iid or iid in seen_ids:
+            continue
+        seen_ids.add(iid)
+        name = ensure_utf8_display(r.get("identity_name", "Unknown"))
+        crop_url = _resolve_crop_url(r["face_id"], crop_files)
+
+        pills.append(
+            Div(
+                Img(src=crop_url, cls="w-6 h-6 rounded-full object-cover", alt=name) if crop_url else None,
+                Span(name, cls="text-xs text-white truncate max-w-[100px]"),
+                Span(f"{r.get('confidence_pct', 0)}%", cls="text-[10px] text-slate-400"),
+                data_entity_type="person",
+                data_entity_id=iid,
+                data_entity_name=name,
+                data_entity_crop=crop_url or "",
+                data_action="select-compare-target",
+                cls="flex items-center gap-1.5 px-2 py-1 bg-slate-700 rounded-full cursor-pointer hover:bg-slate-600 transition-colors",
+                data_testid=f"similar-target-{iid}",
+            )
+        )
+
+    if not pills:
+        return Div(P("No similar people found.", cls="text-sm text-slate-500"), id="compare-similar-results")
+
+    return Div(
+        P("Visually similar people:", cls="text-xs text-slate-400 mb-2"),
+        Div(*pills, cls="flex flex-wrap gap-2"),
+        id="compare-similar-results",
+        data_testid="compare-similar-results",
     )
 
 

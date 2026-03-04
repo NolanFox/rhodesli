@@ -242,7 +242,8 @@ class TestCompareRouteTiers:
         assert "compare-results" in resp.text
 
     def test_compare_results_have_data_tier_attr(self):
-        """Compare result cards have data-tier attributes."""
+        """Compare result cards via API have tier-based styling."""
+        # New workspace: results come from /api/compare endpoint, not inline
         from app.main import load_registry, get_face_data
         registry = load_registry()
         face_data = get_face_data()
@@ -262,11 +263,12 @@ class TestCompareRouteTiers:
         if not test_fid:
             pytest.skip("No face with embeddings found")
 
-        resp = self.client.get(f"/compare?face_id={test_fid}")
+        # Test via the API endpoint instead
+        resp = self.client.get(f"/api/compare?face_id={test_fid}")
         assert "data-tier=" in resp.text
 
     def test_compare_results_include_person_links(self):
-        """Confirmed identity results include person page links."""
+        """Compare API results include person page links."""
         from app.main import load_registry, get_face_data
         registry = load_registry()
         face_data = get_face_data()
@@ -286,12 +288,11 @@ class TestCompareRouteTiers:
         if not test_fid:
             pytest.skip("No face with embeddings found")
 
-        resp = self.client.get(f"/compare?face_id={test_fid}")
-        # Should include /person/ links for confirmed identities
+        resp = self.client.get(f"/api/compare?face_id={test_fid}")
         assert "/person/" in resp.text
 
     def test_compare_results_include_timeline_links(self):
-        """Confirmed identity results include timeline links."""
+        """Compare API results include timeline links for confirmed identities."""
         from app.main import load_registry, get_face_data
         registry = load_registry()
         face_data = get_face_data()
@@ -311,7 +312,8 @@ class TestCompareRouteTiers:
         if not test_fid:
             pytest.skip("No face with embeddings found")
 
-        resp = self.client.get(f"/compare?face_id={test_fid}")
+        # Timeline links are in the old API results (kept for backward compat)
+        resp = self.client.get(f"/api/compare?face_id={test_fid}")
         assert "/timeline?" in resp.text
 
 
@@ -362,13 +364,13 @@ class TestUploadPersistence:
             assert loaded_meta["top_match"]["identity_name"] == "Test Person"
 
     def test_upload_area_exists_on_compare_page(self):
-        """Compare page has upload form."""
+        """Compare workspace has upload form in source slot."""
         from starlette.testclient import TestClient
         from app.main import app
         client = TestClient(app)
         resp = client.get("/compare")
-        assert "upload-form" in resp.text
-        assert "upload-area" in resp.text
+        assert "ws-upload-form" in resp.text or "upload-form" in resp.text
+        assert "source-slot" in resp.text
 
     def test_upload_without_file_returns_error(self):
         """POST /api/compare/upload without file returns error."""
@@ -900,9 +902,9 @@ class TestProductionUploadGracefulDegradation:
             pass  # Covered by integration test below
 
     def test_upload_area_has_data_testid(self):
-        """Compare page upload area has the expected testid."""
+        """Compare workspace has source-slot testid."""
         from starlette.testclient import TestClient
         from app.main import app
         client = TestClient(app)
         resp = client.get("/compare")
-        assert "upload-area" in resp.text
+        assert "source-slot" in resp.text
