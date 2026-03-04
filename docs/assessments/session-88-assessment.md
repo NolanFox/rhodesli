@@ -25,6 +25,21 @@ Predecessor: Session 87 (v0.91.0)
 ## Deferred
 - None. All 5 fixes from the prompt shipped.
 
+## Harness Research Phase (same session, separate conversation)
+- [x] **ECC Evaluation** — Full analysis of affaan-m/everything-claude-code (50+ skills, 14 agents, 35 commands)
+- [x] **PR #5 Closed** — Codex couldn't access external repo, analysis was internal-only
+- [x] **HD-024 Implemented** — 6 improvements on branch `session-88/harness-improvements`:
+  1. Post-edit ruff auto-format hook
+  2. Dynamic session hooks (replaced hardcoded session-81)
+  3. Debug statement audit in Stop hook
+  4. Unified test gate script (`scripts/test-gate.sh`)
+  5. `/simplify` enforcement in session-run.md
+  6. `/verify` skill for test-fix loops
+- Branch ready to merge: `session-88/harness-improvements` (worktree at `.claude/worktrees/harness-improvements`)
+
 ## Next Session Should Verify
-1. Run a multi-face photo comparison in browser to visually confirm accordion headers
-2. Verify scoring consistency on New Matches page (not just Discoveries)
+1. Merge `session-88/harness-improvements` branch to main
+2. Verify ruff format hook triggers on Python file edits
+3. Verify post-commit gate shows dynamic session number
+4. Run a multi-face photo comparison in browser to visually confirm accordion headers
+5. Verify scoring consistency on New Matches page (not just Discoveries)
