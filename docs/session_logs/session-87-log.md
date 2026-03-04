@@ -10,7 +10,7 @@ Context: docs/session_context/session-87-context.md
 - [x] Act 4: Shareable Result Page Overhaul
 - [x] Act 5: Discoveries Page Improvements
 - [x] Act 6: Fix Identity Card Navigation & Actions
-- [ ] Act 7: Verification & Session Close
+- [x] Act 7: Verification & Session Close
 
 ## Verification Gate
 - [x] All acts re-checked against original prompt
