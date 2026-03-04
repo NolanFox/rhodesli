@@ -336,12 +336,9 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
     kinship_data = _load_kinship_thresholds()
     sp_stats = kinship_data.get("same_person") if kinship_data else None
 
-    # Batch calibrated scoring (AD-126) — optional enhancement
-    from core.confidence import compute_face_confidence, calibrated_similarity_batch_unified
+    # Unified confidence scoring (AD-200) — single path via compute_face_confidence
+    from core.confidence import compute_face_confidence
     top_indices = sorted_indices[:limit]
-    calibrated_scores = calibrated_similarity_batch_unified(
-        query.flatten(), candidate_matrix[top_indices]
-    ) if len(top_indices) > 0 else None
 
     results = []
     for i, idx in enumerate(top_indices):
@@ -349,31 +346,18 @@ def find_similar_faces(query_embedding, face_data, registry=None, limit=20, excl
         dist = float(dists[idx])
         ident_info = face_to_identity.get(fid, {})
 
-        # Unified confidence scoring (AD-200)
         conf = compute_face_confidence(dist, sp_stats)
-        tier = conf["tier"]
-        confidence_pct = conf["confidence_pct"]
-        # Map tier to legacy confidence label for backward compat
-        confidence = conf["short_label"].upper()
-
-        # Override pct with batch calibrator if available (more efficient)
-        cal_score = None
-        if calibrated_scores is not None:
-            cal_score = float(calibrated_scores[i])
-            confidence_pct = max(1, min(99, int(cal_score * 100)))
 
         result = {
             "face_id": fid,
             "distance": dist,
-            "tier": tier,
-            "confidence": confidence,
-            "confidence_pct": confidence_pct,
+            "tier": conf["tier"],
+            "confidence": conf["short_label"].upper(),
+            "confidence_pct": conf["confidence_pct"],
             "identity_id": ident_info.get("identity_id", ""),
             "identity_name": ident_info.get("name", "Unknown"),
             "state": ident_info.get("state", "INBOX"),
         }
-        if cal_score is not None:
-            result["calibrated_score"] = round(cal_score, 4)
 
         results.append(result)
 

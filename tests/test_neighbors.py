@@ -455,37 +455,22 @@ class TestFindSimilarFaces:
             # No calibrated_score when model unavailable
             assert "calibrated_score" not in r
 
-    def test_calibration_scores_when_available(self):
-        """When calibration model is available, results include calibrated_score."""
-        from unittest.mock import patch
+    def test_no_batch_calibrator_override(self):
+        """Session 88: batch calibrator removed — results use unified scoring only."""
         from core.neighbors import find_similar_faces
         face_data = self._make_face_data(10)
         query = face_data["face_0"]["mu"]
 
-        mock_scores = np.array([0.95, 0.8, 0.6, 0.4, 0.3, 0.2, 0.1, 0.05, 0.02])
-
-        def mock_batch(q, c):
-            return mock_scores[:len(c)]
-
-        with patch(
-            "core.neighbors.calibrated_similarity_batch",
-            side_effect=mock_batch,
-            create=True,
-        ):
-            # Patch at the import site
-            import core.neighbors as cn
-            original_code = cn.find_similar_faces
-            # We need to mock the import inside find_similar_faces
-            with patch(
-                "rhodesli_ml.calibration.inference.calibrated_similarity_batch",
-                side_effect=mock_batch,
-            ):
-                results = find_similar_faces(query, face_data, exclude_face_ids={"face_0"})
+        results = find_similar_faces(query, face_data, exclude_face_ids={"face_0"})
 
         assert len(results) > 0
         for r in results:
-            assert "calibrated_score" in r
-            assert 0 <= r["calibrated_score"] <= 1
+            # No calibrated_score field — unified scoring only
+            assert "calibrated_score" not in r
+            # Standard fields present
+            assert "confidence_pct" in r
+            assert "tier" in r
+            assert 1 <= r["confidence_pct"] <= 99
 
     def test_identical_embedding_high_confidence(self):
         """A face compared to itself (clone) should have high confidence."""

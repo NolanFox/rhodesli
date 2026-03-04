@@ -4,14 +4,17 @@ Single source of truth for converting Euclidean face distances
 to confidence percentages, tiers, labels, and colors.
 
 Replaces 6+ divergent scoring paths (AD-200).
+Fixed in Session 88: isotonic too coarse for continuous display,
+sigmoid CDF with empirical stats gives proper granularity.
 
 Priority chain:
-  1. Calibrated similarity (isotonic regression model)
-  2. Sigmoid CDF with empirical same_person stats
-  3. Linear fallback
+  1. Sigmoid CDF with empirical same_person stats (best granularity)
+  2. Linear fallback
 """
 
+import json
 import numpy as np
+from pathlib import Path
 from typing import Optional
 
 # Tier boundaries based on confidence_pct (AD-091)
@@ -19,41 +22,31 @@ TIER_STRONG = 85
 TIER_POSSIBLE = 70
 TIER_SIMILAR = 50
 
-# Cached calibrator instances
-_calibrator = None
-_calibrator_loaded = False
-_batch_calibrator_available = None
+# Cached same_person stats from kinship thresholds
+_same_person_stats = None
+_same_person_stats_loaded = False
 
 
-def _get_calibrator():
-    """Lazy-load the SimilarityCalibrator (isotonic regression)."""
-    global _calibrator, _calibrator_loaded
-    if _calibrator_loaded:
-        return _calibrator
+def _get_same_person_stats() -> Optional[dict]:
+    """Lazy-load same_person distribution stats from kinship thresholds."""
+    global _same_person_stats, _same_person_stats_loaded
+    if _same_person_stats_loaded:
+        return _same_person_stats
+    _same_person_stats_loaded = True
     try:
-        from rhodesli_ml.similarity_calibration import SimilarityCalibrator
-        cal = SimilarityCalibrator()
-        # Verify it can predict
-        test_result = cal.predict(0.5)
-        if test_result is not None:
-            _calibrator = cal
+        thresholds_path = (
+            Path(__file__).resolve().parent.parent
+            / "rhodesli_ml" / "data" / "model_comparisons" / "kinship_thresholds.json"
+        )
+        if thresholds_path.exists():
+            with open(thresholds_path) as f:
+                data = json.load(f)
+            sp = data.get("same_person")
+            if sp and sp.get("n", 0) > 0 and sp.get("std", 0) > 0:
+                _same_person_stats = sp
     except Exception:
         pass
-    _calibrator_loaded = True
-    return _calibrator
-
-
-def _get_batch_calibrator():
-    """Check if batch calibration (ONNX/PyTorch) is available."""
-    global _batch_calibrator_available
-    if _batch_calibrator_available is not None:
-        return _batch_calibrator_available
-    try:
-        from rhodesli_ml.calibration.inference import is_calibration_available
-        _batch_calibrator_available = is_calibration_available()
-    except Exception:
-        _batch_calibrator_available = False
-    return _batch_calibrator_available
+    return _same_person_stats
 
 
 def distance_to_cosine_sim(distance: float) -> float:
@@ -88,28 +81,27 @@ def compute_confidence_pct(
 
 
 def _compute_pct(distance: float, same_person_stats: Optional[dict]) -> int:
-    """Core percentage computation with priority chain."""
-    # 1. Try isotonic calibrator
-    cal = _get_calibrator()
-    if cal is not None:
-        cosine_sim = distance_to_cosine_sim(distance)
-        try:
-            prob = cal.predict(cosine_sim)
-            if prob is not None:
-                return max(1, min(99, int(prob * 100)))
-        except Exception:
-            pass
+    """Core percentage computation with priority chain.
 
-    # 2. Try sigmoid CDF with empirical stats
-    if same_person_stats and same_person_stats.get("n", 0) > 0:
-        mean = same_person_stats.get("mean", 0)
-        std = same_person_stats.get("std", 0)
+    Session 88: Sigmoid CDF with empirical stats gives best granularity
+    for continuous display. Isotonic calibrator (10 breakpoints) was too
+    coarse — gave 99% for everything above distance ~1.22.
+    """
+    # Use caller-provided stats or load from kinship thresholds
+    stats = same_person_stats
+    if stats is None:
+        stats = _get_same_person_stats()
+
+    # 1. Sigmoid CDF with empirical same_person distribution
+    if stats and stats.get("n", 0) > 0:
+        mean = stats.get("mean", 0)
+        std = stats.get("std", 0)
         if std > 0:
             z = (distance - mean) / (std * 1.5)
             prob = 1.0 / (1.0 + np.exp(z))
             return max(1, min(99, int(prob * 100)))
 
-    # 3. Linear fallback
+    # 2. Linear fallback
     return max(1, min(99, int((2.0 - distance) / 2.0 * 100)))
 
 
@@ -171,16 +163,3 @@ def confidence_tier_with_dots(distance: float) -> tuple:
     return (result["short_label"], result["tier_color"], result["dots"])
 
 
-def calibrated_similarity_batch_unified(query_emb, candidate_embs):
-    """Batch calibrated scoring — wraps the ML calibration module.
-
-    Returns (N,) array of probabilities, or None if unavailable.
-    Used by neighbors.py for batch scoring.
-    """
-    if not _get_batch_calibrator():
-        return None
-    try:
-        from rhodesli_ml.calibration.inference import calibrated_similarity_batch
-        return calibrated_similarity_batch(query_emb, candidate_embs)
-    except Exception:
-        return None

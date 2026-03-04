@@ -211,9 +211,11 @@ class TestConfidenceCalculation:
         resp = client.get("/api/match/next-pair")
         html = resp.text
 
-        # 0.5 distance → (1 - 0.5/2.0) * 100 = 75%
-        assert "75%" in html
-        assert "High" in html or "emerald" in html
+        # 0.5 distance → sigmoid CDF with empirical stats → ~86%
+        # (was 75% with linear fallback pre-Session 88)
+        from core.confidence import compute_confidence_pct
+        expected_pct = compute_confidence_pct(0.5)
+        assert f"{expected_pct}%" in html
 
 
 class TestMatchModeFilters:

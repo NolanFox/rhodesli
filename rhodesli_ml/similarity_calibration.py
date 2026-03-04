@@ -369,12 +369,19 @@ class SimilarityCalibrator:
             # Reconstruct isotonic regression from thresholds
             if self._model.iso_X and self._model.iso_y:
                 from sklearn.isotonic import IsotonicRegression
+                from scipy.interpolate import interp1d
                 iso = IsotonicRegression(y_min=0, y_max=1, out_of_bounds='clip')
                 iso.X_thresholds_ = np.array(self._model.iso_X)
                 iso.y_thresholds_ = np.array(self._model.iso_y)
                 iso.X_min_ = iso.X_thresholds_[0]
                 iso.X_max_ = iso.X_thresholds_[-1]
-                iso.f_ = None  # Will use threshold-based prediction
+                iso.increasing_ = True
+                # Rebuild the interpolation function that sklearn needs
+                iso.f_ = interp1d(
+                    iso.X_thresholds_, iso.y_thresholds_,
+                    kind='linear', bounds_error=False,
+                    fill_value=(iso.y_thresholds_[0], iso.y_thresholds_[-1]),
+                )
                 self._iso_reg = iso
 
             logger.info(f"Loaded calibration model v{self._model.version}")
