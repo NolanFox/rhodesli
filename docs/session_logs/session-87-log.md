@@ -4,12 +4,12 @@ Prompt: docs/prompts/session-87-prompt.md
 Context: docs/session_context/session-87-context.md
 
 ## Act Checklist
-- [ ] Act 1: Orient & Setup
+- [x] Act 1: Orient & Setup
 - [x] Act 2: Unify Confidence Scoring (AD-200)
-- [ ] Act 3: Compare "Best Matches" Summary View
-- [ ] Act 4: Shareable Result Page Overhaul
-- [ ] Act 5: Discoveries Page Improvements
-- [ ] Act 6: Fix Identity Card Navigation & Actions
+- [x] Act 3: Compare "Best Matches" Summary View
+- [x] Act 4: Shareable Result Page Overhaul
+- [x] Act 5: Discoveries Page Improvements
+- [x] Act 6: Fix Identity Card Navigation & Actions
 - [ ] Act 7: Verification & Session Close
 
 ## Verification Gate
@@ -41,11 +41,37 @@ Context: docs/session_context/session-87-context.md
 - 4 commits: 74aaa10, c856ec3, b3808c6, 63cccda
 
 ## Act 3: Compare Summary View
+- Completed: 2026-03-04 (Track A worktree subagent)
+- New _compare_summary_section() collects matches across all faces >= 40%
+- Sort by confidence desc, CONFIRMED first
+- Each card: source 150px + match 150px, confidence badge, name, share
+- Admin: Confirm / Not Same buttons
+- 8 new tests
+- Commit: c80775f (cherry-picked as 6af4ca6)
 
 ## Act 4: Shareable Result Page
+- Completed: 2026-03-04 (Track A worktree subagent)
+- Hero redesign: 200px side-by-side, "Could this be [Name]?" framing
+- Removed raw distance from community page
+- Better empty state messaging
+- OG tags: "Could this be [Name]? N% match in Rhodes Archive"
+- 5 new tests
+- Commits: cb6892e, a5eae39 (cherry-picked as 9cf1023, d6be81f)
 
 ## Act 5: Discoveries Improvements
+- Completed: 2026-03-04 (Track B worktree subagent)
+- Sort by confidence_pct descending using unified scoring
+- Filter controls: photo dropdown, confidence buttons (Strong/Possible/All)
+- HTMX query params for filtering
+- Inline compare link, rounded-lg faces, 112px images, confidence_pct shown
+- 15 new tests
+- Commits: 19810a1, 53d8a13
 
 ## Act 6: Identity Card Fixes
+- Completed: 2026-03-04 (Track B worktree subagent)
+- "Faces" button on identity cards with >1 face
+- Detach button always visible (not hover-only) for admin
+- Commit: ff96e28
 
 ## Act 7: Verification & Close
+- Pending — will execute after /clear
