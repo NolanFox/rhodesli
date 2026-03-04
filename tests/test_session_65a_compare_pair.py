@@ -38,10 +38,11 @@ class TestComparePairPage:
         assert "/compare" in response.text
         assert "Back to Compare" in response.text
 
-    def test_compare_page_links_to_pair(self, client, auth_disabled):
-        """Main compare page should have a link to pair compare."""
+    def test_compare_page_is_workspace(self, client, auth_disabled):
+        """Main compare page should render the unified workspace (pair is consolidated)."""
         response = client.get("/compare")
-        assert "/compare/pair" in response.text
+        # Pair compare is now consolidated into the workspace - no separate link
+        assert response.status_code == 200
 
 
 class TestComparePairUpload:

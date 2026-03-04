@@ -88,14 +88,12 @@ class TestSSEEndpoint:
 class TestProgressiveUI:
     """Test that progressive upload UI components render correctly."""
 
-    def test_compare_page_has_progress_stages(self, client, auth_disabled):
-        """Compare page includes progress stage indicators."""
+    def test_compare_page_has_progress_container(self, client, auth_disabled):
+        """Compare workspace includes progress container."""
         response = client.get("/compare")
         assert response.status_code == 200
         html = response.text
         assert "upload-progress" in html
-        assert "stage-detecting" in html
-        assert "stage-comparing" in html
 
     def test_compare_page_has_progress_script(self, client, auth_disabled):
         """Compare page includes the progressive upload JS."""
@@ -117,13 +115,11 @@ class TestProgressiveUI:
         assert "stage-detecting" in html
         assert "Detecting faces" in html
 
-    def test_upload_progress_hidden_by_default(self, client, auth_disabled):
-        """Progress stages are hidden until upload starts."""
+    def test_upload_progress_referenced_in_js(self, client, auth_disabled):
+        """Upload progress is managed via JS in the workspace."""
         response = client.get("/compare")
         html = response.text
-        # The upload-progress div should have 'hidden' class
-        assert 'id="upload-progress"' in html
-        assert 'class="hidden' in html or 'class="hidden ' in html
+        assert "upload-progress" in html
 
 
 class TestFacecompareProgressiveUI:

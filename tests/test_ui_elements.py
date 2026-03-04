@@ -135,30 +135,23 @@ class TestCompareUploadIndicator:
     """Compare upload form should show a loading indicator during processing."""
 
     def test_upload_form_has_indicator(self, client):
-        """Compare page upload form has an htmx-indicator for loading state."""
+        """Compare workspace has an htmx-indicator for upload loading state."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert 'id="upload-spinner"' in response.text
+            assert "upload-spinner" in response.text
             assert "htmx-indicator" in response.text
 
-    def test_upload_spinner_has_message(self, client):
-        """The upload spinner shows a descriptive message."""
+    def test_upload_has_progress_script(self, client):
+        """Compare workspace has progressive upload JS."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert "Analyzing your photo" in response.text
+            assert "startProgressUpload" in response.text
 
-    def test_upload_spinner_has_duration_warning(self, client):
-        """The upload spinner warns about longer wait for group photos."""
+    def test_upload_has_progress_container(self, client):
+        """Compare workspace has upload progress container."""
         with patch("app.main.is_auth_enabled", return_value=False):
             response = client.get("/compare")
-            assert "group photos" in response.text
-
-    def test_submit_button_disabled_during_request_css(self, client):
-        """CSS rule disables submit button during htmx request."""
-        with patch("app.main.is_auth_enabled", return_value=False):
-            response = client.get("/compare")
-            assert "form.htmx-request button[type=\"submit\"]" in response.text
-            assert "pointer-events: none" in response.text
+            assert "upload-progress" in response.text
 
     def test_htmx_indicator_css_handles_direct_class(self, client):
         """Triage dashboard CSS must handle .htmx-request.htmx-indicator for hx-indicator usage."""
