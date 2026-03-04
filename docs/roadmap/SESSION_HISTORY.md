@@ -394,6 +394,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 87: Compare & Discoveries UX Overhaul (2026-03-04) — v0.91.0
+- AD-200: Unified confidence scoring — single core/confidence.py replaces 12+ divergent scoring paths
+- Compare best-matches summary section (top matches across all faces >= 40%)
+- Shareable result page: 200px hero, "Could this be [Name]?" framing, improved OG tags
+- Discoveries: sort by confidence, filter by tier + photo, inline Compare link, 112px images
+- Identity cards: "Faces (N)" button, always-visible detach for admin
+- 63 new tests, parallel worktree execution (Track A + Track B)
+
 ## Session 86b: Route Extraction + Deferred UX Fixes (2026-03-04) — v0.90.0
 - Extracted compare routes (4,642 lines) and estimate routes (739 lines) from app/main.py
 - app/main.py reduced from ~35,800 to ~30,573 lines

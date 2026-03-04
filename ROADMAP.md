@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.90.0 · ~4059 tests · 274 photos · 665 identities · 60 confirmed
+Current: v0.91.0 · ~4122 tests · 274 photos · 665 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -68,6 +68,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-04: **v0.91.0 — Session 87**: Compare & Discoveries UX Overhaul. AD-200: Unified confidence scoring (12+ paths → 1). Compare best-matches summary. Shareable result "Could this be [Name]?" redesign. Discoveries sort/filter by confidence + photo. Identity card "Faces" button + visible detach. 63 new tests. ~4122 tests.
 - [x] 2026-03-04: **v0.90.0 — Session 86b**: Route Extraction + Deferred UX Fixes. Extracted compare (4,642 lines) and estimate (739 lines) routes from main.py. UX-038: merged identity POST guards (~15 routes). UX-053/056/057: estimate photo preview, CTAs, form reset. Deploy fix for FastHTML serve() duplicate module. 13 new tests. ~4059 tests.
 - [x] 2026-03-04: **v0.89.0 — Session 86**: P1 UX Fixes + MLS Experiment + Gemini Completion. Merge confirmation dialogs (UX-037). Person page inline admin controls (UX-039). Confirmed face labels visible for all users. Connected navigation (person→tree/map/timeline/compare). MLS vs Euclidean resolved: Euclidean wins AUC 0.9903 vs 0.9454 (AD-027). Gemini 271/271 complete. app/utils.py extraction. 38+ new tests. ~4023 tests.
 - [x] 2026-03-03: **v0.88.0 — Session 85c**: Universal Comparison Workspace. Two-slot design (Source + Compare With), all entity combinations, multi-target (up to 5), unified search (people + photos), per-match context (target's best %, rank), CSS animations (bar glow, skeleton loading, face collapse), backward-compat URLs. PRD-026. 36 new tests (99 total compare). Browser verified 14/14 PASS. ~3985 tests.

@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.91.0] — 2026-03-04 (Session 87: Compare & Discoveries UX Overhaul)
+
+### Added
+- **AD-200: Unified Confidence Scoring** — Single `core/confidence.py` replaces 12+ divergent scoring paths. Priority chain: calibrator → sigmoid CDF → linear fallback.
+- **Compare Best Matches Summary** — New summary section collecting top matches across all faces (>= 40%), sorted by confidence descending, CONFIRMED first. 150px face images.
+- **Discoveries Filters** — Sort by confidence, filter by tier (Strong 70%+/Possible 50%+/All) and by photo. Inline "Compare" link.
+- **Identity Card "Faces" Button** — Multi-face identities show "Faces (N)" button. Detach button always visible for admin.
+
+### Changed
+- **Shareable Result Page** — 200px hero faces, "Could this be [Name]?" positive framing, improved OG tags for Facebook sharing
+- **Discoveries images** — 112px rounded-lg faces (up from small rounded-full), confidence percentage shown numerically
+- **Compare images** — Result cards 80→112px, per-face header 56→80px, rounded-lg instead of rounded-full
+
+### Fixed
+- Same distance (1.13) now produces identical confidence_pct everywhere (was 62% vs 48% depending on path)
+
 ## [v0.90.0] — 2026-03-04 (Session 86b: Route Extraction + Deferred UX Fixes)
 
 ### Changed

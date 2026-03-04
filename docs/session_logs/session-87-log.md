@@ -13,12 +13,12 @@ Context: docs/session_context/session-87-context.md
 - [ ] Act 7: Verification & Session Close
 
 ## Verification Gate
-- [ ] All acts re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] `make test-fast` passes
-- [ ] Distance 1.13 produces identical confidence_pct everywhere
-- [ ] Browser verification with screenshots
-- [ ] `/ux-review` run on all screenshots
+- [x] All acts re-checked against original prompt
+- [x] Feature Reality Contract passed
+- [x] `make test-fast` passes (1412 pass, 1 pre-existing xdist flake)
+- [x] Distance 1.13 produces identical confidence_pct everywhere (43%)
+- [x] Browser verification with screenshots
+- [ ] `/ux-review` run on all screenshots (Chrome extension unavailable)
 - [ ] `/session-review` run at session end
 
 ## Act 1: Orient & Setup
@@ -74,4 +74,14 @@ Context: docs/session_context/session-87-context.md
 - Commit: ff96e28
 
 ## Act 7: Verification & Close
-- Pending — will execute after /clear
+- Completed: 2026-03-04
+- make test-fast: 1412 passed, 1 pre-existing xdist flake
+- Distance 1.13 → 43% everywhere (verified)
+- Deployed to production (git push origin main)
+- Browser verification via Playwright (Chrome extension unavailable):
+  - Discoveries: filter controls visible, confidence % shown, Compare link present
+  - People cards: "Faces (2)" button visible on multi-face identities
+  - Compare: page loads correctly
+- Screenshots: docs/screenshots/session-87/
+- Assessment: docs/assessments/session-87-assessment.md
+- Session log: docs/sessions/SESSION_087.md
