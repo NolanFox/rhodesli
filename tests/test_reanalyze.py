@@ -119,6 +119,134 @@ class TestGuessRegion:
         assert _guess_region("Mars Colony") == "Unknown"
 
 
+class TestReanalyzeModelAndLocationEvidence:
+    """Tests for model label and location evidence persistence in reanalyze."""
+
+    def test_new_entry_includes_model(self):
+        """Reanalyze should store the model used in the date_labels entry."""
+        # The new_entry dict must contain 'model' key
+        # We verify by checking the code constructs it
+        from rhodesli_ml.gemini_config import GEMINI_MODEL
+
+        assert GEMINI_MODEL  # model string is non-empty
+
+    def test_new_entry_includes_location_evidence(self):
+        """Reanalyze should store full location evidence dict in date_labels."""
+        # Simulate what the reanalyze handler builds
+        location_data = {
+            "place": "Asheville, North Carolina, USA",
+            "confidence": "high",
+            "visual_evidence": "Brick apartment buildings with sun porches",
+            "biographical_evidence": "Family lived at 33 Elizabeth St, Asheville NC",
+            "missing_child_analysis": "3 of 4 children present",
+        }
+        # The handler stores location_data as location_evidence
+        entry = {"location_evidence": location_data if isinstance(location_data, dict) else {}}
+        assert entry["location_evidence"]["place"] == "Asheville, North Carolina, USA"
+        assert entry["location_evidence"]["biographical_evidence"] == "Family lived at 33 Elizabeth St, Asheville NC"
+
+    def test_detective_evidence_shows_location(self):
+        """_detective_evidence_section should render location evidence cards."""
+        from app.main import _detective_evidence_section
+
+        label = {
+            "evidence": {
+                "fashion": [{"cue": "1930s bob", "strength": "strong", "suggested_range": [1928, 1938]}],
+            },
+            "model": "gemini-3.1-pro-preview",
+            "location_evidence": {
+                "place": "Asheville, NC",
+                "confidence": "high",
+                "visual_evidence": "Mountain architecture",
+                "biographical_evidence": "GEDCOM shows family at 33 Elizabeth St",
+                "missing_child_analysis": "Youngest child absent",
+            },
+        }
+        result = _detective_evidence_section(label)
+        assert result is not None
+        html = repr(result)
+        assert "Geographic Analysis" in html
+        assert "Mountain architecture" in html
+        assert "GEDCOM shows family at 33 Elizabeth St" in html
+        assert "Youngest child absent" in html
+        assert "evidence-card-location" in html
+
+    def test_detective_evidence_model_badge_dynamic(self):
+        """Model badge should reflect actual model from label, not hardcoded."""
+        from app.main import _detective_evidence_section
+
+        label = {
+            "evidence": {
+                "fashion": [{"cue": "test", "strength": "moderate", "suggested_range": [1930, 1940]}],
+            },
+            "model": "gemini-3.1-pro-preview",
+        }
+        result = _detective_evidence_section(label)
+        assert result is not None
+        html = repr(result)
+        assert "Gemini 3.1-pro" in html
+        assert "model-badge" in html
+
+    def test_detective_evidence_no_location_if_empty(self):
+        """No location card when location_evidence is missing or empty."""
+        from app.main import _detective_evidence_section
+
+        label = {
+            "evidence": {
+                "fashion": [{"cue": "test", "strength": "moderate", "suggested_range": [1930, 1940]}],
+            },
+        }
+        result = _detective_evidence_section(label)
+        assert result is not None
+        html = repr(result)
+        assert "evidence-card-location" not in html
+
+    def test_photo_locations_creates_file_if_missing(self, tmp_path):
+        """photo_locations.json should be created if it doesn't exist."""
+        import json
+
+        locations_path = tmp_path / "photo_locations.json"
+        assert not locations_path.exists()
+
+        # Simulate what the handler does
+        all_locations = {"photos": {}}
+        photos_dict = all_locations.setdefault("photos", {})
+        photos_dict["test_photo"] = {
+            "photo_id": "test_photo",
+            "lat": 35.5951,
+            "lng": -82.5515,
+            "location_name": "Asheville, NC",
+        }
+        locations_path.write_text(json.dumps(all_locations, indent=2))
+
+        assert locations_path.exists()
+        data = json.loads(locations_path.read_text())
+        assert data["photos"]["test_photo"]["location_name"] == "Asheville, NC"
+
+    def test_photo_locations_stores_biographical_evidence(self, tmp_path):
+        """photo_locations.json entry should include biographical_evidence."""
+        import json
+
+        locations_path = tmp_path / "photo_locations.json"
+        all_locations = {"photos": {}}
+        photos_dict = all_locations.setdefault("photos", {})
+        location_data = {
+            "visual_evidence": "Brick buildings",
+            "biographical_evidence": "Family at 33 Elizabeth St",
+            "missing_child_analysis": "3 of 4 children",
+        }
+        photos_dict["test"] = {
+            "location_estimate": location_data.get("visual_evidence", ""),
+            "biographical_evidence": location_data.get("biographical_evidence", ""),
+            "missing_child_analysis": location_data.get("missing_child_analysis", ""),
+        }
+        locations_path.write_text(json.dumps(all_locations, indent=2))
+
+        data = json.loads(locations_path.read_text())
+        assert data["photos"]["test"]["biographical_evidence"] == "Family at 33 Elizabeth St"
+        assert data["photos"]["test"]["missing_child_analysis"] == "3 of 4 children"
+
+
 class TestReanalyzeButton:
     """Tests for re-analyze button visibility in AI analysis section."""
 

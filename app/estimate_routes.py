@@ -1162,6 +1162,8 @@ async def post(photo_id: str, sess=None):
             all_labels = _json.loads(date_labels_path.read_text())
             # date_labels.json has schema_version + "labels" array
             labels_list = all_labels.get("labels", [])
+            from rhodesli_ml.gemini_config import GEMINI_MODEL as _reanalyze_model
+
             new_entry = {
                 "photo_id": photo_id,
                 "estimated_decade": new_decade,
@@ -1171,6 +1173,8 @@ async def post(photo_id: str, sess=None):
                 "reasoning_summary": result.get("reasoning_summary", ""),
                 "evidence": result.get("evidence", {}),
                 "location_estimate": new_location,
+                "model": _reanalyze_model,
+                "location_evidence": location_data if isinstance(location_data, dict) else {},
                 "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
                 "reanalyzed_with_gedcom": bool(gedcom_context),
             }
@@ -1193,28 +1197,32 @@ async def post(photo_id: str, sess=None):
     # Update photo_locations.json
     if new_location:
         locations_path = Path(DATA_DIR) / "photo_locations.json"
-        if locations_path.exists():
-            try:
+        try:
+            if locations_path.exists():
                 all_locations = _json.loads(locations_path.read_text())
-                # photo_locations.json has a "photos" envelope
-                photos_dict = all_locations.get("photos", all_locations)
-                # Try to geocode the new location
-                new_lat, new_lng = _geocode_location(new_location)
-                photos_dict[photo_id] = {
-                    "photo_id": photo_id,
-                    "lat": new_lat,
-                    "lng": new_lng,
-                    "location_name": new_location,
-                    "location_estimate": location_data.get("visual_evidence", ""),
-                    "confidence": location_data.get("confidence", "medium"),
-                    "region": _guess_region(new_location),
-                    "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
-                }
-                locations_path.write_text(_json.dumps(all_locations, indent=2, ensure_ascii=False))
-                # Invalidate cache
-                _main_mod._photo_locations_cache = None
-            except Exception as e:
-                logger.warning(f"Failed to update photo_locations.json: {e}")
+            else:
+                all_locations = {"photos": {}}
+            # photo_locations.json has a "photos" envelope
+            photos_dict = all_locations.setdefault("photos", {})
+            # Try to geocode the new location
+            new_lat, new_lng = _geocode_location(new_location)
+            photos_dict[photo_id] = {
+                "photo_id": photo_id,
+                "lat": new_lat,
+                "lng": new_lng,
+                "location_name": new_location,
+                "location_estimate": location_data.get("visual_evidence", ""),
+                "biographical_evidence": location_data.get("biographical_evidence", ""),
+                "missing_child_analysis": location_data.get("missing_child_analysis", ""),
+                "confidence": location_data.get("confidence", "medium"),
+                "region": _guess_region(new_location),
+                "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
+            }
+            locations_path.write_text(_json.dumps(all_locations, indent=2, ensure_ascii=False))
+            # Invalidate cache
+            _main_mod._photo_locations_cache = None
+        except Exception as e:
+            logger.warning(f"Failed to update photo_locations.json: {e}")
 
     # Build diff summary
     changes = []

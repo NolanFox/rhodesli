@@ -18659,6 +18659,54 @@ def _detective_evidence_section(label: dict) -> object:
         if card:
             cards.append(card)
 
+    # Location evidence card (from Gemini location analysis + GEDCOM reasoning)
+    location_evidence = label.get("location_evidence", {})
+    loc_items = []
+    if location_evidence.get("place"):
+        loc_items.append(
+            Div(
+                P(f"Location: {location_evidence['place']}", cls="text-xs text-amber-200 font-semibold"),
+                Span(
+                    f"Confidence: {location_evidence.get('confidence', 'unknown')}",
+                    cls="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400",
+                ),
+                cls="flex items-start justify-between gap-2 py-1",
+            )
+        )
+    if location_evidence.get("visual_evidence"):
+        loc_items.append(
+            Div(
+                P("Visual evidence", cls="text-[10px] text-slate-500 uppercase tracking-wide"),
+                P(location_evidence["visual_evidence"], cls="text-xs text-slate-300"),
+                cls="py-1",
+            )
+        )
+    if location_evidence.get("biographical_evidence"):
+        loc_items.append(
+            Div(
+                P("Genealogical context", cls="text-[10px] text-indigo-400 uppercase tracking-wide"),
+                P(location_evidence["biographical_evidence"], cls="text-xs text-slate-300"),
+                cls="py-1",
+            )
+        )
+    if location_evidence.get("missing_child_analysis"):
+        loc_items.append(
+            Div(
+                P("Missing child analysis", cls="text-[10px] text-emerald-400 uppercase tracking-wide"),
+                P(location_evidence["missing_child_analysis"], cls="text-xs text-slate-300"),
+                cls="py-1",
+            )
+        )
+    if loc_items:
+        cards.append(
+            Div(
+                H4("Geographic Analysis", cls="text-sm font-semibold text-white mb-2"),
+                *loc_items,
+                cls="bg-slate-800/40 rounded-lg p-3 border border-slate-700/30",
+                data_testid="evidence-card-location",
+            )
+        )
+
     if not cards:
         return None
 
