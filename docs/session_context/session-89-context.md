@@ -2,7 +2,7 @@
 
 **Predecessor**: Session 88 (scoring fixes, card failures, harness improvements)
 **Prompt**: `docs/prompts/session-89-prompt.md`
-**Owner request**: Nolan noticed photo 746dd11e5b4d86a1 (Victoria Capuano, Asheville ~1934) still shows Brooklyn. Wants to understand why GEDCOM enrichment never got wired in despite significant prior work.
+**Owner request**: Nolan noticed photo 746dd11e5b4d86a1 (Victoria Capuano, Asheville ~1934) still shows Brooklyn. Wants to understand why GEDCOM enrichment never got wired in despite significant prior work. Also wants: (1) admin re-analyze button on photo page for after GEDCOM linking, (2) full API call logging on every interactive Gemini call, (3) model version tracking for future comparison/fine-tuning.
 
 ## The Problem
 
@@ -128,10 +128,57 @@ This data enables:
 - **Victoria likely pregnant** — deeply personal photo for Nolan
 - **GEDCOM evidence**: Leon + Victoria resided at 33 Elizabeth St, Asheville 1928-1940. Leon's occupation listed as 1930 in Asheville.
 
+## Owner Feedback (Nolan, Session 89 Planning)
+
+### Admin Re-Analyze Button
+"When I upload a picture, I will often link to the GEDCOM after upload. There needs to be a way on the photo page to manually trigger the Gemini model to re-run so it can account for the updated information."
+- One-click admin button on photo detail page
+- Especially important for the upload → link GEDCOM → re-analyze workflow
+- Should show what changed ("Brooklyn → Asheville") and cost
+
+### Model Freshness / Version Tracking
+"It might also be good if you wanted to have it re-run and account for a new model. In general we should be writing this so that if this is the first time the gemini api has been used in a given day, it checks what the most recent model equivalent to gemini 3.1 pro is, and if there is a new one, it tests point for the runs and sees if there is an improvement and flags it some way for us."
+- **Full auto-check**: Deferred — too complex for this session. Would require Gemini model listing API, benchmark photo set, automated comparison.
+- **For now**: Log model version on every call. Admin can manually set `GEMINI_MODEL` env var. Supabase data enables before/after comparison queries.
+- **Future**: Daily auto-check script that runs benchmark photo against latest model, logs results, alerts if improvement detected.
+
+### Full Provenance on Every Call
+"All of this should be logged. We want to be able to run analysis to understand how this shifts over time and eventually (potentially) develop our own models that might approximate this."
+- Every call: model, prompt variant, tokens, cost, response, timing
+- Enables: time-series analysis of estimate quality, model comparison, fine-tuning data collection
+
+### Breadcrumbing
+"Everything should also be properly breadcrumbed so that we can understand the work that we did and spot issues like this earlier."
+- AD entries must cross-reference prior ADs
+- Context file → prompt → assessment chain
+- Session log must trace what was built and what was deferred
+
+## Gap 3: Interactive Route Doesn't Log API Calls
+
+This was discovered during planning. `app/estimate_routes.py` `_call_gemini_date_estimate()` does NOT call `log_gemini_call()`. The batch pipeline (`scripts/run_combined_pipeline.py`, `app/face_alignment.py`) logs correctly, but interactive calls from the Estimate page are invisible to Supabase. This means we have no record of how many interactive estimates have been run, what they cost, or what models were used.
+
+## Gap 4: No Admin Re-Run Trigger
+
+After uploading a photo and linking GEDCOM records via the admin UI, there's no way to re-run Gemini to account for the new biographical context. The admin has to either:
+- Wait for a batch reprocessing run (which doesn't exist yet), or
+- Manually run a script (which doesn't exist yet)
+
+Session 89 will add a one-click "Re-analyze with Gemini" button on the photo page (admin-only) that reuses the unified prompt pipeline.
+
+## Gemini Model Config Reference
+
+Current model config is in `rhodesli_ml/gemini_config.py`:
+- `GEMINI_MODEL = "gemini-3.1-pro-preview"` (env var override)
+- `GEMINI_MODEL_FAST = "gemini-3-flash"` (for batch/cheap)
+- `MODEL_PRICING` dict has per-model costs (input/output per 1M tokens, per_photo estimate)
+- `get_model_pricing()` returns cost info for a model
+- `get_api_key()` returns GEMINI_API_KEY with clear error if missing
+
 ## Deferred to Future Sessions
 
 - Full batch reprocessing of all 274 photos (cost implications — separate budget decision)
 - Auto-trigger: "faces identified → re-estimate location" webhook
+- Auto model freshness check (daily benchmark against latest Gemini model)
 - Fine-tuning or custom model development based on API call data
 - Geocoding dictionary expansion (Asheville not currently in dictionary — need to add or use Gemini's structured location output directly)
 
@@ -139,4 +186,5 @@ This data enables:
 
 ### Candidate Next Sessions
 - **Session 90**: Batch reprocess top-N photos with GEDCOM links (after Session 89 validates the pipeline)
-- **Session 90 alt**: Active learning pipeline — use GEDCOM-enriched results as training signal
+- **Session 90 alt**: Auto model freshness checker — daily script runs benchmark photos, compares to previous model, flags improvements
+- **Session 90 alt2**: Active learning pipeline — use GEDCOM-enriched results as training signal
