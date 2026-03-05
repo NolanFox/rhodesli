@@ -5887,12 +5887,21 @@ def render_photos_section(
         photos = [p for p in photos if p["collection"] == filter_collection]
 
     # Apply sorting
-    if sort_by == "oldest":
-        photos = sorted(photos, key=lambda p: p["filename"])
-    elif sort_by == "newest":
-        photos = sorted(photos, key=lambda p: p["filename"], reverse=True)
+    if sort_by in ("oldest", "newest"):
+        # Sort by estimated date from Gemini analysis (best_year_estimate)
+        labels = _load_date_labels()
+        NO_DATE = 9999 if sort_by == "oldest" else 0
+
+        def _year_key(p):
+            label = labels.get(p["photo_id"], {})
+            year = label.get("best_year_estimate") or label.get("estimated_decade") or 0
+            return year if year else NO_DATE
+
+        photos = sorted(photos, key=_year_key, reverse=(sort_by == "newest"))
     elif sort_by == "most_faces":
         photos = sorted(photos, key=lambda p: p["face_count"], reverse=True)
+    elif sort_by == "by_source":
+        photos = sorted(photos, key=lambda p: (p["source"] or "zzz", p["filename"]))
     elif sort_by == "collection":
         photos = sorted(photos, key=lambda p: (p["collection"] or p["source"] or "zzz", p["filename"]))
 
@@ -5939,6 +5948,7 @@ def render_photos_section(
         Option("Oldest First", value="oldest", selected=(sort_by == "oldest")),
         Option("Most Faces", value="most_faces", selected=(sort_by == "most_faces")),
         Option("By Collection", value="collection", selected=(sort_by == "collection")),
+        Option("By Source", value="by_source", selected=(sort_by == "by_source")),
     ]
 
     # Filter/sort controls
