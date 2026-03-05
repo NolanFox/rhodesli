@@ -18726,13 +18726,28 @@ def _detective_evidence_section(label: dict) -> object:
     if not cards:
         return None
 
-    # Model badge
+    # Model badge with timestamp
     model = label.get("model", label.get("_model", ""))
     model_badge = None
     if model:
         display_model = model.replace("gemini-", "Gemini ").replace("-preview", "")
+        # Build timestamp string from reanalyzed_at or analyzed_at
+        timestamp_str = ""
+        analysis_ts = label.get("reanalyzed_at") or label.get("analyzed_at") or label.get("timestamp")
+        if analysis_ts:
+            try:
+                from datetime import datetime
+
+                if isinstance(analysis_ts, str):
+                    # Try ISO format
+                    dt = datetime.fromisoformat(analysis_ts.replace("Z", "+00:00"))
+                    timestamp_str = f" on {dt.strftime('%b %-d, %Y')}"
+            except (ValueError, TypeError):
+                pass
+        prompt_version = label.get("prompt_version", "")
+        version_str = f" ({prompt_version})" if prompt_version else ""
         model_badge = Span(
-            f"Analyzed with {display_model}",
+            f"Analyzed with {display_model}{timestamp_str}{version_str}",
             cls="text-[10px] text-indigo-300 bg-indigo-900/30 px-2 py-1 rounded-full",
             data_testid="model-badge",
         )

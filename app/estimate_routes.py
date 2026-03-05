@@ -489,65 +489,80 @@ def _call_gemini_date_estimate(
 
     client = genai.Client(
         api_key=api_key,
-        http_options={"timeout": 120_000 if gedcom_context else 30_000},
+        http_options={"timeout": 180_000 if gedcom_context else 30_000},
     )
 
     mime_type = "image/png" if suffix.lower() == ".png" else "image/jpeg"
 
+    max_retries = 2
+    retry_delays = [5, 15]  # seconds
     start_time = _time.time()
     status = "success"
     error_msg = None
     parsed = None
 
     try:
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[
-                types.Content(
-                    parts=[
-                        types.Part.from_text(text=prompt_text),
-                        types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
-                    ]
+        for attempt in range(1 + max_retries):
+            try:
+                if attempt > 0:
+                    delay = retry_delays[attempt - 1]
+                    logger.info(f"[estimate] Retry {attempt}/{max_retries} after {delay}s for photo {photo_id}")
+                    _time.sleep(delay)
+                    start_time = _time.time()
+
+                response = client.models.generate_content(
+                    model=GEMINI_MODEL,
+                    contents=[
+                        types.Content(
+                            parts=[
+                                types.Part.from_text(text=prompt_text),
+                                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                            ]
+                        )
+                    ],
+                    config=types.GenerateContentConfig(
+                        response_mime_type="application/json",
+                        temperature=0.1,
+                    ),
                 )
-            ],
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.1,
-            ),
-        )
 
-        latency_ms = int((_time.time() - start_time) * 1000)
+                latency_ms = int((_time.time() - start_time) * 1000)
 
-        text = response.text
-        if not text:
-            status = "error"
-            error_msg = "Empty response"
-            return None
+                text = response.text
+                if not text:
+                    status = "error"
+                    error_msg = "Empty response"
+                    return None
 
-        parsed = _json.loads(text)
+                parsed = _json.loads(text)
 
-        # Extract date_estimation (may be nested or top-level)
-        date_est = parsed.get("date_estimation", parsed)
+                # Extract date_estimation (may be nested or top-level)
+                date_est = parsed.get("date_estimation", parsed)
 
-        # Basic validation
-        decade = date_est.get("estimated_decade")
-        if not isinstance(decade, int) or decade < 1800 or decade > 2030:
-            status = "error"
-            error_msg = f"Invalid decade: {decade}"
-            return None
+                # Basic validation
+                decade = date_est.get("estimated_decade")
+                if not isinstance(decade, int) or decade < 1800 or decade > 2030:
+                    status = "error"
+                    error_msg = f"Invalid decade: {decade}"
+                    return None
 
-        # Merge location into date_est for backward-compatible return
-        if "location" in parsed and "location" not in date_est:
-            date_est["location"] = parsed["location"]
+                # Merge location into date_est for backward-compatible return
+                if "location" in parsed and "location" not in date_est:
+                    date_est["location"] = parsed["location"]
 
-        return date_est
+                return date_est
 
-    except Exception as e:
-        latency_ms = int((_time.time() - start_time) * 1000)
-        status = "error"
-        error_msg = str(e)
-        logger.warning(f"[estimate] Gemini API error: {e}")
-        return None
+            except Exception as e:
+                latency_ms = int((_time.time() - start_time) * 1000)
+                error_msg = str(e)
+                # Retry on timeout/server errors (504, 503, DEADLINE_EXCEEDED)
+                is_retryable = any(s in error_msg for s in ["504", "503", "DEADLINE_EXCEEDED", "timeout", "Timeout"])
+                if is_retryable and attempt < max_retries:
+                    logger.warning(f"[estimate] Retryable Gemini error (attempt {attempt + 1}): {e}")
+                    continue
+                status = "error"
+                logger.warning(f"[estimate] Gemini API error (final): {e}")
+                return None
 
     finally:
         # Log every call to Supabase (AD-152) — fire-and-forget
@@ -1178,6 +1193,7 @@ async def post(photo_id: str, sess=None):
                 "location_evidence": location_data if isinstance(location_data, dict) else {},
                 "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
                 "reanalyzed_with_gedcom": bool(gedcom_context),
+                "prompt_version": "v3_enriched" if gedcom_context else "v3_visual_only",
             }
             # Replace existing entry or append
             replaced = False

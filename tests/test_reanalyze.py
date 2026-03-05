@@ -283,3 +283,93 @@ class TestReanalyzeButton:
         if result is not None:
             html = repr(result)
             assert "reanalyze-button" not in html
+
+
+class TestGeminiRetryLogic:
+    """Tests for retry logic in _call_gemini_date_estimate.
+
+    These verify the retry constants and retryable error detection
+    without calling the full Gemini API function (which has complex deferred imports).
+    """
+
+    def test_retryable_error_patterns_detected(self):
+        """The retry logic checks for 504, 503, DEADLINE_EXCEEDED, timeout."""
+        retryable_patterns = ["504", "503", "DEADLINE_EXCEEDED", "timeout", "Timeout"]
+        test_errors = [
+            ("504 DEADLINE_EXCEEDED", True),
+            ("503 Service Unavailable", True),
+            ("Connection timeout after 120s", True),
+            ("Invalid API key", False),
+            ("Rate limit exceeded", False),
+            ("Empty response", False),
+        ]
+        for error_msg, expected_retryable in test_errors:
+            is_retryable = any(s in error_msg for s in retryable_patterns)
+            assert is_retryable == expected_retryable, (
+                f"Error '{error_msg}' retryable={is_retryable}, expected={expected_retryable}"
+            )
+
+    def test_retry_constants_in_source(self):
+        """Verify retry constants are configured in the function."""
+        import inspect
+        from app.estimate_routes import _call_gemini_date_estimate
+
+        source = inspect.getsource(_call_gemini_date_estimate)
+        assert "max_retries = 2" in source
+        assert "retry_delays" in source
+        assert "DEADLINE_EXCEEDED" in source
+
+    def test_timeout_increased_for_gedcom(self):
+        """GEDCOM context should use higher timeout (180s)."""
+        import inspect
+        from app.estimate_routes import _call_gemini_date_estimate
+
+        source = inspect.getsource(_call_gemini_date_estimate)
+        assert "180_000" in source
+
+
+class TestModelBadgeTimestamp:
+    """Tests for analysis timestamp in model badge."""
+
+    def test_model_badge_shows_timestamp(self):
+        """Model badge includes analysis date when reanalyzed_at present."""
+        from app.main import _detective_evidence_section
+        from fasthtml.common import to_xml
+
+        label = {
+            "estimated_decade": 1940,
+            "confidence": "medium",
+            "model": "gemini-3.1-pro-preview",
+            "reanalyzed_at": "2026-03-05T12:00:00+00:00",
+            "prompt_version": "v3_enriched",
+        }
+        with (
+            patch("app.main._load_photo_locations", return_value={}),
+            patch("app.main._load_search_index", return_value=[]),
+        ):
+            result = _detective_evidence_section(label)
+        if result is not None:
+            html = to_xml(result)
+            assert "model-badge" in html
+            assert "Mar 5, 2026" in html
+            assert "v3_enriched" in html
+
+    def test_model_badge_without_timestamp(self):
+        """Model badge works without timestamp (batch analysis)."""
+        from app.main import _detective_evidence_section
+        from fasthtml.common import to_xml
+
+        label = {
+            "estimated_decade": 1940,
+            "confidence": "medium",
+            "model": "gemini-3-flash",
+        }
+        with (
+            patch("app.main._load_photo_locations", return_value={}),
+            patch("app.main._load_search_index", return_value=[]),
+        ):
+            result = _detective_evidence_section(label)
+        if result is not None:
+            html = to_xml(result)
+            assert "model-badge" in html
+            assert "Gemini 3-flash" in html
