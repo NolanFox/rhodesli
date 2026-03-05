@@ -1021,7 +1021,7 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
         return None
 
     registry = _main_mod.load_registry()
-    face_ids = [f["face_id"] for f in photo.get("faces", [])]
+    face_ids = photo.get("face_ids", [])
     if not face_ids:
         return None
 
