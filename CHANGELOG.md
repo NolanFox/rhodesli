@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.92.0] — 2026-03-04 (Session 89: Wire GEDCOM into Location Estimation)
+
+### Added
+- **AD-201: Unified Gemini Prompt** — Interactive estimate route now uses `build_extraction_prompt()` from `rhodesli_ml/gemini_extraction.py` (replacing stripped-down `_GEMINI_DATE_PROMPT`). Includes location estimation, GEDCOM context support, and full API call logging.
+- **AD-202: Admin Re-analyze Button** — One-click "Re-analyze" on photo AI Analysis section. Loads GEDCOM context for identified faces, calls Gemini with enriched prompt, updates date/location data, shows diff. Admin-only.
+- **Batch reprocessing script** — `scripts/reprocess_with_gedcom.py` with `--dry-run`, `--photo-id`, `--batch`, `--limit`, `--max-cost` modes. Cost estimation, rate limiting, change tracking.
+- **API call logging** — Every interactive Gemini call logged to Supabase `gemini_api_calls` with full provenance: model, tokens, cost, latency, `gemini_config` JSONB (enrichment_level, prompt_version, gedcom_variant, trigger).
+- **Location in estimate results** — Enriched prompt returns location data, displayed in interactive estimate page.
+- **Geocoding helper** — Inline geocoder for Asheville, Rhodes, NYC, Miami, Tampa, etc.
+- 24 new tests across `test_estimate_gemini.py` and `test_reanalyze.py`
+
+### Fixed
+- **Asheville photo (746dd11e5b4d86a1)** — Pipeline now supports GEDCOM-enriched re-analysis to correct Brooklyn→Asheville. Actual reprocessing via admin button after deploy.
+
 ## [v0.91.1] — 2026-03-04 (Session 88: Fix Scoring & Card Failures)
 
 ### Fixed

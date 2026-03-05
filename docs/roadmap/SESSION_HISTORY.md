@@ -394,6 +394,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 89: Wire GEDCOM into Location Estimation (2026-03-04) — v0.92.0
+- AD-201: Unified Gemini prompt — interactive estimate route now uses build_extraction_prompt() with location + GEDCOM support
+- AD-202: Admin re-analyze button — one-click Gemini re-run on photo AI Analysis section
+- API call logging on every interactive Gemini call (AD-152 gap closed)
+- Batch reprocessing script (scripts/reprocess_with_gedcom.py) with dry-run, cost estimation
+- Inline geocoder for Asheville, Rhodes, NYC, Miami, etc.
+- Asheville photo (746dd11e5b4d86a1) pipeline ready — Brooklyn→Asheville correction via admin button
+- 24 new tests across test_estimate_gemini.py and test_reanalyze.py. ~4,146 tests.
+
 ## Session 88: Fix Scoring & Card Failures (2026-03-04) — v0.91.1
 - Fix scoring divergence: isotonic calibrator f_=None crash, switched to sigmoid CDF priority, removed batch NN override in neighbors.py
 - Fix compare link from Discoveries: was source=/target= (404), now face_id=/person_id= matching route params

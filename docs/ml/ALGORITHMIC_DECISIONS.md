@@ -2271,3 +2271,23 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: `core/confidence.py` (new), `core/neighbors.py`, `app/compare_routes.py`, `app/main.py`. Removed all `SimilarityCalibrator` imports from compare_routes. Removed 3 local `_confidence_tier()` definitions from main.py.
 - **Tests**: 35 tests in `tests/test_confidence.py` covering all priority paths, boundary conditions, and consistency invariant.
 - **Session 88 Update**: Isotonic calibrator `f_=None` crash fixed (rebuild interp1d from stored thresholds in similarity_calibration.py). However, isotonic too coarse (10 breakpoints → 99% for everything above dist ~1.22). Priority chain changed to: (1) sigmoid CDF with auto-loaded same_person_stats (n=959, mean=1.0148, std=0.187 from kinship_thresholds.json), (2) linear fallback. Batch NN override in neighbors.py removed entirely — single scoring path via `compute_face_confidence()`. Tests updated to 39.
+
+### AD-201: Unified Gemini Prompt — Interactive Route Uses Enriched Prompt
+- **Date**: 2026-03-04
+- **Session**: 89
+- **Context**: Interactive estimate route (`app/estimate_routes.py`) used `_GEMINI_DATE_PROMPT` — a stripped-down visual-only prompt from Feb 14. It didn't ask for location and didn't accept GEDCOM context. The batch pipeline (`rhodesli_ml/gemini_extraction.py`) had the full enriched prompt with location, GEDCOM, face analysis — but the two were never unified. This caused photo 746dd11e5b4d86a1 (Victoria Capuano, Asheville ~1934) to show "Brooklyn, New York" because Gemini only had visual cues.
+- **Decision**: Replace `_GEMINI_DATE_PROMPT` with `build_extraction_prompt(preset="quick")`. The "quick" preset includes date_estimation + location + text_signage (no face_analysis or cultural_markers, keeping it fast). Added `gedcom_context` parameter that is forwarded to `build_extraction_prompt()`. Every interactive Gemini call now logged to Supabase `gemini_api_calls` via `log_gemini_call()` with full provenance: model, tokens, cost, latency, gemini_config JSONB (enrichment_level, prompt_version, gedcom_variant, temperature, trigger, model_generation).
+- **Rejected**: (1) Using "full" preset for interactive — too slow (includes face_analysis, cultural_markers). (2) Creating a third prompt variant — prompt divergence was the root cause. (3) Not logging interactive calls — violates AD-152 mandate.
+- **Breadcrumbs**: AD-148 (curated GEDCOM variant optimal), AD-152 (API call logging), AD-192 (GEDCOM-enriched location prompting), AD-193 (location data model).
+- **Affects**: `app/estimate_routes.py` — `_call_gemini_date_estimate()` rewritten. `_GEMINI_DATE_PROMPT` removed.
+- **Tests**: 10 tests in `tests/test_estimate_gemini.py`.
+
+### AD-202: Admin Re-analyze — One-Click Gemini Re-Run on Photo Page
+- **Date**: 2026-03-04
+- **Session**: 89
+- **Context**: After uploading a photo and linking GEDCOM records via admin UI, there was no way to re-run Gemini to account for the new biographical context. Owner workflow: upload → link GEDCOM → want updated analysis.
+- **Decision**: POST `/api/photo/{photo_id}/reanalyze` endpoint (admin-only). Loads photo from R2/local, builds GEDCOM context for identified faces, calls Gemini via `_call_gemini_date_estimate()` with `call_type='re_analysis'` and `trigger='admin_rerun'`. Updates `date_labels.json` and `photo_locations.json`. Returns HTMX partial showing diff ("Brooklyn → Asheville") and cost. "Re-analyze" button in AI Analysis section header (admin-only). Inline geocoder for common locations. Batch script `scripts/reprocess_with_gedcom.py` for multi-photo reprocessing.
+- **Rejected**: (1) Auto-trigger on GEDCOM link — too expensive for exploratory linking. (2) Full page reload after re-analyze — HTMX partial is smoother. (3) Client-side geocoding API — adds dependency, inline dict is sufficient for known communities.
+- **Breadcrumbs**: AD-152 (API logging), AD-192 (location prompting), AD-201 (unified prompt).
+- **Affects**: `app/estimate_routes.py` (reanalyze endpoint + helpers), `app/main.py` (button in `_build_ai_analysis_section`), `scripts/reprocess_with_gedcom.py` (batch script).
+- **Tests**: 14 tests in `tests/test_reanalyze.py`.
