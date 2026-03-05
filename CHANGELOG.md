@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.92.1] — 2026-03-05 (Session 89c: Fix Re-analyze + Location ID Mismatch)
+
+### Fixed
+- **Photo location ID mismatch** — `_load_photo_locations()` now dual-keys inbox IDs to SHA256 IDs (same pattern as `_load_date_labels()`). Fixes inline Leaflet maps for all inbox-uploaded photos including Leon's Restaurant (3192877a90a174e9).
+- **Gemini 504 timeout** — Added retry logic (up to 2 retries with 5s/15s exponential backoff) for 504/503/DEADLINE_EXCEEDED errors. GEDCOM timeout increased from 120s to 180s.
+- **"Run Face Analysis" naming** — Renamed to "Detect Faces" to distinguish from AI photo analysis.
+
+### Added
+- **Analysis metadata in UI** — Model badge now shows analysis timestamp ("Analyzed with Gemini 3.1-pro on Mar 5, 2026") and prompt version (v3_enriched/v3_visual_only).
+- **Prompt version tracking** — `prompt_version` stored in date_labels on re-analyze, enabling full prompt reconstruction from metadata.
+- 7 new tests (dual-keying, retry logic, model badge timestamp)
+
 ## [v0.92.0] — 2026-03-04 (Session 89: Wire GEDCOM into Location Estimation)
 
 ### Added

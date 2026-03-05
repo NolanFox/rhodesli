@@ -394,6 +394,14 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 89c: Fix Re-analyze + Location ID Mismatch (2026-03-05) — v0.92.1
+- Fix photo location ID mismatch: `_load_photo_locations()` now dual-keys inbox IDs to SHA256 IDs
+- Gemini retry logic: 2 retries with 5s/15s backoff for 504/503/DEADLINE_EXCEEDED
+- GEDCOM timeout increased 120s → 180s
+- Model badge shows analysis timestamp + prompt version
+- "Run Face Analysis" renamed to "Detect Faces"
+- 7 new tests. ~4,153 tests.
+
 ## Session 89: Wire GEDCOM into Location Estimation (2026-03-04) — v0.92.0
 - AD-201: Unified Gemini prompt — interactive estimate route now uses build_extraction_prompt() with location + GEDCOM support
 - AD-202: Admin re-analyze button — one-click Gemini re-run on photo AI Analysis section
