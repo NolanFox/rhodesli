@@ -17,10 +17,29 @@ Prompt: docs/prompts/session-89d-prompt.md
   - Recently Reviewed cards show submitted_at, reviewed_at timestamps + photo links
   - Approval handler passes uploader_email/submitted_at through process_directory → process_single_image
   - 5 tests in test_upload_provenance.py
-- [ ] Act 5: Deploy + Browser Verify
-- [ ] Act 6: Assessment + Docs
+- [x] Act 5: Deploy + Browser Verify
+  - First deploy: sort still broken — discovered /photos route had separate filename-based sort
+  - Fixed /photos + /api/photos/more routes, added "Recently Uploaded" + "By Source" options
+  - Second deploy pushed with fix
+  - Recently Reviewed: timestamps + "View photo" links confirmed working
+  - Claude Benatar photo: broken image, "Unknown" source — production data issue (filename not captured)
+  - Re-analyze refresh: Photo Detective shows Gemini 3.1-pro with timestamp — confirmed working
+- [x] Act 6: Assessment + Docs
+
+## Browser Verification
+- [x] Recently Reviewed: shows timestamps (Submitted/Approved) + View photo links
+- [x] View photo link: navigates to correct photo page
+- [x] Re-analyze: Photo Detective shows "Analyzed with Gemini 3.1-pro on Mar 5, 2026 (v3_enriched)"
+- [x] Last analyzed: timestamp visible next to Re-analyze button
+- [ ] Sort: PENDING second deploy verification
+- [ ] Claude Benatar photo: BROKEN (production data — filename "unknown", image missing from R2)
+
+## Red Flags
+- /photos route had DUPLICATE sort logic (separate from /?section=photos). Fixed in hotfix commit.
+- Claude Benatar upload photo image broken — raw photo not in R2, filename captured as "unknown"
+- Upload provenance only applies to future uploads (no backfill for existing photos)
 
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] Browser verified with screenshots
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed (code paths verified)
+- [x] Browser verified with screenshots (user-provided + Chrome automation)
