@@ -10,8 +10,6 @@ These tests prevent the 5th+ occurrence of deploy data loss.
 """
 
 import json
-import shutil
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -210,6 +208,59 @@ class TestIsVolumeUserModified:
         with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
             assert _is_volume_user_modified(mock_volume, "embeddings.npy") is False
 
+    def test_blocks_date_labels_with_reanalyzed_entries(self, mock_volume, mock_bundle):
+        """date_labels.json must be protected when volume has reanalyzed entries."""
+        import json
+        from scripts.init_railway_volume import _is_volume_user_modified
+
+        # Volume: has a reanalyzed entry
+        volume_data = {
+            "labels": [
+                {"photo_id": "test123", "estimated_decade": 1930, "reanalyzed_at": "2026-03-05T00:00:00Z"},
+            ]
+        }
+        (mock_volume / "date_labels.json").write_text(json.dumps(volume_data))
+
+        # Bundle: no reanalyzed entries
+        bundle_data = {
+            "labels": [
+                {"photo_id": "test123", "estimated_decade": 1930},
+            ]
+        }
+        (mock_bundle / "date_labels.json").write_text(json.dumps(bundle_data))
+
+        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
+            assert _is_volume_user_modified(mock_volume, "date_labels.json") is True
+
+    def test_allows_date_labels_without_reanalyzed(self, mock_volume, mock_bundle):
+        """date_labels.json can be overwritten when no reanalyzed entries."""
+        import json
+        from scripts.init_railway_volume import _is_volume_user_modified
+
+        data = {"labels": [{"photo_id": "test123", "estimated_decade": 1930}]}
+        (mock_volume / "date_labels.json").write_text(json.dumps(data))
+        (mock_bundle / "date_labels.json").write_text(json.dumps(data))
+
+        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
+            assert _is_volume_user_modified(mock_volume, "date_labels.json") is False
+
+    def test_blocks_photo_locations_with_reanalyzed_entries(self, mock_volume, mock_bundle):
+        """photo_locations.json must be protected when volume has reanalyzed entries."""
+        import json
+        from scripts.init_railway_volume import _is_volume_user_modified
+
+        volume_data = {
+            "photos": {
+                "test123": {"location_name": "Asheville", "reanalyzed_at": "2026-03-05T00:00:00Z"},
+            }
+        }
+        (mock_volume / "photo_locations.json").write_text(json.dumps(volume_data))
+        bundle_data = {"photos": {"test123": {"location_name": "Brooklyn"}}}
+        (mock_bundle / "photo_locations.json").write_text(json.dumps(bundle_data))
+
+        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle):
+            assert _is_volume_user_modified(mock_volume, "photo_locations.json") is True
+
 
 class TestAutoBackupVolume:
     """Tests for _auto_backup_volume — pre-sync backup."""
@@ -269,9 +320,7 @@ class TestAutoBackupVolume:
 class TestSyncEssentialFilesIntegration:
     """Integration tests for _sync_essential_files with safety gate."""
 
-    def test_blocks_overwrite_when_volume_has_more_confirmed(
-        self, mock_volume, mock_bundle
-    ):
+    def test_blocks_overwrite_when_volume_has_more_confirmed(self, mock_volume, mock_bundle):
         from scripts.init_railway_volume import _sync_essential_files
 
         # Volume: 55 confirmed (user data)
@@ -279,9 +328,11 @@ class TestSyncEssentialFilesIntegration:
         # Bundle: 46 confirmed (stale)
         _write_identities(mock_bundle / "identities.json", confirmed=46, total=100)
 
-        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle), \
-             patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]), \
-             patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []):
+        with (
+            patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle),
+            patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]),
+            patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []),
+        ):
             updated = _sync_essential_files(mock_volume)
 
         assert updated == 0
@@ -292,9 +343,7 @@ class TestSyncEssentialFilesIntegration:
         confirmed = sum(1 for v in ids.values() if v.get("state") == "CONFIRMED")
         assert confirmed == 55
 
-    def test_allows_overwrite_when_bundle_has_more_confirmed(
-        self, mock_volume, mock_bundle
-    ):
+    def test_allows_overwrite_when_bundle_has_more_confirmed(self, mock_volume, mock_bundle):
         from scripts.init_railway_volume import _sync_essential_files
 
         # Volume: 46 confirmed
@@ -302,9 +351,11 @@ class TestSyncEssentialFilesIntegration:
         # Bundle: 55 confirmed (new pipeline data)
         _write_identities(mock_bundle / "identities.json", confirmed=55, total=100)
 
-        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle), \
-             patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]), \
-             patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []):
+        with (
+            patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle),
+            patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]),
+            patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []),
+        ):
             updated = _sync_essential_files(mock_volume)
 
         assert updated == 1
@@ -321,9 +372,11 @@ class TestSyncEssentialFilesIntegration:
         _write_identities(mock_volume / "identities.json", confirmed=46, total=100)
         _write_identities(mock_bundle / "identities.json", confirmed=55, total=100)
 
-        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle), \
-             patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]), \
-             patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []):
+        with (
+            patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle),
+            patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]),
+            patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []),
+        ):
             _sync_essential_files(mock_volume)
 
         bak_files = list(mock_volume.glob("identities.json.bak.*"))
@@ -335,9 +388,11 @@ class TestSyncEssentialFilesIntegration:
         _write_identities(mock_volume / "identities.json", confirmed=46, total=100)
         _write_identities(mock_bundle / "identities.json", confirmed=55, total=100)
 
-        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle), \
-             patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]), \
-             patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []):
+        with (
+            patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle),
+            patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]),
+            patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []),
+        ):
             _sync_essential_files(mock_volume)
 
         auto_backups = mock_volume / "auto_backups"
@@ -352,9 +407,11 @@ class TestSyncEssentialFilesIntegration:
         (mock_volume / "proposals.json").write_text('{"old": true}')
         (mock_bundle / "proposals.json").write_text('{"new": true}')
 
-        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle), \
-             patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", []), \
-             patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", ["proposals.json"]):
+        with (
+            patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle),
+            patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", []),
+            patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", ["proposals.json"]),
+        ):
             updated = _sync_essential_files(mock_volume)
 
         assert updated == 1
@@ -375,17 +432,15 @@ class TestSyncEssentialFilesRegresssion:
         from scripts.init_railway_volume import _sync_essential_files
 
         # Simulate: production volume has 49B user confirmations
-        _write_identities(
-            mock_volume / "identities.json", confirmed=55, total=775
-        )
+        _write_identities(mock_volume / "identities.json", confirmed=55, total=775)
         # Simulate: Docker bundle has pre-49B data (stale)
-        _write_identities(
-            mock_bundle / "identities.json", confirmed=46, total=775
-        )
+        _write_identities(mock_bundle / "identities.json", confirmed=46, total=775)
 
-        with patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle), \
-             patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]), \
-             patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []):
+        with (
+            patch("scripts.init_railway_volume.BUNDLED_DATA", mock_bundle),
+            patch("scripts.init_railway_volume.REQUIRED_DATA_FILES", ["identities.json"]),
+            patch("scripts.init_railway_volume.OPTIONAL_SYNC_FILES", []),
+        ):
             updated = _sync_essential_files(mock_volume)
 
         # Safety gate MUST block the overwrite

@@ -64,7 +64,17 @@ REQUIRED_DATA_FILES = ["identities.json", "photo_index.json", "embeddings.npy"]
 #   - gedcom_matches.json — user review decisions on GEDCOM matches
 #   - ancestry_links.json — derived from user-reviewed GEDCOM matches
 # These are rebuilt from Supabase on every app start (see app/supabase_data.py).
-OPTIONAL_SYNC_FILES = ["proposals.json", "surname_variants.json", "date_labels.json", "photo_search_index.json", "rhodes_context_events.json", "co_occurrence_graph.json", "location_dictionary.json", "photo_locations.json", "birth_year_estimates.json"]
+OPTIONAL_SYNC_FILES = [
+    "proposals.json",
+    "surname_variants.json",
+    "date_labels.json",
+    "photo_search_index.json",
+    "rhodes_context_events.json",
+    "co_occurrence_graph.json",
+    "location_dictionary.json",
+    "photo_locations.json",
+    "birth_year_estimates.json",
+]
 
 
 def volume_is_valid(data_dir: Path) -> bool:
@@ -136,7 +146,7 @@ def _migrate_photo_dimensions(data_dir: Path) -> None:
         with open(volume_photo_index, "w") as f:
             json.dump(volume_data, f, indent=2)
 
-        print(f"[init] Photo dimensions migration complete.")
+        print("[init] Photo dimensions migration complete.")
 
     except Exception as e:
         print(f"[init] WARNING: Photo dimensions migration failed: {e}")
@@ -175,9 +185,14 @@ def _auto_backup_volume(data_dir: Path) -> str | None:
     backup_dir = backup_root / ts
 
     files_to_backup = [
-        "identities.json", "photo_index.json", "embeddings.npy",
-        "annotations.json", "relationships.json", "ancestry_links.json",
-        "match_decisions.jsonl", "identification_responses.json",
+        "identities.json",
+        "photo_index.json",
+        "embeddings.npy",
+        "annotations.json",
+        "relationships.json",
+        "ancestry_links.json",
+        "match_decisions.jsonl",
+        "identification_responses.json",
     ]
 
     backed_up = 0
@@ -209,10 +224,7 @@ def _count_confirmed_identities(filepath: Path) -> int:
         with open(filepath) as f:
             data = json.load(f)
         ids = data.get("identities", data)
-        return sum(
-            1 for v in ids.values()
-            if isinstance(v, dict) and v.get("state") == "CONFIRMED"
-        )
+        return sum(1 for v in ids.values() if isinstance(v, dict) and v.get("state") == "CONFIRMED")
     except Exception:
         return -1
 
@@ -223,6 +235,7 @@ def _is_volume_user_modified(data_dir: Path, filename: str) -> bool:
     For identities.json: volume has MORE confirmed identities than bundle.
     For photo_index.json: volume has MORE photos than bundle.
     For embeddings.npy: volume has MORE entries than bundle (AD-165).
+    For date_labels.json/photo_locations.json: volume has reanalyzed entries.
     For other files: always returns False (safe to overwrite).
     """
     import json
@@ -268,6 +281,7 @@ def _is_volume_user_modified(data_dir: Path, filename: str) -> bool:
         # count: if volume has more entries, it has upload data we must preserve.
         try:
             import numpy as np
+
             v_entries = len(np.load(str(volume_file), allow_pickle=True))
             b_entries = len(np.load(str(bundle_file), allow_pickle=True))
             if v_entries > b_entries:
@@ -275,6 +289,20 @@ def _is_volume_user_modified(data_dir: Path, filename: str) -> bool:
                     f"[init] SAFETY GATE: Volume {filename} has {v_entries} "
                     f"embeddings but bundle only has {b_entries}. "
                     f"Refusing to overwrite — volume has upload data."
+                )
+                return True
+        except Exception:
+            pass
+
+    elif filename in ("date_labels.json", "photo_locations.json"):
+        # Protect re-analyze results: if any entry in the volume file has
+        # "reanalyzed_at", the admin ran re-analysis and we must not overwrite.
+        try:
+            v_text = volume_file.read_text()
+            if '"reanalyzed_at"' in v_text:
+                print(
+                    f"[init] SAFETY GATE: Volume {filename} has reanalyzed entries. "
+                    f"Refusing to overwrite — volume has admin re-analysis data."
                 )
                 return True
         except Exception:
@@ -422,7 +450,7 @@ def init_volume():
                     print(f"[init]   Copied: {item.name}")
             print(f"[init] Copied {data_copied} data items.")
         else:
-            print(f"[init] Data bundle is empty (likely GitHub deploy).")
+            print("[init] Data bundle is empty (likely GitHub deploy).")
     else:
         print(f"[init] No bundled data found at {BUNDLED_DATA}")
 
