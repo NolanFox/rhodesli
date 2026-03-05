@@ -20313,10 +20313,20 @@ def public_photo_page(
     meta_line = Span(*meta_elements) if meta_elements else None
 
     # --- Uploader attribution ---
-    # TODO: When uploaded_by field is added to photo_index.json, show "Uploaded by [Name] on [Date]"
-    # For now, fall back to source field as provenance indicator
     uploader_line = None
-    if photo.get("source"):
+    if photo.get("uploaded_by"):
+        uploader_parts = [f"Uploaded by {photo['uploaded_by']}"]
+        upload_date = photo.get("upload_date", "")
+        if upload_date:
+            try:
+                from datetime import datetime as _dt
+
+                dt = _dt.fromisoformat(upload_date.replace("Z", "+00:00"))
+                uploader_parts.append(f"on {dt.strftime('%b %-d, %Y')}")
+            except (ValueError, TypeError):
+                pass
+        uploader_line = Span(" ".join(uploader_parts), cls="text-xs text-slate-500")
+    elif photo.get("source"):
         uploader_line = Span(f"Source: {photo['source']}", cls="text-xs text-slate-500")
 
     # --- Open Graph meta tag data ---
@@ -20882,7 +20892,7 @@ def public_photo_page(
                     # Photo metadata (with inline admin editing)
                     Div(
                         P(meta_line, cls="text-slate-400 text-sm") if meta_line else None,
-                        P(uploader_line, cls="mt-1") if uploader_line and not meta_line else None,
+                        P(uploader_line, cls="mt-1") if uploader_line else None,
                         P(
                             f"{total_faces} {'person' if total_faces == 1 else 'people'} detected · "
                             f"{identified_count} identified",
@@ -25252,16 +25262,65 @@ def get(sess=None):
             status_label = "Approved" if item["status"] == "approved" else "Rejected"
             file_count = item.get("file_count", len(item.get("files", [])))
             file_msg = "1 file" if file_count == 1 else f"{file_count} files"
+
+            # Format timestamps
+            ts_parts = []
+            submitted_at = item.get("submitted_at", "")
+            reviewed_at = item.get("reviewed_at", "")
+            try:
+                from datetime import datetime as _dt
+
+                if submitted_at:
+                    dt = _dt.fromisoformat(submitted_at.replace("Z", "+00:00"))
+                    ts_parts.append(
+                        Span(f"Submitted: {dt.strftime('%b %-d at %-I:%M %p')}", cls="text-slate-500 text-[10px]")
+                    )
+                if reviewed_at:
+                    dt = _dt.fromisoformat(reviewed_at.replace("Z", "+00:00"))
+                    ts_parts.append(
+                        Span(f"{status_label}: {dt.strftime('%b %-d at %-I:%M %p')}", cls="text-slate-500 text-[10px]")
+                    )
+            except (ValueError, TypeError):
+                pass
+
+            # Build photo links for approved uploads
+            photo_links = []
+            if item["status"] == "approved":
+                job_id = item.get("job_id", "")
+                files = item.get("files", [])
+                for idx, file_info in enumerate(files):
+                    fname = file_info.get("filename", "") if isinstance(file_info, dict) else str(file_info)
+                    if fname:
+                        # Try to find the photo by inbox ID pattern
+                        candidate_id = f"inbox_{job_id}_{idx}_{Path(fname).stem}"
+                        photo_links.append(
+                            A(
+                                "View photo",
+                                href=f"/photo/{candidate_id}",
+                                cls="text-indigo-400 hover:text-indigo-300 text-[10px] underline",
+                                data_testid="reviewed-photo-link",
+                            )
+                        )
+
+            card_elements = [
+                Div(
+                    Span(status_label, cls=f"text-{status_color}-400 text-xs font-bold uppercase"),
+                    Span(" | ", cls="text-slate-600"),
+                    Span(item.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
+                    Span(f" | {file_msg}", cls="text-slate-500 text-xs"),
+                    cls="flex items-center gap-1",
+                ),
+            ]
+            if ts_parts:
+                card_elements.append(Div(*ts_parts, cls="flex gap-3 mt-1"))
+            if photo_links:
+                card_elements.append(Div(*photo_links, cls="flex gap-2 mt-1"))
+
             reviewed_cards.append(
                 Div(
-                    Div(
-                        Span(status_label, cls=f"text-{status_color}-400 text-xs font-bold uppercase"),
-                        Span(" | ", cls="text-slate-600"),
-                        Span(item.get("uploader_email", "Unknown"), cls="text-slate-400 text-xs"),
-                        Span(f" | {file_msg}", cls="text-slate-500 text-xs"),
-                        cls="flex items-center gap-1",
-                    ),
+                    *card_elements,
                     cls="px-3 py-2 bg-slate-800/30 border border-slate-700/30 rounded",
+                    data_testid="reviewed-card",
                 )
             )
         reviewed_section = Div(
@@ -26465,6 +26524,8 @@ def post(job_id: str, sess=None):
 
             source = upload.get("source", "")
             upload_collection = upload.get("collection", "")
+            uploader_email = upload.get("uploader_email", "")
+            submitted_at = upload.get("submitted_at", "")
 
             def _bg_approve_ingest():
                 import logging as _bg_logging
@@ -26484,6 +26545,8 @@ def post(job_id: str, sess=None):
                         source=source,
                         collection=upload_collection,
                         prefer_hybrid=True,
+                        uploaded_by=uploader_email,
+                        upload_date=submitted_at,
                     )
                 except Exception:
                     import traceback

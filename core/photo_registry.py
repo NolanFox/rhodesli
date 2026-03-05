@@ -231,10 +231,22 @@ class PhotoRegistry:
             return False
 
         valid_keys = {
-            "date_taken", "date_estimate", "location", "caption",
-            "occasion", "photographer", "donor", "notes", "camera",
-            "back_image", "back_transcription",
-            "transform", "back_transform",
+            "date_taken",
+            "date_estimate",
+            "location",
+            "caption",
+            "occasion",
+            "photographer",
+            "donor",
+            "notes",
+            "camera",
+            "back_image",
+            "back_transcription",
+            "transform",
+            "back_transform",
+            "uploaded_by",
+            "upload_date",
+            "job_id",
         }
         for key, value in metadata.items():
             if key in valid_keys:
@@ -252,10 +264,7 @@ class PhotoRegistry:
             return {}
 
         skip_keys = {"path", "face_ids", "source", "collection", "source_url", "width", "height"}
-        return {
-            k: v for k, v in self._photos[photo_id].items()
-            if k not in skip_keys and v
-        }
+        return {k: v for k, v in self._photos[photo_id].items() if k not in skip_keys and v}
 
     def get_photo_path(self, photo_id: str) -> str | None:
         """
@@ -336,15 +345,10 @@ class PhotoRegistry:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             logger.error(f"PhotoRegistry: corrupted JSON in {path}: {e}")
-            raise ValueError(
-                f"PhotoRegistry file is corrupted ({path}): {e}"
-            ) from e
+            raise ValueError(f"PhotoRegistry file is corrupted ({path}): {e}") from e
 
         if data.get("schema_version") != 1:
-            raise ValueError(
-                f"PhotoRegistry schema version mismatch: expected 1, "
-                f"got {data.get('schema_version')}"
-            )
+            raise ValueError(f"PhotoRegistry schema version mismatch: expected 1, got {data.get('schema_version')}")
 
         try:
             registry = cls()
@@ -368,10 +372,10 @@ class PhotoRegistry:
             registry._face_to_photo = data["face_to_photo"]
         except KeyError as e:
             logger.error(f"PhotoRegistry: missing required key {e} in {path}")
-            raise ValueError(
-                f"PhotoRegistry file is missing required key {e} ({path})"
-            ) from e
+            raise ValueError(f"PhotoRegistry file is missing required key {e} ({path})") from e
 
-        logger.info(f"PhotoRegistry loaded from {path} ({len(registry._photos)} photos, {len(registry._face_to_photo)} faces)")
+        logger.info(
+            f"PhotoRegistry loaded from {path} ({len(registry._photos)} photos, {len(registry._face_to_photo)} faces)"
+        )
 
         return registry

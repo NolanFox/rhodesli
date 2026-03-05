@@ -233,6 +233,7 @@ def get_face_analyzer():
     global _face_analyzer
     if _face_analyzer is None:
         from insightface.app import FaceAnalysis
+
         _face_analyzer = FaceAnalysis(
             name="buffalo_l",
             allowed_modules=["detection", "recognition"],
@@ -385,7 +386,7 @@ def extract_faces_hybrid(filepath: Path):
 
     image_height, image_width = img.shape[:2]
     image_shape = (image_height, image_width)
-    logging.info(f"[hybrid] Image read: {_time.time()-t_read:.3f}s ({image_width}x{image_height})")
+    logging.info(f"[hybrid] Image read: {_time.time() - t_read:.3f}s ({image_width}x{image_height})")
 
     t_det = _time.time()
     bboxes, kpss = detector.detect(img, max_num=0, metric="default")
@@ -448,7 +449,7 @@ def generate_crop(
     # Defer heavy imports
     import cv2
 
-    from core.crop_faces import add_padding, sanitize_filename
+    from core.crop_faces import add_padding
 
     filepath = Path(face["filepath"])
     bbox = face["bbox"]
@@ -489,6 +490,8 @@ def process_single_image(
     source: str = "",
     collection: str = "",
     prefer_hybrid: bool = False,
+    uploaded_by: str = "",
+    upload_date: str = "",
 ) -> dict:
     """
     Process a single image file (internal helper).
@@ -504,6 +507,8 @@ def process_single_image(
         file_hash_path: Path to file_hashes.json (for idempotency)
         source: Provenance/origin label (e.g., "Betty Capeluto's Album")
         collection: Archive classification (e.g., "Betty Capeluto Miami Collection"). Defaults to source if empty.
+        uploaded_by: Email or name of the uploader
+        upload_date: ISO timestamp when the photo was uploaded
 
     Returns:
         Result dict with faces_extracted, identity_ids, skipped_duplicate, or error
@@ -531,8 +536,7 @@ def process_single_image(
         existing = file_hash_registry.lookup(file_hash)
         if existing:
             logger.info(
-                f"Skipping {filepath.name}: already processed as {existing['filename']} "
-                f"(hash: {file_hash[:12]}...)"
+                f"Skipping {filepath.name}: already processed as {existing['filename']} (hash: {file_hash[:12]}...)"
             )
             return {
                 "faces_extracted": len(existing["face_ids"]),
@@ -583,6 +587,16 @@ def process_single_image(
     effective_collection = collection or source or "Uncategorized"
     photo_registry.set_collection(photo_id, effective_collection)
 
+    # Store upload provenance if provided
+    if uploaded_by or upload_date:
+        provenance = {}
+        if uploaded_by:
+            provenance["uploaded_by"] = uploaded_by
+        if upload_date:
+            provenance["upload_date"] = upload_date
+        provenance["job_id"] = job_id
+        photo_registry.set_metadata(photo_id, provenance)
+
     photo_registry.save(photo_index_path)
 
     # Extract EXIF metadata and store on the photo record
@@ -597,16 +611,11 @@ def process_single_image(
             if "camera" in exif_data:
                 exif_metadata["camera"] = exif_data["camera"]
             if "gps_lat" in exif_data and "gps_lon" in exif_data:
-                exif_metadata["location"] = (
-                    f"{exif_data['gps_lat']}, {exif_data['gps_lon']}"
-                )
+                exif_metadata["location"] = f"{exif_data['gps_lat']}, {exif_data['gps_lon']}"
             if exif_metadata:
                 photo_registry.set_metadata(photo_id, exif_metadata)
                 photo_registry.save(photo_index_path)
-                logger.info(
-                    f"EXIF metadata stored for {filepath.name}: "
-                    f"{list(exif_metadata.keys())}"
-                )
+                logger.info(f"EXIF metadata stored for {filepath.name}: {list(exif_metadata.keys())}")
     except Exception as e:
         # EXIF extraction is best-effort — never fail ingestion for it
         logger.debug(f"EXIF extraction skipped for {filepath.name}: {e}")
@@ -673,8 +682,6 @@ def process_uploaded_file(
     Returns:
         Result dict with status, faces_extracted, identities_created
     """
-    import tempfile
-    import zipfile
 
     project_root = Path(__file__).resolve().parent.parent
 
@@ -729,7 +736,9 @@ def process_uploaded_file(
         logger.info(f"Found {result['faces_extracted']} face(s)")
 
         write_status_file(
-            inbox_dir, job_id, "success",
+            inbox_dir,
+            job_id,
+            "success",
             faces_extracted=result["faces_extracted"],
             identities_created=result["identity_ids"],
             total_files=1,
@@ -748,7 +757,9 @@ def process_uploaded_file(
     except Exception as e:
         logger.error(f"Error processing {filepath}: {e}")
         write_status_file(
-            inbox_dir, job_id, "error",
+            inbox_dir,
+            job_id,
+            "error",
             error=str(e),
             total_files=1,
             files_succeeded=0,
@@ -804,7 +815,8 @@ def _process_zip_file(
         with zipfile.ZipFile(filepath, "r") as zf:
             # Filter to image files only (skip __MACOSX, .DS_Store, etc.)
             image_files = [
-                name for name in zf.namelist()
+                name
+                for name in zf.namelist()
                 if is_image_file(name)
                 and not name.startswith("__MACOSX")
                 and not name.startswith(".")
@@ -814,7 +826,9 @@ def _process_zip_file(
             total_files = len(image_files)
             if total_files == 0:
                 write_status_file(
-                    inbox_dir, job_id, "success",
+                    inbox_dir,
+                    job_id,
+                    "success",
                     faces_extracted=0,
                     total_files=0,
                     files_succeeded=0,
@@ -844,7 +858,9 @@ def _process_zip_file(
                 for file_index, image_name in enumerate(image_files):
                     # Update progress status
                     write_status_file(
-                        inbox_dir, job_id, "processing",
+                        inbox_dir,
+                        job_id,
+                        "processing",
                         faces_extracted=total_faces,
                         identities_created=all_identity_ids,
                         total_files=total_files,
@@ -881,7 +897,7 @@ def _process_zip_file(
                         files_succeeded += 1
 
                         if result.get("skipped_duplicate"):
-                            logger.info(f"  Skipped (duplicate)")
+                            logger.info("  Skipped (duplicate)")
                         else:
                             logger.info(f"  Found {result['faces_extracted']} face(s)")
 
@@ -889,10 +905,12 @@ def _process_zip_file(
                         # Error isolation: log and continue
                         logger.error(f"  Error processing {image_name}: {e}")
                         files_failed += 1
-                        errors.append({
-                            "filename": image_name,
-                            "error": str(e),
-                        })
+                        errors.append(
+                            {
+                                "filename": image_name,
+                                "error": str(e),
+                            }
+                        )
 
             # Determine final status
             if files_failed == 0:
@@ -903,7 +921,9 @@ def _process_zip_file(
                 final_status = "partial"  # Some succeeded, some failed
 
             write_status_file(
-                inbox_dir, job_id, final_status,
+                inbox_dir,
+                job_id,
+                final_status,
                 faces_extracted=total_faces,
                 identities_created=all_identity_ids,
                 total_files=total_files,
@@ -927,7 +947,9 @@ def _process_zip_file(
     except zipfile.BadZipFile as e:
         logger.error(f"Invalid ZIP file: {e}")
         write_status_file(
-            inbox_dir, job_id, "error",
+            inbox_dir,
+            job_id,
+            "error",
             error=f"Invalid ZIP file: {e}",
         )
         return {
@@ -937,7 +959,9 @@ def _process_zip_file(
     except Exception as e:
         logger.error(f"Error processing ZIP: {e}")
         write_status_file(
-            inbox_dir, job_id, "error",
+            inbox_dir,
+            job_id,
+            "error",
             error=str(e),
         )
         return {
@@ -954,6 +978,8 @@ def process_directory(
     source: str = "",
     collection: str = "",
     prefer_hybrid: bool = False,
+    uploaded_by: str = "",
+    upload_date: str = "",
 ) -> dict:
     """
     Process a directory of uploaded files (images and/or ZIPs).
@@ -968,6 +994,8 @@ def process_directory(
         crops_dir: Crops output directory (default: project/app/static/crops)
         source: Provenance/origin label
         collection: Archive classification. Defaults to source if empty.
+        uploaded_by: Email or name of the uploader
+        upload_date: ISO timestamp when the photo was uploaded
 
     Returns:
         Result dict with aggregated status
@@ -1009,7 +1037,8 @@ def process_directory(
         try:
             with zipfile.ZipFile(zf_path, "r") as zf:
                 image_names = [
-                    name for name in zf.namelist()
+                    name
+                    for name in zf.namelist()
                     if is_image_file(name)
                     and not name.startswith("__MACOSX")
                     and not name.startswith(".")
@@ -1023,7 +1052,9 @@ def process_directory(
 
     # Write initial status
     write_status_file(
-        inbox_dir, job_id, "processing",
+        inbox_dir,
+        job_id,
+        "processing",
         total_files=total_images,
         files_succeeded=0,
         files_failed=0,
@@ -1041,7 +1072,9 @@ def process_directory(
     # Process standalone images
     for img_path in files_to_process:
         write_status_file(
-            inbox_dir, job_id, "processing",
+            inbox_dir,
+            job_id,
+            "processing",
             faces_extracted=total_faces,
             identities_created=all_identity_ids,
             total_files=total_images,
@@ -1065,6 +1098,8 @@ def process_directory(
                 source=source,
                 collection=collection,
                 prefer_hybrid=prefer_hybrid,
+                uploaded_by=uploaded_by,
+                upload_date=upload_date,
             )
 
             total_faces += result["faces_extracted"]
@@ -1072,17 +1107,19 @@ def process_directory(
             all_face_ids.extend(result.get("face_ids", []))
             files_succeeded += 1
             if result.get("skipped_duplicate"):
-                logger.info(f"  Skipped (duplicate)")
+                logger.info("  Skipped (duplicate)")
             else:
                 logger.info(f"  Found {result['faces_extracted']} face(s)")
 
         except Exception as e:
             logger.error(f"  Error processing {img_path.name}: {e}")
             files_failed += 1
-            errors.append({
-                "filename": img_path.name,
-                "error": str(e),
-            })
+            errors.append(
+                {
+                    "filename": img_path.name,
+                    "error": str(e),
+                }
+            )
 
         file_index += 1
 
@@ -1097,7 +1134,9 @@ def process_directory(
 
                     for image_name in image_names:
                         write_status_file(
-                            inbox_dir, job_id, "processing",
+                            inbox_dir,
+                            job_id,
+                            "processing",
                             faces_extracted=total_faces,
                             identities_created=all_identity_ids,
                             total_files=total_images,
@@ -1126,6 +1165,8 @@ def process_directory(
                                 source=source,
                                 collection=collection,
                                 prefer_hybrid=prefer_hybrid,
+                                uploaded_by=uploaded_by,
+                                upload_date=upload_date,
                             )
 
                             total_faces += result["faces_extracted"]
@@ -1133,27 +1174,31 @@ def process_directory(
                             all_face_ids.extend(result.get("face_ids", []))
                             files_succeeded += 1
                             if result.get("skipped_duplicate"):
-                                logger.info(f"  Skipped (duplicate)")
+                                logger.info("  Skipped (duplicate)")
                             else:
                                 logger.info(f"  Found {result['faces_extracted']} face(s)")
 
                         except Exception as e:
                             logger.error(f"  Error processing {image_name}: {e}")
                             files_failed += 1
-                            errors.append({
-                                "filename": f"{zf_path.name}:{image_name}",
-                                "error": str(e),
-                            })
+                            errors.append(
+                                {
+                                    "filename": f"{zf_path.name}:{image_name}",
+                                    "error": str(e),
+                                }
+                            )
 
                         file_index += 1
 
         except zipfile.BadZipFile as e:
             logger.error(f"Invalid ZIP file {zf_path.name}: {e}")
             files_failed += 1
-            errors.append({
-                "filename": zf_path.name,
-                "error": f"Invalid ZIP file: {e}",
-            })
+            errors.append(
+                {
+                    "filename": zf_path.name,
+                    "error": f"Invalid ZIP file: {e}",
+                }
+            )
 
     # Determine final status
     if files_failed == 0:
@@ -1164,7 +1209,9 @@ def process_directory(
         final_status = "partial"
 
     write_status_file(
-        inbox_dir, job_id, final_status,
+        inbox_dir,
+        job_id,
+        final_status,
         faces_extracted=total_faces,
         identities_created=all_identity_ids,
         total_files=total_images,
@@ -1188,9 +1235,7 @@ def process_directory(
 
 def main():
     """CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description="Process uploaded file(s) for inbox ingestion"
-    )
+    parser = argparse.ArgumentParser(description="Process uploaded file(s) for inbox ingestion")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument(
         "--file",
@@ -1242,13 +1287,23 @@ def main():
             data_dir = Path(env_data_dir)
 
     if args.directory:
-        result = process_directory(args.directory, args.job_id, source=args.source,
-                                   collection=args.collection, data_dir=data_dir,
-                                   crops_dir=args.crops_dir)
+        result = process_directory(
+            args.directory,
+            args.job_id,
+            source=args.source,
+            collection=args.collection,
+            data_dir=data_dir,
+            crops_dir=args.crops_dir,
+        )
     else:
-        result = process_uploaded_file(args.file, args.job_id, source=args.source,
-                                       collection=args.collection, data_dir=data_dir,
-                                       crops_dir=args.crops_dir)
+        result = process_uploaded_file(
+            args.file,
+            args.job_id,
+            source=args.source,
+            collection=args.collection,
+            data_dir=data_dir,
+            crops_dir=args.crops_dir,
+        )
 
     if result["status"] == "error":
         sys.exit(1)
