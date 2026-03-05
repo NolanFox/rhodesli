@@ -50,6 +50,8 @@ COPY scripts/ scripts/
 # Copy rhodesli_ml subpackages needed at runtime (graph + importers + calibration + date inference)
 # Full ML package has 3GB+ of .venv/checkpoints — only copy pure-Python modules
 COPY rhodesli_ml/__init__.py rhodesli_ml/__init__.py
+COPY rhodesli_ml/gemini_config.py rhodesli_ml/gemini_config.py
+COPY rhodesli_ml/gemini_extraction.py rhodesli_ml/gemini_extraction.py
 COPY rhodesli_ml/graph/ rhodesli_ml/graph/
 COPY rhodesli_ml/importers/ rhodesli_ml/importers/
 COPY rhodesli_ml/calibration/ rhodesli_ml/calibration/
