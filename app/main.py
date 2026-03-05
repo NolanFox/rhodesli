@@ -32133,8 +32133,9 @@ async def post(request):
     results = {"job_id": repair_job_id, "actions": []}
 
     # Find the uploads directory for this job
-    uploads_dir = data_path.parent / "uploads" / repair_job_id
-    staging_dir = data_path.parent / "staging" / repair_job_id
+    # Approval handler stores in data_path/uploads/ (not data_path.parent/uploads/)
+    uploads_dir = data_path / "uploads" / repair_job_id
+    staging_dir = data_path / "staging" / repair_job_id
     raw_photos_dir = data_path.parent / "raw_photos"
     raw_photos_dir.mkdir(parents=True, exist_ok=True)
 
