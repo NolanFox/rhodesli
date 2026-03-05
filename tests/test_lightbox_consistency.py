@@ -235,6 +235,17 @@ class TestModalDismissibility:
         html = to_xml(confirm_modal())
         assert "Escape" in html
 
+    def test_confirm_modal_layers_above_compare_modal(self, client):
+        """Global confirm modal should overlay compare modal when both are present."""
+        from app.main import compare_modal, confirm_modal
+        from fastcore.xml import to_xml
+
+        compare_html = to_xml(compare_modal())
+        confirm_html = to_xml(confirm_modal())
+
+        assert "z-[10000]" in compare_html
+        assert "z-[10010]" in confirm_html
+
     def test_all_modals_have_backdrop_dismiss(self, client):
         """All modals have backdrop click-to-close handlers."""
         response = client.get("/?section=to_review")

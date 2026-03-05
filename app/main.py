@@ -7820,7 +7820,7 @@ def confirm_modal() -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-6 relative border border-slate-700"
         ),
         id="confirm-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9997]",
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[10010]",
         **{"_": "on keydown[key=='Escape'] add .hidden to me"},
     )
 
