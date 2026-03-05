@@ -5,15 +5,13 @@ Covers:
 - A4: AI Analysis — Scene expanded by default
 - A5: "Often appears with" name truncation (max-w increased to 140px)
 - A6: Quality score labels (human-readable, not raw numbers)
-- A3: Run Face Analysis button feedback (loading indicator)
+- A3: Detect Faces button feedback (loading indicator)
 """
 
 import pytest
-from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
 import json
-from pathlib import Path
 
 from app.main import app, load_registry, data_path
 
@@ -43,12 +41,11 @@ class TestQualityScoreLabels:
         """Quality >= 30 shows 'Excellent quality'."""
         # Test via confirmed identity page
         registry = load_registry()
-        confirmed = [i for i in registry.list_identities()
-                     if i.get("state") == "CONFIRMED"]
+        confirmed = [i for i in registry.list_identities() if i.get("state") == "CONFIRMED"]
         if not confirmed:
             pytest.skip("No confirmed identities")
 
-        response = client.get(f"/?section=confirmed")
+        response = client.get("/?section=confirmed")
         assert response.status_code == 200
         # Should NOT show raw "Quality: XX.XX" format
         assert "Quality: " not in response.text or "quality" in response.text.lower()
@@ -59,8 +56,7 @@ class TestQualityScoreLabels:
         assert response.status_code == 200
         html = response.text
         # Should contain at least one of the quality labels
-        has_label = any(label in html for label in
-                       ["Excellent quality", "Good quality", "Fair quality", "Low quality"])
+        has_label = any(label in html for label in ["Excellent quality", "Good quality", "Fair quality", "Low quality"])
         # It's OK if no faces have quality scores (some crops lack them)
         # But raw "Quality: XX.XX" should NOT appear
         assert "Quality: " not in html, "Raw quality scores should not be shown to users"
@@ -83,8 +79,9 @@ class TestFaceCardSize:
         response = client.get("/?section=confirmed")
         assert response.status_code == 200
         # New design uses aspect-square hero images, old design uses min-w
-        assert ("aspect-square" in response.text or "min-w-[150px]" in response.text), \
+        assert "aspect-square" in response.text or "min-w-[150px]" in response.text, (
             "Cards need either aspect-square hero or minimum width"
+        )
 
     def test_face_grid_uses_responsive_columns(self, client):
         """Card grid uses responsive columns (DD-005 photo-dominant cards)."""
@@ -131,9 +128,11 @@ class TestNameTruncation:
     def test_companion_names_wider(self, client):
         """Companion name spans should use max-w-[140px], not max-w-[80px]."""
         registry = load_registry()
-        confirmed = [i for i in registry.list_identities()
-                     if i.get("state") == "CONFIRMED"
-                     and not i.get("name", "").startswith("Unidentified")]
+        confirmed = [
+            i
+            for i in registry.list_identities()
+            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
+        ]
         if not confirmed:
             pytest.skip("No confirmed identities")
 
@@ -149,9 +148,11 @@ class TestNameTruncation:
     def test_companion_names_have_title_tooltip(self, client):
         """Companion name elements should have title attribute for full name on hover."""
         registry = load_registry()
-        confirmed = [i for i in registry.list_identities()
-                     if i.get("state") == "CONFIRMED"
-                     and not i.get("name", "").startswith("Unidentified")]
+        confirmed = [
+            i
+            for i in registry.list_identities()
+            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
+        ]
         if not confirmed:
             pytest.skip("No confirmed identities")
 
@@ -161,7 +162,7 @@ class TestNameTruncation:
             if "Often appears with" in html:
                 # Find the section
                 idx = html.index("Often appears with")
-                section = html[idx:idx + 2000]
+                section = html[idx : idx + 2000]
                 # Companion names should have title attributes
                 assert "title=" in section, "Companion names need title tooltip for full name"
                 return
@@ -170,7 +171,7 @@ class TestNameTruncation:
 
 
 class TestRunFaceAnalysisFeedback:
-    """A3: Run Face Analysis button should show loading feedback."""
+    """A3: Detect Faces button should show loading feedback."""
 
     def test_analysis_button_has_loading_indicator(self, client):
         """Face analysis button should have htmx-indicator for loading state."""
@@ -181,7 +182,7 @@ class TestRunFaceAnalysisFeedback:
         for photo in photos[:10]:
             photo_id = photo.get("photo_id", "")
             response = client.get(f"/photo/{photo_id}/partial")
-            if response.status_code == 200 and "Run Face Analysis" in response.text:
+            if response.status_code == 200 and "Detect Faces" in response.text:
                 html = response.text
                 assert "Analyzing faces..." in html, "Should show 'Analyzing faces...' indicator text"
                 assert "hx-disabled-elt" in html, "Button should be disabled during request"
@@ -232,7 +233,7 @@ class TestEnterKeyHandler:
             if response.status_code == 200 and "tag-search" in response.text:
                 html = response.text
                 # The HTMX trigger should include both keyup debounce AND Enter keydown
-                if "keydown[key==&#x27;Enter&#x27;]" in html or 'keydown[key==\'Enter\']' in html:
+                if "keydown[key==&#x27;Enter&#x27;]" in html or "keydown[key=='Enter']" in html:
                     return
 
         pytest.skip("No photos with face tag search found")

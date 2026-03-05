@@ -2,30 +2,33 @@
 
 from unittest.mock import patch
 
-import pytest
 
 
 class TestFaceAlignmentSection:
     """Test _build_face_alignment_section rendering."""
 
     def test_admin_sees_trigger_when_no_alignment(self):
-        """Admin sees 'Run Face Analysis' button when no alignment exists."""
+        """Admin sees 'Detect Faces' button when no alignment exists."""
         from app.main import _build_face_alignment_section
 
-        with patch("app.face_alignment.get_cached_alignment", return_value=None), \
-             patch("app.face_alignment.load_alignments_from_file", return_value={}):
+        with (
+            patch("app.face_alignment.get_cached_alignment", return_value=None),
+            patch("app.face_alignment.load_alignments_from_file", return_value={}),
+        ):
             result = _build_face_alignment_section("photo_test", is_admin=True)
 
         html = repr(result)
-        assert "Run Face Analysis" in html
+        assert "Detect Faces" in html
         assert "face-alignment-trigger" in html
 
     def test_non_admin_sees_nothing_when_no_alignment(self):
         """Non-admin sees nothing when no alignment exists."""
         from app.main import _build_face_alignment_section
 
-        with patch("app.face_alignment.get_cached_alignment", return_value=None), \
-             patch("app.face_alignment.load_alignments_from_file", return_value={}):
+        with (
+            patch("app.face_alignment.get_cached_alignment", return_value=None),
+            patch("app.face_alignment.load_alignments_from_file", return_value={}),
+        ):
             result = _build_face_alignment_section("photo_test", is_admin=False)
 
         assert result is None
@@ -74,9 +77,10 @@ class TestFaceAlignmentSection:
             "unmatched_faces": [],
         }
 
-        with patch("app.face_alignment.get_cached_alignment", return_value=None), \
-             patch("app.face_alignment.load_alignments_from_file",
-                   return_value={"photo_test": alignment_data}):
+        with (
+            patch("app.face_alignment.get_cached_alignment", return_value=None),
+            patch("app.face_alignment.load_alignments_from_file", return_value={"photo_test": alignment_data}),
+        ):
             result = _build_face_alignment_section("photo_test", is_admin=False)
 
         html = repr(result)
@@ -101,9 +105,10 @@ class TestFaceAlignmentSection:
             "unmatched_faces": ["face_3"],
         }
 
-        with patch("app.face_alignment.get_cached_alignment", return_value=None), \
-             patch("app.face_alignment.load_alignments_from_file",
-                   return_value={"photo_mismatch": alignment_data}):
+        with (
+            patch("app.face_alignment.get_cached_alignment", return_value=None),
+            patch("app.face_alignment.load_alignments_from_file", return_value={"photo_mismatch": alignment_data}),
+        ):
             result = _build_face_alignment_section("photo_mismatch", is_admin=False)
 
         html = repr(result)
@@ -123,18 +128,24 @@ class TestFaceAlignmentSection:
             "scene_context": "",
             "aligned_faces": [
                 {
-                    "face_id": "f1", "face_index": 0, "bbox": [0, 0, 10, 10],
-                    "estimated_age": 30, "gender": "male", "gemini_description": "...",
-                    "is_subject": True, "matched": True,
+                    "face_id": "f1",
+                    "face_index": 0,
+                    "bbox": [0, 0, 10, 10],
+                    "estimated_age": 30,
+                    "gender": "male",
+                    "gemini_description": "...",
+                    "is_subject": True,
+                    "matched": True,
                 }
             ],
             "gemini_only_faces": [],
             "unmatched_faces": [],
         }
 
-        with patch("app.face_alignment.get_cached_alignment", return_value=None), \
-             patch("app.face_alignment.load_alignments_from_file",
-                   return_value={"photo_x": alignment_data}):
+        with (
+            patch("app.face_alignment.get_cached_alignment", return_value=None),
+            patch("app.face_alignment.load_alignments_from_file", return_value={"photo_x": alignment_data}),
+        ):
             result = _build_face_alignment_section("photo_x", is_admin=True)
 
         html = repr(result)
@@ -152,25 +163,34 @@ class TestFaceAlignmentSection:
             "scene_context": "",
             "aligned_faces": [
                 {
-                    "face_id": "f1", "face_index": 0, "bbox": [0, 0, 10, 10],
-                    "estimated_age": 30, "gender": "male",
+                    "face_id": "f1",
+                    "face_index": 0,
+                    "bbox": [0, 0, 10, 10],
+                    "estimated_age": 30,
+                    "gender": "male",
                     "gemini_description": "Real person",
-                    "is_subject": True, "matched": True,
+                    "is_subject": True,
+                    "matched": True,
                 },
                 {
-                    "face_id": "f2", "face_index": 1, "bbox": [20, 0, 30, 10],
-                    "estimated_age": None, "gender": None,
+                    "face_id": "f2",
+                    "face_index": 1,
+                    "bbox": [20, 0, 30, 10],
+                    "estimated_age": None,
+                    "gender": None,
                     "gemini_description": "Newspaper face",
-                    "is_subject": False, "matched": True,
+                    "is_subject": False,
+                    "matched": True,
                 },
             ],
             "gemini_only_faces": [],
             "unmatched_faces": [],
         }
 
-        with patch("app.face_alignment.get_cached_alignment", return_value=None), \
-             patch("app.face_alignment.load_alignments_from_file",
-                   return_value={"photo_bg": alignment_data}):
+        with (
+            patch("app.face_alignment.get_cached_alignment", return_value=None),
+            patch("app.face_alignment.load_alignments_from_file", return_value={"photo_bg": alignment_data}),
+        ):
             result = _build_face_alignment_section("photo_bg", is_admin=False)
 
         html = repr(result)

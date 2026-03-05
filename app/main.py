@@ -1864,7 +1864,7 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
 
     Shows per-face Gemini descriptions (from PRD-015 coordinate bridging).
     Returns None if no alignment data exists for this photo.
-    Admin users see a "Run Face Analysis" trigger button if not yet aligned.
+    Admin users see a "Detect Faces" trigger button if not yet aligned.
     """
     from app.face_alignment import get_cached_alignment, load_alignments
 
@@ -1883,7 +1883,7 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
             P("No face descriptions available yet.", cls="text-slate-400 text-sm mb-2"),
             Div(
                 Button(
-                    "Run Face Analysis",
+                    "Detect Faces",
                     cls="text-sm px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white "
                     "rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
                     hx_post=f"/api/face-alignment/{photo_id}",
@@ -16688,6 +16688,7 @@ def _load_photo_locations() -> dict:
     """Load geocoded photo locations (photo_id -> location info).
 
     Returns dict keyed by photo_id with lat, lng, location_name, etc.
+    Dual-keys inbox IDs to SHA256 IDs (same pattern as _load_date_labels).
     """
     global _photo_locations_cache
     if _photo_locations_cache is not None:
@@ -16699,6 +16700,21 @@ def _load_photo_locations() -> dict:
         try:
             data = json.loads(locations_path.read_text())
             _photo_locations_cache = data.get("photos", {})
+
+            # Dual-key: also index inbox_* IDs by their SHA256 cache ID
+            try:
+                from core.photo_registry import PhotoRegistry
+
+                photo_registry = PhotoRegistry.load(data_path / "photo_index.json")
+                for pid in list(_photo_locations_cache.keys()):
+                    if pid.startswith("inbox_"):
+                        path = photo_registry.get_photo_path(pid)
+                        if path:
+                            fname = Path(path).name
+                            sha_id = hashlib.sha256(fname.encode("utf-8")).hexdigest()[:16]
+                            _photo_locations_cache[sha_id] = _photo_locations_cache[pid]
+            except Exception:
+                pass
         except Exception:
             pass
     return _photo_locations_cache

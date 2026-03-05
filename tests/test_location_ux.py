@@ -11,13 +11,12 @@ Session 81 Act 3.
 """
 
 import pytest
-from unittest.mock import patch, MagicMock
-from contextlib import ExitStack
 
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def date_labels_with_location():
@@ -129,6 +128,7 @@ def _clear_caches(main_module):
 # Location Label + Confidence Badge
 # ---------------------------------------------------------------------------
 
+
 class TestLocationLabelAndBadge:
     """Location name and confidence badge render correctly."""
 
@@ -136,6 +136,7 @@ class TestLocationLabelAndBadge:
         """Location name appears in the AI analysis section."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -148,6 +149,7 @@ class TestLocationLabelAndBadge:
         """Location region appended after location name."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -160,6 +162,7 @@ class TestLocationLabelAndBadge:
         """High confidence badge uses emerald styling."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -173,6 +176,7 @@ class TestLocationLabelAndBadge:
         """Medium confidence badge uses amber styling."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_medium_confidence)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -188,6 +192,7 @@ class TestLocationLabelAndBadge:
         """Low confidence badge uses red styling."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_low_confidence)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -201,6 +206,7 @@ class TestLocationLabelAndBadge:
         """Location Estimate heading appears in the section."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -214,6 +220,7 @@ class TestLocationLabelAndBadge:
 # Evidence Text
 # ---------------------------------------------------------------------------
 
+
 class TestLocationEvidence:
     """Gemini evidence text renders in location section."""
 
@@ -221,6 +228,7 @@ class TestLocationEvidence:
         """Gemini reasoning text appears with location-evidence testid."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -234,6 +242,7 @@ class TestLocationEvidence:
         """When only label has location_estimate (no photo_locations), still shows it."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, {})
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -247,6 +256,7 @@ class TestLocationEvidence:
 # Leaflet Map
 # ---------------------------------------------------------------------------
 
+
 class TestLeafletMap:
     """Embedded map renders when geocoded data available."""
 
@@ -254,6 +264,7 @@ class TestLeafletMap:
         """Map container with data-testid='location-map' when lat/lng present."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -267,6 +278,7 @@ class TestLeafletMap:
         """Map initialization uses the correct lat/lng from location data."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -280,6 +292,7 @@ class TestLeafletMap:
         """No map element when location data lacks lat/lng."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_no_coords)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -294,6 +307,7 @@ class TestLeafletMap:
         """Map tile layer uses CARTO dark tiles (in global Leaflet init script)."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         # CARTO dark tiles URL is in the global page header script
         # (loaded dynamically via DOMContentLoaded + Leaflet onload)
         hdrs_html = "".join(to_xml(h) for h in main_module.app.hdrs)
@@ -304,6 +318,7 @@ class TestLeafletMap:
 # No Location Section
 # ---------------------------------------------------------------------------
 
+
 class TestNoLocationSection:
     """No location section when photo has no location data."""
 
@@ -311,6 +326,7 @@ class TestNoLocationSection:
         """Photo without location data does not show Location Estimate section."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, {})
         try:
             section = main_module._build_ai_analysis_section("photo_no_loc")
@@ -324,6 +340,7 @@ class TestNoLocationSection:
         """Location section has data-testid='location-estimate' when data present."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1")
@@ -337,6 +354,7 @@ class TestNoLocationSection:
 # Admin vs Non-Admin
 # ---------------------------------------------------------------------------
 
+
 class TestLocationAdminCorrection:
     """Admin correction form visibility."""
 
@@ -344,6 +362,7 @@ class TestLocationAdminCorrection:
         """Admin user sees the location correction form."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1", is_admin=True)
@@ -357,6 +376,7 @@ class TestLocationAdminCorrection:
         """Non-admin user does NOT see the location correction form."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1", is_admin=False)
@@ -370,6 +390,7 @@ class TestLocationAdminCorrection:
         """Admin gets a draggable map marker (data-draggable attribute)."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1", is_admin=True)
@@ -382,6 +403,7 @@ class TestLocationAdminCorrection:
         """Non-admin gets a non-draggable map marker (data-draggable=false)."""
         import app.main as main_module
         from fasthtml.common import to_xml
+
         _setup_caches(main_module, date_labels_with_location, photo_locations_data)
         try:
             section = main_module._build_ai_analysis_section("photo_loc_1", is_admin=False)
@@ -395,12 +417,14 @@ class TestLocationAdminCorrection:
 # _load_photo_locations
 # ---------------------------------------------------------------------------
 
+
 class TestLoadPhotoLocations:
     """_load_photo_locations() function behavior."""
 
     def test_returns_dict(self):
         """_load_photo_locations() returns a dict."""
         import app.main as main_module
+
         # Clear cache to force reload
         main_module._photo_locations_cache = None
         try:
@@ -412,7 +436,7 @@ class TestLoadPhotoLocations:
     def test_returns_empty_dict_when_no_file(self, tmp_path):
         """Returns empty dict when photo_locations.json does not exist."""
         import app.main as main_module
-        from pathlib import Path
+
         main_module._photo_locations_cache = None
         original_data_dir = main_module.DATA_DIR
         try:
@@ -426,6 +450,7 @@ class TestLoadPhotoLocations:
     def test_caches_result(self):
         """Subsequent calls return cached result."""
         import app.main as main_module
+
         main_module._photo_locations_cache = {"cached": True}
         try:
             result = main_module._load_photo_locations()
@@ -437,7 +462,6 @@ class TestLoadPhotoLocations:
         """Loads photo locations from JSON file."""
         import app.main as main_module
         import json
-        from pathlib import Path
 
         locations_data = {
             "version": 1,
@@ -448,7 +472,7 @@ class TestLoadPhotoLocations:
                     "lng": 28.2261,
                     "location_name": "Rhodes, Greece",
                 }
-            }
+            },
         }
         locations_path = tmp_path / "photo_locations.json"
         locations_path.write_text(json.dumps(locations_data))
@@ -463,4 +487,105 @@ class TestLoadPhotoLocations:
             assert result["test_photo"]["lat"] == 36.4413
         finally:
             main_module.DATA_DIR = original_data_dir
+            main_module._photo_locations_cache = None
+
+    def test_dual_keys_inbox_ids_to_sha256(self, tmp_path):
+        """inbox_* IDs are also keyed by SHA256 of their filename."""
+        import app.main as main_module
+        import json
+        import hashlib
+
+        inbox_id = "inbox_staged-20260210-182610_5_757557421.130308"
+        filename = "757557421.130308.jpg"
+        sha_id = hashlib.sha256(filename.encode("utf-8")).hexdigest()[:16]
+
+        locations_data = {
+            "version": 1,
+            "photos": {
+                inbox_id: {
+                    "photo_id": inbox_id,
+                    "lat": 25.7617,
+                    "lng": -80.1918,
+                    "location_name": "Miami, Florida",
+                }
+            },
+        }
+        locations_path = tmp_path / "photo_locations.json"
+        locations_path.write_text(json.dumps(locations_data))
+
+        # Also need photo_index.json for the registry lookup
+        photo_index = {
+            "schema_version": 1,
+            "photos": {
+                inbox_id: {
+                    "path": filename,
+                    "face_ids": [],
+                    "source": "test",
+                }
+            },
+            "face_to_photo": {},
+        }
+        photo_index_path = tmp_path / "photo_index.json"
+        photo_index_path.write_text(json.dumps(photo_index))
+
+        original_data_dir = main_module.DATA_DIR
+        original_data_path = main_module.data_path
+        main_module._photo_locations_cache = None
+        try:
+            main_module.DATA_DIR = str(tmp_path)
+            main_module.data_path = tmp_path
+            result = main_module._load_photo_locations()
+            # Original inbox key still works
+            assert inbox_id in result
+            # SHA256 key also works
+            assert sha_id in result, f"SHA256 key {sha_id} not found in {list(result.keys())}"
+            assert result[sha_id]["location_name"] == "Miami, Florida"
+            assert result[sha_id]["lat"] == 25.7617
+        finally:
+            main_module.DATA_DIR = original_data_dir
+            main_module.data_path = original_data_path
+            main_module._photo_locations_cache = None
+
+    def test_dual_key_matches_leon_restaurant_photo(self, tmp_path):
+        """Specific regression test for Leon's Restaurant photo ID mismatch."""
+        import app.main as main_module
+        import json
+        import hashlib
+
+        inbox_id = "inbox_staged-20260210-182610_5_757557421.130308"
+        filename = "757557421.130308.jpg"
+        expected_sha = "3192877a90a174e9"
+        actual_sha = hashlib.sha256(filename.encode("utf-8")).hexdigest()[:16]
+        assert actual_sha == expected_sha, f"SHA mismatch: {actual_sha} != {expected_sha}"
+
+        locations_data = {
+            "version": 1,
+            "photos": {
+                inbox_id: {
+                    "photo_id": inbox_id,
+                    "lat": 25.7617,
+                    "lng": -80.1918,
+                    "location_name": "Miami, Florida",
+                }
+            },
+        }
+        (tmp_path / "photo_locations.json").write_text(json.dumps(locations_data))
+        photo_index = {
+            "schema_version": 1,
+            "photos": {inbox_id: {"path": filename, "face_ids": [], "source": "test"}},
+            "face_to_photo": {},
+        }
+        (tmp_path / "photo_index.json").write_text(json.dumps(photo_index))
+
+        original_data_dir = main_module.DATA_DIR
+        original_data_path = main_module.data_path
+        main_module._photo_locations_cache = None
+        try:
+            main_module.DATA_DIR = str(tmp_path)
+            main_module.data_path = tmp_path
+            result = main_module._load_photo_locations()
+            assert expected_sha in result, f"Leon's photo SHA {expected_sha} not in locations"
+        finally:
+            main_module.DATA_DIR = original_data_dir
+            main_module.data_path = original_data_path
             main_module._photo_locations_cache = None
