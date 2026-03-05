@@ -30,6 +30,9 @@ The `/photos` public route (line 15557) had its own sort implementation that was
 
 ## Next Session Should Verify
 
-1. Sort working in production after second deploy (newest shows 1980s/1990s first)
-2. Claude Benatar photo needs manual re-processing (check staging data)
-3. Consider extracting shared sort helper to avoid future duplicate logic
+1. Sort working in production after sort fix deploy
+2. Claude Benatar photo LOST — raw file and crop both 404 from R2, uploads dir gone from Railway. Need recovery attempt or re-upload request
+3. Site performance degradation — face_gemini_alignments Supabase query on every page load
+4. Leon's Restaurant missing Face Analysis (needs Detect Faces button clicked)
+5. All photos need upload_date backfill
+6. See `docs/prompts/session-89e-prompt.md` for full plan
