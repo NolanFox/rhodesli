@@ -971,3 +971,310 @@ async def post(photo: UploadFile = None, sess=None):
     )
 
     return Div(photo_preview, *parts, cta_section, cls="py-4", data_testid="estimate-upload-result")
+
+
+# =============================================================================
+# ADMIN RE-ANALYZE ENDPOINT
+# =============================================================================
+
+
+def _load_photo_image_bytes(photo_id: str) -> tuple[bytes | None, str]:
+    """Load photo image bytes for a given photo_id.
+
+    Returns (image_bytes, suffix) or (None, "") if photo not found.
+    Works in both R2 and local modes.
+    """
+    import urllib.request
+
+    _main_mod._build_caches()
+    photo = _main_mod.get_photo_metadata(photo_id)
+    if not photo:
+        return None, ""
+
+    filename = photo.get("filename", "")
+    suffix = Path(filename).suffix.lower() or ".jpg"
+
+    if storage.is_r2_mode():
+        url = storage.get_photo_url(filename)
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Rhodesli/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                return resp.read(), suffix
+        except Exception as e:
+            logger.warning(f"Failed to fetch photo from R2: {e}")
+            return None, ""
+    else:
+        local_path = Path("raw_photos") / Path(filename).name
+        if local_path.exists():
+            return local_path.read_bytes(), suffix
+        return None, ""
+
+
+def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
+    """Build GEDCOM context string for identified faces in a photo.
+
+    Returns context string or None if no GEDCOM data available.
+    """
+    _main_mod._build_caches()
+    photo = _main_mod.get_photo_metadata(photo_id)
+    if not photo:
+        return None
+
+    registry = _main_mod.load_registry()
+    face_ids = [f["face_id"] for f in photo.get("faces", [])]
+    if not face_ids:
+        return None
+
+    # Get GEDCOM face links from Supabase
+    gedcom_links = _main_mod._load_gedcom_face_links()
+    if not gedcom_links:
+        return None
+
+    # Check if any identified faces have GEDCOM links
+    has_linked_faces = False
+    for face_id in face_ids:
+        identity = _main_mod.get_identity_for_face(registry, face_id)
+        if identity and identity.get("identity_id") in gedcom_links:
+            has_linked_faces = True
+            break
+
+    if not has_linked_faces:
+        return None
+
+    # Load GEDCOM data via the batch pipeline's loader
+    try:
+        from scripts.run_combined_pipeline import load_gedcom_data
+
+        gedcom_data = load_gedcom_data()
+        if not gedcom_data:
+            return None
+
+        from scripts.run_combined_pipeline import build_gedcom_context
+
+        # Build face list matching the expected format
+        class _FaceStub:
+            def __init__(self, face_id, identity_name):
+                self.face_id = face_id
+                self.identity_name = identity_name
+
+        faces = []
+        for face_id in face_ids:
+            identity = _main_mod.get_identity_for_face(registry, face_id)
+            name = identity.get("name") if identity else None
+            faces.append(_FaceStub(face_id, name))
+
+        identities_dict = {"identities": registry._identities}
+        return build_gedcom_context(photo_id, faces, identities_dict, gedcom_data)
+    except Exception as e:
+        logger.warning(f"Failed to build GEDCOM context: {e}")
+        return None
+
+
+@rt("/api/photo/{photo_id}/reanalyze")
+async def post(photo_id: str, sess=None):
+    """Admin-only: Re-run Gemini analysis on a photo with GEDCOM context.
+
+    Useful after linking GEDCOM records to identified faces.
+    Returns HTMX partial showing what changed.
+    """
+    denied = _main_mod._check_admin(sess)
+    if denied:
+        return denied
+
+    gemini_key = os.getenv("GEMINI_API_KEY", "")
+    if not gemini_key:
+        return Div(
+            P("Gemini API key not configured.", cls="text-red-400 text-sm"),
+            data_testid="reanalyze-error",
+        )
+
+    # Load photo image
+    image_bytes, suffix = _load_photo_image_bytes(photo_id)
+    if not image_bytes:
+        return Div(
+            P("Could not load photo image.", cls="text-red-400 text-sm"),
+            data_testid="reanalyze-error",
+        )
+
+    # Get old data for comparison
+    old_labels = _main_mod._load_date_labels()
+    old_label = old_labels.get(photo_id, {})
+    old_locations = _main_mod._load_photo_locations()
+    old_location = old_locations.get(photo_id, {})
+    old_location_name = old_location.get("location_name", "Unknown")
+
+    # Build GEDCOM context
+    gedcom_context = _build_gedcom_context_for_photo(photo_id)
+
+    # Call Gemini with enriched prompt
+    result = _call_gemini_date_estimate(
+        image_bytes,
+        suffix,
+        gemini_key,
+        photo_id=photo_id,
+        gedcom_context=gedcom_context,
+        call_type="re_analysis",
+        trigger="admin_rerun",
+    )
+
+    if not result:
+        return Div(
+            P("Gemini analysis failed. Check logs for details.", cls="text-amber-400 text-sm"),
+            data_testid="reanalyze-error",
+        )
+
+    # Extract results
+    new_decade = result.get("estimated_decade")
+    new_year = result.get("best_year_estimate")
+    new_confidence = result.get("confidence", "unknown")
+    location_data = result.get("location", {})
+    new_location = location_data.get("place", "") if isinstance(location_data, dict) else ""
+
+    # Update date_labels.json
+    import json as _json
+
+    date_labels_path = Path("data/date_labels.json")
+    if date_labels_path.exists():
+        try:
+            all_labels = _json.loads(date_labels_path.read_text())
+            # Update the entry for this photo
+            all_labels[photo_id] = {
+                **old_label,
+                "estimated_decade": new_decade,
+                "best_year_estimate": new_year,
+                "confidence": new_confidence,
+                "probable_range": result.get("probable_range", []),
+                "reasoning_summary": result.get("reasoning_summary", ""),
+                "evidence": result.get("evidence", {}),
+                "location_estimate": new_location,
+                "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
+                "reanalyzed_with_gedcom": bool(gedcom_context),
+            }
+            date_labels_path.write_text(_json.dumps(all_labels, indent=2, ensure_ascii=False))
+            # Invalidate cache
+            _main_mod._date_labels_cache = None
+        except Exception as e:
+            logger.warning(f"Failed to update date_labels.json: {e}")
+
+    # Update photo_locations.json
+    if new_location:
+        locations_path = Path("data/photo_locations.json")
+        if locations_path.exists():
+            try:
+                all_locations = _json.loads(locations_path.read_text())
+                # Try to geocode the new location
+                new_lat, new_lng = _geocode_location(new_location)
+                all_locations[photo_id] = {
+                    "photo_id": photo_id,
+                    "lat": new_lat,
+                    "lng": new_lng,
+                    "location_name": new_location,
+                    "location_estimate": location_data.get("visual_evidence", ""),
+                    "confidence": location_data.get("confidence", "medium"),
+                    "region": _guess_region(new_location),
+                    "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
+                }
+                locations_path.write_text(_json.dumps(all_locations, indent=2, ensure_ascii=False))
+                # Invalidate cache
+                _main_mod._photo_locations_cache = None
+            except Exception as e:
+                logger.warning(f"Failed to update photo_locations.json: {e}")
+
+    # Build diff summary
+    changes = []
+    old_decade = old_label.get("estimated_decade")
+    if old_decade and new_decade and old_decade != new_decade:
+        changes.append(f"Date: {old_decade}s → {new_decade}s")
+    if old_location_name and new_location and old_location_name != new_location:
+        changes.append(f"Location: {old_location_name} → {new_location}")
+
+    from rhodesli_ml.gemini_config import GEMINI_MODEL, get_model_pricing
+
+    pricing = get_model_pricing(GEMINI_MODEL)
+    est_cost = pricing.get("per_photo", 0.037)
+
+    return Div(
+        Div(
+            Span("Re-analysis complete", cls="text-sm font-semibold text-emerald-400"),
+            cls="mb-2",
+        ),
+        Div(
+            P(f"Date: c. {new_year or new_decade}", cls="text-sm text-white"),
+            P(f"Location: {new_location}", cls="text-sm text-white") if new_location else None,
+            P(f"Confidence: {new_confidence}", cls="text-xs text-slate-400"),
+            P(f"GEDCOM context: {'Yes' if gedcom_context else 'No'}", cls="text-xs text-slate-400"),
+            cls="mb-2",
+        ),
+        Div(
+            *[P(change, cls="text-xs text-amber-400") for change in changes],
+            cls="mb-2",
+        )
+        if changes
+        else P("No changes detected.", cls="text-xs text-slate-500 mb-2"),
+        P(f"Est. cost: ${est_cost:.3f} · Model: {GEMINI_MODEL}", cls="text-[10px] text-slate-600"),
+        cls="bg-slate-800/50 rounded-lg p-3 border border-emerald-500/30",
+        data_testid="reanalyze-result",
+    )
+
+
+def _geocode_location(location_text: str) -> tuple[float, float]:
+    """Simple geocoding from location text to lat/lng.
+
+    Uses the geocoding dictionary from scripts/geocode_photos.py patterns.
+    Returns (0, 0) if no match found.
+    """
+    text_lower = location_text.lower()
+
+    LOCATION_COORDS = {
+        "asheville": (35.5951, -82.5515),
+        "rhodes": (36.4341, 28.2176),
+        "brooklyn": (40.6782, -73.9442),
+        "new york": (40.7128, -74.0060),
+        "miami": (25.7617, -80.1918),
+        "tampa": (27.9506, -82.4572),
+        "montgomery": (32.3792, -86.3077),
+        "atlanta": (33.7490, -84.3880),
+        "havana": (23.1136, -82.3666),
+        "seattle": (47.6062, -122.3321),
+        "los angeles": (34.0522, -118.2437),
+        "congo": (-4.3250, 15.3222),
+        "jerusalem": (31.7683, 35.2137),
+        "israel": (31.0461, 34.8516),
+        "greece": (37.9838, 23.7275),
+    }
+
+    for key, coords in LOCATION_COORDS.items():
+        if key in text_lower:
+            return coords
+    return (0.0, 0.0)
+
+
+def _guess_region(location_text: str) -> str:
+    """Guess the region from location text."""
+    text_lower = location_text.lower()
+    us_cities = [
+        "asheville",
+        "new york",
+        "brooklyn",
+        "miami",
+        "tampa",
+        "montgomery",
+        "atlanta",
+        "seattle",
+        "los angeles",
+        "north carolina",
+        "florida",
+        "georgia",
+        "alabama",
+    ]
+    if any(c in text_lower for c in us_cities):
+        return "United States"
+    if "rhodes" in text_lower or "greece" in text_lower:
+        return "Greece"
+    if "israel" in text_lower or "jerusalem" in text_lower:
+        return "Israel"
+    if "havana" in text_lower or "cuba" in text_lower:
+        return "Cuba"
+    if "congo" in text_lower:
+        return "Congo"
+    return "Unknown"
