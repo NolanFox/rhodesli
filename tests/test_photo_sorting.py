@@ -156,3 +156,32 @@ class TestPhotoSortBySource:
         assert resp.status_code == 200
         assert "By Source" in resp.text
         assert 'value="by_source"' in resp.text
+
+
+class TestPhotosRouteSort:
+    """Test the /photos route sorting (separate from /?section=photos)."""
+
+    def test_photos_route_newest_sorts_by_date(self, client, mock_photo_cache, mock_date_labels):
+        """The /photos route must sort by date, not filename."""
+        patches = _sort_patches(mock_photo_cache, mock_date_labels)
+        with patch.multiple(
+            "app.main", **{k.split(".")[-1]: v for k, v in patches.items() if k.startswith("app.main.")}
+        ):
+            resp = client.get("/photos?sort_by=newest")
+        assert resp.status_code == 200
+        ids = _extract_photo_ids_from_response(resp.text)
+        # Newest first: ccc(1980), aaa(1955), bbb(1920)
+        assert ids.index("ccc333") < ids.index("aaa111") < ids.index("bbb222"), (
+            f"Expected newest-first order ccc>aaa>bbb on /photos route, got: {ids}"
+        )
+
+    def test_photos_route_has_recently_uploaded_option(self, client, mock_photo_cache):
+        """The /photos dropdown should include Recently Uploaded."""
+        patches = _sort_patches(mock_photo_cache)
+        with patch.multiple(
+            "app.main", **{k.split(".")[-1]: v for k, v in patches.items() if k.startswith("app.main.")}
+        ):
+            resp = client.get("/photos")
+        assert resp.status_code == 200
+        assert "Recently Uploaded" in resp.text
+        assert 'value="recently_uploaded"' in resp.text
