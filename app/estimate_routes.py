@@ -1022,7 +1022,13 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
         return None
 
     registry = _main_mod.load_registry()
-    face_ids = photo.get("face_ids", [])
+    # _photo_cache stores faces as list of dicts with "face_id" key,
+    # not as flat "face_ids" list (that's the photo_index.json format).
+    faces_list = photo.get("faces", [])
+    face_ids = [f["face_id"] for f in faces_list if "face_id" in f]
+    if not face_ids:
+        # Fallback to flat face_ids if present (photo_index.json format)
+        face_ids = photo.get("face_ids", [])
     if not face_ids:
         logger.info(f"GEDCOM context: no face_ids for photo {photo_id}")
         return None
