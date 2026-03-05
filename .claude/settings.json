@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo 'PARALLELIZATION CHECK: Before starting, analyze this prompt for parallel opportunities. Independent phases (different files) can use worktree-isolated subagents. Max 3-4 worktrees. Merge: docs first, then code.'"
+            "command": "bash -c 'REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); T=\"$REPO/.claude/commits_since_clear.txt\"; C=0; if [ -f \"$T\" ]; then C=$(cat \"$T\" | tr -d \"[:space:]\"); fi; if [ \"$C\" -ge 2 ] 2>/dev/null; then echo \"\" >&2; echo \"BLOCKED: $C commits without /clear. Run /clear FIRST.\" >&2; echo \"Lesson 89: Sessions 80+89 both failed from this exact mistake.\" >&2; echo \"\" >&2; fi; echo \"PARALLELIZATION CHECK: Before starting, analyze this prompt for parallel opportunities. Independent phases (different files) can use worktree-isolated subagents. Max 3-4 worktrees. Merge: docs first, then code.\"'"
           }
         ]
       }

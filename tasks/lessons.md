@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-101 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+102 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -135,10 +135,11 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 86 | Context overflow in long sessions — subagent results flood orchestrator, need context budget estimation |
 | 87 | Subagent commit discipline — every subagent MUST run tests AND commit ALL files before completing |
 | 88 | Monolithic app files prevent parallel worktree execution — Tracks touching app/main.py must be sequential |
-| 89 | /clear between acts is NON-NEGOTIABLE — never rationalize skipping it. Compaction at 2% destroyed session 80 |
+| 89 | **/clear between acts — REPEAT OFFENDER (Sessions 80+89). Behavioral instructions insufficient.** |
 | 96 | Multi-layered rendering pipeline bugs require iterative fix-verify cycles |
 | 97 | **Self-assessment must include visual verification evidence — "PASS" without screenshots is theater** |
 | 98 | **UUID/ID fields must be validated before write — truncated IDs cause silent cascade failures** |
 | 99 | **Session log + INDEX.md update must happen atomically with session completion** |
 | 100 | **Planning sessions must create context/prompt/log files BEFORE implementation** |
 | 101 | **Subagent work MUST be browser-verified before declaring PASS** |
+| 102 | **Behavioral instructions are insufficient — only mechanical enforcement works (Lesson 89 violated twice)** |

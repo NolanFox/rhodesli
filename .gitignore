@@ -107,3 +107,4 @@ docs/ux_audit/session_findings/screenshots/
 .claude/parallel_session_active
 notebookllm/
 scripts/extract_routes.py
+.claude/commits_since_clear.txt
