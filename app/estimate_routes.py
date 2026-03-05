@@ -3,10 +3,9 @@ Estimate routes extracted from app/main.py.
 
 All /estimate/* and /api/estimate/* routes plus estimate-exclusive helpers.
 """
+
 import logging
 import os
-from datetime import datetime, timezone
-from pathlib import Path
 
 from fasthtml.common import *
 from starlette.datastructures import UploadFile
@@ -50,6 +49,7 @@ def get(photo: str = "", sess=None):
     selected_photo = None
     if photo and photo in (_main_mod._photo_cache or {}):
         from core.year_estimation import estimate_photo_year
+
         selected_photo = _main_mod._photo_cache[photo]
         estimate_result = estimate_photo_year(
             photo_id=photo,
@@ -82,9 +82,15 @@ def get(photo: str = "", sess=None):
 
         photo_grid_items.append(
             A(
-                Img(src=purl, alt="Archive photo",
-                    cls=f"w-full h-20 object-cover rounded-lg {'ring-2 ring-amber-400' if is_selected else 'hover:ring-2 hover:ring-indigo-400'} transition-all"),
-                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500 block text-center mt-0.5"),
+                Img(
+                    src=purl,
+                    alt="Archive photo",
+                    cls=f"w-full h-20 object-cover rounded-lg {'ring-2 ring-amber-400' if is_selected else 'hover:ring-2 hover:ring-indigo-400'} transition-all",
+                ),
+                Span(
+                    f"{face_count} face{'s' if face_count != 1 else ''}",
+                    cls="text-[10px] text-slate-500 block text-center mt-0.5",
+                ),
                 href=f"/estimate?photo={pid}",
                 cls="block",
             )
@@ -106,9 +112,13 @@ def get(photo: str = "", sess=None):
             year_text = f"c. {ev['estimated_year']}" if ev.get("estimated_year") else "—"
             source_badge = ""
             if ev.get("birth_year_source") == "confirmed":
-                source_badge = Span("verified", cls="text-[10px] bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded-full ml-2")
+                source_badge = Span(
+                    "verified", cls="text-[10px] bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded-full ml-2"
+                )
             elif ev.get("birth_year_source") == "ml_inferred":
-                source_badge = Span("estimated", cls="text-[10px] bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded-full ml-2")
+                source_badge = Span(
+                    "estimated", cls="text-[10px] bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded-full ml-2"
+                )
 
             face_cards.append(
                 Div(
@@ -133,27 +143,37 @@ def get(photo: str = "", sess=None):
                     cls="flex items-center",
                 ),
                 P(", ".join(scene["clues"][:4]), cls="text-xs text-slate-400 mt-0.5"),
-                P(f"Suggests: {scene['scene_estimate']}", cls="text-sm text-slate-300 mt-1") if scene.get("scene_estimate") else None,
+                P(f"Suggests: {scene['scene_estimate']}", cls="text-sm text-slate-300 mt-1")
+                if scene.get("scene_estimate")
+                else None,
                 cls="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50",
             )
 
         # Confidence styling
         conf = estimate_result.get("confidence", "low")
-        conf_color = {"high": "text-emerald-400", "medium": "text-amber-400", "low": "text-slate-400"}.get(conf, "text-slate-400")
+        conf_color = {"high": "text-emerald-400", "medium": "text-amber-400", "low": "text-slate-400"}.get(
+            conf, "text-slate-400"
+        )
         conf_label = {"high": "High confidence", "medium": "Moderate confidence", "low": "Low confidence"}.get(conf, "")
         margin = estimate_result.get("margin", 10)
-        method_label = "Based on facial age analysis" if estimate_result.get("method") == "facial_age_aggregation" else "Based on scene analysis"
+        method_label = (
+            "Based on facial age analysis"
+            if estimate_result.get("method") == "facial_age_aggregation"
+            else "Based on scene analysis"
+        )
 
         result_section = Div(
             # Photo with estimate badge
             Div(
-                Img(src=photo_url_val, alt="Selected photo",
-                    cls="w-full max-w-lg mx-auto rounded-xl shadow-lg"),
+                Img(src=photo_url_val, alt="Selected photo", cls="w-full max-w-lg mx-auto rounded-xl shadow-lg"),
                 cls="mb-6",
             ),
             # Main estimate
             Div(
-                H2(f"Estimated: c. {estimate_result['year']}", cls="text-3xl font-serif font-bold text-white text-center"),
+                H2(
+                    f"Estimated: c. {estimate_result['year']}",
+                    cls="text-3xl font-serif font-bold text-white text-center",
+                ),
                 P(f"+/- {margin} years", cls="text-lg text-slate-400 text-center"),
                 Div(
                     Span(conf_label, cls=f"text-sm font-medium {conf_color}"),
@@ -165,18 +185,34 @@ def get(photo: str = "", sess=None):
             ),
             # How we estimated this
             H3("How we estimated this", cls="text-lg font-serif font-semibold text-white mb-4"),
-            Div(*face_cards, scene_card, cls="flex flex-col gap-3 mb-6") if face_cards or scene_card else
-            P("Based on visual analysis. Identify more people to improve this estimate.", cls="text-sm text-slate-500 italic"),
+            Div(*face_cards, scene_card, cls="flex flex-col gap-3 mb-6")
+            if face_cards or scene_card
+            else P(
+                "Based on visual analysis. Identify more people to improve this estimate.",
+                cls="text-sm text-slate-500 italic",
+            ),
             # Photo Detective evidence from Gemini (PRD-022)
             _main_mod._detective_evidence_section(labels.get(photo, {})),
             _main_mod._progressive_refinement_badge(labels.get(photo, {})),
             # CTAs
             Div(
-                _main_mod.share_button(url=f"/estimate?photo={photo}", style="button", label="Share Estimate",
-                             title=f"This photo was taken c. {estimate_result['year']}",
-                             text="Year estimation from the Rhodesli Heritage Archive"),
-                A("View Photo Page", href=f"/photo/{photo}", cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors"),
-                A("Try Another", href="/estimate", cls="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors border border-slate-700"),
+                _main_mod.share_button(
+                    url=f"/estimate?photo={photo}",
+                    style="button",
+                    label="Share Estimate",
+                    title=f"This photo was taken c. {estimate_result['year']}",
+                    text="Year estimation from the Rhodesli Heritage Archive",
+                ),
+                A(
+                    "View Photo Page",
+                    href=f"/photo/{photo}",
+                    cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors",
+                ),
+                A(
+                    "Try Another",
+                    href="/estimate",
+                    cls="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-lg transition-colors border border-slate-700",
+                ),
                 cls="flex flex-wrap justify-center gap-3 mt-6",
             ),
             cls="bg-slate-800/30 rounded-xl p-6 border border-slate-700/30 mt-8",
@@ -186,13 +222,19 @@ def get(photo: str = "", sess=None):
         photo_path = (selected_photo or {}).get("path") or (selected_photo or {}).get("filename", "")
         photo_url_val = storage.get_photo_url(photo_path) if photo_path else ""
         result_section = Div(
-            Img(src=photo_url_val, alt="Selected photo",
-                cls="w-full max-w-lg mx-auto rounded-xl shadow-lg mb-4") if photo_url_val else None,
+            Img(src=photo_url_val, alt="Selected photo", cls="w-full max-w-lg mx-auto rounded-xl shadow-lg mb-4")
+            if photo_url_val
+            else None,
             P("Not enough data to estimate the year for this photo.", cls="text-slate-400 text-center"),
-            P("Photos with identified people and known birth years produce the best estimates.",
-              cls="text-xs text-slate-500 text-center mt-2"),
-            A("Try another photo", href="/estimate",
-              cls="text-indigo-400 hover:text-indigo-300 text-sm text-center block mt-4"),
+            P(
+                "Photos with identified people and known birth years produce the best estimates.",
+                cls="text-xs text-slate-500 text-center mt-2",
+            ),
+            A(
+                "Try another photo",
+                href="/estimate",
+                cls="text-indigo-400 hover:text-indigo-300 text-sm text-center block mt-4",
+            ),
             cls="bg-slate-800/30 rounded-xl p-6 border border-slate-700/30 mt-8 text-center",
         )
 
@@ -232,23 +274,41 @@ def get(photo: str = "", sess=None):
             ),
             Section(
                 Div(
-                    H1("When Was This Photo Taken?",
-                        cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2"),
-                    P("Upload a photo or select one from the archive. Our AI estimates the year using facial age analysis and historical clues.",
-                      cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto"),
+                    H1(
+                        "When Was This Photo Taken?",
+                        cls="text-2xl sm:text-3xl font-serif font-bold text-white text-center mb-2",
+                    ),
+                    P(
+                        "Upload a photo or select one from the archive. Our AI estimates the year using facial age analysis and historical clues.",
+                        cls="text-slate-400 text-sm text-center mb-8 max-w-lg mx-auto",
+                    ),
                     # Upload zone
                     Div(
                         Form(
                             Div(
                                 Div(
-                                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" id="estimate-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
-                                    Img(id="estimate-preview", cls="hidden max-h-24 rounded-lg mx-auto mb-2 border border-slate-600", alt="Selected photo"),
-                                    P("Upload a photo to estimate its date", id="estimate-upload-text", cls="text-slate-400 text-sm mb-1"),
+                                    NotStr(
+                                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" id="estimate-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'
+                                    ),
+                                    Img(
+                                        id="estimate-preview",
+                                        cls="hidden max-h-24 rounded-lg mx-auto mb-2 border border-slate-600",
+                                        alt="Selected photo",
+                                    ),
+                                    P(
+                                        "Upload a photo to estimate its date",
+                                        id="estimate-upload-text",
+                                        cls="text-slate-400 text-sm mb-1",
+                                    ),
                                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs"),
-                                    Input(type="file", name="photo", accept="image/jpeg,image/png",
-                                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                                          onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('estimate-upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}var preview=document.getElementById('estimate-preview');var icon=document.getElementById('estimate-upload-icon');var txt=document.getElementById('estimate-upload-text');if(preview){var r=new FileReader();r.onload=function(e){preview.src=e.target.result;preview.classList.remove('hidden');if(icon)icon.classList.add('hidden');if(txt)txt.textContent='Photo selected - analyzing...'};r.readAsDataURL(f)}this.closest('form').requestSubmit()",
-                                          data_testid="estimate-upload-input"),
+                                    Input(
+                                        type="file",
+                                        name="photo",
+                                        accept="image/jpeg,image/png",
+                                        cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                                        onchange="var f=this.files[0];if(!f)return;var err=document.getElementById('estimate-upload-error');if(err)err.remove();if(!['image/jpeg','image/png'].includes(f.type)){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='Please select a JPG or PNG image.';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}if(f.size>10*1024*1024){var e=document.createElement('p');e.id='estimate-upload-error';e.className='text-red-400 text-sm text-center mt-2';e.textContent='File is too large (max 10 MB).';this.closest('form').parentNode.insertBefore(e,this.closest('form').nextSibling);this.value='';return}var preview=document.getElementById('estimate-preview');var icon=document.getElementById('estimate-upload-icon');var txt=document.getElementById('estimate-upload-text');if(preview){var r=new FileReader();r.onload=function(e){preview.src=e.target.result;preview.classList.remove('hidden');if(icon)icon.classList.add('hidden');if(txt)txt.textContent='Photo selected - analyzing...'};r.readAsDataURL(f)}this.closest('form').requestSubmit()",
+                                        data_testid="estimate-upload-input",
+                                    ),
                                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-6 transition-colors cursor-pointer",
                                 ),
                                 cls="mb-3",
@@ -263,42 +323,68 @@ def get(photo: str = "", sess=None):
                             data_testid="estimate-upload-form",
                             **{"hx-on::after-request": "if(event.detail.successful) this.reset()"},
                         ),
-                        Div(id="estimate-upload-spinner", cls="htmx-indicator text-center py-3",
+                        Div(
+                            id="estimate-upload-spinner",
+                            cls="htmx-indicator text-center py-3",
                             children=[
                                 Div(
-                                    Svg(viewBox="0 0 24 24", fill="none", cls="animate-spin h-5 w-5 text-amber-400 inline-block mr-2",
-                                        children=[NotStr('<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" class="opacity-75"></path>')]),
+                                    Svg(
+                                        viewBox="0 0 24 24",
+                                        fill="none",
+                                        cls="animate-spin h-5 w-5 text-amber-400 inline-block mr-2",
+                                        children=[
+                                            NotStr(
+                                                '<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" class="opacity-75"></path>'
+                                            )
+                                        ],
+                                    ),
                                     Span("Analyzing your photo for date clues...", cls="text-slate-400 text-sm"),
-                                    cls="flex items-center justify-center"
+                                    cls="flex items-center justify-center",
                                 ),
                                 P("This may take a moment for group photos.", cls="text-slate-500 text-xs mt-1"),
-                            ]),
+                            ],
+                        ),
                         Div(id="estimate-upload-result"),
                         cls="bg-slate-800/50 rounded-2xl p-6 max-w-md mx-auto mb-8",
                         data_testid="estimate-upload-area",
-                    ) if not photo else None,
+                    )
+                    if not photo
+                    else None,
                     # Results (if photo selected)
                     result_section,
                     # Photo selector with pagination
                     Div(
-                        H3("Select a Photo" if not photo else "Try Another Photo",
-                           cls="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3"),
-                        Div(*photo_grid_items, cls="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2",
-                            id="estimate-photo-grid"),
+                        H3(
+                            "Select a Photo" if not photo else "Try Another Photo",
+                            cls="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3",
+                        ),
                         Div(
-                            Button("Load More Photos",
-                                   hx_get=f"/api/estimate/photos?page=1",
-                                   hx_target="#estimate-photo-grid",
-                                   hx_swap="beforeend",
-                                   hx_swap_oob="true",
-                                   cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors",
-                                   id="load-more-estimate"),
+                            *photo_grid_items,
+                            cls="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2",
+                            id="estimate-photo-grid",
+                        ),
+                        Div(
+                            Button(
+                                "Load More Photos",
+                                hx_get="/api/estimate/photos?page=1",
+                                hx_target="#estimate-photo-grid",
+                                hx_swap="beforeend",
+                                hx_swap_oob="true",
+                                cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors",
+                                id="load-more-estimate",
+                            ),
                             cls="flex justify-center mt-4",
-                        ) if has_more else None,
+                        )
+                        if has_more
+                        else None,
                         cls="mt-8",
-                    ) if photo_grid_items else None,
-                    P("The more people you identify, the better the estimate.",
-                      cls="text-xs text-slate-500 text-center mt-6"),
+                    )
+                    if photo_grid_items
+                    else None,
+                    P(
+                        "The more people you identify, the better the estimate.",
+                        cls="text-xs text-slate-500 text-center mt-6",
+                    ),
                     cls="max-w-4xl mx-auto pt-8 pb-16 px-6",
                 ),
             ),
@@ -306,6 +392,8 @@ def get(photo: str = "", sess=None):
         ),
         _main_mod._share_script(),
     )
+
+
 @rt("/api/estimate/photos")
 def get(page: int = 0, sess=None):
     """Load more photos for the estimate grid (HTMX partial)."""
@@ -329,9 +417,15 @@ def get(page: int = 0, sess=None):
         face_count = len(pm.get("faces", []))
         items.append(
             A(
-                Img(src=purl, alt="Archive photo",
-                    cls="w-full h-20 object-cover rounded-lg hover:ring-2 hover:ring-indigo-400 transition-all"),
-                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500 block text-center mt-0.5"),
+                Img(
+                    src=purl,
+                    alt="Archive photo",
+                    cls="w-full h-20 object-cover rounded-lg hover:ring-2 hover:ring-indigo-400 transition-all",
+                ),
+                Span(
+                    f"{face_count} face{'s' if face_count != 1 else ''}",
+                    cls="text-[10px] text-slate-500 block text-center mt-0.5",
+                ),
                 href=f"/estimate?photo={pid}",
                 cls="block",
             )
@@ -341,13 +435,15 @@ def get(page: int = 0, sess=None):
     if has_more:
         items.append(
             Div(
-                Button("Load More Photos",
-                       hx_get=f"/api/estimate/photos?page={page + 1}",
-                       hx_target="#estimate-photo-grid",
-                       hx_swap="beforeend",
-                       hx_swap_oob="true",
-                       cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors",
-                       id="load-more-estimate"),
+                Button(
+                    "Load More Photos",
+                    hx_get=f"/api/estimate/photos?page={page + 1}",
+                    hx_target="#estimate-photo-grid",
+                    hx_swap="beforeend",
+                    hx_swap_oob="true",
+                    cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors",
+                    id="load-more-estimate",
+                ),
                 cls="flex justify-center mt-4",
                 id="load-more-container",
                 hx_swap_oob="true",
@@ -355,42 +451,40 @@ def get(page: int = 0, sess=None):
         )
 
     return tuple(items)
-_GEMINI_DATE_PROMPT = """You are a forensic photo analyst specializing in dating historical photographs from Sephardic Jewish communities, particularly from Rhodes (Dodecanese), Greece and diaspora communities in New York City, Miami, and Tampa, Florida.
 
-Analyze this photograph and estimate when it was ORIGINALLY TAKEN (not when printed or scanned).
 
-Examine FOUR evidence categories: (1) Print/Physical Format, (2) Fashion/Grooming,
-(3) Environmental/Geographic, (4) Technological/Object Markers.
+def _call_gemini_date_estimate(
+    image_bytes: bytes,
+    suffix: str,
+    api_key: str,
+    photo_id: str | None = None,
+    gedcom_context: str | None = None,
+    call_type: str = "date_estimation",
+    trigger: str = "interactive_upload",
+) -> dict | None:
+    """Call Gemini Vision API for date/location estimation using the enriched prompt.
 
-These photos are from a Sephardic Jewish community. Fashion often LAGGED 5-15 years behind
-Paris/London mainstream. Studio portraits used deliberately conservative formal attire.
+    Uses build_extraction_prompt() with the "quick" preset (date + location + text).
+    Optionally includes GEDCOM genealogical context for identified faces.
+    Logs every call to Supabase gemini_api_calls for cost tracking.
 
-Return JSON only:
-{
-    "evidence": {
-        "print_format": [{"cue": "...", "strength": "strong|moderate|weak", "suggested_range": [YYYY, YYYY]}],
-        "fashion": [...],
-        "environment": [...],
-        "technology": [...]
-    },
-    "estimated_decade": DDDD,
-    "best_year_estimate": YYYY,
-    "confidence": "high|medium|low",
-    "probable_range": [YYYY, YYYY],
-    "reasoning_summary": "1-2 sentences",
-    "people_count": N,
-    "scene_description": "2-3 sentences describing the photo"
-}
-"""
-def _call_gemini_date_estimate(image_bytes: bytes, suffix: str, api_key: str) -> dict | None:
-    """Call Gemini Vision API for real-time date estimation of a single photo.
-
-    Returns parsed dict with date estimation fields, or None on failure.
+    Returns parsed dict with date_estimation + location fields, or None on failure.
     """
+    import time as _time
+
     from google import genai
     from google.genai import types
-    from rhodesli_ml.gemini_config import GEMINI_MODEL
+    from rhodesli_ml.gemini_config import GEMINI_MODEL, get_model_pricing
+    from rhodesli_ml.gemini_extraction import build_extraction_prompt
     import json as _json
+
+    # Build enriched prompt (quick preset: date + location + text_signage)
+    prompt_text = build_extraction_prompt(
+        preset="quick",
+        gedcom_context=gedcom_context,
+    )
+    enrichment_level = "gedcom" if gedcom_context else "none"
+    gedcom_variant = "first_order" if gedcom_context else "none"
 
     client = genai.Client(
         api_key=api_key,
@@ -399,13 +493,18 @@ def _call_gemini_date_estimate(image_bytes: bytes, suffix: str, api_key: str) ->
 
     mime_type = "image/png" if suffix.lower() == ".png" else "image/jpeg"
 
+    start_time = _time.time()
+    status = "success"
+    error_msg = None
+    parsed = None
+
     try:
         response = client.models.generate_content(
             model=GEMINI_MODEL,
             contents=[
                 types.Content(
                     parts=[
-                        types.Part.from_text(text=_GEMINI_DATE_PROMPT),
+                        types.Part.from_text(text=prompt_text),
                         types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
                     ]
                 )
@@ -416,25 +515,97 @@ def _call_gemini_date_estimate(image_bytes: bytes, suffix: str, api_key: str) ->
             ),
         )
 
+        latency_ms = int((_time.time() - start_time) * 1000)
+
         text = response.text
         if not text:
+            status = "error"
+            error_msg = "Empty response"
             return None
 
         parsed = _json.loads(text)
 
-        # Handle nested date_estimation structure
+        # Extract date_estimation (may be nested or top-level)
         date_est = parsed.get("date_estimation", parsed)
 
         # Basic validation
         decade = date_est.get("estimated_decade")
         if not isinstance(decade, int) or decade < 1800 or decade > 2030:
+            status = "error"
+            error_msg = f"Invalid decade: {decade}"
             return None
+
+        # Merge location into date_est for backward-compatible return
+        if "location" in parsed and "location" not in date_est:
+            date_est["location"] = parsed["location"]
 
         return date_est
 
     except Exception as e:
-        print(f"[estimate] Gemini API error: {e}")
+        latency_ms = int((_time.time() - start_time) * 1000)
+        status = "error"
+        error_msg = str(e)
+        logger.warning(f"[estimate] Gemini API error: {e}")
         return None
+
+    finally:
+        # Log every call to Supabase (AD-152) — fire-and-forget
+        if photo_id:
+            try:
+                from app.supabase_data import log_gemini_call
+
+                pricing = get_model_pricing(GEMINI_MODEL)
+                # Estimate tokens from prompt length (rough: ~4 chars/token)
+                prompt_tokens = len(prompt_text) // 4
+                # Response tokens estimated from response size
+                resp_text = _json.dumps(parsed) if parsed else ""
+                completion_tokens = len(resp_text) // 4
+                total_tokens = prompt_tokens + completion_tokens
+                cost_usd = (
+                    prompt_tokens * pricing.get("input", 2.0) / 1_000_000
+                    + completion_tokens * pricing.get("output", 12.0) / 1_000_000
+                )
+
+                # Build response summary for analysis
+                response_summary = None
+                if parsed:
+                    date_est = parsed.get("date_estimation", parsed)
+                    loc = parsed.get("location", {})
+                    response_summary = {
+                        "estimated_decade": date_est.get("estimated_decade"),
+                        "best_year_estimate": date_est.get("best_year_estimate"),
+                        "confidence": date_est.get("confidence"),
+                        "location_place": loc.get("place") if isinstance(loc, dict) else None,
+                        "location_confidence": loc.get("confidence") if isinstance(loc, dict) else None,
+                    }
+
+                log_gemini_call(
+                    photo_id=photo_id,
+                    model_used=GEMINI_MODEL,
+                    call_type=call_type,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=total_tokens,
+                    cost_usd=round(cost_usd, 6),
+                    latency_ms=latency_ms,
+                    status=status,
+                    error_message=error_msg,
+                    gemini_config={
+                        "enrichment_level": enrichment_level,
+                        "prompt_version": "v3_enriched",
+                        "gedcom_variant": gedcom_variant,
+                        "temperature": 0.1,
+                        "trigger": trigger,
+                        "model_generation": "3.1",
+                        "model_variant": "pro-preview",
+                        "preset": "quick",
+                    },
+                    response_summary=response_summary,
+                )
+            except Exception as log_err:
+                logger.warning(f"[estimate] Failed to log Gemini call: {log_err}")
+
+
 @rt("/api/estimate/upload")
 async def post(photo: UploadFile = None, sess=None):
     """Upload a photo for date estimation.
@@ -464,11 +635,13 @@ async def post(photo: UploadFile = None, sess=None):
 
     # Save the upload
     import uuid as _uuid
+
     upload_id = _uuid.uuid4().hex[:12]
     image_key = f"uploads/estimate/{upload_id}{suffix}"
 
     from core.storage import can_write_r2, upload_bytes_to_r2, get_upload_url
     import mimetypes
+
     content_type = mimetypes.guess_type(original_filename)[0] or "image/jpeg"
 
     if can_write_r2():
@@ -500,9 +673,12 @@ async def post(photo: UploadFile = None, sess=None):
         return Div(
             # UX-053: Photo preview
             Div(
-                Img(src=photo_preview_url, alt="Uploaded photo",
+                Img(
+                    src=photo_preview_url,
+                    alt="Uploaded photo",
                     cls="max-h-48 rounded-lg mx-auto border border-slate-600/50 shadow-lg",
-                    data_testid="estimate-photo-preview"),
+                    data_testid="estimate-photo-preview",
+                ),
                 cls="flex justify-center mb-4",
             ),
             Div(
@@ -510,17 +686,24 @@ async def post(photo: UploadFile = None, sess=None):
                 cls="flex justify-center mb-2",
             ),
             P(f"Estimated: c. {year}", cls="text-xl font-serif font-bold text-white text-center"),
-            P(f"Range: {conf_range[0]}–{conf_range[1]}" if len(conf_range) >= 2 else "",
-              cls="text-sm text-slate-400 text-center mt-1"),
+            P(
+                f"Range: {conf_range[0]}–{conf_range[1]}" if len(conf_range) >= 2 else "",
+                cls="text-sm text-slate-400 text-center mt-1",
+            ),
             P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic"),
             # UX-056: CTAs
             Div(
-                Button("Try Another Photo",
-                       onclick="var form=document.querySelector('[data-testid=\"estimate-upload-form\"]');if(form){form.reset();var p=document.getElementById('estimate-preview');if(p){p.classList.add('hidden');p.src=''}var i=document.getElementById('estimate-upload-icon');if(i)i.classList.remove('hidden');var t=document.getElementById('estimate-upload-text');if(t)t.textContent='Upload a photo to estimate its date';document.getElementById('estimate-upload-result').innerHTML=''}",
-                       cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors cursor-pointer",
-                       data_testid="estimate-try-another"),
-                A("Browse the Archive", href="/photos",
-                  cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors"),
+                Button(
+                    "Try Another Photo",
+                    onclick="var form=document.querySelector('[data-testid=\"estimate-upload-form\"]');if(form){form.reset();var p=document.getElementById('estimate-preview');if(p){p.classList.add('hidden');p.src=''}var i=document.getElementById('estimate-upload-icon');if(i)i.classList.remove('hidden');var t=document.getElementById('estimate-upload-text');if(t)t.textContent='Upload a photo to estimate its date';document.getElementById('estimate-upload-result').innerHTML=''}",
+                    cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors cursor-pointer",
+                    data_testid="estimate-try-another",
+                ),
+                A(
+                    "Browse the Archive",
+                    href="/photos",
+                    cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors",
+                ),
                 cls="flex flex-wrap justify-center gap-3 mt-6 pt-4 border-t border-slate-700/50",
                 data_testid="estimate-ctas",
             ),
@@ -538,12 +721,14 @@ async def post(photo: UploadFile = None, sess=None):
         import cv2  # noqa: F811
         from insightface.app import FaceAnalysis  # noqa: F401
         from core.ingest_inbox import extract_faces_hybrid
+
         has_insightface = True
     except ImportError:
         pass
 
     if has_insightface:
         import tempfile
+
         with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
             tmp.write(content)
             tmp_path = _Path(tmp.name)
@@ -563,8 +748,10 @@ async def post(photo: UploadFile = None, sess=None):
             if face_count > 0:
                 parts.append(
                     Div(
-                        P(f"{face_count} {'face' if face_count == 1 else 'faces'} detected",
-                          cls="text-sm text-emerald-400 text-center"),
+                        P(
+                            f"{face_count} {'face' if face_count == 1 else 'faces'} detected",
+                            cls="text-sm text-emerald-400 text-center",
+                        ),
                         cls="mb-3",
                         data_testid="estimate-face-count",
                     )
@@ -580,8 +767,10 @@ async def post(photo: UploadFile = None, sess=None):
         from rhodesli_ml.date_inference.inference import predict_date
         from PIL import Image as _PILImage
         import io as _io
+
         pil_img = _PILImage.open(_io.BytesIO(content)).convert("RGB")
         import numpy as _np
+
         rgb_array = _np.array(pil_img)
         coral_result = predict_date(rgb_array)
     except Exception as e:
@@ -610,7 +799,7 @@ async def post(photo: UploadFile = None, sess=None):
             dec = int(dec_str)
             pct = prob * 100
             bar_width = max(1, pct)  # Minimum 1% width for visibility
-            is_predicted = (dec == decade)
+            is_predicted = dec == decade
             bar_color = "bg-amber-400" if is_predicted else "bg-slate-600"
             text_color = "text-amber-400 font-semibold" if is_predicted else "text-slate-500"
             prob_bars.append(
@@ -625,35 +814,45 @@ async def post(photo: UploadFile = None, sess=None):
                 )
             )
 
-        parts.append(Div(
-            P(f"Estimated era: circa {decade}s", cls="text-xl font-serif font-bold text-white text-center",
-              data_testid="estimate-coral-decade"),
-            P(f"Expected year: ~{expected_year}",
-              cls="text-sm text-slate-400 text-center mt-1"),
+        parts.append(
             Div(
-                Span(conf_label, cls=f"text-xs font-medium {conf_color}"),
-                Span(" · ", cls="text-slate-600"),
-                Span("CORAL ordinal regression model", cls="text-xs text-slate-500"),
-                cls="flex items-center justify-center gap-1 mt-2",
-            ),
-            # Decade probability distribution
-            Div(
-                P("Decade probability distribution", cls="text-xs text-slate-500 uppercase tracking-wider mb-2"),
-                Div(*prob_bars, cls="flex flex-col gap-1"),
-                cls="mt-4 bg-slate-800/30 rounded-lg p-3 border border-slate-700/30",
-            ),
-            cls="py-3",
-            data_testid="estimate-coral-result",
-        ))
+                P(
+                    f"Estimated era: circa {decade}s",
+                    cls="text-xl font-serif font-bold text-white text-center",
+                    data_testid="estimate-coral-decade",
+                ),
+                P(f"Expected year: ~{expected_year}", cls="text-sm text-slate-400 text-center mt-1"),
+                Div(
+                    Span(conf_label, cls=f"text-xs font-medium {conf_color}"),
+                    Span(" · ", cls="text-slate-600"),
+                    Span("CORAL ordinal regression model", cls="text-xs text-slate-500"),
+                    cls="flex items-center justify-center gap-1 mt-2",
+                ),
+                # Decade probability distribution
+                Div(
+                    P("Decade probability distribution", cls="text-xs text-slate-500 uppercase tracking-wider mb-2"),
+                    Div(*prob_bars, cls="flex flex-col gap-1"),
+                    cls="mt-4 bg-slate-800/30 rounded-lg p-3 border border-slate-700/30",
+                ),
+                cls="py-3",
+                data_testid="estimate-coral-result",
+            )
+        )
 
     # 3. Gemini date estimation (if API key available — supplementary, richer evidence)
     gemini_key = os.getenv("GEMINI_API_KEY", "")
     gemini_result = None
     if gemini_key:
         try:
-            gemini_result = _call_gemini_date_estimate(content, suffix, gemini_key)
+            gemini_result = _call_gemini_date_estimate(
+                content,
+                suffix,
+                gemini_key,
+                photo_id=f"upload_{upload_id}",
+                trigger="interactive_upload",
+            )
         except Exception as e:
-            print(f"[estimate] Gemini API error: {e}")
+            logger.warning(f"[estimate] Gemini API error: {e}")
 
     if gemini_result:
         year = gemini_result.get("best_year_estimate") or gemini_result.get("estimated_decade", "Unknown")
@@ -670,68 +869,103 @@ async def post(photo: UploadFile = None, sess=None):
                     clues.append(cue.get("cue", ""))
         clues_text = "; ".join(clues[:4]) if clues else reasoning[:120] if reasoning else "Based on AI analysis"
 
+        # Location from enriched prompt (if available)
+        location_info = gemini_result.get("location", {})
+        location_place = location_info.get("place") if isinstance(location_info, dict) else None
+
         # If we already have CORAL result, show Gemini as supplementary
         heading = "Detailed AI Analysis" if coral_result else "AI Date Estimate"
-        parts.append(Div(
+        parts.append(
             Div(
-                Span("~", cls="text-2xl text-amber-400 font-serif") if not coral_result else None,
-                cls="flex justify-center mb-2" if not coral_result else "hidden",
-            ),
-            P(heading if coral_result else f"Estimated: c. {year}",
-              cls=f"text-{'sm text-slate-400 font-semibold' if coral_result else 'xl font-serif font-bold text-white'} text-center"),
-            P(f"Gemini suggests c. {year}" if coral_result else "",
-              cls="text-sm text-slate-400 text-center mt-1") if coral_result else None,
-            P(f"Range: {prob_range[0]}–{prob_range[1]}" if len(prob_range) >= 2 else "",
-              cls="text-sm text-slate-400 text-center mt-1") if not coral_result else None,
-            P(f"Confidence: {confidence}", cls="text-xs text-slate-500 text-center mt-1"),
-            P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic max-w-md mx-auto"),
-            cls="py-3 mt-3 border-t border-slate-700/30" if coral_result else "py-3",
-            data_testid="estimate-gemini-result",
-        ))
+                Div(
+                    Span("~", cls="text-2xl text-amber-400 font-serif") if not coral_result else None,
+                    cls="flex justify-center mb-2" if not coral_result else "hidden",
+                ),
+                P(
+                    heading if coral_result else f"Estimated: c. {year}",
+                    cls=f"text-{'sm text-slate-400 font-semibold' if coral_result else 'xl font-serif font-bold text-white'} text-center",
+                ),
+                P(f"Gemini suggests c. {year}" if coral_result else "", cls="text-sm text-slate-400 text-center mt-1")
+                if coral_result
+                else None,
+                P(
+                    f"Range: {prob_range[0]}–{prob_range[1]}" if len(prob_range) >= 2 else "",
+                    cls="text-sm text-slate-400 text-center mt-1",
+                )
+                if not coral_result
+                else None,
+                P(
+                    f"Location: {location_place}",
+                    cls="text-sm text-indigo-400 text-center mt-1",
+                    data_testid="estimate-gemini-location",
+                )
+                if location_place
+                else None,
+                P(f"Confidence: {confidence}", cls="text-xs text-slate-500 text-center mt-1"),
+                P(clues_text, cls="text-xs text-slate-500 text-center mt-2 italic max-w-md mx-auto"),
+                cls="py-3 mt-3 border-t border-slate-700/30" if coral_result else "py-3",
+                data_testid="estimate-gemini-result",
+            )
+        )
     elif not coral_result and not has_insightface:
         # No CORAL + no Gemini + no InsightFace = honest minimal message
-        parts.append(Div(
+        parts.append(
             Div(
-                Span("?", cls="text-2xl text-slate-500"),
-                cls="flex justify-center mb-2",
-            ),
-            P("Photo saved!", cls="text-lg font-semibold text-white text-center"),
-            P("Date estimation is being configured. Check back soon.",
-              cls="text-sm text-slate-400 text-center mt-1"),
-            P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
-            cls="py-4",
-        ))
+                Div(
+                    Span("?", cls="text-2xl text-slate-500"),
+                    cls="flex justify-center mb-2",
+                ),
+                P("Photo saved!", cls="text-lg font-semibold text-white text-center"),
+                P(
+                    "Date estimation is being configured. Check back soon.",
+                    cls="text-sm text-slate-400 text-center mt-1",
+                ),
+                P(f"Upload ID: {upload_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
+                cls="py-4",
+            )
+        )
     elif not coral_result:
         # No CORAL + no Gemini but has InsightFace = faces only
-        parts.append(Div(
-            P("Face detection complete — date estimation model loading.",
-              cls="text-sm text-slate-400 text-center"),
-            cls="py-2",
-        ))
+        parts.append(
+            Div(
+                P("Face detection complete — date estimation model loading.", cls="text-sm text-slate-400 text-center"),
+                cls="py-2",
+            )
+        )
 
     if not parts:
         parts.append(P("Photo saved.", cls="text-sm text-slate-400 text-center py-4"))
 
     # UX-053: Photo preview at the top of results
     photo_preview = Div(
-        Img(src=photo_preview_url, alt="Uploaded photo",
+        Img(
+            src=photo_preview_url,
+            alt="Uploaded photo",
             cls="max-h-48 rounded-lg mx-auto border border-slate-600/50 shadow-lg",
-            data_testid="estimate-photo-preview"),
+            data_testid="estimate-photo-preview",
+        ),
         cls="flex justify-center mb-4",
     )
 
     # UX-056: CTAs after estimate results
     cta_section = Div(
-        Button("Try Another Photo",
-               onclick="var form=document.querySelector('[data-testid=\"estimate-upload-form\"]');if(form){form.reset();var p=document.getElementById('estimate-preview');if(p){p.classList.add('hidden');p.src=''}var i=document.getElementById('estimate-upload-icon');if(i)i.classList.remove('hidden');var t=document.getElementById('estimate-upload-text');if(t)t.textContent='Upload a photo to estimate its date';document.getElementById('estimate-upload-result').innerHTML=''}",
-               cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors cursor-pointer",
-               data_testid="estimate-try-another"),
-        Button("Share Estimate",
-               onclick="if(navigator.share){navigator.share({title:'Photo Date Estimate',text:'Check out this date estimate from the Rhodesli archive!',url:window.location.href}).catch(()=>{})}else{navigator.clipboard.writeText(window.location.href).then(()=>{this.textContent='Link copied!';setTimeout(()=>{this.textContent='Share Estimate'},2000)})}",
-               cls="px-4 py-2 text-sm border border-indigo-500/50 text-indigo-400 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer",
-               data_testid="estimate-share"),
-        A("Browse the Archive", href="/photos",
-          cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors"),
+        Button(
+            "Try Another Photo",
+            onclick="var form=document.querySelector('[data-testid=\"estimate-upload-form\"]');if(form){form.reset();var p=document.getElementById('estimate-preview');if(p){p.classList.add('hidden');p.src=''}var i=document.getElementById('estimate-upload-icon');if(i)i.classList.remove('hidden');var t=document.getElementById('estimate-upload-text');if(t)t.textContent='Upload a photo to estimate its date';document.getElementById('estimate-upload-result').innerHTML=''}",
+            cls="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors cursor-pointer",
+            data_testid="estimate-try-another",
+        ),
+        Button(
+            "Share Estimate",
+            onclick="if(navigator.share){navigator.share({title:'Photo Date Estimate',text:'Check out this date estimate from the Rhodesli archive!',url:window.location.href}).catch(()=>{})}else{navigator.clipboard.writeText(window.location.href).then(()=>{this.textContent='Link copied!';setTimeout(()=>{this.textContent='Share Estimate'},2000)})}",
+            cls="px-4 py-2 text-sm border border-indigo-500/50 text-indigo-400 rounded-lg hover:bg-indigo-500/10 transition-colors cursor-pointer",
+            data_testid="estimate-share",
+        ),
+        A(
+            "Browse the Archive",
+            href="/photos",
+            cls="px-4 py-2 text-sm border border-slate-600 text-slate-400 rounded-lg hover:bg-slate-700/50 transition-colors",
+        ),
         cls="flex flex-wrap justify-center gap-3 mt-6 pt-4 border-t border-slate-700/50",
         data_testid="estimate-ctas",
     )
