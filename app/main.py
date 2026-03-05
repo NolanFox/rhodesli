@@ -8052,8 +8052,10 @@ def photo_modal() -> Div:
     Hidden by default, shown via HTMX when "View Photo" is clicked.
 
     Z-index hierarchy:
-    - Toast container: z-[10001] (above all modals — always visible)
-    - Modal container: z-[9999] (above page content)
+    - Confirm modal: z-[10002] (above compare — always topmost interactive)
+    - Toast container: z-[10001] (above all content modals)
+    - Compare modal: z-[10000] (above photo modal)
+    - Photo modal: z-[9999] (above page content)
     - Backdrop: absolute, no z-index (first child, renders behind content)
     - Content: relative, no z-index (second child, renders above backdrop)
     """
@@ -8395,7 +8397,7 @@ def confirm_modal() -> Div:
             cls="bg-slate-800 rounded-lg shadow-2xl max-w-md w-full p-4 sm:p-6 relative border border-slate-700",
         ),
         id="confirm-modal",
-        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[9997]",
+        cls="hidden fixed inset-0 flex items-center justify-center p-4 z-[10002]",
         **{"_": "on keydown[key=='Escape'] add .hidden to me"},
     )
 
@@ -25489,7 +25491,6 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
             data_testid="discoveries-empty-state",
         )
 
-
     sections = []
 
     # Tier 1 section: Auto-added (confirm/undo)
@@ -29298,7 +29299,6 @@ def post(ann_id: str, sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-
     old_status = ann["status"]
     ann["status"] = "pending" if ann.get("submitted_by") != "anonymous" else "pending_unverified"
     ann["reviewed_by"] = None
@@ -30629,7 +30629,7 @@ def _load_gedcom_individuals():
         logging.info(f"Loaded {len(all_rows)} GEDCOM individuals into cache")
     except Exception as e:
         logging.warning(f"Failed to load GEDCOM individuals: {e}")
-        _gedcom_individuals_cache = []
+        return []  # Don't cache failures — retry on next request
 
     return _gedcom_individuals_cache
 
@@ -30656,7 +30656,7 @@ def _load_gedcom_face_links():
         _gedcom_face_links_cache = links
     except Exception as e:
         logging.warning(f"Failed to load GEDCOM face links: {e}")
-        _gedcom_face_links_cache = {}
+        return {}  # Don't cache failures — retry on next request
 
     return _gedcom_face_links_cache
 
