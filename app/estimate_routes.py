@@ -1079,7 +1079,7 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
             name = identity.get("name") if identity else None
             faces.append(_FaceStub(face_id, name))
 
-        identities_dict = {"identities": registry._identities}
+        identities_dict = registry._identities
         context = build_gedcom_context(photo_id, faces, identities_dict, gedcom_data)
         logger.info(
             f"GEDCOM context: build_gedcom_context returned {len(context)} chars"
