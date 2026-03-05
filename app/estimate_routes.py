@@ -1018,27 +1018,34 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
     _main_mod._build_caches()
     photo = _main_mod.get_photo_metadata(photo_id)
     if not photo:
+        logger.info(f"GEDCOM context: photo {photo_id} not found")
         return None
 
     registry = _main_mod.load_registry()
     face_ids = photo.get("face_ids", [])
     if not face_ids:
+        logger.info(f"GEDCOM context: no face_ids for photo {photo_id}")
         return None
 
     # Get GEDCOM face links from Supabase
     gedcom_links = _main_mod._load_gedcom_face_links()
     if not gedcom_links:
+        logger.info("GEDCOM context: no gedcom links loaded")
         return None
 
     # Check if any identified faces have GEDCOM links
     has_linked_faces = False
     for face_id in face_ids:
         identity = _main_mod.get_identity_for_face(registry, face_id)
-        if identity and identity.get("identity_id") in gedcom_links:
+        iid = identity.get("identity_id") if identity else None
+        linked = iid in gedcom_links if iid else False
+        logger.info(f"GEDCOM context: face {face_id} -> identity {iid} linked={linked}")
+        if linked:
             has_linked_faces = True
             break
 
     if not has_linked_faces:
+        logger.info(f"GEDCOM context: no linked faces found for photo {photo_id}")
         return None
 
     # Load GEDCOM data via the batch pipeline's loader
@@ -1047,7 +1054,10 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
 
         gedcom_data = load_gedcom_data()
         if not gedcom_data:
+            logger.info("GEDCOM context: load_gedcom_data() returned None")
             return None
+
+        logger.info(f"GEDCOM context: loaded data with {len(gedcom_data.get('face_links', {}))} links")
 
         from scripts.run_combined_pipeline import build_gedcom_context
 
@@ -1064,9 +1074,15 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
             faces.append(_FaceStub(face_id, name))
 
         identities_dict = {"identities": registry._identities}
-        return build_gedcom_context(photo_id, faces, identities_dict, gedcom_data)
+        context = build_gedcom_context(photo_id, faces, identities_dict, gedcom_data)
+        logger.info(
+            f"GEDCOM context: build_gedcom_context returned {len(context)} chars"
+            if context
+            else "GEDCOM context: build_gedcom_context returned empty"
+        )
+        return context or None
     except Exception as e:
-        logger.warning(f"Failed to build GEDCOM context: {e}")
+        logger.warning(f"Failed to build GEDCOM context: {e}", exc_info=True)
         return None
 
 
