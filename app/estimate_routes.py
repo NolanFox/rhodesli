@@ -1159,9 +1159,10 @@ async def post(photo_id: str, sess=None):
     if date_labels_path.exists():
         try:
             all_labels = _json.loads(date_labels_path.read_text())
-            # Update the entry for this photo
-            all_labels[photo_id] = {
-                **old_label,
+            # date_labels.json has schema_version + "labels" array
+            labels_list = all_labels.get("labels", [])
+            new_entry = {
+                "photo_id": photo_id,
                 "estimated_decade": new_decade,
                 "best_year_estimate": new_year,
                 "confidence": new_confidence,
@@ -1172,6 +1173,16 @@ async def post(photo_id: str, sess=None):
                 "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
                 "reanalyzed_with_gedcom": bool(gedcom_context),
             }
+            # Replace existing entry or append
+            replaced = False
+            for i, lbl in enumerate(labels_list):
+                if lbl.get("photo_id") == photo_id:
+                    labels_list[i] = {**lbl, **new_entry}
+                    replaced = True
+                    break
+            if not replaced:
+                labels_list.append(new_entry)
+            all_labels["labels"] = labels_list
             date_labels_path.write_text(_json.dumps(all_labels, indent=2, ensure_ascii=False))
             # Invalidate cache
             _main_mod._date_labels_cache = None
@@ -1184,9 +1195,11 @@ async def post(photo_id: str, sess=None):
         if locations_path.exists():
             try:
                 all_locations = _json.loads(locations_path.read_text())
+                # photo_locations.json has a "photos" envelope
+                photos_dict = all_locations.get("photos", all_locations)
                 # Try to geocode the new location
                 new_lat, new_lng = _geocode_location(new_location)
-                all_locations[photo_id] = {
+                photos_dict[photo_id] = {
                     "photo_id": photo_id,
                     "lat": new_lat,
                     "lng": new_lng,
