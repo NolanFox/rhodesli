@@ -8,7 +8,7 @@ Context: docs/session_context/session-89-context.md
 - [x] Act 2: Unify Prompts + Wire GEDCOM + API Logging
 - [x] Act 3: Admin Re-analyze Button
 - [x] Act 4+5: Batch Script (Asheville reprocess deferred to deploy)
-- [ ] Act 6: Deploy + Browser Verification + Assessment
+- [x] Act 6: Deploy + Browser Verification + Assessment
 
 ## Act 1: Orient
 - Read prompt, context, lessons, todo
@@ -49,6 +49,37 @@ Context: docs/session_context/session-89-context.md
 - Cost estimation, rate limiting, change diffs
 - Asheville photo reprocessing deferred to production deploy
 
+## Act 6: Deploy + Browser Verification
+- **4 deploys total**: initial push + 3 hotfixes
+- Hotfix 1: `gemini_config.py` + `gemini_extraction.py` missing from Dockerfile → 500 error
+- Hotfix 2: `gedcom_context.py` missing from Dockerfile → visual-only fallback
+- Hotfix 3: `face_ids` field name wrong (`faces` vs `face_ids`) → empty face list
+- Re-analyze button works end-to-end: spinner, Gemini call, diff display, cost
+- GEDCOM context NOT injected: Victoria Capuano not linked to GEDCOM record in admin UI
+- Without GEDCOM, Gemini guesses "urban/suburban US" — better than Brooklyn but not Asheville
+
+## Harness: /clear Enforcement (Lesson 102)
+- Session 89 violated /clear-between-acts AGAIN (same as Session 80)
+- Added mechanical enforcement: commit counter in `.claude/commits_since_clear.txt`
+- Post-commit hook escalates warnings at 2+ commits without /clear
+- UserPromptSubmit hook prints BLOCKED warning when counter >= 2
+- Updated Lesson 89 as REPEAT OFFENDER
+- New Lesson 102: Behavioral instructions insufficient, need mechanical enforcement
+
+## Parallel: Codex PR #6 Review
+- PR: "Fix merge button functionality and UX" — confirm modal z-index fix
+- Reviewed via subagent in worktree
+- VERDICT: REQUEST_CHANGES
+  - z-[10010] too high — should be z-[10002] (preserves toast invariant)
+  - z-index hierarchy comment not updated
+  - Test adequate, consistent with codebase patterns
+- Not merged pending changes
+
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
+- [x] Re-analyze button visible for admin — PASS (screenshot)
+- [x] Re-analyze fires Gemini call — PASS (200 response, results shown)
+- [x] Location diff displayed — PASS ("Brooklyn, New York → ...")
+- [x] Cost + model shown — PASS ($0.037, gemini-3.1-pro-preview)
+- [ ] GEDCOM context injected — FAIL (no gedcom_face_links for Victoria)
+- [x] Enriched prompt used — PASS (build_extraction_prompt verified in tests)
+- [x] API logging — PASS (log_gemini_call wired in finally block)
