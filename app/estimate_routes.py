@@ -1154,8 +1154,9 @@ async def post(photo_id: str, sess=None):
 
     # Update date_labels.json
     import json as _json
+    from core.config import DATA_DIR
 
-    date_labels_path = Path("data/date_labels.json")
+    date_labels_path = Path(DATA_DIR) / "date_labels.json"
     if date_labels_path.exists():
         try:
             all_labels = _json.loads(date_labels_path.read_text())
@@ -1191,7 +1192,7 @@ async def post(photo_id: str, sess=None):
 
     # Update photo_locations.json
     if new_location:
-        locations_path = Path("data/photo_locations.json")
+        locations_path = Path(DATA_DIR) / "photo_locations.json"
         if locations_path.exists():
             try:
                 all_locations = _json.loads(locations_path.read_text())
