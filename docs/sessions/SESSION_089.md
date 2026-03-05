@@ -30,3 +30,29 @@ Photo 746dd11e5b4d86a1 (Victoria Capuano, Asheville ~1934) showed "Brooklyn, New
 
 ## Assessment
 See: docs/assessments/session-89-assessment.md
+
+---
+
+## Session 89b: Fix Location Persistence + Model Label + GEDCOM Reasoning
+
+**Date:** 2026-03-05
+
+### Summary
+Fixed 3 user feedback items from Session 89: location not persisting after page refresh, hardcoded model label, and missing GEDCOM reasoning in Photo Detective Evidence section.
+
+### Root Causes
+1. **Missing `datetime` import** in estimate_routes.py — NameError silently caught by broad except blocks, preventing all file writes
+2. **Deploy overwrite** — `_is_volume_user_modified()` didn't protect date_labels.json or photo_locations.json from being overwritten by stale bundle data
+3. **Missing model key** in reanalyze entry dict
+4. **No location evidence rendering** in `_detective_evidence_section()`
+
+### Key Commits
+- 5409ae7: Location persistence + dynamic model label + GEDCOM reasoning display
+- b0feb56: Protect reanalyzed data from deploy overwrite
+- 1de56bf: Add missing datetime import (actual root cause)
+
+### Browser Verified
+Victoria Capuano photo shows "Asheville, North Carolina, USA" after refresh, with "Analyzed with Gemini 3.1-pro" badge and Geographic Analysis card showing visual evidence, genealogical context, and missing child analysis.
+
+### Assessment
+See: docs/assessments/session-89b-assessment.md
