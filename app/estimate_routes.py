@@ -1254,27 +1254,37 @@ async def post(photo_id: str, sess=None):
     pricing = get_model_pricing(GEMINI_MODEL)
     est_cost = pricing.get("per_photo", 0.037)
 
-    return Div(
+    # Build summary div + trigger refresh of AI sections via HX-Trigger
+    from starlette.responses import HTMLResponse
+
+    summary_html = to_xml(
         Div(
-            Span("Re-analysis complete", cls="text-sm font-semibold text-emerald-400"),
-            cls="mb-2",
-        ),
-        Div(
-            P(f"Date: c. {new_year or new_decade}", cls="text-sm text-white"),
-            P(f"Location: {new_location}", cls="text-sm text-white") if new_location else None,
-            P(f"Confidence: {new_confidence}", cls="text-xs text-slate-400"),
-            P(f"GEDCOM context: {'Yes' if gedcom_context else 'No'}", cls="text-xs text-slate-400"),
-            cls="mb-2",
-        ),
-        Div(
-            *[P(change, cls="text-xs text-amber-400") for change in changes],
-            cls="mb-2",
+            Div(
+                Span("Re-analysis complete", cls="text-sm font-semibold text-emerald-400"),
+                cls="mb-2",
+            ),
+            Div(
+                P(f"Date: c. {new_year or new_decade}", cls="text-sm text-white"),
+                P(f"Location: {new_location}", cls="text-sm text-white") if new_location else None,
+                P(f"Confidence: {new_confidence}", cls="text-xs text-slate-400"),
+                P(f"GEDCOM context: {'Yes' if gedcom_context else 'No'}", cls="text-xs text-slate-400"),
+                cls="mb-2",
+            ),
+            Div(
+                *[P(change, cls="text-xs text-amber-400") for change in changes],
+                cls="mb-2",
+            )
+            if changes
+            else P("No changes detected.", cls="text-xs text-slate-500 mb-2"),
+            P(f"Est. cost: ${est_cost:.3f} · Model: {GEMINI_MODEL}", cls="text-[10px] text-slate-600"),
+            cls="bg-slate-800/50 rounded-lg p-3 border border-emerald-500/30",
+            data_testid="reanalyze-result",
         )
-        if changes
-        else P("No changes detected.", cls="text-xs text-slate-500 mb-2"),
-        P(f"Est. cost: ${est_cost:.3f} · Model: {GEMINI_MODEL}", cls="text-[10px] text-slate-600"),
-        cls="bg-slate-800/50 rounded-lg p-3 border border-emerald-500/30",
-        data_testid="reanalyze-result",
+    )
+
+    return HTMLResponse(
+        content=summary_html,
+        headers={"HX-Trigger": "refreshAnalysis"},
     )
 
 

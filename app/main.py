@@ -1816,26 +1816,46 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     if not sections:
         return None
 
-    # Admin re-analyze button (AD-202)
+    # Admin re-analyze button (AD-202) + "Last analyzed" timestamp
     reanalyze_btn = None
     if is_admin:
+        # Build "Last analyzed" timestamp
+        last_analyzed_el = None
+        analysis_ts = label.get("reanalyzed_at") or label.get("analyzed_at") or label.get("timestamp")
+        if analysis_ts:
+            try:
+                from datetime import datetime as _dt
+
+                if isinstance(analysis_ts, str):
+                    dt = _dt.fromisoformat(analysis_ts.replace("Z", "+00:00"))
+                    last_analyzed_el = Span(
+                        f"Last analyzed: {dt.strftime('%b %-d, %Y')}",
+                        cls="text-[10px] text-slate-500 mr-2",
+                        data_testid="last-analyzed",
+                    )
+            except (ValueError, TypeError):
+                pass
+
         reanalyze_btn = Div(
+            last_analyzed_el,
             Button(
                 NotStr(
                     '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'
                 ),
-                "Re-analyze",
+                "Re-analyze Photo",
                 hx_post=f"/api/photo/{photo_id}/reanalyze",
                 hx_target=f"#reanalyze-result-{photo_id}",
                 hx_swap="innerHTML",
                 hx_indicator=f"#reanalyze-spinner-{photo_id}",
                 cls="flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded px-2 py-1 transition-colors cursor-pointer",
                 data_testid="reanalyze-button",
+                title="Date, location, and scene analysis",
             ),
             Span(
                 cls="htmx-indicator animate-spin inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full ml-2",
                 id=f"reanalyze-spinner-{photo_id}",
             ),
+            cls="flex items-center",
         )
 
     return Section(
@@ -1851,12 +1871,118 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             ),
             P("Estimated by AI \u2014 help us verify", cls="text-[11px] text-indigo-400/70 mb-4"),
             Div(id=f"reanalyze-result-{photo_id}", cls="mb-3"),
-            *sections,
+            Div(
+                *sections,
+                id=f"ai-analysis-sections-{photo_id}",
+                hx_get=f"/api/photo/{photo_id}/ai-sections",
+                hx_trigger="refreshAnalysis from:body",
+                hx_swap="innerHTML",
+            ),
             cls="max-w-[900px] mx-auto",
             data_testid="ai-analysis",
         ),
         cls="px-4 sm:px-6 py-6 border-t border-slate-800/50",
     )
+
+
+@rt("/api/photo/{photo_id}/ai-sections")
+def get(photo_id: str, sess=None):
+    """Return refreshed AI Analysis sections content (used after re-analyze)."""
+    is_admin = not _check_admin(sess)
+    section = _build_ai_analysis_section(photo_id, is_admin=is_admin)
+    if not section:
+        return Div()
+    # The full section is a Section > Div > [header, reanalyze-result, sections-div, ...]
+    # We just need to rebuild and return the sections.
+    # Simplest: return the full section and let HTMX swap it in.
+    # But our target is the inner sections div. Let's rebuild just sections.
+    labels = _load_date_labels()
+    label = labels.get(photo_id)
+    if not label:
+        return Div()
+    return _build_ai_sections_list(photo_id, label, is_admin)
+
+
+def _build_ai_sections_list(photo_id: str, label: dict, is_admin: bool = False):
+    """Build just the collapsible sections for AI Analysis (no wrapper).
+
+    This is the inner content of the ai-analysis-sections-{photo_id} div,
+    used both for initial render and for OOB refresh after re-analyze.
+    """
+    docs = _load_search_index()
+    search_doc = next((d for d in docs if d.get("photo_id") == photo_id or d.get("cache_photo_id") == photo_id), None)
+    _date_is_human = label.get("source") == "human"
+
+    def _field(title, content, field_key="ai", expanded=False):
+        is_human = field_key == "human" or (field_key == "date" and _date_is_human)
+        border_cls = "border-emerald-500/40 bg-emerald-950/20" if is_human else "border-indigo-500/40 bg-indigo-950/20"
+        icon = "\u2713" if is_human else "\u2728"
+        provenance_text = "Verified" if is_human else "AI Estimated"
+        provenance_cls = "text-emerald-400" if is_human else "text-indigo-400"
+        return Details(
+            Summary(
+                Div(
+                    Span(icon, cls="mr-1.5"),
+                    Span(title, cls="text-sm font-medium text-white"),
+                    Span(f" \u2014 {provenance_text}", cls=f"text-[10px] {provenance_cls} ml-2"),
+                    cls="flex items-center",
+                ),
+                cls="cursor-pointer list-none select-none py-2 px-3 hover:bg-slate-800/50 rounded-lg transition-colors",
+            ),
+            Div(content, cls="px-3 pb-3 text-sm text-slate-300 leading-relaxed"),
+            cls=f"border-l-2 {border_cls} rounded-lg mb-2",
+            open=expanded,
+            data_provenance="human" if is_human else "ai",
+            data_testid="verified-field" if is_human else None,
+        )
+
+    sections = []
+
+    # Date estimate
+    decade = label.get("estimated_decade")
+    best_year = label.get("best_year_estimate")
+    confidence = label.get("confidence", "medium")
+    if decade:
+        conf_badge_cls = {
+            "high": "bg-emerald-500/20 text-emerald-400",
+            "medium": "bg-amber-500/20 text-amber-400",
+            "low": "bg-red-500/20 text-red-400",
+        }.get(confidence, "bg-slate-500/20 text-slate-400")
+        date_text = f"circa {best_year}" if best_year else f"{decade}s"
+        date_content = Div(
+            P(date_text, cls="text-lg font-serif text-amber-200 mb-1"),
+            Span(confidence.capitalize(), cls=f"text-[10px] px-2 py-0.5 rounded-full {conf_badge_cls}"),
+        )
+        sections.append(_field("Date Estimate", date_content, field_key="date", expanded=True))
+
+    # Location
+    locations = _load_photo_locations()
+    location_data = locations.get(photo_id, {})
+    location_name = location_data.get("location_name", "")
+    if location_name:
+        location_parts = [P(location_name, cls="text-white font-medium")]
+        location_estimate = location_data.get("location_estimate", "")
+        if location_estimate:
+            location_parts.append(P(location_estimate, cls="text-slate-400 text-xs mt-2 italic"))
+        location_content = Div(*location_parts, data_testid="location-estimate")
+        sections.append(_field("Location Estimate", location_content, expanded=True))
+
+    # Scene description
+    scene = label.get("scene_description", "")
+    if not scene and search_doc:
+        st = search_doc.get("searchable_text", "")
+        scene = st.split(".")[0] + "." if "." in st else st[:200]
+    if scene:
+        sections.append(_field("Scene", P(scene), expanded=True))
+
+    # Photo Detective Evidence
+    detective_section = _detective_evidence_section(label)
+    if detective_section:
+        sections.append(_field("Photo Detective Evidence", detective_section, expanded=True))
+
+    if not sections:
+        return Div()
+    return Div(*sections)
 
 
 def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
