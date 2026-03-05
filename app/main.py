@@ -2829,6 +2829,78 @@ _face_to_photo_cache = None
 _photo_id_aliases = None  # Maps photo_index.json IDs → SHA256 cache IDs
 
 
+def _invalidate_all_caches():
+    """Reset all in-memory caches so data is reloaded from disk."""
+    global _photo_cache, _face_to_photo_cache, _photo_id_aliases
+    global _date_labels_cache, _photo_locations_cache
+    _photo_cache = None
+    _face_to_photo_cache = None
+    _photo_id_aliases = None
+    _date_labels_cache = None
+    _photo_locations_cache = None
+
+
+def _upload_new_files_to_r2(data_dir: Path, job_id: str):
+    """Upload raw photos and crops from a processed job to R2."""
+    import os
+
+    r2_url = os.getenv("R2_PUBLIC_URL", "")
+    r2_access = os.getenv("R2_ACCESS_KEY_ID", "")
+    r2_secret = os.getenv("R2_SECRET_ACCESS_KEY", "")
+    r2_account = os.getenv("R2_ACCOUNT_ID", "")
+    r2_bucket = os.getenv("R2_BUCKET_NAME", "rhodesli-photos")
+
+    if not (r2_access and r2_secret and r2_account):
+        logging.info(f"R2 not configured, skipping upload for job {job_id}")
+        return
+
+    import boto3
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=f"https://{r2_account}.r2.cloudflarestorage.com",
+        aws_access_key_id=r2_access,
+        aws_secret_access_key=r2_secret,
+    )
+
+    # Upload raw photos
+    raw_dir = data_dir.parent / "raw_photos"
+    uploads_dir = data_dir.parent / "uploads" / job_id
+    if uploads_dir.exists():
+        for f in uploads_dir.iterdir():
+            if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".bmp"):
+                r2_key = f"raw_photos/{f.name}"
+                try:
+                    s3.upload_file(str(f), r2_bucket, r2_key, ExtraArgs={"ContentType": "image/jpeg"})
+                    logging.info(f"Uploaded {r2_key} to R2")
+                except Exception as e:
+                    logging.warning(f"Failed to upload {r2_key}: {e}")
+
+    # Upload crops (new crops from this job)
+    crops_dir = data_dir / "crops" if (data_dir / "crops").exists() else data_dir.parent / "app" / "static" / "crops"
+    if crops_dir.exists():
+        # Upload crops that match the job's face IDs
+        import json
+
+        photo_index_path = data_dir / "photo_index.json"
+        if photo_index_path.exists():
+            with open(photo_index_path) as pf:
+                pi = json.load(pf)
+            for pid, pdata in pi.get("photos", {}).items():
+                if job_id in pid:
+                    for face_id in pdata.get("face_ids", []):
+                        crop_path = crops_dir / f"{face_id}.jpg"
+                        if crop_path.exists():
+                            r2_key = f"crops/{face_id}.jpg"
+                            try:
+                                s3.upload_file(
+                                    str(crop_path), r2_bucket, r2_key, ExtraArgs={"ContentType": "image/jpeg"}
+                                )
+                                logging.info(f"Uploaded {r2_key} to R2")
+                            except Exception as e:
+                                logging.warning(f"Failed to upload crop {r2_key}: {e}")
+
+
 def _build_caches():
     """Build photo and face-to-photo caches.
 
@@ -26584,6 +26656,17 @@ def post(job_id: str, sess=None):
                         uploaded_by=uploader_email,
                         upload_date=submitted_at,
                     )
+
+                    # Upload new raw photos + crops to R2 (if R2 is configured)
+                    try:
+                        _upload_new_files_to_r2(data_path, job_id)
+                    except Exception as r2_err:
+                        _bg_logging.getLogger("core.ingest_inbox").warning(
+                            f"R2 upload failed for job {job_id}: {r2_err}"
+                        )
+
+                    # Invalidate caches so new photo appears immediately
+                    _invalidate_all_caches()
                 except Exception:
                     import traceback
 
@@ -32025,6 +32108,78 @@ async def post(request):
         _save_pending_uploads(pending)
 
     return {"marked_processed": marked, "count": len(marked)}
+
+
+@rt("/api/sync/repair-upload")
+async def post(request):
+    """Repair a broken upload by copying file from uploads/ to raw_photos/ and uploading to R2.
+
+    Accepts JSON body with:
+        job_id: The upload job ID to repair
+
+    Protected by sync token.
+    """
+    denied = _check_sync_token(request)
+    if denied:
+        return denied
+
+    import shutil
+
+    body = await request.json()
+    repair_job_id = body.get("job_id", "")
+    if not repair_job_id:
+        return Response("Must provide 'job_id'", status_code=400)
+
+    results = {"job_id": repair_job_id, "actions": []}
+
+    # Find the uploads directory for this job
+    uploads_dir = data_path.parent / "uploads" / repair_job_id
+    staging_dir = data_path.parent / "staging" / repair_job_id
+    raw_photos_dir = data_path.parent / "raw_photos"
+    raw_photos_dir.mkdir(parents=True, exist_ok=True)
+
+    # Check which directory has the files
+    source_dir = None
+    if uploads_dir.exists():
+        source_dir = uploads_dir
+        results["actions"].append(f"Found uploads dir: {uploads_dir}")
+    elif staging_dir.exists():
+        source_dir = staging_dir
+        results["actions"].append(f"Found staging dir: {staging_dir}")
+    else:
+        results["actions"].append(f"No uploads or staging dir found for {repair_job_id}")
+        # List what directories DO exist
+        for d in [data_path.parent / "uploads", data_path.parent / "staging"]:
+            if d.exists():
+                subdirs = [x.name for x in d.iterdir() if x.is_dir()]
+                results["actions"].append(f"Available in {d.name}/: {subdirs[:20]}")
+        return results
+
+    # Copy image files to raw_photos/
+    image_exts = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".bmp"}
+    copied_files = []
+    for f in source_dir.iterdir():
+        if f.is_file() and f.suffix.lower() in image_exts:
+            dest = raw_photos_dir / f.name
+            if not dest.exists():
+                shutil.copy2(f, dest)
+                results["actions"].append(f"Copied {f.name} to raw_photos/")
+            else:
+                results["actions"].append(f"{f.name} already in raw_photos/")
+            copied_files.append(f)
+
+    # Upload to R2
+    try:
+        _upload_new_files_to_r2(data_path, repair_job_id)
+        results["actions"].append("R2 upload completed")
+    except Exception as e:
+        results["actions"].append(f"R2 upload failed: {e}")
+
+    # Invalidate caches
+    _invalidate_all_caches()
+    results["actions"].append("Caches invalidated")
+
+    return results
 
 
 # --- Push API (for pushing locally-processed data back to production) ---

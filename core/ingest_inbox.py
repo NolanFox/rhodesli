@@ -576,6 +576,21 @@ def process_single_image(
 
     # Use relative path (raw_photos/filename.jpg) per data model rules
     relative_path = f"raw_photos/{filepath.name}"
+
+    # Copy source image to raw_photos/ so it's served correctly
+    # (on production, the file lives in uploads/{job_id}/ but must be in raw_photos/)
+    import shutil
+
+    data_dir = photo_index_path.parent if photo_index_path else Path("data")
+    raw_photos_dir = data_dir.parent / "raw_photos"
+    raw_photos_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = raw_photos_dir / filepath.name
+    if not dest_path.exists():
+        try:
+            shutil.copy2(filepath, dest_path)
+            logger.info(f"Copied {filepath.name} to {raw_photos_dir}")
+        except Exception as e:
+            logger.warning(f"Failed to copy {filepath.name} to raw_photos: {e}")
     for face in faces:
         photo_registry.register_face(photo_id, relative_path, face["face_id"], source=source)
 
