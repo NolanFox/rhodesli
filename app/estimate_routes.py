@@ -488,7 +488,7 @@ def _call_gemini_date_estimate(
 
     client = genai.Client(
         api_key=api_key,
-        http_options={"timeout": 30_000},  # 30s for real-time request
+        http_options={"timeout": 120_000 if gedcom_context else 30_000},
     )
 
     mime_type = "image/png" if suffix.lower() == ".png" else "image/jpeg"

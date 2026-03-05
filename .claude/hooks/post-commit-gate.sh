@@ -24,9 +24,10 @@ if echo "$CMD" | grep -qE "git commit|git merge"; then
         echo "" >&2
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
         echo "CRITICAL: $COUNT COMMITS WITHOUT /clear" >&2
-        echo "This is EXACTLY how Sessions 80 and 89 failed." >&2
-        echo "You MUST /clear NOW before doing ANYTHING else." >&2
-        echo "Lesson 89: Violated TWICE. No more excuses." >&2
+        echo "This is EXACTLY how Sessions 80, 89, and 89-cont failed." >&2
+        echo "NEXT PROMPT WILL BE HARD-BLOCKED." >&2
+        echo "NEXT GIT COMMIT WILL BE HARD-BLOCKED (at 4+)." >&2
+        echo "You MUST /clear NOW. There is NO workaround." >&2
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
         echo "" >&2
     elif [ "$COUNT" -ge 2 ]; then

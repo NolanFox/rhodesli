@@ -46,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); T=\"$REPO/.claude/commits_since_clear.txt\"; C=0; if [ -f \"$T\" ]; then C=$(cat \"$T\" | tr -d \"[:space:]\"); fi; if [ \"$C\" -ge 2 ] 2>/dev/null; then echo \"\" >&2; echo \"BLOCKED: $C commits without /clear. Run /clear FIRST.\" >&2; echo \"Lesson 89: Sessions 80+89 both failed from this exact mistake.\" >&2; echo \"\" >&2; fi; echo \"PARALLELIZATION CHECK: Before starting, analyze this prompt for parallel opportunities. Independent phases (different files) can use worktree-isolated subagents. Max 3-4 worktrees. Merge: docs first, then code.\"'"
+            "command": "bash -c 'REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); T=\"$REPO/.claude/commits_since_clear.txt\"; C=0; if [ -f \"$T\" ]; then C=$(cat \"$T\" | tr -d \"[:space:]\"); fi; if [ \"$C\" -ge 3 ] 2>/dev/null; then echo \"\" >&2; echo \"HARD BLOCK: $C commits without /clear. Sessions 80, 89, 89-cont ALL failed this way.\" >&2; echo \"You MUST /clear before doing ANYTHING. This prompt will not be processed.\" >&2; echo \"\" >&2; exit 2; fi; if [ \"$C\" -ge 2 ] 2>/dev/null; then echo \"\" >&2; echo \"WARNING: $C commits without /clear. Next prompt WILL BE BLOCKED.\" >&2; echo \"Run /clear NOW before continuing.\" >&2; echo \"\" >&2; fi; echo \"PARALLELIZATION CHECK: Before starting, analyze this prompt for parallel opportunities. Independent phases (different files) can use worktree-isolated subagents. Max 3-4 worktrees. Merge: docs first, then code.\"'"
           }
         ]
       }
@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); bash \"$REPO/scripts/test-gate.sh\" fast 2>&1 | tail -5; fi'"
+            "command": "bash -c 'INPUT=$(cat); CMD=$(echo \"$INPUT\" | python3 -c \"import sys,json; print(json.load(sys.stdin).get(\\\"tool_input\\\",{}).get(\\\"command\\\",\\\"\\\"))\" 2>/dev/null); if echo \"$CMD\" | grep -qE \"\\bgit commit\\b\"; then if [ -f .claude/parallel_session_active ]; then BRANCH=$(git branch --show-current); if [ \"$BRANCH\" = \"main\" ]; then echo \"BLOCKED: Cannot commit to main during parallel session.\" >&2; exit 2; fi; fi; REPO=$(git rev-parse --show-toplevel 2>/dev/null || echo \".\"); T=\"$REPO/.claude/commits_since_clear.txt\"; C=0; if [ -f \"$T\" ]; then C=$(cat \"$T\" | tr -d \"[:space:]\"); fi; if [ \"$C\" -ge 4 ] 2>/dev/null; then echo \"HARD BLOCK: $C commits without /clear — git commit REFUSED.\" >&2; echo \"You MUST /clear before committing again. No exceptions.\" >&2; exit 2; fi; bash \"$REPO/scripts/test-gate.sh\" fast 2>&1 | tail -5; fi'"
           }
         ]
       }
