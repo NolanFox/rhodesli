@@ -113,6 +113,28 @@ The Benatar photo specifically needs full Gemini analysis run: date estimation, 
 4. Update `data/photo_locations.json` entry: lat ~27.9506, lng ~-82.4572, location_name "Tampa, Florida"
 5. Browser verify: map pin moves to Tampa, face analysis populated
 
+### 10. Discoveries Page + Contributor Notifications (from Claude Benatar feedback)
+
+**Claude Benatar (community contributor) asked via Messenger**: "if someone uploads a picture, how does he or she know if there's a match? or a match comes up later?" He suggests email notifications triggered when a match occurs.
+
+**Nolan's full vision (from Messenger, 9:32 AM)**:
+- If you upload a photo, get both email AND in-app notifications when anything changes
+- Changes include: location update, person identification, GEDCOM linking, identity merge, auto-clustering match
+- First-order AND second-order: notified about changes to your photo AND to people in your photo
+- Facebook-style persistent notification history
+- Discoveries section should surface latest changes first — "when you log in and click discoveries, it would surface whatever the latest changes are first"
+- Should work for both logged-in and non-logged-in users (email for non-logged-in)
+
+**Current Discoveries page issues** (from screenshots):
+1. Confidence filter buttons (All / Strong 70%+ / Possible 50%+) — may not be functional
+2. Photo dropdown appears empty — lazy load via HTMX may be failing
+3. Raw ML metrics visible: "Dist: 0.80" shown on cards — violates UX rule
+4. Face cards don't match unified identity_card (DD-006)
+5. No uploader context — can't filter to "my photos"
+6. No notification system exists for contributors
+
+**Prior decisions**: DD-003 (Discovery Notification UX), AD-179 (Two-Tier Auto-Clustering), AD-183 (Tier 2 1.30), DD-006 (Unified Face Cards)
+
 ---
 
 ## Nolan's Exact Feedback (Preserved)

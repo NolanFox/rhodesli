@@ -26,6 +26,7 @@ Session 90 shipped upload date sorting but it's broken on production — switchi
 - Track B: Supabase shadow writes (worktree: `session-90b/supabase`)
 - Track C: Performance optimization (worktree: `session-90b/perf`)
 - Track D: Testing + hooks cleanup (worktree: `session-90b/testing`)
+- Track E: Review sections UX fix + Notification PRD (worktree: `session-90b/review-ux`)
 **Phase 3** (Act 6): Merge all tracks, browser verify, assessment
 
 **File conflict analysis**:
@@ -33,7 +34,8 @@ Session 90 shipped upload date sorting but it's broken on production — switchi
 - Track B touches `app/supabase_data.py` + new files — independent
 - Track C may touch templates in main.py — merges AFTER Track A
 - Track D touches `tests/` + `.claude/` — independent
-- **Merge order**: A first, then B+C+D (B and D can merge in any order, C after A)
+- Track E touches discoveries/review routes in main.py — merges AFTER Track A
+- **Merge order**: A first, then B+D (independent), then C+E (depend on A's file structure)
 
 ---
 
@@ -187,6 +189,31 @@ After Act 1 is committed and verified, launch 4 parallel worktree subagents.
 
 **Acceptance**: Hooks produce no errors. Flaky tests fixed. Test count < 3400. Runtime < 4 min.
 
+### Track E: Review Sections UX Fix + Contributor Notification PRD
+
+**Worktree**: `session-90b/review-ux`
+**Merges AFTER Track A** (both touch main.py).
+
+**Background (Claude Benatar feedback)**: Community contributor asked "if someone uploads a picture, how does he or she know if there's a match?" Nolan's vision: Facebook-style notifications — email + in-app when anything changes about uploaded photos or people in them.
+
+**Prior decisions**: DD-003 (Discovery Notification UX, Session 69), AD-179 (Two-Tier Auto-Clustering, Session 76a), AD-183 (Tier 2 threshold 1.30, Session 79), DD-006 (Unified Face Cards, Session 84).
+
+**Three Review sections must be clearly differentiated**:
+- **New Matches** (to_review): Raw ML output — INBOX + PROPOSED faces. Admin triage. ~499 items.
+- **Discoveries**: High-confidence Tier 2 matches to confirmed identities. Admin confirms. ~194 items.
+- **Help Identify**: SKIPPED faces needing community help. Everyone can see. ~202 items.
+
+**Fixes (this session)**:
+1. **Confidence filter**: Verify HTMX buttons work (`/api/discoveries?min_confidence=70`). Fix if broken.
+2. **Photo dropdown**: Empty on production. Debug `hx_get="/api/discoveries/photo-options"` at main.py:25866.
+3. **Hide raw ML metrics**: Cards show "Dist: 0.80" — replace with calibrated confidence labels only (violates UX rule).
+4. **Face card consistency**: Update discovery cards to match unified `identity_card` (DD-006).
+5. **Uploader context**: Add ability to filter discoveries by "from your photos" if `uploaded_by` exists.
+
+**PRD to write**: `docs/prds/028_contributor_notifications.md` — notification system for contributors (email on match, in-app activity feed, first+second order notifications). This is planning for future sessions, NOT implementation this session.
+
+**Acceptance**: Filters work. Raw distances hidden. PRD-028 written. Cards consistent with DD-006.
+
 ---
 
 ## Act 3: Photo Enrichment — Benatar + Leon's Restaurant (20 min)
@@ -289,6 +316,8 @@ Standard mandatory outputs:
 - [ ] Performance: photos page measurably faster
 - [ ] Hooks produce no errors, stop hook path fixed
 - [ ] Test count < 3400, flaky tests fixed
+- [ ] Discoveries: confidence filter + photo dropdown work, raw distances hidden
+- [ ] PRD-028 (contributor notifications) written
 - [ ] All tests pass (`make test-fast`)
 - [ ] Browser verified via Claude Chrome with screenshots
 - [ ] Assessment + session log + CHANGELOG + ROADMAP + BACKLOG updated
