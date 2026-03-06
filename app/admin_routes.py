@@ -17,6 +17,8 @@ from fasthtml.common import *
 from starlette.responses import FileResponse, Response
 
 from core import storage
+from core.registry import IdentityState
+from core.ui_safety import ensure_utf8_display
 from core.config import (
     MATCH_THRESHOLD_HIGH,
     MATCH_THRESHOLD_MEDIUM,
