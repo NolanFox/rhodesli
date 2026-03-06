@@ -40,7 +40,7 @@ class TestMatchModeKeyboardNav:
         from starlette.testclient import TestClient
         from app.main import app
 
-        with patch("app.main._get_best_match_pair", return_value=self._mock_pair()), \
+        with patch("app.match_facecompare_routes._get_best_match_pair", return_value=self._mock_pair()), \
              patch("app.main.get_crop_files", return_value=set()), \
              patch("app.main.get_photo_id_for_face", return_value="photo-1"), \
              patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg"), \

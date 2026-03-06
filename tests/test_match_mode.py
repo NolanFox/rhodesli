@@ -26,7 +26,7 @@ class TestMatchModeUI:
         }
         return (identity_a, neighbor_b, 0.8)
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value="photo-1")
     @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
@@ -52,7 +52,7 @@ class TestMatchModeUI:
         assert "Match Confidence:" in html
         assert "%" in html
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value="photo-1")
     @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
@@ -78,7 +78,7 @@ class TestMatchModeUI:
         assert "/photo/photo-1/partial" in html
         assert "Click to view" in html
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value=None)
     @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
@@ -100,7 +100,7 @@ class TestMatchModeUI:
         resp = client.get("/api/match/next-pair")
         assert resp.status_code == 200
 
-    @patch("app.main._get_best_match_pair", return_value=None)
+    @patch("app.match_facecompare_routes._get_best_match_pair", return_value=None)
     def test_no_pairs_shows_empty_state(self, mock_pair):
         """When no pairs available, shows empty state."""
         from starlette.testclient import TestClient
@@ -113,7 +113,7 @@ class TestMatchModeUI:
         assert "No more pairs" in html
         assert "Focus mode" in html
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value="photo-1")
     @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
@@ -144,9 +144,9 @@ class TestMatchDecisionLogging:
 
     def test_log_match_decision_writes_jsonl(self, tmp_path):
         """Decisions are logged to match_decisions.jsonl."""
-        from app.main import _log_match_decision
+        from app.match_facecompare_routes import _log_match_decision
 
-        with patch("app.main.DATA_DIR", str(tmp_path)), \
+        with patch("app.main.data_path", tmp_path), \
              patch("app.main.get_current_user", return_value=None):
             _log_match_decision("id-a", "id-b", "same", 75)
 
@@ -166,9 +166,9 @@ class TestMatchDecisionLogging:
 
     def test_log_multiple_decisions(self, tmp_path):
         """Multiple decisions append to the same log file."""
-        from app.main import _log_match_decision
+        from app.match_facecompare_routes import _log_match_decision
 
-        with patch("app.main.DATA_DIR", str(tmp_path)), \
+        with patch("app.main.data_path", tmp_path), \
              patch("app.main.get_current_user", return_value=None):
             _log_match_decision("id-1", "id-2", "same", 80)
             _log_match_decision("id-3", "id-4", "different", 45)
@@ -187,7 +187,7 @@ class TestMatchDecisionLogging:
 class TestConfidenceCalculation:
     """Tests for confidence percentage calculation."""
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value=None)
     @patch("app.main.resolve_face_image_url", return_value=None)
@@ -221,7 +221,7 @@ class TestConfidenceCalculation:
 class TestMatchModeFilters:
     """Tests for match mode filter parameter support."""
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value="photo-1")
     @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
@@ -248,7 +248,7 @@ class TestMatchModeFilters:
         # Skip button should include filter
         assert "next-pair?filter=ready" in html
 
-    @patch("app.main._get_best_match_pair")
+    @patch("app.match_facecompare_routes._get_best_match_pair")
     @patch("app.main.get_crop_files", return_value=set())
     @patch("app.main.get_photo_id_for_face", return_value="photo-1")
     @patch("app.main.resolve_face_image_url", return_value="/crops/face.jpg")
@@ -276,7 +276,7 @@ class TestMatchModeFilters:
         assert "filter=rediscovered" in html
         assert "decide?" in html
 
-    @patch("app.main._get_best_match_pair", return_value=None)
+    @patch("app.match_facecompare_routes._get_best_match_pair", return_value=None)
     def test_filter_ready_no_pairs_shows_filtered_empty_state(self, mock_pair):
         """When filter=ready and no proposals, shows empty state with filter-aware back link."""
         from starlette.testclient import TestClient

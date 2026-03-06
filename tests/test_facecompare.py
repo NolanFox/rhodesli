@@ -182,7 +182,7 @@ class TestFaceCompareResults:
 
     def test_result_card_tiers(self):
         """Result cards have correct tier data attributes."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
              patch("app.main.get_photo_id_for_face", return_value="photo1"):
@@ -199,7 +199,7 @@ class TestFaceCompareResults:
 
     def test_result_card_possible_match(self):
         """Possible match card renders correctly."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
              patch("app.main.get_photo_id_for_face", return_value="photo1"):
@@ -215,7 +215,7 @@ class TestFaceCompareResults:
 
     def test_result_card_no_crop_returns_none(self):
         """Card returns None when crop URL cannot be resolved."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         with patch("app.main.resolve_face_image_url", return_value=None), \
              patch("app.main.get_photo_id_for_face", return_value=None):
@@ -229,7 +229,7 @@ class TestFaceCompareResults:
 
     def test_result_card_shows_percentage_not_raw_float(self):
         """Verify compare results show '90%' not '0.73 similarity' (AD-149 calibration)."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
              patch("app.main.get_photo_id_for_face", return_value="photo1"):
@@ -248,7 +248,7 @@ class TestFaceCompareResults:
 
     def test_result_card_shows_calibrated_confidence_labels(self):
         """Verify confidence labels use calibrated thresholds (AD-091)."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         # _fc_result_card uses "Some similarity" for <50 (museum-quality UX)
         test_cases = [
@@ -271,7 +271,7 @@ class TestFaceCompareResults:
 
     def test_results_section_empty_state(self):
         """Results section shows empty state when no matches."""
-        from app.main import _fc_results_section
+        from app.match_facecompare_routes import _fc_results_section
 
         section = _fc_results_section([], set())
         html = repr(section)
@@ -279,7 +279,7 @@ class TestFaceCompareResults:
 
     def test_results_section_with_matches(self):
         """Results section shows match cards when matches exist."""
-        from app.main import _fc_results_section
+        from app.match_facecompare_routes import _fc_results_section
 
         mock_results = [
             {"face_id": "f1", "distance": 1.0, "tier": "STRONG MATCH",
@@ -296,7 +296,7 @@ class TestFaceCompareResults:
 
     def test_results_section_with_date(self):
         """Results section shows date estimation."""
-        from app.main import _fc_results_section
+        from app.match_facecompare_routes import _fc_results_section
 
         date_info = {
             "predicted_decade": 1930,
@@ -312,7 +312,7 @@ class TestFaceCompareResults:
 
     def test_results_collection_name(self):
         """Results include collection name."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
              patch("app.main.get_photo_id_for_face", return_value="photo1"):
@@ -327,7 +327,7 @@ class TestFaceCompareResults:
 
     def test_results_person_link(self):
         """Identified persons have links to their person pages."""
-        from app.main import _fc_result_card
+        from app.match_facecompare_routes import _fc_result_card
 
         with patch("app.main.resolve_face_image_url", return_value="/crop.jpg"), \
              patch("app.main.get_photo_id_for_face", return_value="photo1"):
@@ -402,7 +402,7 @@ class TestFaceCompareShareable:
 
     def test_results_have_share_button(self):
         """Results section includes share button when result_id is provided."""
-        from app.main import _fc_results_section
+        from app.match_facecompare_routes import _fc_results_section
 
         mock_results = [
             {"face_id": "f1", "distance": 1.0, "tier": "STRONG MATCH",
@@ -418,7 +418,7 @@ class TestFaceCompareShareable:
 
     def test_results_have_bridge_ctas(self):
         """Results include bridge CTAs to the archive."""
-        from app.main import _fc_results_section
+        from app.match_facecompare_routes import _fc_results_section
 
         mock_results = [
             {"face_id": "f1", "distance": 1.0, "tier": "STRONG MATCH",
