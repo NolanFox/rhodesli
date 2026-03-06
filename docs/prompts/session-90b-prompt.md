@@ -189,9 +189,11 @@ After Act 1 is committed and verified, launch 4 parallel worktree subagents.
 
 ---
 
-## Act 3: Benatar Photo Enrichment (15 min)
+## Act 3: Photo Enrichment — Benatar + Leon's Restaurant (20 min)
 
-**While subagents run**, run ML enrichment on the Benatar photo.
+**While subagents run**, fix ML enrichment on two photos that are visibly broken.
+
+### 3a. Benatar Photo (inbox_0c57277a_0_unknown / a75e6b54b0eb6c50)
 
 1. **Verify photo state**: Check `data/photo_index.json` for `inbox_0c57277a_0_unknown` — confirm it has source "Claude Benatar upload"
 2. **Run Gemini analysis**: Use the admin "Re-analyze with Gemini" button (added in Session 89) on production, OR use `scripts/reprocess_with_gedcom.py --photo-id inbox_0c57277a_0_unknown`
@@ -199,7 +201,29 @@ After Act 1 is committed and verified, launch 4 parallel worktree subagents.
 4. **Verify on photo page**: Date label, location on map, face analysis section should all populate
 5. **DO NOT delete a75e6b54b0eb6c50** — it exists on production and user shared the link
 
-Commit: `fix(data): run Gemini enrichment on Benatar photo`
+### 3b. Leon's Restaurant Photo (3192877a90a174e9) — MUST FIX
+
+**This photo has been broken since Session 89. Nolan has flagged it twice.**
+
+Photo shows Victoria and Victor Capeluto standing in front of "LEON'S RESTAURANT" in Tampa, FL. It's from the "Nace Capeluto Tampa Collection."
+
+**Current state (all WRONG)**:
+- **Location estimate**: Says "Miami, Florida, United States" (WRONG — should be Tampa, FL)
+- **Geographic Analysis**: Says "Likely San Francisco, CA or New York, NY" (WRONG)
+- **Location pin**: Points at Miami on map (WRONG)
+- **Face Analysis**: Says "No face descriptions available yet" — face alignment was never run
+- **Gemini analysis WAS run** (Photo Detective shows evidence cards with Gemini 3.1-pro) but it got the location wrong
+- **GEDCOM context IS partially working** — the evidence cards mention "Victor Capelluto's brother, Leon Capeluto" and "Victor's timeline places him in San Francisco in 1938 and 1940"
+
+**What's needed**:
+1. **Run face alignment** ("Detect Faces" button or `face_alignment.py`) to populate face descriptions
+2. **Re-run Gemini with corrected GEDCOM context** — the restaurant sign literally says "LEON'S" and the collection is Tampa. The GEDCOM should link Leon Capeluto to Tampa, not SF.
+3. **Fix location**: Update `data/photo_locations.json` entry to Tampa, FL (lat: ~27.9506, lng: ~-82.4572)
+4. **Verify**: Photo page shows Tampa on map, face analysis populated, date estimate reasonable
+
+**Key investigation**: Why did Gemini say San Francisco when the GEDCOM context mentions Leon had a restaurant? Check if the GEDCOM data for Leon Capeluto has Tampa residence events. If not, that's the root cause — the GEDCOM data may be incomplete or the wrong Leon is being referenced.
+
+Commit: `fix(data): enrichment for Benatar + Leon's Restaurant photos`
 
 ---
 
@@ -221,8 +245,9 @@ Commit: merge commits per track
 
 1. **Sorting**: `/photos` page — upload_newest shows March photos first, upload_oldest shows Feb photos first
 2. **Photo page**: Any photo shows upload date
-3. **Benatar photo**: `a75e6b54b0eb6c50` still loads correctly
-4. **Upload page**: Still works (regression check from Session 90 merge issues)
+3. **Benatar photo**: `a75e6b54b0eb6c50` still loads correctly with ML enrichment
+4. **Leon's Restaurant**: `3192877a90a174e9` — map shows Tampa FL, face analysis populated
+5. **Upload page**: Still works (regression check from Session 90 merge issues)
 5. **Performance**: Photos page feels faster (subjective check + network timing)
 6. **General smoke**: Landing page, People page, Compare page all load
 7. Save screenshots to `docs/screenshots/session-90b/`
@@ -257,6 +282,8 @@ Standard mandatory outputs:
 - [ ] Upload date displayed on photo pages
 - [ ] Benatar photo has ML enrichment (date + location + face analysis)
 - [ ] a75e6b54b0eb6c50 still works on production (DO NOT DELETE)
+- [ ] Leon's Restaurant photo (3192877a90a174e9) shows Tampa, FL (not Miami/SF)
+- [ ] Leon's Restaurant photo has face analysis populated (not "No face descriptions")
 - [ ] main.py < 15,000 lines (route extraction complete)
 - [ ] Supabase shadow write tables created + backfill script exists
 - [ ] Performance: photos page measurably faster
@@ -277,9 +304,20 @@ Standard mandatory outputs:
 
 - Full Supabase migration (shadow writes only, not replacing JSON as source of truth)
 - New features or UX redesigns
-- Running ML on all 294 photos (just Benatar photo)
-- GEDCOM work
+- Running ML on all 294 photos (just Benatar + Leon's Restaurant)
 - Compare/Estimate page changes
+
+## Architecture Notes (from research)
+
+**Two photo pages exist** — be aware when fixing upload date display:
+- **Modal viewer** (`photo_view_content` at line 11729) — used from browse/compare. MISSING upload provenance.
+- **Public page** (`public_photo_page` at line 20199) — standalone shareable page. Already HAS upload provenance via `_build_upload_provenance_line()` at line 733.
+- **Fix**: Add `_build_upload_provenance_line()` call to the modal viewer too.
+
+**Performance top 3** (from research):
+1. O(N) identity lookup per photo card render (`get_identity_for_face` at line 15754) — 600-1500 lookups per page. Fix: pre-build face_id→state lookup dict.
+2. Synchronous JSON file loads (date_labels 1.1MB, photo_index 246KB) block first request after deploy.
+3. Tailwind JIT CDN compilation adds 300-800ms per page. Consider static CSS build.
 
 ## Tradeoff Guidance
 

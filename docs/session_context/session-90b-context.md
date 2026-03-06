@@ -89,6 +89,26 @@ The Benatar photo specifically needs full Gemini analysis run: date estimation, 
 | `.claude/settings.json` | 52 | Hook configuration |
 | `docs/prds/027_data_migration.md` | — | Migration plan (draft) |
 
+### 9. Leon's Restaurant Photo (3192877a90a174e9) — MUST FIX
+**Nolan flagged this twice** — was supposed to be fixed in Session 89 but wasn't.
+
+**Current state** (from screenshots):
+- Photo shows Victoria and Victor Capeluto in front of "LEON'S RESTAURANT"
+- Collection: "Nace Capeluto Tampa Collection" — so it's Tampa, FL
+- Location estimate says "Miami, Florida" with pin on Miami (WRONG)
+- Geographic Analysis says "Likely San Francisco, CA or New York, NY" (WRONG)
+- GEDCOM context IS partially working — mentions "Victor Capelluto's brother, Leon Capeluto" and "Victor's timeline places him in San Francisco in 1938 and 1940"
+- Face Analysis says "No face descriptions available yet" — face alignment never run
+- Gemini analysis WAS run (Photo Detective shows evidence cards) but got location wrong
+
+**Why it's wrong**: The GEDCOM context references Victor's SF timeline (1938-1940) and the visual cues (Art Deco, English signage) led Gemini to guess SF/NYC. But "LEON'S RESTAURANT" was Leon Capeluto's restaurant in Tampa, FL. The GEDCOM data may not have Leon's Tampa residence events, or the wrong person is being linked.
+
+**What needs to happen**:
+1. Run face alignment to populate face descriptions
+2. Re-run Gemini with better GEDCOM context pointing to Tampa
+3. Fix location to Tampa, FL in photo_locations.json
+4. Browser verify the map pin moves to Tampa
+
 ---
 
 ## Nolan's Exact Feedback (Preserved)
@@ -104,6 +124,8 @@ The Benatar photo specifically needs full Gemini analysis run: date estimation, 
 > "I also want you to make progress on the supabase migration. Within a few sessions I want all of the data logged."
 
 > "Take one more pass at website performance. It really seems a lot slower than it should."
+
+> "Also I just checked and somehow we STILL have not fixed the work on the victoria and victor in front of Leon's photo. It's missing lots of the gemini info. We were supposed to fix that a day ago... the location is wrong, the face analysis is missing, the geographic photo detective (with gedcom linking) is missing, etc."
 
 > "Please make sure [hooks] are in a good place."
 
