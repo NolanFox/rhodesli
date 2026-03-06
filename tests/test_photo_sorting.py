@@ -175,13 +175,13 @@ class TestPhotosRouteSort:
             f"Expected newest-first order ccc>aaa>bbb on /photos route, got: {ids}"
         )
 
-    def test_photos_route_has_recently_uploaded_option(self, client, mock_photo_cache):
-        """The /photos dropdown should include Recently Uploaded."""
+    def test_photos_route_has_upload_date_option(self, client, mock_photo_cache):
+        """The /photos dropdown should include Upload Date sort options."""
         patches = _sort_patches(mock_photo_cache)
         with patch.multiple(
             "app.main", **{k.split(".")[-1]: v for k, v in patches.items() if k.startswith("app.main.")}
         ):
             resp = client.get("/photos")
         assert resp.status_code == 200
-        assert "Recently Uploaded" in resp.text
-        assert 'value="recently_uploaded"' in resp.text
+        assert "Upload Date (Newest)" in resp.text
+        assert 'value="upload_newest"' in resp.text

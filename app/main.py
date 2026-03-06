@@ -6168,6 +6168,7 @@ def render_photos_section(
                 "identified_count": len(identified_faces),
                 "confirmed_count": confirmed_count,
                 "identified_faces": identified_faces[:4],  # Max 4 for display
+                "upload_date": photo_data.get("upload_date", ""),
             }
         )
 
@@ -6181,23 +6182,7 @@ def render_photos_section(
         photos = [p for p in photos if p["collection"] == filter_collection]
 
     # Apply sorting
-    if sort_by in ("oldest", "newest"):
-        # Sort by estimated date from Gemini analysis (best_year_estimate)
-        labels = _load_date_labels()
-        NO_DATE = 9999 if sort_by == "oldest" else 0
-
-        def _year_key(p):
-            label = labels.get(p["photo_id"], {})
-            year = label.get("best_year_estimate") or label.get("estimated_decade") or 0
-            return year if year else NO_DATE
-
-        photos = sorted(photos, key=_year_key, reverse=(sort_by == "newest"))
-    elif sort_by == "most_faces":
-        photos = sorted(photos, key=lambda p: p["face_count"], reverse=True)
-    elif sort_by == "by_source":
-        photos = sorted(photos, key=lambda p: (p["source"] or "zzz", p["filename"]))
-    elif sort_by == "collection":
-        photos = sorted(photos, key=lambda p: (p["collection"] or p["source"] or "zzz", p["filename"]))
+    photos = _sort_photos(photos, sort_by)
 
     # Build per-collection stats
     collection_stats = {}
@@ -6238,8 +6223,11 @@ def render_photos_section(
         source_options.append(Option(s, value=s, selected=(filter_source == s)))
 
     sort_options = [
-        Option("Newest First", value="newest", selected=(sort_by == "newest")),
-        Option("Oldest First", value="oldest", selected=(sort_by == "oldest")),
+        Option("Upload Date (Newest)", value="upload_newest", selected=(sort_by == "upload_newest")),
+        Option("Upload Date (Oldest)", value="upload_oldest", selected=(sort_by == "upload_oldest")),
+        Option("Estimated Date (Newest)", value="newest", selected=(sort_by == "newest")),
+        Option("Estimated Date (Oldest)", value="oldest", selected=(sort_by == "oldest")),
+        Option("Filename (A-Z)", value="filename_az", selected=(sort_by == "filename_az")),
         Option("Most Faces", value="most_faces", selected=(sort_by == "most_faces")),
         Option("By Collection", value="collection", selected=(sort_by == "collection")),
         Option("By Source", value="by_source", selected=(sort_by == "by_source")),
@@ -15580,6 +15568,48 @@ def post(person_id: str, comment_id: str, sess=None):
     return Div(P("Comment hidden.", cls="text-xs text-slate-500 italic py-2"))
 
 
+def _sort_photos(photos: list, sort_by: str) -> list:
+    """Sort photo dicts by the given sort criterion.
+
+    Sort options:
+      - upload_newest / upload_oldest: by upload_date ISO string
+      - newest / oldest: by estimated year from date_labels
+      - filename_az: alphabetical by filename
+      - most_faces: descending face count
+      - by_source: alphabetical by collection then filename
+      - collection: alphabetical by collection/source then filename
+      - recently_uploaded: legacy alias for upload_newest
+    """
+    if sort_by in ("upload_newest", "upload_oldest", "recently_uploaded"):
+        reverse = sort_by in ("upload_newest", "recently_uploaded")
+        # Sort by actual upload_date; photos without a date go to the end
+        NO_DATE = "" if reverse else "9999-99-99"
+
+        def _upload_key(p):
+            return p.get("upload_date") or NO_DATE
+
+        photos.sort(key=_upload_key, reverse=reverse)
+    elif sort_by in ("oldest", "newest"):
+        labels = _load_date_labels()
+        NO_DATE = 9999 if sort_by == "oldest" else 0
+
+        def _year_key(p):
+            label = labels.get(p["photo_id"], {})
+            year = label.get("best_year_estimate") or label.get("estimated_decade") or 0
+            return year if year else NO_DATE
+
+        photos.sort(key=_year_key, reverse=(sort_by == "newest"))
+    elif sort_by == "filename_az":
+        photos.sort(key=lambda p: p.get("filename", "").lower())
+    elif sort_by == "most_faces":
+        photos.sort(key=lambda p: p["face_count"], reverse=True)
+    elif sort_by == "by_source":
+        photos.sort(key=lambda p: (p.get("collection") or "zzz", p["filename"]))
+    elif sort_by == "collection":
+        photos.sort(key=lambda p: (p.get("collection") or p.get("source") or "zzz", p["filename"]))
+    return photos
+
+
 def _build_photo_cards(photos: list, masonry: bool = False) -> list:
     """Build photo card elements for a list of photo dicts.
 
@@ -15672,7 +15702,7 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
 @rt("/photos")
 def get(
     filter_collection: str = "",
-    sort_by: str = "newest",
+    sort_by: str = "upload_newest",
     decade: int = None,
     search_q: str = "",
     tag: str = "",
@@ -15731,35 +15761,14 @@ def get(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "upload_date": photo_data.get("upload_date", ""),
             }
         )
 
     collections = sorted(collections_set)
 
     # Sort
-    if sort_by in ("oldest", "newest"):
-        labels = _load_date_labels()
-        NO_DATE = 9999 if sort_by == "oldest" else 0
-
-        def _year_key(p):
-            label = labels.get(p["photo_id"], {})
-            year = label.get("best_year_estimate") or label.get("estimated_decade") or 0
-            return year if year else NO_DATE
-
-        photos.sort(key=_year_key, reverse=(sort_by == "newest"))
-    elif sort_by == "most_faces":
-        photos.sort(key=lambda p: p["face_count"], reverse=True)
-    elif sort_by == "by_source":
-        photos.sort(key=lambda p: (p.get("collection") or "zzz", p["filename"]))
-    elif sort_by == "recently_uploaded":
-        # Sort inbox_ photos first (community uploads), then by photo_id
-        def _upload_key(p):
-            pid = p["photo_id"]
-            if pid.startswith("inbox_"):
-                return (0, pid)
-            return (1, pid)
-
-        photos.sort(key=_upload_key, reverse=True)
+    photos = _sort_photos(photos, sort_by)
 
     # Build photo cards (paginated — 24 per page for lazy loading)
     PHOTOS_PER_PAGE = 24
@@ -15813,9 +15822,11 @@ def get(
         collection_options.append(Option(c, value=c, selected=(filter_collection == c)))
 
     sort_options = [
-        Option("Newest First", value="newest", selected=(sort_by == "newest")),
-        Option("Oldest First", value="oldest", selected=(sort_by == "oldest")),
-        Option("Recently Uploaded", value="recently_uploaded", selected=(sort_by == "recently_uploaded")),
+        Option("Upload Date (Newest)", value="upload_newest", selected=(sort_by == "upload_newest")),
+        Option("Upload Date (Oldest)", value="upload_oldest", selected=(sort_by == "upload_oldest")),
+        Option("Estimated Date (Newest)", value="newest", selected=(sort_by == "newest")),
+        Option("Estimated Date (Oldest)", value="oldest", selected=(sort_by == "oldest")),
+        Option("Filename (A-Z)", value="filename_az", selected=(sort_by == "filename_az")),
         Option("Most Faces", value="most_faces", selected=(sort_by == "most_faces")),
         Option("By Source", value="by_source", selected=(sort_by == "by_source")),
     ]
@@ -16001,7 +16012,7 @@ def get(
 def photos_more(
     page: int = 2,
     filter_collection: str = "",
-    sort_by: str = "newest",
+    sort_by: str = "upload_newest",
     decade: int = None,
     search_q: str = "",
     tag: str = "",
@@ -16044,32 +16055,11 @@ def photos_more(
                 "match_reason": search_photo_ids.get(photo_id_val) if search_photo_ids else None,
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
+                "upload_date": photo_data.get("upload_date", ""),
             }
         )
 
-    if sort_by in ("oldest", "newest"):
-        labels = _load_date_labels()
-        NO_DATE = 9999 if sort_by == "oldest" else 0
-
-        def _year_key(p):
-            label = labels.get(p["photo_id"], {})
-            year = label.get("best_year_estimate") or label.get("estimated_decade") or 0
-            return year if year else NO_DATE
-
-        photos.sort(key=_year_key, reverse=(sort_by == "newest"))
-    elif sort_by == "most_faces":
-        photos.sort(key=lambda p: p["face_count"], reverse=True)
-    elif sort_by == "by_source":
-        photos.sort(key=lambda p: (p.get("collection") or "zzz", p["filename"]))
-    elif sort_by == "recently_uploaded":
-
-        def _upload_key(p):
-            pid = p["photo_id"]
-            if pid.startswith("inbox_"):
-                return (0, pid)
-            return (1, pid)
-
-        photos.sort(key=_upload_key, reverse=True)
+    photos = _sort_photos(photos, sort_by)
 
     # Paginate
     start = (page - 1) * PHOTOS_PER_PAGE
@@ -33466,7 +33456,11 @@ def get(filename: str):
 # --- Route module imports (triggers route registration via @rt decorators) ---
 from app import compare_routes  # noqa: E402, F401
 from app import estimate_routes  # noqa: E402, F401
-from app import upload_routes  # noqa: E402, F401
+
+try:
+    from app import upload_routes  # noqa: E402, F401
+except ImportError:
+    pass  # upload_routes not yet extracted
 
 if __name__ == "__main__":
     # Startup diagnostics
