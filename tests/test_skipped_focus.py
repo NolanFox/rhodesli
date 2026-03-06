@@ -10,11 +10,11 @@ Verifies:
 - Actionability sorting (best leads first)
 - Progress counter
 """
-import json
+
 import re
 import subprocess
 import sys
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
 
@@ -22,6 +22,7 @@ from starlette.testclient import TestClient
 @pytest.fixture
 def client():
     from app.main import app
+
     return TestClient(app)
 
 
@@ -130,8 +131,8 @@ class TestSkippedFocusModeViewToggle:
     def test_view_toggle_present(self, client):
         """View toggle with Focus and View All links is present."""
         html = _render_path("/?section=skipped&view=focus")
-        assert 'section=skipped&amp;view=focus' in html
-        assert 'section=skipped&amp;view=browse' in html
+        assert "section=skipped&amp;view=focus" in html
+        assert "section=skipped&amp;view=browse" in html
 
     def test_browse_mode_shows_cards_list(self, client):
         """Browse mode shows the traditional card grid, not focus mode."""
@@ -221,14 +222,19 @@ class TestSkippedFocusModeWithMockData:
         identities = self._mock_skipped_identities()
 
         # Mock: skip-high has a proposal, skip-none doesn't
-        with patch("app.main._get_identities_with_proposals", return_value={"skip-high"}), \
-             patch("app.main._get_best_proposal_for_identity", return_value={
-                 "confidence": "HIGH",
-                 "distance": 0.85,
-                 "target_identity_id": "target-1",
-                 "target_identity_name": "Known Person",
-             }), \
-             patch("app.main._identity_quality_score", return_value=50.0):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value={"skip-high"}),
+            patch(
+                "app.main._get_best_proposal_for_identity",
+                return_value={
+                    "confidence": "HIGH",
+                    "distance": 0.85,
+                    "target_identity_id": "target-1",
+                    "target_identity_name": "Known Person",
+                },
+            ),
+            patch("app.main._identity_quality_score", return_value=50.0),
+        ):
             sorted_list = _sort_skipped_by_actionability(identities)
             assert sorted_list[0]["identity_id"] == "skip-high"
 
@@ -238,8 +244,10 @@ class TestSkippedFocusModeWithMockData:
 
         identities = self._mock_skipped_identities()
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()), \
-             patch("app.main._identity_quality_score", return_value=50.0):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+            patch("app.main._identity_quality_score", return_value=50.0),
+        ):
             sorted_list = _sort_skipped_by_actionability(identities)
             # Both in tier 3 (no proposals), should maintain original order
             assert len(sorted_list) == 2
@@ -276,30 +284,45 @@ class TestActionabilityBadges:
     def test_strong_lead_badge_for_high_confidence(self):
         """Strong lead badge returned for VERY HIGH or HIGH proposals."""
         from app.main import _actionability_badge
-        with patch("app.main._get_best_proposal_for_identity", return_value={
-            "confidence": "HIGH", "distance": 0.85,
-            "target_identity_id": "t1", "target_identity_name": "Known"
-        }):
+
+        with patch(
+            "app.main._get_best_proposal_for_identity",
+            return_value={
+                "confidence": "HIGH",
+                "distance": 0.85,
+                "target_identity_id": "t1",
+                "target_identity_name": "Known",
+            },
+        ):
             badge = _actionability_badge("test-id", {"test-id"})
             from fasthtml.common import to_xml
+
             html = to_xml(badge)
             assert "Strong lead" in html
 
     def test_good_lead_badge_for_moderate(self):
         """Good lead badge returned for MODERATE proposals."""
         from app.main import _actionability_badge
-        with patch("app.main._get_best_proposal_for_identity", return_value={
-            "confidence": "MODERATE", "distance": 1.1,
-            "target_identity_id": "t1", "target_identity_name": "Maybe"
-        }):
+
+        with patch(
+            "app.main._get_best_proposal_for_identity",
+            return_value={
+                "confidence": "MODERATE",
+                "distance": 1.1,
+                "target_identity_id": "t1",
+                "target_identity_name": "Maybe",
+            },
+        ):
             badge = _actionability_badge("test-id", {"test-id"})
             from fasthtml.common import to_xml
+
             html = to_xml(badge)
             assert "Good lead" in html
 
     def test_no_badge_for_no_proposals(self):
         """No badge when identity has no proposals."""
         from app.main import _actionability_badge
+
         badge = _actionability_badge("test-id", set())
         assert badge is None
 
@@ -318,6 +341,7 @@ class TestCollapsibleNeighborsPanel:
         """Neighbors panel has a toggle button instead of a close/dismiss button."""
         from app.main import neighbors_sidebar
         from fasthtml.common import to_xml
+
         result = neighbors_sidebar("test-id", [], set())
         html = to_xml(result)
         assert "Collapse" in html or "Expand" in html
@@ -327,6 +351,7 @@ class TestCollapsibleNeighborsPanel:
         """Toggle button uses Hyperscript to show/hide body."""
         from app.main import neighbors_sidebar
         from fasthtml.common import to_xml
+
         result = neighbors_sidebar("test-id", [], set())
         html = to_xml(result)
         assert "toggle .hidden" in html
@@ -354,17 +379,13 @@ class TestSkippedFocusMergeIntegration:
 
     def test_merge_route_accepts_focus_section(self, client):
         """Merge route accepts focus_section parameter without error."""
-        resp = client.post(
-            "/api/identity/fake-target/merge/fake-source?from_focus=true&focus_section=skipped"
-        )
+        resp = client.post("/api/identity/fake-target/merge/fake-source?from_focus=true&focus_section=skipped")
         # Should not be 500 — either 404 (identity not found) or 409
         assert resp.status_code in (404, 409, 200)
 
     def test_neighbors_route_accepts_focus_section(self, client):
         """Neighbors route accepts focus_section parameter."""
-        resp = client.get(
-            "/api/identity/fake-id/neighbors?from_focus=true&focus_section=skipped"
-        )
+        resp = client.get("/api/identity/fake-id/neighbors?from_focus=true&focus_section=skipped")
         # Should not be 500
         assert resp.status_code in (200, 404)
 
@@ -375,6 +396,7 @@ class TestBestMatchFallback:
     def test_get_best_match_uses_proposals_first(self):
         """_get_best_match_for_identity prefers proposals over neighbors."""
         from app.main import _get_best_match_for_identity
+
         proposal = {
             "target_identity_id": "t1",
             "target_identity_name": "Known Person",
@@ -388,22 +410,28 @@ class TestBestMatchFallback:
     def test_get_best_match_falls_back_to_neighbors(self):
         """_get_best_match_for_identity falls back to _compute_best_neighbor."""
         from app.main import _get_best_match_for_identity
+
         neighbor = {
             "target_identity_id": "t2",
             "target_identity_name": "Neighbor",
             "distance": 1.05,
             "confidence": "MODERATE",
         }
-        with patch("app.main._get_best_proposal_for_identity", return_value=None), \
-             patch("app.main._compute_best_neighbor", return_value=neighbor):
+        with (
+            patch("app.main._get_best_proposal_for_identity", return_value=None),
+            patch("app.main._compute_best_neighbor", return_value=neighbor),
+        ):
             result = _get_best_match_for_identity("test-id")
             assert result == neighbor
 
     def test_get_best_match_returns_none_when_no_matches(self):
         """_get_best_match_for_identity returns None when nothing found."""
         from app.main import _get_best_match_for_identity
-        with patch("app.main._get_best_proposal_for_identity", return_value=None), \
-             patch("app.main._compute_best_neighbor", return_value=None):
+
+        with (
+            patch("app.main._get_best_proposal_for_identity", return_value=None),
+            patch("app.main._compute_best_neighbor", return_value=None),
+        ):
             result = _get_best_match_for_identity("test-id")
             assert result is None
 
@@ -411,10 +439,10 @@ class TestBestMatchFallback:
         """Focus mode shows human-readable confidence labels."""
         html = _render_skipped_focus_html()
         # Should have one of the human-readable labels
-        has_label = any(label in html for label in [
-            "Strong match", "Good match", "Possible match", "Weak match",
-            "No ML suggestions yet"
-        ])
+        has_label = any(
+            label in html
+            for label in ["Strong match", "Good match", "Possible match", "Weak match", "No ML suggestions yet"]
+        )
         if 'data-focus-mode="skipped"' in html:
             assert has_label, "Expected a confidence label in the best match area"
         else:
@@ -427,9 +455,12 @@ class TestSmartLandingRedirect:
     def test_logged_in_empty_inbox_goes_to_skipped(self, client):
         """When inbox is empty, logged-in users see Help Identify instead."""
         from app.auth import User
+
         mock_user = User(id="test", email="test@test.com", is_admin=True)
-        with patch("app.main.get_current_user", return_value=mock_user), \
-             patch("app.main.is_auth_enabled", return_value=True):
+        with (
+            patch("app.main.get_current_user", return_value=mock_user),
+            patch("app.main.is_auth_enabled", return_value=True),
+        ):
             resp = client.get("/")
             html = resp.text
             # Should show Help Identify content (not empty inbox)
@@ -445,15 +476,20 @@ class TestSourcePhotoRendering:
         from fasthtml.common import to_xml
 
         # Mock the photo cache to have a "filename" key but no "path"
-        with patch("app.main._build_caches"), \
-             patch("app.main._photo_cache", {
-                 "test-photo": {
-                     "filename": "Image 001_compress.jpg",
-                     "faces": [],
-                     "collection": "Test Collection",
-                 }
-             }), \
-             patch("app.main.load_registry") as mock_reg:
+        with (
+            patch("app.main._build_caches"),
+            patch(
+                "app.main._photo_cache",
+                {
+                    "test-photo": {
+                        "filename": "Image 001_compress.jpg",
+                        "faces": [],
+                        "collection": "Test Collection",
+                    }
+                },
+            ),
+            patch("app.main.load_registry") as mock_reg,
+        ):
             mock_reg.return_value.list_identities.return_value = []
             result = _build_skipped_photo_context("test-face", "test-photo", "test-identity")
             if result:
@@ -500,6 +536,7 @@ class TestOtherMatchesStrip:
     def test_suggestion_with_strip_returns_tuple(self):
         """_build_skipped_suggestion_with_strip returns (el, strip_or_none, best_match_id)."""
         from app.main import _build_skipped_suggestion_with_strip
+
         # Should return a tuple of three elements: (suggestion_el, strip_or_none, best_match_id)
         result = _build_skipped_suggestion_with_strip("nonexistent-id", set())
         assert isinstance(result, tuple)
@@ -576,7 +613,8 @@ class TestKeyboardUndoSupport:
     def test_merge_button_has_undo_merge_url(self, client):
         """Same Person button has data-undo-url pointing to undo-merge endpoint."""
         html = _render_skipped_focus_html()
-        if "focus-btn-confirm" in html:
+        # Check for the actual button element, not JS string references to the ID
+        if 'id="focus-btn-confirm"' in html:
             assert "data-undo-url" in html
             assert "undo-merge" in html
 
@@ -597,8 +635,10 @@ class TestActionabilitySortUnit:
             {"identity_id": "id-high", "name": "Person A", "state": "SKIPPED"},
             {"identity_id": "id-very-high", "name": "Person B", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
-             patch("app.main._identity_quality_score", return_value=50.0):
+        with (
+            patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors),
+            patch("app.main._identity_quality_score", return_value=50.0),
+        ):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-very-high"
             assert result[1]["identity_id"] == "id-high"
@@ -615,8 +655,10 @@ class TestActionabilitySortUnit:
             {"identity_id": "id-nomatch", "name": "Nobody", "state": "SKIPPED"},
             {"identity_id": "id-match", "name": "Somebody", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
-             patch("app.main._identity_quality_score", return_value=50.0):
+        with (
+            patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors),
+            patch("app.main._identity_quality_score", return_value=50.0),
+        ):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-match"
             assert result[1]["identity_id"] == "id-nomatch"
@@ -634,8 +676,10 @@ class TestActionabilitySortUnit:
             {"identity_id": "id-far", "name": "Far", "state": "SKIPPED"},
             {"identity_id": "id-close", "name": "Close", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
-             patch("app.main._identity_quality_score", return_value=50.0):
+        with (
+            patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors),
+            patch("app.main._identity_quality_score", return_value=50.0),
+        ):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-close"
             assert result[1]["identity_id"] == "id-far"
@@ -653,8 +697,10 @@ class TestActionabilitySortUnit:
             {"identity_id": "id-unid", "name": "Person A", "state": "SKIPPED"},
             {"identity_id": "id-named", "name": "Person B", "state": "SKIPPED"},
         ]
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
-             patch("app.main._identity_quality_score", return_value=50.0):
+        with (
+            patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors),
+            patch("app.main._identity_quality_score", return_value=50.0),
+        ):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-named"
             assert result[1]["identity_id"] == "id-unid"
@@ -676,8 +722,10 @@ class TestActionabilitySortUnit:
         def mock_quality(identity):
             return 80.0 if identity.get("identity_id") == "id-clear" else 20.0
 
-        with patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors), \
-             patch("app.main._identity_quality_score", side_effect=mock_quality):
+        with (
+            patch("app.main._get_skipped_neighbor_distances", return_value=mock_neighbors),
+            patch("app.main._identity_quality_score", side_effect=mock_quality),
+        ):
             result = _sort_skipped_by_actionability(skipped)
             assert result[0]["identity_id"] == "id-clear"
             assert result[1]["identity_id"] == "id-blurry"

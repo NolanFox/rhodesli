@@ -36,7 +36,10 @@ def _get_same_person_stats() -> Optional[dict]:
     try:
         thresholds_path = (
             Path(__file__).resolve().parent.parent
-            / "rhodesli_ml" / "data" / "model_comparisons" / "kinship_thresholds.json"
+            / "rhodesli_ml"
+            / "data"
+            / "model_comparisons"
+            / "kinship_thresholds.json"
         )
         if thresholds_path.exists():
             with open(thresholds_path) as f:
@@ -51,7 +54,7 @@ def _get_same_person_stats() -> Optional[dict]:
 
 def distance_to_cosine_sim(distance: float) -> float:
     """Convert Euclidean distance to cosine similarity."""
-    return max(0.0, 1.0 - (distance ** 2) / 2.0)
+    return max(0.0, 1.0 - (distance**2) / 2.0)
 
 
 def compute_face_confidence(
@@ -87,6 +90,9 @@ def _compute_pct(distance: float, same_person_stats: Optional[dict]) -> int:
     for continuous display. Isotonic calibrator (10 breakpoints) was too
     coarse — gave 99% for everything above distance ~1.22.
     """
+    # Ensure distance is a plain float (callers may pass numpy scalars/arrays)
+    distance = float(distance)
+
     # Use caller-provided stats or load from kinship thresholds
     stats = same_person_stats
     if stats is None:
@@ -161,5 +167,3 @@ def confidence_tier_with_dots(distance: float) -> tuple:
     """Return (short_label, color, dots) for discoveries display."""
     result = compute_face_confidence(distance)
     return (result["short_label"], result["tier_color"], result["dots"])
-
-
