@@ -492,8 +492,41 @@ def init_volume():
         return False
 
 
+def _run_r2_backup():
+    """Run R2 backup of volume data on startup (non-blocking).
+
+    Only runs if R2 write credentials are available.
+    Failures are logged but do not prevent app startup.
+    """
+    try:
+        from core.storage import can_write_r2
+
+        if not can_write_r2():
+            print("[init] R2 write credentials not available, skipping startup backup")
+            return
+
+        from scripts.backup_volume_to_r2 import run_backup
+
+        data_dir = Path(VOLUME_DATA_DIR)
+        print("[init] Running startup backup to R2...")
+        result = run_backup(dry_run=False, data_dir=data_dir)
+        if result["errors"]:
+            print(f"[init] Backup completed with errors: {result['errors']}")
+        else:
+            print(
+                f"[init] Backup complete: {result['uploaded']} file(s) uploaded, {result['pruned']} old backup(s) pruned"
+            )
+    except Exception as e:
+        print(f"[init] WARNING: Startup backup failed (non-fatal): {e}")
+
+
 if __name__ == "__main__":
     success = init_volume()
+
+    # Run R2 backup after successful volume init
+    if success:
+        _run_r2_backup()
+
     # Exit with error code if initialization failed
     # This helps Railway detect failed deploys
     exit(0 if success else 1)
