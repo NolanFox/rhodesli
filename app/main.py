@@ -32428,9 +32428,10 @@ async def post(request):
 
     body = await request.json()
 
-    if not body.get("identities") and not body.get("photo_index") and not body.get("annotations"):
+    accepted_keys = {"identities", "photo_index", "annotations", "photo_locations", "date_labels"}
+    if not any(body.get(k) for k in accepted_keys):
         return Response(
-            "Must provide 'identities', 'photo_index', and/or 'annotations' in request body",
+            f"Must provide one of {sorted(accepted_keys)} in request body",
             status_code=400,
         )
 
@@ -32502,6 +32503,50 @@ async def post(request):
         results["annotations"] = {
             "status": "written",
             "count": ann_count,
+            "backup": backup_path.name,
+        }
+
+    # Push photo_locations.json
+    if body.get("photo_locations"):
+        loc_data = body["photo_locations"]
+        if not isinstance(loc_data, dict):
+            return Response("photo_locations must be a JSON object", status_code=400)
+
+        fpath = data_path / "photo_locations.json"
+        backup_path = data_path / f"photo_locations.json.bak.{ts}"
+
+        if fpath.exists():
+            shutil.copy2(fpath, backup_path)
+
+        with open(fpath, "w") as f:
+            json.dump(loc_data, f, indent=2)
+
+        loc_count = len(loc_data.get("photos", {}))
+        results["photo_locations"] = {
+            "status": "written",
+            "count": loc_count,
+            "backup": backup_path.name,
+        }
+
+    # Push date_labels.json
+    if body.get("date_labels"):
+        dl_data = body["date_labels"]
+        if not isinstance(dl_data, dict):
+            return Response("date_labels must be a JSON object", status_code=400)
+
+        fpath = data_path / "date_labels.json"
+        backup_path = data_path / f"date_labels.json.bak.{ts}"
+
+        if fpath.exists():
+            shutil.copy2(fpath, backup_path)
+
+        with open(fpath, "w") as f:
+            json.dump(dl_data, f, indent=2)
+
+        dl_count = len(dl_data.get("photos", dl_data))
+        results["date_labels"] = {
+            "status": "written",
+            "count": dl_count,
             "backup": backup_path.name,
         }
 
