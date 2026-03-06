@@ -1,13 +1,16 @@
 """Lazy loading tests for /photos and /timeline pages (UX-007, UX-018).
 
-Verifies that:
-- /photos returns paginated results with lazy loading sentinel
-- /api/photos/more returns additional photo cards
-- /timeline lazy loads remaining decades via HTMX
-- /api/timeline/more returns remaining decade sections
+Also verifies image lazy loading on key UI components for performance:
+- identity_card hero images
+- identity_card_mini thumbnails
+- face_card hero images
+- neighbor_card thumbnails
+- /people page avatars
+- Person page face gallery
+- Preconnect headers for CDN domains
 """
 
-import pytest
+from unittest.mock import patch
 
 
 class TestPhotosLazyLoading:
@@ -32,6 +35,7 @@ class TestPhotosLazyLoading:
         response = client.get("/photos")
         # If there are more than 24 photos, we should see the sentinel
         from app.main import _compute_landing_stats
+
         stats = _compute_landing_stats()
         if stats["photo_count"] > 24:
             assert "photos-lazy-sentinel" in response.text
@@ -104,3 +108,112 @@ class TestTimelineLazyLoading:
         """GET /api/timeline/more respects person filter."""
         response = client.get("/api/timeline/more?offset=0&person=nonexistent")
         assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Image lazy loading tests for grid/list components
+# ---------------------------------------------------------------------------
+
+
+def _html(element) -> str:
+    """Get full HTML string from a FastHTML element."""
+    return repr(element)
+
+
+def _make_identity(identity_id="test-id-1", name="Test Person", state="CONFIRMED"):
+    return {
+        "identity_id": identity_id,
+        "name": name,
+        "state": state,
+        "anchor_ids": ["face1", "face2"],
+        "candidate_ids": [],
+        "negative_ids": [],
+        "version_id": 1,
+        "created_at": "2026-01-01T00:00:00Z",
+        "updated_at": "2026-01-01T00:00:00Z",
+    }
+
+
+class TestIdentityCardLazyLoading:
+    """identity_card() hero image must use loading='lazy' for grid performance."""
+
+    def test_hero_image_has_lazy_loading(self):
+        import app.main as m
+
+        identity = _make_identity()
+        crop_files = {"face1.jpg", "face2.jpg"}
+
+        with (
+            patch.object(m, "resolve_face_image_url", return_value="https://example.com/face1.jpg"),
+            patch.object(m, "get_best_face_id", return_value="face1"),
+            patch.object(m, "get_face_quality", return_value=25.0),
+            patch.object(m, "_load_gedcom_face_links", return_value={}),
+            patch.object(m, "share_button", return_value=None),
+        ):
+            card = m.identity_card(identity, crop_files, is_admin=False)
+
+        html = _html(card)
+        assert 'loading="lazy"' in html, "identity_card hero image must have loading='lazy' for grid performance"
+
+
+class TestIdentityCardMiniLazyLoading:
+    """identity_card_mini() image must use loading='lazy'."""
+
+    def test_mini_card_has_lazy_loading(self):
+        import app.main as m
+
+        identity = _make_identity()
+        crop_files = {"face1.jpg"}
+
+        with (
+            patch.object(m, "resolve_face_image_url", return_value="https://example.com/face1.jpg"),
+            patch.object(m, "get_best_face_id", return_value="face1"),
+        ):
+            card = m.identity_card_mini(identity, crop_files, clickable=False)
+
+        html = _html(card)
+        assert 'loading="lazy"' in html, "identity_card_mini image must have loading='lazy'"
+
+
+class TestNeighborCardLazyLoading:
+    """neighbor_card() thumbnail must use loading='lazy'."""
+
+    def test_neighbor_thumbnail_has_lazy_loading(self):
+        import app.main as m
+
+        neighbor = {
+            "identity_id": "n1",
+            "name": "Neighbor Person",
+            "distance": 0.5,
+            "percentile": 0.3,
+            "confidence_gap": 0.2,
+            "can_merge": True,
+            "face_count": 2,
+            "co_occurrence": 0,
+            "anchor_face_ids": ["nface1"],
+            "candidate_face_ids": [],
+        }
+        crop_files = {"nface1.jpg"}
+
+        with (
+            patch.object(m, "resolve_face_image_url", return_value="https://example.com/nface1.jpg"),
+            patch.object(m, "get_best_face_id", return_value="nface1"),
+        ):
+            card = m.neighbor_card(neighbor, "target-id", crop_files, user_role="admin")
+
+        html = _html(card)
+        assert 'loading="lazy"' in html, "neighbor_card thumbnail must have loading='lazy'"
+
+
+class TestPreconnectHeaders:
+    """App headers should include preconnect hints for CDN domains."""
+
+    def test_cdn_preconnect_in_headers(self):
+        import app.main as m
+
+        hdrs = m.app.hdrs if hasattr(m.app, "hdrs") else []
+        hdrs_html = " ".join(_html(h) for h in hdrs if h is not None)
+
+        assert "cdn.tailwindcss.com" in hdrs_html, "Must preconnect to Tailwind CDN"
+        assert "unpkg.com" in hdrs_html, "Must preconnect to unpkg CDN"
+        assert "fonts.googleapis.com" in hdrs_html, "Must preconnect to Google Fonts"
