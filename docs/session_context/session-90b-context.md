@@ -101,13 +101,17 @@ The Benatar photo specifically needs full Gemini analysis run: date estimation, 
 - Face Analysis says "No face descriptions available yet" — face alignment never run
 - Gemini analysis WAS run (Photo Detective shows evidence cards) but got location wrong
 
-**Why it's wrong**: The GEDCOM context references Victor's SF timeline (1938-1940) and the visual cues (Art Deco, English signage) led Gemini to guess SF/NYC. But "LEON'S RESTAURANT" was Leon Capeluto's restaurant in Tampa, FL. The GEDCOM data may not have Leon's Tampa residence events, or the wrong person is being linked.
+**Why it's wrong (from research)**:
+- **Geocoding root cause**: `_geocode_location()` in `estimate_routes.py:1291` picks the FIRST matching location from `LOCATION_COORDS` dict. When Gemini returns "Miami or Tampa", it resolves to Miami because Miami appears first.
+- **GEDCOM context partially works**: The evidence cards DO mention "Victor Capelluto's brother, Leon Capeluto" — so GEDCOM linking IS wired in. But the GEDCOM data references Victor's SF timeline (1938-1940), which misled Gemini.
+- **Collection name ignored**: The photo is in "Nace Capeluto Tampa Collection" — this is a strong signal that should override ambiguous Gemini guesses.
 
 **What needs to happen**:
-1. Run face alignment to populate face descriptions
-2. Re-run Gemini with better GEDCOM context pointing to Tampa
-3. Fix location to Tampa, FL in photo_locations.json
-4. Browser verify the map pin moves to Tampa
+1. Run face alignment ("Detect Faces" button or `POST /api/face-alignment/{photo_id}`) to populate face descriptions
+2. Re-run Gemini with corrected context — OR manually fix location to Tampa
+3. Fix `_geocode_location()` to use collection name as a location hint (e.g., if collection contains "Tampa", prefer Tampa over Miami)
+4. Update `data/photo_locations.json` entry: lat ~27.9506, lng ~-82.4572, location_name "Tampa, Florida"
+5. Browser verify: map pin moves to Tampa, face analysis populated
 
 ---
 
