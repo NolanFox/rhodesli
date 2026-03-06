@@ -257,6 +257,10 @@ class PhotoRegistry:
             "uploaded_by",
             "upload_date",
             "job_id",
+            "media_group_id",
+            "media_role",
+            "parent_photo_id",
+            "related_media",
         }
         for key, value in metadata.items():
             if key in valid_keys:

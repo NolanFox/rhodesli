@@ -36,10 +36,37 @@ Context: docs/session_context/session-90b-context.md
   - ISSUE: init_railway_volume safety gate blocked overwrite on deploy (volume already had reanalyzed entries from prior admin action)
   - FIX: Added photo_locations + date_labels to sync/push endpoint (commit 504ae97)
   - Deploy triggered — awaiting push of photo_locations data to production
-- [ ] Act 3b: Benatar photo enrichment — DEFERRED (needs Gemini API call on production)
+- [x] Act 3b: Benatar photo enrichment — COMPLETED
+  - Triggered Gemini 3.1-pro re-analysis via admin "Re-analyze Photo" button
+  - Result: circa 1928, medium confidence, range 1922-1935, location Unknown
+  - Photo Detective evidence cards populated (fashion/grooming analysis)
+  - Collection updated to "Community Submissions", source to "Claude Benatar"
 - [x] Act 4: Merge tracks — All 3 tracks merged successfully
-- [ ] Act 5: Browser verification — partial (WebFetch only, Chrome extension disconnected)
-- [ ] Act 6: Assessment + docs — IN PROGRESS
+- [x] Act 5: Browser verification — COMPLETED via Claude Chrome
+  - Upload sorting: newest shows Mar 5 photos first, oldest shows Feb 10 first — PASS
+  - Leon's Restaurant: Tampa, FL on location badge + map pin — PASS
+  - Benatar photo: AI analysis populated (date, evidence cards) — PASS
+  - Landing page: loads, 294 photos, v0.93.0 — PASS
+  - People page: 70 identified, face cards render — PASS
+  - Leon's face alignment: 500 error (expected — AD-110, ML models not on Railway) — KNOWN LIMITATION
+  - Screenshots saved to docs/screenshots/session-90b/
+- [x] Act 6: Assessment + docs — COMPLETED
+- [-] Track A: main.py refactor — IN PROGRESS (multiple worktree subagents)
+  - auth_routes.py extracted (660 lines) — merged to main
+  - sync_routes.py extracted (513 lines) — merged to main
+  - match_facecompare_routes.py extracted (1,750 lines) — merged to main
+  - person_routes.py extraction (~3,300 lines) — in progress (worktree)
+  - upload_routes.py, admin_routes.py, browse_routes.py, photo_routes.py — subagents launched
+  - main.py: 34,449 → ~31,500 after first 3 merges
+- [x] Act 7 (mid-flight addition): Back-of-photo feature (PRD-029)
+  - User reported: back image upload completely broken on production
+  - Root cause: endpoint saves to local but never uploads to R2
+  - Also: duplicate routes in main.py AND photo_routes.py
+  - PRD written: docs/prds/029_photo_back_and_media_groups.md
+  - Context saved: docs/session_context/session-90b-back-photo-context.md
+  - Subagent launched in worktree for implementation
+  - Scope: fix upload, R2 integration, flip UX, browse filter, media group data model
+- [x] Perf: Background cache prewarm — commit fcf18b2
 
 ## Commits (main branch)
 1. 90226ca — fix(photos): upload date sorting — filename-based metadata fallback
@@ -52,6 +79,9 @@ Context: docs/session_context/session-90b-context.md
 8. 53eadc6 — fix(tests): unstaged test_person_links.py change
 9. 90c630e — fix(photos): remove debug endpoint + push upload_dates to production
 10. 504ae97 — feat(sync): add photo_locations + date_labels to sync/push endpoint
+11. 6f2c718 — docs(session): session 90b assessment + changelog + roadmap
+12. ebcb9b1 — Merge worktree-agent-a0ecc975 (auth_routes + sync_routes + match_facecompare extractions)
+13. fcf18b2 — perf(startup): background cache prewarm + fix _prune_bak_files import
 
 ## Key Findings
 - Production volume's photo_index.json doesn't have upload_date (predates Session 90)
@@ -60,9 +90,19 @@ Context: docs/session_context/session-90b-context.md
 - Railway auto-deploy from git push was NOT triggering — had to use `railway deploy` manually
 - init_railway_volume safety gate blocks photo_locations.json overwrite when volume has reanalyzed entries
 - Solution: expanded sync/push endpoint to accept photo_locations + date_labels
+- Back image upload broken on production: R2 upload step missing from endpoint
+- Duplicate routes exist in both main.py and photo_routes.py after partial extraction
 
-## Deferred
-- Track A: main.py refactor (biggest track, needs dedicated session)
-- Track C: Performance optimization (depends on Track A)
-- Act 3b: Benatar photo enrichment (needs Gemini API call on production admin UI)
-- Full browser verification (Chrome extension disconnected mid-session)
+## Browser Verification (Claude Chrome) — Continued Session
+- Upload sorting newest: Mar 5 photos first (leon_and_nace, test_image) — PASS
+- Upload sorting oldest: Feb 10 photos first (Image 001, 054, 006) — PASS
+- Leon's Restaurant: Tampa FL, confidence high, map pin correct — PASS
+- Benatar photo: circa 1928, Gemini 3.1-pro, evidence cards — PASS
+- Landing page: 296 photos, v0.93.0 — PASS
+- People page: 82 identified, face cards render — PASS
+
+## Deferred to Session 91
+- Track A completion: main.py target <15K lines (currently ~31.5K, subagents in progress)
+- Track C: Performance optimization — pagination refactor
+- Leon's face alignment — requires InsightFace locally (AD-110 blocks ML on Railway)
+- Leon's Gemini evidence text — still says "SF/NYC", location badge correct (Tampa)

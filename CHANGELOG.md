@@ -2,11 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.93.1] — 2026-03-06 (Session 90b continued: Route Extraction + Back Photo Fix + Perf)
+
+### Fixed
+- **Back-of-photo upload** (PRD-029) — Upload endpoint now uploads to R2 in production mode. Flip UX with 3D animation. Browse filter for front/back. Visual indicators.
+- **_prune_bak_files import** — Missing import after sync_routes extraction caused startup crash.
+- **Duplicate route definitions** — Removed duplicate back-image/transcription/transform routes from main.py (canonical versions in photo_routes.py).
+
+### Added
+- **Route extraction** — auth_routes.py (660 lines), sync_routes.py (513 lines), match_facecompare_routes.py (1,750 lines), person_routes.py (~3,300 lines) extracted from main.py.
+- **Background cache prewarm** — Server startup cache building moved to background thread with double-checked locking. Server accepts requests immediately.
+- **PRD-029** — Photo back images and media groups data model (docs/prds/029_photo_back_and_media_groups.md).
+- **Media group data model** — media_group_id, media_role, parent_photo_id fields for scalable multi-image support.
+
+### Changed
+- **main.py reduced** — From 34,449 to ~28K lines via route extraction (ongoing).
+
 ## [v0.93.0] — 2026-03-06 (Session 90b: Fix Sorting + Supabase Shadow Writes + Location Fix)
 
 ### Fixed
-- **Upload date sorting on production** — Production photo_index.json predates Session 90 and had no upload_date fields. Patched via sync API (296 photos). Sorting now works: upload_newest shows Mar 5 photos first, upload_oldest shows Feb 10 first.
-- **Leon's Restaurant location** — Changed from Miami to Tampa, FL (lat 27.9506, lng -82.4572). Photo is from Nace Capeluto Tampa Collection; restaurant owned by Leon Capeluto in Tampa.
+- **Upload date sorting on production** — Production photo_index.json predates Session 90 and had no upload_date fields. Patched via sync API (296 photos). Sorting now works: upload_newest shows Mar 5 photos first, upload_oldest shows Feb 10 first. Browser verified with screenshots.
+- **Leon's Restaurant location** — Changed from Miami to Tampa, FL (lat 27.9506, lng -82.4572). Photo is from Nace Capeluto Tampa Collection; restaurant owned by Leon Capeluto in Tampa. Browser verified: map pin on Tampa, confidence badge "high".
 - **Debug endpoint removed** — Temporary /api/debug/upload-dates endpoint removed after verification.
 
 ### Added
@@ -14,6 +30,9 @@ All notable changes to this project will be documented in this file.
 - **Sync/push expanded** — `/api/sync/push` now accepts `photo_locations` and `date_labels` in addition to identities/photo_index/annotations. Enables pushing ML enrichment data to production.
 - **PRD-028** — Contributor notification system design (docs/prds/028_contributor_notifications.md).
 - **Discoveries UX** (Track E) — Raw ML metrics hidden from cards, photo dropdown fix, confidence filter verified.
+- **Benatar photo enrichment** — Gemini 3.1-pro analysis: circa 1928, medium confidence (1922-1935). Photo Detective evidence cards with fashion/grooming analysis.
+- **auth_routes.py extraction** (Track A partial) — 660 lines of auth routes extracted from main.py. First step of main.py refactor.
+- **Browser verification** — Full Claude Chrome verification: sorting, Leon's location, Benatar AI analysis, landing page, People page. Screenshots in docs/screenshots/session-90b/.
 
 ### Changed
 - **Hooks cleanup** (Track D) — Orphaned hook scripts removed, test pruning.

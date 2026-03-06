@@ -57,7 +57,7 @@ class TestPublicPhotosPage:
         response = client.get("/photos")
         html = response.text
         # Admin-only elements should not appear
-        assert "Select" not in html or "data-action=\"toggle-photo-select\"" not in html
+        assert "Select" not in html or 'data-action="toggle-photo-select"' not in html
         assert "Mark Processed" not in html
 
     def test_collection_filter(self, client):
@@ -68,7 +68,7 @@ class TestPublicPhotosPage:
     def test_sort_options(self, client):
         """Sort dropdown is present."""
         response = client.get("/photos")
-        assert "Newest First" in response.text
+        assert "Upload Date (Newest)" in response.text
 
     def test_people_nav_link(self, client):
         """Page has link to /people."""
