@@ -142,3 +142,137 @@ class TestPhotosRouteDropdown:
         assert resp.status_code == 200
         # The first option should be selected by default
         assert 'value="upload_newest" selected' in resp.text.lower().replace('"', '"')
+
+
+class TestBuildCachesMetadataFallback:
+    """Verify _build_caches merges upload_date even for mismatched photo IDs.
+
+    Bug: photo_index.json uses inbox_* IDs, _photo_cache uses SHA256 IDs.
+    get_metadata(sha256_id) returns {} for inbox photos, so upload_date
+    was never propagated. Fix: filename-based fallback for metadata.
+    """
+
+    def test_upload_date_propagated_for_inbox_photos(self, tmp_path):
+        """upload_date should appear in _photo_cache even when IDs mismatch."""
+        import json
+
+        from app.main import _build_caches
+
+        # Create a photo_index.json where the photo uses inbox_* ID
+        photo_index = {
+            "schema_version": 1,
+            "photos": {
+                "inbox_abc123_0_test": {
+                    "path": "raw_photos/test_photo.jpg",
+                    "face_ids": ["inbox_abc123_face0"],
+                    "source": "Test Source",
+                    "collection": "Test Collection",
+                    "upload_date": "2026-03-05T12:00:00+00:00",
+                    "uploaded_by": "test@example.com",
+                    "width": 800,
+                    "height": 600,
+                }
+            },
+            "face_to_photo": {"inbox_abc123_face0": "inbox_abc123_0_test"},
+        }
+        pi_path = tmp_path / "photo_index.json"
+        pi_path.write_text(json.dumps(photo_index))
+
+        # _photo_cache uses SHA256 ID for the same file
+        fake_cache = {
+            "sha256abcdef01": {
+                "filename": "raw_photos/test_photo.jpg",
+                "faces": [{"face_id": "inbox_abc123_face0", "bbox": [0, 0, 100, 100]}],
+                "source": "",
+                "collection": "",
+            }
+        }
+
+        import app.main as main_mod
+
+        # Save originals
+        orig_cache = main_mod._photo_cache
+        orig_f2p = main_mod._face_to_photo_cache
+        orig_aliases = main_mod._photo_id_aliases
+
+        try:
+            # Set _photo_cache to our fake (non-None so _build_caches skips load_embeddings)
+            # We need to simulate the state AFTER load_embeddings but before metadata merge
+            # So we call the merge logic directly by resetting and calling _build_caches
+            main_mod._photo_cache = None
+            main_mod._face_to_photo_cache = None
+            main_mod._photo_id_aliases = None
+
+            with (
+                patch.object(main_mod, "load_embeddings_for_photos", return_value=fake_cache),
+                patch.object(main_mod, "data_path", tmp_path),
+            ):
+                _build_caches()
+
+            # Verify upload_date was propagated via filename fallback
+            cached = main_mod._photo_cache["sha256abcdef01"]
+            assert cached.get("upload_date") == "2026-03-05T12:00:00+00:00", (
+                f"upload_date not propagated to _photo_cache: {cached}"
+            )
+            assert cached.get("uploaded_by") == "test@example.com"
+        finally:
+            main_mod._photo_cache = orig_cache
+            main_mod._face_to_photo_cache = orig_f2p
+            main_mod._photo_id_aliases = orig_aliases
+
+    def test_upload_date_propagated_for_matching_ids(self, tmp_path):
+        """upload_date works when photo_index and cache use the same ID."""
+        import json
+
+        from app.main import _build_caches
+
+        photo_index = {
+            "schema_version": 1,
+            "photos": {
+                "sha256match01": {
+                    "path": "raw_photos/match.jpg",
+                    "face_ids": [],
+                    "source": "Match Source",
+                    "collection": "Match Collection",
+                    "upload_date": "2026-02-10T00:00:00+00:00",
+                    "width": 400,
+                    "height": 300,
+                }
+            },
+            "face_to_photo": {},
+        }
+        pi_path = tmp_path / "photo_index.json"
+        pi_path.write_text(json.dumps(photo_index))
+
+        fake_cache = {
+            "sha256match01": {
+                "filename": "raw_photos/match.jpg",
+                "faces": [],
+                "source": "",
+                "collection": "",
+            }
+        }
+
+        import app.main as main_mod
+
+        orig_cache = main_mod._photo_cache
+        orig_f2p = main_mod._face_to_photo_cache
+        orig_aliases = main_mod._photo_id_aliases
+
+        try:
+            main_mod._photo_cache = None
+            main_mod._face_to_photo_cache = None
+            main_mod._photo_id_aliases = None
+
+            with (
+                patch.object(main_mod, "load_embeddings_for_photos", return_value=fake_cache),
+                patch.object(main_mod, "data_path", tmp_path),
+            ):
+                _build_caches()
+
+            cached = main_mod._photo_cache["sha256match01"]
+            assert cached.get("upload_date") == "2026-02-10T00:00:00+00:00"
+        finally:
+            main_mod._photo_cache = orig_cache
+            main_mod._face_to_photo_cache = orig_f2p
+            main_mod._photo_id_aliases = orig_aliases

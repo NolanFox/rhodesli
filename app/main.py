@@ -3023,12 +3023,14 @@ def _build_caches():
             filename_to_collection = {}
             filename_to_source_url = {}
             filename_to_face_ids = {}
+            filename_to_metadata = {}
             for pid in photo_registry._photos:
                 path = photo_registry.get_photo_path(pid)
                 source = photo_registry.get_source(pid)
                 collection = photo_registry.get_collection(pid)
                 source_url = photo_registry.get_source_url(pid)
                 face_ids = photo_registry.get_faces_in_photo(pid)
+                metadata = photo_registry.get_metadata(pid)
                 if path:
                     fname = Path(path).name
                     if source:
@@ -3038,6 +3040,8 @@ def _build_caches():
                     if source_url:
                         filename_to_source_url[fname] = source_url
                     filename_to_face_ids[fname] = face_ids
+                    if metadata:
+                        filename_to_metadata[fname] = metadata
 
             for photo_id in _photo_cache:
                 filename = _photo_cache[photo_id].get("filename", "")
@@ -3070,6 +3074,8 @@ def _build_caches():
 
                 # Merge photo metadata (BE-012)
                 metadata = photo_registry.get_metadata(photo_id)
+                if not metadata:
+                    metadata = filename_to_metadata.get(fname, {})
                 if metadata:
                     _photo_cache[photo_id].update(metadata)
         except FileNotFoundError:
@@ -12348,6 +12354,8 @@ def photo_view_content(
             )
             if photo.get("collection") or photo.get("source") or photo.get("source_url")
             else None,
+            # Upload provenance (uploaded by / added to archive date)
+            _build_upload_provenance_line(photo),
             # Stored photo metadata (BE-012)
             _photo_metadata_display(photo),
             # Photo annotations display + form (AN-002–AN-006)
