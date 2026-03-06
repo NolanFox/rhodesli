@@ -136,6 +136,9 @@ app, rt = fast_app(
             type="image/svg+xml",
             href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%234f46e5'/%3E%3Ctext x='16' y='23' font-size='20' font-family='serif' font-weight='bold' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E",
         ),
+        # Preconnect to CDN domains for faster resource loading
+        Link(rel="preconnect", href="https://cdn.tailwindcss.com"),
+        Link(rel="preconnect", href="https://unpkg.com"),
         # Google Fonts: Playfair Display (serif) for editorial archival headings (DD-001)
         Link(rel="preconnect", href="https://fonts.googleapis.com"),
         Link(rel="preconnect", href="https://fonts.gstatic.com", crossorigin="anonymous"),
@@ -4473,7 +4476,7 @@ def identity_card_mini(identity: dict, crop_files: set, clickable: bool = False,
         crop_url = resolve_face_image_url(best_fid, crop_files)
 
     img_element = (
-        Img(src=crop_url or "", cls="w-full h-full object-cover")
+        Img(src=crop_url or "", cls="w-full h-full object-cover", loading="lazy")
         if crop_url
         else Span("?", cls="text-2xl text-slate-500")
     )
@@ -7433,6 +7436,7 @@ def neighbor_card(
             src=crop_url,
             alt=name,
             cls="w-20 h-20 object-cover rounded border border-slate-600 hover:scale-105 transition-transform",
+            loading="lazy",
         )
 
     # Checkbox for bulk selection (linked to bulk form via hyperscript)
@@ -8188,6 +8192,7 @@ def identity_card(
                 cls="w-full aspect-square object-cover rounded-xl"
                 " transition-all duration-300 hover:scale-[1.03]"
                 " hover:shadow-[0_8px_30px_rgba(212,165,116,0.3)]",
+                loading="lazy",
             )
             if hero_crop_url
             else Div(
