@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.93.0] — 2026-03-06 (Session 90b: Fix Sorting + Supabase Shadow Writes + Location Fix)
+
+### Fixed
+- **Upload date sorting on production** — Production photo_index.json predates Session 90 and had no upload_date fields. Patched via sync API (296 photos). Sorting now works: upload_newest shows Mar 5 photos first, upload_oldest shows Feb 10 first.
+- **Leon's Restaurant location** — Changed from Miami to Tampa, FL (lat 27.9506, lng -82.4572). Photo is from Nace Capeluto Tampa Collection; restaurant owned by Leon Capeluto in Tampa.
+- **Debug endpoint removed** — Temporary /api/debug/upload-dates endpoint removed after verification.
+
+### Added
+- **Supabase shadow write infrastructure** (Track B) — SQL scripts for photos, identities, photo_faces, date_labels, photo_locations tables. Shadow write functions in app/supabase_data.py. Backfill script. 17 tests.
+- **Sync/push expanded** — `/api/sync/push` now accepts `photo_locations` and `date_labels` in addition to identities/photo_index/annotations. Enables pushing ML enrichment data to production.
+- **PRD-028** — Contributor notification system design (docs/prds/028_contributor_notifications.md).
+- **Discoveries UX** (Track E) — Raw ML metrics hidden from cards, photo dropdown fix, confidence filter verified.
+
+### Changed
+- **Hooks cleanup** (Track D) — Orphaned hook scripts removed, test pruning.
+
 ## [v0.92.2] — 2026-03-05 (Session 89e: Codex Review + Cleanup)
 
 ### Fixed

@@ -394,6 +394,17 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 90b: Fix Sorting + Supabase Shadow Writes + Location Fix (2026-03-06) — v0.93.0
+- Upload date sorting fixed on production — patched 296 photos via sync API push
+- Leon's Restaurant location corrected from Miami to Tampa, FL
+- Supabase shadow write infrastructure: 5 SQL scripts, shadow write functions, backfill script, 17 tests
+- Sync/push endpoint expanded: now accepts photo_locations + date_labels
+- Discoveries UX: raw ML metrics hidden, photo dropdown fix
+- PRD-028: contributor notification system design
+- Hooks cleanup: orphaned scripts removed, test pruning
+- 3 parallel worktree subagents (B, D, E). Tracks A, C deferred.
+- 10 commits. ~4146 tests.
+
 ## Session 89c: Fix Re-analyze + Location ID Mismatch (2026-03-05) — v0.92.1
 - Fix photo location ID mismatch: `_load_photo_locations()` now dual-keys inbox IDs to SHA256 IDs
 - Gemini retry logic: 2 retries with 5s/15s backoff for 504/503/DEADLINE_EXCEEDED
