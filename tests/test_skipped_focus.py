@@ -12,8 +12,6 @@ Verifies:
 """
 
 import re
-import subprocess
-import sys
 from unittest.mock import patch
 import pytest
 from starlette.testclient import TestClient
@@ -26,28 +24,25 @@ def client():
     return TestClient(app)
 
 
+# ---------------------------------------------------------------------------
+# Cached HTML rendering — replaces subprocess isolation with in-process
+# caching. Each unique path is rendered once per test session via TestClient.
+# ---------------------------------------------------------------------------
+_render_cache: dict[str, str] = {}
+
+
 def _render_path(path: str) -> str:
-    """Render a route in an isolated subprocess to avoid cache bleed."""
-    code = """
-import os
-os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
-from app.main import app
-from starlette.testclient import TestClient
-import sys
-client = TestClient(app)
-print(client.get(sys.argv[1]).text)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", code, path],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
+    """Render a route via TestClient with per-session caching."""
+    if path not in _render_cache:
+        from app.main import app
+
+        c = TestClient(app)
+        _render_cache[path] = c.get(path).text
+    return _render_cache[path]
 
 
 def _render_skipped_focus_html() -> str:
-    """Render skipped focus mode in an isolated subprocess."""
+    """Render skipped focus mode."""
     return _render_path("/?section=skipped&view=focus")
 
 

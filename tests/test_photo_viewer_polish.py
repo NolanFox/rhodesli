@@ -7,11 +7,7 @@ Tests cover:
 - Photo container padding for overlay clipping
 """
 
-import subprocess
-import sys
-
 import pytest
-from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
 from app.main import app, load_embeddings_for_photos, face_card
@@ -34,22 +30,16 @@ def real_photo_id():
     return get_real_photo_id()
 
 
+_render_cache: dict[str, str] = {}
+
+
 def _render_photo_page_html(photo_id: str) -> str:
-    """Render a photo page in an isolated subprocess to avoid cache bleed."""
-    code = """
-from app.main import app
-from starlette.testclient import TestClient
-import sys
-client = TestClient(app)
-print(client.get(f"/photo/{sys.argv[1]}").text)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", code, photo_id],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
+    """Render a photo page via TestClient with caching."""
+    key = f"/photo/{photo_id}"
+    if key not in _render_cache:
+        c = TestClient(app)
+        _render_cache[key] = c.get(key).text
+    return _render_cache[key]
 
 
 class TestFaceOverlayNamePosition:
@@ -83,6 +73,7 @@ class TestQualityScoreVisibility:
     def test_quality_shown_for_admin(self):
         """face_card shows human-readable quality label with admin tooltip."""
         from fasthtml.common import to_xml
+
         card = face_card(
             face_id="test-face",
             crop_url="/static/crops/test.jpg",
@@ -96,6 +87,7 @@ class TestQualityScoreVisibility:
     def test_quality_shown_for_non_admin(self):
         """face_card shows quality label for non-admin (no tooltip)."""
         from fasthtml.common import to_xml
+
         card = face_card(
             face_id="test-face",
             crop_url="/static/crops/test.jpg",
@@ -109,6 +101,7 @@ class TestQualityScoreVisibility:
     def test_quality_hidden_when_zero(self):
         """face_card hides quality when score is 0 even for admin."""
         from fasthtml.common import to_xml
+
         card = face_card(
             face_id="test-face",
             crop_url="/static/crops/test.jpg",

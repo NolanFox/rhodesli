@@ -6,9 +6,6 @@ Tests cover:
 - Unidentified people don't get person page links
 """
 
-import subprocess
-import sys
-
 import pytest
 from starlette.testclient import TestClient
 
@@ -43,22 +40,16 @@ def photo_with_person():
     return get_photo_with_identified_person()
 
 
+_render_cache: dict[str, str] = {}
+
+
 def _render_photo_page_html(photo_id: str) -> str:
-    """Render a photo page in an isolated subprocess to avoid cache bleed."""
-    code = """
-from app.main import app
-from starlette.testclient import TestClient
-import sys
-client = TestClient(app)
-print(client.get(f"/photo/{sys.argv[1]}").text)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", code, photo_id],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
+    """Render a photo page via TestClient with caching."""
+    key = f"/photo/{photo_id}"
+    if key not in _render_cache:
+        c = TestClient(app)
+        _render_cache[key] = c.get(key).text
+    return _render_cache[key]
 
 
 class TestPersonLinksFromPhotoViewer:

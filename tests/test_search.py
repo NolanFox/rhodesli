@@ -7,32 +7,22 @@ Tests cover:
 4. Server-side /api/search endpoint still works (backward compatibility)
 """
 
-import subprocess
-import sys
-
 import pytest
-from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
+
+
+_render_cache: dict[str, str] = {}
 
 
 def _render_search_html(query: str) -> str:
-    """Render /api/search in an isolated subprocess to avoid cache bleed."""
-    code = """
-import os
-os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
-from app.main import app
-from starlette.testclient import TestClient
-import sys
-client = TestClient(app)
-print(client.get(f"/api/search?q={sys.argv[1]}").text)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", code, query],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
+    """Render /api/search via TestClient with caching."""
+    key = f"/api/search?q={query}"
+    if key not in _render_cache:
+        from app.main import app
+
+        c = TestClient(app)
+        _render_cache[key] = c.get(key).text
+    return _render_cache[key]
 
 
 class TestIdentityCardDataAttributes:
@@ -94,6 +84,7 @@ class TestSidebarSearchInput:
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_sidebar_search_input_exists(self, client):
@@ -120,6 +111,7 @@ class TestClientSideFilterScript:
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_filter_script_present_on_main_page(self, client):
@@ -151,6 +143,7 @@ class TestServerSideSearchBackwardCompat:
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_api_search_returns_results(self, client):
@@ -177,23 +170,27 @@ class TestFuzzySearch:
     def test_levenshtein_identical(self):
         """Identical strings have distance 0."""
         from core.registry import _levenshtein
+
         assert _levenshtein("capeluto", "capeluto") == 0
 
     def test_levenshtein_one_edit(self):
         """Single character difference has distance 1."""
         from core.registry import _levenshtein
+
         assert _levenshtein("capeluto", "capeluто") <= 2  # one char difference
         assert _levenshtein("josef", "joseph") <= 2
 
     def test_levenshtein_two_edits(self):
         """Two character difference has distance 2."""
         from core.registry import _levenshtein
+
         assert _levenshtein("cap", "cab") == 1
         assert _levenshtein("cap", "cat") == 1
 
     def test_levenshtein_empty(self):
         """Empty string distance equals length of other string."""
         from core.registry import _levenshtein
+
         assert _levenshtein("", "abc") == 3
         assert _levenshtein("abc", "") == 3
 
@@ -219,7 +216,7 @@ class TestFuzzySearch:
                     "history": [],
                     "merge_history": [],
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -256,7 +253,7 @@ class TestFuzzySearch:
                     "history": [],
                     "merge_history": [],
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -273,6 +270,7 @@ class TestSearchHighlighting:
     def test_highlight_match_basic(self):
         """Matching portion is wrapped in a highlight span."""
         from app.main import _highlight_match, to_xml
+
         result = _highlight_match("Leon Capeluto", "Cap")
         html = to_xml(result)
         assert "text-amber-300" in html
@@ -281,6 +279,7 @@ class TestSearchHighlighting:
     def test_highlight_match_case_insensitive(self):
         """Highlighting works case-insensitively."""
         from app.main import _highlight_match, to_xml
+
         result = _highlight_match("Leon Capeluto", "cap")
         html = to_xml(result)
         assert "text-amber-300" in html
@@ -288,12 +287,14 @@ class TestSearchHighlighting:
     def test_highlight_no_match_returns_plain(self):
         """No match returns the plain name string."""
         from app.main import _highlight_match
+
         result = _highlight_match("Leon Capeluto", "xyz")
         assert result == "Leon Capeluto"
 
     def test_highlight_empty_query(self):
         """Empty query returns the plain name."""
         from app.main import _highlight_match
+
         result = _highlight_match("Leon Capeluto", "")
         assert result == "Leon Capeluto"
 
@@ -301,6 +302,7 @@ class TestSearchHighlighting:
         """Variant query highlights the matched variant in the name."""
         from app.main import _highlight_match
         from fasthtml.common import to_xml
+
         # "Capelluto" is a variant of "Capeluto" — should highlight "Capeluto" in result
         result = _highlight_match("Leon Capeluto", "Capelluto")
         html = to_xml(result)
@@ -310,12 +312,14 @@ class TestSearchHighlighting:
     def test_highlight_variant_no_false_positive(self):
         """Variant highlighting doesn't match unrelated names."""
         from app.main import _highlight_match
+
         result = _highlight_match("David Franco", "Capelluto")
         assert result == "David Franco"
 
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_search_api_returns_highlighted_results(self, client):
@@ -332,6 +336,7 @@ class TestSearchResultNavigation:
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_search_result_links_to_person_or_identify(self, client):
@@ -344,6 +349,7 @@ class TestSearchResultNavigation:
         if "No matches" in html:
             pytest.skip("No confirmed 'capeluto' identities in test data")
         import re
+
         links = re.findall(r'href="([^"]+)"', html)
         nav_links = [l for l in links if l.startswith("/person/") or l.startswith("/identify/")]
         assert len(nav_links) > 0, "Search results must link to /person/ or /identify/"
@@ -353,6 +359,7 @@ class TestSearchResultNavigation:
     def test_search_result_identity_id_in_url(self, client):
         """Search result URLs contain the identity UUID."""
         import re
+
         html = _render_search_html("capeluto")
         if "No matches" in html:
             pytest.skip("No 'capeluto' identities in test data")
@@ -391,7 +398,7 @@ class TestAllStatesSearch:
                     "history": [],
                     "merge_history": [],
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -424,7 +431,7 @@ class TestAllStatesSearch:
                     "history": [],
                     "merge_history": [],
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -468,8 +475,8 @@ class TestAllStatesSearch:
                     "updated_at": "2026-01-01T00:00:00Z",
                     "history": [],
                     "merge_history": [],
-                }
-            }
+                },
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -502,7 +509,7 @@ class TestAllStatesSearch:
                     "history": [],
                     "merge_history": [],
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -536,7 +543,7 @@ class TestAllStatesSearch:
                     "merge_history": [],
                     "merged_into": "id2",
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -579,8 +586,8 @@ class TestAllStatesSearch:
                     "updated_at": "2026-01-01T00:00:00Z",
                     "history": [],
                     "merge_history": [],
-                }
-            }
+                },
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -623,7 +630,7 @@ class TestAllStatesSearch:
                     "merge_history": [],
                     "aliases": ["Stella Hasson"],
                 }
-            }
+            },
         }
         path = tmp_path / "identities.json"
         path.write_text(json.dumps(data))
@@ -637,17 +644,24 @@ class TestAllStatesSearch:
     def test_api_search_shows_state_badges(self):
         """Search API shows state badges for non-confirmed results."""
         from app.main import app
+
         client = TestClient(app)
         # Search for something likely to have non-confirmed results
         response = client.get("/api/search?q=Unidentified")
         assert response.status_code == 200
         # If results found, non-confirmed should have state badges
         if "No matches" not in response.text and "Unidentified" in response.text:
-            assert "Help Identify" in response.text or "New Matches" in response.text or "Proposed" in response.text or "Inbox" in response.text
+            assert (
+                "Help Identify" in response.text
+                or "New Matches" in response.text
+                or "Proposed" in response.text
+                or "Inbox" in response.text
+            )
 
     def test_api_search_routes_to_correct_page(self):
         """Search results link to /identify/ for unidentified, /person/ for confirmed."""
         from app.main import app
+
         client = TestClient(app)
         response = client.get("/api/search?q=Unidentified")
         if "No matches" not in response.text:
@@ -665,6 +679,7 @@ class TestSurnameVariantSearch:
     def _reset_variant_cache(self):
         """Reset the module-level surname variant cache between tests."""
         import core.registry as reg_mod
+
         reg_mod._surname_variants_cache = None
         yield
         reg_mod._surname_variants_cache = None
@@ -696,47 +711,62 @@ class TestSurnameVariantSearch:
 
     def test_variant_search_finds_alternate_spelling(self, tmp_path):
         """Searching 'Capeluto' finds 'Leon Capelouto' via variant matching."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capelouto", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capelouto", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Capeluto")
         assert len(results) == 1
         assert results[0]["name"] == "Leon Capelouto"
 
     def test_variant_search_finds_italianized_form(self, tmp_path):
         """Searching 'Capeluto' finds 'Maria Capuano' (Italianized variant)."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Maria Capuano", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Maria Capuano", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Capeluto")
         assert len(results) == 1
         assert results[0]["name"] == "Maria Capuano"
 
     def test_variant_search_bidirectional(self, tmp_path):
         """Searching 'Capuano' also finds 'Capeluto' — variants work both ways."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Capuano")
         assert len(results) == 1
         assert results[0]["name"] == "Leon Capeluto"
 
     def test_variant_search_finds_multiple_variants(self, tmp_path):
         """Search finds identities with different variant spellings."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
-            "id2": {"name": "Maria Capuano", "state": "CONFIRMED"},
-            "id3": {"name": "Rosa Capelouto", "state": "SKIPPED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+                "id2": {"name": "Maria Capuano", "state": "CONFIRMED"},
+                "id3": {"name": "Rosa Capelouto", "state": "SKIPPED"},
+            },
+        )
         results = reg.search_identities("Capeluto")
         assert len(results) == 3
 
     def test_variant_search_hasson_hassan(self, tmp_path):
         """Searching 'Hasson' finds 'Hassan' and vice versa."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Stella Hassan", "state": "CONFIRMED"},
-            "id2": {"name": "David Hasson", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Stella Hassan", "state": "CONFIRMED"},
+                "id2": {"name": "David Hasson", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Hasson")
         assert len(results) == 2
         names = {r["name"] for r in results}
@@ -745,10 +775,13 @@ class TestSurnameVariantSearch:
 
     def test_variant_search_preserves_ranking(self, tmp_path):
         """Variant results still rank CONFIRMED before other states."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Rosa Capuano", "state": "SKIPPED"},
-            "id2": {"name": "Leon Capeluto", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Rosa Capuano", "state": "SKIPPED"},
+                "id2": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Capelouto")
         assert len(results) == 2
         assert results[0]["state"] == "CONFIRMED"
@@ -756,27 +789,36 @@ class TestSurnameVariantSearch:
 
     def test_variant_search_no_false_positives(self, tmp_path):
         """Variant expansion doesn't match unrelated names."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "John Smith", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "John Smith", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Capeluto")
         assert len(results) == 0
 
     def test_variant_search_with_first_name(self, tmp_path):
         """Full name search 'Leon Capeluto' still matches via substring."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
+            },
+        )
         # "Leon Capeluto" as a query — "capeluto" word expands to include "capuano"
         results = reg.search_identities("Leon Capeluto")
         assert len(results) == 1
 
     def test_variant_search_works_with_states_filter(self, tmp_path):
         """Variant search respects the states filter."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
-            "id2": {"name": "Rosa Capelouto", "state": "SKIPPED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
+                "id2": {"name": "Rosa Capelouto", "state": "SKIPPED"},
+            },
+        )
         results = reg.search_identities("Capeluto", states=["CONFIRMED"])
         assert len(results) == 1
         assert results[0]["state"] == "CONFIRMED"
@@ -788,6 +830,7 @@ class TestMultiWordAndMatching:
     @pytest.fixture(autouse=True)
     def _reset_variant_cache(self):
         import core.registry as reg_mod
+
         reg_mod._surname_variants_cache = None
         yield
         reg_mod._surname_variants_cache = None
@@ -797,9 +840,14 @@ class TestMultiWordAndMatching:
         from core.registry import IdentityRegistry
 
         base = {
-            "anchor_ids": ["face-1"], "candidate_ids": [], "negative_ids": [],
-            "version_id": 1, "created_at": "2026-01-01T00:00:00Z",
-            "updated_at": "2026-01-01T00:00:00Z", "history": [], "merge_history": [],
+            "anchor_ids": ["face-1"],
+            "candidate_ids": [],
+            "negative_ids": [],
+            "version_id": 1,
+            "created_at": "2026-01-01T00:00:00Z",
+            "updated_at": "2026-01-01T00:00:00Z",
+            "history": [],
+            "merge_history": [],
         }
         identities = {}
         for iid, overrides in identities_dict.items():
@@ -811,11 +859,14 @@ class TestMultiWordAndMatching:
 
     def test_multiword_and_matching_full_match_first(self, tmp_path):
         """'Leon Capelluto' finds 'Leon Capeluto' (full match) before 'Betty Capeluto' (partial)."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Betty Capeluto", "state": "CONFIRMED"},
-            "id2": {"name": "Leon Capeluto", "state": "CONFIRMED"},
-            "id3": {"name": "Leon Hasson", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Betty Capeluto", "state": "CONFIRMED"},
+                "id2": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+                "id3": {"name": "Leon Hasson", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Leon Capelluto", limit=20)
         # Full match: Leon Capeluto (both "leon" and capeluto variant matched)
         assert results[0]["name"] == "Leon Capeluto"
@@ -826,10 +877,13 @@ class TestMultiWordAndMatching:
 
     def test_multiword_and_matching_variant_expansion(self, tmp_path):
         """'Leon Capelluto' also matches 'Leon Capuano' via variant expansion."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
-            "id2": {"name": "Betty Capuano", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capuano", "state": "CONFIRMED"},
+                "id2": {"name": "Betty Capuano", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Leon Capelluto", limit=20)
         assert results[0]["name"] == "Leon Capuano"
         # Betty is partial match only (missing "leon")
@@ -838,27 +892,36 @@ class TestMultiWordAndMatching:
 
     def test_single_word_query_matches_all_variants(self, tmp_path):
         """Single word query 'Capeluto' still matches all surname variants."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
-            "id2": {"name": "Maria Capuano", "state": "CONFIRMED"},
-            "id3": {"name": "Rosa Capelouto", "state": "SKIPPED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Leon Capeluto", "state": "CONFIRMED"},
+                "id2": {"name": "Maria Capuano", "state": "CONFIRMED"},
+                "id3": {"name": "Rosa Capelouto", "state": "SKIPPED"},
+            },
+        )
         results = reg.search_identities("Capeluto", limit=20)
         assert len(results) == 3
 
     def test_no_partial_match_for_unrelated(self, tmp_path):
         """Identities matching neither word are not returned."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "David Franco", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "David Franco", "state": "CONFIRMED"},
+            },
+        )
         results = reg.search_identities("Leon Capeluto", limit=20)
         assert len(results) == 0
 
     def test_multiword_fuzzy_fallback(self, tmp_path):
         """If no exact/partial match, fuzzy fallback still works per-word."""
-        reg = self._make_registry(tmp_path, {
-            "id1": {"name": "Loen Something", "state": "CONFIRMED"},
-        })
+        reg = self._make_registry(
+            tmp_path,
+            {
+                "id1": {"name": "Loen Something", "state": "CONFIRMED"},
+            },
+        )
         # "Leon" vs "Loen" = Levenshtein distance 2 (swap e/o)
         results = reg.search_identities("Leon Xyzzy", limit=20)
         # Fuzzy should find "Loen" close to "Leon"
@@ -869,6 +932,7 @@ class TestMultiWordAndMatching:
         """API search for 'Leon Capelluto' returns full matches before partials."""
         from app.main import app
         from starlette.testclient import TestClient
+
         client = TestClient(app)
         response = client.get("/api/search?q=Leon+Capelluto")
         assert response.status_code == 200

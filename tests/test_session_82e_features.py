@@ -4,11 +4,8 @@ Session 82e — UX Feature Sprint tests.
 Tests for: Mobile hamburger, masonry grid, help page, OG tags, identify mode.
 """
 
-import subprocess
-import sys
-
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from starlette.testclient import TestClient
 from app.main import app, _public_nav_links
 
@@ -17,6 +14,7 @@ def get_real_photo_id():
     """Get a real photo_id from photo_index for testing."""
     try:
         from app.main import _photo_cache
+
         if _photo_cache:
             for pid, pdata in _photo_cache.items():
                 if pdata.get("faces") and pdata.get("width"):
@@ -37,24 +35,19 @@ def real_photo_id():
     return get_real_photo_id()
 
 
+# ---------------------------------------------------------------------------
+# Cached HTML rendering — replaces subprocess isolation with in-process
+# caching. Each unique path is rendered once per test session.
+# ---------------------------------------------------------------------------
+_render_cache: dict[str, str] = {}
+
+
 def _render_path(path: str) -> str:
-    """Render a route in an isolated subprocess to avoid cache bleed."""
-    code = """
-import os
-os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
-from app.main import app
-from starlette.testclient import TestClient
-import sys
-client = TestClient(app)
-print(client.get(sys.argv[1]).text)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", code, path],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
+    """Render a route via TestClient with per-session caching."""
+    if path not in _render_cache:
+        c = TestClient(app)
+        _render_cache[path] = c.get(path).text
+    return _render_cache[path]
 
 
 class TestMobileHamburger:
@@ -106,16 +99,19 @@ class TestMasonryPhotoGrid:
         """_build_photo_cards with masonry=True should use aspect-ratio style."""
         from app.main import _build_photo_cards
         from fasthtml.common import to_xml
-        test_photos = [{
-            "photo_id": "test123",
-            "filename": "test.jpg",
-            "collection": "Test",
-            "face_count": 1,
-            "confirmed_count": 0,
-            "match_reason": None,
-            "width": 800,
-            "height": 600,
-        }]
+
+        test_photos = [
+            {
+                "photo_id": "test123",
+                "filename": "test.jpg",
+                "collection": "Test",
+                "face_count": 1,
+                "confirmed_count": 0,
+                "match_reason": None,
+                "width": 800,
+                "height": 600,
+            }
+        ]
         cards = _build_photo_cards(test_photos, masonry=True)
         html = to_xml(cards[0])
         assert "aspect-ratio" in html
@@ -161,6 +157,7 @@ class TestShareForHelp:
         # Get a real identity to test with
         try:
             from app.main import load_registry
+
             registry = load_registry()
             identities = registry.get("identities", {})
             identity_id = next(iter(identities))
@@ -169,12 +166,13 @@ class TestShareForHelp:
         response = client.get(f"/identify/{identity_id}")
         if response.status_code != 200:
             pytest.skip("Identify page not accessible")
-        assert 'og:image' in response.text
+        assert "og:image" in response.text
 
     def test_identify_page_has_og_title(self, client):
         """Identify page should include og:title meta tag."""
         try:
             from app.main import load_registry
+
             registry = load_registry()
             identities = registry.get("identities", {})
             identity_id = next(iter(identities))
@@ -183,7 +181,7 @@ class TestShareForHelp:
         response = client.get(f"/identify/{identity_id}")
         if response.status_code != 200:
             pytest.skip("Identify page not accessible")
-        assert 'og:title' in response.text
+        assert "og:title" in response.text
 
 
 class TestIdentifyModeFocusState:

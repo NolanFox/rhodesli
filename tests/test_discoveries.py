@@ -13,6 +13,7 @@ from starlette.testclient import TestClient
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_identity(identity_id, name, state, anchor_ids=None, candidate_ids=None, negative_ids=None):
     """Build a minimal identity dict matching the schema."""
     return {
@@ -54,17 +55,20 @@ def _make_registry_mock(identities):
 # Test: _count_discoveries function
 # ---------------------------------------------------------------------------
 
+
 class TestCountDiscoveries:
     """Tests for the _count_discoveries function."""
 
     def test_function_exists(self):
         """_count_discoveries is importable from app.main."""
         from app.main import _count_discoveries
+
         assert callable(_count_discoveries)
 
     def test_returns_zero_when_no_confirmed(self):
         """No discoveries when there are no confirmed identities."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -80,6 +84,7 @@ class TestCountDiscoveries:
     def test_returns_zero_when_no_unreviewed(self):
         """No discoveries when there are no INBOX/PROPOSED identities."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -93,6 +98,7 @@ class TestCountDiscoveries:
     def test_counts_high_confidence_match_via_batch(self):
         """Counts a discovery when batch neighbor finds a close confirmed match."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -104,9 +110,11 @@ class TestCountDiscoveries:
         # batch_best_neighbor_distances returns conf1 as closest with distance 0.7
         batch_result = {"inbox1": (0.7, "conf1", "Known Person")}
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()), \
-             patch("app.main.get_face_data", return_value={}), \
-             patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+            patch("app.main.get_face_data", return_value={}),
+            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+        ):
             count = _count_discoveries(registry)
 
         assert count == 1
@@ -114,6 +122,7 @@ class TestCountDiscoveries:
     def test_ignores_low_confidence_match(self):
         """Does not count matches with distance >= 1.05."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -125,9 +134,11 @@ class TestCountDiscoveries:
         # Distance 1.5 is too far — not a discovery
         batch_result = {"inbox1": (1.5, "conf1", "Known Person")}
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()), \
-             patch("app.main.get_face_data", return_value={}), \
-             patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+            patch("app.main.get_face_data", return_value={}),
+            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+        ):
             count = _count_discoveries(registry)
 
         assert count == 0
@@ -135,6 +146,7 @@ class TestCountDiscoveries:
     def test_includes_borderline_high_match(self):
         """Borderline matches at distance 1.01 are included (AD-172 widened threshold)."""
         from app.main import _count_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -146,9 +158,11 @@ class TestCountDiscoveries:
         # Distance 1.01 was previously excluded (threshold was 1.0), now included
         batch_result = {"inbox1": (1.01, "conf1", "Known Person")}
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()), \
-             patch("app.main.get_face_data", return_value={}), \
-             patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+            patch("app.main.get_face_data", return_value={}),
+            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+        ):
             count = _count_discoveries(registry)
 
         assert count == 1
@@ -160,11 +174,13 @@ class TestComputeDiscoveries:
     def test_function_exists(self):
         """_compute_discoveries is importable from app.main."""
         from app.main import _compute_discoveries
+
         assert callable(_compute_discoveries)
 
     def test_returns_list(self):
         """_compute_discoveries returns a list."""
         from app.main import _compute_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [_make_identity("id1", "Person A", "CONFIRMED", anchor_ids=["f1"])]
@@ -175,6 +191,7 @@ class TestComputeDiscoveries:
     def test_discovery_has_required_fields(self):
         """Each discovery dict has the required fields."""
         from app.main import _compute_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -185,9 +202,11 @@ class TestComputeDiscoveries:
 
         batch_result = {"inbox1": (0.5, "conf1", "Known Person")}
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()), \
-             patch("app.main.get_face_data", return_value={}), \
-             patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+            patch("app.main.get_face_data", return_value={}),
+            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+        ):
             result = _compute_discoveries(registry)
 
         assert len(result) == 1
@@ -206,6 +225,7 @@ class TestComputeDiscoveries:
     def test_discoveries_sorted_by_distance(self):
         """Discoveries are sorted by distance ascending (best first)."""
         from app.main import _compute_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -221,9 +241,11 @@ class TestComputeDiscoveries:
             "inbox2": (0.6, "conf1", "Known Person"),
         }
 
-        with patch("app.main._get_identities_with_proposals", return_value=set()), \
-             patch("app.main.get_face_data", return_value={}), \
-             patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value=set()),
+            patch("app.main.get_face_data", return_value={}),
+            patch("core.neighbors.batch_best_neighbor_distances", return_value=batch_result),
+        ):
             result = _compute_discoveries(registry)
 
         assert len(result) == 2
@@ -233,6 +255,7 @@ class TestComputeDiscoveries:
     def test_uses_proposals_when_available(self):
         """Uses existing proposals instead of batch computation when available."""
         from app.main import _compute_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -248,8 +271,10 @@ class TestComputeDiscoveries:
             "confidence": "HIGH",
         }
 
-        with patch("app.main._get_identities_with_proposals", return_value={"inbox1"}), \
-             patch("app.main._get_best_proposal_for_identity", return_value=proposal):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1"}),
+            patch("app.main._get_best_proposal_for_identity", return_value=proposal),
+        ):
             result = _compute_discoveries(registry)
 
         assert len(result) == 1
@@ -258,6 +283,7 @@ class TestComputeDiscoveries:
     def test_skips_proposal_to_non_confirmed(self):
         """Proposal pointing to a non-confirmed identity is not a discovery."""
         from app.main import _compute_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -275,8 +301,10 @@ class TestComputeDiscoveries:
             "confidence": "VERY HIGH",
         }
 
-        with patch("app.main._get_identities_with_proposals", return_value={"inbox1"}), \
-             patch("app.main._get_best_proposal_for_identity", return_value=proposal):
+        with (
+            patch("app.main._get_identities_with_proposals", return_value={"inbox1"}),
+            patch("app.main._get_best_proposal_for_identity", return_value=proposal),
+        ):
             result = _compute_discoveries(registry)
 
         assert len(result) == 0
@@ -285,6 +313,7 @@ class TestComputeDiscoveries:
 # ---------------------------------------------------------------------------
 # Test: Sidebar includes discovery count
 # ---------------------------------------------------------------------------
+
 
 class TestSidebarDiscoveries:
     """Tests that the sidebar shows the Discoveries link with count."""
@@ -370,8 +399,10 @@ class TestSidebarDiscoveries:
 
         registry = load_registry()
 
-        with patch.object(main_module, "_discovery_cache", []), \
-             patch.object(main_module, "_discovery_cache_key", (0, 0, 0)):
+        with (
+            patch.object(main_module, "_discovery_cache", []),
+            patch.object(main_module, "_discovery_cache_key", (0, 0, 0)),
+        ):
             counts = _compute_sidebar_counts(registry)
 
         assert "discoveries" in counts
@@ -382,20 +413,24 @@ class TestSidebarDiscoveries:
 # Test: /discoveries route
 # ---------------------------------------------------------------------------
 
+
 class TestDiscoveriesRoute:
     """Tests for the /discoveries page route."""
 
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_discoveries_route_returns_200_for_admin(self, client):
         """/discoveries returns 200 when accessed by admin."""
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")), \
-             patch("app.main._count_discoveries", return_value=0), \
-             patch("app.main._compute_discoveries", return_value=[]):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")),
+            patch("app.main._count_discoveries", return_value=0),
+            patch("app.main._compute_discoveries", return_value=[]),
+        ):
             response = client.get("/discoveries")
 
         assert response.status_code == 200
@@ -403,8 +438,8 @@ class TestDiscoveriesRoute:
 
     def test_discoveries_route_requires_admin(self, client):
         """/discoveries returns 401 when not admin."""
-        from starlette.responses import Response as StarletteResponse
         from app.main import Response
+
         with patch("app.main._check_admin", return_value=Response("Unauthorized", status_code=401)):
             response = client.get("/discoveries")
 
@@ -417,14 +452,17 @@ class TestApiDiscoveriesRoute:
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_api_discoveries_empty_shows_message(self, client):
         """/api/discoveries shows 'all discoveries reviewed' when no discoveries."""
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=[]), \
-             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
-             patch("app.main.get_crop_files", return_value=set()):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=[]),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            patch("app.main.get_crop_files", return_value=set()),
+        ):
             response = client.get("/api/discoveries")
 
         assert response.status_code == 200
@@ -445,15 +483,17 @@ class TestApiDiscoveriesRoute:
 
         source_identity = _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._compute_co_occurrence", return_value=0), \
-             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
             response = client.get("/api/discoveries")
 
         assert response.status_code == 200
@@ -479,15 +519,17 @@ class TestApiDiscoveriesRoute:
         ]
         source_identity = _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._compute_co_occurrence", return_value=0), \
-             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
             response = client.get("/api/discoveries")
 
         html = response.text
@@ -514,15 +556,17 @@ class TestApiDiscoveriesRoute:
         ]
         source_identity = _make_identity("inbox1", "Unknown 1", "INBOX", candidate_ids=["face_inbox1"])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._compute_co_occurrence", return_value=0), \
-             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
             response = client.get("/api/discoveries")
 
         html = response.text
@@ -550,14 +594,16 @@ class TestApiDiscoveriesRoute:
             "filename": "test_photo.jpg",
         }
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity), \
-             patch("app.main.get_photo_id_for_face", return_value="photo123"), \
-             patch("app.main.get_photo_metadata", return_value=photo_data), \
-             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value="photo123"),
+            patch("app.main.get_photo_metadata", return_value=photo_data),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
             response = client.get("/api/discoveries")
 
         html = response.text
@@ -574,6 +620,7 @@ class TestApiDiscoveryReject:
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_reject_adds_negative_id(self, client):
@@ -584,10 +631,12 @@ class TestApiDiscoveryReject:
         ]
         registry = _make_registry_mock(identities)
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main.load_registry", return_value=registry), \
-             patch("app.main.save_registry") as mock_save, \
-             patch("app.main._invalidate_discovery_cache"):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+            patch("app.main.save_registry") as mock_save,
+            patch("app.main._invalidate_discovery_cache"),
+        ):
             response = client.post("/api/discovery/reject?source_id=inbox1&target_id=conf1")
 
         assert response.status_code == 200
@@ -599,6 +648,7 @@ class TestApiDiscoveryReject:
     def test_reject_requires_admin(self, client):
         """Reject endpoint requires admin auth."""
         from app.main import Response
+
         with patch("app.main._check_admin", return_value=Response("Unauthorized", status_code=401)):
             response = client.post("/api/discovery/reject?source_id=inbox1&target_id=conf1")
 
@@ -608,6 +658,7 @@ class TestApiDiscoveryReject:
 # ---------------------------------------------------------------------------
 # Test: Cache invalidation
 # ---------------------------------------------------------------------------
+
 
 class TestDiscoveryCacheInvalidation:
     """Tests for discovery cache lifecycle."""
@@ -628,6 +679,7 @@ class TestDiscoveryCacheInvalidation:
     def test_cache_is_used_on_second_call(self):
         """Second call to _compute_discoveries uses cached result."""
         from app.main import _compute_discoveries, _invalidate_discovery_cache
+
         _invalidate_discovery_cache()
 
         identities = [
@@ -645,6 +697,7 @@ class TestDiscoveryCacheInvalidation:
     def test_discovery_threshold_is_1_point_30(self):
         """The discovery threshold is distance < 1.30 (Session 79, raised from 1.05)."""
         from app.main import DISCOVERY_DISTANCE_THRESHOLD
+
         assert DISCOVERY_DISTANCE_THRESHOLD == 1.30
 
 
@@ -652,20 +705,24 @@ class TestDiscoveryCacheInvalidation:
 # Test: Filter controls (Act 5a — Session 87)
 # ---------------------------------------------------------------------------
 
+
 class TestDiscoveriesFilterControls:
     """Tests for the discoveries page filter controls."""
 
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def test_discoveries_page_has_filter_controls(self, client):
         """The /discoveries page renders filter controls."""
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")), \
-             patch("app.main._count_discoveries", return_value=5), \
-             patch("app.main._compute_discoveries", return_value=[]):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")),
+            patch("app.main._count_discoveries", return_value=5),
+            patch("app.main._compute_discoveries", return_value=[]),
+        ):
             response = client.get("/discoveries")
 
         assert response.status_code == 200
@@ -701,13 +758,18 @@ class TestDiscoveriesFilterControls:
         source2 = _make_identity("inbox2", "High Confidence", "INBOX", candidate_ids=["face2"])
         registry = _make_registry_mock([source1, source2])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_registry", return_value=registry):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch(
+                "app.main._safe_get_identity",
+                side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
+            ),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+        ):
             response = client.get("/api/discoveries")
 
         html = response.text
@@ -740,13 +802,18 @@ class TestDiscoveriesFilterControls:
         source2 = _make_identity("inbox2", "High Match", "INBOX", candidate_ids=["face2"])
         registry = _make_registry_mock([source1, source2])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_registry", return_value=registry):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch(
+                "app.main._safe_get_identity",
+                side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
+            ),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+        ):
             response = client.get("/api/discoveries?min_confidence=70")
 
         html = response.text
@@ -756,10 +823,12 @@ class TestDiscoveriesFilterControls:
 
     def test_api_discoveries_empty_with_filter_shows_filter_message(self, client):
         """When filters exclude all items, show 'No matches' instead of 'All reviewed'."""
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=[]), \
-             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
-             patch("app.main.get_crop_files", return_value=set()):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=[]),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            patch("app.main.get_crop_files", return_value=set()),
+        ):
             response = client.get("/api/discoveries?min_confidence=70")
 
         html = response.text
@@ -792,13 +861,18 @@ class TestDiscoveriesFilterControls:
         def mock_photo_for_face(fid):
             return "photo_X" if fid == "face_a" else "photo_Y"
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
-             patch("app.main.get_photo_id_for_face", side_effect=mock_photo_for_face), \
-             patch("app.main.load_registry", return_value=registry):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch(
+                "app.main._safe_get_identity",
+                side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
+            ),
+            patch("app.main.get_photo_id_for_face", side_effect=mock_photo_for_face),
+            patch("app.main.load_registry", return_value=registry),
+        ):
             response = client.get("/api/discoveries?photo_id=photo_X")
 
         html = response.text
@@ -821,13 +895,18 @@ class TestDiscoveriesFilterControls:
         registry = _make_registry_mock([source1])
         photo_data = {"collection": "Test Collection", "path": "test.jpg"}
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main._get_pending_discovery_entries", return_value=([], [])), \
-             patch("app.main._safe_get_identity", side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None), \
-             patch("app.main.get_photo_id_for_face", return_value="photo123"), \
-             patch("app.main.get_photo_metadata", return_value=photo_data), \
-             patch("app.main.load_registry", return_value=registry):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            patch(
+                "app.main._safe_get_identity",
+                side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
+            ),
+            patch("app.main.get_photo_id_for_face", return_value="photo123"),
+            patch("app.main.get_photo_metadata", return_value=photo_data),
+            patch("app.main.load_registry", return_value=registry),
+        ):
             response = client.get("/api/discoveries/photo-options")
 
         assert response.status_code == 200
@@ -840,12 +919,14 @@ class TestDiscoveriesFilterControls:
 # Test: Inline compare links, larger faces, confidence percentage (Act 5b)
 # ---------------------------------------------------------------------------
 
+
 class TestDiscoveriesCardEnhancements:
     """Tests for discovery card visual improvements (Session 87 Act 5b)."""
 
     @pytest.fixture
     def client(self):
         from app.main import app
+
         return TestClient(app)
 
     def _get_discovery_html(self, client, distance=0.6):
@@ -862,42 +943,49 @@ class TestDiscoveriesCardEnhancements:
         ]
         source_identity = _make_identity("inbox1", "Test Person", "INBOX", candidate_ids=["face_inbox1"])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._compute_co_occurrence", return_value=0), \
-             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
             response = client.get("/api/discoveries")
 
         assert response.status_code == 200
         return response.text
 
-    def test_discovery_card_has_compare_link(self, client):
+    @pytest.fixture
+    def default_discovery_html(self, client):
+        """Cache the default discovery HTML (distance=0.6) for reuse across tests."""
+        return self._get_discovery_html(client, distance=0.6)
+
+    def test_discovery_card_has_compare_link(self, default_discovery_html):
         """Each discovery card has an inline Compare link."""
-        html = self._get_discovery_html(client)
+        html = default_discovery_html
         assert 'data-testid="discovery-compare-link"' in html
         assert "/compare?face_id=face_inbox1&amp;person_id=conf1" in html
 
-    def test_discovery_card_uses_rounded_lg(self, client):
+    def test_discovery_card_uses_rounded_lg(self, default_discovery_html):
         """Face images use rounded-lg instead of rounded-full for better visibility."""
-        html = self._get_discovery_html(client)
+        html = default_discovery_html
         assert "rounded-lg" in html
         assert "rounded-full" not in html or html.count("rounded-full") < html.count("rounded-lg")
 
-    def test_discovery_card_shows_confidence_pct(self, client):
+    def test_discovery_card_shows_confidence_pct(self, default_discovery_html):
         """Discovery cards show numeric confidence percentage."""
-        html = self._get_discovery_html(client, distance=0.6)
+        html = default_discovery_html
         assert 'data-testid="discovery-confidence-pct"' in html
         # Should contain a percentage number
         assert "%" in html
 
-    def test_discovery_card_face_size_at_least_112px(self, client):
+    def test_discovery_card_face_size_at_least_112px(self, default_discovery_html):
         """Face images are at least w-28 (112px) for better visibility."""
-        html = self._get_discovery_html(client)
+        html = default_discovery_html
         assert "w-28" in html
         assert "h-28" in html
 
@@ -907,9 +995,9 @@ class TestDiscoveriesCardEnhancements:
         assert 'data-testid="match-info-bar"' in html
         assert "0.92" in html
 
-    def test_discovery_card_correct_compare_url(self, client):
+    def test_discovery_card_correct_compare_url(self, default_discovery_html):
         """Session 88: Compare link uses face_id + person_id params."""
-        html = self._get_discovery_html(client)
+        html = default_discovery_html
         assert "face_id=" in html
         assert "person_id=conf1" in html
         # Should NOT use old source=/target= params
@@ -930,15 +1018,17 @@ class TestDiscoveriesCardEnhancements:
         ]
         source_identity = _make_identity("inbox1", "Test Person", "INBOX", candidate_ids=["face_inbox1"])
 
-        with patch("app.main._check_admin", return_value=None), \
-             patch("app.main._compute_discoveries", return_value=discoveries), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._resolve_identity_crop", return_value=None), \
-             patch("app.main._safe_get_identity", return_value=source_identity), \
-             patch("app.main.get_photo_id_for_face", return_value=None), \
-             patch("app.main.load_photo_registry"), \
-             patch("app.main._compute_co_occurrence", return_value=0), \
-             patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])):
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
             response = client.get("/api/discoveries")
 
         assert response.status_code == 200

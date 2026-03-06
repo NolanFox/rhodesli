@@ -9,12 +9,8 @@ Tests cover:
 - CTA section for unidentified faces
 """
 
-import hashlib
-import subprocess
-import sys
 
 import pytest
-from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
 
 from app.main import app, load_embeddings_for_photos
@@ -38,24 +34,16 @@ def real_photo_id():
     return get_real_photo_id()
 
 
+_render_cache: dict[str, str] = {}
+
+
 def _render_photo_page_html(photo_id: str) -> str:
-    """Render a photo page in an isolated subprocess to avoid cache bleed."""
-    code = """
-import os
-os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
-from app.main import app
-from starlette.testclient import TestClient
-import sys
-client = TestClient(app)
-print(client.get(f"/photo/{sys.argv[1]}").text)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", code, photo_id],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
+    """Render a photo page via TestClient with caching."""
+    key = f"/photo/{photo_id}"
+    if key not in _render_cache:
+        c = TestClient(app)
+        _render_cache[key] = c.get(key).text
+    return _render_cache[key]
 
 
 class TestPublicPhotoViewerAccess:
@@ -215,7 +203,7 @@ class TestPhotoCarousel:
         """Photo page shows carousel navigation when in a collection."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        import re
+
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         # Should have at least one nav arrow (prev or next)
@@ -228,10 +216,11 @@ class TestPhotoCarousel:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         import re
+
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         # Should have position indicator like "Photo 1 of 108"
-        position = re.findall(r'Photo \d+ of \d+', html)
+        position = re.findall(r"Photo \d+ of \d+", html)
         assert len(position) > 0, "Should show photo position in collection"
 
     def test_keyboard_navigation_script(self, client, real_photo_id):
@@ -240,14 +229,14 @@ class TestPhotoCarousel:
             pytest.skip("No embeddings available")
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
-        assert "ArrowLeft" in html or "ArrowRight" in html, \
-            "Should include keyboard navigation for arrow keys"
+        assert "ArrowLeft" in html or "ArrowRight" in html, "Should include keyboard navigation for arrow keys"
 
     def test_collection_link_visible(self, client, real_photo_id):
         """Collection name is a clickable link."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
         import re
+
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         collection_links = re.findall(r'href="/collection/[^"]+"', html)
@@ -262,9 +251,12 @@ class TestFaceClickBehavior:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         import re
+
         html = _render_photo_page_html(real_photo_id)
         # Overlays should be <a> tags with person or identify hrefs
-        overlay_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="[^"]*face-overlay-box', html)
+        overlay_links = re.findall(
+            r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="[^"]*face-overlay-box', html
+        )
         # Face overlays require photo dimensions (read from filesystem or cached in photo_index).
         # In worktrees without raw_photos/, dimensions may be 0x0 so no overlays render.
         # Check for actual overlay elements (not just CSS class references in <style>)
@@ -287,6 +279,7 @@ class TestFaceClickBehavior:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         import re
+
         html = _render_photo_page_html(real_photo_id)
         card_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="no-underline', html)
         assert len(card_links) > 0, "Person cards should link to /person/ or /identify/"
@@ -303,6 +296,7 @@ class TestFaceOverlayAlignment:
             pytest.skip("No embeddings available")
         html = _render_photo_page_html(real_photo_id)
         import re
+
         # The front-side div wrapping the image and face overlays must be relative
         # It should NOT depend on photo-hero-container (which has padding)
         # Find the div that contains both photo-hero img and face-overlay-box
@@ -318,13 +312,15 @@ class TestFaceOverlayAlignment:
         # photo-hero-container has padding — overlays must NOT be direct children of it
         # They should be inside an inner relative div
         import re
+
         # Check that face-overlay-box elements appear inside a <div class="...relative...">
         # that is NOT the photo-hero-container
         overlay_pattern = re.search(r'<div class="([^"]*relative[^"]*)"[^>]*>\s*<img[^>]*photo-hero', html)
         assert overlay_pattern, "Overlays must be inside a relative div wrapping the image"
         container_classes = overlay_pattern.group(1)
-        assert "photo-hero-container" not in container_classes, \
+        assert "photo-hero-container" not in container_classes, (
             "Overlay container must not be photo-hero-container (it has padding that misaligns overlays)"
+        )
 
 
 class TestPublicPhotoViewerPartialUnchanged:
@@ -334,10 +330,7 @@ class TestPublicPhotoViewerPartialUnchanged:
         """Partial route returns content for HTMX injection."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(
-            f"/photo/{real_photo_id}/partial",
-            headers={"HX-Request": "true"}
-        )
+        response = client.get(f"/photo/{real_photo_id}/partial", headers={"HX-Request": "true"})
         assert response.status_code == 200
         html = response.text
         # Partial should contain the photo viewer content
@@ -372,6 +365,7 @@ class TestUX103BackNavigation:
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         import re
+
         # Photo should have a collection, breadcrumb should link to it
         collection_links = re.findall(r'href="/collection/[^"]+"', html)
         assert len(collection_links) > 0, "Breadcrumb should include collection link"
@@ -382,8 +376,7 @@ class TestUX103BackNavigation:
             pytest.skip("No embeddings available")
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
-        assert "mobile-nav-overlay" in html, \
-            "Photo page should use _public_page_nav with mobile menu"
+        assert "mobile-nav-overlay" in html, "Photo page should use _public_page_nav with mobile menu"
 
     def test_back_to_photos_visible_on_mobile(self, client, real_photo_id):
         """Back to Photos link is visible on all screen sizes (not hidden sm:flex)."""
@@ -392,11 +385,11 @@ class TestUX103BackNavigation:
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         import re
+
         # The breadcrumb bar should NOT have 'hidden' class (should be visible on mobile)
         breadcrumb = re.search(r'data-testid="photo-breadcrumb"[^>]*class="([^"]*)"', html)
         if breadcrumb:
-            assert "hidden" not in breadcrumb.group(1), \
-                "Breadcrumb bar should be visible on mobile"
+            assert "hidden" not in breadcrumb.group(1), "Breadcrumb bar should be visible on mobile"
 
 
 class TestUX103MetadataOverlay:
@@ -433,11 +426,11 @@ class TestUX103MetadataOverlay:
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
         import re
+
         # The div wrapping the photo and overlays should have 'group' class
         # for hover effects on the metadata overlay
         pattern = r'class="[^"]*relative[^"]*group[^"]*"'
-        assert re.search(pattern, html), \
-            "Photo container should have 'group' class for hover overlay"
+        assert re.search(pattern, html), "Photo container should have 'group' class for hover overlay"
 
     def test_anonymous_sees_metadata_overlay(self, client, real_photo_id, auth_enabled, no_user):
         """Anonymous users can see the metadata overlay."""
@@ -453,8 +446,7 @@ class TestUX103MetadataOverlay:
             pytest.skip("No embeddings available")
         response = client.get(f"/photo/{real_photo_id}")
         html = response.text
-        assert "ArrowLeft" in html or "ArrowRight" in html, \
-            "Keyboard navigation should still be present"
+        assert "ArrowLeft" in html or "ArrowRight" in html, "Keyboard navigation should still be present"
 
 
 class TestUX103FaceOverlayToggle:
