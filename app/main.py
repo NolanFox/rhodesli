@@ -8805,19 +8805,6 @@ def _ping_supabase() -> str:
         return f"error:{e}"
 
 
-@rt("/api/debug/upload-dates")
-def get():
-    """Debug endpoint to check upload_date in photo cache."""
-    _build_caches()
-    dates = {}
-    for pid, pd in (_photo_cache or {}).items():
-        d = pd.get("upload_date", "")
-        d_short = d[:10] if d else "EMPTY"
-        dates[d_short] = dates.get(d_short, 0) + 1
-    total = sum(dates.values())
-    return {"total_photos": total, "upload_date_distribution": dates, "fix_marker": "filename_to_metadata_v2"}
-
-
 @rt("/health")
 def health():
     """Health check endpoint for Railway deployment."""
