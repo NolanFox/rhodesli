@@ -2276,23 +2276,20 @@
     },
     "inbox_staged-20260210-182610_5_757557421.130308": {
       "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
-      "lat": 25.7617,
-      "lng": -80.1918,
-      "location_name": "Miami, Florida",
-      "location_key": "miami",
+      "lat": 27.9506,
+      "lng": -82.4572,
+      "location_name": "Tampa, Florida",
+      "location_key": "tampa",
       "region": "United States",
-      "location_estimate": "Likely New York City or Miami, Florida, given the Art Deco architecture and English signage.",
+      "location_estimate": "Tampa, Florida \u2014 Leon's Restaurant, owned by Leon Capeluto. Photo from Nace Capeluto Tampa Collection.",
       "confidence": "high",
       "all_matches": [
         {
-          "key": "miami",
-          "name": "Miami, Florida"
-        },
-        {
-          "key": "nyc",
-          "name": "New York City"
+          "key": "tampa",
+          "name": "Tampa, Florida"
         }
-      ]
+      ],
+      "reanalyzed_at": "2026-03-06T00:00:00+00:00"
     },
     "inbox_staged-20260210-182610_6_596771293.674187": {
       "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
