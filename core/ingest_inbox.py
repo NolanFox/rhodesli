@@ -322,6 +322,22 @@ def extract_faces(filepath: Path, prefer_hybrid: bool = False) -> list[dict]:
 
     analyzer = get_face_analyzer()
     faces = analyzer.get(img)
+
+    # AD-204: Close-crop fallback for non-hybrid path
+    if not faces:
+        pad_ratio = 0.4
+        pad_h = int(image_height * pad_ratio)
+        pad_w = int(image_width * pad_ratio)
+        padded = cv2.copyMakeBorder(img, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT, value=(128, 128, 128))
+        faces = analyzer.get(padded)
+        if faces:
+            logging.info(f"[buffalo_l] Close-crop fallback: padded {pad_ratio:.0%}, found {len(faces)} face(s)")
+            for face in faces:
+                face.bbox[0] -= pad_w
+                face.bbox[1] -= pad_h
+                face.bbox[2] -= pad_w
+                face.bbox[3] -= pad_h
+
     results = []
 
     for face in faces:
@@ -393,6 +409,24 @@ def extract_faces_hybrid(filepath: Path):
     det_time = _time.time() - t_det
     logging.info(f"[hybrid] Detection: {det_time:.3f}s ({len(bboxes)} faces)")
 
+    # AD-204: Close-crop fallback — if no faces detected, pad the image and retry.
+    # InsightFace anchors expect faces to be a fraction of the frame. Extreme close-crops
+    # (face fills 90%+ of image) fail detection. Adding a 40% border simulates a wider shot.
+    _used_padding = False
+    if len(bboxes) == 0:
+        pad_ratio = 0.4
+        pad_h = int(image_height * pad_ratio)
+        pad_w = int(image_width * pad_ratio)
+        padded = cv2.copyMakeBorder(img, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT, value=(128, 128, 128))
+        bboxes_p, kpss_p = detector.detect(padded, max_num=0, metric="default")
+        if len(bboxes_p) > 0:
+            # Keep landmarks in padded-image space for norm_crop alignment.
+            # Only adjust bboxes back to original image space for storage.
+            bboxes, kpss = bboxes_p, kpss_p
+            img = padded  # norm_crop needs padded image with padded-space landmarks
+            _used_padding = True
+            logging.info(f"[hybrid] Close-crop fallback: padded {pad_ratio:.0%}, found {len(bboxes)} face(s)")
+
     t_rec = _time.time()
     results = []
     for i in range(len(bboxes)):
@@ -403,7 +437,17 @@ def extract_faces_hybrid(filepath: Path):
         det_score = float(bboxes[i][4])
         bbox = bboxes[i][:4].tolist()
 
+        # AD-204: If padding was used, bbox is in padded space — convert back to original
+        if _used_padding:
+            bbox = [
+                bbox[0] - pad_w,
+                bbox[1] - pad_h,
+                bbox[2] - pad_w,
+                bbox[3] - pad_h,
+            ]
+
         # Align face using 5-point landmarks, then run recognition
+        # Note: kps stays in padded space, img is padded — norm_crop works correctly
         aligned = norm_crop(img, kps, image_size=112)
         emb = recognizer.get_feat(aligned).flatten()
         raw_norm = float(np.linalg.norm(emb))

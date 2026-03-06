@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.92.2] — 2026-03-05 (Session 89e: Codex Review + Cleanup)
+
+### Fixed
+- **Benatar photo recovery** — Raw photo + face crop regenerated and uploaded to R2
+- **numpy scalar crash** — `core/confidence.py` crashed when distance was numpy array; now calls `.item()`
+- **Codex test bug** — `test_merge_button_has_undo_merge_url` matched JS string ref, not button element
+- **Harness commit counter** — Stale threshold increased 120s→3600s + git-clean heuristic (AD-203)
+
+### Added
+- **Cleanup scripts** — `scripts/cleanup_isolated_photo.py` (isolated photo removal), `scripts/backfill_upload_dates.py` (upload date backfill)
+- **Performance caching** — Face alignment TTL cache, GEDCOM retry/backoff, Supabase timeout config
+
 ## [v0.92.1] — 2026-03-05 (Session 89c: Fix Re-analyze + Location ID Mismatch)
 
 ### Fixed

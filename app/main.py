@@ -745,6 +745,7 @@ def _build_upload_provenance_line(photo: dict):
 
     return None
 
+
 # =============================================================================
 # USER ACTION LOGGING (LEGACY - REPLACED BY EVENT RECORDER)
 # =============================================================================
@@ -25295,6 +25296,26 @@ def get(job_id: str):
     faces = status.get("faces_extracted", 0)
     identities = len(status.get("identities_created", []))
     total = status.get("total_files")
+
+    # Handle 0 faces: photo was processed but no faces detected.
+    # This is NOT a success — show a clear warning so users don't think their photo was lost.
+    if faces == 0:
+        return Div(
+            P(
+                "\u26a0 No faces detected in your photo.",
+                cls="text-amber-400 text-sm font-medium",
+            ),
+            P(
+                "This can happen with extreme close-crops, very small faces, or non-portrait images. "
+                "Try uploading a wider shot where faces are clearly visible.",
+                cls="text-slate-400 text-xs mt-1",
+            ),
+            P(
+                "The photo was not added to the archive.",
+                cls="text-slate-500 text-xs mt-1",
+            ),
+            cls="p-3 bg-amber-900/20 border border-amber-500/30 rounded",
+        )
 
     success_text = f"\u2713 {_pl(faces, 'face')} extracted"
     if total and total > 1:
