@@ -3073,11 +3073,15 @@ def _build_caches():
                 _photo_cache[photo_id]["source_url"] = source_url
 
                 # Merge photo metadata (BE-012)
+                # Try direct lookup first, then filename fallback for mismatched IDs
                 metadata = photo_registry.get_metadata(photo_id)
-                if not metadata:
-                    metadata = filename_to_metadata.get(fname, {})
-                if metadata:
-                    _photo_cache[photo_id].update(metadata)
+                fallback_meta = filename_to_metadata.get(fname, {})
+                # Merge fallback first (lower priority), then direct (higher priority)
+                merged = {}
+                merged.update(fallback_meta)
+                merged.update(metadata)
+                if merged:
+                    _photo_cache[photo_id].update(merged)
         except FileNotFoundError:
             # No photo_index.json yet, set empty sources
             for photo_id in _photo_cache:
@@ -8811,7 +8815,7 @@ def get():
         d_short = d[:10] if d else "EMPTY"
         dates[d_short] = dates.get(d_short, 0) + 1
     total = sum(dates.values())
-    return {"total_photos": total, "upload_date_distribution": dates, "fix_marker": "filename_to_metadata_v1"}
+    return {"total_photos": total, "upload_date_distribution": dates, "fix_marker": "filename_to_metadata_v2"}
 
 
 @rt("/health")
