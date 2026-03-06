@@ -222,9 +222,10 @@ class TestFaceCardShareButton:
         """Face cards in browse view include share button."""
         response = client.get("/?section=confirmed&view=browse")
         html = response.text
-        # Face cards with photos should have share buttons
+        # Browse identity cards share the person page, not a specific photo page.
         if 'data-action="share-photo"' in html:
-            assert "/photo/" in html
+            assert '/person/' in html
+            assert 'data-share-url="/person/' in html
 
 
 class TestGlobalShareJS:

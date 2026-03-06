@@ -10,6 +10,22 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def reset_face_alignment_caches():
+    """Keep module-level alignment caches isolated between tests."""
+    import app.face_alignment as face_alignment
+
+    face_alignment._ALIGNMENT_CACHE.clear()
+    face_alignment._ALIGNMENTS_BULK_CACHE = None
+    face_alignment._ALIGNMENTS_BULK_CACHE_LOADED_AT = 0.0
+    face_alignment._ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
+    yield
+    face_alignment._ALIGNMENT_CACHE.clear()
+    face_alignment._ALIGNMENTS_BULK_CACHE = None
+    face_alignment._ALIGNMENTS_BULK_CACHE_LOADED_AT = 0.0
+    face_alignment._ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
+
+
 class TestFaceAlignmentSupabaseSave:
     """Tests for save_face_alignment_to_supabase."""
 
@@ -205,6 +221,23 @@ class TestAlignmentSaveFunction:
 class TestLoadAlignmentsFunction:
     """Tests for the unified load_alignments function."""
 
+    def test_caches_supabase_bulk_load_within_ttl(self, tmp_path):
+        """Repeated page loads should not re-query Supabase within the TTL."""
+        import app.face_alignment as face_alignment
+
+        face_alignment._ALIGNMENTS_BULK_CACHE = None
+        face_alignment._ALIGNMENTS_BULK_CACHE_LOADED_AT = 0.0
+        face_alignment._ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
+
+        supabase_data = {"p1": {"faces": 3}}
+        with patch("app.supabase_data.load_all_face_alignments_from_supabase", return_value=supabase_data) as mock_load:
+            result1 = face_alignment.load_alignments(tmp_path)
+            result2 = face_alignment.load_alignments(tmp_path)
+
+        assert result1 == supabase_data
+        assert result2 == supabase_data
+        assert mock_load.call_count == 1
+
     def test_prefers_supabase_data(self, tmp_path):
         """Returns Supabase data when available."""
         from app.face_alignment import load_alignments
@@ -239,6 +272,25 @@ class TestLoadAlignmentsFunction:
             result = load_alignments(tmp_path)
 
         assert result == {"p3": {"faces": 1}}
+
+    def test_failure_backoff_avoids_repeat_supabase_queries(self, tmp_path):
+        """After a failed bulk load, reuse fallback data during the backoff window."""
+        import app.face_alignment as face_alignment
+
+        face_alignment._ALIGNMENTS_BULK_CACHE = None
+        face_alignment._ALIGNMENTS_BULK_CACHE_LOADED_AT = 0.0
+        face_alignment._ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
+
+        json_file = tmp_path / "face_alignments.json"
+        json_file.write_text('{"p4": {"faces": 2}}')
+
+        with patch("app.supabase_data.load_all_face_alignments_from_supabase", return_value=None) as mock_load:
+            result1 = face_alignment.load_alignments(tmp_path)
+            result2 = face_alignment.load_alignments(tmp_path)
+
+        assert result1 == {"p4": {"faces": 2}}
+        assert result2 == {"p4": {"faces": 2}}
+        assert mock_load.call_count == 1
 
 
 class TestAlignmentDataSchema:

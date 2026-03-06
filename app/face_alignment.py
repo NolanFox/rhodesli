@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Optional
@@ -482,6 +483,11 @@ async def run_face_alignment(
 # --- Storage (Supabase-first with JSON fallback, AD-152) ---
 
 _ALIGNMENT_CACHE: dict[str, AlignmentResult] = {}
+_ALIGNMENTS_BULK_CACHE: dict[str, dict] | None = None
+_ALIGNMENTS_BULK_CACHE_LOADED_AT = 0.0
+_ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
+_ALIGNMENTS_CACHE_TTL_SECONDS = 300
+_ALIGNMENTS_FAILURE_BACKOFF_SECONDS = 30
 
 
 def get_cached_alignment(photo_id: str) -> AlignmentResult | None:
@@ -491,7 +497,12 @@ def get_cached_alignment(photo_id: str) -> AlignmentResult | None:
 
 def cache_alignment(result: AlignmentResult) -> None:
     """Cache a face alignment result."""
+    global _ALIGNMENTS_BULK_CACHE, _ALIGNMENTS_BULK_CACHE_LOADED_AT, _ALIGNMENTS_BULK_CACHE_FAILED_AT
     _ALIGNMENT_CACHE[result.photo_id] = result
+    if _ALIGNMENTS_BULK_CACHE is not None:
+        _ALIGNMENTS_BULK_CACHE[result.photo_id] = result.to_dict()
+        _ALIGNMENTS_BULK_CACHE_LOADED_AT = time.monotonic()
+        _ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
 
 
 def save_alignment(result: AlignmentResult, output_dir: str | Path = "data") -> bool:
@@ -502,6 +513,7 @@ def save_alignment(result: AlignmentResult, output_dir: str | Path = "data") -> 
     from app.supabase_data import save_face_alignment_to_supabase
 
     alignment_dict = result.to_dict()
+    cache_alignment(result)
     saved_to_supabase = save_face_alignment_to_supabase(
         photo_id=result.photo_id,
         alignment_data=alignment_dict,
@@ -550,10 +562,34 @@ def load_alignments(data_dir: str | Path = "data") -> dict[str, dict]:
     Returns dict of {photo_id: alignment_data_dict}.
     """
     from app.supabase_data import load_all_face_alignments_from_supabase
+    global _ALIGNMENTS_BULK_CACHE, _ALIGNMENTS_BULK_CACHE_LOADED_AT, _ALIGNMENTS_BULK_CACHE_FAILED_AT
+
+    now = time.monotonic()
+    cache_is_fresh = (
+        _ALIGNMENTS_BULK_CACHE is not None
+        and (now - _ALIGNMENTS_BULK_CACHE_LOADED_AT) < _ALIGNMENTS_CACHE_TTL_SECONDS
+    )
+    if cache_is_fresh:
+        return _ALIGNMENTS_BULK_CACHE or load_alignments_from_file(data_dir)
+
+    failure_backoff_active = (
+        _ALIGNMENTS_BULK_CACHE_FAILED_AT
+        and (now - _ALIGNMENTS_BULK_CACHE_FAILED_AT) < _ALIGNMENTS_FAILURE_BACKOFF_SECONDS
+    )
+    if failure_backoff_active:
+        return _ALIGNMENTS_BULK_CACHE or load_alignments_from_file(data_dir)
 
     supabase_data = load_all_face_alignments_from_supabase()
-    if supabase_data is not None and len(supabase_data) > 0:
-        return supabase_data
+    if supabase_data is not None:
+        _ALIGNMENTS_BULK_CACHE = supabase_data
+        _ALIGNMENTS_BULK_CACHE_LOADED_AT = now
+        _ALIGNMENTS_BULK_CACHE_FAILED_AT = 0.0
+        if len(supabase_data) > 0:
+            return supabase_data
+
+    if supabase_data is None:
+        _ALIGNMENTS_BULK_CACHE_FAILED_AT = now
+        return _ALIGNMENTS_BULK_CACHE or load_alignments_from_file(data_dir)
 
     # Fallback to JSON
     return load_alignments_from_file(data_dir)

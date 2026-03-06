@@ -18,9 +18,8 @@ from starlette.testclient import TestClient
 from app.main import app, load_registry
 
 
-def get_confirmed_identity():
+def get_confirmed_identity(registry):
     """Get a real confirmed identity for testing."""
-    registry = load_registry()
     confirmed = registry.list_identities(state=None)
     for identity in confirmed:
         if identity.get("state") == "CONFIRMED" and not identity.get("name", "").startswith("Unidentified"):
@@ -28,9 +27,8 @@ def get_confirmed_identity():
     return None
 
 
-def get_any_identity():
+def get_any_identity(registry):
     """Get any identity for testing."""
-    registry = load_registry()
     identities = registry.list_identities()
     return identities[0] if identities else None
 
@@ -41,13 +39,20 @@ def client():
 
 
 @pytest.fixture
-def confirmed_identity():
-    return get_confirmed_identity()
+def registry_snapshot(monkeypatch):
+    registry = load_registry()
+    monkeypatch.setattr("app.main.load_registry", lambda: registry)
+    return registry
 
 
 @pytest.fixture
-def any_identity():
-    return get_any_identity()
+def confirmed_identity(registry_snapshot):
+    return get_confirmed_identity(registry_snapshot)
+
+
+@pytest.fixture
+def any_identity(registry_snapshot):
+    return get_any_identity(registry_snapshot)
 
 
 class TestPublicPersonPageAccess:
@@ -302,11 +307,14 @@ class TestPersonPageNavigation:
 class TestPersonPageAppearsWithSection:
     """The 'Appears with' section for co-appearing people."""
 
-    def test_appears_with_section_rendered(self, client):
+    def test_appears_with_section_rendered(self, client, registry_snapshot):
         """If a person appears with other confirmed people, the section renders."""
         # Find a confirmed identity that appears with others
-        registry = load_registry()
-        confirmed = [i for i in registry.list_identities() if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")]
+        confirmed = [
+            i
+            for i in registry_snapshot.list_identities()
+            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
+        ]
         if not confirmed:
             pytest.skip("No confirmed identities available")
 
@@ -321,10 +329,13 @@ class TestPersonPageAppearsWithSection:
         # No confirmed identity has companions — that's OK, skip
         pytest.skip("No confirmed identities with companions found")
 
-    def test_appears_with_links_to_person_pages(self, client):
+    def test_appears_with_links_to_person_pages(self, client, registry_snapshot):
         """Companion links go to /person/{id}."""
-        registry = load_registry()
-        confirmed = [i for i in registry.list_identities() if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")]
+        confirmed = [
+            i
+            for i in registry_snapshot.list_identities()
+            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
+        ]
         if not confirmed:
             pytest.skip("No confirmed identities available")
 
@@ -345,13 +356,12 @@ class TestPersonPageAppearsWithSection:
 class TestPersonPageAnnotations:
     """Approved annotations display on public person page."""
 
-    def test_approved_annotation_displays(self, client, tmp_path):
+    def test_approved_annotation_displays(self, client, tmp_path, any_identity):
         """Approved annotations show in 'Community Notes' section."""
         import json
         from app.main import _invalidate_annotations_cache
 
-        # Get a real identity to test with
-        identity = get_any_identity()
+        identity = any_identity
         if not identity:
             pytest.skip("No identities available")
         identity_id = identity["identity_id"]
@@ -385,12 +395,12 @@ class TestPersonPageAnnotations:
         assert "Community Notes" in response.text
         assert "A mi querida Estrella" in response.text
 
-    def test_pending_annotations_hidden(self, client, tmp_path):
+    def test_pending_annotations_hidden(self, client, tmp_path, any_identity):
         """Pending annotations do NOT show on public page."""
         import json
         from app.main import _invalidate_annotations_cache
 
-        identity = get_any_identity()
+        identity = any_identity
         if not identity:
             pytest.skip("No identities available")
         identity_id = identity["identity_id"]
@@ -424,12 +434,12 @@ class TestPersonPageAnnotations:
         assert "SECRET PENDING ANNOTATION" not in response.text
         assert "Community Notes" not in response.text
 
-    def test_duplicate_annotations_deduplicated(self, client, tmp_path):
+    def test_duplicate_annotations_deduplicated(self, client, tmp_path, any_identity):
         """Duplicate annotation values are shown only once."""
         import json
         from app.main import _invalidate_annotations_cache
 
-        identity = get_any_identity()
+        identity = any_identity
         if not identity:
             pytest.skip("No identities available")
         identity_id = identity["identity_id"]
@@ -480,12 +490,11 @@ class TestPersonPageAnnotations:
 class TestPersonPageTreeLink:
     """Person page shows link to family tree when relationships exist."""
 
-    def test_person_with_family_shows_tree_link(self, client):
+    def test_person_with_family_shows_tree_link(self, client, registry_snapshot):
         """Person with family relationships shows 'View in Family Tree' link."""
         # Get two real confirmed identities to make the relationship graph work
-        registry = load_registry()
         confirmed = [
-            i for i in registry.list_identities(state=None)
+            i for i in registry_snapshot.list_identities(state=None)
             if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
         ]
         if len(confirmed) < 2:
@@ -588,10 +597,9 @@ class TestPersonMetadataEdit:
 class TestMergedIdentityRedirect:
     """UX-038: Visiting a merged person's URL redirects to the canonical identity."""
 
-    def test_merged_person_redirects_to_canonical(self, client):
+    def test_merged_person_redirects_to_canonical(self, client, registry_snapshot):
         """Visiting /person/{merged_id} returns 301 to canonical person."""
-        registry = load_registry()
-        all_ids = registry.list_identities()
+        all_ids = registry_snapshot.list_identities()
         merged = [i for i in all_ids if i.get("merged_into")]
         if not merged:
             pytest.skip("No merged identities in test data")
@@ -601,10 +609,9 @@ class TestMergedIdentityRedirect:
         assert response.status_code == 301
         assert f"/person/{canonical_id}" in response.headers.get("location", "")
 
-    def test_merged_person_redirect_follow(self, client):
+    def test_merged_person_redirect_follow(self, client, registry_snapshot):
         """Following the redirect from a merged person shows the canonical page."""
-        registry = load_registry()
-        all_ids = registry.list_identities()
+        all_ids = registry_snapshot.list_identities()
         merged = [i for i in all_ids if i.get("merged_into")]
         if not merged:
             pytest.skip("No merged identities in test data")

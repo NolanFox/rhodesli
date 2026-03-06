@@ -36,13 +36,18 @@ if "app.main" not in sys.modules:
         _app_pkg = types.ModuleType("app")
         _app_pkg.__path__ = [str(_PathEarly(__file__).resolve().parent)]
         sys.modules["app"] = _app_pkg
-if not os.environ.get("RAILWAY_ENVIRONMENT") and "pytest" not in sys.modules:
+if (
+    not os.environ.get("RAILWAY_ENVIRONMENT")
+    and "pytest" not in sys.modules
+    and not os.environ.get("RHODESLI_SKIP_DOTENV")
+):
     from dotenv import load_dotenv
 
     load_dotenv()
 import random
 import re
 import sys
+import time
 import uuid
 import zipfile
 from datetime import datetime, timedelta, timezone
@@ -317,12 +322,16 @@ app, rt = fast_app(
                     var o = document.getElementById('mobile-nav-overlay');
                     if (o) {
                         o.querySelector('.mobile-nav-panel').style.transform = 'translateX(100%)';
-                        setTimeout(function() { o.classList.add('hidden'); }, 200);
+                        setTimeout(function() {
+                            o.classList.add('hidden');
+                            o.style.display = 'none';
+                        }, 200);
                     }
                 }
                 function openMobileNav() {
                     var o = document.getElementById('mobile-nav-overlay');
                     if (o) {
+                        o.style.display = 'block';
                         o.classList.remove('hidden');
                         requestAnimationFrame(function() {
                             o.querySelector('.mobile-nav-panel').style.transform = 'translateX(0)';
@@ -334,6 +343,7 @@ app, rt = fast_app(
                 var overlay = document.createElement('div');
                 overlay.id = 'mobile-nav-overlay';
                 overlay.className = 'hidden fixed inset-0 z-[60]';
+                overlay.style.display = 'none';
                 overlay.innerHTML =
                     '<div onclick="closeMobileNav()" class="absolute inset-0 bg-black/50 transition-opacity"></div>' +
                     '<div class="mobile-nav-panel absolute top-0 right-0 w-72 h-full bg-slate-800 shadow-xl overflow-y-auto transition-transform duration-200" style="transform:translateX(100%)">' +
@@ -417,6 +427,15 @@ async def startup_event():
         sync_from_supabase_on_startup(data_path)
     except Exception as e:
         logging.warning(f"Supabase startup sync failed (using existing JSON): {e}")
+
+    try:
+        startup_t0 = time.perf_counter()
+        _build_caches()
+        _load_date_labels()
+        get_crop_files()
+        logging.info(f"UI caches prewarmed in {time.perf_counter() - startup_t0:.2f}s")
+    except Exception as e:
+        logging.warning(f"UI cache prewarm failed (lazy loading on first request): {e}")
 
     get_event_recorder().record(
         "RUN_START", {"action": "server_start", "timestamp_utc": datetime.utcnow().isoformat()}, actor="system"
@@ -678,6 +697,9 @@ def load_registry():
 def save_registry(registry):
     """Save registry with atomic write + sync to Supabase (AD-135)."""
     registry.save(REGISTRY_PATH)
+    registry_dict = getattr(registry, "__dict__", None)
+    if registry_dict is not None:
+        registry_dict.pop("_face_identity_lookup_cache", None)
     # Sync user-modified identities to Supabase (non-blocking on failure)
     try:
         from app.supabase_data import sync_identity_overrides
@@ -692,6 +714,36 @@ def save_registry(registry):
 # =============================================================================
 
 # _pl imported from app.utils
+
+
+def _format_display_date(date_str: str) -> str | None:
+    """Format an ISO date for UI display."""
+    if not date_str:
+        return None
+    try:
+        dt = datetime.fromisoformat(str(date_str).replace("Z", "+00:00"))
+        return dt.strftime("%b %-d, %Y")
+    except (TypeError, ValueError):
+        return None
+
+
+def _build_upload_provenance_line(photo: dict):
+    """Build the archive-entry/source line shown on photo pages."""
+    upload_date_label = _format_display_date(photo.get("upload_date", ""))
+
+    if photo.get("uploaded_by"):
+        text = f"Uploaded by {photo['uploaded_by']}"
+        if upload_date_label:
+            text += f" on {upload_date_label}"
+        return Span(text, cls="text-xs text-slate-500")
+
+    if upload_date_label:
+        return Span(f"Added to archive: {upload_date_label}", cls="text-xs text-slate-500")
+
+    if photo.get("source"):
+        return Span(f"Source: {photo['source']}", cls="text-xs text-slate-500")
+
+    return None
 
 # =============================================================================
 # USER ACTION LOGGING (LEGACY - REPLACED BY EVENT RECORDER)
@@ -1587,6 +1639,8 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                     ),
                     cls="flex items-center mt-2",
                 ),
+                method="post",
+                action=f"/api/photo/{photo_id}/correct-date",
                 hx_post=f"/api/photo/{photo_id}/correct-date",
                 hx_target=f"#date-section-{photo_id[:8]}",
                 hx_swap="outerHTML",
@@ -2736,13 +2790,20 @@ def get_identity_for_face(registry, face_id: str) -> dict:
     Returns:
         Identity dict or None if not found
     """
-    for identity in registry.list_identities():
-        all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
-        for entry in all_face_ids:
-            fid = entry if isinstance(entry, str) else entry.get("face_id")
-            if fid == face_id:
-                return identity
-    return None
+    registry_dict = getattr(registry, "__dict__", None)
+    face_lookup = registry_dict.get("_face_identity_lookup_cache") if registry_dict is not None else None
+    if face_lookup is None:
+        face_lookup = {}
+        for identity in registry.list_identities():
+            all_face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+            for entry in all_face_ids:
+                fid = entry if isinstance(entry, str) else entry.get("face_id")
+                if fid:
+                    face_lookup[fid] = identity
+        if registry_dict is not None:
+            registry_dict["_face_identity_lookup_cache"] = face_lookup
+
+    return face_lookup.get(face_id)
 
 
 def find_shared_photo_filename(
@@ -2863,42 +2924,75 @@ def _upload_new_files_to_r2(data_dir: Path, job_id: str):
         aws_secret_access_key=r2_secret,
     )
 
-    # Upload raw photos
-    raw_dir = data_dir.parent / "raw_photos"
-    uploads_dir = data_dir.parent / "uploads" / job_id
-    if uploads_dir.exists():
+    uploaded_raw_keys = set()
+
+    # Upload raw photos from the job directory if it still exists.
+    upload_dirs = [
+        data_dir / "uploads" / job_id,
+        data_dir.parent / "uploads" / job_id,
+        data_dir / "staging" / job_id,
+        data_dir.parent / "staging" / job_id,
+    ]
+    for uploads_dir in upload_dirs:
+        if not uploads_dir.exists():
+            continue
         for f in uploads_dir.iterdir():
             if f.is_file() and f.suffix.lower() in (".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".bmp"):
                 r2_key = f"raw_photos/{f.name}"
                 try:
                     s3.upload_file(str(f), r2_bucket, r2_key, ExtraArgs={"ContentType": "image/jpeg"})
                     logging.info(f"Uploaded {r2_key} to R2")
+                    uploaded_raw_keys.add(r2_key)
                 except Exception as e:
                     logging.warning(f"Failed to upload {r2_key}: {e}")
+
+    # Upload raw photos from the canonical photo_index path as a fallback.
+    import json
+
+    photo_index_path = data_dir / "photo_index.json"
+    photo_index = {}
+    if photo_index_path.exists():
+        with open(photo_index_path) as pf:
+            photo_index = json.load(pf)
+
+    for pid, pdata in photo_index.get("photos", {}).items():
+        if job_id not in pid:
+            continue
+        raw_rel_path = pdata.get("path", "")
+        raw_filename = Path(raw_rel_path).name
+        r2_key = f"raw_photos/{raw_filename}"
+        if not raw_filename or r2_key in uploaded_raw_keys:
+            continue
+        raw_candidates = [
+            data_dir.parent / raw_rel_path,
+            data_dir.parent / "raw_photos" / raw_filename,
+            data_dir / raw_rel_path,
+            data_dir / "raw_photos" / raw_filename,
+        ]
+        raw_path = next((candidate for candidate in raw_candidates if candidate.exists()), None)
+        if not raw_path:
+            continue
+        try:
+            s3.upload_file(str(raw_path), r2_bucket, r2_key, ExtraArgs={"ContentType": "image/jpeg"})
+            logging.info(f"Uploaded {r2_key} to R2")
+            uploaded_raw_keys.add(r2_key)
+        except Exception as e:
+            logging.warning(f"Failed to upload {r2_key}: {e}")
 
     # Upload crops (new crops from this job)
     crops_dir = data_dir / "crops" if (data_dir / "crops").exists() else data_dir.parent / "app" / "static" / "crops"
     if crops_dir.exists():
-        # Upload crops that match the job's face IDs
-        import json
-
-        photo_index_path = data_dir / "photo_index.json"
-        if photo_index_path.exists():
-            with open(photo_index_path) as pf:
-                pi = json.load(pf)
-            for pid, pdata in pi.get("photos", {}).items():
-                if job_id in pid:
-                    for face_id in pdata.get("face_ids", []):
-                        crop_path = crops_dir / f"{face_id}.jpg"
-                        if crop_path.exists():
-                            r2_key = f"crops/{face_id}.jpg"
-                            try:
-                                s3.upload_file(
-                                    str(crop_path), r2_bucket, r2_key, ExtraArgs={"ContentType": "image/jpeg"}
-                                )
-                                logging.info(f"Uploaded {r2_key} to R2")
-                            except Exception as e:
-                                logging.warning(f"Failed to upload crop {r2_key}: {e}")
+        for pid, pdata in photo_index.get("photos", {}).items():
+            if job_id in pid:
+                for face_id in pdata.get("face_ids", []):
+                    crop_path = crops_dir / f"{face_id}.jpg"
+                    if crop_path.exists():
+                        r2_key = f"crops/{face_id}.jpg"
+                        try:
+                            s3.upload_file(str(crop_path), r2_bucket, r2_key, ExtraArgs={"ContentType": "image/jpeg"})
+                            logging.info(f"Uploaded {r2_key} to R2")
+                        except Exception as e:
+                            logging.warning(f"Failed to upload crop {r2_key}: {e}")
 
 
 def _build_caches():
@@ -3618,6 +3712,7 @@ def _public_page_nav(
         ),
         id="mobile-nav-overlay",
         cls="hidden fixed inset-0 z-[60]",
+        style="display: none;",
     )
 
     # Hamburger button (visible below md/768px, hidden at md+)
@@ -7579,6 +7674,17 @@ def neighbors_sidebar(
 ) -> Div:
     # container_id allows targeting the browse expansion panel or the focus sidebar
     _target_id = container_id or f"neighbors-{identity_id}"
+    close_btn = None
+    if container_id and container_id.startswith("expand-"):
+        close_btn = Button(
+            NotStr("&times;"),
+            cls="panel-close text-slate-400 hover:text-white text-xl font-bold bg-transparent border-0 p-1 leading-none",
+            **{
+                "_": f"on click set innerHTML of #{container_id} to '' then remove .find-similar-active from closest .identity-card"
+            },
+            type="button",
+            title="Close",
+        )
     toggle_btn = Button(
         "▾ Collapse",
         cls="text-sm text-slate-400 hover:text-slate-300",
@@ -7591,8 +7697,13 @@ def neighbors_sidebar(
     if not neighbors:
         return Div(
             Div(
-                P("No similar identities.", cls="text-slate-400 italic"),
+                H4("Similar Identities", cls="text-lg font-serif font-bold text-white"),
                 toggle_btn,
+                close_btn,
+                cls="flex items-center justify-between mb-3",
+            ),
+            Div(
+                P("No similar identities.", cls="text-slate-400 italic"),
                 cls="flex items-center justify-between",
             ),
             manual_search_section(identity_id),
@@ -7705,19 +7816,6 @@ def neighbors_sidebar(
         if rejected_count > 0
         else None
     )
-
-    # Close button for browse expansion panels
-    close_btn = None
-    if container_id and container_id.startswith("expand-"):
-        close_btn = Button(
-            NotStr("&times;"),
-            cls="panel-close text-slate-400 hover:text-white text-xl font-bold bg-transparent border-0 p-1 leading-none",
-            **{
-                "_": f"on click set innerHTML of #{container_id} to '' then remove .find-similar-active from closest .identity-card"
-            },
-            type="button",
-            title="Close",
-        )
 
     return Div(
         Div(
@@ -9135,7 +9233,7 @@ def landing_page(stats, featured_photos):
     landing_style = Style("""
         /* ============ LANDING PAGE STYLES ============ */
         html, body { height: 100%; margin: 0; }
-        body { background-color: #1a1511; }
+        body { background-color: #1a1511; overflow-x: hidden; }
 
         /* Warm sepia/archival color palette */
         .landing-bg { background: linear-gradient(180deg, #1a1511 0%, #1e1a15 40%, #1a1511 100%); }
@@ -9260,15 +9358,27 @@ def landing_page(stats, featured_photos):
             gap: 2rem;
             animation: scroll-names 30s linear infinite;
             width: max-content;
+            position: absolute;
+            inset: 0 auto 0 0;
+            align-items: center;
         }
         @keyframes scroll-names {
             from { transform: translateX(0); }
             to { transform: translateX(-50%); }
         }
         .names-track {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            min-height: 1.75rem;
             overflow: hidden;
             mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        @media (max-width: 767px) {
+            .names-track {
+                display: none;
+            }
         }
 
         /* Animations */
@@ -20421,21 +20531,7 @@ def public_photo_page(
     meta_line = Span(*meta_elements) if meta_elements else None
 
     # --- Uploader attribution ---
-    uploader_line = None
-    if photo.get("uploaded_by"):
-        uploader_parts = [f"Uploaded by {photo['uploaded_by']}"]
-        upload_date = photo.get("upload_date", "")
-        if upload_date:
-            try:
-                from datetime import datetime as _dt
-
-                dt = _dt.fromisoformat(upload_date.replace("Z", "+00:00"))
-                uploader_parts.append(f"on {dt.strftime('%b %-d, %Y')}")
-            except (ValueError, TypeError):
-                pass
-        uploader_line = Span(" ".join(uploader_parts), cls="text-xs text-slate-500")
-    elif photo.get("source"):
-        uploader_line = Span(f"Source: {photo['source']}", cls="text-xs text-slate-500")
+    uploader_line = _build_upload_provenance_line(photo)
 
     # --- Open Graph meta tag data ---
     total_faces = len(face_info_list)
@@ -30982,6 +31078,70 @@ def post(xref: str, sess=None):
 
 _gedcom_individuals_cache = None
 _gedcom_face_links_cache = None
+_gedcom_individuals_cache_loaded_at = 0.0
+_gedcom_individuals_cache_failed_at = 0.0
+_gedcom_face_links_cache_loaded_at = 0.0
+_gedcom_face_links_cache_failed_at = 0.0
+_GEDCOM_CACHE_TTL_SECONDS = 300
+_GEDCOM_FAILURE_BACKOFF_SECONDS = 30
+
+
+def _is_ttl_cache_fresh(loaded_at: float, ttl_seconds: int) -> bool:
+    return bool(loaded_at) and (time.monotonic() - loaded_at) < ttl_seconds
+
+
+def _failure_backoff_active(failed_at: float, backoff_seconds: int) -> bool:
+    return bool(failed_at) and (time.monotonic() - failed_at) < backoff_seconds
+
+
+def _is_retryable_gedcom_error(exc: Exception) -> bool:
+    msg = str(exc)
+    retryable_markers = (
+        "ConnectionTerminated",
+        "RemoteProtocolError",
+        "Server disconnected",
+        "timeout",
+        "Timeout",
+        "503",
+        "504",
+    )
+    return any(marker in msg for marker in retryable_markers)
+
+
+def _run_gedcom_query(query_fn, label: str):
+    """Retry a transient GEDCOM/Supabase failure once after resetting the client."""
+    last_error = None
+    for attempt in range(1, 3):
+        try:
+            return query_fn()
+        except Exception as exc:
+            last_error = exc
+            if attempt >= 2 or not _is_retryable_gedcom_error(exc):
+                raise
+            logging.warning(f"{label} failed ({exc}); retrying once with a fresh Supabase client")
+            try:
+                from app.supabase_data import reset_client
+
+                reset_client()
+            except Exception:
+                pass
+            time.sleep(0.2 * attempt)
+    raise last_error
+
+
+def _load_gedcom_rows(sb, table_name: str, select_fields: str) -> list[dict]:
+    rows = []
+    page_size = 1000
+    offset = 0
+    while True:
+        resp = sb.table(table_name).select(select_fields).range(offset, offset + page_size - 1).execute()
+        if not resp or not resp.data:
+            break
+        rows.extend(resp.data)
+        if len(resp.data) < page_size:
+            break
+        offset += page_size
+    return rows
 
 
 def _load_gedcom_individuals():
@@ -30991,77 +31151,92 @@ def _load_gedcom_individuals():
     gender, birth_date, birth_place, death_date, death_place.
     Caches in memory — call _invalidate_gedcom_cache() to refresh.
     """
-    global _gedcom_individuals_cache
-    if _gedcom_individuals_cache is not None:
+    global _gedcom_individuals_cache, _gedcom_individuals_cache_loaded_at, _gedcom_individuals_cache_failed_at
+    if _gedcom_individuals_cache is not None and _is_ttl_cache_fresh(
+        _gedcom_individuals_cache_loaded_at, _GEDCOM_CACHE_TTL_SECONDS
+    ):
         return _gedcom_individuals_cache
+    if _failure_backoff_active(_gedcom_individuals_cache_failed_at, _GEDCOM_FAILURE_BACKOFF_SECONDS):
+        return _gedcom_individuals_cache or []
 
     try:
         from app.supabase_data import get_supabase_client
 
-        sb = get_supabase_client()
-        if not sb:
-            _gedcom_individuals_cache = []
-            return _gedcom_individuals_cache
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return []
 
-        all_rows = []
-        page_size = 1000
-        offset = 0
-        while True:
-            # AD-163: Read from current_gedcom_individuals view (only is_current=TRUE rows).
-            # Falls back to raw table if view doesn't exist yet (pre-migration).
-            resp = (
-                sb.table("current_gedcom_individuals")
-                .select("gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place")
-                .range(offset, offset + page_size - 1)
-                .execute()
-            )
-            if not resp or not resp.data:
-                break
-            all_rows.extend(resp.data)
-            if len(resp.data) < page_size:
-                break
-            offset += page_size
+            select_fields = "gedcom_id,name,given_name,surname,gender,birth_date,birth_place,death_date,death_place"
+            try:
+                # AD-163: prefer the current-only view when it exists.
+                return _load_gedcom_rows(sb, "current_gedcom_individuals", select_fields)
+            except Exception as exc:
+                msg = str(exc)
+                if "current_gedcom_individuals" not in msg and "PGRST205" not in msg and "relation" not in msg:
+                    raise
+                logging.info("current_gedcom_individuals unavailable; falling back to gedcom_individuals")
+                return _load_gedcom_rows(sb, "gedcom_individuals", select_fields)
+
+        all_rows = _run_gedcom_query(_query, "GEDCOM individuals load")
 
         _gedcom_individuals_cache = all_rows
+        _gedcom_individuals_cache_loaded_at = time.monotonic()
+        _gedcom_individuals_cache_failed_at = 0.0
         logging.info(f"Loaded {len(all_rows)} GEDCOM individuals into cache")
     except Exception as e:
+        _gedcom_individuals_cache_failed_at = time.monotonic()
         logging.warning(f"Failed to load GEDCOM individuals: {e}")
-        return []  # Don't cache failures — retry on next request
+        return _gedcom_individuals_cache or []
 
     return _gedcom_individuals_cache
 
 
 def _load_gedcom_face_links():
     """Load GEDCOM face links from Supabase. Returns dict: identity_id -> gedcom_id."""
-    global _gedcom_face_links_cache
-    if _gedcom_face_links_cache is not None:
+    global _gedcom_face_links_cache, _gedcom_face_links_cache_loaded_at, _gedcom_face_links_cache_failed_at
+    if _gedcom_face_links_cache is not None and _is_ttl_cache_fresh(
+        _gedcom_face_links_cache_loaded_at, _GEDCOM_CACHE_TTL_SECONDS
+    ):
         return _gedcom_face_links_cache
+    if _failure_backoff_active(_gedcom_face_links_cache_failed_at, _GEDCOM_FAILURE_BACKOFF_SECONDS):
+        return _gedcom_face_links_cache or {}
 
     try:
         from app.supabase_data import get_supabase_client
 
-        sb = get_supabase_client()
-        if not sb:
-            _gedcom_face_links_cache = {}
-            return _gedcom_face_links_cache
+        def _query():
+            sb = get_supabase_client()
+            if not sb:
+                return {}
+            resp = sb.table("gedcom_face_links").select("identity_id,gedcom_id,confidence,linked_by").execute()
+            links = {}
+            if resp and resp.data:
+                for row in resp.data:
+                    links[row["identity_id"]] = row
+            return links
 
-        resp = sb.table("gedcom_face_links").select("identity_id,gedcom_id,confidence,linked_by").execute()
-        links = {}
-        if resp and resp.data:
-            for row in resp.data:
-                links[row["identity_id"]] = row
+        links = _run_gedcom_query(_query, "GEDCOM face links load")
         _gedcom_face_links_cache = links
+        _gedcom_face_links_cache_loaded_at = time.monotonic()
+        _gedcom_face_links_cache_failed_at = 0.0
     except Exception as e:
+        _gedcom_face_links_cache_failed_at = time.monotonic()
         logging.warning(f"Failed to load GEDCOM face links: {e}")
-        return {}  # Don't cache failures — retry on next request
+        return _gedcom_face_links_cache or {}
 
     return _gedcom_face_links_cache
 
 
 def _invalidate_gedcom_cache():
     """Invalidate GEDCOM caches after link/unlink operations."""
-    global _gedcom_face_links_cache
+    global _gedcom_individuals_cache_loaded_at, _gedcom_individuals_cache_failed_at
+    global _gedcom_face_links_cache, _gedcom_face_links_cache_loaded_at, _gedcom_face_links_cache_failed_at
+    _gedcom_individuals_cache_loaded_at = 0.0
+    _gedcom_individuals_cache_failed_at = 0.0
     _gedcom_face_links_cache = None
+    _gedcom_face_links_cache_loaded_at = 0.0
+    _gedcom_face_links_cache_failed_at = 0.0
 
 
 def _load_gedcom_versions():
@@ -32412,8 +32587,11 @@ def _get_best_match_pair(triage_filter: str = ""):
         for proposal in proposals_data.get("proposals", []):
             source_id = proposal["source_identity_id"]
             target_id = proposal["target_identity_id"]
-            source = registry.get_identity(source_id)
-            target = registry.get_identity(target_id)
+            try:
+                source = registry.get_identity(source_id)
+                target = registry.get_identity(target_id)
+            except KeyError:
+                continue
             if not source or not target:
                 continue
             # Skip if already merged or resolved

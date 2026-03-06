@@ -120,7 +120,7 @@ class TestQuickIdentifyForm:
 class TestQuickIdentifyOnPhotoPage:
     """Test that quick-identify buttons appear on photo pages."""
 
-    def test_no_quick_id_button_for_anonymous(self, client, auth_disabled):
+    def test_no_quick_id_button_for_anonymous(self, client, public_user):
         """Anonymous users don't see quick-identify buttons."""
         response = client.get("/photo/a3d2695fe0804844")
         if response.status_code == 200:

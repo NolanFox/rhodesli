@@ -4,6 +4,9 @@ Session 82e — UX Feature Sprint tests.
 Tests for: Mobile hamburger, masonry grid, help page, OG tags, identify mode.
 """
 
+import subprocess
+import sys
+
 import pytest
 from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
@@ -32,6 +35,26 @@ def client():
 @pytest.fixture
 def real_photo_id():
     return get_real_photo_id()
+
+
+def _render_path(path: str) -> str:
+    """Render a route in an isolated subprocess to avoid cache bleed."""
+    code = """
+import os
+os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
+from app.main import app
+from starlette.testclient import TestClient
+import sys
+client = TestClient(app)
+print(client.get(sys.argv[1]).text)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, path],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout
 
 
 class TestMobileHamburger:
@@ -109,15 +132,13 @@ class TestHelpNeededPage:
 
     def test_help_page_has_face_cards(self, client):
         """/help page should show face cards."""
-        response = client.get("/help")
-        assert response.status_code == 200
-        assert "help-face-card" in response.text
+        html = _render_path("/help")
+        assert "help-face-card" in html
 
     def test_help_page_has_cta(self, client):
         """/help page should ask users to identify people."""
-        response = client.get("/help")
-        assert response.status_code == 200
-        assert "recognize" in response.text.lower() or "identify" in response.text.lower()
+        html = _render_path("/help")
+        assert "recognize" in html.lower() or "identify" in html.lower()
 
     def test_help_in_navigation(self):
         """Navigation should include Help Identify link to /help."""
@@ -128,9 +149,8 @@ class TestHelpNeededPage:
 
     def test_help_page_links_to_identify(self, client):
         """/help face cards should link to /identify/{id}."""
-        response = client.get("/help")
-        assert response.status_code == 200
-        assert "/identify/" in response.text
+        html = _render_path("/help")
+        assert "/identify/" in html
 
 
 class TestShareForHelp:

@@ -10,6 +10,8 @@ Tests cover:
 """
 
 import hashlib
+import subprocess
+import sys
 
 import pytest
 from unittest.mock import patch, MagicMock
@@ -34,6 +36,26 @@ def client():
 @pytest.fixture
 def real_photo_id():
     return get_real_photo_id()
+
+
+def _render_photo_page_html(photo_id: str) -> str:
+    """Render a photo page in an isolated subprocess to avoid cache bleed."""
+    code = """
+import os
+os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
+from app.main import app
+from starlette.testclient import TestClient
+import sys
+client = TestClient(app)
+print(client.get(f"/photo/{sys.argv[1]}").text)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, photo_id],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout
 
 
 class TestPublicPhotoViewerAccess:
@@ -240,8 +262,7 @@ class TestFaceClickBehavior:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         import re
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         # Overlays should be <a> tags with person or identify hrefs
         overlay_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="[^"]*face-overlay-box', html)
         # Face overlays require photo dimensions (read from filesystem or cached in photo_index).
@@ -256,8 +277,7 @@ class TestFaceClickBehavior:
         """No scroll-to-element behavior between overlays and cards."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         # Should NOT have hyperscript scroll-to references
         assert "go to #person-" not in html, "Overlay should not scroll to person card"
         assert "go to #overlay-" not in html, "Card should not scroll to overlay"
@@ -267,8 +287,7 @@ class TestFaceClickBehavior:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         import re
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         card_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="no-underline', html)
         assert len(card_links) > 0, "Person cards should link to /person/ or /identify/"
 
@@ -282,8 +301,7 @@ class TestFaceOverlayAlignment:
         not the outer padded container (padding-top: 1.5rem caused misalignment)."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         import re
         # The front-side div wrapping the image and face overlays must be relative
         # It should NOT depend on photo-hero-container (which has padding)
@@ -296,8 +314,7 @@ class TestFaceOverlayAlignment:
         """The immediate overlay container must not have padding that would offset overlays."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         # photo-hero-container has padding — overlays must NOT be direct children of it
         # They should be inside an inner relative div
         import re

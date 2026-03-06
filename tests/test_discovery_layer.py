@@ -625,6 +625,22 @@ class TestBuildAiAnalysisSection:
         main_module._date_labels_cache = None
         main_module._search_index_cache = None
 
+    def test_correction_form_has_standard_post_fallback(self, sample_date_labels, sample_search_index):
+        """Date correction form should still submit when HTMX is unavailable."""
+        import app.main as main_module
+        from fasthtml.common import to_xml
+
+        main_module._date_labels_cache = sample_date_labels
+        main_module._search_index_cache = sample_search_index
+        section = main_module._build_ai_analysis_section("abc123")
+        html = to_xml(section)
+
+        assert 'method="post"' in html
+        assert 'action="/api/photo/abc123/correct-date"' in html
+
+        main_module._date_labels_cache = None
+        main_module._search_index_cache = None
+
 
 # ---------------------------------------------------------------------------
 # _compute_correction_priority tests

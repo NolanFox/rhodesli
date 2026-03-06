@@ -204,6 +204,44 @@ class TestCreateMergeSuggestion:
 class TestMatchModeRoleAware:
     """Match mode buttons should be role-aware."""
 
+    def test_get_best_match_pair_skips_stale_proposal_ids(self):
+        """Stale proposal IDs should be skipped instead of crashing match mode."""
+        from app.main import _get_best_match_pair
+
+        registry = MagicMock()
+
+        def _get_identity(identity_id):
+            if identity_id == "missing-id":
+                raise KeyError(identity_id)
+            return {
+                "identity_id": identity_id,
+                "name": "Present Person",
+                "state": "INBOX",
+                "anchor_ids": [],
+                "candidate_ids": [],
+            }
+
+        registry.get_identity.side_effect = _get_identity
+        registry.list_identities.return_value = []
+
+        with patch("app.main.load_registry", return_value=registry), \
+             patch("app.main.get_face_data", return_value={}), \
+             patch("app.main.load_photo_registry", return_value=MagicMock()), \
+             patch("app.main._get_identities_with_proposals", return_value=set()), \
+             patch(
+                 "app.main._load_proposals",
+                 return_value={
+                     "proposals": [
+                         {
+                             "source_identity_id": "missing-id",
+                             "target_identity_id": "present-id",
+                             "distance": 0.12,
+                         }
+                     ]
+                 },
+             ):
+            assert _get_best_match_pair() is None
+
     def test_match_mode_shows_same_person_for_admin(self, client):
         """Admin sees 'Same Person' button in match mode."""
         with patch("app.main.is_auth_enabled", return_value=False):

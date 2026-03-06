@@ -50,8 +50,18 @@ def get_supabase_client():
         return None
 
     try:
-        from supabase import create_client
-        _supabase_client = create_client(url, key)
+        from supabase import ClientOptions, create_client
+
+        try:
+            timeout_s = float(os.environ.get("SUPABASE_POSTGREST_TIMEOUT_SECONDS", "10"))
+        except ValueError:
+            timeout_s = 10.0
+
+        _supabase_client = create_client(
+            url,
+            key,
+            options=ClientOptions(postgrest_client_timeout=max(timeout_s, 1.0)),
+        )
         _supabase_available = True
         logger.info("Supabase client initialized")
         return _supabase_client

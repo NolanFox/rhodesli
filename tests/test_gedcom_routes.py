@@ -551,3 +551,66 @@ class TestGedcomTreeButtonOnIdentityCard:
         with patch("app.main._load_gedcom_face_links", return_value={}):
             html = to_xml(identity_card(identity, crop_files, is_admin=False))
         assert "Link to Tree" not in html
+
+
+class TestGedcomLoaderResilience:
+    """Regression tests for GEDCOM retry/backoff behavior."""
+
+    def setup_method(self):
+        import app.main as main
+
+        main._gedcom_individuals_cache = None
+        main._gedcom_face_links_cache = None
+        main._gedcom_individuals_cache_loaded_at = 0.0
+        main._gedcom_individuals_cache_failed_at = 0.0
+        main._gedcom_face_links_cache_loaded_at = 0.0
+        main._gedcom_face_links_cache_failed_at = 0.0
+
+    def teardown_method(self):
+        import app.main as main
+
+        main._gedcom_individuals_cache = None
+        main._gedcom_face_links_cache = None
+        main._gedcom_individuals_cache_loaded_at = 0.0
+        main._gedcom_individuals_cache_failed_at = 0.0
+        main._gedcom_face_links_cache_loaded_at = 0.0
+        main._gedcom_face_links_cache_failed_at = 0.0
+
+    def test_face_links_retry_once_on_transient_error(self):
+        import app.main as main
+
+        mock_sb = MagicMock()
+        execute = mock_sb.table.return_value.select.return_value.execute
+        execute.side_effect = [
+            ConnectionError("ConnectionTerminated"),
+            MagicMock(
+                data=[{"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}]
+            ),
+        ]
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
+             patch("app.supabase_data.reset_client") as mock_reset, \
+             patch("app.main.time.sleep") as mock_sleep:
+            result = main._load_gedcom_face_links()
+
+        assert result == {"id-1": {"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}}
+        assert execute.call_count == 2
+        mock_reset.assert_called_once()
+        mock_sleep.assert_called_once()
+
+    def test_face_links_backoff_skips_immediate_requery_after_failure(self):
+        import app.main as main
+
+        mock_sb = MagicMock()
+        execute = mock_sb.table.return_value.select.return_value.execute
+        execute.side_effect = ConnectionError("timeout")
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
+             patch("app.supabase_data.reset_client"), \
+             patch("app.main.time.sleep"):
+            first = main._load_gedcom_face_links()
+            second = main._load_gedcom_face_links()
+
+        assert first == {}
+        assert second == {}
+        assert execute.call_count == 2  # initial attempt + single retry only

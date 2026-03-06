@@ -48,6 +48,7 @@ def app_server():
         "DEBUG": "false",  # no reload in tests
         # Auth disabled — no Supabase env vars set, so is_auth_enabled() returns False
         "STORAGE_MODE": "local",
+        "RHODESLI_SKIP_DOTENV": "1",
     }
     # Remove any existing auth env vars so auth is truly disabled
     env.pop("SUPABASE_URL", None)
@@ -106,6 +107,17 @@ def _block_heavy_resources(page):
         "**/*.{jpg,jpeg,png,gif,webp,svg,woff,woff2,ttf,eot}",
         lambda route: route.abort(),
     )
-    # Block external CDN scripts (Tailwind JIT, etc.) that keep connections alive
+    # Keep only the scripts needed for HTMX + hyperscript interactivity.
+    def _route_external(route):
+        url = route.request.url
+        if "cdn.jsdelivr.net/npm/htmx.org" in url or "unpkg.com/hyperscript.org" in url:
+            route.continue_()
+            return
+        route.abort()
+
     page.route("https://cdn.tailwindcss.com/**", lambda route: route.abort())
+    page.route("https://fonts.googleapis.com/**", lambda route: route.abort())
+    page.route("https://fonts.gstatic.com/**", lambda route: route.abort())
+    page.route("https://cdn.jsdelivr.net/**", _route_external)
+    page.route("https://unpkg.com/**", _route_external)
     yield

@@ -75,6 +75,38 @@ class TestUploadProvenanceDisplay:
         assert resp.status_code == 200
         assert "Source: Betty Capeluto Album" in resp.text
 
+    def test_photo_page_shows_added_to_archive_when_upload_date_backfilled(self, client):
+        """Backfilled upload dates should render even when no uploader email exists."""
+        mock_photo_cache = {
+            "test_backfilled": {
+                "filename": "test.jpg",
+                "source": "Betty Capeluto Album",
+                "collection": "Betty Collection",
+                "faces": [],
+                "upload_date": "2026-02-10T00:00:00+00:00",
+            }
+        }
+        mock_registry = MagicMock()
+        mock_registry.list_identities.return_value = []
+
+        with (
+            patch("app.main._build_caches"),
+            patch("app.main._photo_cache", mock_photo_cache),
+            patch("app.main._photo_id_aliases", {}),
+            patch("app.main._face_to_photo_cache", {}),
+            patch("app.main._load_date_labels", return_value={}),
+            patch("app.main._load_search_index", return_value=[]),
+            patch("app.main._load_photo_locations", return_value={}),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._check_login", return_value=None),
+            patch("app.main.get_identity_for_face", return_value=None),
+        ):
+            resp = client.get("/photo/test_backfilled")
+
+        assert resp.status_code == 200
+        assert "Added to archive: Feb 10, 2026" in resp.text
+
 
 class TestRecentlyReviewedCards:
     """Verify Recently Reviewed shows timestamps and photo links."""

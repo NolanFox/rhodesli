@@ -7,6 +7,9 @@ Tests cover:
 - Photo container padding for overlay clipping
 """
 
+import subprocess
+import sys
+
 import pytest
 from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
@@ -31,6 +34,24 @@ def real_photo_id():
     return get_real_photo_id()
 
 
+def _render_photo_page_html(photo_id: str) -> str:
+    """Render a photo page in an isolated subprocess to avoid cache bleed."""
+    code = """
+from app.main import app
+from starlette.testclient import TestClient
+import sys
+client = TestClient(app)
+print(client.get(f"/photo/{sys.argv[1]}").text)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, photo_id],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout
+
+
 class TestFaceOverlayNamePosition:
     """Face overlay names don't clip at top edge."""
 
@@ -38,8 +59,7 @@ class TestFaceOverlayNamePosition:
         """Face overlays use face-overlay-box class for CSS targeting."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         if "face-overlay-box" in html:
             # Good — overlays have the class
             assert True
@@ -51,8 +71,7 @@ class TestFaceOverlayNamePosition:
         """Face overlays have id='overlay-{identity_id}' for scroll targeting."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         # If overlays exist, they should have overlay- IDs
         if "face-overlay-box" in html:
             assert 'id="overlay-' in html
@@ -107,8 +126,7 @@ class TestPersonCardInteraction:
         """Person cards in public viewer have cursor-pointer for clickability."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         if 'id="person-' in html:
             assert "cursor-pointer" in html
 
@@ -116,8 +134,7 @@ class TestPersonCardInteraction:
         """Person cards have hyperscript for scrolling to overlay."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         if 'id="person-' in html:
             # Check for the scroll-and-highlight script
             assert "overlay-" in html
@@ -130,6 +147,5 @@ class TestPhotoContainerPadding:
         """Photo hero container has top padding for overlay labels."""
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        response = client.get(f"/photo/{real_photo_id}")
-        html = response.text
+        html = _render_photo_page_html(real_photo_id)
         assert "padding-top" in html

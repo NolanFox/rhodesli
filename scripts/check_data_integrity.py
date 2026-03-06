@@ -14,6 +14,11 @@ import sys
 from pathlib import Path
 
 project_root = Path(__file__).resolve().parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+from core.registry import IdentityState
+
 data_dir = project_root / "data"
 
 errors = []
@@ -50,7 +55,7 @@ def check_identity_integrity():
     ids = json.loads(id_path.read_text())
     identities = ids.get("identities", ids)
 
-    valid_states = {"CONFIRMED", "PROPOSED", "INBOX", "SKIPPED", "CONTESTED"}
+    valid_states = {state.value for state in IdentityState}
     test_names = ["test person", "test identity", "fixture"]
 
     for iid, identity in identities.items():

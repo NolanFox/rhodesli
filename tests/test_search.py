@@ -7,9 +7,32 @@ Tests cover:
 4. Server-side /api/search endpoint still works (backward compatibility)
 """
 
+import subprocess
+import sys
+
 import pytest
 from unittest.mock import patch, MagicMock
 from starlette.testclient import TestClient
+
+
+def _render_search_html(query: str) -> str:
+    """Render /api/search in an isolated subprocess to avoid cache bleed."""
+    code = """
+import os
+os.environ.setdefault('RHODESLI_SKIP_DOTENV', '1')
+from app.main import app
+from starlette.testclient import TestClient
+import sys
+client = TestClient(app)
+print(client.get(f"/api/search?q={sys.argv[1]}").text)
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, query],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout
 
 
 class TestIdentityCardDataAttributes:
@@ -317,24 +340,24 @@ class TestSearchResultNavigation:
         Regression: previously linked to /?section=...#identity- which dumped into
         Focus mode at position 0 instead of the searched person.
         """
-        response = client.get("/api/search?q=capeluto")
-        if "No matches" in response.text:
+        html = _render_search_html("capeluto")
+        if "No matches" in html:
             pytest.skip("No confirmed 'capeluto' identities in test data")
         import re
-        links = re.findall(r'href="([^"]+)"', response.text)
+        links = re.findall(r'href="([^"]+)"', html)
         nav_links = [l for l in links if l.startswith("/person/") or l.startswith("/identify/")]
         assert len(nav_links) > 0, "Search results must link to /person/ or /identify/"
         # Should NOT link to Focus mode
-        assert "section=" not in response.text, "Search results should not link to /?section= (Focus mode)"
+        assert "section=" not in html, "Search results should not link to /?section= (Focus mode)"
 
     def test_search_result_identity_id_in_url(self, client):
         """Search result URLs contain the identity UUID."""
         import re
-        response = client.get("/api/search?q=capeluto")
-        if "No matches" in response.text:
+        html = _render_search_html("capeluto")
+        if "No matches" in html:
             pytest.skip("No 'capeluto' identities in test data")
         # Extract identity IDs from URLs
-        url_ids = re.findall(r'href="/(?:person|identify)/([a-f0-9-]+)"', response.text)
+        url_ids = re.findall(r'href="/(?:person|identify)/([a-f0-9-]+)"', html)
         assert len(url_ids) > 0, "Should find at least one identity UUID in search result URLs"
 
     def test_page_includes_hash_highlight_script(self, client):
