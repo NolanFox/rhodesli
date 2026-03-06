@@ -5,7 +5,6 @@ All /photo/* and /api/photo/* routes plus photo-exclusive helpers.
 Shared helpers (caches, registries, UI builders) remain in app.main.
 """
 
-import json
 import logging
 import os
 import uuid
@@ -36,53 +35,18 @@ logger = logging.getLogger(__name__)
 
 
 def _load_corrections_log() -> dict:
-    """Load corrections log. Creates file if it doesn't exist."""
-    corrections_path = _main_mod.data_path / "corrections_log.json"
-    if not corrections_path.exists():
-        return {"schema_version": 1, "corrections": []}
-    try:
-        with open(corrections_path) as f:
-            return json.load(f)
-    except Exception:
-        return {"schema_version": 1, "corrections": []}
+    """Delegate to main module so test patches on app.main work."""
+    return _main_mod._load_corrections_log()
 
 
 def _save_corrections_log(data: dict):
-    """Save corrections log atomically."""
-    corrections_path = _main_mod.data_path / "corrections_log.json"
-    import tempfile
-
-    tmp_fd, tmp_path = tempfile.mkstemp(dir=str(_main_mod.data_path), suffix=".json")
-    try:
-        with os.fdopen(tmp_fd, "w") as f:
-            json.dump(data, f, indent=2)
-        os.replace(tmp_path, str(corrections_path))
-    except Exception:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-        raise
+    """Delegate to main module so test patches on app.main work."""
+    return _main_mod._save_corrections_log(data)
 
 
 def _load_photo_bytes(photo_id: str, filename: str) -> bytes | None:
-    """Load photo image bytes from local filesystem or R2."""
-    # Try local filesystem first
-    local_path = Path("raw_photos") / filename
-    if local_path.exists():
-        return local_path.read_bytes()
-
-    # Try R2
-    r2_url = os.getenv("R2_PUBLIC_URL", "")
-    if r2_url:
-        try:
-            import urllib.request
-
-            url = f"{r2_url}/raw_photos/{urllib.parse.quote(filename)}"
-            with urllib.request.urlopen(url, timeout=15) as resp:
-                return resp.read()
-        except Exception as e:
-            logging.warning(f"Failed to load photo from R2: {e}")
-
-    return None
+    """Delegate to main module so test patches on app.main work."""
+    return _main_mod._load_photo_bytes(photo_id, filename)
 
 
 # =============================================================================
