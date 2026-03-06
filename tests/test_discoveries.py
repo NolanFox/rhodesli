@@ -539,8 +539,10 @@ class TestApiDiscoveriesRoute:
         assert 'data-testid="discovery-confidence-pct"' in html
         # Percentage symbol present
         assert "%" in html
-        # Admin tooltip should show raw distance
-        assert "Distance: 0.91" in html
+        # Tooltip should NOT show raw distance (Session 90b fix)
+        assert "Distance:" not in html
+        # Tooltip shows human-readable confidence label instead
+        assert "confidence" in html.lower()
 
     def test_api_discoveries_source_face_is_clickable(self, client):
         """Source face image and name are wrapped in navigation links."""
@@ -989,11 +991,14 @@ class TestDiscoveriesCardEnhancements:
         assert "w-28" in html
         assert "h-28" in html
 
-    def test_discovery_card_shows_distance(self, client):
-        """Session 88: Discovery cards show distance via match_info_bar."""
+    def test_discovery_card_hides_raw_distance(self, client):
+        """Session 90b: Discovery cards do NOT show raw distance (non-admin UX rule)."""
         html = self._get_discovery_html(client, distance=0.92)
         assert 'data-testid="match-info-bar"' in html
-        assert "0.92" in html
+        # Raw distance "Dist: 0.92" must NOT appear — only calibrated labels
+        assert "Dist:" not in html
+        # But the match-info-bar itself should still render
+        assert "match-info-bar" in html
 
     def test_discovery_card_correct_compare_url(self, default_discovery_html):
         """Session 88: Compare link uses face_id + person_id params."""
@@ -1034,3 +1039,58 @@ class TestDiscoveriesCardEnhancements:
         assert response.status_code == 200
         html = response.text
         assert "3 photos" in html
+
+    def test_discovery_card_tooltip_no_raw_distance(self, default_discovery_html):
+        """Session 90b: Confidence badge tooltip shows label, not raw distance."""
+        html = default_discovery_html
+        # Should NOT contain "Distance: X.XX" in tooltips
+        assert "Distance:" not in html
+        # Should contain human-readable confidence tooltip
+        assert "confidence" in html.lower()
+
+
+class TestDiscoveriesPhotoDropdownLazyLoad:
+    """Session 90b: Photo dropdown loads options via dedicated loader div."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+
+        return TestClient(app)
+
+    def test_discoveries_page_has_photo_loader_div(self, client):
+        """The /discoveries page has a dedicated div to lazy-load photo options."""
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")),
+            patch("app.main._count_discoveries", return_value=5),
+            patch("app.main._compute_discoveries", return_value=[]),
+        ):
+            response = client.get("/discoveries")
+
+        assert response.status_code == 200
+        html = response.text
+        # Dedicated loader div exists
+        assert "discovery-photo-loader" in html
+        # It targets the select element
+        assert "/api/discoveries/photo-options" in html
+
+    def test_photo_options_not_loaded_via_hx_select(self, client):
+        """Session 90b: Photo options must NOT use hx-select (caused empty dropdown)."""
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main.get_current_user", return_value=MagicMock(is_admin=True, email="admin@test.com")),
+            patch("app.main._count_discoveries", return_value=5),
+            patch("app.main._compute_discoveries", return_value=[]),
+        ):
+            response = client.get("/discoveries")
+
+        html = response.text
+        # hx-select with discovery-photo-filter should NOT appear
+        assert (
+            "hx-select" not in html or "discovery-photo-filter" not in html.split("hx-select")[1].split('"')[1]
+            if "hx-select" in html
+            else True
+        )
+        # Simpler assertion: the old broken pattern should not exist
+        assert 'hx-select="#discovery-photo-filter' not in html
