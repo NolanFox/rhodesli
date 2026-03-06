@@ -2291,3 +2291,14 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Breadcrumbs**: AD-152 (API logging), AD-192 (location prompting), AD-201 (unified prompt).
 - **Affects**: `app/estimate_routes.py` (reanalyze endpoint + helpers), `app/main.py` (button in `_build_ai_analysis_section`), `scripts/reprocess_with_gedcom.py` (batch script).
 - **Tests**: 14 tests in `tests/test_reanalyze.py`.
+
+### AD-203: Commit Counter Stale Detection Threshold — 120s → 3600s + Git-Clean Heuristic
+- **Date**: 2026-03-05
+- **Session**: 90 (harness fix)
+- **Context**: The `commits_since_clear.txt` counter (Lesson 103, HD-024) uses file mtime to detect stale state from a prior conversation. The original 120s threshold was too aggressive — starting a new conversation within 2 minutes of a previous one ending would inherit the old counter and immediately hard-block. This happened in practice when the user started a new prompt shortly after a prior session ended cleanly.
+- **Decision**: Two changes to both `UserPromptSubmit` and `PreToolUse` hooks in `.claude/settings.json`:
+  1. **Stale threshold 120s → 3600s**: A counter file older than 1 hour is definitively from a prior session. 1 hour is generous — conversations rarely span that gap without activity.
+  2. **Git-clean secondary check**: If counter ≥ 3 (UserPromptSubmit) or ≥ 4 (PreToolUse) BUT `git status --porcelain` is empty (no uncommitted changes), auto-reset the counter with a warning instead of hard-blocking. Rationale: if the commits all landed cleanly and there's no dirty state, the counter is residual from a completed session, not evidence of context degradation in the current one.
+- **Rejected**: (1) Removing the counter entirely — the /clear enforcement has genuine value within a single session. (2) Using conversation ID — not available in hook environment. (3) Shorter threshold like 300s — still risks false positives during quick session transitions.
+- **Affects**: `.claude/settings.json` (UserPromptSubmit hook, PreToolUse Bash hook).
+- **Tests**: Manual verification — start new conversation with stale counter file.
