@@ -596,11 +596,11 @@ async def post(photo_id: str, file: UploadFile = None, back_transcription: str =
         return _main_mod.toast("File too large. Maximum is 50 MB.", "error")
 
     # Generate back image filename: {original_stem}_back{ext}
-    photo_registry = _main_mod.load_photo_registry()
-    photo = photo_registry.get_photo(photo_id)
+    photo = _main_mod.get_photo_metadata(photo_id)
     if not photo:
         return _main_mod.toast("Photo not found.", "error")
 
+    photo_registry = _main_mod.load_photo_registry()
     original_path = photo.get("path", photo.get("filename", ""))
     original_stem = Path(original_path).stem
     back_filename = f"{original_stem}_back{ext}"
@@ -689,11 +689,11 @@ def post(photo_id: str, transform: str = "", field: str = "transform", sess=None
     if field not in {"transform", "back_transform"}:
         return _main_mod.toast("Invalid field.", "error")
 
-    photo_registry = _main_mod.load_photo_registry()
-    photo = photo_registry.get_photo(photo_id)
+    photo = _main_mod.get_photo_metadata(photo_id)
     if not photo:
         return _main_mod.toast("Photo not found.", "error")
 
+    photo_registry = _main_mod.load_photo_registry()
     if transform == "reset":
         new_transform = ""
     else:
