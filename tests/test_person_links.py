@@ -46,7 +46,13 @@ def photo_with_person():
 
 
 def _render_photo_page_html(photo_id: str) -> str:
-    """Render a photo page via TestClient (no caching for xdist safety)."""
+    """Render a photo page via TestClient (rebuild caches for isolation)."""
+    import app.main as main
+
+    # Reset caches to ensure identity data is fresh (xdist/ordering safety)
+    main._photo_cache = None
+    main._face_to_photo_cache = None
+    main._identity_lookup = None
     c = TestClient(app)
     return c.get(f"/photo/{photo_id}").text
 
