@@ -22,6 +22,7 @@ import os
 try:
     import httpx
     from postgrest.exceptions import APIError as PostgRESTError
+
     _SUPABASE_ERRORS = (httpx.HTTPError, PostgRESTError, ConnectionError, TimeoutError, OSError)
 except ImportError:
     _SUPABASE_ERRORS = (ConnectionError, TimeoutError, OSError)
@@ -42,8 +43,8 @@ def get_supabase_client():
     if _supabase_client is not None:
         return _supabase_client
 
-    url = os.environ.get('SUPABASE_URL')
-    key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY')
+    url = os.environ.get("SUPABASE_URL")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
     if not url or not key:
         _supabase_available = False
         logger.info("Supabase not configured (no SERVICE_ROLE_KEY) — JSON-only mode")
@@ -84,17 +85,26 @@ def _is_user_modified_identity(data):
     User-modified means state was changed from ML-default, or has
     user-entered metadata, or has been merged, or has face rejections.
     """
-    state = data.get('state', 'INBOX')
-    if state in ('CONFIRMED', 'CONTESTED', 'SKIPPED'):
+    state = data.get("state", "INBOX")
+    if state in ("CONFIRMED", "CONTESTED", "SKIPPED"):
         return True
-    if data.get('merged_into') is not None:
+    if data.get("merged_into") is not None:
         return True
-    if len(data.get('negative_ids', [])) > 0:
+    if len(data.get("negative_ids", [])) > 0:
         return True
-    metadata = data.get('metadata', {})
-    user_fields = ['birth_year', 'death_year', 'birth_place', 'death_place',
-                   'maiden_name', 'generation_qualifier', 'relationship_notes',
-                   'bio', 'gedcom_xref', 'ancestry_url']
+    metadata = data.get("metadata", {})
+    user_fields = [
+        "birth_year",
+        "death_year",
+        "birth_place",
+        "death_place",
+        "maiden_name",
+        "generation_qualifier",
+        "relationship_notes",
+        "bio",
+        "gedcom_xref",
+        "ancestry_url",
+    ]
     if any(metadata.get(f) for f in user_fields):
         return True
     return False
@@ -103,6 +113,7 @@ def _is_user_modified_identity(data):
 # =========================================================================
 # IDENTITY SYNC
 # =========================================================================
+
 
 def sync_identity_overrides(identities_dict):
     """Upsert all user-modified identities to Supabase.
@@ -120,15 +131,17 @@ def sync_identity_overrides(identities_dict):
     rows = []
     for identity_id, data in identities_dict.items():
         if _is_user_modified_identity(data):
-            rows.append({
-                'identity_id': identity_id,
-                'state': data.get('state', 'INBOX'),
-                'name': data.get('name'),
-                'merged_into': data.get('merged_into'),
-                'data': data,
-                'updated_by': 'admin',
-                'updated_at': data.get('updated_at'),
-            })
+            rows.append(
+                {
+                    "identity_id": identity_id,
+                    "state": data.get("state", "INBOX"),
+                    "name": data.get("name"),
+                    "merged_into": data.get("merged_into"),
+                    "data": data,
+                    "updated_by": "admin",
+                    "updated_at": data.get("updated_at"),
+                }
+            )
 
     if not rows:
         return
@@ -136,8 +149,8 @@ def sync_identity_overrides(identities_dict):
     try:
         batch_size = 100
         for i in range(0, len(rows), batch_size):
-            batch = rows[i:i + batch_size]
-            sb.table('identity_overrides').upsert(batch).execute()
+            batch = rows[i : i + batch_size]
+            sb.table("identity_overrides").upsert(batch).execute()
         logger.debug(f"Synced {len(rows)} identity overrides to Supabase")
     except Exception as e:
         logger.warning(f"Supabase identity sync failed (degraded mode): {e}")
@@ -146,6 +159,7 @@ def sync_identity_overrides(identities_dict):
 # =========================================================================
 # ANNOTATION SYNC
 # =========================================================================
+
 
 def sync_annotations(annotations_dict):
     """Upsert all annotations to Supabase.
@@ -161,21 +175,23 @@ def sync_annotations(annotations_dict):
 
     rows = []
     for ann_id, ann in annotations_dict.items():
-        rows.append({
-            'annotation_id': ann_id,
-            'identity_id': ann.get('target_id') if ann.get('target_type') == 'identity' else None,
-            'photo_id': ann.get('target_id') if ann.get('target_type') == 'photo' else None,
-            'type': ann.get('type'),
-            'status': ann.get('status', 'pending'),
-            'data': ann,
-            'updated_at': ann.get('reviewed_at') or ann.get('submitted_at'),
-        })
+        rows.append(
+            {
+                "annotation_id": ann_id,
+                "identity_id": ann.get("target_id") if ann.get("target_type") == "identity" else None,
+                "photo_id": ann.get("target_id") if ann.get("target_type") == "photo" else None,
+                "type": ann.get("type"),
+                "status": ann.get("status", "pending"),
+                "data": ann,
+                "updated_at": ann.get("reviewed_at") or ann.get("submitted_at"),
+            }
+        )
 
     if not rows:
         return
 
     try:
-        sb.table('annotations').upsert(rows).execute()
+        sb.table("annotations").upsert(rows).execute()
         logger.debug(f"Synced {len(rows)} annotations to Supabase")
     except Exception as e:
         logger.warning(f"Supabase annotation sync failed (degraded mode): {e}")
@@ -184,6 +200,7 @@ def sync_annotations(annotations_dict):
 # =========================================================================
 # RELATIONSHIP SYNC
 # =========================================================================
+
 
 def sync_relationships(relationships_list):
     """Sync relationships to Supabase.
@@ -200,27 +217,29 @@ def sync_relationships(relationships_list):
 
     try:
         # Delete all existing and re-insert (relationships don't have stable IDs)
-        sb.table('relationships').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
+        sb.table("relationships").delete().neq("id", "00000000-0000-0000-0000-000000000000").execute()
 
         if not relationships_list:
             return
 
         rows = []
         for r in relationships_list:
-            rows.append({
-                'person_a': r.get('person_a'),
-                'person_b': r.get('person_b'),
-                'relationship_type': r.get('type'),
-                'source': r.get('source', 'human'),
-                'data': r,
-                'updated_at': r.get('created_at'),
-            })
+            rows.append(
+                {
+                    "person_a": r.get("person_a"),
+                    "person_b": r.get("person_b"),
+                    "relationship_type": r.get("type"),
+                    "source": r.get("source", "human"),
+                    "data": r,
+                    "updated_at": r.get("created_at"),
+                }
+            )
 
         # Batch insert to avoid request size limits
         batch_size = 200
         for i in range(0, len(rows), batch_size):
-            batch = rows[i:i + batch_size]
-            sb.table('relationships').insert(batch).execute()
+            batch = rows[i : i + batch_size]
+            sb.table("relationships").insert(batch).execute()
         logger.debug(f"Synced {len(rows)} relationships to Supabase")
     except Exception as e:
         logger.warning(f"Supabase relationship sync failed (degraded mode): {e}")
@@ -229,6 +248,7 @@ def sync_relationships(relationships_list):
 # =========================================================================
 # GEDCOM SYNC
 # =========================================================================
+
 
 def sync_gedcom_matches(matches_list):
     """Sync GEDCOM matches to Supabase.
@@ -242,19 +262,21 @@ def sync_gedcom_matches(matches_list):
 
     rows = []
     for m in matches_list:
-        rows.append({
-            'xref_id': m.get('gedcom_xref'),
-            'identity_id': m.get('identity_id'),
-            'decision': m.get('status', 'pending'),
-            'data': m,
-            'updated_at': m.get('updated_at'),
-        })
+        rows.append(
+            {
+                "xref_id": m.get("gedcom_xref"),
+                "identity_id": m.get("identity_id"),
+                "decision": m.get("status", "pending"),
+                "data": m,
+                "updated_at": m.get("updated_at"),
+            }
+        )
 
     if not rows:
         return
 
     try:
-        sb.table('gedcom_matches').upsert(rows).execute()
+        sb.table("gedcom_matches").upsert(rows).execute()
         logger.debug(f"Synced {len(rows)} GEDCOM matches to Supabase")
     except Exception as e:
         logger.warning(f"Supabase GEDCOM sync failed (degraded mode): {e}")
@@ -263,6 +285,7 @@ def sync_gedcom_matches(matches_list):
 # =========================================================================
 # STARTUP SYNC (Supabase → JSON)
 # =========================================================================
+
 
 def sync_from_supabase_on_startup(data_path):
     """Rebuild JSON cache from Supabase source of truth.
@@ -289,26 +312,26 @@ def sync_from_supabase_on_startup(data_path):
 
     # --- Sync identity overrides ---
     try:
-        result = sb.table('identity_overrides').select('identity_id, data').execute()
-        overrides = {row['identity_id']: row['data'] for row in result.data}
+        result = sb.table("identity_overrides").select("identity_id, data").execute()
+        overrides = {row["identity_id"]: row["data"] for row in result.data}
 
         if overrides:
-            ids_path = data_path / 'identities.json'
+            ids_path = data_path / "identities.json"
             if ids_path.exists():
                 with open(ids_path) as f:
                     ids_data = json.load(f)
 
-                identities = ids_data.get('identities', {})
+                identities = ids_data.get("identities", {})
                 applied = 0
                 for identity_id, override_data in overrides.items():
                     identities[identity_id] = override_data
                     applied += 1
 
-                ids_data['identities'] = identities
+                ids_data["identities"] = identities
 
                 # Atomic write with lock
-                tmp_path = ids_path.with_suffix('.tmp')
-                with open(tmp_path, 'w') as f:
+                tmp_path = ids_path.with_suffix(".tmp")
+                with open(tmp_path, "w") as f:
                     portalocker.lock(f, portalocker.LOCK_EX)
                     json.dump(ids_data, f, indent=2)
                 tmp_path.replace(ids_path)
@@ -320,19 +343,19 @@ def sync_from_supabase_on_startup(data_path):
 
     # --- Sync annotations ---
     try:
-        result = sb.table('annotations').select('annotation_id, data').execute()
+        result = sb.table("annotations").select("annotation_id, data").execute()
         if result.data:
-            ann_path = data_path / 'annotations.json'
-            ann_data = {'schema_version': 1, 'annotations': {}}
+            ann_path = data_path / "annotations.json"
+            ann_data = {"schema_version": 1, "annotations": {}}
             if ann_path.exists():
                 with open(ann_path) as f:
                     ann_data = json.load(f)
 
             for row in result.data:
-                ann_data.setdefault('annotations', {})[row['annotation_id']] = row['data']
+                ann_data.setdefault("annotations", {})[row["annotation_id"]] = row["data"]
 
-            tmp_path = ann_path.with_suffix('.tmp')
-            with open(tmp_path, 'w') as f:
+            tmp_path = ann_path.with_suffix(".tmp")
+            with open(tmp_path, "w") as f:
                 portalocker.lock(f, portalocker.LOCK_EX)
                 json.dump(ann_data, f, indent=2)
             tmp_path.replace(ann_path)
@@ -349,9 +372,7 @@ def sync_from_supabase_on_startup(data_path):
         page_size = 1000
         offset = 0
         while True:
-            result = sb.table('relationships').select('data').range(
-                offset, offset + page_size - 1
-            ).execute()
+            result = sb.table("relationships").select("data").range(offset, offset + page_size - 1).execute()
             if not result.data:
                 break
             all_rel_rows.extend(result.data)
@@ -360,14 +381,14 @@ def sync_from_supabase_on_startup(data_path):
             offset += page_size
 
         if all_rel_rows:
-            rel_path = data_path / 'relationships.json'
+            rel_path = data_path / "relationships.json"
             rel_data = {
-                'relationships': [row['data'] for row in all_rel_rows],
-                'metadata': {},
+                "relationships": [row["data"] for row in all_rel_rows],
+                "metadata": {},
             }
 
-            tmp_path = rel_path.with_suffix('.tmp')
-            with open(tmp_path, 'w') as f:
+            tmp_path = rel_path.with_suffix(".tmp")
+            with open(tmp_path, "w") as f:
                 portalocker.lock(f, portalocker.LOCK_EX)
                 json.dump(rel_data, f, indent=2)
             tmp_path.replace(rel_path)
@@ -379,19 +400,19 @@ def sync_from_supabase_on_startup(data_path):
 
     # --- Sync GEDCOM matches ---
     try:
-        result = sb.table('gedcom_matches').select('data').execute()
+        result = sb.table("gedcom_matches").select("data").execute()
         if result.data:
-            gm_path = data_path / 'gedcom_matches.json'
-            gm_data = {'schema_version': 1, 'matches': []}
+            gm_path = data_path / "gedcom_matches.json"
+            gm_data = {"schema_version": 1, "matches": []}
             if gm_path.exists():
                 with open(gm_path) as f:
                     gm_data = json.load(f)
 
             # Replace matches list with Supabase data
-            gm_data['matches'] = [row['data'] for row in result.data]
+            gm_data["matches"] = [row["data"] for row in result.data]
 
-            tmp_path = gm_path.with_suffix('.tmp')
-            with open(tmp_path, 'w') as f:
+            tmp_path = gm_path.with_suffix(".tmp")
+            with open(tmp_path, "w") as f:
                 portalocker.lock(f, portalocker.LOCK_EX)
                 json.dump(gm_data, f, indent=2)
             tmp_path.replace(gm_path)
@@ -413,6 +434,7 @@ def sync_from_supabase_on_startup(data_path):
 # FACE ALIGNMENT SYNC (AD-152: JSON → Supabase migration)
 # =========================================================================
 
+
 def save_face_alignment_to_supabase(photo_id, alignment_data, model_used=None, cost=None, tokens=None):
     """Save face alignment result to Supabase.
 
@@ -424,19 +446,17 @@ def save_face_alignment_to_supabase(photo_id, alignment_data, model_used=None, c
         return False
 
     row = {
-        'photo_id': photo_id,
-        'alignment_data': alignment_data,
-        'model_used': model_used,
-        'cost': cost,
-        'tokens_used': tokens,
+        "photo_id": photo_id,
+        "alignment_data": alignment_data,
+        "model_used": model_used,
+        "cost": cost,
+        "tokens_used": tokens,
     }
     # Remove None values so defaults apply
     row = {k: v for k, v in row.items() if v is not None}
 
     try:
-        sb.table('face_gemini_alignments').upsert(
-            row, on_conflict='photo_id'
-        ).execute()
+        sb.table("face_gemini_alignments").upsert(row, on_conflict="photo_id").execute()
         logger.debug(f"Saved face alignment for {photo_id} to Supabase")
         return True
     except _SUPABASE_ERRORS as e:
@@ -454,11 +474,14 @@ def load_face_alignment_from_supabase(photo_id):
         return None
 
     try:
-        result = sb.table('face_gemini_alignments').select(
-            'alignment_data, model_used, cost, tokens_used'
-        ).eq('photo_id', photo_id).execute()
+        result = (
+            sb.table("face_gemini_alignments")
+            .select("alignment_data, model_used, cost, tokens_used")
+            .eq("photo_id", photo_id)
+            .execute()
+        )
         if result.data and len(result.data) > 0:
-            return result.data[0].get('alignment_data')
+            return result.data[0].get("alignment_data")
         return None
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment load failed for {photo_id}: {e}")
@@ -475,15 +498,9 @@ def load_all_face_alignments_from_supabase():
         return None
 
     try:
-        result = sb.table('face_gemini_alignments').select(
-            'photo_id, alignment_data'
-        ).execute()
+        result = sb.table("face_gemini_alignments").select("photo_id, alignment_data").execute()
         if result.data:
-            return {
-                row['photo_id']: row['alignment_data']
-                for row in result.data
-                if row.get('alignment_data')
-            }
+            return {row["photo_id"]: row["alignment_data"] for row in result.data if row.get("alignment_data")}
         return {}
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment bulk load failed: {e}")
@@ -497,9 +514,7 @@ def count_face_alignments_in_supabase():
         return None
 
     try:
-        result = sb.table('face_gemini_alignments').select(
-            'photo_id', count='exact'
-        ).execute()
+        result = sb.table("face_gemini_alignments").select("photo_id", count="exact").execute()
         return result.count
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase face alignment count failed: {e}")
@@ -509,6 +524,7 @@ def count_face_alignments_in_supabase():
 # =========================================================================
 # GEMINI API CALL LOGGING (AD-152)
 # =========================================================================
+
 
 def log_gemini_call(photo_id, model_used, call_type, **kwargs):
     """Log a Gemini API call to Supabase for analysis.
@@ -528,20 +544,29 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
         return False
 
     row = {
-        'photo_id': photo_id,
-        'model_used': model_used,
-        'call_type': call_type,
-        'status': kwargs.get('status', 'success'),
+        "photo_id": photo_id,
+        "model_used": model_used,
+        "call_type": call_type,
+        "status": kwargs.get("status", "success"),
     }
     # Add optional fields
-    for field in ['prompt_tokens', 'completion_tokens', 'total_tokens',
-                  'cost_usd', 'latency_ms', 'error_message', 'rate_limit_type',
-                  'response_summary', 'gemini_config', 'batch_id']:
+    for field in [
+        "prompt_tokens",
+        "completion_tokens",
+        "total_tokens",
+        "cost_usd",
+        "latency_ms",
+        "error_message",
+        "rate_limit_type",
+        "response_summary",
+        "gemini_config",
+        "batch_id",
+    ]:
         if field in kwargs and kwargs[field] is not None:
             row[field] = kwargs[field]
 
     try:
-        sb.table('gemini_api_calls').insert(row).execute()
+        sb.table("gemini_api_calls").insert(row).execute()
         logger.debug(f"Logged Gemini call: {photo_id} ({call_type}, {model_used})")
         return True
     except _SUPABASE_ERRORS as e:
@@ -556,18 +581,18 @@ def get_gemini_call_summary(batch_id=None):
         return None
 
     try:
-        query = sb.table('gemini_api_calls').select('*')
+        query = sb.table("gemini_api_calls").select("*")
         if batch_id:
-            query = query.eq('batch_id', batch_id)
+            query = query.eq("batch_id", batch_id)
         result = query.execute()
 
         if not result.data:
             return {"total_calls": 0, "total_cost": 0}
 
-        total_cost = sum(float(r.get('cost_usd', 0) or 0) for r in result.data)
+        total_cost = sum(float(r.get("cost_usd", 0) or 0) for r in result.data)
         by_status = {}
         for r in result.data:
-            s = r.get('status', 'unknown')
+            s = r.get("status", "unknown")
             by_status[s] = by_status.get(s, 0) + 1
 
         return {
@@ -578,3 +603,126 @@ def get_gemini_call_summary(batch_id=None):
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase Gemini call summary failed: {e}")
         return None
+
+
+# =========================================================================
+# SHADOW WRITES — Core data mirroring to Supabase (Session 90b)
+# =========================================================================
+# These functions write core data (photos, identities) to Supabase
+# alongside the existing JSON files. They are fire-and-forget: failures
+# log a warning but never raise. This enables eventual migration from
+# JSON to Supabase as the primary data store.
+
+
+def shadow_write_photo(photo_data: dict) -> None:
+    """Shadow-write photo metadata to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "photo_id": photo_data.get("photo_id", ""),
+            "path": photo_data.get("path", ""),
+            "source": photo_data.get("source", ""),
+            "collection": photo_data.get("collection", ""),
+            "source_url": photo_data.get("source_url", ""),
+            "upload_date": photo_data.get("upload_date"),
+            "width": photo_data.get("width"),
+            "height": photo_data.get("height"),
+            "face_count": len(photo_data.get("face_ids", [])),
+            "uploaded_by": photo_data.get("uploaded_by"),
+            "job_id": photo_data.get("job_id"),
+        }
+        client.table("photos").upsert(row).execute()
+    except Exception as e:
+        logger.warning(f"Shadow write photo failed: {e}")
+
+
+def shadow_write_identity(identity_data: dict) -> None:
+    """Shadow-write identity to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "identity_id": identity_data.get("identity_id", ""),
+            "name": identity_data.get("name", ""),
+            "display_name": identity_data.get("display_name"),
+            "state": identity_data.get("state", "INBOX"),
+            "anchor_ids": identity_data.get("anchor_ids", []),
+            "candidate_ids": identity_data.get("candidate_ids", []),
+            "negative_ids": identity_data.get("negative_ids", []),
+            "version_id": identity_data.get("version_id", 1),
+            "merged_into": identity_data.get("merged_into"),
+        }
+        client.table("identities").upsert(row).execute()
+    except Exception as e:
+        logger.warning(f"Shadow write identity failed: {e}")
+
+
+def shadow_write_photos_batch(photos_list: list[dict]) -> int:
+    """Shadow-write a batch of photos to Supabase. Returns count written."""
+    client = get_supabase_client()
+    if not client:
+        return 0
+
+    written = 0
+    batch_size = 100
+    for i in range(0, len(photos_list), batch_size):
+        batch = photos_list[i : i + batch_size]
+        rows = []
+        for p in batch:
+            rows.append(
+                {
+                    "photo_id": p.get("photo_id", ""),
+                    "path": p.get("path", ""),
+                    "source": p.get("source", ""),
+                    "collection": p.get("collection", ""),
+                    "source_url": p.get("source_url", ""),
+                    "upload_date": p.get("upload_date"),
+                    "width": p.get("width"),
+                    "height": p.get("height"),
+                    "face_count": len(p.get("face_ids", [])),
+                    "uploaded_by": p.get("uploaded_by"),
+                    "job_id": p.get("job_id"),
+                }
+            )
+        try:
+            client.table("photos").upsert(rows).execute()
+            written += len(rows)
+        except Exception as e:
+            logger.warning(f"Shadow write photos batch failed: {e}")
+    return written
+
+
+def shadow_write_identities_batch(identities_list: list[dict]) -> int:
+    """Shadow-write a batch of identities to Supabase. Returns count written."""
+    client = get_supabase_client()
+    if not client:
+        return 0
+
+    written = 0
+    batch_size = 100
+    for i in range(0, len(identities_list), batch_size):
+        batch = identities_list[i : i + batch_size]
+        rows = []
+        for ident in batch:
+            rows.append(
+                {
+                    "identity_id": ident.get("identity_id", ""),
+                    "name": ident.get("name", ""),
+                    "display_name": ident.get("display_name"),
+                    "state": ident.get("state", "INBOX"),
+                    "anchor_ids": ident.get("anchor_ids", []),
+                    "candidate_ids": ident.get("candidate_ids", []),
+                    "negative_ids": ident.get("negative_ids", []),
+                    "version_id": ident.get("version_id", 1),
+                    "merged_into": ident.get("merged_into"),
+                }
+            )
+        try:
+            client.table("identities").upsert(rows).execute()
+            written += len(rows)
+        except Exception as e:
+            logger.warning(f"Shadow write identities batch failed: {e}")
+    return written
