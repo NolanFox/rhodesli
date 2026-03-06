@@ -39,6 +39,9 @@ def real_photo_id():
     return get_real_photo_id()
 
 
+FAKE_PHOTO = {"path": "test_photo.jpg", "filename": "test_photo.jpg"}
+
+
 # =============================================================================
 # Upload endpoint tests
 # =============================================================================
@@ -52,12 +55,12 @@ class TestBackImageUpload:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         mock_registry = MagicMock()
-        mock_registry.get_photo.return_value = {"path": "test_photo.jpg", "filename": "test_photo.jpg"}
         mock_registry.set_metadata.return_value = True
 
         with (
             patch("app.photo_routes._main_mod.is_auth_enabled", return_value=False),
             patch("app.photo_routes._main_mod._check_admin", return_value=None),
+            patch("app.photo_routes._main_mod.get_photo_metadata", return_value=FAKE_PHOTO),
             patch("app.photo_routes._main_mod.load_photo_registry", return_value=mock_registry),
             patch("app.photo_routes._main_mod.save_photo_registry"),
             patch("app.photo_routes._main_mod._invalidate_all_caches"),
@@ -87,7 +90,6 @@ class TestBackImageUpload:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         mock_registry = MagicMock()
-        mock_registry.get_photo.return_value = {"path": "test_photo.jpg", "filename": "test_photo.jpg"}
         mock_registry.set_metadata.return_value = True
 
         mock_upload = MagicMock()
@@ -95,6 +97,7 @@ class TestBackImageUpload:
         with (
             patch("app.photo_routes._main_mod.is_auth_enabled", return_value=False),
             patch("app.photo_routes._main_mod._check_admin", return_value=None),
+            patch("app.photo_routes._main_mod.get_photo_metadata", return_value=FAKE_PHOTO),
             patch("app.photo_routes._main_mod.load_photo_registry", return_value=mock_registry),
             patch("app.photo_routes._main_mod.save_photo_registry"),
             patch("app.photo_routes._main_mod._invalidate_all_caches"),
@@ -117,12 +120,12 @@ class TestBackImageUpload:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         mock_registry = MagicMock()
-        mock_registry.get_photo.return_value = {"path": "test_photo.jpg", "filename": "test_photo.jpg"}
         mock_registry.set_metadata.return_value = True
 
         with (
             patch("app.photo_routes._main_mod.is_auth_enabled", return_value=False),
             patch("app.photo_routes._main_mod._check_admin", return_value=None),
+            patch("app.photo_routes._main_mod.get_photo_metadata", return_value=FAKE_PHOTO),
             patch("app.photo_routes._main_mod.load_photo_registry", return_value=mock_registry),
             patch("app.photo_routes._main_mod.save_photo_registry"),
             patch("app.photo_routes._main_mod._invalidate_all_caches"),
@@ -142,12 +145,12 @@ class TestBackImageUpload:
         if not real_photo_id:
             pytest.skip("No embeddings available")
         mock_registry = MagicMock()
-        mock_registry.get_photo.return_value = {"path": "test_photo.jpg", "filename": "test_photo.jpg"}
         mock_registry.set_metadata.return_value = True
 
         with (
             patch("app.photo_routes._main_mod.is_auth_enabled", return_value=False),
             patch("app.photo_routes._main_mod._check_admin", return_value=None),
+            patch("app.photo_routes._main_mod.get_photo_metadata", return_value=FAKE_PHOTO),
             patch("app.photo_routes._main_mod.load_photo_registry", return_value=mock_registry),
             patch("app.photo_routes._main_mod.save_photo_registry"),
             patch("app.photo_routes._main_mod._invalidate_all_caches"),
