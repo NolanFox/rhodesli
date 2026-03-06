@@ -25297,24 +25297,21 @@ def get(job_id: str):
     identities = len(status.get("identities_created", []))
     total = status.get("total_files")
 
-    # Handle 0 faces: photo was processed but no faces detected.
-    # This is NOT a success — show a clear warning so users don't think their photo was lost.
+    # Handle 0 faces: photo was added to archive but no faces detected.
+    # Show info message — the photo is preserved, just without face identification.
     if faces == 0:
         return Div(
             P(
-                "\u26a0 No faces detected in your photo.",
-                cls="text-amber-400 text-sm font-medium",
+                "\u2713 Photo added to the archive.",
+                cls="text-emerald-400 text-sm font-medium",
             ),
             P(
-                "This can happen with extreme close-crops, very small faces, or non-portrait images. "
-                "Try uploading a wider shot where faces are clearly visible.",
+                "No faces were detected in this photo. It will appear in the Photos section "
+                "but won't be included in face matching.",
                 cls="text-slate-400 text-xs mt-1",
             ),
-            P(
-                "The photo was not added to the archive.",
-                cls="text-slate-500 text-xs mt-1",
-            ),
-            cls="p-3 bg-amber-900/20 border border-amber-500/30 rounded",
+            A("Refresh to see photos", href="/photos", cls="text-indigo-400 hover:underline text-xs mt-1 block"),
+            cls="p-3 bg-emerald-900/20 border border-emerald-500/30 rounded",
         )
 
     success_text = f"\u2713 {_pl(faces, 'face')} extracted"

@@ -36,10 +36,12 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
+- [ ] DATA-005: Nightly R2 backup for critical JSON/NPY files ([PRD-027](docs/prds/027_data_migration.md))
 - [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
 - [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
 
 ### Near-Term
+- [ ] DATA-006: Shadow writes — all identities + photo_index to Supabase ([PRD-027](docs/prds/027_data_migration.md))
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [x] 2026-03-01: FE-041: "Help Identify" mode — /help page, Identify Mode toggle, OG cards

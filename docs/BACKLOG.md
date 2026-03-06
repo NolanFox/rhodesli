@@ -147,6 +147,9 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **DATA-002: Create Supabase tables** — Run `scripts/sql/create_face_gemini_alignments.sql` and `scripts/sql/create_gemini_api_calls.sql` in Supabase. Required for Supabase-first data layer to function. Source: Session 64.
 - [ ] **DATA-003: Run alignment migration** — Execute `python scripts/migrate_alignments_to_supabase.py --execute` after tables created. Migrates 127 alignment records from JSON to Supabase. Source: Session 64.
 - [ ] **DATA-004: Retry 144 rate-limited photos** — Run `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`. Requires GEMINI_API_KEY. Estimated cost: ~$4 at $0.028/photo. Source: Session 64.
+- [ ] **DATA-005: Nightly R2 backup for critical JSON/NPY files** — Upload identities.json, photo_index.json, embeddings.npy, date_labels.json, photo_locations.json to R2 nightly. Closes "total data loss" risk. ~0.5 session. Source: PRD-027.
+- [ ] **DATA-006: Shadow writes for all identities + photo_index** — Extend dual-write pattern (identity_overrides) to cover ALL identities and photo_index in Supabase. Near-zero data loss window. ~2-3 sessions. Source: PRD-027.
+- [ ] **DATA-007: Full Postgres migration (triggered)** — Move all reads/writes to Supabase. Eliminate JSON as source of truth. Triggered when 3+ sync bugs in 4 weeks, or pgvector needed, or volume failure. ~4-6 sessions. Source: PRD-027.
 
 ### Face Card Consolidation (Session 82b gap, deferred 82f)
 - [ ] **UX-204: Unify face card rendering** — 14+ inline face card rendering locations in app/main.py use bespoke code. Consolidate into reusable `face_card()` component. Major refactor. Source: 82b Phase 2, 82d assessment.

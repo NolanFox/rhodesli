@@ -598,20 +598,14 @@ def process_single_image(
         faces = result
         image_width, image_height = 0, 0
 
-    if not faces:
-        return {
-            "faces_extracted": 0,
-            "identity_ids": [],
-        }
+    # Generate face_ids and append embeddings (only if faces found)
+    if faces:
+        for i, face in enumerate(faces):
+            face["face_id"] = generate_face_id(f"{file_index}_{filepath.name}", i, job_id)
+        atomic_append_embeddings(embeddings_path, faces)
 
-    # Generate face_ids (include file_index to ensure uniqueness in batch)
-    for i, face in enumerate(faces):
-        face["face_id"] = generate_face_id(f"{file_index}_{filepath.name}", i, job_id)
-
-    # Append to embeddings atomically
-    atomic_append_embeddings(embeddings_path, faces)
-
-    # Register in photo registry
+    # Register photo in registry regardless of whether faces were found.
+    # Every uploaded photo belongs in the archive — face detection is supplementary.
     photo_id = f"inbox_{job_id}_{file_index}_{filepath.stem}"
     try:
         photo_registry = PhotoRegistry.load(photo_index_path)
@@ -635,8 +629,12 @@ def process_single_image(
             logger.info(f"Copied {filepath.name} to {raw_photos_dir}")
         except Exception as e:
             logger.warning(f"Failed to copy {filepath.name} to raw_photos: {e}")
-    for face in faces:
-        photo_registry.register_face(photo_id, relative_path, face["face_id"], source=source)
+    if faces:
+        for face in faces:
+            photo_registry.register_face(photo_id, relative_path, face["face_id"], source=source)
+    else:
+        # Register photo with no faces — still appears in Photos browse
+        photo_registry.register_photo(photo_id, relative_path, source=source)
 
     # Store image dimensions for face overlay positioning (critical for R2 mode)
     if image_width > 0 and image_height > 0:
