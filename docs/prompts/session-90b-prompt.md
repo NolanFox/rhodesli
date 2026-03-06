@@ -1,0 +1,292 @@
+# Session 90b: Fix Sorting + Refactor main.py + Supabase + Performance
+
+**Context**: `docs/session_context/session-90b-context.md`
+**Predecessor**: Session 90 (v0.92.2, 42caecd)
+
+## Problem Statement
+
+Session 90 shipped upload date sorting but it's broken on production — switching sort order doesn't change photo order. The photo page is missing upload metadata and ML enrichment. main.py at 34K lines blocks parallel development and causes merge failures. Supabase migration hasn't started. The site feels slow.
+
+## Session Protocol
+- Set `.claude/current_session.txt` to `90b`
+- Read `tasks/lessons.md` and `tasks/todo.md` at start
+- Commit after every act, `/clear` between acts
+- Use Claude Chrome for ALL frontend verification — no exceptions (Lesson 97)
+- Run `/session-review` at session end
+- Browser verify with Claude Chrome (admin is logged in)
+- Screenshots to `docs/screenshots/session-90b/`
+
+---
+
+## Parallelization Plan
+
+**Phase 1** (Act 0-1): Sequential on main — orient + fix sorting bug + browser verify
+**Phase 2** (Acts 2-5): Parallel worktree subagents:
+- Track A: main.py refactor (worktree: `session-90b/refactor`)
+- Track B: Supabase shadow writes (worktree: `session-90b/supabase`)
+- Track C: Performance optimization (worktree: `session-90b/perf`)
+- Track D: Testing + hooks cleanup (worktree: `session-90b/testing`)
+**Phase 3** (Act 6): Merge all tracks, browser verify, assessment
+
+**File conflict analysis**:
+- Track A touches `app/main.py` exclusively (splitting it) — merges FIRST
+- Track B touches `app/supabase_data.py` + new files — independent
+- Track C may touch templates in main.py — merges AFTER Track A
+- Track D touches `tests/` + `.claude/` — independent
+- **Merge order**: A first, then B+C+D (B and D can merge in any order, C after A)
+
+---
+
+## Act 0: Orient (5 min)
+
+1. Read this prompt, context file, `tasks/lessons.md`
+2. Read `docs/assessments/session-90-assessment.md` and `docs/session_logs/session-90-log.md`
+3. Verify current state: `git log --oneline -5`, `git status`, test suite passes
+4. Set `.claude/current_session.txt` to `90b`
+5. Create `docs/session_logs/session-90b-log.md` with phase checklist
+
+---
+
+## Act 1: Fix Upload Date Sorting + Photo Page Metadata (30 min)
+
+**This is the P0. Fix it, browser verify it, commit it.**
+
+### 1a. Debug and Fix Sorting Bug
+
+**Symptoms**: On production, `sort_by=upload_newest` and `sort_by=upload_oldest` show the same photo order.
+
+**Investigation steps**:
+1. Check `_build_caches()` at `app/main.py:3002` — does `upload_date` make it into `_photo_cache`?
+2. Trace: `photo_registry.get_metadata(photo_id)` at line 3072 — for SHA256 photo IDs that exist in `_photo_cache`, does the matching photo_index.json entry also use SHA256 IDs? Or do some use `inbox_*` IDs?
+3. Add a temporary debug log or test: After `_build_caches()`, count how many `_photo_cache` entries have `upload_date` set.
+4. Check `render_photos_section()` at line 6174: `photo_data.get("upload_date", "")` — is `photo_data` from `_photo_cache`? If `upload_date` isn't in `_photo_cache`, it'll always be `""`.
+5. Check if `_sort_photos()` receives photos with empty `upload_date` — if all are empty, `NO_DATE` logic makes them unsorted.
+
+**Most likely root cause**: `_build_caches()` builds `_photo_cache` from `load_embeddings_for_photos()` which uses SHA256 IDs. Then `get_metadata(photo_id)` on line 3072 looks up by SHA256 ID in `photo_registry._photos`. But `photo_registry._photos` keys community photos by `inbox_*` IDs. So `get_metadata()` returns `{}` for those — and `upload_date` never gets merged into `_photo_cache`. Even for original photos where SHA256 IDs match, `upload_date` needs to be in `photo_index.json` AND returned by `get_metadata()`.
+
+**Fix approach**: In `_build_caches()`, after the main loop, add a filename-based fallback for `upload_date` (same pattern as `filename_to_source` at line 3022-3040). Build a `filename_to_metadata` dict, and for each `_photo_cache` entry that's missing `upload_date`, look it up by filename.
+
+**Tests**:
+- Test that `_sort_photos()` with `upload_newest` puts newer dates first
+- Test that photos with mixed dates sort correctly
+- Test that the `render_photos_section` output has different first photo for newest vs oldest
+
+### 1b. Display Upload Date on Photo Pages
+
+Currently no photo page shows upload date. Fix:
+1. Find the photo detail route handler (search for `@rt("/photo/{photo_id}")` in `app/main.py`)
+2. After the photo metadata section, add upload date display: "Added to archive: March 5, 2026"
+3. Use the existing `_format_display_date()` helper (already used at line 735)
+
+### 1c. Browser Verify with Claude Chrome
+
+**MANDATORY** — this is the lesson from Session 90. Do not skip.
+
+1. Open `https://rhodesli.nolanandrewfox.com/?section=photos&sort_by=upload_newest`
+2. Screenshot — the 24 March 5 photos should be at the top
+3. Switch to `sort_by=upload_oldest` — the 155 Feb 10 photos should be first
+4. Screenshot showing different order
+5. Open a photo page — verify upload date is displayed
+6. Save screenshots to `docs/screenshots/session-90b/`
+
+Commit: `fix(photos): upload date sorting + display on photo pages`
+
+---
+
+## Act 2: Parallel Tracks — Launch Subagents (5 min)
+
+After Act 1 is committed and verified, launch 4 parallel worktree subagents.
+
+**CRITICAL**: Do NOT start these until Act 1 is merged to main, since all worktrees fork from main.
+
+### Track A: main.py Refactor
+
+**Worktree**: `session-90b/refactor`
+**Goal**: Split `app/main.py` (34K lines) into logical route modules.
+
+**Extraction plan** (from existing patterns in `compare_routes.py` and `estimate_routes.py`):
+
+| New File | Routes | Approx Lines |
+|----------|--------|-------------|
+| `app/upload_routes.py` | `/upload/*`, `/api/upload/*`, staging, processing | ~2,000 |
+| `app/admin_routes.py` | `/admin/*`, `/api/admin/*`, pending, proposals | ~3,000 |
+| `app/person_routes.py` | `/person/*`, `/api/person/*`, identity CRUD | ~3,000 |
+| `app/photo_routes.py` | `/photo/*`, `/api/photo/*`, gallery, reanalyze | ~2,000 |
+| `app/browse_routes.py` | Photos/People/Collections sections, landing page | ~3,000 |
+| `app/shared.py` | Shared helpers, caches, UI components | ~3,000 |
+
+**Rules**:
+- Each extracted file should be self-contained with its own imports
+- Shared state (`_photo_cache`, `_face_to_photo_cache`, registry, etc.) stays in `app/shared.py` or `app/main.py` and is imported
+- Use the same pattern as `compare_routes.py`: define routes in the file, register them in main.py via `include_router` or similar
+- Run `make test-fast` after each extraction — tests must pass
+- Don't change behavior, only move code
+
+**Acceptance**: main.py < 15,000 lines. Each extracted file < 4,000 lines. All tests pass.
+
+### Track B: Supabase Shadow Writes
+
+**Worktree**: `session-90b/supabase`
+**Goal**: Start writing core data to Supabase alongside JSON files.
+
+1. **Create Supabase tables** (SQL scripts in `scripts/sql/`):
+   - `photos` table: photo_id, path, source, collection, source_url, upload_date, width, height, face_count, uploaded_by, created_at, updated_at
+   - `identities` table: identity_id, name, state, display_name, anchor_ids (JSONB), candidate_ids (JSONB), negative_ids (JSONB), version_id, created_at, updated_at, merged_into
+   - `photo_faces` table: face_id, photo_id, bbox (JSONB), det_score, quality
+   - `date_labels` table: photo_id, estimated_decade, best_year_estimate, confidence, model_used, labeled_by, raw_response (JSONB)
+   - `photo_locations` table: photo_id, lat, lng, location_name, location_estimate, confidence, geocoded_from
+
+2. **Shadow write functions** in `app/supabase_data.py`:
+   - `shadow_write_photo(photo_data)` — called after any photo_index.json write
+   - `shadow_write_identity(identity_data)` — called after any identities.json write
+   - Fire-and-forget (don't block the main write path)
+   - Log errors but don't fail the request
+
+3. **Backfill script**: `scripts/backfill_supabase.py` — one-time load of all existing JSON data into Supabase tables.
+
+4. **Tests**: Mock Supabase calls, verify shadow writes are called on key operations.
+
+**Acceptance**: Tables created. Shadow write functions exist. Backfill script runs without error.
+
+### Track C: Performance Optimization
+
+**Worktree**: `session-90b/perf`
+**Goal**: Measurable page load improvement.
+
+**Investigation & fixes**:
+1. **Pagination**: The photos page renders all 294 photos at once. Add server-side pagination or HTMX infinite scroll (load 40 at a time).
+2. **Startup optimization**: Profile `_build_caches()` — does it run synchronously on first request? Consider lazy loading or background thread.
+3. **Image optimization**: Are images served with proper `Cache-Control` headers from R2? Add `?v=hash` cache-busting to allow long cache TTLs.
+4. **CSS/JS bundle**: Check total transfer size. Consider inlining critical CSS, deferring non-critical JS.
+5. **Supabase connection**: Is the Supabase client initialized on startup or lazily? Connection pooling?
+
+**Measure**: Use Claude Chrome to capture network waterfall (or `read_network_requests`). Before/after comparison.
+
+**Acceptance**: Photos page initial load noticeably faster. Document what changed and by how much.
+
+### Track D: Testing + Hooks Cleanup
+
+**Worktree**: `session-90b/testing`
+**Goal**: Fix hooks, reduce test count, fix flaky tests.
+
+**Hooks**:
+1. **Fix Stop hook**: `settings.json` checks for `docs/sessions/SESSION_0${S}.md` but actual path is `docs/session_logs/session-${S}-log.md`. Fix the path.
+2. **Clean up orphaned hook scripts**: `session-stop-gate.py`, `session-stop-gate.sh` in `.claude/hooks/` are NOT referenced in `settings.json`. Either wire them in or delete them.
+3. **Verify all hooks work**: Run a test commit cycle and confirm no errors.
+
+**Testing**:
+1. **Fix 21 flaky xdist tests**: Identify shared state issues (global caches, file locks, etc.). Add proper test isolation.
+2. **Continue pruning**: Target another 200+ tests. Focus on:
+   - Tests checking specific CSS classes or HTML strings (brittle)
+   - Duplicate coverage (same route tested in multiple files)
+   - Tests for removed/changed features
+3. **Runtime optimization**: Profile test suite. Identify slowest test files. Consider:
+   - Shared fixtures that reduce setup/teardown
+   - `pytest-randomly` to surface order-dependent tests
+   - Mock heavy imports (InsightFace, etc.) at conftest level
+
+**Acceptance**: Hooks produce no errors. Flaky tests fixed. Test count < 3400. Runtime < 4 min.
+
+---
+
+## Act 3: Benatar Photo Enrichment (15 min)
+
+**While subagents run**, run ML enrichment on the Benatar photo.
+
+1. **Verify photo state**: Check `data/photo_index.json` for `inbox_0c57277a_0_unknown` — confirm it has source "Claude Benatar upload"
+2. **Run Gemini analysis**: Use the admin "Re-analyze with Gemini" button (added in Session 89) on production, OR use `scripts/reprocess_with_gedcom.py --photo-id inbox_0c57277a_0_unknown`
+3. **Expected outputs**: Date estimate, location estimate, face analysis
+4. **Verify on photo page**: Date label, location on map, face analysis section should all populate
+5. **DO NOT delete a75e6b54b0eb6c50** — it exists on production and user shared the link
+
+Commit: `fix(data): run Gemini enrichment on Benatar photo`
+
+---
+
+## Act 4: Merge Tracks + Resolve Conflicts (20 min)
+
+1. Check all subagent branches for completion
+2. **Merge order**: Track A (refactor) FIRST, then Track D (testing), then Track B (supabase), then Track C (perf)
+3. Use `./scripts/merge.sh session-90b/refactor session-90b/testing session-90b/supabase session-90b/perf`
+4. Run `make test-fast` after each merge
+5. Resolve conflicts (Track C may conflict with Track A if both touched main.py templates)
+
+Commit: merge commits per track
+
+---
+
+## Act 5: Browser Verification + Production Smoke (15 min)
+
+**ALL of these must be verified with Claude Chrome. No exceptions.**
+
+1. **Sorting**: `/photos` page — upload_newest shows March photos first, upload_oldest shows Feb photos first
+2. **Photo page**: Any photo shows upload date
+3. **Benatar photo**: `a75e6b54b0eb6c50` still loads correctly
+4. **Upload page**: Still works (regression check from Session 90 merge issues)
+5. **Performance**: Photos page feels faster (subjective check + network timing)
+6. **General smoke**: Landing page, People page, Compare page all load
+7. Save screenshots to `docs/screenshots/session-90b/`
+
+---
+
+## Act 6: Assessment + Docs (10 min)
+
+Standard mandatory outputs:
+
+1. Write `docs/assessments/session-90b-assessment.md`
+2. Update `docs/session_logs/session-90b-log.md`
+3. Update `CHANGELOG.md` — new version entry
+4. Update `ROADMAP.md`:
+   - Move completed items to "Recently Completed"
+   - Update Supabase migration status
+   - Update main.py refactor status
+5. Update `docs/BACKLOG.md` — FB-40-22 (upload attribution) status
+6. Update `docs/roadmap/SESSION_HISTORY.md` — session 90b entry
+7. Update `docs/ml/ALGORITHMIC_DECISIONS.md` if any ML decisions made
+8. Verify all breadcrumbs:
+   - Context file references predecessor + prompt
+   - Assessment references context file + prompt
+   - BACKLOG items updated with session 90b reference
+   - New AD entries (if any) reference related ADs
+
+---
+
+## Acceptance Criteria
+
+- [ ] Upload date sorting works on production (browser verified with screenshots)
+- [ ] Upload date displayed on photo pages
+- [ ] Benatar photo has ML enrichment (date + location + face analysis)
+- [ ] a75e6b54b0eb6c50 still works on production (DO NOT DELETE)
+- [ ] main.py < 15,000 lines (route extraction complete)
+- [ ] Supabase shadow write tables created + backfill script exists
+- [ ] Performance: photos page measurably faster
+- [ ] Hooks produce no errors, stop hook path fixed
+- [ ] Test count < 3400, flaky tests fixed
+- [ ] All tests pass (`make test-fast`)
+- [ ] Browser verified via Claude Chrome with screenshots
+- [ ] Assessment + session log + CHANGELOG + ROADMAP + BACKLOG updated
+
+## Key Skills to Use
+
+- `/simplify` — after implementation acts
+- `/session-review` — at session end (mandatory)
+- Claude Chrome — for ALL frontend verification
+- Worktree subagents — for parallel tracks
+
+## Non-Goals
+
+- Full Supabase migration (shadow writes only, not replacing JSON as source of truth)
+- New features or UX redesigns
+- Running ML on all 294 photos (just Benatar photo)
+- GEDCOM work
+- Compare/Estimate page changes
+
+## Tradeoff Guidance
+
+**main.py refactor vs feature work**: Do the refactor. Every future session pays the merge-conflict tax. The ROI is immediate.
+
+**Shadow writes vs full migration**: Shadow writes only. Get the tables and write path working. Full cutover is Session 91+.
+
+**Test count target**: Don't spend more than 30 min on test pruning. Fix the flaky ones, remove obvious duplicates, move on.
+
+**Performance**: Quick wins only. Pagination is the biggest bang-for-buck. Don't over-engineer caching.
