@@ -11,18 +11,12 @@ import pytest
 from starlette.testclient import TestClient
 
 
-_render_cache: dict[str, str] = {}
-
-
 def _render_search_html(query: str) -> str:
-    """Render /api/search via TestClient with caching."""
-    key = f"/api/search?q={query}"
-    if key not in _render_cache:
-        from app.main import app
+    """Render /api/search via TestClient (no caching for xdist safety)."""
+    from app.main import app
 
-        c = TestClient(app)
-        _render_cache[key] = c.get(key).text
-    return _render_cache[key]
+    c = TestClient(app)
+    return c.get(f"/api/search?q={query}").text
 
 
 class TestIdentityCardDataAttributes:

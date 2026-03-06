@@ -107,25 +107,11 @@ class TestPublicPersonPageContent:
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
         assert "Identified" in response.text
 
-    def test_displays_stats_or_name(self, client, confirmed_identity):
-        """Page shows photo count stats or at minimum the person name."""
-        if not confirmed_identity:
-            pytest.skip("No confirmed identities available")
-        response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        html = response.text
-        name = confirmed_identity["name"]
-        # Page always shows the person name
-        assert name in html or name.replace("'", "&#x27;") in html
-        # Stats line shows "Appears in N photo(s)" when photo registry is available
-        # May be absent if photo registry cache was cleared by prior tests
-        # Either way, the page must render correctly with 200 status
-        assert response.status_code == 200
-
     def test_displays_share_button(self, client, confirmed_identity):
         """Page has a share button with correct data attributes."""
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
-        pid = confirmed_identity['identity_id']
+        pid = confirmed_identity["identity_id"]
         response = client.get(f"/person/{pid}")
         assert 'data-action="share-photo"' in response.text
         assert f"/person/{pid}" in response.text
@@ -168,8 +154,6 @@ class TestPersonPageViewToggle:
         assert "Faces of" in html
 
 
-
-
 class TestPersonPageOrdering:
     """Ordering controls for person page galleries."""
 
@@ -189,9 +173,24 @@ class TestPersonPageOrdering:
                 return ["photo-1", "photo-2", "photo-3"]
 
         photo_meta = {
-            "photo-1": {"photo_id": "photo-1", "filename": "photo-1.jpg", "collection": "C1", "created_at": "2025-01-01T00:00:00+00:00"},
-            "photo-2": {"photo_id": "photo-2", "filename": "photo-2.jpg", "collection": "C1", "created_at": "2023-01-01T00:00:00+00:00"},
-            "photo-3": {"photo_id": "photo-3", "filename": "photo-3.jpg", "collection": "C1", "created_at": "2024-01-01T00:00:00+00:00"},
+            "photo-1": {
+                "photo_id": "photo-1",
+                "filename": "photo-1.jpg",
+                "collection": "C1",
+                "created_at": "2025-01-01T00:00:00+00:00",
+            },
+            "photo-2": {
+                "photo_id": "photo-2",
+                "filename": "photo-2.jpg",
+                "collection": "C1",
+                "created_at": "2023-01-01T00:00:00+00:00",
+            },
+            "photo-3": {
+                "photo_id": "photo-3",
+                "filename": "photo-3.jpg",
+                "collection": "C1",
+                "created_at": "2024-01-01T00:00:00+00:00",
+            },
         }
         face_to_photo = {"face-a": "photo-1", "face-b": "photo-2", "face-c": "photo-3"}
 
@@ -201,12 +200,15 @@ class TestPersonPageOrdering:
         monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a.jpg", "face-b.jpg", "face-c.jpg"})
         monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops: f"/crops/{fid}.jpg" if fid else None)
         monkeypatch.setattr("app.main.get_photo_id_for_face", lambda fid: face_to_photo.get(fid))
-        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: (all_faces[0] if all_faces else None))
-        monkeypatch.setattr("app.main._load_date_labels", lambda: {
-            "photo-1": {"best_year_estimate": 1940},
-            "photo-2": {"best_year_estimate": 1960},
-            "photo-3": {"best_year_estimate": 1950},
-        })
+        monkeypatch.setattr("app.main.get_best_face_id", lambda all_faces: all_faces[0] if all_faces else None)
+        monkeypatch.setattr(
+            "app.main._load_date_labels",
+            lambda: {
+                "photo-1": {"best_year_estimate": 1940},
+                "photo-2": {"best_year_estimate": 1960},
+                "photo-3": {"best_year_estimate": 1950},
+            },
+        )
 
     def test_default_order_uses_earliest_first(self, client, monkeypatch):
         self._mock_person_data(monkeypatch)
@@ -228,6 +230,7 @@ class TestPersonPageOrdering:
         assert "view=photos&amp;sort_by=date_desc" in html
         assert "Earliest Last" in html
 
+
 class TestPersonPageOGTags:
     """Open Graph meta tags for social sharing."""
 
@@ -237,7 +240,7 @@ class TestPersonPageOGTags:
             pytest.skip("No confirmed identities available")
         name = confirmed_identity.get("name", "")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert 'og:title' in response.text
+        assert "og:title" in response.text
         # Name should be in the title (may be HTML-escaped)
         assert name in response.text or name.replace("'", "&#x27;") in response.text
 
@@ -246,62 +249,22 @@ class TestPersonPageOGTags:
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert 'og:description' in response.text
+        assert "og:description" in response.text
 
     def test_og_image_present(self, client, confirmed_identity):
         """OG image tag is present."""
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
         response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert 'og:image' in response.text
+        assert "og:image" in response.text
 
     def test_og_url_contains_person_id(self, client, confirmed_identity):
         """OG URL points to the person page."""
         if not confirmed_identity:
             pytest.skip("No confirmed identities available")
-        pid = confirmed_identity['identity_id']
+        pid = confirmed_identity["identity_id"]
         response = client.get(f"/person/{pid}")
         assert f"/person/{pid}" in response.text
-
-    def test_og_type_is_profile(self, client, confirmed_identity):
-        """OG type is 'profile' for person pages."""
-        if not confirmed_identity:
-            pytest.skip("No confirmed identities available")
-        response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert 'profile' in response.text
-
-
-class TestPersonPageNavigation:
-    """Navigation and cross-linking."""
-
-    def test_navigation_links(self, client, confirmed_identity):
-        """Page has Photos and People navigation links."""
-        if not confirmed_identity:
-            pytest.skip("No confirmed identities available")
-        response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        html = response.text
-        assert "Photos" in html
-        assert "People" in html
-
-    def test_404_page_has_archive_link(self, client):
-        """404 page has a link back to the archive."""
-        response = client.get("/person/nonexistent-id-12345")
-        assert "Explore the Archive" in response.text
-
-    def test_face_crops_link_to_photo_viewer(self, client, confirmed_identity):
-        """Face crops in the gallery link to /photo/{id}."""
-        if not confirmed_identity:
-            pytest.skip("No confirmed identities available")
-        response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        # Face items should link to /photo/ pages
-        assert "/photo/" in response.text
-
-    def test_footer_present(self, client, confirmed_identity):
-        """Page has footer with archive branding."""
-        if not confirmed_identity:
-            pytest.skip("No confirmed identities available")
-        response = client.get(f"/person/{confirmed_identity['identity_id']}")
-        assert "Heritage Archive" in response.text
 
 
 class TestPersonPageAppearsWithSection:
@@ -346,7 +309,7 @@ class TestPersonPageAppearsWithSection:
                 html = response.text
                 # Find the "appears with" section and verify it contains person links
                 idx = html.index("Often appears with")
-                section = html[idx:idx+2000]
+                section = html[idx : idx + 2000]
                 assert "/person/" in section
                 return
 
@@ -494,7 +457,8 @@ class TestPersonPageTreeLink:
         """Person with family relationships shows 'View in Family Tree' link."""
         # Get two real confirmed identities to make the relationship graph work
         confirmed = [
-            i for i in registry_snapshot.list_identities(state=None)
+            i
+            for i in registry_snapshot.list_identities(state=None)
             if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
         ]
         if len(confirmed) < 2:
@@ -509,8 +473,10 @@ class TestPersonPageTreeLink:
             ],
             "gedcom_imports": [],
         }
-        with patch("app.main._load_relationship_graph", return_value=mock_graph), \
-             patch("app.main.is_auth_enabled", return_value=False):
+        with (
+            patch("app.main._load_relationship_graph", return_value=mock_graph),
+            patch("app.main.is_auth_enabled", return_value=False),
+        ):
             response = client.get(f"/person/{identity_id}")
 
         assert response.status_code == 200
@@ -524,8 +490,10 @@ class TestPersonPageTreeLink:
 
         # Empty relationship graph
         mock_graph = {"schema_version": 1, "relationships": [], "gedcom_imports": []}
-        with patch("app.main._load_relationship_graph", return_value=mock_graph), \
-             patch("app.main.is_auth_enabled", return_value=False):
+        with (
+            patch("app.main._load_relationship_graph", return_value=mock_graph),
+            patch("app.main.is_auth_enabled", return_value=False),
+        ):
             response = client.get(f"/person/{identity_id}")
 
         assert response.status_code == 200

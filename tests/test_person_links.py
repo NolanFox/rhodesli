@@ -14,6 +14,11 @@ from app.main import app, load_registry, load_embeddings_for_photos, get_identit
 
 def get_photo_with_identified_person():
     """Find a photo that contains an identified (CONFIRMED) person."""
+    import app.main as main
+
+    main._photo_cache = None
+    main._face_to_photo_cache = None
+    main._build_caches()
     photos = load_embeddings_for_photos()
     registry = load_registry()
     if not photos:
@@ -40,16 +45,10 @@ def photo_with_person():
     return get_photo_with_identified_person()
 
 
-_render_cache: dict[str, str] = {}
-
-
 def _render_photo_page_html(photo_id: str) -> str:
-    """Render a photo page via TestClient with caching."""
-    key = f"/photo/{photo_id}"
-    if key not in _render_cache:
-        c = TestClient(app)
-        _render_cache[key] = c.get(key).text
-    return _render_cache[key]
+    """Render a photo page via TestClient (no caching for xdist safety)."""
+    c = TestClient(app)
+    return c.get(f"/photo/{photo_id}").text
 
 
 class TestPersonLinksFromPhotoViewer:
