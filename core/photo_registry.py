@@ -51,6 +51,16 @@ class PhotoRegistry:
         self._photos: dict[str, dict] = {}
         self._face_to_photo: dict[str, str] = {}
 
+    def register_photo(self, photo_id: str, path: str, source: str = "", collection: str = "") -> None:
+        """Register a photo without any faces (e.g., documents, buildings, far-away groups)."""
+        if photo_id not in self._photos:
+            self._photos[photo_id] = {
+                "path": path,
+                "face_ids": set(),
+                "source": source,
+                "collection": collection or source or "Uncategorized",
+            }
+
     def register_face(self, photo_id: str, path: str, face_id: str, source: str = "", collection: str = "") -> None:
         """
         Register a face as appearing in a photo.

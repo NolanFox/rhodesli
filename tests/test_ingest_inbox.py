@@ -11,9 +11,8 @@ These tests mock the ML layer and focus on the data flow.
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
-import pytest
 
 
 class TestProcessUploadedFile:
@@ -71,7 +70,6 @@ class TestProcessUploadedFile:
                 status = json.load(f)
             assert status["status"] == "success"
 
-
     def test_process_single_image_stores_dimensions(self):
         """Processing should store image width/height in photo_index.json."""
         from core.ingest_inbox import process_uploaded_file
@@ -124,7 +122,6 @@ class TestProcessUploadedFile:
             assert photo["width"] == 1920
             assert photo["height"] == 1080
 
-
     def test_process_stores_relative_path_not_absolute(self):
         """Photo path in photo_index.json must be relative (raw_photos/file.jpg), never absolute."""
         from core.ingest_inbox import process_uploaded_file
@@ -172,6 +169,48 @@ class TestProcessUploadedFile:
             photo = list(photo_data["photos"].values())[0]
             assert photo["path"] == "raw_photos/Sarina2.jpg"
             assert not photo["path"].startswith("/"), "Path must not be absolute"
+
+    def test_process_no_faces_still_registers_photo(self):
+        """Photos without detected faces should still be added to the archive."""
+        from core.ingest_inbox import process_uploaded_file
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir = Path(tmpdir)
+
+            data_dir = tmpdir / "data"
+            inbox_dir = data_dir / "inbox"
+            data_dir.mkdir()
+            inbox_dir.mkdir()
+
+            job_id = "test_noface_001"
+
+            with patch("core.ingest_inbox.extract_faces") as mock_extract:
+                # No faces detected
+                mock_extract.return_value = ([], 800, 600)
+
+                result = process_uploaded_file(
+                    filepath=tmpdir / "building.jpg",
+                    job_id=job_id,
+                    data_dir=data_dir,
+                    source="Test",
+                    collection="Test Collection",
+                )
+
+            assert result["status"] == "success"
+            assert result["faces_extracted"] == 0
+
+            # Photo should still be registered
+            photo_index_path = data_dir / "photo_index.json"
+            with open(photo_index_path) as f:
+                photo_data = json.load(f)
+
+            photos = photo_data.get("photos", {})
+            assert len(photos) == 1
+            photo = list(photos.values())[0]
+            assert photo["path"] == "raw_photos/building.jpg"
+            assert photo["source"] == "Test"
+            # No face_ids
+            assert len(photo.get("face_ids", [])) == 0
 
 
 class TestCreateInboxIdentities:
