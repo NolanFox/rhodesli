@@ -28229,6 +28229,10 @@ from app import sync_routes  # noqa: E402, F401
 from app import match_facecompare_routes  # noqa: E402, F401
 from app import admin_routes  # noqa: E402, F401
 
+# Backward-compat: tests that import admin helpers from app.main still work
+_admin_nav_bar = admin_routes._admin_nav_bar
+_load_activity_feed = admin_routes._load_activity_feed
+
 try:
     from app import upload_routes  # noqa: E402, F401
 except ImportError:
