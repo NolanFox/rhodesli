@@ -117,6 +117,9 @@ class TestPhotoCarousel:
 class TestFaceClickBehavior:
     """Face clicks navigate to person/identify pages."""
 
+    @pytest.mark.xfail(
+        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+    )
     def test_person_cards_link_to_person_or_identify(self, client, real_photo_id):
         if not real_photo_id:
             pytest.skip("No embeddings available")

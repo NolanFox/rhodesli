@@ -11619,13 +11619,13 @@ def _load_photo_bytes(photo_id: str, filename: str) -> bytes | None:
         return local_path.read_bytes()
 
     # Try R2
-    r2_url = os.getenv("R2_PUBLIC_URL", "")
-    if r2_url:
+    if storage.is_r2_mode():
         try:
             import urllib.request
 
-            url = f"{r2_url}/raw_photos/{urllib.parse.quote(filename)}"
-            with urllib.request.urlopen(url, timeout=15) as resp:
+            url = storage.get_photo_url(filename)
+            req = urllib.request.Request(url, headers={"User-Agent": "Rhodesli/1.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp:
                 return resp.read()
         except Exception as e:
             logging.warning(f"Failed to load photo from R2: {e}")
