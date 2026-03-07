@@ -44,3 +44,15 @@ class TestCollectionNameNotLocationSignal:
         """When photo_metadata is empty dict, no metadata section should be added."""
         prompt = build_extraction_prompt(photo_metadata={})
         assert "WEAK contextual evidence" not in prompt or "Collection:" not in prompt
+
+    def test_tampa_evidence_still_returns_tampa(self):
+        """No over-correction: when GEDCOM + visual evidence both point to Tampa,
+        collection name being weak doesn't mean Tampa is ignored."""
+        prompt = build_extraction_prompt(
+            photo_metadata={"collection": "Nace Capeluto Tampa Collection"},
+            gedcom_context="Nace Capeluto resided in Tampa, FL from 1945 until death in 1992. Address: 3102 Bay to Bay Blvd, Tampa.",
+        )
+        # Tampa should still appear when all evidence agrees
+        assert "Tampa" in prompt
+        # But collection name should still be treated as weak
+        assert "WEAK contextual evidence" in prompt

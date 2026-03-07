@@ -417,11 +417,12 @@ class TestSidebarDiscoveries:
 class TestDiscoveriesRoute:
     """Tests for the /discoveries page route."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def test_discoveries_route_returns_200_for_admin(self, client):
         """/discoveries returns 200 when accessed by admin."""
@@ -449,11 +450,12 @@ class TestDiscoveriesRoute:
 class TestApiDiscoveriesRoute:
     """Tests for the /api/discoveries HTMX endpoint."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def test_api_discoveries_empty_shows_message(self, client):
         """/api/discoveries shows 'all discoveries reviewed' when no discoveries."""
@@ -615,11 +617,12 @@ class TestApiDiscoveriesRoute:
 class TestApiDiscoveryReject:
     """Tests for the /api/discovery/reject endpoint."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def test_reject_adds_negative_id(self, client):
         """Rejecting a discovery adds target to source's negative_ids."""
@@ -707,11 +710,12 @@ class TestDiscoveryCacheInvalidation:
 class TestDiscoveriesFilterControls:
     """Tests for the discoveries page filter controls."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def test_discoveries_page_has_filter_controls(self, client):
         """The /discoveries page renders filter controls."""
@@ -923,11 +927,12 @@ class TestDiscoveriesFilterControls:
 class TestDiscoveriesCardEnhancements:
     """Tests for discovery card visual improvements (Session 87 Act 5b)."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def _get_discovery_html(self, client, distance=0.6):
         """Helper to render a discovery card and return HTML."""
@@ -959,7 +964,7 @@ class TestDiscoveriesCardEnhancements:
         assert response.status_code == 200
         return response.text
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def default_discovery_html(self, client):
         """Cache the default discovery HTML (distance=0.6) for reuse across tests."""
         return self._get_discovery_html(client, distance=0.6)
@@ -1050,11 +1055,12 @@ class TestDiscoveriesCardEnhancements:
 class TestDiscoveriesPhotoDropdownLazyLoad:
     """Session 90b: Photo dropdown loads options via dedicated loader div."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def test_discoveries_page_has_photo_loader_div(self, client):
         """The /discoveries page has a dedicated div to lazy-load photo options."""
@@ -1097,11 +1103,12 @@ class TestDiscoveriesPhotoDropdownLazyLoad:
 class TestDiscoveriesExtraction:
     """Tests for discoveries_routes.py extraction and UX fixes."""
 
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def client(self):
         from app.main import app
 
-        return TestClient(app)
+        with TestClient(app) as c:
+            yield c
 
     def test_confidence_tier_labels(self):
         """confidence_tier_label returns correct labels for distance ranges."""
@@ -1252,3 +1259,161 @@ class TestDiscoveriesExtraction:
         assert "Strong match" in html
         # data-testid for the label element
         assert 'data-testid="discovery-confidence-label"' in html
+
+
+# ---------------------------------------------------------------------------
+# Test: Share buttons on discovery cards (Session 91b gap fix)
+# ---------------------------------------------------------------------------
+
+
+class TestDiscoveriesShareButtons:
+    """Discovery cards must have share buttons for community outreach."""
+
+    @pytest.fixture(scope="class")
+    def client(self):
+        from app.main import app
+
+        with TestClient(app) as c:
+            yield c
+
+    def test_discovery_card_has_share_button(self, client):
+        """Each discovery card has a share button."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Unknown Face",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": 0.85,
+                "confidence": "HIGH",
+                "created_at": "2026-03-01T00:00:00Z",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Unknown Face", "INBOX", candidate_ids=["face_inbox1"])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value="/crop/test.jpg"),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value="photo123"),
+            patch("app.main.get_photo_metadata", return_value={"collection": "Test", "faces": []}),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        assert 'data-action="share-photo"' in html
+        assert "Share" in html
+
+
+# ---------------------------------------------------------------------------
+# Test: Three visually distinct sections (Session 91b gap fix)
+# ---------------------------------------------------------------------------
+
+
+class TestDiscoveriesThreeSections:
+    """The discoveries page must have three visually distinct sections."""
+
+    @pytest.fixture(scope="class")
+    def client(self):
+        from app.main import app
+
+        with TestClient(app) as c:
+            yield c
+
+    def test_tier_1_section_has_distinct_styling(self, client):
+        """Tier 1 (auto-added) section has green accent and icon."""
+        tier_1_entries = [
+            {
+                "source_identity_id": "inbox1",
+                "source_identity_name": "Auto Match",
+                "target_identity_id": "conf1",
+                "target_identity_name": "Known",
+                "distance": 0.5,
+                "face_id": "face1",
+                "created_at": "2026-03-01T00:00:00Z",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Auto Match", "INBOX", candidate_ids=["face1"])
+        registry = _make_registry_mock([source_identity])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=[]),
+            patch("app.main._get_pending_discovery_entries", return_value=(tier_1_entries, [])),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        assert 'data-testid="section-auto-added"' in html
+        assert "Recently Auto-Added" in html
+        assert "bg-emerald-500/5" in html
+
+    def test_tier_2_section_has_distinct_styling(self, client):
+        """Tier 2 (suggested matches) section has blue accent and icon."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Suggestion",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.9,
+                "confidence": "HIGH",
+                "created_at": "2026-03-01T00:00:00Z",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Suggestion", "INBOX", candidate_ids=["face1"])
+        registry = _make_registry_mock([source_identity])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=registry),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        assert 'data-testid="section-suggested-matches"' in html
+        assert "Suggested Matches" in html
+        assert "bg-blue-500/5" in html
+
+    def test_help_identify_section_present(self, client):
+        """Help Identify section shows when there are unidentified faces."""
+        unid_identity = _make_identity("unid1", "Unidentified Person 001", "INBOX", candidate_ids=["face_unid1"])
+        conf_identity = _make_identity("conf1", "Known Person", "CONFIRMED", anchor_ids=["faceC"])
+        registry = _make_registry_mock([unid_identity, conf_identity])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=[]),
+            patch("app.main._get_pending_discovery_entries", return_value=([], [])),
+            patch("app.main.get_crop_files", return_value={"face_unid1.jpg"}),
+            patch("app.main.resolve_face_image_url", return_value="/crop/face_unid1.jpg"),
+            patch("app.main.get_best_face_id", return_value="face_unid1"),
+            patch("app.main.get_face_quality", return_value=0.9),
+            patch("app.main.get_photo_id_for_face", return_value="photo1"),
+            patch("app.main._photo_cache", {"photo1": {"collection": "Test Collection"}}),
+            patch("app.main.load_registry", return_value=registry),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        assert 'data-testid="section-help-identify"' in html
+        assert "Help Identify" in html
+        assert "bg-amber-500/5" in html
+        assert 'href="/help"' in html

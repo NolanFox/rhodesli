@@ -392,13 +392,18 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
     if min_confidence > 0:
         all_items = [d for d in all_items if d.get("confidence_pct", 0) >= min_confidence]
 
+    sections = []
+
+    # Build Help Identify section early (shown even when no ML matches)
+    help_section = _build_help_identify_section(registry, crop_files)
+
     if not all_items:
         filter_msg = (
             "No matches found with current filters."
             if (photo_id or min_confidence > 0)
             else "No high-confidence matches found. New discoveries will appear here when uploaded faces match confirmed identities."
         )
-        return Div(
+        empty_state = Div(
             Div(
                 Span("\u2705", cls="text-4xl mb-3 block"),
                 H3(
@@ -411,10 +416,11 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
             cls="bg-slate-800/50 border border-slate-700/50 rounded-xl",
             data_testid="discoveries-empty-state",
         )
+        if help_section is not None:
+            return Div(empty_state, help_section, cls="space-y-4")
+        return empty_state
 
-    sections = []
-
-    # Tier 1 section: Auto-added (confirm/undo)
+    # --- Section 1: Auto-Added (Tier 1) ---
     tier_1_items = [d for d in all_items if d.get("tier") == 1]
     if tier_1_items:
         tier_1_cards = []
@@ -426,19 +432,29 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
             sections.append(
                 Div(
                     Div(
-                        H3("Recently Auto-Added", cls="text-lg font-semibold text-emerald-400"),
-                        P(
-                            f"{len(tier_1_cards)} face{'s' if len(tier_1_cards) != 1 else ''} automatically added to clusters",
-                            cls="text-xs text-slate-400 mt-0.5",
+                        Div(
+                            Span(
+                                NotStr(
+                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                                ),
+                                cls="text-emerald-400",
+                            ),
+                            H3("Recently Auto-Added", cls="text-lg font-semibold text-emerald-400"),
+                            cls="flex items-center gap-2",
                         ),
-                        cls="mb-3",
+                        P(
+                            f"ML automatically added {len(tier_1_cards)} face{'s' if len(tier_1_cards) != 1 else ''} to clusters — review to confirm or undo",
+                            cls="text-xs text-slate-400 mt-1",
+                        ),
+                        cls="mb-3 pb-3 border-b border-emerald-500/20",
                     ),
                     Div(*tier_1_cards, cls="space-y-3"),
-                    cls="mb-8",
+                    cls="mb-8 p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl",
+                    data_testid="section-auto-added",
                 )
             )
 
-    # Tier 2 section: Suggested matches (accept/reject) — sorted by recency
+    # --- Section 2: Suggested Matches (Tier 2) ---
     tier_2_items = [d for d in all_items if d.get("tier") == 2]
     if tier_2_items:
         tier_2_cards = []
@@ -450,16 +466,31 @@ def get(sess=None, photo_id: str = "", min_confidence: int = 0):
             sections.append(
                 Div(
                     Div(
-                        H3("Suggested Matches", cls="text-lg font-semibold text-blue-400"),
-                        P(
-                            f"{len(tier_2_cards)} potential match{'es' if len(tier_2_cards) != 1 else ''}",
-                            cls="text-xs text-slate-400 mt-0.5",
+                        Div(
+                            Span(
+                                NotStr(
+                                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'
+                                ),
+                                cls="text-blue-400",
+                            ),
+                            H3("Suggested Matches", cls="text-lg font-semibold text-blue-400"),
+                            cls="flex items-center gap-2",
                         ),
-                        cls="mb-3",
+                        P(
+                            f"{len(tier_2_cards)} potential match{'es' if len(tier_2_cards) != 1 else ''} — newest first",
+                            cls="text-xs text-slate-400 mt-1",
+                        ),
+                        cls="mb-3 pb-3 border-b border-blue-500/20",
                     ),
                     Div(*tier_2_cards, cls="space-y-3"),
+                    cls="mb-8 p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl",
+                    data_testid="section-suggested-matches",
                 )
             )
+
+    # --- Section 3: Help Identify (cold cases) ---
+    if help_section is not None:
+        sections.append(help_section)
 
     return (
         Div(*sections, cls="space-y-4")
@@ -768,6 +799,15 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
         data_testid="discovery-compare-link",
     )
 
+    # Share button for this discovery
+    share_btn = _main_mod.share_button(
+        url=f"/person/{source_id}",
+        style="link",
+        label="Share",
+        title="Can you help identify this person?",
+        text=f"This face may be {target_name} — help us confirm!",
+    )
+
     return Div(
         Div(
             Div(
@@ -811,7 +851,7 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
                     show_badge=False,
                     show_distance=False,
                 ),
-                compare_link,
+                Div(compare_link, share_btn, cls="flex items-center gap-3"),
                 cls="flex flex-col items-center gap-1.5 px-4",
             ),
             Div(
@@ -835,6 +875,110 @@ def _build_discovery_card(d, registry, crop_files, tier=2):
         action_buttons,
         id=f"discovery-card-{source_id}",
         cls=f"bg-slate-800/80 border border-slate-700/50 rounded-xl hover:border-slate-600/50 transition-colors {tier_border}",
+    )
+
+
+def _build_help_identify_section(registry, crop_files, max_faces=6):
+    """Build the 'Help Identify' section showing top cold-case faces.
+
+    These are unidentified faces (INBOX/PROPOSED/SKIPPED) that need community
+    help. Sorted by face quality (highest first).
+    """
+    unid_faces = []
+    for ident in registry.list_identities():
+        if ident.get("merged_into"):
+            continue
+        state = ident.get("state", "")
+        if state not in ("INBOX", "PROPOSED", "SKIPPED"):
+            continue
+        face_ids = ident.get("anchor_ids", []) + ident.get("candidate_ids", [])
+        if not face_ids:
+            continue
+        best_fid = _main_mod.get_best_face_id(face_ids)
+        if not best_fid:
+            best_fid = face_ids[0] if isinstance(face_ids[0], str) else face_ids[0].get("face_id", "")
+        crop_url = _main_mod.resolve_face_image_url(best_fid, crop_files) if crop_files else None
+        if not crop_url:
+            continue
+        quality = _main_mod.get_face_quality(best_fid) or 0.0
+        photo_id = _main_mod.get_photo_id_for_face(best_fid)
+        collection = ""
+        if photo_id and _main_mod._photo_cache:
+            pm = _main_mod._photo_cache.get(photo_id, {})
+            collection = pm.get("collection", "")
+        unid_faces.append(
+            {
+                "identity_id": ident["identity_id"],
+                "crop_url": crop_url,
+                "quality": quality,
+                "collection": collection,
+                "photo_id": photo_id,
+            }
+        )
+
+    unid_faces.sort(key=lambda x: x["quality"], reverse=True)
+    top_faces = unid_faces[:max_faces]
+
+    if not top_faces:
+        return None
+
+    face_cards = []
+    for item in top_faces:
+        _iid = item["identity_id"]
+        face_cards.append(
+            A(
+                Div(
+                    Img(
+                        src=item["crop_url"],
+                        alt="Unidentified person",
+                        cls="w-full h-full object-cover rounded-lg",
+                        loading="lazy",
+                    ),
+                    cls="aspect-square overflow-hidden rounded-lg",
+                ),
+                Div(
+                    P("Can you help?", cls="text-[10px] text-amber-300/80 font-medium mt-1"),
+                    P(item["collection"], cls="text-[10px] text-slate-500 leading-snug truncate")
+                    if item["collection"]
+                    else None,
+                    cls="text-center",
+                ),
+                href=f"/identify/{_iid}",
+                cls="block hover:opacity-80 transition-opacity",
+                data_testid="help-identify-card",
+            )
+        )
+
+    total_unid = len(unid_faces)
+    return Div(
+        Div(
+            Div(
+                Span(
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+                    ),
+                    cls="text-amber-400",
+                ),
+                H3("Help Identify", cls="text-lg font-semibold text-amber-400"),
+                cls="flex items-center gap-2",
+            ),
+            P(
+                f"{total_unid} face{'s' if total_unid != 1 else ''} still unidentified — can you help?",
+                cls="text-xs text-slate-400 mt-1",
+            ),
+            cls="mb-3 pb-3 border-b border-amber-500/20",
+        ),
+        Div(*face_cards, cls="grid grid-cols-3 sm:grid-cols-6 gap-3"),
+        Div(
+            A(
+                "View all unidentified faces",
+                href="/help",
+                cls="text-sm text-amber-400 hover:text-amber-300 underline",
+            ),
+            cls="mt-3 text-center",
+        ),
+        cls="p-4 bg-amber-500/5 border border-amber-500/10 rounded-xl",
+        data_testid="section-help-identify",
     )
 
 

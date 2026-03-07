@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.94.1 · ~3518 tests · 296 photos · 777 identities · 69 confirmed
+Current: v0.94.1 · ~3522 tests · 296 photos · 777 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -36,7 +36,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ### Immediate — Post-Session 91b
 - [ ] Deploy Session 91b to Railway + browser verify all features
-- [ ] Re-analyze Leon's Restaurant photo → verify Asheville (not Tampa)
+- [x] 2026-03-07: Re-analyze Leon's Restaurant photo — Tampa confirmed correct (Victor/Victoria have Tampa GEDCOM, Asheville is Leon who isn't pictured)
 - [ ] Set SENTRY_DSN + POSTHOG_API_KEY on Railway
 - [ ] Test DATA_SOURCE=postgres on Railway
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
