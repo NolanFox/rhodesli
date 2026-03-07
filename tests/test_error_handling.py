@@ -190,6 +190,7 @@ class TestLoadRegistryGraceful:
     def test_corrupted_file_returns_empty_registry(self, tmp_path):
         """Corrupted identities.json returns empty IdentityRegistry, not crash."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
         from core.registry import IdentityRegistry
 
         bad_file = tmp_path / "identities.json"
@@ -208,6 +209,7 @@ class TestLoadRegistryGraceful:
     def test_missing_file_returns_empty_registry(self, tmp_path):
         """Missing file returns empty IdentityRegistry."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
         from core.registry import IdentityRegistry
 
         missing_file = tmp_path / "nonexistent.json"
@@ -224,6 +226,7 @@ class TestLoadRegistryGraceful:
     def test_valid_file_loads_normally(self, tmp_path):
         """Valid file loads normally (regression check)."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
         from core.registry import IdentityRegistry
 
         good_file = tmp_path / "identities.json"
@@ -253,6 +256,7 @@ class TestLoadPhotoRegistryGraceful:
     def test_corrupted_file_returns_empty_registry(self, tmp_path):
         """Corrupted photo_index.json returns empty PhotoRegistry, not crash."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
         from core.photo_registry import PhotoRegistry
 
         bad_file = tmp_path / "photo_index.json"
@@ -272,6 +276,7 @@ class TestLoadPhotoRegistryGraceful:
     def test_missing_file_returns_empty_registry(self, tmp_path):
         """Missing file returns empty PhotoRegistry."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
         from core.photo_registry import PhotoRegistry
 
         # tmp_path has no photo_index.json
@@ -288,6 +293,7 @@ class TestLoadPhotoRegistryGraceful:
     def test_valid_file_loads_normally(self, tmp_path):
         """Valid file loads normally (regression check)."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
         from core.photo_registry import PhotoRegistry
 
         good_file = tmp_path / "photo_index.json"
@@ -325,56 +331,60 @@ class TestLoadAnnotationsGraceful:
     def test_corrupted_file_returns_default(self, tmp_path):
         """Corrupted annotations.json returns default structure."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
 
         bad_file = tmp_path / "annotations.json"
         bad_file.write_text("{broken json!!")
 
         # Reset cache
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        original_cache = engagement_mod._annotations_cache
+        engagement_mod._annotations_cache = None
 
         try:
             with patch.object(main_mod, "data_path", tmp_path):
                 result = main_mod._load_annotations()
                 assert result == {"schema_version": 1, "annotations": {}}
         finally:
-            main_mod._annotations_cache = original_cache
+            engagement_mod._annotations_cache = original_cache
 
     def test_missing_file_returns_default(self, tmp_path):
         """Missing annotations.json returns default structure."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
 
         # tmp_path has no annotations.json
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        original_cache = engagement_mod._annotations_cache
+        engagement_mod._annotations_cache = None
 
         try:
             with patch.object(main_mod, "data_path", tmp_path):
                 result = main_mod._load_annotations()
                 assert result == {"schema_version": 1, "annotations": {}}
         finally:
-            main_mod._annotations_cache = original_cache
+            engagement_mod._annotations_cache = original_cache
 
     def test_empty_file_returns_default(self, tmp_path):
         """Empty annotations.json returns default structure."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
 
         empty_file = tmp_path / "annotations.json"
         empty_file.write_text("")
 
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        original_cache = engagement_mod._annotations_cache
+        engagement_mod._annotations_cache = None
 
         try:
             with patch.object(main_mod, "data_path", tmp_path):
                 result = main_mod._load_annotations()
                 assert result == {"schema_version": 1, "annotations": {}}
         finally:
-            main_mod._annotations_cache = original_cache
+            engagement_mod._annotations_cache = original_cache
 
     def test_valid_file_loads_normally(self, tmp_path):
         """Valid annotations file loads normally (regression check)."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
 
         good_file = tmp_path / "annotations.json"
         good_file.write_text(json.dumps({
@@ -382,27 +392,28 @@ class TestLoadAnnotationsGraceful:
             "annotations": {"ann1": {"text": "test annotation"}},
         }))
 
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        original_cache = engagement_mod._annotations_cache
+        engagement_mod._annotations_cache = None
 
         try:
             with patch.object(main_mod, "data_path", tmp_path):
                 result = main_mod._load_annotations()
                 assert result["annotations"]["ann1"]["text"] == "test annotation"
         finally:
-            main_mod._annotations_cache = original_cache
+            engagement_mod._annotations_cache = original_cache
 
     def test_cached_result_not_reloaded(self, tmp_path):
         """When cache is populated, file is not re-read (even if corrupted)."""
         import app.main as main_mod
+        import app.engagement_routes as engagement_mod
 
         # Write corrupted file
         bad_file = tmp_path / "annotations.json"
         bad_file.write_text("{broken!!!")
 
         cached_data = {"schema_version": 1, "annotations": {"cached": True}}
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = cached_data
+        original_cache = engagement_mod._annotations_cache
+        engagement_mod._annotations_cache = cached_data
 
         try:
             with patch.object(main_mod, "data_path", tmp_path):
@@ -410,4 +421,4 @@ class TestLoadAnnotationsGraceful:
                 # Should return cached data, not try to load corrupted file
                 assert result["annotations"]["cached"] is True
         finally:
-            main_mod._annotations_cache = original_cache
+            engagement_mod._annotations_cache = original_cache

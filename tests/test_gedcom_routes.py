@@ -6,7 +6,6 @@ TEST 9: Admin UI shows pending matches
 
 import json
 import pytest
-from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from starlette.testclient import TestClient
@@ -15,19 +14,19 @@ from starlette.testclient import TestClient
 @pytest.fixture
 def admin_client():
     """Test client with admin auth mocked."""
-    with patch("app.main.is_auth_enabled", return_value=True), \
-         patch("app.main.get_current_user") as mock_user:
+    with patch("app.main.is_auth_enabled", return_value=True), patch("app.main.get_current_user") as mock_user:
         mock_user.return_value = MagicMock(email="admin@test.com", is_admin=True, id="admin-id")
         from app.main import app
+
         yield TestClient(app)
 
 
 @pytest.fixture
 def anon_client():
     """Test client with no auth."""
-    with patch("app.main.is_auth_enabled", return_value=True), \
-         patch("app.main.get_current_user", return_value=None):
+    with patch("app.main.is_auth_enabled", return_value=True), patch("app.main.get_current_user", return_value=None):
         from app.main import app
+
         yield TestClient(app)
 
 
@@ -145,12 +144,13 @@ class TestGedcomConfirm:
         }
         mock_registry.get_identity.return_value = mock_identity
 
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main.load_registry", return_value=mock_registry), \
-             patch("app.main.save_registry"), \
-             patch("app.main._gedcom_matches_cache", None), \
-             patch("app.main._birth_year_cache", None):
-
+        with (
+            patch("app.main.data_path", tmp_path),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.save_registry"),
+            patch("app.main._gedcom_matches_cache", None),
+            patch("app.main._birth_year_cache", None),
+        ):
             resp = admin_client.post("/admin/gedcom/confirm/@I1@")
             assert resp.status_code == 200
             assert "Confirmed" in resp.text
@@ -184,8 +184,7 @@ class TestGedcomConfirm:
         }
         matches_path.write_text(json.dumps(matches_data))
 
-        with patch("app.main.data_path", tmp_path), \
-             patch("app.main._gedcom_matches_cache", None):
+        with patch("app.main.data_path", tmp_path), patch("app.main._gedcom_matches_cache", None):
             resp = admin_client.post("/admin/gedcom/reject/@I1@")
             assert resp.status_code == 200
             assert "Rejected" in resp.text
@@ -229,21 +228,61 @@ class TestGedcomPermissions:
 
 
 SAMPLE_GEDCOM_INDIVIDUALS = [
-    {"gedcom_id": "@I1@", "name": "Leon Capeluto", "given_name": "Leon", "surname": "Capeluto",
-     "gender": "M", "birth_date": "1903", "birth_place": "Rhodes, Greece",
-     "death_date": "1982", "death_place": "Tampa, Florida"},
-    {"gedcom_id": "@I2@", "name": "Victoria Capuano", "given_name": "Victoria", "surname": "Capuano",
-     "gender": "F", "birth_date": "1908", "birth_place": "Rhodes",
-     "death_date": "1990", "death_place": ""},
-    {"gedcom_id": "@I3@", "name": "Moise Capeluto", "given_name": "Moise", "surname": "Capeluto",
-     "gender": "M", "birth_date": "1904", "birth_place": "Rhodes",
-     "death_date": "", "death_place": ""},
-    {"gedcom_id": "@I4@", "name": "Isaac Israel", "given_name": "Isaac", "surname": "Israel",
-     "gender": "M", "birth_date": "1880", "birth_place": "",
-     "death_date": "1945", "death_place": ""},
-    {"gedcom_id": "@I5@", "name": "Selma Capouya", "given_name": "Selma", "surname": "Capouya",
-     "gender": "F", "birth_date": "", "birth_place": "",
-     "death_date": "", "death_place": ""},
+    {
+        "gedcom_id": "@I1@",
+        "name": "Leon Capeluto",
+        "given_name": "Leon",
+        "surname": "Capeluto",
+        "gender": "M",
+        "birth_date": "1903",
+        "birth_place": "Rhodes, Greece",
+        "death_date": "1982",
+        "death_place": "Tampa, Florida",
+    },
+    {
+        "gedcom_id": "@I2@",
+        "name": "Victoria Capuano",
+        "given_name": "Victoria",
+        "surname": "Capuano",
+        "gender": "F",
+        "birth_date": "1908",
+        "birth_place": "Rhodes",
+        "death_date": "1990",
+        "death_place": "",
+    },
+    {
+        "gedcom_id": "@I3@",
+        "name": "Moise Capeluto",
+        "given_name": "Moise",
+        "surname": "Capeluto",
+        "gender": "M",
+        "birth_date": "1904",
+        "birth_place": "Rhodes",
+        "death_date": "",
+        "death_place": "",
+    },
+    {
+        "gedcom_id": "@I4@",
+        "name": "Isaac Israel",
+        "given_name": "Isaac",
+        "surname": "Israel",
+        "gender": "M",
+        "birth_date": "1880",
+        "birth_place": "",
+        "death_date": "1945",
+        "death_place": "",
+    },
+    {
+        "gedcom_id": "@I5@",
+        "name": "Selma Capouya",
+        "given_name": "Selma",
+        "surname": "Capouya",
+        "gender": "F",
+        "birth_date": "",
+        "birth_place": "",
+        "death_date": "",
+        "death_place": "",
+    },
 ]
 
 
@@ -251,37 +290,47 @@ class TestGedcomSearchAPI:
     """Tests for GET /api/gedcom/search (AD-160)."""
 
     def test_search_returns_results(self, admin_client):
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
             assert resp.status_code == 200
             assert "Leon Capeluto" in resp.text
 
     def test_search_case_insensitive(self, admin_client):
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=leon capeluto&identity_id=test-id")
             assert resp.status_code == 200
             assert "Leon Capeluto" in resp.text
 
     def test_search_no_match(self, admin_client):
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=Nonexistent Person&identity_id=test-id")
             assert resp.status_code == 200
             assert "No matches found" in resp.text
 
     def test_search_empty_query(self, admin_client):
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=&identity_id=test-id")
             assert resp.status_code == 200
             assert "No matches found" in resp.text
 
     def test_search_surname_variant(self, admin_client):
         """Sephardic name variants: Capuano should match Capeluto."""
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=Victoria Capeluto&identity_id=test-id")
             assert resp.status_code == 200
             # Should find Victoria Capuano (variant of Capeluto)
@@ -292,8 +341,10 @@ class TestGedcomSearchAPI:
         assert resp.status_code in (401, 403)
 
     def test_search_shows_birth_death_years(self, admin_client):
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
             assert resp.status_code == 200
             assert "1903" in resp.text
@@ -308,10 +359,12 @@ class TestGedcomLinkAPI:
         mock_sb.table.return_value.upsert.return_value.execute.return_value = MagicMock()
         mock_registry = MagicMock()
 
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main.load_registry", return_value=mock_registry), \
-             patch("app.main.save_registry"), \
-             patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.save_registry"),
+            patch("app.supabase_data.get_supabase_client", return_value=mock_sb),
+        ):
             resp = admin_client.post(
                 "/api/gedcom/link",
                 data={"identity_id": "test-id", "gedcom_id": "@I1@"},
@@ -328,10 +381,12 @@ class TestGedcomLinkAPI:
         mock_sb.table.return_value.upsert.return_value.execute.return_value = MagicMock()
         mock_registry = MagicMock()
 
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main.load_registry", return_value=mock_registry), \
-             patch("app.main.save_registry"), \
-             patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.save_registry"),
+            patch("app.supabase_data.get_supabase_client", return_value=mock_sb),
+        ):
             resp = admin_client.post(
                 "/api/gedcom/link",
                 data={"identity_id": "test-id", "gedcom_id": "@I1@"},
@@ -361,9 +416,11 @@ class TestGedcomLinkAPI:
         mock_registry = MagicMock()
         mock_registry.get_identity.return_value = {"identity_id": "test-id", "name": "Test Person"}
 
-        with patch("app.main.load_registry", return_value=mock_registry), \
-             patch("app.main._gedcom_face_links_cache", None), \
-             patch("app.supabase_data.get_supabase_client", return_value=mock_sb):
+        with (
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main._gedcom_face_links_cache", None),
+            patch("app.supabase_data.get_supabase_client", return_value=mock_sb),
+        ):
             resp = admin_client.post(
                 "/api/gedcom/unlink",
                 data={"identity_id": "test-id", "gedcom_id": "@I1@"},
@@ -385,11 +442,13 @@ class TestGedcomLinkAPI:
         mock_registry.get_identity.return_value = identity
         mock_registry.confirm_identity.return_value = None
 
-        with patch("app.main.load_registry", return_value=mock_registry), \
-             patch("app.main.save_registry"), \
-             patch("app.main.get_crop_files", return_value=set()), \
-             patch("app.main._load_gedcom_face_links", return_value={}), \
-             patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
+        with (
+            patch("app.main.load_registry", return_value=mock_registry),
+            patch("app.main.save_registry"),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+        ):
             resp = admin_client.post("/confirm/test-id")
             assert resp.status_code == 200
             assert "Link to Family Tree" in resp.text
@@ -401,6 +460,7 @@ class TestSearchGedcomFunction:
 
     def test_exact_match_scores_highest(self):
         from app.main import _search_gedcom_individuals
+
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
             results, total = _search_gedcom_individuals("Leon Capeluto")
             assert len(results) > 0
@@ -410,12 +470,14 @@ class TestSearchGedcomFunction:
 
     def test_partial_match(self):
         from app.main import _search_gedcom_individuals
+
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
             results, total = _search_gedcom_individuals("Capeluto")
             assert len(results) >= 2  # Leon + Moise
 
     def test_surname_variant(self):
         from app.main import _search_gedcom_individuals
+
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
             results, total = _search_gedcom_individuals("Victoria Capeluto")
             # Should find Victoria Capuano via surname variant
@@ -424,6 +486,7 @@ class TestSearchGedcomFunction:
 
     def test_empty_query_returns_empty(self):
         from app.main import _search_gedcom_individuals
+
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
             results, total = _search_gedcom_individuals("")
             assert results == []
@@ -433,6 +496,7 @@ class TestSearchGedcomFunction:
 
     def test_no_match_returns_empty(self):
         from app.main import _search_gedcom_individuals
+
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
             results, total = _search_gedcom_individuals("Zzzzz Nonexistent")
             assert results == []
@@ -441,6 +505,7 @@ class TestSearchGedcomFunction:
     def test_date_bonus_scoring(self):
         """People with dates and Rhodes connection get bonus score (B1)."""
         from app.main import _search_gedcom_individuals
+
         with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS):
             results, total = _search_gedcom_individuals("Capeluto")
             # Leon (has dates + Rhodes) should rank above Selma Capouya (no dates)
@@ -451,11 +516,20 @@ class TestSearchGedcomFunction:
     def test_pagination_offset(self):
         """Pagination returns correct slice of results."""
         from app.main import _search_gedcom_individuals
+
         # Create many similar individuals
         many_individuals = [
-            {"gedcom_id": f"@I{i}@", "name": f"Person Capeluto {i}", "given_name": f"Person{i}",
-             "surname": "Capeluto", "gender": "M", "birth_date": "", "birth_place": "",
-             "death_date": "", "death_place": ""}
+            {
+                "gedcom_id": f"@I{i}@",
+                "name": f"Person Capeluto {i}",
+                "given_name": f"Person{i}",
+                "surname": "Capeluto",
+                "gender": "M",
+                "birth_date": "",
+                "birth_place": "",
+                "death_date": "",
+                "death_place": "",
+            }
             for i in range(25)
         ]
         with patch("app.main._load_gedcom_individuals", return_value=many_individuals):
@@ -471,16 +545,20 @@ class TestSearchGedcomFunction:
 
     def test_result_count_in_search_response(self, admin_client):
         """Search endpoint shows result count (B1)."""
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=Capeluto&identity_id=test-id")
             assert resp.status_code == 200
             assert "result" in resp.text.lower()  # Shows "N results"
 
     def test_match_strength_indicator(self, admin_client):
         """Search results show match strength labels (B1)."""
-        with patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS), \
-             patch("app.main._load_gedcom_face_links", return_value={}):
+        with (
+            patch("app.main._load_gedcom_individuals", return_value=SAMPLE_GEDCOM_INDIVIDUALS),
+            patch("app.main._load_gedcom_face_links", return_value={}),
+        ):
             resp = admin_client.get("/api/gedcom/search?q=Leon Capeluto&identity_id=test-id")
             assert resp.status_code == 200
             assert "Strong" in resp.text  # Exact match → Strong
@@ -492,6 +570,7 @@ class TestGedcomTreeButtonOnIdentityCard:
     def test_confirmed_identity_shows_tree_link(self):
         """Confirmed identity card shows tree link when not linked (DD-005 compact pills)."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-id-gedcom-001",
             "name": "Leon Capeluto",
@@ -503,11 +582,12 @@ class TestGedcomTreeButtonOnIdentityCard:
         with patch("app.main._load_gedcom_face_links", return_value={}):
             html = to_xml(identity_card(identity, crop_files, is_admin=True))
         assert "Link Tree" in html
-        assert f"/person/test-id-gedcom-001#gedcom" in html
+        assert "/person/test-id-gedcom-001#gedcom" in html
 
     def test_linked_identity_shows_view_tree(self):
         """Confirmed identity card shows 'Tree' when linked (DD-005 compact pills)."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-id-gedcom-002",
             "name": "Victoria Capuano",
@@ -524,6 +604,7 @@ class TestGedcomTreeButtonOnIdentityCard:
     def test_proposed_identity_no_tree_button(self):
         """Proposed identities should NOT show tree button."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-id-gedcom-003",
             "name": "Unknown Person",
@@ -540,6 +621,7 @@ class TestGedcomTreeButtonOnIdentityCard:
     def test_non_admin_no_tree_button(self):
         """Non-admin users should NOT see tree button."""
         from app.main import identity_card, to_xml
+
         identity = {
             "identity_id": "test-id-gedcom-004",
             "name": "Leon Capeluto",
@@ -578,39 +660,71 @@ class TestGedcomLoaderResilience:
 
     def test_face_links_retry_once_on_transient_error(self):
         import app.main as main
+        import app.relationship_routes as rel_mod
+
+        # Clear caches before test
+        main._gedcom_face_links_cache = None
+        rel_mod._gedcom_face_links_cache = None
+        rel_mod._gedcom_face_links_cache_loaded_at = 0.0
+        rel_mod._gedcom_face_links_cache_failed_at = 0.0
 
         mock_sb = MagicMock()
         execute = mock_sb.table.return_value.select.return_value.execute
         execute.side_effect = [
             ConnectionError("ConnectionTerminated"),
-            MagicMock(
-                data=[{"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}]
-            ),
+            MagicMock(data=[{"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}]),
         ]
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
-             patch("app.supabase_data.reset_client") as mock_reset, \
-             patch("app.main.time.sleep") as mock_sleep:
-            result = main._load_gedcom_face_links()
+        try:
+            with (
+                patch("app.supabase_data.get_supabase_client", return_value=mock_sb),
+                patch("app.supabase_data.reset_client") as mock_reset,
+                patch("app.main.time.sleep") as mock_sleep,
+            ):
+                result = main._load_gedcom_face_links()
 
-        assert result == {"id-1": {"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}}
-        assert execute.call_count == 2
-        mock_reset.assert_called_once()
-        mock_sleep.assert_called_once()
+            assert result == {
+                "id-1": {"identity_id": "id-1", "gedcom_id": "@I1@", "confidence": 1.0, "linked_by": "admin"}
+            }
+            assert execute.call_count == 2
+            mock_reset.assert_called_once()
+            mock_sleep.assert_called_once()
+        finally:
+            # Clean up caches
+            main._gedcom_face_links_cache = None
+            rel_mod._gedcom_face_links_cache = None
+            rel_mod._gedcom_face_links_cache_loaded_at = 0.0
+            rel_mod._gedcom_face_links_cache_failed_at = 0.0
 
     def test_face_links_backoff_skips_immediate_requery_after_failure(self):
         import app.main as main
+        import app.relationship_routes as rel_mod
+
+        # Clear caches on both modules before test
+        main._gedcom_face_links_cache = None
+        rel_mod._gedcom_face_links_cache = None
+        rel_mod._gedcom_face_links_cache_loaded_at = 0.0
+        rel_mod._gedcom_face_links_cache_failed_at = 0.0
 
         mock_sb = MagicMock()
         execute = mock_sb.table.return_value.select.return_value.execute
         execute.side_effect = ConnectionError("timeout")
 
-        with patch("app.supabase_data.get_supabase_client", return_value=mock_sb), \
-             patch("app.supabase_data.reset_client"), \
-             patch("app.main.time.sleep"):
-            first = main._load_gedcom_face_links()
-            second = main._load_gedcom_face_links()
+        try:
+            with (
+                patch("app.supabase_data.get_supabase_client", return_value=mock_sb),
+                patch("app.supabase_data.reset_client"),
+                patch("app.main.time.sleep"),
+            ):
+                first = main._load_gedcom_face_links()
+                second = main._load_gedcom_face_links()
 
-        assert first == {}
-        assert second == {}
-        assert execute.call_count == 2  # initial attempt + single retry only
+            assert first == {}
+            assert second == {}
+            assert execute.call_count == 2  # initial attempt + single retry only
+        finally:
+            # Clean up caches
+            main._gedcom_face_links_cache = None
+            rel_mod._gedcom_face_links_cache = None
+            rel_mod._gedcom_face_links_cache_loaded_at = 0.0
+            rel_mod._gedcom_face_links_cache_failed_at = 0.0

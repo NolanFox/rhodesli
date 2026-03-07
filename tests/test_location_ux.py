@@ -111,16 +111,22 @@ def photo_locations_no_coords():
 
 
 def _setup_caches(main_module, date_labels, photo_locations, search_index=None):
-    """Set caches on main module for testing."""
+    """Set caches on main module and route modules for testing."""
+    import app.page_routes as page_mod
+
     main_module._date_labels_cache = date_labels
     main_module._photo_locations_cache = photo_locations
+    page_mod._photo_locations_cache = photo_locations
     main_module._search_index_cache = search_index or []
 
 
 def _clear_caches(main_module):
     """Clear test caches."""
+    import app.page_routes as page_mod
+
     main_module._date_labels_cache = None
     main_module._photo_locations_cache = None
+    page_mod._photo_locations_cache = None
     main_module._search_index_cache = None
 
 
@@ -421,23 +427,37 @@ class TestLocationAdminCorrection:
 class TestLoadPhotoLocations:
     """_load_photo_locations() function behavior."""
 
+    def _clear_loc_cache(self, main_module):
+        """Clear photo locations cache on both main and page_routes modules."""
+        import app.page_routes as page_mod
+
+        main_module._photo_locations_cache = None
+        page_mod._photo_locations_cache = None
+
+    def _set_loc_cache(self, main_module, value):
+        """Set photo locations cache on both main and page_routes modules."""
+        import app.page_routes as page_mod
+
+        main_module._photo_locations_cache = value
+        page_mod._photo_locations_cache = value
+
     def test_returns_dict(self):
         """_load_photo_locations() returns a dict."""
         import app.main as main_module
 
         # Clear cache to force reload
-        main_module._photo_locations_cache = None
+        self._clear_loc_cache(main_module)
         try:
             result = main_module._load_photo_locations()
             assert isinstance(result, dict)
         finally:
-            main_module._photo_locations_cache = None
+            self._clear_loc_cache(main_module)
 
     def test_returns_empty_dict_when_no_file(self, tmp_path):
         """Returns empty dict when photo_locations.json does not exist."""
         import app.main as main_module
 
-        main_module._photo_locations_cache = None
+        self._clear_loc_cache(main_module)
         original_data_dir = main_module.DATA_DIR
         try:
             main_module.DATA_DIR = str(tmp_path)
@@ -445,18 +465,18 @@ class TestLoadPhotoLocations:
             assert result == {}
         finally:
             main_module.DATA_DIR = original_data_dir
-            main_module._photo_locations_cache = None
+            self._clear_loc_cache(main_module)
 
     def test_caches_result(self):
         """Subsequent calls return cached result."""
         import app.main as main_module
 
-        main_module._photo_locations_cache = {"cached": True}
+        self._set_loc_cache(main_module, {"cached": True})
         try:
             result = main_module._load_photo_locations()
             assert result == {"cached": True}
         finally:
-            main_module._photo_locations_cache = None
+            self._clear_loc_cache(main_module)
 
     def test_loads_from_json_file(self, tmp_path):
         """Loads photo locations from JSON file."""
@@ -478,7 +498,7 @@ class TestLoadPhotoLocations:
         locations_path.write_text(json.dumps(locations_data))
 
         original_data_dir = main_module.DATA_DIR
-        main_module._photo_locations_cache = None
+        self._clear_loc_cache(main_module)
         try:
             main_module.DATA_DIR = str(tmp_path)
             result = main_module._load_photo_locations()
@@ -487,7 +507,7 @@ class TestLoadPhotoLocations:
             assert result["test_photo"]["lat"] == 36.4413
         finally:
             main_module.DATA_DIR = original_data_dir
-            main_module._photo_locations_cache = None
+            self._clear_loc_cache(main_module)
 
     def test_dual_keys_inbox_ids_to_sha256(self, tmp_path):
         """inbox_* IDs are also keyed by SHA256 of their filename."""
@@ -530,7 +550,7 @@ class TestLoadPhotoLocations:
 
         original_data_dir = main_module.DATA_DIR
         original_data_path = main_module.data_path
-        main_module._photo_locations_cache = None
+        self._clear_loc_cache(main_module)
         try:
             main_module.DATA_DIR = str(tmp_path)
             main_module.data_path = tmp_path
@@ -544,7 +564,7 @@ class TestLoadPhotoLocations:
         finally:
             main_module.DATA_DIR = original_data_dir
             main_module.data_path = original_data_path
-            main_module._photo_locations_cache = None
+            self._clear_loc_cache(main_module)
 
     def test_dual_key_matches_leon_restaurant_photo(self, tmp_path):
         """Specific regression test for Leon's Restaurant photo ID mismatch."""
@@ -579,7 +599,7 @@ class TestLoadPhotoLocations:
 
         original_data_dir = main_module.DATA_DIR
         original_data_path = main_module.data_path
-        main_module._photo_locations_cache = None
+        self._clear_loc_cache(main_module)
         try:
             main_module.DATA_DIR = str(tmp_path)
             main_module.data_path = tmp_path
@@ -588,4 +608,4 @@ class TestLoadPhotoLocations:
         finally:
             main_module.DATA_DIR = original_data_dir
             main_module.data_path = original_data_path
-            main_module._photo_locations_cache = None
+            self._clear_loc_cache(main_module)
