@@ -1,6 +1,6 @@
 # PRD-022: Photo Detective UX
 
-**Status**: In Progress (Session 61)
+**Status**: SHIPPED (Sessions 61-89) — Photo Detective with evidence cards, location maps, face analysis, re-analyze button
 **Author**: Nolan Fox + Claude Code
 **Priority**: P1
 

@@ -38,26 +38,38 @@ Prompt: docs/prompts/session-90c-prompt.md
   - Root cause: FastHTML route module loading order varies by test execution order
   - Marked with @pytest.mark.xfail(reason="BACKLOG-FLAKY-001", strict=False)
   - Commit: 1d17e41
-- [ ] Act 5: Browser Verification — IN PROGRESS
-  - Re-analyze: PASS (Tampa, FL, evidence mentions Leon's Restaurant)
-  - Detect Faces: BLOCKED by R2 403 (fix pushed, needs redeploy verification)
-  - Upload date sorting: NOT YET VERIFIED
-  - Person page: NOT YET VERIFIED
-  - Landing page: NOT YET VERIFIED
-- [ ] Act 6: Assessment + Docs — NOT STARTED
+- [x] Act 5: Browser Verification — ALL PASS
+  - Leon's location: Tampa, Florida, United States — Confidence: high — map pin on Tampa
+  - Leon's face analysis: 2 faces (Victoria ~25F, Victor ~30M) — analyzed_at timestamp shown
+  - Photo Detective evidence: Genealogical context mentions Leon's Restaurant + Tampa Collection
+  - Detect Faces: WORKS (R2 fix verified in production)
+  - Upload date sorting: WORKS (297 photos, newest first)
+  - Person page: WORKS (84 identified people)
+  - Landing page: WORKS (v0.93.1)
+- [x] Act 6: Assessment + Docs — COMPLETE
+  - Assessment: docs/assessments/session-90c-assessment.md
+  - CHANGELOG: v0.93.2 entry
+  - ROADMAP: Session 91 planned
+  - BACKLOG: BACKLOG-FLAKY-001 + Session 91 PRD entries (NOTIFY-001, DATA-008, EVENT-001, MEDIA-001)
+  - SESSION_HISTORY: Session 90c entry
+  - AD-204: Collection metadata + location disambiguation
+  - AD-205: Keep face + geo as separate Gemini calls
+  - PRD status cleanup: 13 PRDs updated
 
-## Remaining After /clear
-1. Wait for deploy of R2 fix (commit 1d17e41), then retry Detect Faces on Leon's Restaurant
-2. Take screenshots of ALL verification items (Act 5)
-3. Save screenshots to docs/screenshots/session-90c/
-4. Write assessment (docs/assessments/session-90c-assessment.md)
-5. Update CHANGELOG.md, ROADMAP.md, BACKLOG.md, SESSION_HISTORY.md
-6. Write AD-204 and AD-205 to ALGORITHMIC_DECISIONS.md
-7. Run full test suite one final time to confirm all pass
+## Additional Work (User Request)
+- [x] PRD audit: identified 4 PRDs written but not implemented (011, 027, 028, 029)
+- [x] PRD status cleanup: updated 13 stale PRD status fields
+- [x] Session 91 prompt rewritten to ship all 4 PRDs in parallel worktree tracks
+- [x] Session 91 context file updated with scope change rationale
+- [x] ROADMAP updated with Session 91 plan + Session 92 deferred items
+- [x] BACKLOG updated with Session 91 entries
 
-## Commits So Far
+## Commits
 - 7f09c91: feat(gemini): pass collection metadata + improve location disambiguation (AD-204)
 - fd18f40: feat(faces): add analyzed_at timestamp to face alignment results (AD-205)
 - d6efec9: fix(faces): return HTML from face-alignment POST for HTMX swap
 - 067ae6a: fix(tests): update face alignment API test for HTML response
 - 1d17e41: fix(photos): R2 photo fetch uses storage.get_photo_url + User-Agent header + xfail markers
+- 988a0c1: docs: session 90c log — progress through Act 4
+- dd9e706: docs: session 90c partial assessment (context handoff)
+- (pending): docs: session 90c — PRD cleanup + Act 5/6 completion + session 91 planning

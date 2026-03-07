@@ -2,7 +2,7 @@
 
 **Author:** Session 85c
 **Date:** 2026-03-03
-**Status:** Active
+**Status:** SHIPPED (Session 85c, v0.88.0) — Two-slot design, all entity combos, multi-target, unified search, CSS animations
 **Predecessor:** PRD-025 (Compare Functional Rebuild)
 
 ## Problem Statement

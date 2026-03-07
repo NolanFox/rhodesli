@@ -34,14 +34,20 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Open Work (Prioritized)
 
-### Immediate
+### Immediate — Session 91 (PRD Backlog Ship)
+- [-] 2026-03-06: PRD-028: Contributor Notifications P0 — in-app notification center + event triggers
+- [-] 2026-03-06: PRD-027 Phase A: Nightly R2 backup for critical JSON/NPY files
+- [-] 2026-03-06: PRD-011: Life Events & Context Graph — event model + tagging + timeline integration
+- [-] 2026-03-06: PRD-029: Complete Photo Backs & Media Groups — remaining work from Session 90b
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
-- [ ] DATA-005: Nightly R2 backup for critical JSON/NPY files ([PRD-027](docs/prds/027_data_migration.md))
 - [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
 - [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
 
 ### Near-Term
 - [x] 2026-03-06: DATA-006: Shadow writes — tables, functions, backfill script, app wiring complete (Session 90b). save_registry() and save_photo_registry() fire-and-forget to Supabase.
+- [ ] PRD-027 Phases B/C: Full Postgres migration + read flip (Session 92)
+- [ ] GlobalPersonID / multi-tenant schema (Session 92)
+- [ ] Sentry + PostHog + structlog observability (Session 92)
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [x] 2026-03-01: FE-041: "Help Identify" mode — /help page, Identify Mode toggle, OG cards
@@ -64,9 +70,17 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 43: Life Events & Context Graph (deferred)
-- Event tagging, connecting photos/people/places/dates
-- PRD: docs/prds/011_life_events_context_graph.md
+### Session 91: Ship the PRD Backlog (4 parallel tracks)
+- Track A: PRD-028 Contributor Notifications P0 (notifications table, bell icon, event triggers)
+- Track B: PRD-027 Phase A R2 Nightly Backup (backup + restore scripts)
+- Track C: PRD-011 Life Events & Context Graph (event model, CRUD, photo/person/timeline integration)
+- Track D: PRD-029 Photo Backs Completion (media group API, Front/Back label, browse filter, card badges)
+- Prompt: docs/prompts/session-91-prompt.md
+
+### Session 92: Platform Foundation (deferred from original Session 91)
+- PRD-027 Phases B/C: Full Postgres migration + read flip
+- GlobalPersonID / multi-tenant schema
+- Sentry + PostHog + structlog observability
 
 ## Recently Completed
 

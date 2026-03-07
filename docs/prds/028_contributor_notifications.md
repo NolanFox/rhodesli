@@ -1,6 +1,6 @@
 # PRD-028: Contributor Notifications
 
-**Status**: Planning
+**Status**: PLANNED — Session 91 (Track A). P0 implementation: in-app center + event triggers.
 **Author**: Track E (Session 90b)
 **Date**: 2026-03-06
 **Related**: DD-003 (Discovery Notifications), OPS-001 (Custom SMTP)

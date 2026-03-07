@@ -1,6 +1,6 @@
 # PRD-021: Multi-Photo Compare Upload
 
-**Status**: In Progress (Session 61)
+**Status**: SHIPPED (Sessions 61, 85c) — Multi-photo compare + universal workspace live (AD-141, PRD-026)
 **Author**: Nolan Fox + Claude Code
 **Priority**: P1
 

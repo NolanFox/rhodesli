@@ -1,6 +1,6 @@
 # PRD-017: Sharing Design System
 
-**Status:** IN PROGRESS
+**Status:** PARTIALLY SHIPPED — OG cards, share buttons, shareable result pages exist (Sessions 82e, 85b). Full design system not formalized
 **Priority:** HIGH
 **Session:** 44
 **Date:** 2026-02-17

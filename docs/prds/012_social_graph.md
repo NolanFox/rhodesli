@@ -1,6 +1,6 @@
 # PRD 012: Social Graph + Six Degrees Connection Finder
 
-**Status:** In Progress
+**Status:** DEFERRED — Social graph visualization exists via /connect (D3.js) but full PRD scope not implemented
 **Session:** 36-38
 **Priority:** P1
 

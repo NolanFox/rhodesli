@@ -2,7 +2,7 @@
 
 **Author:** Nolan Fox
 **Date:** 2026-02-22
-**Status:** Research Complete, Ready for Implementation
+**Status:** RESOLVED DIFFERENTLY — Isotonic regression shipped instead of LoRA (Session 63, AUC=0.9577, AD-149). LoRA deferred to ML-070
 **Session:** 61B
 **Depends on:** AD-123 (Siamese MLP calibration), AD-125 (ground truth pairs)
 

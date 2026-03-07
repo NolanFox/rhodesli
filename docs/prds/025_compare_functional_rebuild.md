@@ -1,6 +1,6 @@
 # PRD-025: Compare — Functional Rebuild
 
-**Status:** IN PROGRESS
+**Status:** SHIPPED (Session 85, v0.87.0) — Upload pipeline unified, vs-person comparison, confidence bars
 **Priority:** P0 — Community member blocked
 **Session:** 85
 **Date:** 2026-03-03

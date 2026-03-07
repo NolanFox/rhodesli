@@ -1,6 +1,6 @@
 # PRD 013: Shareable Collection Pages
 
-**Status:** In Progress
+**Status:** DEFERRED — Share buttons exist on individual items but collection sharing not built
 **Session:** 36-38
 **Priority:** P1
 

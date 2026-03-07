@@ -2302,3 +2302,29 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: (1) Removing the counter entirely — the /clear enforcement has genuine value within a single session. (2) Using conversation ID — not available in hook environment. (3) Shorter threshold like 300s — still risks false positives during quick session transitions.
 - **Affects**: `.claude/settings.json` (UserPromptSubmit hook, PreToolUse Bash hook).
 - **Tests**: Manual verification — start new conversation with stale counter file.
+
+### AD-204: Collection Metadata + Location Disambiguation in Gemini Prompt
+- **Date**: 2026-03-06
+- **Session**: 90c
+- **Context**: Leon's Restaurant photo (3192877a90a174e9) from "Nace Capeluto Tampa Collection" was estimated as San Francisco/NYC by Gemini. The collection name — a strong location signal — was never passed to the prompt. Additionally, GEDCOM immigration records list ports of entry (like San Francisco) which are transit points, not residences.
+- **Decision**: Three prompt improvements:
+  1. **Photo Metadata Context section**: New optional `photo_metadata` dict param to `build_extraction_prompt()` — injects collection name, source, filename, visible text as context. Prompt tells Gemini the collection name often indicates geographic origin.
+  2. **Business Name Cross-Reference (Step 2b)**: Cross-reference visible signage with family member names. "LEON'S RESTAURANT" + Leon Capeluto → strong location evidence for Leon's known locations.
+  3. **Immigration & Transit Disambiguation (Step 2c)**: Ports of entry are transit points, not residences. Residence events, occupation, and children's birth places are more reliable. Visual evidence preferred over transit records.
+- **Result**: After re-analysis, Gemini says "Tampa, Florida, USA" (high confidence) with genealogical context explicitly mentioning Leon Capeluto's restaurant and the Tampa Collection. Cost: $0.037.
+- **Rejected**: (1) Hardcoding location hints per collection — doesn't generalize. (2) Removing immigration data from GEDCOM context — throws away useful data, just needs disambiguation.
+- **Affects**: `rhodesli_ml/gemini_extraction.py` (build_extraction_prompt), `app/estimate_routes.py` (reanalyze route).
+- **Tests**: 10 new tests in `rhodesli_ml/tests/test_gemini_extraction.py`.
+
+### AD-205: Keep Face Alignment and Geo/Date as Separate Gemini Calls
+- **Date**: 2026-03-06
+- **Session**: 90c
+- **Context**: Face alignment (per-face descriptions from bounding boxes) and geo/date estimation (location, date, scene analysis) are currently two separate Gemini API calls. Research whether combining them saves cost or improves quality.
+- **Decision**: Keep them separate. Reasons:
+  1. **Different output schemas**: Face alignment returns per-face structured data (age, gender, attire, position). Geo/date returns location, date, scene, evidence. Combined schema would be complex and fragile.
+  2. **Different trigger patterns**: Geo/date runs automatically on upload. Face alignment is on-demand (admin clicks "Detect Faces"). Combining would force both to run together.
+  3. **Minimal cost savings**: Each call is ~$0.02-0.04. Combined would save one image upload (~$0.01). Not worth the complexity.
+  4. **Quality risk**: Combining multiple tasks in one prompt can reduce accuracy on each individual task.
+- **Rejected**: Combined single call — complexity outweighs the ~$0.01 savings per photo.
+- **Affects**: No code changes. Documents the architectural decision to maintain separate pipelines.
+- **Also added**: `analyzed_at` timestamp field to AlignmentResult dataclass, displayed in Face Analysis section UI.

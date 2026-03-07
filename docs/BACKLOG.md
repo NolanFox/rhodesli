@@ -151,6 +151,13 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [x] **DATA-006: Shadow writes for all identities + photo_index** — DONE (Session 90b). Tables created, backfill script exists, save_registry() and save_photo_registry() fire-and-forget to Supabase. Backfill on production pending.
 - [ ] **DATA-007: Full Postgres migration (triggered)** — Move all reads/writes to Supabase. Eliminate JSON as source of truth. Triggered when 3+ sync bugs in 4 weeks, or pgvector needed, or volume failure. ~4-6 sessions. Source: PRD-027.
 
+### PRD Backlog — Session 91
+- [-] **NOTIFY-001: PRD-028 Contributor Notifications P0** — In-app notification center, bell icon, identity confirmation trigger, auto-clustering match trigger. Origin: Claude Benatar feedback ("how does someone know if there's a match?"). PRD: `docs/prds/028_contributor_notifications.md`.
+- [-] **DATA-008: PRD-027 Phase A R2 Nightly Backup** — scripts/backup_to_r2.py + scripts/restore_from_r2.py. Closes "total data loss" risk. PRD: `docs/prds/027_data_migration.md`.
+- [-] **EVENT-001: PRD-011 Life Events & Context Graph** — Event model (Supabase tables), CRUD routes, photo/person/timeline integration. Flesh out stub PRD first. PRD: `docs/prds/011_life_events_context_graph.md`.
+- [-] **MEDIA-001: PRD-029 Photo Backs Completion** — Media group API, Front/Back label, browse "Has back" filter, card badges. Completes work started in Session 90b. PRD: `docs/prds/029_photo_back_and_media_groups.md`.
+- [ ] **BACKLOG-FLAKY-001: 8 order-dependent tests marked xfail** — Root cause: FastHTML route module loading order varies by test execution order. Proper fix needs test isolation (fresh TestClient per test or route order reset). Source: Session 90c.
+
 ### Face Card Consolidation (Session 82b gap, deferred 82f)
 - [ ] **UX-204: Unify face card rendering** — 14+ inline face card rendering locations in app/main.py use bespoke code. Consolidate into reusable `face_card()` component. Major refactor. Source: 82b Phase 2, 82d assessment.
 

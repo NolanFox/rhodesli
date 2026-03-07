@@ -1,6 +1,6 @@
 # PRD-016: Compare Faces Redesign
 
-**Status:** IN PROGRESS
+**Status:** SUPERSEDED by PRD-025/026 (Sessions 85-85c, v0.87.0-v0.88.0)
 **Priority:** HIGH
 **Session:** 44
 **Date:** 2026-02-17

@@ -1,6 +1,6 @@
 # PRD-018: Year Estimation Tool
 
-**Status:** IN PROGRESS
+**Status:** SHIPPED (Session 46+) — /estimate page live with Gemini 3.1 Pro, evidence cards, GEDCOM enrichment
 **Priority:** HIGH
 **Session:** 46
 **Date:** 2026-02-18

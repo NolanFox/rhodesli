@@ -2,7 +2,7 @@
 
 **Author:** Nolan Fox
 **Date:** 2026-02-17 (updated 2026-02-22)
-**Status:** Ready for Implementation
+**Status:** SHIPPED (Session 62, v0.65.0) — Coordinate bridging, per-face Gemini descriptions, photo page UI (AD-146)
 **Session:** Designed Session 53, updated Session 61B (unified extraction integration)
 **Supersedes:** PRD-015 v1 (same file, pre-61B)
 

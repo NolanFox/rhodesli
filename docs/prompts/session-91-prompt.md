@@ -1,17 +1,17 @@
-# Session 91: Full Postgres Migration + Platform Foundation
+# Session 91: Ship the PRD Backlog — Notifications + Data Safety + Life Events + Photo Backs
 
 **Context**: `docs/session_context/session-91-context.md`
-**Predecessor**: Session 90b (sorting fix, main.py refactor, Supabase shadow writes, performance)
+**Predecessor**: Session 90c (Gemini prompt fix, face alignment timestamp, flaky test cleanup)
 
 ## Problem Statement
 
-Rhodesli's core data still lives as JSON files on a Railway volume. Session 90b started shadow writes; Session 91 completes the migration and lays the architectural foundation for multi-collection support.
+We have 4 PRDs that were written but never fully implemented. This session ships all of them. The growth loop is broken because contributors get no feedback (PRD-028). Core data has no backup (PRD-027). Life events aren't captured (PRD-011). Photo backs are half-built (PRD-029). Fix all of it.
 
-This session has two goals:
-1. **Complete the Supabase migration** — flip reads to Postgres, eliminate JSON as source of truth
-2. **Lay platform foundation** — GlobalPersonID schema, Sentry, PostHog, structured logging
-
-After this session, the codebase should be ready for a second collection (Fox family photos) and ML service extraction in Session 92+.
+**PRDs to ship:**
+1. **PRD-028**: Contributor Notifications (P0 — in-app center + event triggers)
+2. **PRD-027**: Data Safety — R2 nightly backup (Phase A)
+3. **PRD-011**: Life Events & Context Graph (event model + tagging + timeline integration)
+4. **PRD-029**: Photo Back & Media Groups (complete remaining work)
 
 ## Session Protocol
 - Set `.claude/current_session.txt` to `91`
@@ -23,455 +23,431 @@ After this session, the codebase should be ready for a second collection (Fox fa
 
 ---
 
-## Dependencies on Session 90b
+## Dependencies on Prior Sessions
 
-This prompt assumes Session 90b shipped:
-- [ ] Supabase tables created (`photos`, `identities`, `photo_faces`, `date_labels`, `photo_locations`)
-- [ ] Shadow write functions in `app/supabase_data.py`
-- [ ] Backfill script (`scripts/backfill_supabase.py`) run successfully
-- [ ] main.py refactored (< 15,000 lines)
+Session 90b shipped shadow writes (`save_registry()` and `save_photo_registry()` fire-and-forget to Supabase). Session 90c shipped Gemini prompt improvements. This session builds on both.
 
-**If any of these are incomplete**, Act 1 must finish them before proceeding. Adjust the parallelization plan accordingly.
+**Verify before starting:**
+- [ ] Shadow writes work (check `app/supabase_data.py` has `shadow_write_identity` and `shadow_write_photo`)
+- [ ] Back image upload route exists (`POST /api/photo/{photo_id}/back-image` in `app/photo_routes.py`)
+- [ ] Timeline route exists (`/timeline` — from timeline-story-engine PRD, Session 30+)
 
 ---
 
 ## Parallelization Plan
 
-**Phase 1** (Acts 0-1): Sequential on main — orient + verify 90b state + fix gaps
-**Phase 2** (Acts 2-5): Parallel worktree subagents:
-- Track A: Postgres read path flip (worktree: `session-91/postgres-reads`)
-- Track B: GlobalPersonID + community schema (worktree: `session-91/multi-tenant`)
-- Track C: Sentry + PostHog + structured logging (worktree: `session-91/observability`)
-- Track D: ROADMAP + BACKLOG + architecture docs update (worktree: `session-91/docs`)
-**Phase 3** (Act 6): Merge all tracks, browser verify, assessment
+**Phase 1** (Act 0): Sequential on main — orient, verify state
+**Phase 2** (Acts 1-4): Parallel worktree subagents:
+- **Track A**: PRD-028 — Notifications (worktree: `session-91/notifications`)
+- **Track B**: PRD-027 Phase A — R2 Backup (worktree: `session-91/r2-backup`)
+- **Track C**: PRD-011 — Life Events (worktree: `session-91/life-events`)
+- **Track D**: PRD-029 — Photo Backs Completion (worktree: `session-91/photo-backs`)
+**Phase 3** (Act 5): Merge all tracks, browser verify, assessment
 
 **File conflict analysis**:
-- Track A touches `core/registry.py`, `core/photo_registry.py`, `app/supabase_data.py`, `app/main.py` (imports) — merges FIRST
-- Track B touches `scripts/sql/` (new files), `app/supabase_data.py` (new functions) — merges AFTER Track A
-- Track C touches `app/main.py` (middleware init), `requirements.txt` — merges AFTER Track A
-- Track D touches docs only — independent, can merge anytime
-- **Merge order**: D first (docs only), then A (core), then B (schema), then C (observability)
+- Track A touches: new Supabase tables, new `app/notification_routes.py`, header in `app/main.py` (bell icon)
+- Track B touches: new `scripts/backup_to_r2.py`, new `scripts/restore_from_r2.py` — fully independent
+- Track C touches: new Supabase tables, new `app/event_routes.py`, timeline UI modifications
+- Track D touches: `app/photo_routes.py`, `app/browse_routes.py`, Supabase photo table columns
+- **Merge order**: B first (scripts only), then D (photo routes), then C (events), then A (notifications + header)
+- **Conflict risk**: LOW — each track touches different files. Only risk is `app/main.py` header (Track A) vs timeline nav (Track C). Merge A last.
 
 ---
 
 ## Act 0: Orient (5 min)
 
 1. Read this prompt, context file, `tasks/lessons.md`
-2. Read `docs/assessments/session-90b-assessment.md` (or log if no assessment)
-3. Verify current state: `git log --oneline -5`, `git status`, test suite passes
-4. Set `.claude/current_session.txt` to `91`
-5. Create `docs/session_logs/session-91-log.md` with phase checklist
-6. **Verify 90b deliverables** — check each dependency listed above
+2. `git log --oneline -5`, `git status`, verify tests pass
+3. Set `.claude/current_session.txt` to `91`
+4. Create `docs/session_logs/session-91-log.md` with phase checklist
+5. Verify dependencies listed above
+6. Check timeline route exists — if not, note for Track C
 
 ---
 
-## Act 1: Complete 90b Gaps (if any) (15 min)
+## Act 1 (Track A): PRD-028 — Contributor Notifications P0
 
-If any 90b deliverable is incomplete, finish it here. Specifically:
+**Worktree**: `session-91/notifications`
+**PRD**: `docs/prds/028_contributor_notifications.md`
+**Goal**: In-app notification center with event triggers for identity confirmation and auto-clustering matches.
 
-### 1a. Verify Supabase Tables Exist
-Run the backfill script if not already run. Verify record counts match JSON:
-- `photos` table: should have ~296 rows
-- `identities` table: should have ~777 rows
-- `photo_faces` table: should have ~982 rows
+### 1a. Supabase Tables
 
-### 1b. Verify Shadow Writes Are Working
-1. Make a test identity change (rename a PROPOSED identity)
-2. Check that the change appears in both JSON AND Supabase
-3. Revert the test change
-
-### 1c. If Tables Don't Exist Yet
-Create them using the SQL from `docs/session_context/session-91-context.md` or the scripts from Session 90b. The schema should include:
+Create via SQL (run in Supabase dashboard or migration script):
 
 ```sql
--- Core tables (if not created by 90b)
-CREATE TABLE IF NOT EXISTS photos (
-    photo_id TEXT PRIMARY KEY,
-    path TEXT NOT NULL,
-    source TEXT,
-    collection TEXT,
-    source_url TEXT,
-    upload_date TIMESTAMPTZ,
-    width INTEGER,
-    height INTEGER,
-    face_count INTEGER,
-    uploaded_by TEXT,
-    community_id UUID,  -- nullable, for future multi-tenant
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+CREATE TABLE IF NOT EXISTS notifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    notification_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT,
+    photo_id TEXT,
+    identity_id UUID,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS identities (
-    identity_id UUID PRIMARY KEY,
-    name TEXT NOT NULL,
-    display_name TEXT,
-    state TEXT NOT NULL DEFAULT 'INBOX',
-    anchor_ids JSONB DEFAULT '[]',
-    candidate_ids JSONB DEFAULT '[]',
-    negative_ids JSONB DEFAULT '[]',
-    metadata JSONB DEFAULT '{}',
-    version_id INTEGER DEFAULT 1,
-    merged_into UUID,
-    community_id UUID,  -- nullable, for future multi-tenant
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
+CREATE INDEX idx_notifications_user_unread
+    ON notifications(user_id, is_read)
+    WHERE is_read = FALSE;
 
-CREATE TABLE IF NOT EXISTS photo_faces (
-    face_id TEXT PRIMARY KEY,
-    photo_id TEXT NOT NULL REFERENCES photos(photo_id),
-    identity_id UUID REFERENCES identities(identity_id),
-    bbox JSONB,
-    det_score NUMERIC(6,4),
-    quality NUMERIC(6,4),
-    embedding float4[],  -- 512-dim vector
-    created_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS date_labels (
-    photo_id TEXT PRIMARY KEY REFERENCES photos(photo_id),
-    estimated_decade TEXT,
-    best_year_estimate INTEGER,
-    confidence TEXT,
-    model_used TEXT,
-    labeled_by TEXT,
-    raw_response JSONB,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS photo_locations (
-    photo_id TEXT PRIMARY KEY REFERENCES photos(photo_id),
-    lat NUMERIC(10,7),
-    lng NUMERIC(10,7),
-    location_name TEXT,
-    location_estimate TEXT,
-    confidence TEXT,
-    geocoded_from TEXT,
-    created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now()
+CREATE TABLE IF NOT EXISTS notification_preferences (
+    user_id UUID PRIMARY KEY,
+    email_enabled BOOLEAN DEFAULT TRUE,
+    in_app_enabled BOOLEAN DEFAULT TRUE,
+    digest_frequency TEXT DEFAULT 'daily',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
-Commit: `feat(data): complete Supabase table setup + backfill`
+### 1b. Notification Routes
+
+Create `app/notification_routes.py`:
+
+1. `GET /notifications` — Page with chronological list of notifications for logged-in user
+   - HTMX-powered, paginated (20 per page)
+   - Unread items highlighted
+   - Each item: icon (by type), title, body preview, timestamp, link to photo/person
+   - "Mark all as read" button
+2. `POST /api/notifications/{id}/read` — Mark single notification as read
+3. `POST /api/notifications/mark-all-read` — Mark all as read
+4. `GET /api/notifications/count` — Returns unread count (for bell icon polling)
+
+### 1c. Bell Icon in Header
+
+Add to the site header (in `app/main.py` or wherever the nav is built):
+- Bell icon visible to all logged-in users
+- Red badge with unread count (hidden when 0)
+- Use `hx-get="/api/notifications/count" hx-trigger="every 30s"` for polling
+- Click navigates to `/notifications`
+
+### 1d. Event Triggers
+
+Hook into existing flows to create notifications:
+
+1. **Identity confirmation** — In `save_registry()` path, when state changes to CONFIRMED:
+   - Find the photo(s) containing that identity's faces
+   - Find the uploader of those photos (if `uploaded_by` exists in photo metadata)
+   - Create notification: "Isaac Cohen identified in your photo"
+2. **Auto-clustering match** — In auto-clustering pipeline, when Tier 1 match auto-added:
+   - Create notification for photo uploader: "New face match found in your photo"
+3. **Manual creation** — Admin endpoint `POST /api/notifications/create` for testing
+
+### 1e. Photo Uploader Tracking
+
+If `uploaded_by` field doesn't exist in photo metadata:
+- Add it to photo upload flow (store current user's email/ID when uploading)
+- Backfill: set existing Benatar photos to `uploaded_by: "claude.benatar@..."` if known
+
+### 1f. Tests
+
+- Notification CRUD (create, list, mark read, count)
+- Event trigger on identity confirmation creates notification
+- Bell icon renders for logged-in users, hidden for anonymous
+- Pagination works
+- Mark-all-read clears badge count
+
+**Acceptance**: Logged-in user sees bell icon. Confirming an identity creates a notification. /notifications page shows chronological list. Mark-as-read works.
+
+Commit: `feat(notifications): PRD-028 P0 — in-app notification center + event triggers`
 
 ---
 
-## Act 2: Launch Parallel Tracks (5 min)
+## Act 2 (Track B): PRD-027 Phase A — R2 Nightly Backup
 
-**After Act 1 is committed**, launch 4 parallel worktree subagents.
+**Worktree**: `session-91/r2-backup`
+**PRD**: `docs/prds/027_data_migration.md` (Phase A)
+**Goal**: Nightly backup of critical JSON/NPY files to R2.
 
-### Track A: Postgres Read Path Flip
+### 2a. Backup Script
 
-**Worktree**: `session-91/postgres-reads`
-**Goal**: IdentityRegistry and PhotoRegistry read from Supabase instead of JSON.
+Create `scripts/backup_to_r2.py`:
+- Uploads to `r2://rhodesli-photos/backups/YYYY-MM-DD/`:
+  - `identities.json`
+  - `photo_index.json`
+  - `embeddings.npy`
+  - `date_labels.json`
+  - `photo_locations.json`
+- Uses boto3 (same as existing R2 upload scripts)
+- Requires: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`
+- Prunes backups older than 30 days (keep max 30 snapshots)
+- Logs success/failure with file sizes and timestamps
+- `--dry-run` flag for preview
 
-**Implementation plan**:
+### 2b. Restore Script
 
-1. **Feature flag**: Add `DATA_SOURCE` env var (`json` or `postgres`, default `json`)
-2. **IdentityRegistry adapter**:
-   - New method `load_from_postgres(cls)` in `core/registry.py`
-   - Queries `identities` table, constructs same in-memory dict structure
-   - Falls back to JSON if Supabase unavailable
-   - Wire into `load()`: if `DATA_SOURCE=postgres`, use Postgres path
-3. **PhotoRegistry adapter**:
-   - New method `load_from_postgres(cls)` in `core/photo_registry.py`
-   - Queries `photos` + `photo_faces` tables
-   - Reconstructs `_photos` dict and `_face_to_photo` mapping
-4. **Embeddings**:
-   - For now, keep reading `embeddings.npy` from disk (too complex to migrate vectors in this session)
-   - Add TODO comment for future pgvector migration
-5. **Date labels + photo locations**:
-   - Read from `date_labels` and `photo_locations` Supabase tables
-   - Replace JSON file reads in `app/main.py` and `app/estimate_routes.py`
-6. **Remove JSON writes for identity/photo changes**:
-   - When `DATA_SOURCE=postgres`, `save_registry()` writes ONLY to Supabase (not JSON)
-   - `save_photo_registry()` writes ONLY to Supabase
-   - JSON files become export-only artifacts
-7. **Startup sync**:
-   - When `DATA_SOURCE=postgres`, skip `sync_from_supabase_on_startup()` (Supabase IS the source)
-   - When `DATA_SOURCE=json` (default), keep existing behavior
+Create `scripts/restore_from_r2.py`:
+- Lists available backup dates
+- `--date YYYY-MM-DD` to restore specific backup
+- Downloads to `data/` directory (with confirmation prompt)
+- `--list` flag to show available backups without restoring
 
-**Critical invariants to preserve**:
-- `neighbors.py` is FROZEN — must still receive same embedding data format
-- Co-occurrence validation still works (face_to_photo mapping)
-- Optimistic concurrency (version_id) still works
-- All admin actions (confirm, merge, rename, detach, reject) still work
+### 2c. Startup Hook (Optional)
 
-**Tests**:
-- New: Test `load_from_postgres()` returns same structure as `load()` from JSON
-- New: Test `save_registry()` with `DATA_SOURCE=postgres` writes to Supabase
-- Update: All existing tests should pass with `DATA_SOURCE=json` (default)
-- New: Integration test that round-trips identity through Postgres
+Add to Railway startup or `scripts/init_railway_volume.py`:
+- If `AUTO_BACKUP=true` env var set, run backup on app startup
+- Also configurable as Railway cron job
 
-**Acceptance**: With `DATA_SOURCE=postgres` on Railway, app loads identities + photos from Supabase. With `DATA_SOURCE=json`, everything works as before (zero regression).
+### 2d. Tests
 
-### Track B: GlobalPersonID + Community Schema
+- Test backup script generates correct R2 keys
+- Test restore script lists backups correctly
+- Test pruning logic (keep 30 days)
+- Test dry-run doesn't upload
 
-**Worktree**: `session-91/multi-tenant`
-**Goal**: Add multi-tenant schema foundation. No runtime changes yet.
+**Acceptance**: `python scripts/backup_to_r2.py --dry-run` shows correct files and R2 paths. Restore script lists available backups.
 
-1. **Create `communities` table** (SQL in `scripts/sql/create_communities.sql`):
-   ```sql
-   CREATE TABLE IF NOT EXISTS communities (
-       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-       slug TEXT UNIQUE NOT NULL,
-       name TEXT NOT NULL,
-       description TEXT,
-       admin_emails TEXT[],
-       r2_prefix TEXT NOT NULL,
-       config JSONB DEFAULT '{}',
-       created_at TIMESTAMPTZ DEFAULT now(),
-       updated_at TIMESTAMPTZ DEFAULT now()
-   );
-   ```
-
-2. **Create `global_person_links` table** (SQL in `scripts/sql/create_global_person_links.sql`):
-   ```sql
-   CREATE TABLE IF NOT EXISTS global_person_links (
-       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-       global_person_id UUID NOT NULL,
-       community_id UUID NOT NULL REFERENCES communities(id),
-       identity_id UUID NOT NULL,
-       link_type TEXT NOT NULL,  -- 'gedcom', 'ml_proposal', 'human_confirmed'
-       confidence NUMERIC(5,4),
-       linked_by TEXT,
-       evidence JSONB,  -- supporting data for the link
-       created_at TIMESTAMPTZ DEFAULT now(),
-       updated_at TIMESTAMPTZ DEFAULT now(),
-       UNIQUE(community_id, identity_id)
-   );
-
-   CREATE INDEX IF NOT EXISTS idx_gpl_global ON global_person_links(global_person_id);
-   CREATE INDEX IF NOT EXISTS idx_gpl_identity ON global_person_links(identity_id);
-   CREATE INDEX IF NOT EXISTS idx_gpl_community ON global_person_links(community_id);
-   ```
-
-3. **Seed Rhodes community**:
-   ```sql
-   INSERT INTO communities (slug, name, description, admin_emails, r2_prefix)
-   VALUES ('rhodes', 'Jewish Community of Rhodes',
-           'Heritage photo archive for the Sephardic Jewish community of Rhodes',
-           ARRAY['NolanFox@gmail.com'], 'raw_photos/')
-   ON CONFLICT (slug) DO NOTHING;
-   ```
-
-4. **Add `community_id` to existing tables** (if not already added in Act 1):
-   - `ALTER TABLE identities ADD COLUMN IF NOT EXISTS community_id UUID REFERENCES communities(id);`
-   - `ALTER TABLE photos ADD COLUMN IF NOT EXISTS community_id UUID REFERENCES communities(id);`
-   - Backfill: `UPDATE identities SET community_id = (SELECT id FROM communities WHERE slug = 'rhodes') WHERE community_id IS NULL;`
-   - Same for `photos`
-
-5. **Write PRD-029: Multi-Collection Architecture** (`docs/prds/029_multi_collection.md`):
-   - Problem: Single-community architecture limits growth
-   - Solution: Community-scoped data + GlobalPersonID for cross-linking
-   - Schema (above)
-   - Migration plan for existing data
-   - Out of scope: RLS policies, ML service extraction, UX changes
-
-6. **Tests**: Verify SQL runs without error. Verify backfill populates community_id.
-
-**Acceptance**: Tables exist. Rhodes community seeded. All existing identities + photos have `community_id` set. PRD-029 written.
-
-### Track C: Observability — Sentry + PostHog + Logging
-
-**Worktree**: `session-91/observability`
-**Goal**: Add error tracking, analytics, and structured logging.
-
-#### Sentry (Error Tracking)
-1. Add `sentry-sdk` to `requirements.txt`
-2. In app startup (main.py or wherever the ASGI app is created):
-   ```python
-   import sentry_sdk
-
-   if os.environ.get("SENTRY_DSN"):
-       sentry_sdk.init(
-           dsn=os.environ["SENTRY_DSN"],
-           environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
-           traces_sample_rate=0.1,  # 10% of transactions for performance
-           send_default_pii=False,  # Heritage app — faces are PII
-       )
-   ```
-3. Do NOT wrap in SentryAsgiMiddleware yet (FastHTML may not be standard ASGI). Test first.
-4. Add `SENTRY_DSN` to Railway env vars (user will do this manually).
-
-#### PostHog (Analytics)
-1. Add PostHog JS snippet to the base HTML template (the `<head>` section in main.py):
-   ```python
-   def _posthog_script():
-       key = os.environ.get("POSTHOG_API_KEY", "")
-       if not key:
-           return ""
-       return Script(f"""
-           !function(t,e){{var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){{function g(t,e){{var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){{t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){{return"$posthog_obj$"+(t?t:"posthog")}},u._i=e._i,u.init=function(){{return e.init.apply(u,arguments)}},n=0;n<["capture","identify","alias","people.set","people.set_once","register","register_once","unregister","opt_out_capturing","has_opted_out_capturing","opt_in_capturing","reset","isFeatureEnabled","onFeatureFlags","getFeatureFlag","getFeatureFlagPayload","reloadFeatureFlags","group","capture","getGroups","setPersonProperties","resetGroups"].length;n++)g(u,["capture","identify","alias","people.set","people.set_once","register","register_once","unregister","opt_out_capturing","has_opted_out_capturing","opt_in_capturing","reset","isFeatureEnabled","onFeatureFlags","getFeatureFlag","getFeatureFlagPayload","reloadFeatureFlags","group","capture","getGroups","setPersonProperties","resetGroups"][n]);e._i.push([i,s,a])}},e.__SV=1)}}(document,window.posthog||[]);
-           posthog.init('{key}', {{api_host: 'https://us.i.posthog.com', person_profiles: 'identified_only', respect_dnt: true}});
-       """)
-   ```
-2. Add `POSTHOG_API_KEY` to Railway env vars (user will create PostHog account + get key).
-3. Do NOT add `posthog-python` yet — client-side JS is sufficient for now.
-
-#### Structured Logging
-1. Add `structlog` to `requirements.txt`
-2. Configure in app startup:
-   ```python
-   import structlog
-
-   structlog.configure(
-       processors=[
-           structlog.contextvars.merge_contextvars,
-           structlog.processors.add_log_level,
-           structlog.processors.TimeStamper(fmt="iso"),
-           structlog.dev.ConsoleRenderer()  # Use JSONRenderer() in production
-       ],
-       wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
-   )
-   ```
-3. Do NOT convert existing `logging.getLogger()` calls — just configure structlog to work alongside stdlib.
-4. Use structlog for NEW code going forward.
-
-**Tests**:
-- Verify Sentry init doesn't crash when DSN not set
-- Verify PostHog snippet renders when key is set, absent when not
-- Verify structlog configures without errors
-
-**Acceptance**: `sentry-sdk` and `structlog` in requirements.txt. Sentry init gated on env var. PostHog snippet gated on env var. Structured logging configured. No runtime errors when env vars are absent.
-
-### Track D: Documentation Updates
-
-**Worktree**: `session-91/docs`
-**Goal**: Update ROADMAP, BACKLOG, architecture docs with new strategic direction.
-
-1. **Update ROADMAP.md**:
-   - Add new items from Nolan's conversation:
-     - GlobalPersonID schema (mark as in-progress if done this session)
-     - ML service extraction (future, with reference to context file)
-     - Second collection onboarding (future)
-     - Standalone tooling product (future)
-     - Chatbot research interface (future)
-   - Update Phase F status
-   - Add Session 91 to "Recently Completed" (after session ends)
-
-2. **Update BACKLOG.md**:
-   - Add `PLATFORM-001`: GlobalPersonID schema — link to PRD-029
-   - Add `PLATFORM-002`: ML service extraction — standalone FastAPI service for face embedding/comparison
-   - Add `PLATFORM-003`: Second collection onboarding (Fox family photos)
-   - Add `PLATFORM-004`: Standalone Gemini tooling product
-   - Add `OPS-005`: Sentry error tracking integration
-   - Add `OPS-006`: PostHog analytics integration
-   - Add `OPS-007`: Structured logging (structlog)
-   - Update `DATA-007` status based on migration progress
-   - Update `GEN-001` with concrete architecture from context file
-
-3. **Update architecture docs**:
-   - `docs/architecture/OVERVIEW.md` — update data layer description to reflect Postgres migration
-   - `docs/architecture/DATA_MODEL.md` — add Supabase table schemas, note JSON is deprecated
-   - Create `docs/architecture/MULTI_TENANT.md` — GlobalPersonID design, community schema, R2 organization
-
-4. **Update ALGORITHMIC_DECISIONS.md**:
-   - AD-XXX: GlobalPersonID schema design (3 linking mechanisms: GEDCOM, ML, human)
-   - AD-XXX: Postgres as source of truth (DATA_SOURCE feature flag)
-   - AD-XXX: Observability stack (Sentry + PostHog + structlog)
-
-5. **Update `docs/roadmap/FEATURE_STATUS.md`**:
-   - Phase F items: check boxes for Postgres migration, Sentry, PostHog
-   - Add multi-tenant items
-
-6. **Update `docs/roadmap/SESSION_HISTORY.md`**:
-   - Add Session 91 entry
-
-**Acceptance**: All docs updated with breadcrumbs. New BACKLOG items have IDs and references. ROADMAP reflects new strategic direction.
+Commit: `feat(ops): PRD-027 Phase A — R2 nightly backup for critical data files`
 
 ---
 
-## Act 3: While Subagents Run — Deploy Verification (15 min)
+## Act 3 (Track C): PRD-011 — Life Events & Context Graph
 
-While parallel tracks execute, verify the current production state:
+**Worktree**: `session-91/life-events`
+**PRD**: `docs/prds/011_life_events_context_graph.md`
+**Goal**: Event tagging system connecting photos, people, places, and dates.
 
-1. **Browser verify** with Claude Chrome:
-   - Landing page loads
-   - Photos page: sorting works (if fixed in 90b)
-   - Upload page works
-   - Compare page works
-   - Person page loads
-2. **Check Railway logs** for any errors since last deploy
-3. Document any issues found for fixing
+### 3a. Flesh Out PRD-011
+
+The PRD is currently a stub. Before implementing, expand it with:
+- Event types: wedding, funeral, holiday, reunion, immigration, graduation, birthday, military, business
+- Data model (Supabase tables)
+- UI flows (tag from photo page, browse events, filter timeline by event)
+- Acceptance criteria
+
+### 3b. Supabase Tables
+
+```sql
+CREATE TABLE IF NOT EXISTS life_events (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    location_name TEXT,
+    lat NUMERIC(10,7),
+    lng NUMERIC(10,7),
+    event_date DATE,
+    event_year INTEGER,
+    date_precision TEXT DEFAULT 'year',  -- 'exact', 'month', 'year', 'decade'
+    created_by TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS event_participants (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES life_events(id) ON DELETE CASCADE,
+    identity_id UUID NOT NULL,
+    role TEXT DEFAULT 'attendee',  -- 'subject', 'attendee', 'photographer', 'mentioned'
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(event_id, identity_id)
+);
+
+CREATE TABLE IF NOT EXISTS event_photos (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES life_events(id) ON DELETE CASCADE,
+    photo_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(event_id, photo_id)
+);
+
+CREATE INDEX idx_event_participants_identity ON event_participants(identity_id);
+CREATE INDEX idx_event_photos_photo ON event_photos(photo_id);
+CREATE INDEX idx_life_events_year ON life_events(event_year);
+```
+
+### 3c. Event Routes
+
+Create `app/event_routes.py`:
+
+1. `GET /events` — Browse all events (admin view initially)
+   - Chronological list with event type icons
+   - Filter by type, year range, person
+2. `GET /events/{id}` — Event detail page
+   - Title, description, date, location
+   - Linked photos (thumbnails)
+   - Participants list with links to person pages
+3. `POST /api/events` — Create event (admin only)
+   - Form: type, title, description, date, location
+4. `POST /api/events/{id}/photos` — Link photo to event
+5. `POST /api/events/{id}/participants` — Link person to event
+6. `DELETE /api/events/{id}/photos/{photo_id}` — Unlink photo
+7. `DELETE /api/events/{id}/participants/{identity_id}` — Unlink person
+
+### 3d. Photo Page Integration
+
+On photo detail pages, add an "Events" section (admin-visible):
+- Show events this photo is linked to
+- "Add to Event" button — dropdown of existing events + "Create New Event"
+- HTMX-powered: adding to event updates the section without full reload
+
+### 3e. Person Page Integration
+
+On person detail pages, add a "Life Events" section:
+- Chronological list of events this person participated in
+- Each event shows: type icon, title, date, photo count
+
+### 3f. Timeline Integration
+
+If `/timeline` route exists, add event markers:
+- Life events appear as distinct cards (different styling from photo cards)
+- Events without photos still appear on timeline
+- Combine with existing `rhodes_context_events.json` historical events
+
+### 3g. Seed Data
+
+Import key Rhodes community events from `data/rhodes_context_events.json` into the life_events table. These are historical context events (deportation, immigration waves, etc.) that already exist as JSON.
+
+### 3h. Tests
+
+- Event CRUD (create, read, update, delete)
+- Link/unlink photos and participants
+- Photo page shows events section
+- Person page shows life events
+- Timeline includes event markers
+- Event type filtering works
+
+**Acceptance**: Admin can create events, link photos and people, see events on photo/person pages and timeline.
+
+Commit: `feat(events): PRD-011 — life events & context graph`
 
 ---
 
-## Act 4: Merge Tracks + Resolve Conflicts (20 min)
+## Act 4 (Track D): PRD-029 — Complete Photo Backs & Media Groups
+
+**Worktree**: `session-91/photo-backs`
+**PRD**: `docs/prds/029_photo_back_and_media_groups.md`
+**Goal**: Complete the remaining work from PRD-029 that wasn't finished in Session 90b.
+
+### What's already built (Session 90b):
+- `POST /api/photo/{photo_id}/back-image` — Upload back image (saves to raw_photos + R2)
+- `POST /api/photo/{photo_id}/back-transcription` — Update transcription
+- 3D flip CSS animation with `rotateY(180deg)`
+- Photo metadata update with `back_image`, `media_group_id`, `related_media` fields
+- Tests in `test_back_image.py` and `test_photo_flip.py`
+
+### What's remaining:
+
+### 4a. Supabase Photo Table Columns
+
+Add media group columns to the photos Supabase table (if exists) or photo_index.json:
+```sql
+ALTER TABLE photos ADD COLUMN IF NOT EXISTS media_group_id TEXT;
+ALTER TABLE photos ADD COLUMN IF NOT EXISTS media_role TEXT DEFAULT 'front';
+ALTER TABLE photos ADD COLUMN IF NOT EXISTS parent_photo_id TEXT;
+```
+
+### 4b. Media Group API Endpoint
+
+`GET /api/photo/{photo_id}/media-group` — Returns all related media:
+```json
+{
+  "group_id": "3192877a90a174e9",
+  "items": [
+    {"photo_id": "3192877a90a174e9", "role": "front", "url": "..."},
+    {"photo_id": "3192877a90a174e9_back", "role": "back", "url": "..."}
+  ]
+}
+```
+
+### 4c. Front/Back Label During Flip
+
+Add a visual indicator showing "Front" or "Back" during/after the flip animation:
+- Small badge in top-right corner of photo
+- Toggles between "Front" and "Back" as the card flips
+- CSS transition matches the flip timing
+
+### 4d. Browse Page "Has Back" Filter
+
+Add to the sort/filter bar on `/photos`:
+- New filter option: "All" | "Front only" | "Has back image"
+- Filter is preserved across pagination (in URL query params)
+
+### 4e. Visual Badge on Photo Cards
+
+On the browse grid, show a small flip icon on photo cards that have back images:
+- Subtle icon in card corner (e.g., a two-sided card icon)
+- Tooltip: "This photo has a back image"
+
+### 4f. Tests
+
+- Media group endpoint returns correct structure
+- Front/Back label toggles on flip
+- Browse filter by "Has back" works
+- Badge appears on cards with back images
+- Back image inherits collection/source from front
+
+**Acceptance**: David Franco photo shows flip with Front/Back label. Browse page has "Has back" filter. Cards with backs show badge.
+
+Commit: `feat(photos): PRD-029 — complete photo backs & media groups`
+
+---
+
+## Act 5: Merge + Browser Verify + Assessment (20 min)
+
+### 5a. Merge All Tracks
 
 1. Check all subagent branches for completion
-2. **Merge order**: Track D (docs) FIRST, then Track A (postgres reads), then Track B (multi-tenant schema), then Track C (observability)
-3. Use `./scripts/merge.sh session-91/docs session-91/postgres-reads session-91/multi-tenant session-91/observability`
+2. **Merge order**: B (scripts), D (photo routes), C (events), A (notifications + header)
+3. Use `./scripts/merge.sh session-91/r2-backup session-91/photo-backs session-91/life-events session-91/notifications`
 4. Run `make test-fast` after each merge
-5. Resolve conflicts
+5. Resolve any conflicts
 
----
+### 5b. Browser Verification (Claude Chrome)
 
-## Act 5: Deploy + Verify (15 min)
+ALL must be verified with Claude Chrome:
+1. **Notifications**: Bell icon visible when logged in, click opens /notifications
+2. **Photo backs**: David Franco photo flip shows Front/Back label, browse has "Has back" filter
+3. **Life events**: /events page loads, can create an event (admin)
+4. **General**: Landing page, person page, compare page still work (regression)
 
-1. **Set Railway env vars** (document what needs to be set manually):
-   - `DATA_SOURCE=json` (keep JSON for initial deploy — flip to `postgres` after verification)
-   - `SENTRY_DSN` (user will create Sentry project)
-   - `POSTHOG_API_KEY` (user will create PostHog project)
-2. `git push origin main` to deploy
-3. Wait for deploy completion (Lesson 94)
-4. **Browser verify**:
-   - App loads correctly with `DATA_SOURCE=json`
-   - No Sentry/PostHog errors in console
-   - All pages load
-5. **Manual flip test** (if time permits):
-   - Set `DATA_SOURCE=postgres` on Railway
-   - Verify app loads identities + photos from Supabase
-   - Verify admin actions work (confirm an identity, check Supabase)
-   - If any issues, flip back to `DATA_SOURCE=json`
-6. Save screenshots to `docs/screenshots/session-91/`
+Save screenshots to `docs/screenshots/session-91/`
 
----
-
-## Act 6: Assessment + Final Docs (10 min)
+### 5c. Assessment + Docs
 
 Standard mandatory outputs:
-
 1. Write `docs/assessments/session-91-assessment.md`
 2. Update `docs/session_logs/session-91-log.md`
-3. Update `CHANGELOG.md` — new version entry
-4. Verify all breadcrumbs from Track D
-5. Verify all tests pass (`make test-fast`)
+3. Update `CHANGELOG.md` — v0.94.0
+4. Update `ROADMAP.md`:
+   - Mark PRD-028 P0 as done
+   - Mark PRD-027 Phase A as done
+   - Mark PRD-011 as done
+   - Mark PRD-029 as done
+5. Update `docs/BACKLOG.md` — update relevant items
+6. Update `docs/roadmap/SESSION_HISTORY.md` — session 91 entry
+7. Update PRD status fields to SHIPPED
 
 ---
 
 ## Acceptance Criteria
 
 ### Must Ship
-- [ ] Supabase tables exist with backfilled data from JSON
-- [ ] `DATA_SOURCE` feature flag works (`json` = existing behavior, `postgres` = reads from Supabase)
-- [ ] IdentityRegistry loads from Postgres when `DATA_SOURCE=postgres`
-- [ ] PhotoRegistry loads from Postgres when `DATA_SOURCE=postgres`
-- [ ] `communities` table exists with Rhodes community seeded
-- [ ] `global_person_links` table exists (empty, schema ready)
-- [ ] All existing identities + photos have `community_id` set to Rhodes
-- [ ] `sentry-sdk` + `structlog` in requirements.txt
-- [ ] Sentry init gated on `SENTRY_DSN` env var
-- [ ] PostHog JS snippet gated on `POSTHOG_API_KEY` env var
-- [ ] PRD-029 (Multi-Collection Architecture) written
-- [ ] ROADMAP + BACKLOG updated with new strategic items
-- [ ] All tests pass
-- [ ] Browser verified via Claude Chrome
+- [ ] PRD-028: Notifications table + /notifications page + bell icon + identity confirmation trigger
+- [ ] PRD-027: R2 backup script with --dry-run + restore script with --list
+- [ ] PRD-011: Life events table + CRUD routes + photo/person page integration
+- [ ] PRD-029: Media group endpoint + Front/Back label + browse "Has back" filter + card badges
+- [ ] All tests pass (`make test-fast`)
+- [ ] Browser verified via Claude Chrome with screenshots
+- [ ] Assessment + session log + CHANGELOG + ROADMAP updated
+- [ ] All 4 PRD status fields updated to SHIPPED
 
 ### Should Ship
-- [ ] Date labels + photo locations read from Supabase when `DATA_SOURCE=postgres`
-- [ ] Architecture docs updated (OVERVIEW, DATA_MODEL, new MULTI_TENANT.md)
-- [ ] AD entries for GlobalPersonID, Postgres migration, observability stack
+- [ ] PRD-028: Auto-clustering match trigger creates notification
+- [ ] PRD-011: Timeline integration with event markers
+- [ ] PRD-011: Seed data from rhodes_context_events.json
+- [ ] PRD-029: Supabase columns for media group
 
 ### Deferred (Session 92+)
-- [ ] Embeddings migration to pgvector (keep as .npy for now)
-- [ ] ML service extraction (separate FastAPI service)
-- [ ] Second collection onboarding (Fox family photos)
-- [ ] Postgres RLS policies (not needed until second community)
-- [ ] Chatbot research interface
-- [ ] Standalone tooling product
-- [ ] `SentryAsgiMiddleware` (need to test FastHTML ASGI compatibility first)
+- [ ] PRD-028 P1: Email notifications via Resend (needs RESEND_API_KEY)
+- [ ] PRD-028 P2-P3: Digest emails, notification preferences page
+- [ ] PRD-027 Phase B: Shadow writes completion + Postgres read flip
+- [ ] PRD-027 Phase C: Full Postgres migration (triggered)
+- [ ] PRD-011: Community event submission (non-admin)
+- [ ] GlobalPersonID schema (from original session 91 plan — moved to session 92)
+- [ ] Sentry + PostHog + structlog (from original session 91 plan — moved to session 92)
 
 ## Key Skills to Use
 
@@ -482,16 +458,16 @@ Standard mandatory outputs:
 
 ## Non-Goals
 
-- UX redesign or new features
+- Full Postgres migration (PRD-027 Phases B/C)
+- Email notifications (PRD-028 P1+)
+- GlobalPersonID / multi-tenant schema (deferred to session 92)
+- Sentry / PostHog / observability (deferred to session 92)
 - ML pipeline changes
-- Running ML on photos
-- Full multi-tenant runtime (just schema + seed)
-- Removing JSON files from repo (keep as fallback)
 
 ## Risk Mitigation
 
-**Biggest risk**: Postgres read path serves stale or empty data.
-**Mitigation**: `DATA_SOURCE` feature flag defaults to `json`. Only flip to `postgres` after manual verification. Can flip back instantly.
+**Biggest risk**: 4 parallel tracks is ambitious. Each track is self-contained with minimal file overlap.
+**Mitigation**: Each track has clear acceptance criteria. If a track is incomplete, it can be merged partially and the remainder goes to BACKLOG with a specific TODO.
 
-**Second risk**: Shadow writes diverge from JSON.
-**Mitigation**: Consistency check script comparing JSON record counts vs Supabase counts. Run before flipping.
+**Second risk**: PRD-011 is the least defined (currently a stub).
+**Mitigation**: Track C starts by fleshing out the PRD before implementation. If the scope is larger than expected, ship the data model + CRUD only, defer UI integration.

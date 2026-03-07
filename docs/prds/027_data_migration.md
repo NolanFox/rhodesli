@@ -2,8 +2,8 @@
 
 **Author:** Session 90, Track D
 **Date:** 2026-03-05
-**Status:** Draft
-**Session:** Future (estimated 2-3 sessions)
+**Status:** Phase A PLANNED (Session 91 Track B — R2 nightly backup). Phases B/C deferred to Session 92+.
+**Session:** 91 (Phase A), 92+ (Phases B/C)
 
 ---
 

@@ -1,6 +1,6 @@
 # PRD-029: Photo Back Images & Media Groups
 
-**Status**: In Progress (Session 90b, added mid-flight)
+**Status**: PARTIALLY SHIPPED (Session 90b). Upload + flip + transcription work. Remaining: media group API, Front/Back label, browse filter, card badges. Completion planned Session 91 Track D.
 **Origin**: User feedback — back image upload broken, needs proper UX and data model
 **Priority**: P1 — blocks contributor workflow
 

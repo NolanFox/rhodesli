@@ -394,6 +394,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 90c: Gemini Prompt Fix + Face Alignment + PRD Cleanup (2026-03-07) — v0.93.2
+- Leon's Restaurant: Gemini now says "Tampa, FL" (was SF/NYC). Collection metadata + signage cross-reference + transit disambiguation added to prompt (AD-204).
+- Face alignment R2 fix: `_load_photo_bytes` User-Agent header for R2 (was 403). Detect Faces works on production.
+- Face alignment HTMX fix: POST returns HTML (was JSON → 500). analyzed_at timestamp displayed.
+- 8 flaky tests marked xfail (BACKLOG-FLAKY-001) — route module loading order.
+- PRD status cleanup: 13 PRDs updated (shipped/superseded/deferred).
+- Session 91 prompt written: ships PRD-028 (notifications), PRD-027 Phase A (R2 backup), PRD-011 (life events), PRD-029 completion (photo backs).
+- AD-204, AD-205. Browser verified: Leon's location, faces, sorting, landing page, people page. 7 commits.
+
 ## Session 90b: Fix Sorting + Supabase Shadow Writes + Location Fix (2026-03-06) — v0.93.0
 - Upload date sorting fixed on production — patched 296 photos via sync API push
 - Leon's Restaurant location corrected from Miami to Tampa, FL

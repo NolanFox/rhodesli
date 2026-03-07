@@ -1,6 +1,6 @@
 # PRD-020: Estimate Page Overhaul
 
-**Status:** Draft
+**Status:** PARTIALLY SHIPPED — Core estimate UX works (Sessions 61, 86b). Remaining: search/filter, date correction flow, deep CTAs
 **Created:** 2026-02-19 (Session 50)
 **Related:** PRD-018 (Year Estimation Tool V1), AD-092-096 (date estimation)
 

@@ -2,7 +2,7 @@
 
 **Author:** Nolan Fox
 **Date:** 2026-02-14
-**Status:** Draft
+**Status:** SHIPPED (Session 76a, v0.79.0) — Discoveries page live with two-tier auto-clustering (AD-179)
 **Session:** 27
 
 ---

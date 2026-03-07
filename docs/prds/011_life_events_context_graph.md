@@ -2,8 +2,8 @@
 
 **Author:** Nolan Fox
 **Date:** 2026-02-15
-**Status:** Stub
-**Session:** TBD (planned Session 35)
+**Status:** PLANNED — Session 91 (Track C). Stub being fleshed out into full PRD + implementation.
+**Session:** 91 (originally planned Session 35, deferred through Session 90c)
 
 ---
 

@@ -1,9 +1,29 @@
 # Session 91 Planning Context
 
-**Predecessor**: Session 90b (sorting fix, main.py refactor, Supabase shadow writes, performance)
+**Predecessor**: Session 90c (Gemini prompt fix, face alignment timestamp, flaky test cleanup)
 **Prompt**: `docs/prompts/session-91-prompt.md`
-**Date**: 2026-03-06
-**Origin**: Nolan's strategic conversation about platform scaling + multi-collection architecture
+**Date**: 2026-03-06 (updated)
+**Origin**: PRD backlog audit — 4 PRDs written but not implemented. Nolan directed: ship all of them.
+
+## Scope Change (2026-03-06)
+
+Original session 91 plan focused on Postgres migration + platform foundation (GlobalPersonID, Sentry, PostHog). After PRD audit, Nolan redirected to ship the PRD backlog first:
+
+**Added:**
+- PRD-028: Contributor Notifications (P0 — growth loop fix, Claude Benatar feedback)
+- PRD-011: Life Events & Context Graph (flesh out stub + implement)
+- PRD-029: Photo Backs completion (remaining work from Session 90b)
+
+**Kept:**
+- PRD-027 Phase A: R2 nightly backup (data safety)
+
+**Deferred to Session 92:**
+- PRD-027 Phases B/C: Full Postgres migration + read flip
+- GlobalPersonID / multi-tenant schema
+- Sentry + PostHog + structlog observability
+- ML service extraction
+
+**Rationale**: PRDs should not sit as planning documents without implementation. Ship user-facing features first (notifications, life events, photo backs), then infrastructure (Postgres migration, observability).
 
 ---
 
