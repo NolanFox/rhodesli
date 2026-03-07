@@ -19621,6 +19621,8 @@ def public_photo_page(
             _build_ai_analysis_section(photo_id, is_admin),
             # Face alignment descriptions (PRD-015 coordinate bridging)
             _build_face_alignment_section(photo_id, is_admin),
+            # Life events linked to this photo (PRD-011)
+            event_routes.photo_events_section(photo_id, is_admin) if is_admin else None,
             # Call to action — link to first unidentified face from this photo
             # More prominent when ALL faces are unidentified (UX-105)
             Section(
@@ -25832,6 +25834,7 @@ from app import admin_routes  # noqa: E402, F401
 from app import photo_routes  # noqa: E402, F401
 from app import browse_routes  # noqa: E402, F401
 from app import person_routes  # noqa: E402, F401
+from app import event_routes  # noqa: E402, F401
 
 # Backward-compat: tests that import person helpers from app.main still work
 public_person_page = person_routes.public_person_page
