@@ -487,7 +487,7 @@ class TestApiDiscoveriesRoute:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value=None),
             patch("app.main.load_photo_registry"),
@@ -505,8 +505,8 @@ class TestApiDiscoveriesRoute:
         # Reject button present
         assert "/api/discovery/reject" in html
 
-    def test_api_discoveries_shows_confidence_label_and_percentage(self, client):
-        """Discovery cards show BOTH confidence label AND unified percentage (AD-200)."""
+    def test_api_discoveries_shows_confidence_tier_label(self, client):
+        """Discovery cards show tier labels instead of misleading percentages."""
         discoveries = [
             {
                 "source_id": "inbox1",
@@ -523,7 +523,7 @@ class TestApiDiscoveriesRoute:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value=None),
             patch("app.main.load_photo_registry"),
@@ -533,16 +533,12 @@ class TestApiDiscoveriesRoute:
             response = client.get("/api/discoveries")
 
         html = response.text
-        # Should show "Good match" label alongside confidence percentage
+        # Should show "Good match" tier label (distance 0.91 is in 0.80-1.00 range)
         assert "Good match" in html
-        # Unified confidence percentage is shown (data-testid for identification)
-        assert 'data-testid="discovery-confidence-pct"' in html
-        # Percentage symbol present
-        assert "%" in html
-        # Tooltip should NOT show raw distance (Session 90b fix)
-        assert "Distance:" not in html
-        # Tooltip shows human-readable confidence label instead
-        assert "confidence" in html.lower()
+        # Tier label is shown via data-testid
+        assert 'data-testid="discovery-confidence-label"' in html
+        # Should NOT show raw percentages — tier labels replace them
+        assert "Discovery:" not in html
 
     def test_api_discoveries_source_face_is_clickable(self, client):
         """Source face image and name are wrapped in navigation links."""
@@ -562,7 +558,7 @@ class TestApiDiscoveriesRoute:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value=None),
             patch("app.main.load_photo_registry"),
@@ -600,7 +596,7 @@ class TestApiDiscoveriesRoute:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value="photo123"),
             patch("app.main.get_photo_metadata", return_value=photo_data),
@@ -736,35 +732,37 @@ class TestDiscoveriesFilterControls:
         assert "discovery-photo-filter" in html
         assert "All photos" in html
 
-    def test_api_discoveries_sorted_by_confidence_descending(self, client):
-        """Discoveries sorted by confidence_pct descending (highest first)."""
+    def test_api_discoveries_sorted_by_recency(self, client):
+        """Discoveries sorted by created_at descending (newest first)."""
         discoveries = [
             {
                 "source_id": "inbox1",
-                "source_name": "Low Confidence",
+                "source_name": "Older Discovery",
                 "target_id": "conf1",
                 "target_name": "Known A",
-                "distance": 1.2,  # Lower confidence
-                "confidence": "LOW",
+                "distance": 0.5,
+                "confidence": "VERY HIGH",
+                "created_at": "2026-01-01T00:00:00Z",
             },
             {
                 "source_id": "inbox2",
-                "source_name": "High Confidence",
+                "source_name": "Newer Discovery",
                 "target_id": "conf1",
                 "target_name": "Known A",
-                "distance": 0.5,  # Higher confidence
-                "confidence": "VERY HIGH",
+                "distance": 1.2,
+                "confidence": "LOW",
+                "created_at": "2026-03-01T00:00:00Z",
             },
         ]
-        source1 = _make_identity("inbox1", "Low Confidence", "INBOX", candidate_ids=["face1"])
-        source2 = _make_identity("inbox2", "High Confidence", "INBOX", candidate_ids=["face2"])
+        source1 = _make_identity("inbox1", "Older Discovery", "INBOX", candidate_ids=["face1"])
+        source2 = _make_identity("inbox2", "Newer Discovery", "INBOX", candidate_ids=["face2"])
         registry = _make_registry_mock([source1, source2])
 
         with (
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
                 "app.main._safe_get_identity",
                 side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
@@ -775,10 +773,10 @@ class TestDiscoveriesFilterControls:
             response = client.get("/api/discoveries")
 
         html = response.text
-        # High confidence card should appear before low confidence card
-        high_pos = html.find("discovery-card-inbox2")
-        low_pos = html.find("discovery-card-inbox1")
-        assert high_pos < low_pos, "High confidence discovery should appear first"
+        # Newer discovery should appear before older one (recency sort)
+        newer_pos = html.find("discovery-card-inbox2")
+        older_pos = html.find("discovery-card-inbox1")
+        assert newer_pos < older_pos, "Newer discovery should appear first (recency sort)"
 
     def test_api_discoveries_min_confidence_filter(self, client):
         """min_confidence filter excludes low-confidence items."""
@@ -808,7 +806,7 @@ class TestDiscoveriesFilterControls:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
                 "app.main._safe_get_identity",
                 side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
@@ -867,7 +865,7 @@ class TestDiscoveriesFilterControls:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch(
                 "app.main._safe_get_identity",
                 side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
@@ -949,7 +947,7 @@ class TestDiscoveriesCardEnhancements:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value=None),
             patch("app.main.load_photo_registry"),
@@ -978,12 +976,12 @@ class TestDiscoveriesCardEnhancements:
         assert "rounded-lg" in html
         assert "rounded-full" not in html or html.count("rounded-full") < html.count("rounded-lg")
 
-    def test_discovery_card_shows_confidence_pct(self, default_discovery_html):
-        """Discovery cards show numeric confidence percentage."""
+    def test_discovery_card_shows_confidence_tier_label(self, default_discovery_html):
+        """Discovery cards show tier label instead of misleading percentage."""
         html = default_discovery_html
-        assert 'data-testid="discovery-confidence-pct"' in html
-        # Should contain a percentage number
-        assert "%" in html
+        assert 'data-testid="discovery-confidence-label"' in html
+        # Should contain a tier label like "Good match" (distance 0.85)
+        assert any(label in html for label in ["Strong match", "Good match", "Possible match", "Weak match"])
 
     def test_discovery_card_face_size_at_least_112px(self, default_discovery_html):
         """Face images are at least w-28 (112px) for better visibility."""
@@ -1027,7 +1025,7 @@ class TestDiscoveriesCardEnhancements:
             patch("app.main._check_admin", return_value=None),
             patch("app.main._compute_discoveries", return_value=discoveries),
             patch("app.main.get_crop_files", return_value=set()),
-            patch("app.main._resolve_identity_crop", return_value=None),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
             patch("app.main._safe_get_identity", return_value=source_identity),
             patch("app.main.get_photo_id_for_face", return_value=None),
             patch("app.main.load_photo_registry"),
@@ -1094,3 +1092,163 @@ class TestDiscoveriesPhotoDropdownLazyLoad:
         )
         # Simpler assertion: the old broken pattern should not exist
         assert 'hx-select="#discovery-photo-filter' not in html
+
+
+class TestDiscoveriesExtraction:
+    """Tests for discoveries_routes.py extraction and UX fixes."""
+
+    @pytest.fixture
+    def client(self):
+        from app.main import app
+
+        return TestClient(app)
+
+    def test_confidence_tier_labels(self):
+        """confidence_tier_label returns correct labels for distance ranges."""
+        from app.discoveries_routes import confidence_tier_label
+
+        assert confidence_tier_label(0.50) == "Strong match"
+        assert confidence_tier_label(0.79) == "Strong match"
+        assert confidence_tier_label(0.80) == "Good match"
+        assert confidence_tier_label(0.99) == "Good match"
+        assert confidence_tier_label(1.00) == "Possible match"
+        assert confidence_tier_label(1.19) == "Possible match"
+        assert confidence_tier_label(1.20) == "Weak match"
+        assert confidence_tier_label(1.50) == "Weak match"
+
+    def test_confidence_tier_styles(self):
+        """confidence_tier_style returns badge and ring CSS classes."""
+        from app.discoveries_routes import confidence_tier_style
+
+        badge_cls, ring_cls = confidence_tier_style(0.50)
+        assert "emerald" in badge_cls
+        assert "emerald" in ring_cls
+
+        badge_cls, ring_cls = confidence_tier_style(0.90)
+        assert "blue" in badge_cls
+
+        badge_cls, ring_cls = confidence_tier_style(1.10)
+        assert "amber" in badge_cls
+
+        badge_cls, ring_cls = confidence_tier_style(1.30)
+        assert "slate" in badge_cls
+
+    def test_discovery_cards_have_navigation_links(self, client):
+        """Discovery cards have clickable links: source face -> person, photo -> photo, target -> person."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Unknown Face",
+                "target_id": "conf1",
+                "target_name": "Known Person",
+                "distance": 0.85,
+                "confidence": "HIGH",
+                "created_at": "2026-03-01T00:00:00Z",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Unknown Face", "INBOX", candidate_ids=["face_inbox1"])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value="/crop/test.jpg"),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value="photo123"),
+            patch("app.main.get_photo_metadata", return_value={"collection": "Test", "faces": []}),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        # Source face image links to /person/{source_id}
+        assert 'href="/person/inbox1"' in html
+        # Target face image links to /person/{target_id}
+        assert 'href="/person/conf1"' in html
+        # Photo link exists
+        assert 'href="/photo/photo123"' in html
+        # Source and target name links point to person pages
+        assert 'data-testid="discovery-source-link"' in html
+        assert 'data-testid="discovery-target-link"' in html
+
+    def test_recency_sort_newest_first(self, client):
+        """Discoveries are sorted by created_at descending — newest appear first."""
+        discoveries = [
+            {
+                "source_id": "old_match",
+                "source_name": "Old Match",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.5,
+                "confidence": "VERY HIGH",
+                "created_at": "2026-01-15T00:00:00Z",
+            },
+            {
+                "source_id": "new_match",
+                "source_name": "New Match",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 1.0,
+                "confidence": "MODERATE",
+                "created_at": "2026-03-07T00:00:00Z",
+            },
+        ]
+        source1 = _make_identity("old_match", "Old Match", "INBOX", candidate_ids=["face_old"])
+        source2 = _make_identity("new_match", "New Match", "INBOX", candidate_ids=["face_new"])
+        registry = _make_registry_mock([source1, source2])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
+            patch(
+                "app.main._safe_get_identity",
+                side_effect=lambda reg, sid: registry.get_identity(sid) if sid in registry._identities else None,
+            ),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_registry", return_value=registry),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        new_pos = html.find("discovery-card-new_match")
+        old_pos = html.find("discovery-card-old_match")
+        assert new_pos > -1 and old_pos > -1, "Both discovery cards should be present"
+        assert new_pos < old_pos, "Newer discovery must appear before older one"
+
+    def test_tier_labels_not_percentages_in_cards(self, client):
+        """Discovery cards show tier labels (Strong/Good/Possible/Weak) not raw percentages."""
+        discoveries = [
+            {
+                "source_id": "inbox1",
+                "source_name": "Test",
+                "target_id": "conf1",
+                "target_name": "Known",
+                "distance": 0.70,
+                "confidence": "VERY HIGH",
+                "created_at": "2026-03-01T00:00:00Z",
+            }
+        ]
+        source_identity = _make_identity("inbox1", "Test", "INBOX", candidate_ids=["face1"])
+
+        with (
+            patch("app.main._check_admin", return_value=None),
+            patch("app.main._compute_discoveries", return_value=discoveries),
+            patch("app.main.get_crop_files", return_value=set()),
+            patch("app.discoveries_routes._resolve_identity_crop", return_value=None),
+            patch("app.main._safe_get_identity", return_value=source_identity),
+            patch("app.main.get_photo_id_for_face", return_value=None),
+            patch("app.main.load_photo_registry"),
+            patch("app.main._compute_co_occurrence", return_value=0),
+            patch("app.main.load_registry", return_value=_make_registry_mock([source_identity])),
+        ):
+            response = client.get("/api/discoveries")
+
+        html = response.text
+        # Tier label present
+        assert "Strong match" in html
+        # data-testid for the label element
+        assert 'data-testid="discovery-confidence-label"' in html

@@ -67,10 +67,9 @@ from core.config import (
     PROCESSING_ENABLED,
     DATA_DIR,
     PHOTOS_DIR,
-    MATCH_THRESHOLD_HIGH,
-    MATCH_THRESHOLD_LOW,
 )
 from core.config import SYNC_API_TOKEN  # noqa: F401 — used by sync_routes via _main_mod
+from core.config import MATCH_THRESHOLD_HIGH, MATCH_THRESHOLD_LOW  # noqa: F401 — used by identity_routes via _main_mod
 from core.ui_safety import ensure_utf8_display
 from core import storage
 from app.auth import (
@@ -87,7 +86,7 @@ from core.event_recorder import get_event_recorder
 
 # --- EXTRACTED UTILITIES ---
 from app.utils import (
-    _pl,
+    _pl,  # noqa: F401 — re-exported for tests
     _section_for_state,
     make_css_id,
     generate_photo_id,
@@ -9130,6 +9129,7 @@ def _progressive_refinement_badge(label: dict) -> object:
 
 from app import page_routes  # noqa: E402, F401
 from app import identity_routes  # noqa: E402, F401
+from app import discoveries_routes  # noqa: E402, F401
 from app import engagement_routes  # noqa: E402, F401
 from app import relationship_routes  # noqa: E402, F401
 
@@ -9184,8 +9184,8 @@ health = page_routes.health
 _name_conflict_modal = identity_routes._name_conflict_modal
 toast_with_merge_undo = identity_routes.toast_with_merge_undo
 _post_merge_suggestions = identity_routes._post_merge_suggestions
-_build_discovery_card = identity_routes._build_discovery_card
-_resolve_identity_crop = identity_routes._resolve_identity_crop
+_build_discovery_card = discoveries_routes._build_discovery_card
+_resolve_identity_crop = discoveries_routes._resolve_identity_crop
 _collection_slug = identity_routes._collection_slug
 _collection_from_slug = identity_routes._collection_from_slug
 _get_collections_data = identity_routes._get_collections_data
