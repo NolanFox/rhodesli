@@ -72,6 +72,21 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
                 data_testid="match-reason",
             )
 
+        # Flip icon badge for photos with back images
+        has_back = bool(photo.get("back_image"))
+        flip_badge = (
+            Div(
+                NotStr(
+                    '<svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>'
+                ),
+                cls="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-amber-600/80 "
+                "text-white flex items-center justify-center backdrop-blur-sm",
+                title="Has back image",
+            )
+            if has_back
+            else None
+        )
+
         # For masonry layout, use natural aspect ratio; otherwise force 4:3
         w = photo.get("width", 0)
         h = photo.get("height", 0)
@@ -108,6 +123,7 @@ def _build_photo_cards(photos: list, masonry: bool = False) -> list:
                     if photo["face_count"] > 0
                     else None,
                     date_badge,
+                    flip_badge,
                     cls=img_container_cls,
                     style=aspect_style if aspect_style else None,
                 ),
@@ -199,6 +215,7 @@ def get(
     decade: int = None,
     search_q: str = "",
     tag: str = "",
+    media_filter: str = "all",
     sess=None,
 ):
     """
@@ -255,10 +272,18 @@ def get(
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
                 "upload_date": photo_data.get("upload_date", ""),
+                "back_image": photo_data.get("back_image", ""),
+                "media_role": photo_data.get("media_role", "front"),
             }
         )
 
     collections = sorted(collections_set)
+
+    # Apply media filter
+    if media_filter == "front_only":
+        photos = [p for p in photos if p["media_role"] != "back"]
+    elif media_filter == "has_back":
+        photos = [p for p in photos if p.get("back_image")]
 
     # Sort
     photos = _main_mod._sort_photos(photos, sort_by)
@@ -278,10 +303,11 @@ def get(
             "sort_by": sort_by,
             "search_q": search_q,
             "tag": tag,
+            "media_filter": media_filter,
         }
         if decade:
             _lazy_params["decade"] = decade
-        _lazy_params = {k: v for k, v in _lazy_params.items() if v}
+        _lazy_params = {k: v for k, v in _lazy_params.items() if v and v != "all"}
         photo_cards.append(
             Div(
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
@@ -300,7 +326,13 @@ def get(
 
     def _filter_url(**overrides):
         """Build /photos URL preserving current filters with overrides."""
-        params = {"filter_collection": filter_collection, "sort_by": sort_by, "search_q": search_q, "tag": tag}
+        params = {
+            "filter_collection": filter_collection,
+            "sort_by": sort_by,
+            "search_q": search_q,
+            "tag": tag,
+            "media_filter": media_filter,
+        }
         if decade:
             params["decade"] = str(decade)
         params.update({k: v for k, v in overrides.items() if v})
@@ -322,6 +354,12 @@ def get(
         Option("Filename (A-Z)", value="filename_az", selected=(sort_by == "filename_az")),
         Option("Most Faces", value="most_faces", selected=(sort_by == "most_faces")),
         Option("By Source", value="by_source", selected=(sort_by == "by_source")),
+    ]
+
+    media_options = [
+        Option("All Photos", value="all", selected=(media_filter == "all")),
+        Option("Front Only", value="front_only", selected=(media_filter == "front_only")),
+        Option("Has Back Image", value="has_back", selected=(media_filter == "has_back")),
     ]
 
     # Decade pills
@@ -452,17 +490,26 @@ def get(
                         Div(*tag_pills, cls="flex flex-wrap gap-1.5") if tag_pills else None,
                         cls="flex flex-wrap items-center gap-3 mb-3",
                     ),
-                    # Collection/sort dropdowns
+                    # Collection/sort/media dropdowns
                     Div(
                         Select(
                             *collection_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
-                            onchange=f"window.location.href='/photos?filter_collection=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}'",
+                            onchange=f"window.location.href='/photos?filter_collection=' + encodeURIComponent(this.value) + '&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}&media_filter={_url_quote(media_filter)}'",
                         ),
                         Select(
                             *sort_options,
                             cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
-                            onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by=' + this.value + '&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}'",
+                            onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by=' + this.value + '&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}&media_filter={_url_quote(media_filter)}'",
+                        ),
+                        Div(
+                            Span("Media:", cls="text-sm text-slate-400 mr-1"),
+                            Select(
+                                *media_options,
+                                cls="bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-1.5",
+                                onchange=f"window.location.href='/photos?filter_collection={_url_quote(filter_collection)}&sort_by={sort_by}&decade={decade or ''}&search_q={_url_quote(search_q)}&tag={_url_quote(tag)}&media_filter=' + this.value",
+                            ),
+                            cls="flex items-center",
                         ),
                         Span(
                             f"{len(photos)} result{'s' if len(photos) != 1 else ''}",
@@ -509,6 +556,7 @@ def photos_more(
     decade: int = None,
     search_q: str = "",
     tag: str = "",
+    media_filter: str = "all",
 ):
     """HTMX endpoint for infinite scroll — returns next batch of photo cards."""
     from urllib.parse import urlencode as _ue
@@ -549,8 +597,16 @@ def photos_more(
                 "width": photo_data.get("width", 0),
                 "height": photo_data.get("height", 0),
                 "upload_date": photo_data.get("upload_date", ""),
+                "back_image": photo_data.get("back_image", ""),
+                "media_role": photo_data.get("media_role", "front"),
             }
         )
+
+    # Apply media filter
+    if media_filter == "front_only":
+        photos = [p for p in photos if p["media_role"] != "back"]
+    elif media_filter == "has_back":
+        photos = [p for p in photos if p.get("back_image")]
 
     photos = _main_mod._sort_photos(photos, sort_by)
 
@@ -573,10 +629,11 @@ def photos_more(
             "sort_by": sort_by,
             "search_q": search_q,
             "tag": tag,
+            "media_filter": media_filter,
         }
         if decade:
             _lazy_params["decade"] = decade
-        _lazy_params = {k: v for k, v in _lazy_params.items() if v}
+        _lazy_params = {k: v for k, v in _lazy_params.items() if v and v != "all"}
         cards.append(
             Div(
                 Div(cls="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto"),
