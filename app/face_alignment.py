@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 @dataclass
 class FaceDetection:
     """InsightFace detection result for one face in a photo."""
+
     face_id: str
-    bbox: list[int]        # [x1, y1, x2, y2] in pixels
+    bbox: list[int]  # [x1, y1, x2, y2] in pixels
     face_index: int = 0
     det_score: float = 0.0
     quality: float = 0.0
@@ -40,6 +41,7 @@ class FaceDetection:
 @dataclass
 class AlignedFaceDescription:
     """Gemini's description aligned to a specific InsightFace detection."""
+
     face_id: str
     bbox: list[int]
     face_index: int
@@ -58,6 +60,7 @@ class AlignedFaceDescription:
 @dataclass
 class AlignmentResult:
     """Full alignment result for one photo."""
+
     photo_id: str
     faces_detected: int = 0
     faces_described: int = 0
@@ -66,6 +69,7 @@ class AlignmentResult:
     unmatched_faces: list[str] = field(default_factory=list)
     scene_context: str = ""
     model_used: str = ""
+    analyzed_at: str = ""
     cost: float = 0.0
     input_tokens: int = 0
     output_tokens: int = 0
@@ -81,6 +85,7 @@ class AlignmentResult:
 
 
 # --- Prompt formatting ---
+
 
 def format_faces_for_gemini(faces: list[FaceDetection]) -> str:
     """
@@ -111,8 +116,7 @@ def format_faces_for_gemini(faces: list[FaceDetection]) -> str:
     return "\n".join(lines)
 
 
-def build_alignment_prompt(faces: list[FaceDetection],
-                           additional_context: str = "") -> str:
+def build_alignment_prompt(faces: list[FaceDetection], additional_context: str = "") -> str:
     """
     Build the full Gemini prompt for face alignment.
 
@@ -147,10 +151,11 @@ def build_alignment_prompt(faces: list[FaceDetection],
     if additional_context:
         prompt_parts.extend(["", "## Additional Context", additional_context])
 
-    prompt_parts.extend([
-        "",
-        "## Response Format (JSON only)",
-        """{
+    prompt_parts.extend(
+        [
+            "",
+            "## Response Format (JSON only)",
+            """{
   "faces": [
     {
       "face_index": 0,
@@ -171,12 +176,14 @@ def build_alignment_prompt(faces: list[FaceDetection],
   ],
   "scene_context": "Formal group portrait, likely studio setting"
 }""",
-    ])
+        ]
+    )
 
     return "\n".join(prompt_parts)
 
 
 # --- Response parsing ---
+
 
 def parse_alignment_response(
     response_data: dict,
@@ -250,9 +257,7 @@ def parse_alignment_response(
             result.unmatched_faces.append(face.face_id)
 
     # Gemini-only faces
-    result.gemini_only_faces = response_data.get(
-        "additional_faces_not_in_coordinates", []
-    )
+    result.gemini_only_faces = response_data.get("additional_faces_not_in_coordinates", [])
 
     result.scene_context = response_data.get("scene_context", "")
 
@@ -260,6 +265,7 @@ def parse_alignment_response(
 
 
 # --- Gemini API call ---
+
 
 async def call_gemini_alignment(
     image_bytes: bytes,
@@ -320,8 +326,18 @@ async def call_gemini_alignment(
 
         text = response.text
         if not text:
-            _log_call(photo_id, model, call_type, 0, 0, 0, start_ms, "error",
-                       error_message="Empty response", batch_id=batch_id)
+            _log_call(
+                photo_id,
+                model,
+                call_type,
+                0,
+                0,
+                0,
+                start_ms,
+                "error",
+                error_message="Empty response",
+                batch_id=batch_id,
+            )
             return None, 0, 0
 
         parsed = json.loads(text)
@@ -335,29 +351,44 @@ async def call_gemini_alignment(
 
         # Estimate cost
         from rhodesli_ml.gemini_config import get_model_pricing
+
         pricing = get_model_pricing(model)
         cost = (input_tokens * pricing["input"] / 1_000_000) + (output_tokens * pricing["output"] / 1_000_000)
 
         # Build gemini_config and response_summary for audit trail
-        gemini_config = json.dumps({
-            "model": model,
-            "call_type": call_type,
-            "gedcom_token_count": gedcom_token_count,
-            "enrichment_level": enrichment_level,
-            "temperature": 0.1,
-            "response_mime_type": "application/json",
-        })
+        gemini_config = json.dumps(
+            {
+                "model": model,
+                "call_type": call_type,
+                "gedcom_token_count": gedcom_token_count,
+                "enrichment_level": enrichment_level,
+                "temperature": 0.1,
+                "response_mime_type": "application/json",
+            }
+        )
         faces_described = len(parsed.get("faces", []))
-        response_summary = json.dumps({
-            "faces_described": faces_described,
-            "additional_faces": len(parsed.get("additional_faces_not_in_coordinates", [])),
-            "has_scene_context": bool(parsed.get("scene_context")),
-            "output_tokens": output_tokens,
-        })
+        response_summary = json.dumps(
+            {
+                "faces_described": faces_described,
+                "additional_faces": len(parsed.get("additional_faces_not_in_coordinates", [])),
+                "has_scene_context": bool(parsed.get("scene_context")),
+                "output_tokens": output_tokens,
+            }
+        )
 
-        _log_call(photo_id, model, call_type, input_tokens, output_tokens, cost,
-                   start_ms, "success", batch_id=batch_id,
-                   gemini_config=gemini_config, response_summary=response_summary)
+        _log_call(
+            photo_id,
+            model,
+            call_type,
+            input_tokens,
+            output_tokens,
+            cost,
+            start_ms,
+            "success",
+            batch_id=batch_id,
+            gemini_config=gemini_config,
+            response_summary=response_summary,
+        )
 
         return parsed, input_tokens, output_tokens
 
@@ -374,22 +405,46 @@ async def call_gemini_alignment(
             else:
                 rate_limit_type = "unknown"
 
-        _log_call(photo_id, model, call_type, 0, 0, 0, start_ms, status,
-                   error_message=error_msg, rate_limit_type=rate_limit_type, batch_id=batch_id)
+        _log_call(
+            photo_id,
+            model,
+            call_type,
+            0,
+            0,
+            0,
+            start_ms,
+            status,
+            error_message=error_msg,
+            rate_limit_type=rate_limit_type,
+            batch_id=batch_id,
+        )
         logger.error(f"Gemini face alignment call failed: {e}")
         return None, 0, 0
 
 
-def _log_call(photo_id, model, call_type, prompt_tokens, completion_tokens,
-              cost_usd, start_ms, status, error_message=None,
-              rate_limit_type=None, batch_id=None,
-              gemini_config=None, response_summary=None):
+def _log_call(
+    photo_id,
+    model,
+    call_type,
+    prompt_tokens,
+    completion_tokens,
+    cost_usd,
+    start_ms,
+    status,
+    error_message=None,
+    rate_limit_type=None,
+    batch_id=None,
+    gemini_config=None,
+    response_summary=None,
+):
     """Best-effort log of Gemini API call to Supabase."""
     import time as _time
+
     if not photo_id:
         return
     try:
         from app.supabase_data import log_gemini_call
+
         latency_ms = int(_time.time() * 1000) - start_ms
         total = (prompt_tokens or 0) + (completion_tokens or 0)
         log_gemini_call(
@@ -413,6 +468,7 @@ def _log_call(photo_id, model, call_type, prompt_tokens, completion_tokens,
 
 
 # --- Full pipeline ---
+
 
 async def run_face_alignment(
     photo_id: str,
@@ -456,9 +512,15 @@ async def run_face_alignment(
 
     # Step 4: Call Gemini
     response_data, input_tokens, output_tokens = await call_gemini_alignment(
-        normalized_bytes, prompt, model=model, api_key=api_key,
-        photo_id=photo_id, call_type=call_type, batch_id=batch_id,
-        gedcom_token_count=gedcom_token_count, enrichment_level=enrichment_level,
+        normalized_bytes,
+        prompt,
+        model=model,
+        api_key=api_key,
+        photo_id=photo_id,
+        call_type=call_type,
+        batch_id=batch_id,
+        gedcom_token_count=gedcom_token_count,
+        enrichment_level=enrichment_level,
     )
 
     if response_data is None:
@@ -471,11 +533,18 @@ async def run_face_alignment(
 
     # Step 5: Parse and align
     result = parse_alignment_response(
-        response_data, faces, photo_id,
+        response_data,
+        faces,
+        photo_id,
         model_used=model,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
     )
+
+    # Set analyzed timestamp
+    from datetime import datetime, timezone
+
+    result.analyzed_at = datetime.now(timezone.utc).isoformat()
 
     return result
 
@@ -562,12 +631,12 @@ def load_alignments(data_dir: str | Path = "data") -> dict[str, dict]:
     Returns dict of {photo_id: alignment_data_dict}.
     """
     from app.supabase_data import load_all_face_alignments_from_supabase
+
     global _ALIGNMENTS_BULK_CACHE, _ALIGNMENTS_BULK_CACHE_LOADED_AT, _ALIGNMENTS_BULK_CACHE_FAILED_AT
 
     now = time.monotonic()
     cache_is_fresh = (
-        _ALIGNMENTS_BULK_CACHE is not None
-        and (now - _ALIGNMENTS_BULK_CACHE_LOADED_AT) < _ALIGNMENTS_CACHE_TTL_SECONDS
+        _ALIGNMENTS_BULK_CACHE is not None and (now - _ALIGNMENTS_BULK_CACHE_LOADED_AT) < _ALIGNMENTS_CACHE_TTL_SECONDS
     )
     if cache_is_fresh:
         return _ALIGNMENTS_BULK_CACHE or load_alignments_from_file(data_dir)

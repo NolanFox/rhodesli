@@ -2118,6 +2118,7 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         gemini_only = alignment.get("gemini_only_faces", [])
         scene_context = alignment.get("scene_context", "")
         model_used = alignment.get("model_used", "")
+        analyzed_at = alignment.get("analyzed_at", "")
     else:
         aligned_faces = [
             f
@@ -2140,6 +2141,18 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
         gemini_only = alignment.gemini_only_faces
         scene_context = alignment.scene_context
         model_used = alignment.model_used
+        analyzed_at = getattr(alignment, "analyzed_at", "")
+
+    # Format model + timestamp line
+    model_line = f"Gemini coordinate bridging ({model_used})" if model_used else "Gemini coordinate bridging"
+    if analyzed_at:
+        try:
+            from datetime import datetime
+
+            dt = datetime.fromisoformat(analyzed_at)
+            model_line += f" on {dt.strftime('%b %-d, %Y')}"
+        except (ValueError, TypeError):
+            pass
 
     # Look up identities for face labels
     registry = load_registry()
@@ -2243,7 +2256,7 @@ def _build_face_alignment_section(photo_id: str, is_admin: bool = False):
 
     return Div(
         H3("Face Analysis", cls="text-lg font-serif font-bold text-white mb-2"),
-        P(f"Gemini coordinate bridging ({model_used})", cls="text-indigo-400/70 text-[11px] mb-3"),
+        P(model_line, cls="text-indigo-400/70 text-[11px] mb-3"),
         mismatch_warning,
         scene_el,
         Div(*face_cards, cls="grid gap-2 sm:grid-cols-2")
