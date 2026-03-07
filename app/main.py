@@ -102,6 +102,31 @@ from app.utils import (
     APP_VERSION,
 )
 
+# --- Observability init (all gated on env vars) ---
+# Sentry error tracking — no-op when SENTRY_DSN is not set
+if os.environ.get("SENTRY_DSN"):
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=os.environ["SENTRY_DSN"],
+        environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
+        traces_sample_rate=0.1,
+        send_default_pii=False,  # Heritage app — faces are PII
+    )
+
+# Structured logging — configures alongside stdlib logging
+import structlog
+
+structlog.configure(
+    processors=[
+        structlog.contextvars.merge_contextvars,
+        structlog.processors.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.dev.ConsoleRenderer(),
+    ],
+    wrapper_class=structlog.make_filtering_bound_logger(logging.INFO),
+)
+
 static_path = Path(__file__).resolve().parent / "static"
 # Data and photos paths come from config, which handles STORAGE_DIR for Railway
 data_path = Path(DATA_DIR) if Path(DATA_DIR).is_absolute() else project_root / DATA_DIR
@@ -114,6 +139,20 @@ SITE_URL = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
 
 # No blanket auth — all GET routes are public.
 # Specific POST routes use @require_admin or @require_login decorators.
+
+
+def _posthog_script():
+    """Return PostHog analytics snippet if POSTHOG_API_KEY is set, else empty tuple."""
+    key = os.environ.get("POSTHOG_API_KEY", "")
+    if not key:
+        return ()
+    return (
+        Script(f"""
+            !function(t,e){{var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){{function g(t,e){{var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){{t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){{var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}},o="init capture register register_once unregister opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing identify alias people.set people.set_once set_config reset get_distinct_id getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onFeatureFlags onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])}},e.__SV=1)}}(document,window.posthog||[]);
+            posthog.init('{key}', {{api_host: 'https://us.i.posthog.com', person_profiles: 'identified_only', respect_dnt: true}});
+        """),
+    )
+
 
 app, rt = fast_app(
     pico=False,
@@ -387,6 +426,7 @@ app, rt = fast_app(
                 };
             });
         """),
+        *_posthog_script(),
     ),
     static_path=str(static_path),
 )
