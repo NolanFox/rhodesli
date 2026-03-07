@@ -3719,6 +3719,35 @@ def _public_nav_links(active: str = "", user=None) -> list:
                 cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium transition-colors ml-2",
             )
         )
+
+    # Bell icon for logged-in users (PRD-028 Notifications)
+    if user:
+        bell_svg = NotStr(
+            '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" '
+            'viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">'
+            '<path stroke-linecap="round" stroke-linejoin="round" '
+            'd="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 '
+            "6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 "
+            "11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 "
+            '11-6 0v-1m6 0H9"/></svg>'
+        )
+        links.append(
+            A(
+                Div(
+                    bell_svg,
+                    Span(id="notification-badge"),
+                    cls="relative",
+                    hx_get="/api/notifications/count",
+                    hx_trigger="load, every 30s",
+                    hx_target="#notification-badge",
+                    hx_swap="outerHTML",
+                ),
+                href="/notifications",
+                cls="text-slate-300 hover:text-white transition-colors ml-2",
+                title="Notifications",
+            )
+        )
+
     return links
 
 
@@ -25845,6 +25874,7 @@ _load_activity_feed = admin_routes._load_activity_feed
 _compute_correction_priority = admin_routes._compute_correction_priority
 _get_priority_reason = admin_routes._get_priority_reason
 
+from app import notification_routes  # noqa: E402, F401
 from app import upload_routes  # noqa: E402, F401
 
 # Re-run route priority after all route modules are imported

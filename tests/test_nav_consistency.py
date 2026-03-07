@@ -62,16 +62,25 @@ class TestPublicNavLinks:
         mock_user.email = "test@test.com"
         with patch("app.main.is_auth_enabled", return_value=True):
             links = _public_nav_links(active="photos", user=mock_user)
-            # Should have 11 items (5 archive + span + 4 tools + help identify)
-            assert len(links) == 11
+            # Should have 12 items (5 archive + span + 4 tools + help identify + bell icon)
+            assert len(links) == 12
 
     def test_link_order(self):
         with patch("app.main.is_auth_enabled", return_value=False):
             links = _public_nav_links(active="")
             hrefs = [link.attrs.get("href", "") for link in links]
             expected_order = [
-                "/photos", "/collections", "/people", "/timeline", "/map",
-                "", "/tree", "/connect", "/compare", "/estimate", "/help"
+                "/photos",
+                "/collections",
+                "/people",
+                "/timeline",
+                "/map",
+                "",
+                "/tree",
+                "/connect",
+                "/compare",
+                "/estimate",
+                "/help",
             ]
             assert hrefs == expected_order
 
@@ -95,6 +104,7 @@ class TestNavOnPublicPages:
         mock_photo_reg._photos = {}  # Prevent MagicMock auto-attrs leaking into JSON serialization
 
         import pathlib
+
         orig_exists = pathlib.Path.exists
         orig_read_text = pathlib.Path.read_text
 
@@ -136,13 +146,16 @@ class TestNavOnPublicPages:
                 stack.enter_context(p)
             return client.get(path)
 
-    @pytest.mark.parametrize("path,expected_links", [
-        ("/photos", ["/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
-        ("/people", ["/photos", "/collections", "/map", "/timeline", "/tree", "/connect", "/compare"]),
-        ("/collections", ["/photos", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
-        ("/map", ["/photos", "/collections", "/people", "/timeline", "/tree", "/connect", "/compare"]),
-        ("/connect", ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/compare"]),
-    ])
+    @pytest.mark.parametrize(
+        "path,expected_links",
+        [
+            ("/photos", ["/collections", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
+            ("/people", ["/photos", "/collections", "/map", "/timeline", "/tree", "/connect", "/compare"]),
+            ("/collections", ["/photos", "/people", "/map", "/timeline", "/tree", "/connect", "/compare"]),
+            ("/map", ["/photos", "/collections", "/people", "/timeline", "/tree", "/connect", "/compare"]),
+            ("/connect", ["/photos", "/collections", "/people", "/map", "/timeline", "/tree", "/compare"]),
+        ],
+    )
     def test_nav_links_present(self, client, path, expected_links):
         resp = self._get_page(client, path)
         assert resp.status_code == 200
