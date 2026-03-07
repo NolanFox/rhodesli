@@ -15,20 +15,15 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path as _Path
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 
-import numpy as np
 from fasthtml.common import *
-from PIL import Image
-from starlette.datastructures import UploadFile
 from starlette.responses import FileResponse, HTMLResponse, RedirectResponse, Response, StreamingResponse
 
-from core.registry import IdentityState
 from core.ui_safety import ensure_utf8_display
-from core.config import MATCH_THRESHOLD_HIGH, MATCH_THRESHOLD_LOW
 
 from app.main import rt
-from app.utils import photo_url, _section_for_state, _pl
+from app.utils import photo_url, _section_for_state
 
 import app.main as _main_mod
 
@@ -50,7 +45,6 @@ def _ping_supabase() -> str:
     Returns status string: 'ok', 'skipped', 'not_configured', or 'error:...'
     """
     global _supabase_last_ping
-    import time
 
     now = time.time()
     if now - _supabase_last_ping < _SUPABASE_PING_INTERVAL:
@@ -1644,7 +1638,9 @@ def get(
     # Personalized discovery banner when user has interest surnames
     discovery_banner = None
     if interest_surnames and section == "skipped":
-        discovery_banner = _main_mod._personalized_discovery_banner(interest_surnames, confirmed_list, crop_files, counts)
+        discovery_banner = _main_mod._personalized_discovery_banner(
+            interest_surnames, confirmed_list, crop_files, counts
+        )
 
     # Render the appropriate section
     if section == "to_review":
@@ -2370,7 +2366,6 @@ def get(
             cls="h-full",
         ),
     )
-
 
 
 # =============================================================================
@@ -4102,12 +4097,18 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
             registry.rename_identity(person_id, name.strip(), user_source="admin_web")
             # Also confirm the person so they move out of New Matches
             identity = registry.get_identity(person_id)
+            _notify = None
             if identity.get("state") != "CONFIRMED":
                 try:
                     registry.confirm_identity(person_id, user_source="admin_web_identify")
+                    _notify = {
+                        "identity_id": person_id,
+                        "identity_name": name.strip(),
+                        "user_id": user.id if user else None,
+                    }
                 except ValueError:
                     pass  # Already confirmed or invalid state transition
-            _main_mod.save_registry(registry)
+            _main_mod.save_registry(registry, confirmed_identity_info=_notify)
             logging.info(f"[identify] Admin direct-named and confirmed {person_id} as '{name.strip()}'")
             return Div(
                 Div(
@@ -6176,8 +6177,6 @@ def get(identity_id: str, sess=None):
     return Div(hero_section, results_section, data_testid="find-similar-panel")
 
 
-
-
 @rt("/collections")
 def get(sess=None):
     """Collection directory — list all collections with preview thumbnails."""
@@ -6364,7 +6363,9 @@ def get(slug: str, sess=None):
     people_section = ""
     if people_in_collection:
         people_items = []
-        for pid in sorted(people_in_collection, key=lambda x: _main_mod._safe_get_identity(registry, x).get("name", "").lower()):
+        for pid in sorted(
+            people_in_collection, key=lambda x: _main_mod._safe_get_identity(registry, x).get("name", "").lower()
+        ):
             p_ident = _main_mod._safe_get_identity(registry, pid)
             p_name = ensure_utf8_display(p_ident.get("name", "Unknown"))
             people_items.append(
@@ -7078,7 +7079,10 @@ def get(
 
     # Build collection list for filter dropdown
     all_collections = sorted(
-        set(((_main_mod._photo_cache or {}).get(pid, {}).get("collection", "") or "") for pid in (_main_mod._photo_cache or {}))
+        set(
+            ((_main_mod._photo_cache or {}).get(pid, {}).get("collection", "") or "")
+            for pid in (_main_mod._photo_cache or {})
+        )
     )
     all_collections = [c for c in all_collections if c]
 
@@ -7976,7 +7980,6 @@ def _save_compare_upload(content: bytes, filename: str, faces: list, results: li
     """
     import uuid as _uuid
     import mimetypes
-    from pathlib import Path as _Path
     from core.storage import can_write_r2, upload_bytes_to_r2
 
     upload_id = _uuid.uuid4().hex[:12]
@@ -8045,7 +8048,6 @@ async def post(request):
             yield sse_event({"stage": "error", "message": "No photo uploaded."})
             return
 
-        from pathlib import Path as _Path
 
         content = await photo.read()
         original_filename = photo.filename or "upload.jpg"
@@ -8389,7 +8391,6 @@ def _connection_path_html(path_steps, registry):
         )
 
     return Div(*steps, cls="flex flex-col items-center mt-6", data_testid="connection-path")
-
 
 
 # =============================================================================
@@ -10707,7 +10708,6 @@ def get(photo_id: str):
     )
 
 
-
 @rt("/api/onboarding/discover")
 def get(surnames: str = ""):
     """Return HTML fragment showing confirmed identities matching selected surnames.
@@ -10815,5 +10815,3 @@ def get(surnames: str = ""):
             cls="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-500 w-full",
         ),
     )
-
-

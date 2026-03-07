@@ -150,7 +150,10 @@ def _create_notification(
 
 
 def create_identity_confirmed_notification(
-    identity_id: str, identity_name: str, photo_ids: list[str] | None = None
+    identity_id: str,
+    identity_name: str,
+    photo_ids: list[str] | None = None,
+    user_id: str | None = None,
 ) -> dict | None:
     """Create a notification when an identity is confirmed.
 
@@ -162,15 +165,15 @@ def create_identity_confirmed_notification(
         identity_id: UUID of the confirmed identity
         identity_name: Display name of the identity
         photo_ids: List of photo IDs associated with the identity
+        user_id: Supabase auth user ID of the admin who confirmed.
+                 Falls back to a system placeholder if not provided.
 
     Returns:
         The created notification row, or None if Supabase is unavailable.
     """
-    # For now, this is a stub that creates a notification.
-    # In the future, we'll look up which user(s) contributed annotations
-    # for this identity and notify them specifically.
+    target_user_id = user_id or "00000000-0000-0000-0000-000000000000"
     return _create_notification(
-        user_id="00000000-0000-0000-0000-000000000000",  # placeholder
+        user_id=target_user_id,
         notification_type="identity_confirmed",
         title=f"Identity Confirmed: {identity_name}",
         body=f'The identity "{identity_name}" has been confirmed by an admin.',

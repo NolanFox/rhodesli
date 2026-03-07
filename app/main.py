@@ -746,11 +746,18 @@ def load_registry():
     return IdentityRegistry()
 
 
-def save_registry(registry):
+def save_registry(registry, confirmed_identity_info=None):
     """Save registry with atomic write + sync to Supabase (AD-135).
 
     When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
     When DATA_SOURCE=json (default), writes JSON + shadow-writes to Supabase.
+
+    Args:
+        registry: The IdentityRegistry to save
+        confirmed_identity_info: Optional dict with keys:
+            - identity_id: str
+            - identity_name: str
+            - user_id: str (Supabase auth user ID of the admin)
     """
     if DATA_SOURCE == "postgres":
         # Postgres-only write path: write directly to Supabase
@@ -796,6 +803,36 @@ def save_registry(registry):
         args=(dict(registry._identities),),
         daemon=True,
     ).start()
+
+    # Fire notification if an identity was just confirmed
+    if confirmed_identity_info:
+
+        def _fire_notification(info):
+            try:
+                from app.notification_routes import create_identity_confirmed_notification
+
+                # Look up photo_ids for this identity
+                photo_ids = []
+                try:
+                    identity = registry.get_identity(info["identity_id"])
+                    face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+                    photo_reg = load_photo_registry()
+                    for fid in face_ids:
+                        pid = photo_reg.face_to_photo.get(fid)
+                        if pid and pid not in photo_ids:
+                            photo_ids.append(pid)
+                except Exception:
+                    pass
+                create_identity_confirmed_notification(
+                    identity_id=info["identity_id"],
+                    identity_name=info["identity_name"],
+                    photo_ids=photo_ids,
+                    user_id=info.get("user_id"),
+                )
+            except Exception:
+                pass  # Notifications are best-effort
+
+        threading.Thread(target=_fire_notification, args=(confirmed_identity_info,), daemon=True).start()
 
 
 # =============================================================================
