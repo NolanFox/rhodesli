@@ -576,6 +576,43 @@ def post(
     return _main_mod.toast(f"Photo metadata updated ({len(metadata)} field(s)).", "success")
 
 
+@rt("/api/photo/{photo_id}/media-group")
+def get(photo_id: str):
+    """Return all related media for a photo's media group.
+
+    Returns JSON with group_id and items list containing each member's
+    photo_id, role (front/back), and URL.
+    """
+    photo = _main_mod.get_photo_metadata(photo_id)
+    if not photo:
+        return JSONResponse(
+            {"error": "Photo not found", "photo_id": photo_id},
+            status_code=404,
+        )
+
+    group_id = photo.get("media_group_id", photo_id)
+    items = [
+        {
+            "photo_id": photo_id,
+            "role": photo.get("media_role", "front"),
+            "url": photo_url(photo.get("filename", "")),
+        }
+    ]
+
+    # Add back image if it exists
+    back_image = photo.get("back_image", "")
+    if back_image:
+        items.append(
+            {
+                "photo_id": f"{photo_id}_back",
+                "role": "back",
+                "url": photo_url(back_image),
+            }
+        )
+
+    return JSONResponse({"group_id": group_id, "items": items})
+
+
 @rt("/api/photo/{photo_id}/back-image")
 async def post(photo_id: str, file: UploadFile = None, back_transcription: str = "", sess=None):
     """Upload a back image for a photo and optionally add transcription. Admin-only.
