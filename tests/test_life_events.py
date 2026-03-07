@@ -381,9 +381,12 @@ class TestSeedScript:
         """Verify the seed script has events."""
         import importlib.util
 
+        import pathlib
+
+        seed_path = pathlib.Path(__file__).parent.parent / "scripts" / "seed_life_events.py"
         spec = importlib.util.spec_from_file_location(
             "seed_life_events",
-            "/Users/nolanfox/rhodesli/.claude/worktrees/agent-a600e94e/scripts/seed_life_events.py",
+            str(seed_path),
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)

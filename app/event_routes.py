@@ -592,7 +592,7 @@ def get(
             ),
         )
 
-    nav_links = _main_mod._nav_links()
+    nav_links = _main_mod._public_nav_links(active="events", user=user)
 
     return (
         Title("Life Events — Rhodesli Heritage Archive"),
@@ -758,7 +758,7 @@ def get(event_id: str, sess=None):
 
     icon = EVENT_TYPE_ICONS.get(event.get("event_type", "other"), "📌")
     date_str = _event_date_display(event)
-    nav_links = _main_mod._nav_links()
+    nav_links = _main_mod._public_nav_links(active="events", user=user)
 
     return (
         Title(f"{event.get('title', 'Event')} — Rhodesli Heritage Archive"),
