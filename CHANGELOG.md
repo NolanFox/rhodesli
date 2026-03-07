@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.94.0] — 2026-03-07 (Session 91: PRD Backlog + Platform Foundation)
+
+### Added
+- **PRD-028: Contributor Notifications** — In-app notification center with bell icon, unread badge (30s polling), /notifications page, mark-read, admin create. SQL schema for notifications + preferences tables.
+- **PRD-027 Phase A: R2 Nightly Backup** — `scripts/backup_to_r2.py` (identities.json, photo_index.json, embeddings.npy, date_labels.json, photo_locations.json → R2 backups/YYYY-MM-DD/). `scripts/restore_from_r2.py` with --list and --date. 30-day pruning.
+- **PRD-011: Life Events** — Event tagging system connecting photos, people, places, dates. `app/event_routes.py` with full CRUD, photo/person linking. Person page "Life Events" section. Event types: wedding, funeral, holiday, reunion, immigration, etc.
+- **PRD-029: Photo Backs Completion** — Media group API endpoint, browse "Has back" filter, card badges for photos with back images. Supabase columns for media_group_id/media_role.
+- **PRD-027 Phases B/C: Postgres Read Flip** — `DATA_SOURCE` feature flag (json|postgres). IdentityRegistry.load_from_postgres() and PhotoRegistry.load_from_postgres(). Fallback to JSON when Supabase unavailable.
+- **GlobalPersonID Schema** — communities table, global_person_links table, Rhodes community seeded. community_id on identities/photos tables.
+- **Observability** — sentry-sdk + structlog in requirements.txt (gated on SENTRY_DSN). PostHog JS snippet (gated on POSTHOG_API_KEY). All no-ops when env vars absent.
+- **PRD-030: Multi-Collection Architecture** — Design doc for community-scoped data + GlobalPersonID cross-linking.
+- **docs/architecture/MULTI_TENANT.md** — Multi-tenant architecture design.
+- ~2265 lines of new test code across 6 test files.
+
+### Technical
+- 6 parallel worktree subagents, all merged cleanly
+- Tests: ~1237 → 3502 (all pass)
+
 ## [v0.93.2] — 2026-03-07 (Session 90c: Gemini Prompt Fix + Face Alignment + PRD Cleanup)
 
 ### Fixed

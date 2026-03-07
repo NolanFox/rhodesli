@@ -394,6 +394,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 91: PRD Backlog + Platform Foundation (2026-03-07) — v0.94.0
+- 6 parallel worktree tracks, all merged cleanly.
+- PRD-028: Contributor Notifications — bell icon, /notifications page, mark-read, SQL schema, 36 tests.
+- PRD-027 Phase A: R2 Backup — backup_to_r2.py + restore_from_r2.py, 30-day pruning, 18 tests.
+- PRD-011: Life Events — event_routes.py (CRUD, photo/person linking), seed script, 394 lines tests.
+- PRD-029: Photo Backs Completion — media group API, browse "Has back" filter, card badges, 298 lines tests.
+- PRD-027 B/C: Postgres Read Flip — DATA_SOURCE feature flag (json|postgres), load_from_postgres(), 562 lines tests.
+- GlobalPersonID: communities + global_person_links tables, Rhodes community seeded.
+- Observability: sentry-sdk, structlog, PostHog JS (all env-gated).
+- PRD-030 Multi-Collection Architecture doc. MULTI_TENANT.md.
+- Tests: ~1237 → 3502 (all pass). ~2265 lines new test code.
+
 ## Session 90c: Gemini Prompt Fix + Face Alignment + PRD Cleanup (2026-03-07) — v0.93.2
 - Leon's Restaurant: Gemini now says "Tampa, FL" (was SF/NYC). Collection metadata + signage cross-reference + transit disambiguation added to prompt (AD-204).
 - Face alignment R2 fix: `_load_photo_bytes` User-Agent header for R2 (was 403). Detect Faces works on production.

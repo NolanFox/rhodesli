@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.93.0 · ~4146 tests · 296 photos · 777 identities · 69 confirmed
+Current: v0.94.0 · ~3502 tests · 296 photos · 777 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -27,21 +27,19 @@ Current: v0.93.0 · ~4146 tests · 296 photos · 777 identities · 69 confirmed
 | **C: Annotation Engine** | COMPLETE | Full submit/review/approve workflow |
 | **D: ML Feedback** | ~90% complete | Remaining: ML-053 (multi-pass Gemini), FE-040-043 |
 | **E: Collaboration** | ~70% complete | Remaining: Help Identify mode, analytics, moderation |
-| **F: Scale & Generalize** | ~20% complete | Face alignment + GEDCOM in Supabase, API logging. Remaining: full Postgres ML data, CI/CD, Sentry |
+| **F: Scale & Generalize** | ~50% complete | Postgres read flip, GlobalPersonID, Sentry, PostHog, structlog. Remaining: pgvector, CI/CD, ML service extraction |
 
 For full feature checklists, see [docs/roadmap/FEATURE_STATUS.md](docs/roadmap/FEATURE_STATUS.md).
 For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMAP.md).
 
 ## Open Work (Prioritized)
 
-### Immediate — Session 91 (PRD Backlog + Platform Foundation, 6 parallel tracks)
-- [-] 2026-03-06: PRD-028: Contributor Notifications P0 — in-app notification center + event triggers
-- [-] 2026-03-06: PRD-027 Phase A: Nightly R2 backup for critical JSON/NPY files
-- [-] 2026-03-06: PRD-011: Life Events & Context Graph — event model + tagging + timeline integration
-- [-] 2026-03-06: PRD-029: Complete Photo Backs & Media Groups — remaining work from Session 90b
-- [-] 2026-03-06: PRD-027 Phases B/C: Full Postgres migration + read flip (DATA_SOURCE feature flag)
-- [-] 2026-03-06: GlobalPersonID + community schema (communities table, global_person_links, Rhodes seed)
-- [-] 2026-03-06: Observability — Sentry + PostHog + structlog (gated on env vars)
+### Immediate — Post-Session 91
+- [ ] Deploy Session 91 to Railway + browser verify all features
+- [ ] Set SENTRY_DSN + POSTHOG_API_KEY on Railway
+- [ ] Wire notification triggers into save_registry()
+- [ ] Run seed_life_events.py against Supabase
+- [ ] Test DATA_SOURCE=postgres on Railway
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
 - [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
 - [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
@@ -70,13 +68,8 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 91: Ship PRD Backlog + Platform Foundation (6 parallel tracks)
-- Track A: PRD-028 Contributor Notifications P0 (notifications table, bell icon, event triggers)
-- Track B: PRD-027 Phase A R2 Nightly Backup (backup + restore scripts)
-- Track C: PRD-011 Life Events & Context Graph (event model, CRUD, photo/person/timeline integration)
-- Track D: PRD-029 Photo Backs Completion (media group API, Front/Back label, browse filter, card badges)
-- Track E: Postgres Read Flip + GlobalPersonID (DATA_SOURCE flag, community schema, Rhodes seed)
-- Track F: Observability + Docs (Sentry, PostHog, structlog, architecture docs, PRD-030)
+### Session 91: Ship PRD Backlog + Platform Foundation (6 parallel tracks) — COMPLETE
+- All 6 tracks shipped and merged. See Recently Completed.
 - Prompt: docs/prompts/session-91-prompt.md
 
 ### Session 92: Scale & Polish
@@ -87,6 +80,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-07: **v0.94.0 — Session 91**: PRD Backlog + Platform Foundation. 6 parallel worktree tracks. PRD-028 notifications (bell icon, /notifications, event triggers). PRD-027 Phase A R2 backup/restore. PRD-011 life events (CRUD, photo/person linking). PRD-029 photo backs completion (media group API, browse filter, badges). PRD-027 B/C Postgres read flip (DATA_SOURCE feature flag, load_from_postgres). GlobalPersonID schema (communities + global_person_links). Observability (Sentry, PostHog, structlog, all env-gated). PRD-030 + MULTI_TENANT.md. ~2265 lines new tests. 3502 tests pass.
 - [x] 2026-03-06: **v0.93.1 — Session 90b (complete)**: Fix Sorting + Shadow Writes + Route Extraction + Back Photo. Upload date sorting fixed (296 photos patched). Leon's Restaurant → Tampa, FL. Supabase shadow writes fully wired (save_registry + save_photo_registry fire-and-forget). Route extraction: person_routes.py (1,632 lines), main.py 34K→26K. Back-photo upload (PRD-029). Test fixes for extracted routes. 22 commits. ~3915 tests.
 - [x] 2026-03-04: **v0.92.0 — Session 89**: Wire GEDCOM into Location Estimation. AD-201: Unified Gemini prompt (interactive uses enriched prompt). AD-202: Admin re-analyze button. API call logging on every interactive Gemini call. Batch reprocessing script. Asheville photo pipeline ready. 24 new tests. ~4146 tests.
 - [x] 2026-03-04: **v0.91.1 — Session 88**: Fix Scoring & Card Failures. Isotonic calibrator crash fixed, sigmoid CDF priority. Batch NN override removed. Compare link params fixed. Accordion headers with match preview. Admin badge → gear icon. Discovery cards: match_info_bar, distance, co-occurrence. HD-024 harness improvements (ruff format, dynamic hooks, test gate). Browser verified 5/5. ~4122 tests.
