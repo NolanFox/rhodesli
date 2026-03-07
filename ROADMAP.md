@@ -34,20 +34,20 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Open Work (Prioritized)
 
-### Immediate — Session 91 (PRD Backlog Ship)
+### Immediate — Session 91 (PRD Backlog + Platform Foundation, 6 parallel tracks)
 - [-] 2026-03-06: PRD-028: Contributor Notifications P0 — in-app notification center + event triggers
 - [-] 2026-03-06: PRD-027 Phase A: Nightly R2 backup for critical JSON/NPY files
 - [-] 2026-03-06: PRD-011: Life Events & Context Graph — event model + tagging + timeline integration
 - [-] 2026-03-06: PRD-029: Complete Photo Backs & Media Groups — remaining work from Session 90b
+- [-] 2026-03-06: PRD-027 Phases B/C: Full Postgres migration + read flip (DATA_SOURCE feature flag)
+- [-] 2026-03-06: GlobalPersonID + community schema (communities table, global_person_links, Rhodes seed)
+- [-] 2026-03-06: Observability — Sentry + PostHog + structlog (gated on env vars)
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
 - [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
 - [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
 
 ### Near-Term
 - [x] 2026-03-06: DATA-006: Shadow writes — tables, functions, backfill script, app wiring complete (Session 90b). save_registry() and save_photo_registry() fire-and-forget to Supabase.
-- [ ] PRD-027 Phases B/C: Full Postgres migration + read flip (Session 92)
-- [ ] GlobalPersonID / multi-tenant schema (Session 92)
-- [ ] Sentry + PostHog + structlog observability (Session 92)
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [x] 2026-03-01: FE-041: "Help Identify" mode — /help page, Identify Mode toggle, OG cards
@@ -70,17 +70,20 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Planned Sessions
 
-### Session 91: Ship the PRD Backlog (4 parallel tracks)
+### Session 91: Ship PRD Backlog + Platform Foundation (6 parallel tracks)
 - Track A: PRD-028 Contributor Notifications P0 (notifications table, bell icon, event triggers)
 - Track B: PRD-027 Phase A R2 Nightly Backup (backup + restore scripts)
 - Track C: PRD-011 Life Events & Context Graph (event model, CRUD, photo/person/timeline integration)
 - Track D: PRD-029 Photo Backs Completion (media group API, Front/Back label, browse filter, card badges)
+- Track E: Postgres Read Flip + GlobalPersonID (DATA_SOURCE flag, community schema, Rhodes seed)
+- Track F: Observability + Docs (Sentry, PostHog, structlog, architecture docs, PRD-030)
 - Prompt: docs/prompts/session-91-prompt.md
 
-### Session 92: Platform Foundation (deferred from original Session 91)
-- PRD-027 Phases B/C: Full Postgres migration + read flip
-- GlobalPersonID / multi-tenant schema
-- Sentry + PostHog + structlog observability
+### Session 92: Scale & Polish
+- ML service extraction (separate FastAPI service)
+- Second collection onboarding (Fox family photos)
+- Chatbot research interface (NL queries)
+- Standalone Gemini tooling product
 
 ## Recently Completed
 
