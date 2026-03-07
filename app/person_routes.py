@@ -36,6 +36,13 @@ logger = logging.getLogger(__name__)
 # remain in app.main so that test patches on app.main work correctly.
 
 
+def _life_events_section(person_id: str):
+    """Build the life events section for person pages (PRD-011). Lazy import to avoid circular."""
+    from app.event_routes import person_events_section
+
+    return person_events_section(person_id)
+
+
 def _person_comments_section(person_id: str, is_admin: bool = False):
     """Build the comments section for person pages."""
     comments_data = _main_mod._load_person_comments()
@@ -1237,6 +1244,8 @@ def public_person_page(
                     appears_with_section if appears_with_section else None,
                     # Approved community annotations
                     annotations_section if annotations_section else None,
+                    # Life events (PRD-011)
+                    _life_events_section(person_id),
                     # Comments section
                     _person_comments_section(person_id, is_admin),
                     cls="max-w-5xl mx-auto px-6 py-10",
