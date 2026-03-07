@@ -2066,24 +2066,6 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
     )
 
 
-@rt("/api/photo/{photo_id}/ai-sections")
-def get(photo_id: str, sess=None):
-    """Return refreshed AI Analysis sections content (used after re-analyze)."""
-    is_admin = not _check_admin(sess)
-    section = _build_ai_analysis_section(photo_id, is_admin=is_admin)
-    if not section:
-        return Div()
-    # The full section is a Section > Div > [header, reanalyze-result, sections-div, ...]
-    # We just need to rebuild and return the sections.
-    # Simplest: return the full section and let HTMX swap it in.
-    # But our target is the inner sections div. Let's rebuild just sections.
-    labels = _load_date_labels()
-    label = labels.get(photo_id)
-    if not label:
-        return Div()
-    return _build_ai_sections_list(photo_id, label, is_admin)
-
-
 def _build_ai_sections_list(photo_id: str, label: dict, is_admin: bool = False):
     """Build just the collapsible sections for AI Analysis (no wrapper).
 

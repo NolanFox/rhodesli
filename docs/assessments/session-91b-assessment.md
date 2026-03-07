@@ -45,7 +45,7 @@
 
 | Metric | Before | After | Target | Status |
 |--------|--------|-------|--------|--------|
-| main.py lines | 26,100 | 9,383 | <17,000 | EXCEEDED |
+| main.py lines | 26,100 | 9,365 | <17,000 | EXCEEDED |
 | Route files | 12 | 17 | +4 new | +5 new (EXCEEDED) |
 | App tests | 1,223 | 3,518 | No regression | PASS |
 | ML tests | ~565 | ~565 | No regression | PASS |
@@ -53,6 +53,16 @@
 | Supabase tables | 0 missing | 0 missing | All created | PASS |
 | Life events seeded | 0 | 5 | >0 | PASS |
 | Notification triggers | 0 | 7 routes | Wired | PASS |
+
+## Auto-Fix Summary (session-review skill)
+
+- Issues found: 2
+- Auto-fixed: 2
+- Deferred: 0
+
+**AUTO-FIXED**: Duplicate @rt("/api/photo/{photo_id}/ai-sections") in main.py — was: duplicate route (also in photo_routes.py), now: removed from main.py. 0 @rt() decorators remain. main.py 9,383 → 9,365 lines.
+
+**AUTO-FIXED**: pytest-xdist and pytest-timeout not in requirements-local.txt — was: installed in venv but untracked, Makefile uses `-n auto`. now: added to requirements-local.txt.
 
 ## Next Session Should Verify
 

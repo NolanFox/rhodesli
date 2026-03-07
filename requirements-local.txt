@@ -9,3 +9,5 @@ insightface
 onnxruntime
 transformers
 open-clip-torch
+pytest-xdist
+pytest-timeout
