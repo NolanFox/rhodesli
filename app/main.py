@@ -135,6 +135,9 @@ photos_path = Path(PHOTOS_DIR) if Path(PHOTOS_DIR).is_absolute() else project_ro
 # Canonical site URL for Open Graph tags and sharing
 SITE_URL = os.getenv("SITE_URL", "https://rhodesli.nolanandrewfox.com")
 
+# Data source feature flag: "json" (default) or "postgres" (PRD-027 Phase B/C)
+DATA_SOURCE = os.environ.get("DATA_SOURCE", "json")
+
 # APP_VERSION imported from app.utils
 
 # No blanket auth — all GET routes are public.
@@ -724,9 +727,21 @@ REGISTRY_PATH = data_path / "identities.json"
 def load_registry():
     """Load the identity registry (backend authority).
 
-    Returns an empty registry if the file is missing or corrupted,
+    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+    When DATA_SOURCE=json (default), loads from JSON file.
+
+    Returns an empty registry if the source is missing or corrupted,
     so the server never crashes on bad data.
     """
+    if DATA_SOURCE == "postgres":
+        try:
+            registry = IdentityRegistry.load_from_postgres()
+            if registry is not None:
+                return registry
+            logging.warning("Postgres load returned None, falling back to JSON")
+        except Exception as e:
+            logging.warning(f"Postgres identity load failed, falling back to JSON: {e}")
+
     if REGISTRY_PATH.exists():
         try:
             return IdentityRegistry.load(REGISTRY_PATH)
@@ -737,7 +752,26 @@ def load_registry():
 
 
 def save_registry(registry):
-    """Save registry with atomic write + sync to Supabase (AD-135)."""
+    """Save registry with atomic write + sync to Supabase (AD-135).
+
+    When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
+    When DATA_SOURCE=json (default), writes JSON + shadow-writes to Supabase.
+    """
+    if DATA_SOURCE == "postgres":
+        # Postgres-only write path: write directly to Supabase
+        try:
+            from app.supabase_data import shadow_write_identities_batch, sync_identity_overrides
+
+            sync_identity_overrides(registry._identities)
+            items = [dict(v, identity_id=k) for k, v in registry._identities.items()]
+            shadow_write_identities_batch(items)
+        except Exception as e:
+            logging.error(f"Postgres save_registry failed: {e}")
+            # Emergency fallback: write JSON so data isn't lost
+            registry.save(REGISTRY_PATH)
+        return
+
+    # JSON write path (default)
     registry.save(REGISTRY_PATH)
     registry_dict = getattr(registry, "__dict__", None)
     if registry_dict is not None:
@@ -2643,6 +2677,12 @@ def load_face_embeddings() -> dict[str, dict]:
 
     Returns:
         Dict mapping face_id to {"mu": np.ndarray, "sigma_sq": np.ndarray}
+
+    # TODO: Embeddings remain on disk (embeddings.npy) even when DATA_SOURCE=postgres.
+    # NumPy arrays are not efficiently stored in Postgres. Future options:
+    # - pgvector extension for embedding storage + similarity search
+    # - Keep .npy on disk as performance-optimized cache
+    # - R2 backup of embeddings.npy (PRD-027 Phase A)
     """
     embeddings_path = data_path / "embeddings.npy"
     if not embeddings_path.exists():
@@ -2696,12 +2736,25 @@ def get_face_data() -> dict[str, dict]:
 def load_photo_registry():
     """Load the photo registry for merge validation.
 
-    Returns an empty registry if the file is missing or corrupted,
+    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+    When DATA_SOURCE=json (default), loads from JSON file.
+
+    Returns an empty registry if the source is missing or corrupted,
     so the server never crashes on bad data.
     """
     global _photo_registry_cache
     if _photo_registry_cache is None:
         from core.photo_registry import PhotoRegistry
+
+        if DATA_SOURCE == "postgres":
+            try:
+                loaded = PhotoRegistry.load_from_postgres()
+                if loaded is not None:
+                    _photo_registry_cache = loaded
+                    return _photo_registry_cache
+                logging.warning("Postgres photo load returned None, falling back to JSON")
+            except Exception as e:
+                logging.warning(f"Postgres photo load failed, falling back to JSON: {e}")
 
         photo_index_path = data_path / "photo_index.json"
         if photo_index_path.exists():
@@ -2716,11 +2769,31 @@ def load_photo_registry():
 
 
 def save_photo_registry(registry):
-    """Save photo registry to disk and invalidate cache."""
+    """Save photo registry to disk and invalidate cache.
+
+    When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
+    When DATA_SOURCE=json (default), writes JSON + shadow-writes to Supabase.
+    """
     global _photo_registry_cache
+    _photo_registry_cache = registry
+
+    if DATA_SOURCE == "postgres":
+        # Postgres-only write path
+        try:
+            from app.supabase_data import shadow_write_photos_batch
+
+            items = [dict(v, photo_id=k) for k, v in registry._photos.items()]
+            shadow_write_photos_batch(items)
+        except Exception as e:
+            logging.error(f"Postgres save_photo_registry failed: {e}")
+            # Emergency fallback: write JSON so data isn't lost
+            photo_index_path = data_path / "photo_index.json"
+            registry.save(photo_index_path)
+        return
+
+    # JSON write path (default)
     photo_index_path = data_path / "photo_index.json"
     registry.save(photo_index_path)
-    _photo_registry_cache = registry
 
     # Shadow-write all photos to Supabase (fire-and-forget background thread)
     def _shadow_sync_photos(photos_dict):

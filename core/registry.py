@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 # --- INSTRUMENTATION IMPORT ---
 from core.event_recorder import get_event_recorder
@@ -40,11 +40,13 @@ def _levenshtein(s: str, t: str) -> int:
         curr_row = [i + 1]
         for j, tc in enumerate(t):
             cost = 0 if sc == tc else 1
-            curr_row.append(min(
-                curr_row[j] + 1,       # insert
-                prev_row[j + 1] + 1,   # delete
-                prev_row[j] + cost,     # substitute
-            ))
+            curr_row.append(
+                min(
+                    curr_row[j] + 1,  # insert
+                    prev_row[j + 1] + 1,  # delete
+                    prev_row[j] + cost,  # substitute
+                )
+            )
         prev_row = curr_row
     return prev_row[-1]
 
@@ -87,16 +89,18 @@ SCHEMA_VERSION = 1
 
 class IdentityState(Enum):
     """Identity lifecycle states."""
-    INBOX = "INBOX"          # Awaiting human review (from ingest pipeline)
-    PROPOSED = "PROPOSED"    # Initial state, accepts changes
+
+    INBOX = "INBOX"  # Awaiting human review (from ingest pipeline)
+    PROPOSED = "PROPOSED"  # Initial state, accepts changes
     CONFIRMED = "CONFIRMED"  # Authoritative but reversible
     CONTESTED = "CONTESTED"  # Frozen until reviewed
-    REJECTED = "REJECTED"    # Explicitly rejected (soft state, reversible)
-    SKIPPED = "SKIPPED"      # Reviewed but deferred for later
+    REJECTED = "REJECTED"  # Explicitly rejected (soft state, reversible)
+    SKIPPED = "SKIPPED"  # Reviewed but deferred for later
 
 
 class ActionType(Enum):
     """Event action types."""
+
     CREATE = "create"
     PROMOTE = "promote"
     REJECT = "reject"
@@ -305,9 +309,7 @@ class IdentityRegistry:
         }
         return priorities.get(state, 0)
 
-    def resolve_merge_direction(
-        self, id_a: str, id_b: str
-    ) -> dict:
+    def resolve_merge_direction(self, id_a: str, id_b: str) -> dict:
         """
         Determine correct merge direction based on name/state/face count.
 
@@ -437,22 +439,16 @@ class IdentityRegistry:
             KeyError: If either identity not found
         """
         # --- INSTRUMENTATION HOOK ---
-        get_event_recorder().record("MERGE", {
-            "source_id": source_id,
-            "target_id": target_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record(
+            "MERGE", {"source_id": source_id, "target_id": target_id, "user_source": user_source}
+        )
         # ----------------------------
 
         # Validate (Safety Foundation - non-negotiable)
-        can_merge, reason = validate_merge(
-            source_id, target_id, self, photo_registry
-        )
+        can_merge, reason = validate_merge(source_id, target_id, self, photo_registry)
 
         if not can_merge:
-            logger.warning(
-                f"Merge blocked ({reason}): {source_id} -> {target_id}"
-            )
+            logger.warning(f"Merge blocked ({reason}): {source_id} -> {target_id}")
             return {
                 "success": False,
                 "reason": reason,
@@ -491,13 +487,15 @@ class IdentityRegistry:
                         "identity_a": {
                             "id": target_id,
                             "name": target_data.get("name"),
-                            "face_count": len(target_data.get("anchor_ids", [])) + len(target_data.get("candidate_ids", [])),
+                            "face_count": len(target_data.get("anchor_ids", []))
+                            + len(target_data.get("candidate_ids", [])),
                             "state": target_data.get("state"),
                         },
                         "identity_b": {
                             "id": source_id,
                             "name": source_data.get("name"),
-                            "face_count": len(source_data.get("anchor_ids", [])) + len(source_data.get("candidate_ids", [])),
+                            "face_count": len(source_data.get("anchor_ids", []))
+                            + len(source_data.get("candidate_ids", [])),
                             "state": source_data.get("state"),
                         },
                     },
@@ -713,10 +711,7 @@ class IdentityRegistry:
             },
         )
 
-        logger.info(
-            f"Undid merge on {identity_id}: restored {source_id} "
-            f"({faces_removed} faces moved back)"
-        )
+        logger.info(f"Undid merge on {identity_id}: restored {source_id} ({faces_removed} faces moved back)")
 
         return {
             "success": True,
@@ -740,10 +735,7 @@ class IdentityRegistry:
             ValueError: If identity is not in INBOX or PROPOSED state
         """
         # --- INSTRUMENTATION HOOK ---
-        get_event_recorder().record("CONFIRM", {
-            "identity_id": identity_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record("CONFIRM", {"identity_id": identity_id, "user_source": user_source})
         # ----------------------------
 
         identity = self._identities[identity_id]
@@ -792,10 +784,7 @@ class IdentityRegistry:
         identity = self._identities[identity_id]
 
         if identity["state"] != IdentityState.INBOX.value:
-            raise ValueError(
-                f"Identity {identity_id} is not in INBOX state "
-                f"(current: {identity['state']})"
-            )
+            raise ValueError(f"Identity {identity_id} is not in INBOX state (current: {identity['state']})")
 
         previous_version = identity["version_id"]
 
@@ -831,10 +820,7 @@ class IdentityRegistry:
             ValueError: If identity is not in INBOX state
         """
         # --- INSTRUMENTATION HOOK ---
-        get_event_recorder().record("REJECT_IDENTITY", {
-            "identity_id": identity_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record("REJECT_IDENTITY", {"identity_id": identity_id, "user_source": user_source})
         # ----------------------------
 
         identity = self._identities[identity_id]
@@ -881,10 +867,7 @@ class IdentityRegistry:
             KeyError: If identity not found
             ValueError: If identity is not in a reviewable state
         """
-        get_event_recorder().record("SKIP_IDENTITY", {
-            "identity_id": identity_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record("SKIP_IDENTITY", {"identity_id": identity_id, "user_source": user_source})
 
         identity = self._identities[identity_id]
 
@@ -892,8 +875,7 @@ class IdentityRegistry:
         reviewable_states = {IdentityState.INBOX.value, IdentityState.PROPOSED.value}
         if identity["state"] not in reviewable_states:
             raise ValueError(
-                f"Identity {identity_id} cannot be skipped from state "
-                f"'{identity['state']}' (must be INBOX or PROPOSED)"
+                f"Identity {identity_id} cannot be skipped from state '{identity['state']}' (must be INBOX or PROPOSED)"
             )
 
         previous_state = identity["state"]
@@ -930,10 +912,7 @@ class IdentityRegistry:
             KeyError: If identity not found
             ValueError: If identity is already in a reviewable state
         """
-        get_event_recorder().record("RESET_IDENTITY", {
-            "identity_id": identity_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record("RESET_IDENTITY", {"identity_id": identity_id, "user_source": user_source})
 
         identity = self._identities[identity_id]
 
@@ -946,8 +925,7 @@ class IdentityRegistry:
         }
         if identity["state"] not in terminal_states:
             raise ValueError(
-                f"Identity {identity_id} cannot be reset from state "
-                f"'{identity['state']}' (already in review queue)"
+                f"Identity {identity_id} cannot be reset from state '{identity['state']}' (already in review queue)"
             )
 
         previous_state = identity["state"]
@@ -1047,11 +1025,21 @@ class IdentityRegistry:
         """
         identity = self._identities[identity_id]
         valid_keys = {
-            "birth_year", "death_year", "birth_place", "death_place",
-            "birth_date_full", "death_date_full", "gender",
-            "maiden_name", "generation_qualifier",
-            "alternate_names", "relationship_notes", "bio", "name_source",
-            "first_name", "last_name",
+            "birth_year",
+            "death_year",
+            "birth_place",
+            "death_place",
+            "birth_date_full",
+            "death_date_full",
+            "gender",
+            "maiden_name",
+            "generation_qualifier",
+            "alternate_names",
+            "relationship_notes",
+            "bio",
+            "name_source",
+            "first_name",
+            "last_name",
         }
         for key, value in metadata.items():
             if key in valid_keys:
@@ -1138,9 +1126,7 @@ class IdentityRegistry:
             },
         )
 
-        logger.info(
-            f"Detached face {face_id} from {identity_id} into new identity {new_identity_id}"
-        )
+        logger.info(f"Detached face {face_id} from {identity_id} into new identity {new_identity_id}")
 
         return {
             "success": True,
@@ -1275,13 +1261,11 @@ class IdentityRegistry:
         Raises:
             KeyError: If either identity not found
         """
-        
+
         # --- INSTRUMENTATION HOOK ---
-        get_event_recorder().record("REJECT", {
-            "source_id": source_id,
-            "target_id": target_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record(
+            "REJECT", {"source_id": source_id, "target_id": target_id, "user_source": user_source}
+        )
         # ----------------------------
 
         # Validate both identities exist (will raise KeyError if not)
@@ -1347,11 +1331,9 @@ class IdentityRegistry:
             KeyError: If either identity not found
         """
         # --- INSTRUMENTATION HOOK ---
-        get_event_recorder().record("UNREJECT", {
-            "source_id": source_id,
-            "target_id": target_id,
-            "user_source": user_source
-        })
+        get_event_recorder().record(
+            "UNREJECT", {"source_id": source_id, "target_id": target_id, "user_source": user_source}
+        )
         # ----------------------------
 
         # Validate both identities exist (will raise KeyError if not)
@@ -1513,10 +1495,7 @@ class IdentityRegistry:
             path: Target file path
             backup_dir: Optional directory for backups (default: path.parent/backups)
         """
-        import os
-        import tempfile
 
-        import portalocker
 
         data = {
             "schema_version": SCHEMA_VERSION,
@@ -1561,7 +1540,6 @@ class IdentityRegistry:
         4. Atomic rename to target path
         """
         import os
-        import tempfile
 
         import portalocker
 
@@ -1589,6 +1567,73 @@ class IdentityRegistry:
                 portalocker.unlock(lock_file)
 
     @classmethod
+    def load_from_postgres(cls) -> "IdentityRegistry | None":
+        """Load registry from Supabase Postgres.
+
+        Queries the identities table and reconstructs the same in-memory
+        structure as the JSON load() method.
+
+        Returns:
+            IdentityRegistry instance, or None if Supabase is unavailable.
+        """
+        try:
+            from app.supabase_data import get_supabase_client
+        except ImportError:
+            logger.warning("supabase_data not available for Postgres load")
+            return None
+
+        client = get_supabase_client()
+        if not client:
+            return None
+
+        try:
+            # Paginate to handle >1000 identities (Supabase default limit)
+            all_rows = []
+            page_size = 1000
+            offset = 0
+            while True:
+                result = client.table("identities").select("*").range(offset, offset + page_size - 1).execute()
+                if not result.data:
+                    break
+                all_rows.extend(result.data)
+                if len(result.data) < page_size:
+                    break
+                offset += page_size
+
+            registry = cls()
+            for row in all_rows:
+                identity_id = row["identity_id"]
+                identity = {
+                    "identity_id": identity_id,
+                    "name": row.get("name", ""),
+                    "display_name": row.get("display_name"),
+                    "state": row.get("state", "INBOX"),
+                    "anchor_ids": row.get("anchor_ids", []),
+                    "candidate_ids": row.get("candidate_ids", []),
+                    "negative_ids": row.get("negative_ids", []),
+                    "version_id": row.get("version_id", 1),
+                    "created_at": row.get("created_at"),
+                    "updated_at": row.get("updated_at"),
+                }
+                if row.get("merged_into"):
+                    identity["merged_into"] = row["merged_into"]
+                # Merge metadata JSONB if present
+                metadata = row.get("metadata")
+                if metadata and isinstance(metadata, dict):
+                    identity["metadata"] = metadata
+                registry._identities[identity_id] = identity
+
+            # History is not stored in Postgres yet — start empty
+            registry._history = []
+
+            logger.info(f"IdentityRegistry loaded from Postgres ({len(registry._identities)} identities)")
+            return registry
+
+        except Exception as e:
+            logger.warning(f"IdentityRegistry.load_from_postgres failed: {e}")
+            return None
+
+    @classmethod
     def load(cls, path: Path) -> "IdentityRegistry":
         """Load registry from JSON file.
 
@@ -1602,15 +1647,10 @@ class IdentityRegistry:
                 data = json.load(f)
         except json.JSONDecodeError as e:
             logger.error(f"IdentityRegistry: corrupted JSON in {path}: {e}")
-            raise ValueError(
-                f"IdentityRegistry file is corrupted ({path}): {e}"
-            ) from e
+            raise ValueError(f"IdentityRegistry file is corrupted ({path}): {e}") from e
 
         if data.get("schema_version") != SCHEMA_VERSION:
-            raise ValueError(
-                f"Schema version mismatch: expected {SCHEMA_VERSION}, "
-                f"got {data.get('schema_version')}"
-            )
+            raise ValueError(f"Schema version mismatch: expected {SCHEMA_VERSION}, got {data.get('schema_version')}")
 
         try:
             registry = cls()
@@ -1618,9 +1658,7 @@ class IdentityRegistry:
             registry._history = data["history"]
         except KeyError as e:
             logger.error(f"IdentityRegistry: missing required key {e} in {path}")
-            raise ValueError(
-                f"IdentityRegistry file is missing required key {e} ({path})"
-            ) from e
+            raise ValueError(f"IdentityRegistry file is missing required key {e} ({path})") from e
 
         return registry
 
@@ -1718,11 +1756,15 @@ class IdentityRegistry:
 
         # State priority for ranking (lower = higher priority)
         _state_rank = {
-            "CONFIRMED": 0, "PROPOSED": 1, "INBOX": 2,
-            "SKIPPED": 3, "CONTESTED": 4, "REJECTED": 5,
+            "CONFIRMED": 0,
+            "PROPOSED": 1,
+            "INBOX": 2,
+            "SKIPPED": 3,
+            "CONTESTED": 4,
+            "REJECTED": 5,
         }
 
-        full_matches = []     # all words matched
+        full_matches = []  # all words matched
         partial_matches = []  # some words matched (secondary results)
         fuzzy_candidates = []
 
@@ -1821,7 +1863,6 @@ class IdentityRegistry:
 
         return sorted_results
 
-
     def add_note(self, identity_id: str, text: str, author: str = "") -> dict:
         """
         Add a note to an identity.
@@ -1855,9 +1896,7 @@ class IdentityRegistry:
         identity = self.get_identity(identity_id)
         return identity.get("notes", [])
 
-    def add_proposed_match(
-        self, source_id: str, target_id: str, note: str = "", author: str = ""
-    ) -> dict:
+    def add_proposed_match(self, source_id: str, target_id: str, note: str = "", author: str = "") -> dict:
         """
         Propose a match between two identities without executing it.
 
@@ -1910,11 +1949,13 @@ class IdentityRegistry:
                 continue
             for pm in identity.get("proposed_matches", []):
                 if pm.get("status") == "pending":
-                    proposals.append({
-                        "source_id": identity["identity_id"],
-                        "source_name": identity.get("name", ""),
-                        **pm,
-                    })
+                    proposals.append(
+                        {
+                            "source_id": identity["identity_id"],
+                            "source_name": identity.get("name", ""),
+                            **pm,
+                        }
+                    )
         return proposals
 
     def resolve_proposed_match(self, source_id: str, proposal_id: str, action: str):
@@ -1977,10 +2018,7 @@ def validate_merge(
     shared_photos = photos_a & photos_b
 
     if shared_photos:
-        logger.warning(
-            f"Merge blocked (co_occurrence): identities {id_a} and {id_b} "
-            f"share photo(s): {shared_photos}"
-        )
+        logger.warning(f"Merge blocked (co_occurrence): identities {id_a} and {id_b} share photo(s): {shared_photos}")
         return (False, "co_occurrence")
 
     return (True, "ok")
