@@ -394,6 +394,11 @@ async def post(photo_id: str, sess=None):
     except Exception as e:
         logging.warning(f"Failed to save alignment: {e}")
 
+    # Return rendered HTML for HTMX swap (the Detect Faces button uses hx_post)
+    section = _main_mod._build_face_alignment_section(photo_id, is_admin=True)
+    if section is not None:
+        return section
+
     return _JSONResponse(result.to_dict())
 
 
