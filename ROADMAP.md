@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.94.0 · ~3502 tests · 296 photos · 777 identities · 69 confirmed
+Current: v0.94.1 · ~3518 tests · 296 photos · 777 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -34,13 +34,18 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 
 ## Open Work (Prioritized)
 
-### Immediate — Post-Session 91
-- [ ] Deploy Session 91 to Railway + browser verify all features
+### Immediate — Post-Session 91b
+- [ ] Deploy Session 91b to Railway + browser verify all features
+- [ ] Re-analyze Leon's Restaurant photo → verify Asheville (not Tampa)
 - [ ] Set SENTRY_DSN + POSTHOG_API_KEY on Railway
-- [ ] Wire notification triggers into save_registry()
-- [ ] Run seed_life_events.py against Supabase
 - [ ] Test DATA_SOURCE=postgres on Railway
 - [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
+- [ ] PERF-001: Test speed <30s (currently ~43s, achieved 23s in isolation)
+- [x] 2026-03-07: Wire notification triggers into save_registry() (Session 91b)
+- [x] 2026-03-07: Run seed_life_events.py against Supabase (Session 91b)
+- [x] 2026-03-07: main.py refactor complete — 26,100 → 9,383 lines, 17 route files (Session 91b)
+- [x] 2026-03-07: AD-209 — Collection name is weak provenance, not location signal (Session 91b)
+- [x] 2026-03-07: Discoveries extraction + UX overhaul — recency sort, confidence labels (Session 91b)
 - [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
 - [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
 
@@ -80,6 +85,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
+- [x] 2026-03-07: **v0.94.1 — Session 91b**: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix. main.py 26,100 → 9,383 lines (64% reduction, 17 route files). 5 new route files: identity_routes, page_routes, engagement_routes, relationship_routes, discoveries_routes. Supabase tables created (communities, life_events, notifications, global_person_links). Life events seeded (5 events). Notification triggers wired into 7 confirm routes. Discoveries extraction + UX overhaul (recency sort, confidence tier labels, navigation). AD-209: collection name is weak provenance. 5 parallel worktree tracks. 3518 tests pass.
 - [x] 2026-03-07: **v0.94.0 — Session 91**: PRD Backlog + Platform Foundation. 6 parallel worktree tracks. PRD-028 notifications (bell icon, /notifications, event triggers). PRD-027 Phase A R2 backup/restore. PRD-011 life events (CRUD, photo/person linking). PRD-029 photo backs completion (media group API, browse filter, badges). PRD-027 B/C Postgres read flip (DATA_SOURCE feature flag, load_from_postgres). GlobalPersonID schema (communities + global_person_links). Observability (Sentry, PostHog, structlog, all env-gated). PRD-030 + MULTI_TENANT.md. ~2265 lines new tests. 3502 tests pass.
 - [x] 2026-03-06: **v0.93.1 — Session 90b (complete)**: Fix Sorting + Shadow Writes + Route Extraction + Back Photo. Upload date sorting fixed (296 photos patched). Leon's Restaurant → Tampa, FL. Supabase shadow writes fully wired (save_registry + save_photo_registry fire-and-forget). Route extraction: person_routes.py (1,632 lines), main.py 34K→26K. Back-photo upload (PRD-029). Test fixes for extracted routes. 22 commits. ~3915 tests.
 - [x] 2026-03-04: **v0.92.0 — Session 89**: Wire GEDCOM into Location Estimation. AD-201: Unified Gemini prompt (interactive uses enriched prompt). AD-202: Admin re-analyze button. API call logging on every interactive Gemini call. Batch reprocessing script. Asheville photo pipeline ready. 24 new tests. ~4146 tests.

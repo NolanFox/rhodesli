@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.94.1] — 2026-03-07 (Session 91b: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix)
+
+### Added
+- **Notification triggers wired** — Confirming an identity fires in-app notification via background thread. 7 confirm routes wired (6 in identity_routes.py, 1 in page_routes.py). `create_identity_confirmed_notification()` accepts `user_id` parameter.
+- **Supabase tables created** — communities (1 Rhodes row), life_events (5 seeded events), notifications, global_person_links tables now exist in production Supabase.
+- **discoveries_routes.py** — Discoveries code extracted from main.py (1,002 lines). Recency sort (newest first). Confidence tier labels (Strong/Good/Possible/Weak) replace misleading percentages. Navigation links on cards.
+- **identity_routes.py** — All identity POST operations extracted (3,247 lines).
+- **page_routes.py** — Core page render routes extracted (10,817 lines).
+- **engagement_routes.py** — Contribution/activity routes extracted (1,132 lines).
+- **relationship_routes.py** — GEDCOM/relationship routes extracted (921 lines).
+- **AD-209**: Collection name is weak provenance, not location signal. Gemini prompt rewritten.
+- **Collection name bias tests** — Anti-regression: no "strongly suggests" or "geographic origin" in prompt.
+
+### Changed
+- **main.py reduced** — 26,100 to 9,383 lines (64% reduction). 17 route files total.
+- **Test speed** — pytest-xdist parallel execution. ~50s → ~43s (23s in isolation).
+
+### Technical
+- 5 parallel worktree tracks, all merged (D→E→B→C→A)
+- 3 merge conflicts resolved
+- Tests: 3,518 app + ~565 ML (all pass)
+
 ## [v0.94.0] — 2026-03-07 (Session 91: PRD Backlog + Platform Foundation)
 
 ### Added

@@ -394,6 +394,18 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 - Tree rendering: 7 → 17 nodes for photo fb6a846971b30f4b
 - Tests: 3917 total (3366 app + 551 ML)
 
+## Session 91b: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix (2026-03-07) — v0.94.1
+- Audit of Session 91 found major gaps: main.py not refactored, Supabase tables not created, notifications not wired, discoveries not overhauled.
+- main.py refactor: 26,100 → 9,383 lines (64% reduction). 5 new route files: identity_routes.py (3,247), page_routes.py (10,817), engagement_routes.py (1,132), relationship_routes.py (921), discoveries_routes.py (1,002). Total 17 route files.
+- Supabase migrations: communities (1 Rhodes row), life_events (5 seeded events), notifications, global_person_links tables created via psycopg2.
+- Notification triggers: save_registry() fires notification via background thread when identity confirmed. 7 confirm routes wired (6 identity_routes + 1 page_routes).
+- Discoveries UX overhaul: recency sort (newest first), confidence tier labels (Strong/Good/Possible/Weak), navigation links (face→person, photo→photo).
+- AD-209: Collection name is weak provenance, not location signal. Gemini prompt rewritten. Anti-regression tests.
+- Test speed: pytest-xdist parallel execution. 50s → 43s (23s in isolation).
+- 5 parallel worktree tracks (D→E→B→C→A), 3 merge conflicts resolved.
+- Tests: 3,518 app + ~565 ML (all pass). Browser verified via Playwright.
+- AD-206, AD-207, AD-208, AD-209 written.
+
 ## Session 91: PRD Backlog + Platform Foundation (2026-03-07) — v0.94.0
 - 6 parallel worktree tracks, all merged cleanly.
 - PRD-028: Contributor Notifications — bell icon, /notifications page, mark-read, SQL schema, 36 tests.
