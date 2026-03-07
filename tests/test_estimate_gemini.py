@@ -13,7 +13,6 @@ import json
 from unittest.mock import MagicMock, patch
 
 
-
 # ---------------------------------------------------------------------------
 # Mock Gemini response matching enriched prompt output
 # ---------------------------------------------------------------------------
@@ -72,7 +71,7 @@ class TestCallGeminiDateEstimate:
             result = _call_gemini_date_estimate(b"fake_image", ".jpg", "fake_key", photo_id="test123")
 
         # build_extraction_prompt should be called with quick preset
-        mock_build.assert_called_once_with(preset="quick", gedcom_context=None)
+        mock_build.assert_called_once_with(preset="quick", gedcom_context=None, photo_metadata=None)
 
         assert result is not None
         assert result["estimated_decade"] == 1930
@@ -100,7 +99,7 @@ class TestCallGeminiDateEstimate:
                 gedcom_context=gedcom_ctx,
             )
 
-        mock_build.assert_called_once_with(preset="quick", gedcom_context=gedcom_ctx)
+        mock_build.assert_called_once_with(preset="quick", gedcom_context=gedcom_ctx, photo_metadata=None)
 
     @patch("app.supabase_data.log_gemini_call", return_value=True)
     def test_api_call_logged_on_success(self, mock_log):

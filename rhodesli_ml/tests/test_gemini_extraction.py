@@ -100,9 +100,7 @@ class TestBuildPrompt:
             {"bbox": [100, 50, 200, 180]},
             {"bbox": [300, 60, 400, 190]},
         ]
-        prompt = build_extraction_prompt(
-            preset="compare", face_coordinates=coords
-        )
+        prompt = build_extraction_prompt(preset="compare", face_coordinates=coords)
         assert "bbox=[100, 50, 200, 180]" in prompt
         assert "Face 0" in prompt
         assert "Face 1" in prompt
@@ -152,6 +150,69 @@ class TestEnhancedLocationPrompt:
         prompt = build_extraction_prompt(preset="full", gedcom_context=context)
         assert "33 Elizabeth Street" in prompt
         assert "Genealogical Context" in prompt
+
+
+class TestPhotoMetadataContext:
+    """Test photo metadata injection into prompt (AD-204)."""
+
+    def test_collection_metadata_included(self):
+        """Collection name appears in prompt when photo_metadata provided."""
+        meta = {"collection": "Nace Capeluto Tampa Collection", "source": "personal photos"}
+        prompt = build_extraction_prompt(preset="quick", photo_metadata=meta)
+        assert "Nace Capeluto Tampa Collection" in prompt
+        assert "Photo Metadata Context" in prompt
+        assert "personal photos" in prompt
+
+    def test_collection_metadata_absent_when_none(self):
+        """No metadata section when photo_metadata is None."""
+        prompt = build_extraction_prompt(preset="quick")
+        assert "Photo Metadata Context" not in prompt
+
+    def test_empty_metadata_not_injected(self):
+        """Empty dict doesn't add section."""
+        prompt = build_extraction_prompt(preset="quick", photo_metadata={})
+        assert "Photo Metadata Context" not in prompt
+
+    def test_filename_included(self):
+        """Filename appears in metadata section."""
+        meta = {"filename": "Image 960_compress.jpg"}
+        prompt = build_extraction_prompt(preset="quick", photo_metadata=meta)
+        assert "Image 960_compress.jpg" in prompt
+
+    def test_visible_text_included(self):
+        """Previously extracted text appears in metadata section."""
+        meta = {"visible_text": "LEON'S RESTAURANT"}
+        prompt = build_extraction_prompt(preset="quick", photo_metadata=meta)
+        assert "LEON'S RESTAURANT" in prompt
+
+    def test_tampa_collection_hint(self):
+        """Metadata section includes Tampa collection location hint."""
+        meta = {"collection": "Tampa Collection"}
+        prompt = build_extraction_prompt(preset="quick", photo_metadata=meta)
+        assert "Tampa Collection" in prompt
+        assert "geographic origin" in prompt
+
+
+class TestSignageCrossReference:
+    """Test signage cross-reference and transit disambiguation in location prompt (AD-204)."""
+
+    def test_business_name_cross_reference(self):
+        """Location section has business name cross-reference instructions."""
+        prompt = build_extraction_prompt(preset="quick")
+        assert "Business Name Cross-Reference" in prompt
+        assert "LEON'S RESTAURANT" in prompt
+
+    def test_transit_disambiguation(self):
+        """Location section has immigration transit disambiguation."""
+        prompt = build_extraction_prompt(preset="quick")
+        assert "Immigration & Transit Disambiguation" in prompt
+        assert "port" in prompt.lower()
+        assert "transit" in prompt.lower()
+
+    def test_visual_evidence_preferred(self):
+        """Location section instructs to prefer visual evidence over transit records."""
+        prompt = build_extraction_prompt(preset="quick")
+        assert "PREFER the visual evidence" in prompt
 
 
 class TestGetActiveExtractions:

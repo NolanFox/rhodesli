@@ -61,7 +61,7 @@ EXTRACTION_PRESETS: dict[str, dict[str, bool]] = {
 
 # JSON output schema fragments per extraction type
 _SCHEMA_FRAGMENTS: dict[str, str] = {
-    "date_estimation": '''"date_estimation": {
+    "date_estimation": """"date_estimation": {
     "evidence": {
       "print_format": [{"cue": "...", "strength": "strong|moderate|weak", "suggested_range": [YYYY, YYYY]}],
       "fashion": [...],
@@ -76,41 +76,41 @@ _SCHEMA_FRAGMENTS: dict[str, str] = {
     "probable_range": [YYYY, YYYY],
     "decade_probabilities": {"1920": 0.05, "1930": 0.55, ...},
     "reasoning_summary": "1-2 sentences"
-  }''',
-    "face_analysis": '''"face_analysis": [
+  }""",
+    "face_analysis": """"face_analysis": [
     {"face_index": 0, "estimated_age": 35, "gender": "male|female", "description": "..."}
-  ]''',
-    "location": '''"location": {
+  ]""",
+    "location": """"location": {
     "place": "Rhodes, Greece",
     "confidence": "high|medium|low",
     "visual_evidence": "Mediterranean stone architecture, visible Greek signage",
     "biographical_evidence": "Family resided at 33 Elizabeth St, Asheville NC per GEDCOM records",
     "missing_child_analysis": "3 of 4 children visible; youngest (born 1935) absent, suggesting pre-1935"
-  }''',
-    "cultural_markers": '''"cultural_markers": ["Sephardic formal attire", "studio backdrop typical of Rhodes photographers"]''',
+  }""",
+    "cultural_markers": """"cultural_markers": ["Sephardic formal attire", "studio backdrop typical of Rhodes photographers"]""",
     "clothing_era": '''"clothing_notes": "Man in dark three-piece suit with pocket watch chain..."''',
-    "photo_technique": '''"photo_technique": {
+    "photo_technique": """"photo_technique": {
     "type": "gelatin silver print",
     "format": "cabinet card",
     "is_color": false,
     "condition": "good"
-  }''',
-    "text_signage": '''"visible_text": {
+  }""",
+    "text_signage": """"visible_text": {
     "detected": true,
     "text": "A mi querida Estrella...",
     "language": "Ladino",
     "script": "Latin"
-  }''',
-    "group_composition": '''"group_composition": {
+  }""",
+    "group_composition": """"group_composition": {
     "type": "formal_portrait|candid|ceremony|group_photo",
     "people_count": 3,
     "arrangement": "seated family group with standing elder"
-  }''',
-    "photo_condition": '''"condition": {
+  }""",
+    "photo_condition": """"condition": {
     "overall": "good|fair|poor|excellent",
     "issues": ["slight fading", "corner damage"]
-  }''',
-    "subject_ages": '''"subject_ages": [45, 12, 8]''',
+  }""",
+    "subject_ages": """"subject_ages": [45, 12, 8]""",
 }
 
 # Prompt section fragments per extraction type
@@ -121,12 +121,10 @@ Examine FOUR evidence categories: (1) Print/Physical Format, (2) Fashion/Groomin
 Rate each cue as STRONG, MODERATE, or WEAK. Provide suggested date ranges.
 The decade_probabilities MUST sum to 1.0 (only decades with >0.01 probability).
 best_year_estimate should be your best point estimate, NOT just the midpoint.""",
-
     "face_analysis": """## Face Analysis
 For each detected face (use face_index starting from 0, left-to-right),
 estimate age, gender, and provide a brief physical description.
 {face_coordinates_section}""",
-
     "location": """## Location Identification
 Identify the likely geographic location using BOTH visual evidence AND biographical context.
 
@@ -143,36 +141,44 @@ Cross-reference visual observations with known biographical data:
 - Use occupation/workplace info to narrow geographic possibilities
 - Consider migration patterns: where did this family live at different times?
 
+**Step 2b: Business Name Cross-Reference**
+- Cross-reference visible business names (signs, storefronts) with known family members
+- Example: A sign reading "LEON'S RESTAURANT" + a family member named "Leon Capeluto"
+  strongly suggests this is Leon's business. Use Leon's known locations.
+- Business name matches are VERY STRONG location evidence.
+
+**Step 2c: Immigration & Transit Disambiguation**
+- Passenger list and immigration records show PORTS OF ENTRY, which may be transit points
+  (e.g., San Francisco was a major Pacific port -- arrivals often continued to other cities)
+- Do NOT assume a port-of-entry city is where someone lived
+- Residence events, occupation events, and children's birth places are more reliable
+  indicators of where someone actually lived than immigration ports
+- When visual evidence (signage, architecture) conflicts with transit/immigration records,
+  PREFER the visual evidence for determining photo location
+
 **Step 3: Confidence Assessment**
 Rate confidence. If visual evidence AND biographical data agree on a location, rate
 confidence higher. If they conflict, explain the discrepancy.""",
-
     "cultural_markers": """## Cultural Markers
 Identify any culturally specific items, traditions, or markers visible
 (e.g., religious items, traditional dress, community-specific customs).""",
-
     "clothing_era": """## Clothing & Fashion Analysis
 Describe notable clothing and accessories. Note era-specific fashion details
 that help with dating or cultural context.""",
-
     "photo_technique": """## Photographic Technique
 Identify the photographic process (daguerreotype, albumen, gelatin silver, etc.),
 format (cabinet card, carte de visite, snapshot), and color type.""",
-
     "text_signage": """## Text & Signage Detection
 Transcribe ALL visible text (handwritten inscriptions, printed text, signs,
 documents). Preserve original language and spelling. Detect language and script.
 Inscriptions may be in Ladino, French, Italian, Greek, or English.
 Handwritten text may use Solitreo (Sephardic cursive Hebrew script).""",
-
     "group_composition": """## Group Composition
 Classify the photo type (formal portrait, candid, ceremony, group photo).
 Describe the arrangement of people and count total visible.""",
-
     "photo_condition": """## Photo Condition Assessment
 Rate overall condition (excellent/good/fair/poor) and list specific issues
 (fading, tears, stains, water damage, foxing).""",
-
     "subject_ages": """## Subject Age Estimation
 Estimate the approximate age of each visible person as integers,
 ordered left-to-right as they appear in the photo.""",
@@ -197,6 +203,7 @@ def build_extraction_prompt(
     face_coordinates: list[dict] | None = None,
     verified_facts: dict | None = None,
     gedcom_context: str | None = None,
+    photo_metadata: dict | None = None,
 ) -> str:
     """Build a unified Gemini prompt that extracts all requested info in one call.
 
@@ -207,6 +214,7 @@ def build_extraction_prompt(
         face_coordinates: InsightFace bounding box data for face_analysis
         verified_facts: Known facts (confirmed names, dates) for progressive refinement
         gedcom_context: GEDCOM genealogical context string for identified people
+        photo_metadata: Dict with collection, source, filename, visible_text keys
 
     Returns:
         Structured prompt string requesting JSON response
@@ -241,8 +249,31 @@ def build_extraction_prompt(
 
     # Add GEDCOM genealogical context if provided
     if gedcom_context:
-        sections.append(f"## Genealogical Context\n{gedcom_context}\n\n"
-                        "Use this genealogical data to improve date, location, and identity analysis.")
+        sections.append(
+            f"## Genealogical Context\n{gedcom_context}\n\n"
+            "Use this genealogical data to improve date, location, and identity analysis."
+        )
+
+    # Add photo metadata context if provided
+    if photo_metadata:
+        meta_section = "## Photo Metadata Context\n"
+        if photo_metadata.get("collection"):
+            meta_section += f"Collection: {photo_metadata['collection']}\n"
+        if photo_metadata.get("source"):
+            meta_section += f"Source: {photo_metadata['source']}\n"
+        if photo_metadata.get("filename"):
+            meta_section += f"Original filename: {photo_metadata['filename']}\n"
+        if photo_metadata.get("visible_text"):
+            meta_section += f"Previously extracted text: {photo_metadata['visible_text']}\n"
+        meta_section += (
+            "\nIMPORTANT: The collection name often indicates the geographic origin "
+            "of photos.\n"
+            'For example, "Tampa Collection" strongly suggests photos were taken '
+            "in or near Tampa.\n"
+            "Use this as corroborating evidence alongside visual and biographical "
+            "analysis."
+        )
+        sections.append(meta_section)
 
     # Add enabled extraction sections
     active_types = [k for k, v in config.items() if v]
@@ -271,9 +302,9 @@ def build_extraction_prompt(
     return "\n\n".join(sections)
 
 
-def get_active_extractions(preset: str = "full",
-                           include: list[str] | None = None,
-                           exclude: list[str] | None = None) -> list[str]:
+def get_active_extractions(
+    preset: str = "full", include: list[str] | None = None, exclude: list[str] | None = None
+) -> list[str]:
     """Return list of active extraction types for a given configuration."""
     if preset not in EXTRACTION_PRESETS:
         raise ValueError(f"Unknown preset '{preset}'")

@@ -462,6 +462,7 @@ def _call_gemini_date_estimate(
     gedcom_context: str | None = None,
     call_type: str = "date_estimation",
     trigger: str = "interactive_upload",
+    photo_metadata: dict | None = None,
 ) -> dict | None:
     """Call Gemini Vision API for date/location estimation using the enriched prompt.
 
@@ -483,6 +484,7 @@ def _call_gemini_date_estimate(
     prompt_text = build_extraction_prompt(
         preset="quick",
         gedcom_context=gedcom_context,
+        photo_metadata=photo_metadata,
     )
     enrichment_level = "gedcom" if gedcom_context else "none"
     gedcom_variant = "first_order" if gedcom_context else "none"
@@ -1144,6 +1146,17 @@ async def post(photo_id: str, sess=None):
     # Build GEDCOM context
     gedcom_context = _build_gedcom_context_for_photo(photo_id)
 
+    # Build photo metadata for collection/source context
+    _main_mod._build_caches()
+    photo_meta = _main_mod.get_photo_metadata(photo_id)
+    p_metadata = None
+    if photo_meta:
+        p_metadata = {
+            "collection": photo_meta.get("collection", ""),
+            "source": photo_meta.get("source", ""),
+            "filename": photo_meta.get("filename", ""),
+        }
+
     # Call Gemini with enriched prompt
     result = _call_gemini_date_estimate(
         image_bytes,
@@ -1153,6 +1166,7 @@ async def post(photo_id: str, sess=None):
         gedcom_context=gedcom_context,
         call_type="re_analysis",
         trigger="admin_rerun",
+        photo_metadata=p_metadata,
     )
 
     if not result:
