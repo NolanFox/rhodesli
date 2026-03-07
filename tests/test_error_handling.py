@@ -12,7 +12,6 @@ Covers:
 """
 
 import json
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -21,6 +20,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # IdentityRegistry.load() — corrupted JSON raises descriptive ValueError
 # ---------------------------------------------------------------------------
+
 
 class TestIdentityRegistryLoadErrors:
     """IdentityRegistry.load() error handling."""
@@ -63,10 +63,14 @@ class TestIdentityRegistryLoadErrors:
         from core.registry import IdentityRegistry
 
         bad_file = tmp_path / "identities.json"
-        bad_file.write_text(json.dumps({
-            "schema_version": 1,
-            "history": [],
-        }))
+        bad_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "history": [],
+                }
+            )
+        )
 
         with pytest.raises(ValueError, match="missing required key"):
             IdentityRegistry.load(bad_file)
@@ -76,10 +80,14 @@ class TestIdentityRegistryLoadErrors:
         from core.registry import IdentityRegistry
 
         bad_file = tmp_path / "identities.json"
-        bad_file.write_text(json.dumps({
-            "schema_version": 1,
-            "identities": {},
-        }))
+        bad_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "identities": {},
+                }
+            )
+        )
 
         with pytest.raises(ValueError, match="missing required key"):
             IdentityRegistry.load(bad_file)
@@ -89,11 +97,15 @@ class TestIdentityRegistryLoadErrors:
         from core.registry import IdentityRegistry
 
         good_file = tmp_path / "identities.json"
-        good_file.write_text(json.dumps({
-            "schema_version": 1,
-            "identities": {},
-            "history": [],
-        }))
+        good_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "identities": {},
+                    "history": [],
+                }
+            )
+        )
 
         registry = IdentityRegistry.load(good_file)
         assert registry is not None
@@ -102,6 +114,7 @@ class TestIdentityRegistryLoadErrors:
 # ---------------------------------------------------------------------------
 # PhotoRegistry.load() — corrupted JSON raises descriptive ValueError
 # ---------------------------------------------------------------------------
+
 
 class TestPhotoRegistryLoadErrors:
     """PhotoRegistry.load() error handling."""
@@ -144,10 +157,14 @@ class TestPhotoRegistryLoadErrors:
         from core.photo_registry import PhotoRegistry
 
         bad_file = tmp_path / "photo_index.json"
-        bad_file.write_text(json.dumps({
-            "schema_version": 1,
-            "face_to_photo": {},
-        }))
+        bad_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "face_to_photo": {},
+                }
+            )
+        )
 
         with pytest.raises(ValueError, match="missing required key"):
             PhotoRegistry.load(bad_file)
@@ -157,10 +174,14 @@ class TestPhotoRegistryLoadErrors:
         from core.photo_registry import PhotoRegistry
 
         bad_file = tmp_path / "photo_index.json"
-        bad_file.write_text(json.dumps({
-            "schema_version": 1,
-            "photos": {},
-        }))
+        bad_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "photos": {},
+                }
+            )
+        )
 
         with pytest.raises(ValueError, match="missing required key"):
             PhotoRegistry.load(bad_file)
@@ -170,11 +191,15 @@ class TestPhotoRegistryLoadErrors:
         from core.photo_registry import PhotoRegistry
 
         good_file = tmp_path / "photo_index.json"
-        good_file.write_text(json.dumps({
-            "schema_version": 1,
-            "photos": {},
-            "face_to_photo": {},
-        }))
+        good_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "photos": {},
+                    "face_to_photo": {},
+                }
+            )
+        )
 
         registry = PhotoRegistry.load(good_file)
         assert registry is not None
@@ -184,10 +209,11 @@ class TestPhotoRegistryLoadErrors:
 # app/main.py load_registry() — graceful degradation
 # ---------------------------------------------------------------------------
 
+
 class TestLoadRegistryGraceful:
     """load_registry() returns empty registry on corruption."""
 
-    def test_corrupted_file_returns_empty_registry(self, tmp_path):
+    def test_corrupted_file_returns_empty_registry(self, tmp_path, monkeypatch):
         """Corrupted identities.json returns empty IdentityRegistry, not crash."""
         import app.main as main_mod
         from core.registry import IdentityRegistry
@@ -195,62 +221,55 @@ class TestLoadRegistryGraceful:
         bad_file = tmp_path / "identities.json"
         bad_file.write_text("{corrupted!!!")
 
-        original_path = main_mod.REGISTRY_PATH
-        try:
-            main_mod.REGISTRY_PATH = bad_file
-            result = main_mod.load_registry()
-            assert isinstance(result, IdentityRegistry)
-            # Empty registry has no identities
-            assert len(result._identities) == 0
-        finally:
-            main_mod.REGISTRY_PATH = original_path
+        monkeypatch.setattr(main_mod, "REGISTRY_PATH", bad_file)
+        result = main_mod.load_registry()
+        assert isinstance(result, IdentityRegistry)
+        # Empty registry has no identities
+        assert len(result._identities) == 0
 
-    def test_missing_file_returns_empty_registry(self, tmp_path):
+    def test_missing_file_returns_empty_registry(self, tmp_path, monkeypatch):
         """Missing file returns empty IdentityRegistry."""
         import app.main as main_mod
         from core.registry import IdentityRegistry
 
         missing_file = tmp_path / "nonexistent.json"
 
-        original_path = main_mod.REGISTRY_PATH
-        try:
-            main_mod.REGISTRY_PATH = missing_file
-            result = main_mod.load_registry()
-            assert isinstance(result, IdentityRegistry)
-            assert len(result._identities) == 0
-        finally:
-            main_mod.REGISTRY_PATH = original_path
+        monkeypatch.setattr(main_mod, "REGISTRY_PATH", missing_file)
+        result = main_mod.load_registry()
+        assert isinstance(result, IdentityRegistry)
+        assert len(result._identities) == 0
 
-    def test_valid_file_loads_normally(self, tmp_path):
+    def test_valid_file_loads_normally(self, tmp_path, monkeypatch):
         """Valid file loads normally (regression check)."""
         import app.main as main_mod
         from core.registry import IdentityRegistry
 
         good_file = tmp_path / "identities.json"
-        good_file.write_text(json.dumps({
-            "schema_version": 1,
-            "identities": {"id1": {"name": "Test"}},
-            "history": [],
-        }))
+        good_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "identities": {"id1": {"name": "Test"}},
+                    "history": [],
+                }
+            )
+        )
 
-        original_path = main_mod.REGISTRY_PATH
-        try:
-            main_mod.REGISTRY_PATH = good_file
-            result = main_mod.load_registry()
-            assert isinstance(result, IdentityRegistry)
-            assert "id1" in result._identities
-        finally:
-            main_mod.REGISTRY_PATH = original_path
+        monkeypatch.setattr(main_mod, "REGISTRY_PATH", good_file)
+        result = main_mod.load_registry()
+        assert isinstance(result, IdentityRegistry)
+        assert "id1" in result._identities
 
 
 # ---------------------------------------------------------------------------
 # app/main.py load_photo_registry() — graceful degradation
 # ---------------------------------------------------------------------------
 
+
 class TestLoadPhotoRegistryGraceful:
     """load_photo_registry() returns empty registry on corruption."""
 
-    def test_corrupted_file_returns_empty_registry(self, tmp_path):
+    def test_corrupted_file_returns_empty_registry(self, tmp_path, monkeypatch):
         """Corrupted photo_index.json returns empty PhotoRegistry, not crash."""
         import app.main as main_mod
         from core.photo_registry import PhotoRegistry
@@ -258,156 +277,119 @@ class TestLoadPhotoRegistryGraceful:
         bad_file = tmp_path / "photo_index.json"
         bad_file.write_text("{not valid json 123")
 
-        # Reset cache so load_photo_registry() actually reads from disk
-        original_cache = main_mod._photo_registry_cache
-        main_mod._photo_registry_cache = None
+        monkeypatch.setattr(main_mod, "_photo_registry_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod.load_photo_registry()
+            assert isinstance(result, PhotoRegistry)
 
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod.load_photo_registry()
-                assert isinstance(result, PhotoRegistry)
-        finally:
-            main_mod._photo_registry_cache = original_cache
-
-    def test_missing_file_returns_empty_registry(self, tmp_path):
+    def test_missing_file_returns_empty_registry(self, tmp_path, monkeypatch):
         """Missing file returns empty PhotoRegistry."""
         import app.main as main_mod
         from core.photo_registry import PhotoRegistry
 
-        # tmp_path has no photo_index.json
-        original_cache = main_mod._photo_registry_cache
-        main_mod._photo_registry_cache = None
+        monkeypatch.setattr(main_mod, "_photo_registry_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod.load_photo_registry()
+            assert isinstance(result, PhotoRegistry)
 
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod.load_photo_registry()
-                assert isinstance(result, PhotoRegistry)
-        finally:
-            main_mod._photo_registry_cache = original_cache
-
-    def test_valid_file_loads_normally(self, tmp_path):
+    def test_valid_file_loads_normally(self, tmp_path, monkeypatch):
         """Valid file loads normally (regression check)."""
         import app.main as main_mod
         from core.photo_registry import PhotoRegistry
 
         good_file = tmp_path / "photo_index.json"
-        good_file.write_text(json.dumps({
-            "schema_version": 1,
-            "photos": {
-                "abc123": {
-                    "path": "raw_photos/test.jpg",
-                    "face_ids": ["face1"],
-                    "source": "Test Collection",
+        good_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "photos": {
+                        "abc123": {
+                            "path": "raw_photos/test.jpg",
+                            "face_ids": ["face1"],
+                            "source": "Test Collection",
+                        }
+                    },
+                    "face_to_photo": {"face1": "abc123"},
                 }
-            },
-            "face_to_photo": {"face1": "abc123"},
-        }))
+            )
+        )
 
-        original_cache = main_mod._photo_registry_cache
-        main_mod._photo_registry_cache = None
-
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod.load_photo_registry()
-                assert isinstance(result, PhotoRegistry)
-                assert result.get_photo_path("abc123") is not None
-        finally:
-            main_mod._photo_registry_cache = original_cache
+        monkeypatch.setattr(main_mod, "_photo_registry_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod.load_photo_registry()
+            assert isinstance(result, PhotoRegistry)
+            assert result.get_photo_path("abc123") is not None
 
 
 # ---------------------------------------------------------------------------
 # app/main.py _load_annotations() — graceful degradation
 # ---------------------------------------------------------------------------
 
+
 class TestLoadAnnotationsGraceful:
     """_load_annotations() returns default structure on corruption."""
 
-    def test_corrupted_file_returns_default(self, tmp_path):
+    def test_corrupted_file_returns_default(self, tmp_path, monkeypatch):
         """Corrupted annotations.json returns default structure."""
         import app.main as main_mod
 
         bad_file = tmp_path / "annotations.json"
         bad_file.write_text("{broken json!!")
 
-        # Reset cache
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        monkeypatch.setattr(main_mod, "_annotations_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod._load_annotations()
+            assert result == {"schema_version": 1, "annotations": {}}
 
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod._load_annotations()
-                assert result == {"schema_version": 1, "annotations": {}}
-        finally:
-            main_mod._annotations_cache = original_cache
-
-    def test_missing_file_returns_default(self, tmp_path):
+    def test_missing_file_returns_default(self, tmp_path, monkeypatch):
         """Missing annotations.json returns default structure."""
         import app.main as main_mod
 
-        # tmp_path has no annotations.json
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        monkeypatch.setattr(main_mod, "_annotations_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod._load_annotations()
+            assert result == {"schema_version": 1, "annotations": {}}
 
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod._load_annotations()
-                assert result == {"schema_version": 1, "annotations": {}}
-        finally:
-            main_mod._annotations_cache = original_cache
-
-    def test_empty_file_returns_default(self, tmp_path):
+    def test_empty_file_returns_default(self, tmp_path, monkeypatch):
         """Empty annotations.json returns default structure."""
         import app.main as main_mod
 
         empty_file = tmp_path / "annotations.json"
         empty_file.write_text("")
 
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        monkeypatch.setattr(main_mod, "_annotations_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod._load_annotations()
+            assert result == {"schema_version": 1, "annotations": {}}
 
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod._load_annotations()
-                assert result == {"schema_version": 1, "annotations": {}}
-        finally:
-            main_mod._annotations_cache = original_cache
-
-    def test_valid_file_loads_normally(self, tmp_path):
+    def test_valid_file_loads_normally(self, tmp_path, monkeypatch):
         """Valid annotations file loads normally (regression check)."""
         import app.main as main_mod
 
         good_file = tmp_path / "annotations.json"
-        good_file.write_text(json.dumps({
-            "schema_version": 1,
-            "annotations": {"ann1": {"text": "test annotation"}},
-        }))
+        good_file.write_text(
+            json.dumps(
+                {
+                    "schema_version": 1,
+                    "annotations": {"ann1": {"text": "test annotation"}},
+                }
+            )
+        )
 
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = None
+        monkeypatch.setattr(main_mod, "_annotations_cache", None)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod._load_annotations()
+            assert result["annotations"]["ann1"]["text"] == "test annotation"
 
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod._load_annotations()
-                assert result["annotations"]["ann1"]["text"] == "test annotation"
-        finally:
-            main_mod._annotations_cache = original_cache
-
-    def test_cached_result_not_reloaded(self, tmp_path):
+    def test_cached_result_not_reloaded(self, tmp_path, monkeypatch):
         """When cache is populated, file is not re-read (even if corrupted)."""
         import app.main as main_mod
 
-        # Write corrupted file
         bad_file = tmp_path / "annotations.json"
         bad_file.write_text("{broken!!!")
 
         cached_data = {"schema_version": 1, "annotations": {"cached": True}}
-        original_cache = main_mod._annotations_cache
-        main_mod._annotations_cache = cached_data
-
-        try:
-            with patch.object(main_mod, "data_path", tmp_path):
-                result = main_mod._load_annotations()
-                # Should return cached data, not try to load corrupted file
-                assert result["annotations"]["cached"] is True
-        finally:
-            main_mod._annotations_cache = original_cache
+        monkeypatch.setattr(main_mod, "_annotations_cache", cached_data)
+        with patch.object(main_mod, "data_path", tmp_path):
+            result = main_mod._load_annotations()
+            assert result["annotations"]["cached"] is True

@@ -270,50 +270,82 @@ class TestPersonPageOGTags:
 class TestPersonPageAppearsWithSection:
     """The 'Appears with' section for co-appearing people."""
 
-    def test_appears_with_section_rendered(self, client, registry_snapshot):
+    def _mock_person_with_companions(self, monkeypatch):
+        """Set up mocked data so person-A co-appears with person-B in a shared photo."""
+        identities = {
+            "person-A": {
+                "identity_id": "person-A",
+                "name": "Test Person A",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face-a1"],
+                "candidate_ids": [],
+            },
+            "person-B": {
+                "identity_id": "person-B",
+                "name": "Companion Person B",
+                "state": "CONFIRMED",
+                "anchor_ids": ["face-b1"],
+                "candidate_ids": [],
+            },
+        }
+
+        class FakeRegistry:
+            def get_identity(self, pid):
+                if pid in identities:
+                    return identities[pid]
+                raise KeyError(pid)
+
+            def list_identities(self, state=None):
+                return list(identities.values())
+
+        class FakePhotoRegistry:
+            def get_photos_for_faces(self, _face_ids):
+                return ["photo-shared"]
+
+        photo_meta = {
+            "photo-shared": {
+                "photo_id": "photo-shared",
+                "filename": "shared.jpg",
+                "collection": "Test Collection",
+                "created_at": "2025-01-01T00:00:00+00:00",
+                "faces": [
+                    {"face_id": "face-a1", "bbox": [10, 10, 50, 50]},
+                    {"face_id": "face-b1", "bbox": [60, 10, 100, 50]},
+                ],
+                "face_ids": ["face-a1", "face-b1"],
+            },
+        }
+        face_to_identity = {"face-a1": identities["person-A"], "face-b1": identities["person-B"]}
+
+        monkeypatch.setattr("app.main.load_registry", lambda: FakeRegistry())
+        monkeypatch.setattr("app.main.load_photo_registry", lambda: FakePhotoRegistry())
+        monkeypatch.setattr("app.main.get_photo_metadata", lambda pid: photo_meta.get(pid))
+        monkeypatch.setattr("app.main.get_crop_files", lambda: {"face-a1.jpg", "face-b1.jpg"})
+        monkeypatch.setattr("app.main.resolve_face_image_url", lambda fid, _crops: f"/crops/{fid}.jpg" if fid else None)
+        monkeypatch.setattr("app.main.get_photo_id_for_face", lambda fid: "photo-shared")
+        monkeypatch.setattr("app.main.get_best_face_id", lambda faces: faces[0] if faces else None)
+        monkeypatch.setattr("app.main._load_date_labels", lambda: {})
+        monkeypatch.setattr(
+            "app.main.get_identity_for_face",
+            lambda _reg, fid: face_to_identity.get(fid),
+        )
+
+    def test_appears_with_section_rendered(self, client, monkeypatch):
         """If a person appears with other confirmed people, the section renders."""
-        # Find a confirmed identity that appears with others
-        confirmed = [
-            i
-            for i in registry_snapshot.list_identities()
-            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
-        ]
-        if not confirmed:
-            pytest.skip("No confirmed identities available")
+        self._mock_person_with_companions(monkeypatch)
+        response = client.get("/person/person-A")
+        assert response.status_code == 200
+        assert "Often appears with" in response.text
+        assert "/person/" in response.text
 
-        # Try each confirmed identity until we find one with companions
-        for identity in confirmed[:5]:
-            response = client.get(f"/person/{identity['identity_id']}")
-            if "Often appears with" in response.text:
-                # Found one — verify it has links to other person pages
-                assert "/person/" in response.text
-                return
-
-        # No confirmed identity has companions — that's OK, skip
-        pytest.skip("No confirmed identities with companions found")
-
-    def test_appears_with_links_to_person_pages(self, client, registry_snapshot):
+    def test_appears_with_links_to_person_pages(self, client, monkeypatch):
         """Companion links go to /person/{id}."""
-        confirmed = [
-            i
-            for i in registry_snapshot.list_identities()
-            if i.get("state") == "CONFIRMED" and not i.get("name", "").startswith("Unidentified")
-        ]
-        if not confirmed:
-            pytest.skip("No confirmed identities available")
-
-        for identity in confirmed[:5]:
-            response = client.get(f"/person/{identity['identity_id']}")
-            if "Often appears with" in response.text:
-                # Companion links should be /person/ URLs
-                html = response.text
-                # Find the "appears with" section and verify it contains person links
-                idx = html.index("Often appears with")
-                section = html[idx : idx + 2000]
-                assert "/person/" in section
-                return
-
-        pytest.skip("No confirmed identities with companions found")
+        self._mock_person_with_companions(monkeypatch)
+        response = client.get("/person/person-A")
+        html = response.text
+        idx = html.index("Often appears with")
+        section = html[idx : idx + 2000]
+        assert "/person/person-B" in section
 
 
 class TestPersonPageAnnotations:
