@@ -595,7 +595,9 @@ class TestCompareUploadPerformance:
         making it impossible to diagnose 502 timeout issues.
         """
         from pathlib import Path
-        source = Path("app/main.py").read_text()
+        source = ""
+        for _f in ["app/main.py", "app/page_routes.py", "app/compare_routes.py", "app/identity_routes.py", "app/engagement_routes.py", "app/relationship_routes.py"]:
+            source += Path(_f).read_text()
         # Must have compare-related logging (exact strings may change across refactors)
         assert "[compare]" in source
 
@@ -608,7 +610,10 @@ class TestCompareUploadPerformance:
         """
         import inspect
         import app.main as main_mod
-        source = inspect.getsource(main_mod)
+        source = ""
+        for _mod_name in ["app.main", "app.page_routes", "app.compare_routes"]:
+            _mod = __import__(_mod_name, fromlist=[""])
+            source += inspect.getsource(_mod)
         # Must contain resize logic with ML max dimension cap
         assert "cv2.resize" in source
         assert "INTER_AREA" in source
@@ -622,7 +627,10 @@ class TestCompareUploadPerformance:
         """
         import inspect
         import app.main as main_mod
-        source = inspect.getsource(main_mod)
+        source = ""
+        for _mod_name in ["app.main", "app.page_routes", "app.compare_routes"]:
+            _mod = __import__(_mod_name, fromlist=[""])
+            source += inspect.getsource(_mod)
         # Must upload raw_photos to R2 (original, not resized)
         assert "upload_bytes_to_r2" in source
         assert "raw_photos/" in source
@@ -700,7 +708,9 @@ class TestCompareUploadPerformance:
         - ml_path: resized to 640px max, used only for InsightFace detection
         """
         from pathlib import Path
-        source = Path("app/main.py").read_text()
+        source = ""
+        for _f in ["app/main.py", "app/page_routes.py", "app/compare_routes.py", "app/identity_routes.py", "app/engagement_routes.py", "app/relationship_routes.py"]:
+            source += Path(_f).read_text()
         # Must have separate ML path
         assert "ml_path" in source, "Handler must use separate ml_path for ML processing"
         assert "ml_tmp" in source or "ml_path" in source
@@ -718,7 +728,9 @@ class TestCompareUploadPerformance:
         (archive-compatible) for recognition, rather than the full buffalo_l pipeline.
         """
         from pathlib import Path
-        source = Path("app/main.py").read_text()
+        source = ""
+        for _f in ["app/main.py", "app/page_routes.py", "app/compare_routes.py", "app/identity_routes.py", "app/engagement_routes.py", "app/relationship_routes.py"]:
+            source += Path(_f).read_text()
         assert "extract_faces_hybrid" in source, "Compare must use hybrid detection (AD-114)"
         assert "from core.ingest_inbox import extract_faces" in source or \
                "from core.ingest_inbox import extract_faces_hybrid" in source
@@ -750,7 +762,9 @@ class TestCompareUploadPerformance:
     def test_startup_preloads_hybrid_models(self):
         """Startup must preload hybrid detection models alongside buffalo_l."""
         from pathlib import Path
-        source = Path("app/main.py").read_text()
+        source = ""
+        for _f in ["app/main.py", "app/page_routes.py", "app/compare_routes.py", "app/identity_routes.py", "app/engagement_routes.py", "app/relationship_routes.py"]:
+            source += Path(_f).read_text()
         assert "get_hybrid_models" in source, "Startup must preload hybrid models"
 
     def test_compare_upload_with_mocked_insightface(self):
