@@ -266,12 +266,15 @@ def build_extraction_prompt(
         if photo_metadata.get("visible_text"):
             meta_section += f"Previously extracted text: {photo_metadata['visible_text']}\n"
         meta_section += (
-            "\nIMPORTANT: The collection name often indicates the geographic origin "
-            "of photos.\n"
-            'For example, "Tampa Collection" strongly suggests photos were taken '
-            "in or near Tampa.\n"
-            "Use this as corroborating evidence alongside visual and biographical "
-            "analysis."
+            "\nNOTE ON COLLECTION NAMES: A collection name indicates WHO HAD these photos and\n"
+            "WHERE THEY WERE STORED, not necessarily where the photos were taken. For example,\n"
+            'a "Tampa Collection" means the photos were found in Tampa -- but the actual photos\n'
+            "may depict locations the family visited or previously lived in (e.g., Asheville, NC;\n"
+            "New York; Rhodes).\n"
+            "Collection name is WEAK contextual evidence about the collector's later residence.\n"
+            "Visual evidence (signage, architecture) and GEDCOM residence data at the time of\n"
+            "the photo are MUCH STRONGER signals for actual photo location.\n"
+            "Do NOT assume the collection city is the photo location."
         )
         sections.append(meta_section)
 

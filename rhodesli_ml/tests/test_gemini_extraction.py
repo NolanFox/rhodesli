@@ -186,11 +186,11 @@ class TestPhotoMetadataContext:
         assert "LEON'S RESTAURANT" in prompt
 
     def test_tampa_collection_hint(self):
-        """Metadata section includes Tampa collection location hint."""
+        """Metadata section includes Tampa collection as weak provenance (AD-209)."""
         meta = {"collection": "Tampa Collection"}
         prompt = build_extraction_prompt(preset="quick", photo_metadata=meta)
         assert "Tampa Collection" in prompt
-        assert "geographic origin" in prompt
+        assert "WEAK contextual evidence" in prompt
 
 
 class TestSignageCrossReference:

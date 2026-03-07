@@ -2328,3 +2328,15 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Rejected**: Combined single call — complexity outweighs the ~$0.01 savings per photo.
 - **Affects**: No code changes. Documents the architectural decision to maintain separate pipelines.
 - **Also added**: `analyzed_at` timestamp field to AlignmentResult dataclass, displayed in Face Analysis section UI.
+
+## AD-209: Collection Name as Weak Provenance, Not Location Signal
+
+**Date**: 2026-03-07 | **Session**: 91b | **Supersedes**: Part of AD-204
+
+**Problem**: AD-204 introduced collection name as a strong location signal. This caused Leon's Restaurant photo (3192877a90a174e9, "Nace Capeluto Tampa Collection") to be estimated as Tampa instead of Asheville, NC.
+
+**Ground truth**: GEDCOM shows Leon Capeluto residence at 33 Elizabeth St, Asheville, NC (1928-1940). Family moved to Tampa after 1940. Collection named after Nace who ended up in Tampa.
+
+**Decision**: Collection name is WEAK provenance context (who had the photos), not location evidence. Visual evidence and GEDCOM residence data at the time are stronger signals.
+
+**Eval**: Leon's Restaurant must return Asheville. Tampa photos with Tampa evidence must still return Tampa.
