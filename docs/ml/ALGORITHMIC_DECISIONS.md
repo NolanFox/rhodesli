@@ -2329,6 +2329,30 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Affects**: No code changes. Documents the architectural decision to maintain separate pipelines.
 - **Also added**: `analyzed_at` timestamp field to AlignmentResult dataclass, displayed in Face Analysis section UI.
 
+### AD-206: GlobalPersonID Schema — Cross-Community Identity Linking
+- **Date**: 2026-03-07 | **Session**: 91/91b
+- **Context**: As Rhodesli scales to multiple communities (Fox family, other archives), identities may appear across collections. Need a way to link the same person across communities without merging their per-community identity records.
+- **Decision**: Three-table schema: `communities` (registry of archives), `global_person_links` (maps local identity → global person across communities), plus `community_id` foreign key on identities and photos tables. Each community maintains its own identity namespace; global links are admin-created.
+- **Implementation**: `scripts/sql/create_communities.sql`, `scripts/sql/create_global_person_links.sql`. Tables created in Supabase. Rhodes community seeded as first entry.
+- **Affects**: Future multi-tenant features. No app code wired yet — schema-only.
+
+### AD-207: Postgres as Source of Truth — DATA_SOURCE Feature Flag
+- **Date**: 2026-03-07 | **Session**: 91/91b
+- **Context**: Moving from JSON files to Postgres (Supabase) as the canonical data store. Need a gradual migration path that doesn't break production.
+- **Decision**: `DATA_SOURCE` environment variable controls read path. `json` (default) reads from JSON files with shadow-writes to Supabase. `postgres` reads directly from Supabase. This allows testing the Postgres path on staging before flipping production.
+- **Implementation**: `app/supabase_data.py` has `load_from_postgres()`. `save_registry()` handles both paths. Shadow writes are fire-and-forget via background threads.
+- **Status**: JSON is still default. Postgres path code-complete but not yet tested on Railway.
+
+### AD-208: Observability — Sentry + PostHog + structlog
+- **Date**: 2026-03-07 | **Session**: 91/91b
+- **Context**: Production errors are invisible unless users report them. Need structured logging, error tracking, and product analytics.
+- **Decision**: Three-layer observability, all env-gated (no-ops when env vars absent):
+  1. **Sentry** (`SENTRY_DSN`): Error tracking + performance monitoring
+  2. **PostHog** (`POSTHOG_API_KEY`): Product analytics (page views, feature usage)
+  3. **structlog**: Structured JSON logging for all app events
+- **Implementation**: Packages in requirements.txt. Init code in app startup. All gated on environment variables — zero cost when not configured.
+- **Status**: Code in place, env vars not yet set on Railway. User will create Sentry/PostHog accounts.
+
 ## AD-209: Collection Name as Weak Provenance, Not Location Signal
 
 **Date**: 2026-03-07 | **Session**: 91b | **Supersedes**: Part of AD-204
