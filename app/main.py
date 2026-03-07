@@ -751,11 +751,18 @@ def load_registry():
     return IdentityRegistry()
 
 
-def save_registry(registry):
+def save_registry(registry, confirmed_identity_info=None):
     """Save registry with atomic write + sync to Supabase (AD-135).
 
     When DATA_SOURCE=postgres, writes to Supabase only (no JSON).
     When DATA_SOURCE=json (default), writes JSON + shadow-writes to Supabase.
+
+    Args:
+        registry: The IdentityRegistry to save
+        confirmed_identity_info: Optional dict with keys:
+            - identity_id: str
+            - identity_name: str
+            - user_id: str (Supabase auth user ID of the admin)
     """
     if DATA_SOURCE == "postgres":
         # Postgres-only write path: write directly to Supabase
@@ -801,6 +808,36 @@ def save_registry(registry):
         args=(dict(registry._identities),),
         daemon=True,
     ).start()
+
+    # Fire notification if an identity was just confirmed
+    if confirmed_identity_info:
+
+        def _fire_notification(info):
+            try:
+                from app.notification_routes import create_identity_confirmed_notification
+
+                # Look up photo_ids for this identity
+                photo_ids = []
+                try:
+                    identity = registry.get_identity(info["identity_id"])
+                    face_ids = identity.get("anchor_ids", []) + identity.get("candidate_ids", [])
+                    photo_reg = load_photo_registry()
+                    for fid in face_ids:
+                        pid = photo_reg.face_to_photo.get(fid)
+                        if pid and pid not in photo_ids:
+                            photo_ids.append(pid)
+                except Exception:
+                    pass
+                create_identity_confirmed_notification(
+                    identity_id=info["identity_id"],
+                    identity_name=info["identity_name"],
+                    photo_ids=photo_ids,
+                    user_id=info.get("user_id"),
+                )
+            except Exception:
+                pass  # Notifications are best-effort
+
+        threading.Thread(target=_fire_notification, args=(confirmed_identity_info,), daemon=True).start()
 
 
 # =============================================================================
@@ -11275,7 +11312,15 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
     # Confirm the identity
     try:
         registry.confirm_identity(identity_id, user_source="web")
-        save_registry(registry)
+        _user = get_current_user(sess or {}) if is_auth_enabled() else None
+        save_registry(
+            registry,
+            confirmed_identity_info={
+                "identity_id": identity_id,
+                "identity_name": identity.get("name", "Unknown"),
+                "user_id": _user.id if _user else None,
+            },
+        )
     except Exception as e:
         # Could be variance explosion or other error
         return Response(
@@ -13101,12 +13146,18 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
             registry.rename_identity(person_id, name.strip(), user_source="admin_web")
             # Also confirm the person so they move out of New Matches
             identity = registry.get_identity(person_id)
+            _notify_info = None
             if identity.get("state") != "CONFIRMED":
                 try:
                     registry.confirm_identity(person_id, user_source="admin_web_identify")
+                    _notify_info = {
+                        "identity_id": person_id,
+                        "identity_name": name.strip(),
+                        "user_id": user.id if user else None,
+                    }
                 except ValueError:
                     pass  # Already confirmed or invalid state transition
-            save_registry(registry)
+            save_registry(registry, confirmed_identity_info=_notify_info)
             logging.info(f"[identify] Admin direct-named and confirmed {person_id} as '{name.strip()}'")
             return Div(
                 Div(
@@ -20644,13 +20695,20 @@ def post(identity_id: str, action: str, photo_id: str, sess=None):
     action_name = action.capitalize()
 
     try:
+        _notify_info = None
         if action == "confirm":
             registry.confirm_identity(identity_id, user_source="quick_action")
+            _user = get_current_user(sess or {}) if is_auth_enabled() else None
+            _notify_info = {
+                "identity_id": identity_id,
+                "identity_name": identity.get("name", "Unknown"),
+                "user_id": _user.id if _user else None,
+            }
         elif action == "skip":
             registry.skip_identity(identity_id, user_source="quick_action")
         elif action == "reject":
             registry.contest_identity(identity_id, user_source="quick_action", reason="Rejected via quick action")
-        save_registry(registry)
+        save_registry(registry, confirmed_identity_info=_notify_info)
     except (ValueError, Exception) as e:
         return Response(
             to_xml(toast(f"Cannot {action}: {str(e)}", "error")),
@@ -20715,13 +20773,20 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
     # Auto-confirm when naming from tag dropdown (tagging = "this IS that person")
+    _notify_info = None
     current_state = source_identity.get("state", "INBOX")
     if current_state in ("INBOX", "PROPOSED", "SKIPPED"):
         try:
             registry.confirm_identity(identity_id, user_source="face_tag")
+            _user = get_current_user(sess or {}) if is_auth_enabled() else None
+            _notify_info = {
+                "identity_id": identity_id,
+                "identity_name": name,
+                "user_id": _user.id if _user else None,
+            }
         except Exception:
             pass  # Already confirmed, or other benign error
-    save_registry(registry)
+    save_registry(registry, confirmed_identity_info=_notify_info)
 
     # Re-render the photo view to show the new name
     # If seq=1, stay in sequential mode for the next unidentified face
@@ -23859,7 +23924,7 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
         return HttpHeader("HX-Redirect", f"/person/{canonical_id}")
 
     try:
-        registry.get_identity(identity_id)
+        _identity = registry.get_identity(identity_id)
     except KeyError:
         return Response(
             to_xml(toast("Identity not found.", "error")),
@@ -23869,7 +23934,15 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
 
     try:
         registry.confirm_identity(identity_id, user_source="web_review")
-        save_registry(registry)
+        _user = get_current_user(sess or {}) if is_auth_enabled() else None
+        save_registry(
+            registry,
+            confirmed_identity_info={
+                "identity_id": identity_id,
+                "identity_name": _identity.get("name", "Unknown"),
+                "user_id": _user.id if _user else None,
+            },
+        )
     except ValueError as e:
         return Response(
             to_xml(toast(str(e), "error")),
@@ -24087,7 +24160,15 @@ def post(identity_id: str, name: str = "", sess=None):
         registry = load_registry()
         registry.rename_identity(identity_id, name, user_source="web_review")
         registry.confirm_identity(identity_id, user_source="web_review")
-        save_registry(registry)
+        _user = get_current_user(sess or {}) if is_auth_enabled() else None
+        save_registry(
+            registry,
+            confirmed_identity_info={
+                "identity_id": identity_id,
+                "identity_name": name,
+                "user_id": _user.id if _user else None,
+            },
+        )
     except (KeyError, ValueError) as e:
         return Response(
             to_xml(toast(f"Cannot confirm: {str(e)}", "error")),

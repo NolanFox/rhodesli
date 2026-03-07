@@ -487,3 +487,231 @@ class TestBellIcon:
         links = _public_nav_links(active="photos", user=admin)
         html = "".join(_to_html(link) for link in links)
         assert "/notifications" in html
+
+
+# ---------------------------------------------------------------------------
+# Tests: Notification trigger wiring (save_registry integration)
+# ---------------------------------------------------------------------------
+
+
+class TestNotificationTriggers:
+    """Test that confirm routes fire notifications via save_registry."""
+
+    def test_save_registry_without_notification_info_works(self):
+        """Backward compatibility: save_registry(registry) with no notification info."""
+        from unittest.mock import MagicMock
+
+        from app.main import save_registry
+
+        mock_registry = MagicMock()
+        mock_registry._identities = {}
+        mock_registry.save = MagicMock()
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.DATA_SOURCE", "json"))
+            stack.enter_context(
+                patch("app.supabase_data.sync_identity_overrides", side_effect=Exception("no supabase"))
+            )
+            save_registry(mock_registry)
+
+        # Should have called save without error
+        mock_registry.save.assert_called_once()
+
+    def test_save_registry_with_confirmed_identity_fires_notification(self):
+        """save_registry with confirmed_identity_info fires notification in background."""
+        import threading
+        from unittest.mock import MagicMock
+
+        from app.main import save_registry
+
+        mock_registry = MagicMock()
+        mock_registry._identities = {}
+        mock_registry.save = MagicMock()
+        mock_registry.get_identity.return_value = {"anchor_ids": ["f1"], "candidate_ids": []}
+
+        mock_photo_reg = MagicMock()
+        mock_photo_reg.face_to_photo = {"f1": "photo-1"}
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.DATA_SOURCE", "json"))
+            stack.enter_context(
+                patch("app.supabase_data.sync_identity_overrides", side_effect=Exception("no supabase"))
+            )
+            mock_create = stack.enter_context(
+                patch("app.notification_routes.create_identity_confirmed_notification", return_value=None)
+            )
+            stack.enter_context(patch("app.main.load_photo_registry", return_value=mock_photo_reg))
+
+            save_registry(
+                mock_registry,
+                confirmed_identity_info={
+                    "identity_id": "id-123",
+                    "identity_name": "Leon Capeluto",
+                    "user_id": "admin-user-id",
+                },
+            )
+
+            # Wait for background thread to complete
+            for t in threading.enumerate():
+                if t.name != "MainThread" and t.daemon:
+                    t.join(timeout=2.0)
+
+            mock_create.assert_called_once_with(
+                identity_id="id-123",
+                identity_name="Leon Capeluto",
+                photo_ids=["photo-1"],
+                user_id="admin-user-id",
+            )
+
+    def test_save_registry_notification_failure_does_not_block_save(self):
+        """Notification failure must not prevent save from completing."""
+        import threading
+        from unittest.mock import MagicMock
+
+        from app.main import save_registry
+
+        mock_registry = MagicMock()
+        mock_registry._identities = {}
+        mock_registry.save = MagicMock()
+        mock_registry.get_identity.side_effect = Exception("boom")
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.DATA_SOURCE", "json"))
+            stack.enter_context(
+                patch("app.supabase_data.sync_identity_overrides", side_effect=Exception("no supabase"))
+            )
+            stack.enter_context(
+                patch(
+                    "app.notification_routes.create_identity_confirmed_notification",
+                    side_effect=Exception("notification failed"),
+                )
+            )
+
+            # Should NOT raise — notification errors are swallowed
+            save_registry(
+                mock_registry,
+                confirmed_identity_info={
+                    "identity_id": "id-123",
+                    "identity_name": "Test",
+                    "user_id": None,
+                },
+            )
+
+            # Wait for background threads
+            for t in threading.enumerate():
+                if t.name != "MainThread" and t.daemon:
+                    t.join(timeout=2.0)
+
+        mock_registry.save.assert_called_once()
+
+    def test_create_identity_confirmed_notification_uses_provided_user_id(self, mock_supabase):
+        """create_identity_confirmed_notification passes through user_id."""
+        from app.notification_routes import create_identity_confirmed_notification
+
+        created = _make_notification(notification_type="identity_confirmed")
+        mock_supabase.table.return_value.insert.return_value.execute.return_value.data = [created]
+
+        create_identity_confirmed_notification(
+            identity_id="id-456",
+            identity_name="Nace Capeluto",
+            photo_ids=["p1"],
+            user_id="real-admin-uuid",
+        )
+
+        insert_call = mock_supabase.table.return_value.insert.call_args
+        row = insert_call[0][0]
+        assert row["user_id"] == "real-admin-uuid"
+        assert row["notification_type"] == "identity_confirmed"
+        assert "Nace Capeluto" in row["title"]
+
+    def test_create_identity_confirmed_notification_falls_back_to_placeholder(self, mock_supabase):
+        """Without user_id, falls back to placeholder UUID."""
+        from app.notification_routes import create_identity_confirmed_notification
+
+        created = _make_notification()
+        mock_supabase.table.return_value.insert.return_value.execute.return_value.data = [created]
+
+        create_identity_confirmed_notification(
+            identity_id="id-789",
+            identity_name="Test Person",
+        )
+
+        insert_call = mock_supabase.table.return_value.insert.call_args
+        row = insert_call[0][0]
+        assert row["user_id"] == "00000000-0000-0000-0000-000000000000"
+
+    def test_confirm_route_passes_notification_info(self, client):
+        """POST /confirm/{id} passes confirmed_identity_info to save_registry."""
+        from unittest.mock import MagicMock
+
+        from app.auth import User
+
+        admin = User(id="admin-uuid-1", email="NolanFox@gmail.com", is_admin=True, role="admin")
+        mock_registry = MagicMock()
+        identity_data = {
+            "identity_id": "test-id",
+            "name": "Betty Capeluto",
+            "state": "PROPOSED",
+            "anchor_ids": [],
+            "candidate_ids": [],
+        }
+        mock_registry.get_identity.return_value = identity_data
+        mock_registry._identities = {"test-id": identity_data}
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.main.get_current_user", return_value=admin))
+            stack.enter_context(patch("app.main._check_admin", return_value=None))
+            stack.enter_context(patch("app.main.load_registry", return_value=mock_registry))
+            stack.enter_context(patch("app.main._check_merged_identity", return_value=(False, None)))
+            mock_save = stack.enter_context(patch("app.main.save_registry"))
+            stack.enter_context(patch("app.main._fire_recalibration_hook"))
+
+            resp = client.post("/confirm/test-id")
+
+        # Verify save_registry was called with confirmed_identity_info
+        mock_save.assert_called_once()
+        call_kwargs = mock_save.call_args
+        notify_info = call_kwargs[1].get("confirmed_identity_info") or (
+            call_kwargs[0][1] if len(call_kwargs[0]) > 1 else None
+        )
+        assert notify_info is not None
+        assert notify_info["identity_id"] == "test-id"
+        assert notify_info["identity_name"] == "Betty Capeluto"
+        assert notify_info["user_id"] == "admin-uuid-1"
+
+    def test_reject_action_does_not_create_notification(self, client):
+        """POST /api/face/quick-action with action=reject does NOT fire notification."""
+        from unittest.mock import MagicMock
+
+        from app.auth import User
+
+        admin = User(id="admin-uuid-1", email="NolanFox@gmail.com", is_admin=True, role="admin")
+        mock_registry = MagicMock()
+        identity_data = {
+            "identity_id": "rej-id",
+            "name": "Unknown Person",
+            "state": "PROPOSED",
+            "anchor_ids": [],
+            "candidate_ids": [],
+        }
+        mock_registry.get_identity.return_value = identity_data
+        mock_registry._identities = {"rej-id": identity_data}
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.main.get_current_user", return_value=admin))
+            stack.enter_context(patch("app.main._check_admin", return_value=None))
+            stack.enter_context(patch("app.main.load_registry", return_value=mock_registry))
+            mock_save = stack.enter_context(patch("app.main.save_registry"))
+            stack.enter_context(patch("app.main.photo_view_content", return_value=(MagicMock(),)))
+
+            resp = client.post(
+                "/api/face/quick-action",
+                data={"identity_id": "rej-id", "action": "reject", "photo_id": "photo-1"},
+            )
+
+        mock_save.assert_called_once()
+        call_kwargs = mock_save.call_args
+        notify_info = call_kwargs[1].get("confirmed_identity_info") if call_kwargs[1] else None
+        assert notify_info is None
