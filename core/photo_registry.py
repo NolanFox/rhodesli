@@ -339,6 +339,101 @@ class PhotoRegistry:
         logger.info(f"PhotoRegistry saved to {path} ({len(self._photos)} photos, {len(self._face_to_photo)} faces)")
 
     @classmethod
+    def load_from_postgres(cls) -> "PhotoRegistry | None":
+        """Load registry from Supabase Postgres.
+
+        Queries photos + photo_faces tables and reconstructs the same
+        in-memory structure as the JSON load() method.
+
+        Returns:
+            PhotoRegistry instance, or None if Supabase is unavailable.
+        """
+        try:
+            from app.supabase_data import get_supabase_client
+        except ImportError:
+            logger.warning("supabase_data not available for Postgres photo load")
+            return None
+
+        client = get_supabase_client()
+        if not client:
+            return None
+
+        try:
+            # Load photos (paginated)
+            all_photos = []
+            page_size = 1000
+            offset = 0
+            while True:
+                result = client.table("photos").select("*").range(offset, offset + page_size - 1).execute()
+                if not result.data:
+                    break
+                all_photos.extend(result.data)
+                if len(result.data) < page_size:
+                    break
+                offset += page_size
+
+            # Load photo_faces (paginated)
+            all_faces = []
+            offset = 0
+            while True:
+                result = (
+                    client.table("photo_faces")
+                    .select("face_id, photo_id")
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
+                if not result.data:
+                    break
+                all_faces.extend(result.data)
+                if len(result.data) < page_size:
+                    break
+                offset += page_size
+
+            # Build face_id -> photo_id mapping
+            face_to_photo = {}
+            photo_face_ids: dict[str, set] = {}
+            for face_row in all_faces:
+                fid = face_row["face_id"]
+                pid = face_row["photo_id"]
+                face_to_photo[fid] = pid
+                photo_face_ids.setdefault(pid, set()).add(fid)
+
+            registry = cls()
+            for row in all_photos:
+                photo_id = row["photo_id"]
+                entry: dict = {
+                    "path": row.get("path", ""),
+                    "face_ids": photo_face_ids.get(photo_id, set()),
+                    "source": row.get("source", ""),
+                    "collection": row.get("collection", ""),
+                    "source_url": row.get("source_url", ""),
+                }
+                # Preserve dimension and metadata fields
+                if row.get("width") is not None:
+                    entry["width"] = row["width"]
+                if row.get("height") is not None:
+                    entry["height"] = row["height"]
+                if row.get("upload_date"):
+                    entry["upload_date"] = row["upload_date"]
+                if row.get("uploaded_by"):
+                    entry["uploaded_by"] = row["uploaded_by"]
+                if row.get("job_id"):
+                    entry["job_id"] = row["job_id"]
+                registry._photos[photo_id] = entry
+
+            registry._face_to_photo = face_to_photo
+
+            logger.info(
+                f"PhotoRegistry loaded from Postgres "
+                f"({len(registry._photos)} photos, {len(registry._face_to_photo)} faces)"
+            )
+            return registry
+
+        except Exception as e:
+            logger.warning(f"PhotoRegistry.load_from_postgres failed: {e}")
+            return None
+
+    @classmethod
     def load(cls, path: Path = None) -> "PhotoRegistry":
         """
         Load registry from JSON file.
