@@ -94,7 +94,7 @@ class TestPruneBakFiles:
 
     def test_prunes_old_bak_files(self, tmp_path):
         """Only the 3 most recent .bak files per type are kept."""
-        from app.main import _prune_bak_files
+        from app.sync_routes import _prune_bak_files
 
         # Create 5 identities.json.bak files with different timestamps
         for i in range(5):
@@ -114,7 +114,7 @@ class TestPruneBakFiles:
 
     def test_prunes_per_base_name(self, tmp_path):
         """Different base names are tracked independently."""
-        from app.main import _prune_bak_files
+        from app.sync_routes import _prune_bak_files
 
         for i in range(4):
             (tmp_path / f"identities.json.bak.{2000 + i}").write_text("{}")
@@ -132,7 +132,7 @@ class TestPruneBakFiles:
 
     def test_no_files_is_noop(self, tmp_path):
         """No crash when directory has no .bak files."""
-        from app.main import _prune_bak_files
+        from app.sync_routes import _prune_bak_files
 
         _prune_bak_files(tmp_path, max_keep=3)
         # Should not raise

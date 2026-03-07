@@ -136,7 +136,10 @@ def regular_user():
     from app.auth import User
 
     user = User(id="test-user-1", email="user@example.com", is_admin=False)
-    with patch("app.main.get_current_user", return_value=user):
+    with (
+        patch("app.main.get_current_user", return_value=user),
+        patch("app.admin_routes.get_current_user", return_value=user),
+    ):
         yield user
 
 
@@ -146,7 +149,10 @@ def admin_user():
     from app.auth import User
 
     user = User(id="test-admin-1", email="admin@rhodesli.test", is_admin=True)
-    with patch("app.main.get_current_user", return_value=user):
+    with (
+        patch("app.main.get_current_user", return_value=user),
+        patch("app.admin_routes.get_current_user", return_value=user),
+    ):
         yield user
 
 

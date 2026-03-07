@@ -2,21 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
-## [v0.93.1] — 2026-03-06 (Session 90b continued: Route Extraction + Back Photo Fix + Perf)
+## [v0.93.1] — 2026-03-06 (Session 90b completion: Route Extraction + Shadow Writes + Test Fixes)
 
 ### Fixed
 - **Back-of-photo upload** (PRD-029) — Upload endpoint now uploads to R2 in production mode. Flip UX with 3D animation. Browse filter for front/back. Visual indicators.
 - **_prune_bak_files import** — Missing import after sync_routes extraction caused startup crash.
 - **Duplicate route definitions** — Removed duplicate back-image/transcription/transform routes from main.py (canonical versions in photo_routes.py).
+- **Test import fixes** — Updated test imports for `_prune_bak_files` (→sync_routes), `_get_best_match_pair` (→match_facecompare_routes), `get_current_user` (→admin_routes).
+- **Route priority reorder** — `_reorder_routes_atomic()` now runs after all route modules import, fixing 404s on staging-preview endpoint.
+- **Admin user test fixture** — Now patches `get_current_user` in both `app.main` and `app.admin_routes`.
 
 ### Added
-- **Route extraction** — auth_routes.py (660 lines), sync_routes.py (513 lines), match_facecompare_routes.py (1,750 lines), person_routes.py (~3,300 lines) extracted from main.py.
+- **Route extraction** — auth_routes.py (660), sync_routes.py (513), match_facecompare_routes.py (1,750), person_routes.py (1,632) extracted from main.py.
+- **Supabase shadow write wiring** — `save_registry()` and `save_photo_registry()` now fire-and-forget shadow write all data to Supabase via background threads. Covers all identity and photo CRUD operations.
 - **Background cache prewarm** — Server startup cache building moved to background thread with double-checked locking. Server accepts requests immediately.
 - **PRD-029** — Photo back images and media groups data model (docs/prds/029_photo_back_and_media_groups.md).
 - **Media group data model** — media_group_id, media_role, parent_photo_id fields for scalable multi-image support.
 
 ### Changed
-- **main.py reduced** — From 34,449 to ~28K lines via route extraction (ongoing).
+- **main.py reduced** — From 34,449 to ~25,941 lines via route extraction.
 
 ## [v0.93.0] — 2026-03-06 (Session 90b: Fix Sorting + Supabase Shadow Writes + Location Fix)
 

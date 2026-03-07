@@ -206,7 +206,7 @@ class TestMatchModeRoleAware:
 
     def test_get_best_match_pair_skips_stale_proposal_ids(self):
         """Stale proposal IDs should be skipped instead of crashing match mode."""
-        from app.main import _get_best_match_pair
+        from app.match_facecompare_routes import _get_best_match_pair
 
         registry = MagicMock()
 

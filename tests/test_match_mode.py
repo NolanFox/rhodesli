@@ -291,7 +291,7 @@ class TestMatchModeFilters:
 
     def test_get_best_match_pair_ready_only_proposals(self):
         """filter=ready returns None when no proposals exist (skips NN fallback)."""
-        from app.main import _get_best_match_pair
+        from app.match_facecompare_routes import _get_best_match_pair
 
         with patch("app.main.load_registry") as mock_reg, \
              patch("app.main.get_face_data"), \
@@ -303,7 +303,7 @@ class TestMatchModeFilters:
 
     def test_get_best_match_pair_unmatched_skips_proposals(self):
         """filter=unmatched skips proposals and only uses NN search."""
-        from app.main import _get_best_match_pair
+        from app.match_facecompare_routes import _get_best_match_pair
 
         proposals = {"proposals": [
             {"source_identity_id": "id1", "target_identity_id": "id2",
@@ -324,7 +324,7 @@ class TestMatchModeFilters:
 
     def test_get_best_match_pair_rediscovered_filters_proposals(self):
         """filter=rediscovered only returns proposals where source has promoted_from."""
-        from app.main import _get_best_match_pair
+        from app.match_facecompare_routes import _get_best_match_pair
 
         proposals = {"proposals": [
             {"source_identity_id": "id1", "target_identity_id": "id2",

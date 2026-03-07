@@ -41,7 +41,7 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
 
 ### Near-Term
-- [-] 2026-03-06: DATA-006: Shadow writes — tables + functions + backfill script created (Session 90b). Full wiring to app pending.
+- [x] 2026-03-06: DATA-006: Shadow writes — tables, functions, backfill script, app wiring complete (Session 90b). save_registry() and save_photo_registry() fire-and-forget to Supabase.
 - [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
 - [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
 - [x] 2026-03-01: FE-041: "Help Identify" mode — /help page, Identify Mode toggle, OG cards
@@ -70,7 +70,7 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 
 ## Recently Completed
 
-- [x] 2026-03-06: **v0.93.0 — Session 90b**: Fix Sorting + Supabase Shadow Writes + Location Fix. Upload date sorting fixed on production (patched 296 photos via sync API). Leon's Restaurant location corrected to Tampa, FL. Supabase shadow write infrastructure (tables, functions, backfill). Sync/push expanded with photo_locations + date_labels. Discoveries UX fixes (raw metrics hidden). PRD-028 contributor notifications. Hooks cleanup. 10 commits. ~4146 tests.
+- [x] 2026-03-06: **v0.93.1 — Session 90b (complete)**: Fix Sorting + Shadow Writes + Route Extraction + Back Photo. Upload date sorting fixed (296 photos patched). Leon's Restaurant → Tampa, FL. Supabase shadow writes fully wired (save_registry + save_photo_registry fire-and-forget). Route extraction: person_routes.py (1,632 lines), main.py 34K→26K. Back-photo upload (PRD-029). Test fixes for extracted routes. 22 commits. ~3915 tests.
 - [x] 2026-03-04: **v0.92.0 — Session 89**: Wire GEDCOM into Location Estimation. AD-201: Unified Gemini prompt (interactive uses enriched prompt). AD-202: Admin re-analyze button. API call logging on every interactive Gemini call. Batch reprocessing script. Asheville photo pipeline ready. 24 new tests. ~4146 tests.
 - [x] 2026-03-04: **v0.91.1 — Session 88**: Fix Scoring & Card Failures. Isotonic calibrator crash fixed, sigmoid CDF priority. Batch NN override removed. Compare link params fixed. Accordion headers with match preview. Admin badge → gear icon. Discovery cards: match_info_bar, distance, co-occurrence. HD-024 harness improvements (ruff format, dynamic hooks, test gate). Browser verified 5/5. ~4122 tests.
 - [x] 2026-03-04: **v0.91.0 — Session 87**: Compare & Discoveries UX Overhaul. AD-200: Unified confidence scoring (12+ paths → 1). Compare best-matches summary. Shareable result "Could this be [Name]?" redesign. Discoveries sort/filter by confidence + photo. Identity card "Faces" button + visible detach. 63 new tests. ~4122 tests.

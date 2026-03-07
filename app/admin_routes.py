@@ -16,6 +16,7 @@ from pathlib import Path
 from fasthtml.common import *
 from starlette.responses import FileResponse, Response
 
+from app.auth import get_current_user
 from core import storage
 from core.registry import IdentityState
 from core.ui_safety import ensure_utf8_display
