@@ -101,8 +101,21 @@ Context: docs/session_context/session-90b-context.md
 - Landing page: 296 photos, v0.93.0 — PASS
 - People page: 82 identified, face cards render — PASS
 
-## Deferred to Session 91
-- Track A completion: main.py target <15K lines (currently ~31.5K, subagents in progress)
-- Track C: Performance optimization — pagination refactor
+## Completion Pass (same day, new context)
+
+- [x] Person routes extraction — person_routes.py (1,632 lines). main.py 27,495 → 25,941.
+- [x] Supabase shadow write wiring — save_registry() + save_photo_registry() fire-and-forget to Supabase
+- [x] Test import fixes — 9 broken imports from route extraction fixed
+- [x] Route priority reorder — _reorder_routes_atomic() after all imports
+- [x] Admin user fixture — patches get_current_user in both app.main and app.admin_routes
+- [x] CHANGELOG accuracy fix — removed false person_routes.py claim
+- [x] Browser verified (Playwright + Chrome): sorting, Leon's, person page all PASS
+- Commit: 49f3755
+
+## Deferred to Session 90c
 - Leon's face alignment — requires InsightFace locally (AD-110 blocks ML on Railway)
 - Leon's Gemini evidence text — still says "SF/NYC", location badge correct (Tampa)
+- Leon's face analysis — "No face descriptions available yet" on photo page
+- main.py target 15K (at 26K — needs shared.py extraction)
+- Track C: Performance/pagination
+- 7 flaky order-dependent tests
