@@ -85,6 +85,7 @@ This is **second-tier ML work** — worth pursuing once the corpus is 5-10x larg
 - **AD-211**: GEDCOM batch reanalysis value assessment (ALGORITHMIC_DECISIONS.md)
 - **User feedback**: docs/session_context/session-93-user-feedback.md
 - **Parent report**: docs/ml/GEDCOM_REANALYSIS_REPORT.md
+- **Before/after examples**: docs/ml/GEDCOM_REANALYSIS_EXAMPLES.md
 - **Reprocess script**: scripts/reprocess_with_gedcom.py
 - **GEDCOM context builder**: rhodesli_ml/gedcom_context.py
 - **Estimate routes**: app/estimate_routes.py (Gemini call + logging)

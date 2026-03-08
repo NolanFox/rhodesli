@@ -259,6 +259,8 @@ Skip already-high-confidence photos with no new data.
 
 ## References
 
+- **Before/after examples:** [GEDCOM_REANALYSIS_EXAMPLES.md](GEDCOM_REANALYSIS_EXAMPLES.md) — 8 annotated comparisons with links
+- **Detailed schema/SQL:** [GEDCOM_REANALYSIS_DETAIL.md](GEDCOM_REANALYSIS_DETAIL.md) — cost projections, ML future, schema SQL
 - AD-139, AD-152, AD-159, AD-163, AD-192, AD-201, AD-202, AD-210, AD-211
 - Session 89: `scripts/reprocess_with_gedcom.py` | Session 92: API logging
 - Session 93: Batch execution + this report
