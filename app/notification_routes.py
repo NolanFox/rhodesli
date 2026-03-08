@@ -10,6 +10,7 @@ Routes:
 """
 
 import logging
+import os
 from datetime import datetime
 
 from fasthtml.common import *
@@ -23,6 +24,8 @@ import app.main as _main_mod
 
 logger = logging.getLogger(__name__)
 
+RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+
 # Narrow exception types for Supabase operations
 try:
     import httpx
@@ -31,6 +34,123 @@ try:
     _SUPABASE_ERRORS = (httpx.HTTPError, PostgRESTError, ConnectionError, TimeoutError, OSError)
 except ImportError:
     _SUPABASE_ERRORS = (ConnectionError, TimeoutError, OSError)
+
+
+# =============================================================================
+# EMAIL NOTIFICATIONS (Resend API)
+# =============================================================================
+
+
+def _build_notification_email_html(title: str, body: str, link_url: str | None = None) -> str:
+    """Build an HTML email body with inline CSS (Lesson 12: email clients strip style blocks).
+
+    Returns a simple, mobile-friendly email with Rhodesli branding.
+    """
+    button_html = ""
+    if link_url:
+        # Ensure absolute URL
+        if link_url.startswith("/"):
+            link_url = f"{_main_mod.SITE_URL}{link_url}"
+        button_html = (
+            '<tr><td style="padding: 20px 0 0 0;">'
+            f'<a href="{link_url}" style="display: inline-block; padding: 12px 24px; '
+            "background-color: #4f46e5; color: #ffffff; text-decoration: none; "
+            'border-radius: 6px; font-weight: 600; font-size: 14px;">View in Archive</a>'
+            "</td></tr>"
+        )
+
+    unsubscribe_url = f"{_main_mod.SITE_URL}/notifications"
+
+    return f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0f172a; padding: 20px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%; background-color: #1e293b; border-radius: 8px; overflow: hidden;">
+<tr><td style="background-color: #1e293b; padding: 24px 30px; border-bottom: 1px solid #334155;">
+<span style="font-size: 20px; font-weight: 700; color: #f8fafc; letter-spacing: -0.02em;">Rhodesli</span>
+<span style="font-size: 12px; color: #94a3b8; margin-left: 8px;">Heritage Photo Archive</span>
+</td></tr>
+<tr><td style="padding: 30px;">
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr><td style="font-size: 18px; font-weight: 600; color: #f1f5f9; padding-bottom: 12px;">{title}</td></tr>
+<tr><td style="font-size: 14px; color: #cbd5e1; line-height: 1.6;">{body}</td></tr>
+{button_html}
+</table>
+</td></tr>
+<tr><td style="padding: 20px 30px; border-top: 1px solid #334155; text-align: center;">
+<span style="font-size: 12px; color: #64748b;">
+<a href="{unsubscribe_url}" style="color: #64748b; text-decoration: underline;">Manage notification preferences</a>
+</span>
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body>
+</html>"""
+
+
+async def send_notification_email(to_email: str, subject: str, html_body: str) -> bool:
+    """Send an email via Resend API. Returns True on success, False otherwise.
+
+    Silently skips if RESEND_API_KEY is not configured.
+    """
+    if not RESEND_API_KEY:
+        return False
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+                json={
+                    "from": "Rhodesli <noreply@rhodesli.nolanandrewfox.com>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_body,
+                },
+                timeout=10.0,
+            )
+            if resp.status_code in (200, 201):
+                logger.info(f"Notification email sent to {to_email}: {subject}")
+                return True
+            else:
+                logger.warning(f"Resend API returned {resp.status_code}: {resp.text[:200]}")
+                return False
+    except Exception:
+        logger.warning(f"Failed to send notification email to {to_email}", exc_info=True)
+        return False
+
+
+def _fire_notification_email(
+    to_email: str,
+    title: str,
+    body: str,
+    link_url: str | None = None,
+) -> None:
+    """Fire-and-forget email notification in a background thread.
+
+    Does NOT block the calling thread. Errors are logged but swallowed.
+    """
+    if not RESEND_API_KEY:
+        return
+
+    import asyncio
+    import threading
+
+    html_body = _build_notification_email_html(title, body, link_url)
+    subject = title
+
+    def _send():
+        try:
+            loop = asyncio.new_event_loop()
+            loop.run_until_complete(send_notification_email(to_email, subject, html_body))
+            loop.close()
+        except Exception:
+            logger.warning("Background email send failed", exc_info=True)
+
+    t = threading.Thread(target=_send, daemon=True)
+    t.start()
 
 
 # =============================================================================
@@ -128,8 +248,13 @@ def _create_notification(
     body: str | None = None,
     photo_id: str | None = None,
     identity_id: str | None = None,
+    email: str | None = None,
 ) -> dict | None:
-    """Create a notification in Supabase. Returns the created row or None."""
+    """Create a notification in Supabase. Returns the created row or None.
+
+    If ``email`` is provided and RESEND_API_KEY is set, also sends an email
+    notification in a background thread.
+    """
     sb = get_supabase_client()
     if not sb:
         return None
@@ -143,7 +268,23 @@ def _create_notification(
             "identity_id": identity_id,
         }
         result = sb.table("notifications").insert(row).execute()
-        return result.data[0] if result.data else None
+        created = result.data[0] if result.data else None
+
+        # Fire email notification if email address is provided
+        if created and email:
+            link_url = None
+            if identity_id:
+                link_url = f"/person/{identity_id}"
+            elif photo_id:
+                link_url = f"/photo/{photo_id}"
+            _fire_notification_email(
+                to_email=email,
+                title=title,
+                body=body or "",
+                link_url=link_url,
+            )
+
+        return created
     except _SUPABASE_ERRORS:
         logger.warning("Failed to create notification")
         return None
@@ -154,6 +295,7 @@ def create_identity_confirmed_notification(
     identity_name: str,
     photo_ids: list[str] | None = None,
     user_id: str | None = None,
+    user_email: str | None = None,
 ) -> dict | None:
     """Create a notification when an identity is confirmed.
 
@@ -167,6 +309,7 @@ def create_identity_confirmed_notification(
         photo_ids: List of photo IDs associated with the identity
         user_id: Supabase auth user ID of the admin who confirmed.
                  Falls back to a system placeholder if not provided.
+        user_email: Email address for email notification delivery.
 
     Returns:
         The created notification row, or None if Supabase is unavailable.
@@ -179,6 +322,7 @@ def create_identity_confirmed_notification(
         body=f'The identity "{identity_name}" has been confirmed by an admin.',
         identity_id=identity_id,
         photo_id=photo_ids[0] if photo_ids else None,
+        email=user_email,
     )
 
 

@@ -7027,6 +7027,42 @@ def get(
             }
         )
 
+    # Add life events from Supabase
+    try:
+        from app.event_routes import list_events as _list_life_events, EVENT_TYPE_ICONS
+
+        life_events = _list_life_events()
+        for le in life_events:
+            year = le.get("event_year")
+            if not year:
+                continue
+            if start and year < start:
+                continue
+            if end and year > end:
+                continue
+            if person_era_start is not None:
+                if year < person_era_start or year > person_era_end:
+                    continue
+
+            event_type = le.get("event_type", "other")
+            icon = EVENT_TYPE_ICONS.get(event_type, EVENT_TYPE_ICONS.get("other", ""))
+            le_title = le.get("title") or le.get("event_type", "Event").title()
+
+            timeline_entries.append(
+                {
+                    "type": "life_event",
+                    "year": year,
+                    "decade": year // 10 * 10,
+                    "title": f"{icon} {le_title}" if icon else le_title,
+                    "description": le.get("description", ""),
+                    "location": le.get("location", ""),
+                    "event_type": event_type,
+                    "event_id": le.get("id", ""),
+                }
+            )
+    except Exception:
+        logger.warning("Failed to load life events for timeline", exc_info=True)
+
     # Sort by year
     timeline_entries.sort(key=lambda e: e["year"])
 
@@ -7285,6 +7321,31 @@ def get(
                     data_testid="timeline-photo-card",
                 )
                 cards.append(Div(card, cls="ml-8 sm:ml-12 mb-4"))
+
+            elif entry["type"] == "life_event":
+                # Life event from Supabase
+                le_type = entry.get("event_type", "other")
+                le_color = "border-indigo-600/50 bg-indigo-950/20"
+
+                card = Div(
+                    Div(
+                        Div(
+                            Span(entry.get("title", ""), cls="text-sm font-medium text-indigo-200 leading-snug"),
+                            Span(str(entry["year"]), cls="text-xs font-serif text-indigo-400 ml-2"),
+                            cls="flex items-center gap-1",
+                        ),
+                        P(entry["description"], cls="text-xs text-slate-400 leading-relaxed mt-1.5")
+                        if entry.get("description")
+                        else None,
+                        P(entry.get("location", ""), cls="text-[10px] text-slate-500 mt-1 italic")
+                        if entry.get("location")
+                        else None,
+                        cls=f"p-4 rounded-lg border-l-4 {le_color}",
+                    ),
+                    cls="ml-8 sm:ml-12 mb-4",
+                    data_testid="timeline-life-event",
+                )
+                cards.append(card)
 
             else:  # context event
                 cat = entry.get("category", "")
