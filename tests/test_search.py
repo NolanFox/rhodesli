@@ -351,7 +351,8 @@ class TestSearchResultNavigation:
         assert "section=" not in html, "Search results should not link to /?section= (Focus mode)"
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_search_result_identity_id_in_url(self, client):
         """Search result URLs contain the identity UUID."""

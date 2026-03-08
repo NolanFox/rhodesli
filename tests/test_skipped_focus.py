@@ -51,7 +51,8 @@ class TestSkippedFocusModeRendering:
         assert 'id="skipped-focus-container"' in html
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_focus_mode_has_this_person_label(self, client):
         """Shows 'Who is this?' label above the face crop."""
@@ -59,7 +60,8 @@ class TestSkippedFocusModeRendering:
         assert "Who is this?" in html
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_focus_mode_has_best_match(self, client):
         """Shows 'Best Match' section (with or without suggestions)."""
