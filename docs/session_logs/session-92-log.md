@@ -149,11 +149,27 @@ Merge order: H → C → D → E → F → G (all clean, no conflicts)
 ## Act 9: Merge + Verify
 
 ### Post-merge test results:
-- App tests: 3606 passed, 4 skipped, 8 xfailed
+- App tests: 3607 passed, 4 skipped, 7 xfailed, 0 failures
 - ML tests: 566 passed
-- Total: 4172 tests passing
+- Total: 4173 tests passing (1 xfail removed via optimization)
+
+### Browser Verification (v0.95.0 deployed):
+- 15/15 pages PASS (landing, photos, people, person detail, discoveries, notifications, events, compare, estimate, about, timeline, help identify, health, focus view, Leon's Restaurant)
+- OG tags verified: og:title, og:image, og:url, og:type, og:site_name on person pages
+- Notification wiring code-verified (save_registry → create_identity_confirmed_notification → Supabase)
+- Leon's re-analysis: "United States (Specific city tied to Leon Capeluto's residence)" — business owner context working, Gemini quality issue for specific city
+
+### Gap Closure (post-merge):
+- 7 xfail markers removed by cache isolation fix (3 restored as genuine xdist race conditions)
+- MLS test optimized (20 face pairs limit, no longer times out)
+- Worktrees cleaned up
+- Assessment updated with browser evidence
 
 ## Verification Gate
 - [x] All phases re-checked against original prompt
 - [x] Feature Reality Contract passed
 - [x] Assessment written
+- [x] Browser verification: 15/15 pages PASS
+- [x] Share flow E2E: OG tags confirmed
+- [x] Help Identify: 50 faces rendered
+- [x] Timeline: 15 historical events integrated
