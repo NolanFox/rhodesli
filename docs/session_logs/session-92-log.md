@@ -214,3 +214,37 @@ Existing tables to backfill:
 - [x] Share flow E2E: OG tags confirmed
 - [x] Help Identify: 50 faces rendered
 - [x] Timeline: 15 historical events integrated
+
+## Act 11: Continuation (rate limit recovery)
+
+### What was recovered:
+Background agents from Act 10 had completed before the rate limit hit.
+Their work was sitting as unstaged changes. All verified and committed.
+
+### Committed (2a1aac8):
+1. **Postgres read paths** — DATA_SOURCE=postgres fallback for:
+   - date_labels (main.py)
+   - birth_year_estimates (main.py)
+   - annotations (engagement_routes.py)
+   - photo_locations (page_routes.py)
+2. **New notification types** — discovery + annotation_approved
+3. **Email wiring** — user_email threaded through all confirm flows
+4. **Supabase load functions** — annotations, birth_year_estimates
+5. **Migration script** — scripts/migrate_complete.py (657 lines)
+6. **Code cleanup** — removed duplicate imports in engagement_routes
+7. **580+ new test lines** — test_growth_loop.py, test_postgres_reads.py
+
+### Migration executed:
+- 3,483 rows across 8 tables migrated to Supabase Postgres
+- date_labels: 271, photo_locations: 268, person_comments: 7
+- discovery_log: 1,248, audit_log: 989, comparison_results: 430
+- birth_year_estimates: 75, corrections_log: 195
+
+### Tests:
+- App: 3708 passed, 4 skipped, 0 failures
+- ML: 566 passed
+- Total: 4,274 tests
+
+### DATA_SOURCE=postgres decision:
+NOT flipped on Railway. Core tables (identities, photos) don't exist.
+Read paths have JSON fallback. Data is in Postgres ready for DATA-007.

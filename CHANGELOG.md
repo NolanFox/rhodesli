@@ -23,10 +23,17 @@ All notable changes to this project will be documented in this file.
 - **10 UX bugs** — Source photo link on /identify, compare/estimate auto-scroll, birth year race condition, CTA standardization, identified badge tooltip, collection dropdown focus, double admin bar on /events.
 - **Test flakiness** — xfail reasons updated to accurate root cause (shared app state under xdist), 13 slow modules isolated.
 
+### Added (Session 92 continuation)
+- **Postgres read paths** — date_labels, birth_year_estimates, annotations, photo_locations now load from Supabase when DATA_SOURCE=postgres (with JSON fallback).
+- **New notification types** — discovery + annotation_approved notifications with SVG icons.
+- **Email wiring** — user_email threaded through all 6 identity confirm flows for Resend delivery.
+- **Full data migration** — 3,483 rows across 8 tables migrated to Supabase (date_labels, photo_locations, person_comments, discovery_log, audit_log, comparison_results, birth_year_estimates, corrections_log).
+- **Migration script** — `scripts/migrate_complete.py` for comprehensive JSON→Postgres migration.
+
 ### Technical
 - 6 parallel worktree tracks, all merged cleanly (H→C→D→E→F→G)
-- Tests: 3,606 app + 566 ML = 4,172 total (all pass)
-- Browser verified 9/9 pages PASS in production
+- Tests: 3,708 app + 566 ML = 4,274 total (all pass)
+- Browser verified 15/15 pages PASS in production
 
 ## [v0.94.1] — 2026-03-07 (Session 91b: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix)
 

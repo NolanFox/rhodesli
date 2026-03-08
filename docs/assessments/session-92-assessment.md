@@ -113,3 +113,31 @@ Evidence: ~4172 tests passing (3606 app + 566 ML), 6 clean merges, 7 xfails remo
 ### Test Speed — NOT at target
 - Current: ~47-55s (xdist). Target: <30s.
 - Floor identified as app import time per worker — would need architectural changes
+
+---
+
+## Session 92 Continuation (rate limit recovery, 2026-03-08)
+
+### Additional Work Shipped (commit 2a1aac8)
+- **Postgres read paths**: 4 data loaders (date_labels, birth_year_estimates, annotations, photo_locations) now route through Supabase when DATA_SOURCE=postgres, with JSON fallback
+- **New notification types**: discovery + annotation_approved (with SVG icons)
+- **Email wiring**: user_email threaded through ALL 6 confirm flows in identity_routes + page_routes
+- **Supabase load functions**: load_annotations_from_supabase(), load_birth_year_estimates_from_supabase()
+- **Migration script**: scripts/migrate_complete.py — comprehensive 8-table migrator
+- **Code cleanup**: removed duplicate imports in engagement_routes.py
+- **580+ new test lines**: 8 new tests in test_growth_loop.py, 26 new tests in test_postgres_reads.py
+
+### Full Supabase Migration Executed
+- 3,483 rows across 8 tables migrated successfully
+- Tables: date_labels (271), photo_locations (268), person_comments (7), discovery_log (1,248), audit_log (989), comparison_results (430), birth_year_estimates (75), corrections_log (195)
+
+### Updated Test Results
+- App: 3,708 passed, 4 skipped, 0 failures
+- ML: 566 passed
+- Total: 4,274 tests
+
+### DATA_SOURCE Decision
+- NOT flipped to postgres on Railway — core tables (identities, photos) still don't exist
+- Read paths have graceful JSON fallback
+- All supplementary data now in both JSON and Postgres (dual source)
+- BACKLOG: DATA-007 remains for full flip
