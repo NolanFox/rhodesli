@@ -13,13 +13,13 @@ Context: docs/session_context/session-92-context.md
 - [x] Act 0: Orient — verify state, set session, create log
 - [x] Act 1: Deploy verification + Railway env vars (browser)
 - [x] Act 2: Supabase tables verified (DATA_SOURCE flip skipped — tables missing)
-- [ ] Act 3 (Track C): Test hardening + CI/CD (worktree)
-- [ ] Act 4 (Track D): UX bug fixes (worktree)
-- [ ] Act 5 (Track E): Growth loop — email + share + timeline (worktree)
-- [ ] Act 6 (Track F): Gemini + ML fixes (worktree)
-- [ ] Act 7 (Track G): Product features (worktree)
-- [ ] Act 8 (Track H): Architecture + debt (worktree)
-- [ ] Act 9: Merge + verify + assessment
+- [x] Act 3 (Track C): Test hardening + CI/CD (worktree)
+- [x] Act 4 (Track D): UX bug fixes (worktree)
+- [x] Act 5 (Track E): Growth loop — email + share + timeline (worktree)
+- [x] Act 6 (Track F): Gemini + ML fixes (worktree)
+- [x] Act 7 (Track G): Product features (worktree)
+- [x] Act 8 (Track H): Architecture + debt (worktree)
+- [x] Act 9: Merge + verify + assessment
 
 ## Act 0: Orient
 - Prompt, context, lessons read
@@ -131,7 +131,29 @@ Full Postgres migration requires creating + backfilling identities/photos tables
 - RESEND_API_KEY: SET (re_bZujfibU...)
 - ACTION: Nolan needs to re-add SENTRY_DSN + POSTHOG_API_KEY to Railway
 
+## Act 3-8: Parallel Worktree Tracks
+
+All 6 tracks executed in parallel worktrees and merged to main.
+
+| Track | Branch | Commits | Key Results |
+|-------|--------|---------|-------------|
+| H: Arch | session-92/arch | 2163338 | pgvector eval, tech debt audit, frontend assessment (3 docs) |
+| C: Tests | session-92/tests | e042696 | xfail reasons updated, 13 slow modules isolated, CI/CD workflow, ~47-55s |
+| D: UX | session-92/ux-fixes | (merged) | 10 UX bugs fixed (D1-D10), 10 new tests |
+| E: Growth | session-92/growth | 66e12ef | Email via Resend, share verified, timeline life events, 22 tests |
+| F: Gemini | session-92/gemini-ml | 5c7b335 | Leon's fix (AD-210), API logging, multi-pass + active learning, 25 tests |
+| G: Products | session-92/products | b163872 | 5 PRDs/docs, compare v2 stub, NL query parser, 27 tests |
+
+Merge order: H → C → D → E → F → G (all clean, no conflicts)
+
+## Act 9: Merge + Verify
+
+### Post-merge test results:
+- App tests: 3606 passed, 4 skipped, 8 xfailed
+- ML tests: 566 passed
+- Total: 4172 tests passing
+
 ## Verification Gate
-- [ ] All phases re-checked against original prompt
-- [ ] Feature Reality Contract passed
-- [ ] Assessment written
+- [x] All phases re-checked against original prompt
+- [x] Feature Reality Contract passed
+- [x] Assessment written

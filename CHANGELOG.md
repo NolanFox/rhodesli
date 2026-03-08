@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.95.0] — 2026-03-08 (Session 92: Ship Everything — Close All Gaps)
+
+### Added
+- **Observability** — Sentry error tracking (StarletteIntegration, LoggingIntegration, traces_sample_rate=0.1) + PostHog server-side analytics (4 events: photo_uploaded, face_compare_requested, help_identify_submitted, admin_identity_confirmed). All gated on env vars.
+- **Email notifications** — Resend integration for notification emails. Inline CSS templates, fire-and-forget background sending. Gated on RESEND_API_KEY.
+- **Leon's Restaurant fix** — Business name to GEDCOM owner lookup (AD-210). `find_business_owner_context()` searches GEDCOM for name matches in visible text.
+- **Full API call logging** — prompt_text, full_response, gedcom_context columns for gemini_api_calls table.
+- **Multi-pass Gemini foundation** — `rhodesli_ml/multi_pass.py` identifies low-confidence photos for re-analysis.
+- **Active learning foundation** — `rhodesli_ml/active_learning.py` finds uncertain face pairs near decision boundary.
+- **NL query parser** — `rhodesli_ml/nl_query.py` with rule-based intent parsing (6 intent types).
+- **Compare v2 stub** — `app/compare_v2_routes.py` with 501 not-implemented endpoints.
+- **CI/CD foundation** — `.github/workflows/test.yml` runs on PR/push to main.
+- **Timeline life events** — Life events from Supabase now appear on /timeline alongside photo cards.
+- **3 PRDs** — Face Compare Tier 2 (031), NL Archive Query (032), Date Estimator Standalone (033).
+- **Architecture docs** — pgvector evaluation (DEFERRED), ML service extraction, tech debt audit, frontend framework assessment.
+
+### Fixed
+- **Bell icon missing** — Notification bell was in `_public_nav_links` but not `sidebar()`. Now in both.
+- **10 UX bugs** — Source photo link on /identify, compare/estimate auto-scroll, birth year race condition, CTA standardization, identified badge tooltip, collection dropdown focus, double admin bar on /events.
+- **Test flakiness** — xfail reasons updated to accurate root cause (shared app state under xdist), 13 slow modules isolated.
+
+### Technical
+- 6 parallel worktree tracks, all merged cleanly (H→C→D→E→F→G)
+- Tests: 3,606 app + 566 ML = 4,172 total (all pass)
+- Browser verified 9/9 pages PASS in production
+
 ## [v0.94.1] — 2026-03-07 (Session 91b: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix)
 
 ### Added
