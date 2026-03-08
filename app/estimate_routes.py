@@ -543,6 +543,10 @@ def _call_gemini_date_estimate(
 
                 parsed = _json.loads(text)
 
+                # Gemini sometimes wraps response in an array — unwrap it
+                if isinstance(parsed, list) and len(parsed) > 0:
+                    parsed = parsed[0]
+
                 # Extract date_estimation (may be nested or top-level)
                 date_est = parsed.get("date_estimation", parsed)
 

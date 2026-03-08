@@ -358,6 +358,15 @@ class TestGeminiRetryLogic:
         source = inspect.getsource(_call_gemini_date_estimate)
         assert "180_000" in source
 
+    def test_array_response_unwrapped(self):
+        """Gemini sometimes wraps JSON in an array — code must unwrap it."""
+        import inspect
+        from app.estimate_routes import _call_gemini_date_estimate
+
+        source = inspect.getsource(_call_gemini_date_estimate)
+        assert "isinstance(parsed, list)" in source
+        assert "parsed[0]" in source
+
 
 class TestModelBadgeTimestamp:
     """Tests for analysis timestamp in model badge."""
