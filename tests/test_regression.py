@@ -190,10 +190,6 @@ class TestMlsDiscriminatesFaces:
     between similar and dissimilar faces.
     """
 
-    @pytest.mark.xfail(
-        reason="Slow: MLS computation over all face pairs exceeds 60s timeout",
-        strict=False,
-    )
     def test_mls_score_range_exceeds_threshold(self, face_data):
         """MLS scores span at least 2.0 points (enough for clustering)."""
         import sys
@@ -206,10 +202,10 @@ class TestMlsDiscriminatesFaces:
         if len(face_data) < 2:
             pytest.skip("Need at least 2 faces for MLS comparison")
 
-        face_ids = list(face_data.keys())
+        face_ids = list(face_data.keys())[:20]  # Limit for performance (O(n^2) pairs)
         scores = []
 
-        # Compute MLS for all pairs
+        # Compute MLS for sampled pairs
         for i in range(len(face_ids)):
             for j in range(i + 1, len(face_ids)):
                 f1 = face_data[face_ids[i]]
