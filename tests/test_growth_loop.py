@@ -193,6 +193,178 @@ class TestEmailNotifications:
             _fire_notification_email("user@example.com", "Title", "Body")
             # No assertion needed — just verifying no exception
 
+    def test_send_email_handles_network_exception(self):
+        """send_notification_email returns False on network errors."""
+        from app.notification_routes import send_notification_email
+
+        import httpx
+
+        mock_client = AsyncMock()
+        mock_client.post = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.notification_routes.RESEND_API_KEY", "re_test_key"))
+            stack.enter_context(patch("app.notification_routes.httpx.AsyncClient", return_value=mock_client))
+
+            result = asyncio.run(send_notification_email("user@example.com", "Subject", "<p>Body</p>"))
+            assert result is False
+
+    def test_create_discovery_notification(self):
+        """create_discovery_notification creates correct notification type."""
+        from app.notification_routes import create_discovery_notification
+
+        mock_sb = MagicMock()
+        created = {"id": "n1", "notification_type": "discovery", "title": "Potential Match Found"}
+        mock_sb.table.return_value.insert.return_value.execute.return_value.data = [created]
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.notification_routes.get_supabase_client", return_value=mock_sb))
+            mock_fire = stack.enter_context(patch("app.notification_routes._fire_notification_email"))
+
+            result = create_discovery_notification(
+                identity_id="person-123",
+                identity_name="Leon Capeluto",
+                match_name="Big Leon",
+                confidence_label="Strong",
+                user_id="user-1",
+                user_email="user@example.com",
+            )
+
+            assert result is not None
+            insert_call = mock_sb.table.return_value.insert.call_args
+            row = insert_call[0][0]
+            assert row["notification_type"] == "discovery"
+            assert "Potential Match" in row["title"]
+            assert "Big Leon" in row["title"]
+            assert "Leon Capeluto" in row["body"]
+            assert "Strong match" in row["body"]
+            mock_fire.assert_called_once()
+
+    def test_create_discovery_notification_without_match_name(self):
+        """create_discovery_notification works without match_name."""
+        from app.notification_routes import create_discovery_notification
+
+        mock_sb = MagicMock()
+        created = {"id": "n1", "notification_type": "discovery"}
+        mock_sb.table.return_value.insert.return_value.execute.return_value.data = [created]
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.notification_routes.get_supabase_client", return_value=mock_sb))
+            stack.enter_context(patch("app.notification_routes._fire_notification_email"))
+
+            result = create_discovery_notification(
+                identity_id="person-123",
+                identity_name="Leon Capeluto",
+            )
+            assert result is not None
+            insert_call = mock_sb.table.return_value.insert.call_args
+            row = insert_call[0][0]
+            assert "Potential Match Found" in row["title"]
+
+    def test_create_annotation_approved_notification(self):
+        """create_annotation_approved_notification creates correct notification."""
+        from app.notification_routes import create_annotation_approved_notification
+
+        mock_sb = MagicMock()
+        created = {"id": "n1", "notification_type": "annotation_approved"}
+        mock_sb.table.return_value.insert.return_value.execute.return_value.data = [created]
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.notification_routes.get_supabase_client", return_value=mock_sb))
+            mock_fire = stack.enter_context(patch("app.notification_routes._fire_notification_email"))
+
+            result = create_annotation_approved_notification(
+                identity_id="person-456",
+                identity_name="Betty Capeluto",
+                annotator_name="Claude Benatar",
+                user_id="user-2",
+                user_email="claude@example.com",
+            )
+
+            assert result is not None
+            insert_call = mock_sb.table.return_value.insert.call_args
+            row = insert_call[0][0]
+            assert row["notification_type"] == "annotation_approved"
+            assert "Betty Capeluto" in row["title"]
+            assert "Claude Benatar" in row["body"]
+            mock_fire.assert_called_once()
+
+    def test_create_annotation_approved_notification_no_email(self):
+        """create_annotation_approved_notification skips email when not provided."""
+        from app.notification_routes import create_annotation_approved_notification
+
+        mock_sb = MagicMock()
+        created = {"id": "n1", "notification_type": "annotation_approved"}
+        mock_sb.table.return_value.insert.return_value.execute.return_value.data = [created]
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.notification_routes.get_supabase_client", return_value=mock_sb))
+            mock_fire = stack.enter_context(patch("app.notification_routes._fire_notification_email"))
+
+            create_annotation_approved_notification(
+                identity_id="person-456",
+                identity_name="Betty Capeluto",
+            )
+
+            mock_fire.assert_not_called()
+
+    def test_discovery_icon_exists(self):
+        """Discovery notification type has a specific icon."""
+        from app.notification_routes import _notification_icon
+
+        icon = _notification_icon("discovery")
+        assert "amber" in icon
+        assert "svg" in icon
+
+    def test_confirm_notification_chain_passes_user_email(self):
+        """The full confirm chain passes user_email through to create_identity_confirmed_notification."""
+        import threading
+
+        from app.main import save_registry
+
+        mock_registry = MagicMock()
+        mock_registry._identities = {}
+        mock_registry.save = MagicMock()
+        mock_registry.get_identity.return_value = {"anchor_ids": ["f1"], "candidate_ids": []}
+
+        mock_photo_reg = MagicMock()
+        mock_photo_reg.face_to_photo = {"f1": "photo-1"}
+
+        with ExitStack() as stack:
+            stack.enter_context(patch("app.main.DATA_SOURCE", "json"))
+            stack.enter_context(
+                patch("app.supabase_data.sync_identity_overrides", side_effect=Exception("no supabase"))
+            )
+            mock_create = stack.enter_context(
+                patch("app.notification_routes.create_identity_confirmed_notification", return_value=None)
+            )
+            stack.enter_context(patch("app.main.load_photo_registry", return_value=mock_photo_reg))
+
+            save_registry(
+                mock_registry,
+                confirmed_identity_info={
+                    "identity_id": "id-123",
+                    "identity_name": "Leon Capeluto",
+                    "user_id": "admin-id",
+                    "user_email": "admin@example.com",
+                },
+            )
+
+            # Wait for background thread
+            for t in threading.enumerate():
+                if t.name != "MainThread" and t.daemon:
+                    t.join(timeout=2.0)
+
+            mock_create.assert_called_once_with(
+                identity_id="id-123",
+                identity_name="Leon Capeluto",
+                photo_ids=["photo-1"],
+                user_id="admin-id",
+                user_email="admin@example.com",
+            )
+
 
 # ---------------------------------------------------------------------------
 # E2: Share Flow OG Meta Tags

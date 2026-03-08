@@ -65,6 +65,7 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
                 "identity_id": identity_id,
                 "identity_name": identity.get("name", "Unknown"),
                 "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
             },
         )
         _main_mod.posthog_capture(
@@ -937,6 +938,7 @@ def post(identity_id: str, action: str, photo_id: str, sess=None):
                 "identity_id": identity_id,
                 "identity_name": identity.get("name", "Unknown"),
                 "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
             }
         _main_mod.save_registry(registry, confirmed_identity_info=_notify)
     except (ValueError, Exception) as e:
@@ -1009,7 +1011,12 @@ def post(face_id: str, name: str, seq: str = "", sess=None):
         try:
             registry.confirm_identity(identity_id, user_source="face_tag")
             _user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
-            _notify = {"identity_id": identity_id, "identity_name": name, "user_id": _user.id if _user else None}
+            _notify = {
+                "identity_id": identity_id,
+                "identity_name": name,
+                "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
+            }
         except Exception:
             pass  # Already confirmed, or other benign error
     _main_mod.save_registry(registry, confirmed_identity_info=_notify)
@@ -2962,6 +2969,7 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
                 "identity_id": identity_id,
                 "identity_name": _identity.get("name", "Unknown"),
                 "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
             },
         )
     except ValueError as e:
@@ -3188,6 +3196,7 @@ def post(identity_id: str, name: str = "", sess=None):
                 "identity_id": identity_id,
                 "identity_name": name,
                 "user_id": _user.id if _user else None,
+                "user_email": _user.email if _user else None,
             },
         )
     except (KeyError, ValueError) as e:

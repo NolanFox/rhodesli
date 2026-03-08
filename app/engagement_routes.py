@@ -10,12 +10,10 @@ import logging
 import os
 import uuid
 from datetime import datetime, timezone
-from pathlib import Path
 
 from fasthtml.common import *
 from starlette.responses import RedirectResponse, Response
 
-from core.registry import IdentityState
 from core.ui_safety import ensure_utf8_display
 
 from app.main import rt
@@ -211,8 +209,6 @@ def post(source_id: str, proposal_id: str, sess=None):
     )
 
 
-
-
 # =============================================================================
 # Auth routes moved to auth_routes.py
 
@@ -226,12 +222,29 @@ _annotations_cache = None
 def _load_annotations() -> dict:
     """Load annotations from data file.
 
+    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+    When DATA_SOURCE=json (default), loads from JSON file.
+
     Returns default empty structure if file is missing or corrupted,
     so the server never crashes on bad annotation data.
     """
     global _annotations_cache
     if _annotations_cache is not None:
         return _annotations_cache
+
+    if _main_mod.DATA_SOURCE == "postgres":
+        try:
+            from app.supabase_data import load_annotations_from_supabase
+
+            result = load_annotations_from_supabase()
+            if result is not None:
+                logging.info(f"Loaded {len(result.get('annotations', {}))} annotations from Postgres")
+                _annotations_cache = result
+                return _annotations_cache
+            logging.warning("Postgres annotations load returned None, falling back to JSON")
+        except Exception as e:
+            logging.warning(f"Postgres annotations load failed, falling back to JSON: {e}")
+
     ann_path = _main_mod.data_path / "annotations.json"
     default = {"schema_version": 1, "annotations": {}}
     if ann_path.exists():
@@ -284,8 +297,6 @@ def _create_merge_suggestion(
     target_id: str, source_id: str, submitted_by: str, confidence: str = "likely", reason: str = ""
 ) -> str:
     """Create a merge_suggestion annotation. Returns the annotation ID."""
-    import uuid
-    from datetime import datetime, timezone
 
     ann_id = str(uuid.uuid4())
     annotations = _main_mod._load_annotations()
@@ -740,8 +751,6 @@ def post(
 
     user = _main_mod.get_current_user(sess) if sess is not None else None
 
-    import uuid
-    from datetime import datetime, timezone
 
     ann_id = str(uuid.uuid4())
 
@@ -837,8 +846,6 @@ def _submit_pending_annotation(sess, user) -> bool:
     if not pending:
         return False
 
-    import uuid
-    from datetime import datetime, timezone
 
     ann_id = str(uuid.uuid4())
 
@@ -874,8 +881,6 @@ def post(
             headers={"HX-Reswap": "beforeend", "HX-Retarget": "#toast-container"},
         )
 
-    import uuid
-    from datetime import datetime, timezone
 
     ann_id = str(uuid.uuid4())
 
@@ -1129,4 +1134,3 @@ def get(sess=None):
         Div(*rows, cls="space-y-0"),
         cls="max-w-3xl mx-auto p-6",
     )
-

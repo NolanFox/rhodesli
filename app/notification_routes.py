@@ -326,6 +326,71 @@ def create_identity_confirmed_notification(
     )
 
 
+def create_discovery_notification(
+    identity_id: str,
+    identity_name: str,
+    match_name: str | None = None,
+    confidence_label: str | None = None,
+    user_id: str | None = None,
+    user_email: str | None = None,
+) -> dict | None:
+    """Create a notification when a potential match is discovered.
+
+    Args:
+        identity_id: UUID of the identity with a potential match
+        identity_name: Display name of the identity
+        match_name: Name of the potential match (if available)
+        confidence_label: Confidence tier label (e.g., "Strong", "Possible")
+        user_id: Supabase auth user ID to notify.
+        user_email: Email for Resend delivery.
+
+    Returns:
+        The created notification row, or None if Supabase is unavailable.
+    """
+    target_user_id = user_id or "00000000-0000-0000-0000-000000000000"
+    match_detail = f' for "{match_name}"' if match_name else ""
+    conf_detail = f" ({confidence_label} match)" if confidence_label else ""
+    return _create_notification(
+        user_id=target_user_id,
+        notification_type="discovery",
+        title=f"Potential Match Found{match_detail}",
+        body=f'A potential match was found for "{identity_name}"{conf_detail}. Review it in the archive.',
+        identity_id=identity_id,
+        email=user_email,
+    )
+
+
+def create_annotation_approved_notification(
+    identity_id: str,
+    identity_name: str,
+    annotator_name: str | None = None,
+    user_id: str | None = None,
+    user_email: str | None = None,
+) -> dict | None:
+    """Create a notification when an annotation/suggestion is approved.
+
+    Args:
+        identity_id: UUID of the identity that was annotated
+        identity_name: Display name of the identity
+        annotator_name: Name of the person who made the annotation
+        user_id: Supabase auth user ID to notify (the annotator).
+        user_email: Email for Resend delivery.
+
+    Returns:
+        The created notification row, or None if Supabase is unavailable.
+    """
+    target_user_id = user_id or "00000000-0000-0000-0000-000000000000"
+    by_detail = f" (suggested by {annotator_name})" if annotator_name else ""
+    return _create_notification(
+        user_id=target_user_id,
+        notification_type="annotation_approved",
+        title=f"Your suggestion was approved: {identity_name}",
+        body=f'The identification of "{identity_name}"{by_detail} has been approved by an admin.',
+        identity_id=identity_id,
+        email=user_email,
+    )
+
+
 # =============================================================================
 # NOTIFICATION TYPE ICONS (SVG)
 # =============================================================================
@@ -336,6 +401,12 @@ _ICON_MAP = {
         'viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">'
         '<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 '
         '11-18 0 9 9 0 0118 0z"/></svg>'
+    ),
+    "discovery": (
+        '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-400" fill="none" '
+        'viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">'
+        '<path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 '
+        '11-14 0 7 7 0 0114 0z"/></svg>'
     ),
     "annotation_approved": (
         '<svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-blue-400" fill="none" '

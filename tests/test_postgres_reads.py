@@ -560,3 +560,412 @@ class TestSaveRouting:
         path = tmp_path / "photo_index.json"
         registry.save(path)
         assert path.exists()
+
+
+# =========================================================================
+# DATE LABELS — POSTGRES READ PATH
+# =========================================================================
+
+
+class TestDateLabelsPostgresRead:
+    """Verify _load_date_labels() routes correctly based on DATA_SOURCE."""
+
+    def test_json_mode_uses_json_file(self, tmp_path):
+        """When DATA_SOURCE=json, date labels load from JSON."""
+        import app.main as main_mod
+
+        # Reset cache
+        main_mod._date_labels_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "json"),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = main_mod._load_date_labels()
+            assert isinstance(result, dict)
+            assert result == {}  # No JSON file exists
+
+    def test_postgres_mode_calls_supabase(self):
+        """When DATA_SOURCE=postgres, date labels load from Supabase."""
+        import app.main as main_mod
+
+        main_mod._date_labels_cache = None
+        mock_data = {
+            "photo1": {"best_year_estimate": 1950, "confidence": "high"},
+            "photo2": {"best_year_estimate": 1965, "confidence": "medium"},
+        }
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_date_labels_from_supabase", return_value=mock_data),
+        ):
+            result = main_mod._load_date_labels()
+            assert result == mock_data
+            assert result["photo1"]["best_year_estimate"] == 1950
+
+        # Reset cache
+        main_mod._date_labels_cache = None
+
+    def test_postgres_fallback_to_json_on_none(self, tmp_path):
+        """When Postgres returns None, falls back to JSON."""
+        import app.main as main_mod
+
+        main_mod._date_labels_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_date_labels_from_supabase", return_value=None),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = main_mod._load_date_labels()
+            assert isinstance(result, dict)
+            assert result == {}
+
+        main_mod._date_labels_cache = None
+
+    def test_postgres_fallback_to_json_on_exception(self, tmp_path):
+        """When Postgres raises, falls back to JSON."""
+        import app.main as main_mod
+
+        main_mod._date_labels_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch(
+                "app.supabase_data.load_date_labels_from_supabase",
+                side_effect=Exception("connection failed"),
+            ),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = main_mod._load_date_labels()
+            assert isinstance(result, dict)
+            assert result == {}
+
+        main_mod._date_labels_cache = None
+
+
+# =========================================================================
+# PHOTO LOCATIONS — POSTGRES READ PATH
+# =========================================================================
+
+
+class TestPhotoLocationsPostgresRead:
+    """Verify _load_photo_locations() routes correctly based on DATA_SOURCE."""
+
+    def test_json_mode_uses_json_file(self, tmp_path):
+        """When DATA_SOURCE=json, photo locations load from JSON."""
+        import app.main as main_mod
+        import app.page_routes as page_routes_mod
+
+        page_routes_mod._photo_locations_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "json"),
+            patch.object(main_mod, "DATA_DIR", str(tmp_path)),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = page_routes_mod._load_photo_locations()
+            assert isinstance(result, dict)
+            assert result == {}
+
+        page_routes_mod._photo_locations_cache = None
+
+    def test_postgres_mode_calls_supabase(self):
+        """When DATA_SOURCE=postgres, photo locations load from Supabase."""
+        import app.main as main_mod
+        import app.page_routes as page_routes_mod
+
+        page_routes_mod._photo_locations_cache = None
+        mock_data = {
+            "photo1": {"location_name": "Rhodes, Greece", "lat": 36.4, "lng": 28.2},
+            "photo2": {"location_name": "New York, NY", "lat": 40.7, "lng": -74.0},
+        }
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_photo_locations_from_supabase", return_value=mock_data),
+        ):
+            result = page_routes_mod._load_photo_locations()
+            assert result == mock_data
+            assert result["photo1"]["location_name"] == "Rhodes, Greece"
+
+        page_routes_mod._photo_locations_cache = None
+
+    def test_postgres_fallback_to_json_on_none(self, tmp_path):
+        """When Postgres returns None, falls back to JSON."""
+        import app.main as main_mod
+        import app.page_routes as page_routes_mod
+
+        page_routes_mod._photo_locations_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_photo_locations_from_supabase", return_value=None),
+            patch.object(main_mod, "DATA_DIR", str(tmp_path)),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = page_routes_mod._load_photo_locations()
+            assert isinstance(result, dict)
+            assert result == {}
+
+        page_routes_mod._photo_locations_cache = None
+
+
+# =========================================================================
+# ANNOTATIONS — POSTGRES READ PATH
+# =========================================================================
+
+
+class TestAnnotationsPostgresRead:
+    """Verify _load_annotations() routes correctly based on DATA_SOURCE."""
+
+    def test_json_mode_uses_json_file(self, tmp_path):
+        """When DATA_SOURCE=json, annotations load from JSON."""
+        import app.engagement_routes as eng_mod
+        import app.main as main_mod
+
+        eng_mod._annotations_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "json"),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = eng_mod._load_annotations()
+            assert isinstance(result, dict)
+            assert "annotations" in result
+            assert result["annotations"] == {}
+
+        eng_mod._annotations_cache = None
+
+    def test_postgres_mode_calls_supabase(self):
+        """When DATA_SOURCE=postgres, annotations load from Supabase."""
+        import app.engagement_routes as eng_mod
+        import app.main as main_mod
+
+        eng_mod._annotations_cache = None
+        mock_data = {
+            "schema_version": 1,
+            "annotations": {
+                "ann-1": {"type": "name_suggestion", "value": "Test Person"},
+                "ann-2": {"type": "bio", "value": "A test bio"},
+            },
+        }
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_annotations_from_supabase", return_value=mock_data),
+        ):
+            result = eng_mod._load_annotations()
+            assert result == mock_data
+            assert len(result["annotations"]) == 2
+
+        eng_mod._annotations_cache = None
+
+    def test_postgres_fallback_to_json_on_none(self, tmp_path):
+        """When Postgres returns None, falls back to JSON."""
+        import app.engagement_routes as eng_mod
+        import app.main as main_mod
+
+        eng_mod._annotations_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_annotations_from_supabase", return_value=None),
+            patch.object(main_mod, "data_path", tmp_path),
+        ):
+            result = eng_mod._load_annotations()
+            assert isinstance(result, dict)
+            assert "annotations" in result
+
+        eng_mod._annotations_cache = None
+
+
+# =========================================================================
+# BIRTH YEAR ESTIMATES — POSTGRES READ PATH
+# =========================================================================
+
+
+class TestBirthYearEstimatesPostgresRead:
+    """Verify _load_birth_year_estimates() routes correctly based on DATA_SOURCE."""
+
+    def test_json_mode_does_not_use_postgres(self):
+        """When DATA_SOURCE=json, birth year estimates do NOT call Supabase."""
+        import app.main as main_mod
+
+        main_mod._birth_year_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "json"),
+            patch("app.supabase_data.load_birth_year_estimates_from_supabase") as mock_pg,
+        ):
+            result = main_mod._load_birth_year_estimates()
+            assert isinstance(result, dict)
+            mock_pg.assert_not_called()
+
+        main_mod._birth_year_cache = None
+
+    def test_postgres_mode_calls_supabase(self):
+        """When DATA_SOURCE=postgres, birth year estimates load from Supabase."""
+        import app.main as main_mod
+
+        main_mod._birth_year_cache = None
+        mock_data = {
+            "id-1": {"birth_year_estimate": 1920, "birth_year_confidence": "high"},
+            "id-2": {"birth_year_estimate": 1945, "birth_year_confidence": "medium"},
+        }
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_birth_year_estimates_from_supabase", return_value=mock_data),
+        ):
+            result = main_mod._load_birth_year_estimates()
+            assert result == mock_data
+            assert result["id-1"]["birth_year_estimate"] == 1920
+
+        main_mod._birth_year_cache = None
+
+    def test_postgres_fallback_to_json_on_none(self):
+        """When Postgres returns None, falls back to JSON (does not crash)."""
+        import app.main as main_mod
+
+        main_mod._birth_year_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch("app.supabase_data.load_birth_year_estimates_from_supabase", return_value=None),
+        ):
+            result = main_mod._load_birth_year_estimates()
+            assert isinstance(result, dict)
+            # Falls back to JSON — may have real data from rhodesli_ml/data/
+
+        main_mod._birth_year_cache = None
+
+    def test_postgres_fallback_to_json_on_exception(self):
+        """When Postgres raises, falls back to JSON (does not crash)."""
+        import app.main as main_mod
+
+        main_mod._birth_year_cache = None
+
+        with (
+            patch.object(main_mod, "DATA_SOURCE", "postgres"),
+            patch(
+                "app.supabase_data.load_birth_year_estimates_from_supabase",
+                side_effect=Exception("timeout"),
+            ),
+        ):
+            result = main_mod._load_birth_year_estimates()
+            assert isinstance(result, dict)
+            # Falls back to JSON — may have real data from rhodesli_ml/data/
+
+        main_mod._birth_year_cache = None
+
+
+# =========================================================================
+# SUPABASE LOADER FUNCTIONS (unit tests)
+# =========================================================================
+
+
+class TestSupabaseAnnotationsLoader:
+    """Test load_annotations_from_supabase()."""
+
+    def test_returns_annotations_dict(self):
+        from app.supabase_data import load_annotations_from_supabase
+
+        mock_client = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = [
+            {"annotation_id": "ann-1", "data": {"type": "name_suggestion", "value": "Test"}},
+            {"annotation_id": "ann-2", "data": {"type": "bio", "value": "A bio"}},
+        ]
+        mock_empty = MagicMock()
+        mock_empty.data = []
+        mock_client.table.return_value.select.return_value.range.return_value.execute.side_effect = [
+            mock_result,
+            mock_empty,
+        ]
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+            result = load_annotations_from_supabase()
+
+        assert result is not None
+        assert result["schema_version"] == 1
+        assert len(result["annotations"]) == 2
+        assert result["annotations"]["ann-1"]["type"] == "name_suggestion"
+
+    def test_returns_none_when_unavailable(self):
+        from app.supabase_data import load_annotations_from_supabase
+
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
+            result = load_annotations_from_supabase()
+        assert result is None
+
+    def test_returns_empty_on_no_data(self):
+        from app.supabase_data import load_annotations_from_supabase
+
+        mock_client = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = []
+        mock_client.table.return_value.select.return_value.range.return_value.execute.return_value = mock_result
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+            result = load_annotations_from_supabase()
+
+        assert result is not None
+        assert result["annotations"] == {}
+
+
+class TestSupabaseBirthYearLoader:
+    """Test load_birth_year_estimates_from_supabase()."""
+
+    def test_returns_estimates_dict(self):
+        from app.supabase_data import load_birth_year_estimates_from_supabase
+
+        mock_client = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = [
+            {"identity_id": "id-1", "data": {"birth_year_estimate": 1920}},
+            {"identity_id": "id-2", "data": {"birth_year_estimate": 1945}},
+        ]
+        mock_empty = MagicMock()
+        mock_empty.data = []
+        mock_client.table.return_value.select.return_value.range.return_value.execute.side_effect = [
+            mock_result,
+            mock_empty,
+        ]
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+            result = load_birth_year_estimates_from_supabase()
+
+        assert result is not None
+        assert len(result) == 2
+        assert result["id-1"]["birth_year_estimate"] == 1920
+
+    def test_returns_none_when_unavailable(self):
+        from app.supabase_data import load_birth_year_estimates_from_supabase
+
+        with patch("app.supabase_data.get_supabase_client", return_value=None):
+            result = load_birth_year_estimates_from_supabase()
+        assert result is None
+
+    def test_skips_rows_without_data(self):
+        from app.supabase_data import load_birth_year_estimates_from_supabase
+
+        mock_client = MagicMock()
+        mock_result = MagicMock()
+        mock_result.data = [
+            {"identity_id": "id-1", "data": {"birth_year_estimate": 1920}},
+            {"identity_id": "id-2", "data": None},
+            {"identity_id": None, "data": {"birth_year_estimate": 1950}},
+        ]
+        mock_empty = MagicMock()
+        mock_empty.data = []
+        mock_client.table.return_value.select.return_value.range.return_value.execute.side_effect = [
+            mock_result,
+            mock_empty,
+        ]
+
+        with patch("app.supabase_data.get_supabase_client", return_value=mock_client):
+            result = load_birth_year_estimates_from_supabase()
+
+        assert len(result) == 1
+        assert "id-1" in result

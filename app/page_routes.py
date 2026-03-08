@@ -4124,6 +4124,7 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
                         "identity_id": person_id,
                         "identity_name": name.strip(),
                         "user_id": user.id if user else None,
+                        "user_email": user.email if user else None,
                     }
                 except ValueError:
                     pass  # Already confirmed or invalid state transition
@@ -6505,12 +6506,28 @@ _photo_locations_cache = None
 def _load_photo_locations() -> dict:
     """Load geocoded photo locations (photo_id -> location info).
 
+    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+    When DATA_SOURCE=json (default), loads from JSON file.
+
     Returns dict keyed by photo_id with lat, lng, location_name, etc.
     Dual-keys inbox IDs to SHA256 IDs (same pattern as _load_date_labels).
     """
     global _photo_locations_cache
     if _photo_locations_cache is not None:
         return _photo_locations_cache
+
+    if _main_mod.DATA_SOURCE == "postgres":
+        try:
+            from app.supabase_data import load_photo_locations_from_supabase
+
+            result = load_photo_locations_from_supabase()
+            if result is not None:
+                logger.info(f"Loaded {len(result)} photo locations from Postgres")
+                _photo_locations_cache = result
+                return _photo_locations_cache
+            logger.warning("Postgres photo locations load returned None, falling back to JSON")
+        except Exception as e:
+            logger.warning(f"Postgres photo locations load failed, falling back to JSON: {e}")
 
     _photo_locations_cache = {}
     locations_path = Path(_main_mod.DATA_DIR) / "photo_locations.json"

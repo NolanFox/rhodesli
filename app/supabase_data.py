@@ -1073,6 +1073,85 @@ def sync_person_comment(identity_id: str, comment: str, author: str = "admin") -
         logger.warning(f"Supabase person comment sync failed: {e}")
 
 
+def load_annotations_from_supabase() -> dict | None:
+    """Load all annotations from Supabase.
+
+    Returns dict with schema_version and annotations dict keyed by annotation_id,
+    matching the JSON file format. Returns None on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = (
+                sb.table("annotations").select("annotation_id, data").range(offset, offset + page_size - 1).execute()
+            )
+            if not result.data:
+                break
+            all_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        annotations = {}
+        for row in all_rows:
+            if row.get("data"):
+                annotations[row["annotation_id"]] = row["data"]
+
+        logger.info(f"Loaded {len(annotations)} annotations from Supabase")
+        return {"schema_version": 1, "annotations": annotations}
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase annotations load failed: {e}")
+        return None
+
+
+def load_birth_year_estimates_from_supabase() -> dict | None:
+    """Load all birth year estimates from Supabase.
+
+    Returns dict keyed by identity_id, matching the in-memory format
+    used by _load_birth_year_estimates(). Returns None on failure.
+    """
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = (
+                sb.table("birth_year_estimates")
+                .select("identity_id, data")
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+            if not result.data:
+                break
+            all_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        estimates = {}
+        for row in all_rows:
+            iid = row.get("identity_id")
+            data = row.get("data")
+            if iid and data:
+                estimates[iid] = data
+
+        logger.info(f"Loaded {len(estimates)} birth year estimates from Supabase")
+        return estimates
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase birth year estimates load failed: {e}")
+        return None
+
+
 def load_person_comments_from_supabase(identity_id: str = None) -> list | None:
     """Load person comments from Supabase. Returns list or None."""
     sb = get_supabase_client()

@@ -1,89 +1,46 @@
 # Session 92 Act 3 — Complete Gap Closure (Continuation)
 
-## CRITICAL STATE
-- Branch: main
-- Previous context ran out — this is a continuation
-- Railway Hobby Plan active (7-day log retention)
-- Supabase tables: ALL 15+ created successfully (40 total tables)
-- Migration: psycopg2 script exists at scripts/migrate_data_psycopg2.py (untracked, 685 lines)
+## STATUS TRACKER (Updated live)
 
-## ROOT CAUSE: ASHEVILLE LOCATION BUG
-**Photo**: 3192877a90a174e9 (Leon's Restaurant)
-**Problem**: Page shows old vague Gemini text instead of "Asheville, North Carolina"
-**Root cause**: photo_locations.json entry stored under INBOX ID (`inbox_staged-20260210-182610_5_757557421.130308`)
-but page looks up by SHA256 ID (`3192877a90a174e9`). The dual-key fallback in `_load_photo_locations()`
-(page_routes.py:6522-6535) should map inbox→SHA256 via PhotoRegistry, but may be failing silently
-due to the broad `except Exception: pass` at line 6534.
+| # | Gap | Status | Notes |
+|---|-----|--------|-------|
+| 1 | Asheville location fix | DONE | Deployed, verified on production. Shows "Asheville, North Carolina, United States" |
+| 2 | Deploy to Railway | DONE | Commit 1565a62, deploy SUCCESS |
+| 3 | SENTRY_DSN | ALREADY SET | Was on Railway all along |
+| 4 | POSTHOG_API_KEY | ALREADY SET | Was on Railway all along |
+| 5 | RESEND_API_KEY | ALREADY SET | Was on Railway all along |
+| 6 | SUPABASE_DB_PASSWORD | DONE | Set on Railway (skipDeploys=true) |
+| 7 | Supabase tables | DONE | 15 new tables created (40 total) |
+| 8 | Full data migration | IN PROGRESS | Background agent writing migrate_complete.py |
+| 9 | DATA_SOURCE=postgres | IN PROGRESS | Background agent implementing read paths |
+| 10 | Email notifications | IN PROGRESS | Background agent implementing Resend API |
+| 11 | Railway log archival | TODO | Need to implement log forwarding to Supabase |
+| 12 | Test speed <30s | TODO | Currently ~43s |
+| 13 | e2e test_admin_review_queue_sorted | INVESTIGATED | Code has correct data attributes; test needs Playwright+server |
+| 14 | main.py <5K target | AT 9.3K | Would need further route extraction |
+| 15 | Two buttons clarified | DONE | Re-analyze=Gemini date/location, Re-run=face descriptions |
+| 16 | GEDCOM linking | BLOCKER | 0/897 identities linked — prevents Gemini from using family context |
 
-**Fix approach**:
-1. Make _load_photo_locations() more robust — log errors instead of swallowing
-2. Verify the dual-key mapping works for this specific photo
-3. Also: improve the GEDCOM context sent to Gemini for this photo
-4. Deploy and verify on production
+## COMMITS THIS ACT
+- 1565a62: fix(location): Asheville for Leon's Restaurant photo + dual-key robustness
 
-## FULL GAP LIST — ALL MUST BE CLOSED
+## BACKGROUND AGENTS
+- Agent a4f8a85: Comprehensive migration script (scripts/migrate_complete.py)
+- Agent afac588: DATA_SOURCE=postgres implementation
+- Agent a2ad0a4: Email notifications (Resend API)
 
-### 1. Asheville Location Fix (HIGHEST PRIORITY)
-- [ ] Fix photo_locations.json dual-key mapping
-- [ ] Improve GEDCOM context for Victor/Victoria/Leon (user wants full family info)
-- [ ] Test locally
-- [ ] Deploy to Railway
-- [ ] Browser verify on production
+## KEY FINDINGS
+1. SENTRY_DSN, POSTHOG_API_KEY, RESEND_API_KEY were already set on Railway
+2. Asheville fix root cause: photo ID key mismatch (inbox ID vs SHA256 ID)
+3. GEDCOM context architecture is ready but 0 identities are linked to GEDCOM records
+4. The Gemini prompt system works correctly but has no data to work with for this photo
 
-### 2. Full Data Migration to Supabase
-- [ ] Review scripts/migrate_data_psycopg2.py (background agent output)
-- [ ] Run migration with --dry-run first
-- [ ] Run real migration
-- [ ] Verify row counts match source data
-- [ ] All tables populated: date_labels, photo_locations, person_comments, discovery_log, audit_log, pending_uploads, comparison_results, birth_year_estimates, corrections_log
-
-### 3. DATA_SOURCE=postgres Implementation
-- [ ] All load_* functions need postgres read path
-- [ ] Test with DATA_SOURCE=postgres locally
-- [ ] Set on Railway and verify
-- [ ] Fallback to JSON if Postgres unavailable
-
-### 4. Email Notifications (OPS-001 + PRD-028)
-- [ ] Wire Resend with RESEND_API_KEY
-- [ ] Custom SMTP sender for branded emails
-- [ ] Notification triggers → actual email delivery
-- [ ] Confirm→notification E2E test
-
-### 5. Railway Log Archival
-- [ ] Railway Hobby plan has 7-day log retention
-- [ ] Design log archival to Supabase (railway_logs table already exists)
-- [ ] Implement log forwarding or periodic sync
-
-### 6. SENTRY_DSN + POSTHOG_API_KEY
-- [ ] Set environment variables on Railway
-- [ ] Verify Sentry captures errors
-- [ ] Verify PostHog tracks events
-
-### 7. Code Quality
-- [ ] Fix e2e test_admin_review_queue_sorted
-- [ ] Test speed optimization (43s → <30s target)
-
-### 8. Two Buttons Investigation (ANSWERED)
-- "Re-analyze Photo" = Gemini date/location/scene analysis (estimate_routes.py:1137)
-- "Re-run Analysis" = face coordinate bridging for descriptions (photo_routes.py:312)
-- Different purposes, both needed. Consider renaming for clarity.
-
-### 9. Gemini Prompting Strategy
-- User wants ALL GEDCOM info for Victor, Victoria, and direct relations
-- "Gemini should see Victor is with the wife of his brother Leon around 1938 or 1940
-  in front of a restaurant called Leon's when Leon and Victoria lived in Asheville
-  and Victor came to the US via SF twice"
-- Need to verify GEDCOM context builder includes full family info
-
-## KEY FILES
-- app/estimate_routes.py — Gemini reanalyze + location write
-- app/page_routes.py:6505 — _load_photo_locations() with dual-key
-- app/main.py:1860 — Location headline display
-- scripts/migrate_data_psycopg2.py — New psycopg2 migration (untracked)
-- scripts/create_supabase_tables.py — Table creation (done)
-- rhodesli_ml/gedcom_context.py — GEDCOM context builder
-
-## SUPABASE CONNECTION
-- Project: fvynibivlphxwfowzkjl
-- Password has @ symbol — use individual params, NOT DATABASE_URL
-- Tables: 40 total (15 new from this session)
+## REMAINING WORK AFTER AGENTS COMPLETE
+1. Review + commit agent outputs
+2. Run migration script against Supabase
+3. Test DATA_SOURCE=postgres locally
+4. Set DATA_SOURCE=postgres on Railway
+5. Test email notification flow
+6. Railway log archival implementation
+7. Final test suite run
+8. Session assessment

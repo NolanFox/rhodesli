@@ -561,6 +561,7 @@ class TestNotificationTriggers:
                 identity_name="Leon Capeluto",
                 photo_ids=["photo-1"],
                 user_id="admin-user-id",
+                user_email=None,
             )
 
     def test_save_registry_notification_failure_does_not_block_save(self):

@@ -785,6 +785,7 @@ def save_registry(registry, confirmed_identity_info=None):
             - identity_id: str
             - identity_name: str
             - user_id: str (Supabase auth user ID of the admin)
+            - user_email: str (email for Resend notification delivery)
     """
     if DATA_SOURCE == "postgres":
         # Postgres-only write path: write directly to Supabase
@@ -855,6 +856,7 @@ def save_registry(registry, confirmed_identity_info=None):
                     identity_name=info["identity_name"],
                     photo_ids=photo_ids,
                     user_id=info.get("user_id"),
+                    user_email=info.get("user_email"),
                 )
             except Exception:
                 pass  # Notifications are best-effort
@@ -1089,6 +1091,9 @@ _ml_review_decisions_cache = None
 def _load_date_labels() -> dict:
     """Load date labels from ML pipeline output, keyed by photo_id for O(1) lookup.
 
+    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+    When DATA_SOURCE=json (default), loads from JSON file.
+
     Labels are indexed by BOTH their original photo_index ID (e.g. inbox_*)
     AND the SHA256 cache ID used by _photo_cache. This dual-keying handles
     the ID mismatch between photo_index.json and the embeddings-based cache.
@@ -1096,6 +1101,19 @@ def _load_date_labels() -> dict:
     global _date_labels_cache
     if _date_labels_cache is not None:
         return _date_labels_cache
+
+    if DATA_SOURCE == "postgres":
+        try:
+            from app.supabase_data import load_date_labels_from_supabase
+
+            result = load_date_labels_from_supabase()
+            if result is not None:
+                logging.info(f"Loaded {len(result)} date labels from Postgres")
+                _date_labels_cache = result
+                return _date_labels_cache
+            logging.warning("Postgres date labels load returned None, falling back to JSON")
+        except Exception as e:
+            logging.warning(f"Postgres date labels load failed, falling back to JSON: {e}")
 
     _date_labels_cache = {}
     ml_data_path = data_path / "date_labels.json"
@@ -1192,12 +1210,28 @@ def _load_search_index() -> list:
 def _load_birth_year_estimates() -> dict:
     """Load ML-inferred birth year estimates, keyed by identity_id.
 
+    When DATA_SOURCE=postgres, loads from Supabase with JSON fallback.
+    When DATA_SOURCE=json (default), loads from JSON file.
+
     Returns dict mapping identity_id -> {birth_year_estimate, birth_year_confidence, ...}.
     Human-confirmed metadata.birth_year always takes priority over these estimates.
     """
     global _birth_year_cache
     if _birth_year_cache is not None:
         return _birth_year_cache
+
+    if DATA_SOURCE == "postgres":
+        try:
+            from app.supabase_data import load_birth_year_estimates_from_supabase
+
+            result = load_birth_year_estimates_from_supabase()
+            if result is not None:
+                logging.info(f"Loaded {len(result)} birth year estimates from Postgres")
+                _birth_year_cache = result
+                return _birth_year_cache
+            logging.warning("Postgres birth year estimates load returned None, falling back to JSON")
+        except Exception as e:
+            logging.warning(f"Postgres birth year estimates load failed, falling back to JSON: {e}")
 
     _birth_year_cache = {}
     # Check both possible locations (ML output dir and data dir)

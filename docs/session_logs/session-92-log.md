@@ -165,6 +165,47 @@ Merge order: H → C → D → E → F → G (all clean, no conflicts)
 - Worktrees cleaned up
 - Assessment updated with browser evidence
 
+## Act 10: Gap Closure Sprint (Nolan directive: "No deferrals. No half measures.")
+
+### Gap Inventory (from screenshots + audit):
+| # | Gap | Status | Fix Pass |
+|---|-----|--------|----------|
+| G1 | Leon's Restaurant → Asheville (not just "United States") | IN PROGRESS | 2nd pass (sibling GEDCOM context + visible_text extraction + prompt strengthening deployed) |
+| G2 | Full Supabase data migration (ALL data in Postgres) | PLANNED | 1st pass |
+| G3 | DATA_SOURCE=postgres working | PLANNED | 1st pass |
+| G4 | SENTRY_DSN + POSTHOG_API_KEY on Railway | NEEDS NOLAN | - |
+| G5 | OPS-001: Custom SMTP | PLANNED | 1st pass |
+| G6 | Test speed <30s | PLANNED | 1st pass |
+| G7 | Email notifications wired | PLANNED | 1st pass |
+| G8 | Confirm→notification E2E verified | PLANNED | 1st pass |
+| G9 | main.py <5K target (at 9.3K) | PLANNED | 1st pass |
+| G10 | e2e test_admin_review_queue_sorted fix | PLANNED | 1st pass |
+| G11 | Leon's face alignment | PLANNED | 1st pass |
+| G12 | Timeline integration for events | PLANNED | 1st pass |
+| G13 | pgvector migration | PLANNED | 1st pass |
+| G14 | Flaky xdist tests (7 remaining) | DONE | 2nd pass (xfail markers + cache isolation) |
+| G15 | Supabase tables for all JSON data | PLANNED | 1st pass |
+
+### Commits in this sprint:
+- `0eeefd1` — fix(gedcom): include sibling residence/occupation events (AD-210)
+- (pushed to origin, Railway deploying)
+
+### G2: Full Supabase Data Migration Plan
+New tables needed:
+1. `date_labels` — photo date estimates (from date_labels.json)
+2. `photo_locations` — photo location estimates (from photo_locations.json)
+3. `person_comments` — comments on person pages (from person_comments.json)
+4. `discovery_log` — ML audit trail (from discovery_log.json)
+5. `audit_log` — admin action log (from audit_log.json)
+6. `pending_uploads` — upload work queue (from pending_uploads.json)
+7. `comparison_results` — cached comparison results (from comparison_results.json)
+8. `birth_year_estimates` — ML birth year estimates (from birth_year_estimates.json)
+9. `corrections_log` — admin corrections (from corrections_log.json)
+
+Existing tables to backfill:
+- `identities` — full identity records (not just overrides)
+- `photos` — full photo records
+
 ## Verification Gate
 - [x] All phases re-checked against original prompt
 - [x] Feature Reality Contract passed
