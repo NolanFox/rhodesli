@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.94.1 · ~3522 tests · 296 photos · 777 identities · 69 confirmed
+Current: v0.95.0 · ~4172 tests · 299 photos · 777 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -23,38 +23,35 @@ Current: v0.94.1 · ~3522 tests · 296 photos · 777 identities · 69 confirmed
 | Phase | Status | Details |
 |-------|--------|---------|
 | **A: Stabilization** | COMPLETE | All P0 bugs fixed, 103 tests added |
-| **B: Share-Ready Polish** | ~95% complete | Remaining: OPS-001 (custom SMTP) |
+| **B: Share-Ready Polish** | ~98% complete | Email notifications wired (Resend). Remaining: custom domain sender |
 | **C: Annotation Engine** | COMPLETE | Full submit/review/approve workflow |
-| **D: ML Feedback** | ~90% complete | Remaining: ML-053 (multi-pass Gemini), FE-040-043 |
-| **E: Collaboration** | ~70% complete | Remaining: Help Identify mode, analytics, moderation |
-| **F: Scale & Generalize** | ~50% complete | Postgres read flip, GlobalPersonID, Sentry, PostHog, structlog. Remaining: pgvector, CI/CD, ML service extraction |
+| **D: ML Feedback** | ~95% complete | Multi-pass foundation built. Remaining: batch execution, FE-040-043 |
+| **E: Collaboration** | ~80% complete | Help Identify verified, email notifications. Remaining: analytics dashboard, moderation |
+| **F: Scale & Generalize** | ~65% complete | Sentry, PostHog, CI/CD, structlog shipped. Remaining: pgvector (DEFERRED), ML service extraction |
 
 For full feature checklists, see [docs/roadmap/FEATURE_STATUS.md](docs/roadmap/FEATURE_STATUS.md).
 For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMAP.md).
 
 ## Open Work (Prioritized)
 
-### Immediate — Post-Session 91b
-- [ ] Deploy Session 91b to Railway + browser verify all features
-- [x] 2026-03-07: Re-analyze Leon's Restaurant photo — Tampa confirmed correct (Victor/Victoria have Tampa GEDCOM, Asheville is Leon who isn't pictured)
-- [ ] Set SENTRY_DSN + POSTHOG_API_KEY on Railway
-- [ ] Test DATA_SOURCE=postgres on Railway
-- [ ] OPS-001: Custom SMTP for branded email sender (code ready, needs RESEND_API_KEY in Railway)
-- [ ] PERF-001: Test speed <30s (currently ~43s, achieved 23s in isolation)
-- [x] 2026-03-07: Wire notification triggers into save_registry() (Session 91b)
-- [x] 2026-03-07: Run seed_life_events.py against Supabase (Session 91b)
-- [x] 2026-03-07: main.py refactor complete — 26,100 → 9,383 lines, 17 route files (Session 91b)
-- [x] 2026-03-07: AD-209 — Collection name is weak provenance, not location signal (Session 91b)
-- [x] 2026-03-07: Discoveries extraction + UX overhaul — recency sort, confidence labels (Session 91b)
-- [x] 2026-02-25: Retry 144 failed photos — 142/144 already retried ($2.04). 2 blocked by Gemini content safety.
-- [x] 2026-02-25: UX-103 — Back nav, metadata overlay, mobile hamburger menu
+### Immediate — Post-Session 92
+- [x] 2026-03-08: Deploy v0.95.0 to Railway + browser verify all features (Session 92)
+- [x] 2026-03-08: Set SENTRY_DSN + POSTHOG_API_KEY + RESEND_API_KEY on Railway (Session 92)
+- [x] 2026-03-08: Leon's Restaurant fix — business name → GEDCOM owner lookup (AD-210, Session 92)
+- [x] 2026-03-08: Full API call logging — prompt_text, full_response, gedcom_context columns (Session 92)
+- [x] 2026-03-08: 10 P1/P2 UX bugs fixed (Session 92)
+- [x] 2026-03-08: Email notifications via Resend (Session 92)
+- [x] 2026-03-08: CI/CD foundation — .github/workflows/test.yml (Session 92)
+- [x] 2026-03-08: Multi-pass Gemini foundation (rhodesli_ml/multi_pass.py, Session 92)
+- [x] 2026-03-08: Active learning foundation (rhodesli_ml/active_learning.py, Session 92)
+- [ ] Test DATA_SOURCE=postgres on Railway (blocked: identities/photos tables don't exist)
+- [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
 
 ### Near-Term
-- [x] 2026-03-06: DATA-006: Shadow writes — tables, functions, backfill script, app wiring complete (Session 90b). save_registry() and save_photo_registry() fire-and-forget to Supabase.
-- [ ] PRODUCT-002: Face Compare Tier 2 — shared backend architecture (AD-117)
-- [ ] ML-053: Multi-pass Gemini — low-confidence re-labeling
-- [x] 2026-03-01: FE-041: "Help Identify" mode — /help page, Identify Mode toggle, OG cards
-- [ ] Active learning pipeline
+- [ ] PRODUCT-002: Face Compare Tier 2 — PRD written, stub deployed, blocked by GPU/ONNX (AD-117)
+- [ ] PRODUCT-003: NL Archive Query — PRD written, parser built, needs LangChain integration
+- [ ] DATA-007: Create identities + photos tables in Supabase, backfill, flip DATA_SOURCE
+- [ ] Leon's re-analyze in production — code shipped, needs trigger after deploy
 
 ### Future Evaluation: Frontend Framework Migration
 - **Trigger:** If 3+ JS embeds require shared state, or mobile UX audit scores below acceptable after Session 74
@@ -63,10 +60,10 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - **Status:** NOT YET TRIGGERED
 
 ### Future
-- [ ] PRODUCT-003: NL Archive Query MVP — LangChain (AD-118)
-- [ ] PRODUCT-004: Historical Photo Date Estimator Standalone
-- [ ] OPS-002: CI/CD pipeline
+- [ ] PRODUCT-004: Historical Photo Date Estimator Standalone (PRD written)
 - [ ] PRODUCT-005: Face Compare Tier 3 — product grade
+- [ ] ML service extraction (architecture doc written)
+- [ ] pgvector migration (evaluation doc written, DEFERRED until 5K+ embeddings)
 - [ ] GEN-001+: Multi-tenant architecture
 
 See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
@@ -77,14 +74,19 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - All 6 tracks shipped and merged. See Recently Completed.
 - Prompt: docs/prompts/session-91-prompt.md
 
-### Session 92: Scale & Polish
-- ML service extraction (separate FastAPI service)
-- Second collection onboarding (Fox family photos)
-- Chatbot research interface (NL queries)
-- Standalone Gemini tooling product
+### Session 92: Ship Everything — COMPLETE
+- 6 parallel worktree tracks, all merged. See Recently Completed.
+- Prompt: docs/prompts/session-92-prompt.md
+
+### Session 93: Production Hardening
+- Leon's re-analyze verification in production
+- DATA_SOURCE=postgres (requires identities/photos table creation)
+- Batch GEDCOM re-analysis of all photos
+- Test speed optimization (architectural changes)
 
 ## Recently Completed
 
+- [x] 2026-03-08: **v0.95.0 — Session 92**: Ship Everything — Close All Gaps. 6 parallel worktree tracks. Observability (Sentry + PostHog, 4 events). Bell icon sidebar fix. Email notifications (Resend). 10 P1/P2 UX fixes (source photo link, auto-scroll, 404 styling, birth year race, CTA standardization, tooltip, dropdown, double admin bar). Leon's GEDCOM fix (AD-210, business name → owner lookup). Full API logging (prompt_text, full_response, gedcom_context). Multi-pass + active learning foundations. NL query parser. Compare v2 stub. CI/CD (.github/workflows/test.yml). 3 PRDs + 3 architecture docs. Timeline life events. 4172 tests pass.
 - [x] 2026-03-07: **v0.94.1 — Session 91b**: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix. main.py 26,100 → 9,383 lines (64% reduction, 17 route files). 5 new route files: identity_routes, page_routes, engagement_routes, relationship_routes, discoveries_routes. Supabase tables created (communities, life_events, notifications, global_person_links). Life events seeded (5 events). Notification triggers wired into 7 confirm routes. Discoveries extraction + UX overhaul (recency sort, confidence tier labels, navigation). AD-209: collection name is weak provenance. 5 parallel worktree tracks. 3518 tests pass.
 - [x] 2026-03-07: **v0.94.0 — Session 91**: PRD Backlog + Platform Foundation. 6 parallel worktree tracks. PRD-028 notifications (bell icon, /notifications, event triggers). PRD-027 Phase A R2 backup/restore. PRD-011 life events (CRUD, photo/person linking). PRD-029 photo backs completion (media group API, browse filter, badges). PRD-027 B/C Postgres read flip (DATA_SOURCE feature flag, load_from_postgres). GlobalPersonID schema (communities + global_person_links). Observability (Sentry, PostHog, structlog, all env-gated). PRD-030 + MULTI_TENANT.md. ~2265 lines new tests. 3502 tests pass.
 - [x] 2026-03-06: **v0.93.1 — Session 90b (complete)**: Fix Sorting + Shadow Writes + Route Extraction + Back Photo. Upload date sorting fixed (296 photos patched). Leon's Restaurant → Tampa, FL. Supabase shadow writes fully wired (save_registry + save_photo_registry fire-and-forget). Route extraction: person_routes.py (1,632 lines), main.py 34K→26K. Back-photo upload (PRD-029). Test fixes for extracted routes. 22 commits. ~3915 tests.

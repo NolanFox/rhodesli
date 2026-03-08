@@ -49,10 +49,13 @@ def _render_photo_page_html(photo_id: str) -> str:
     """Render a photo page via TestClient (rebuild caches for isolation)."""
     import app.main as main
 
-    # Reset caches to ensure identity data is fresh (xdist/ordering safety)
+    # Reset ALL caches to ensure data is fresh (xdist/ordering safety)
     main._photo_cache = None
     main._face_to_photo_cache = None
-    main._identity_lookup = None
+    main._photo_id_aliases = None
+    main._face_data_cache = None
+    main._crop_files_cache = None
+    main._skipped_neighbor_cache = None
     c = TestClient(app)
     return c.get(f"/photo/{photo_id}").text
 
@@ -60,10 +63,6 @@ def _render_photo_page_html(photo_id: str) -> str:
 class TestPersonLinksFromPhotoViewer:
     """Person cards on the photo viewer link to person pages."""
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_person_card_links_to_person_page(self, client, photo_with_person):
         """Identified person card has a link to /person/{id}."""
         photo_id, identity = photo_with_person
@@ -72,10 +71,6 @@ class TestPersonLinksFromPhotoViewer:
         html = _render_photo_page_html(photo_id)
         assert "/person/" in html
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_see_all_photos_link(self, client, photo_with_person):
         """Identified person card has 'See all photos' link."""
         photo_id, identity = photo_with_person
@@ -105,10 +100,6 @@ class TestPersonLinksFromPhotoViewer:
                     return
         pytest.skip("All faces are identified")
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_person_name_links_to_person_page(self, client, photo_with_person):
         """The person's name in the card is a link to /person/{id}."""
         photo_id, identity = photo_with_person

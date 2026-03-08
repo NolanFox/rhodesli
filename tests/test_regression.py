@@ -49,9 +49,11 @@ def face_data():
     project_root = Path(__file__).resolve().parent.parent
     sys.path.insert(0, str(project_root))
 
-    from app.main import get_face_data
+    import app.main as main
 
-    return get_face_data()
+    # Reset cache for xdist isolation
+    main._face_data_cache = None
+    return main.get_face_data()
 
 
 class TestPhotoUrlsResolve:
@@ -189,7 +191,7 @@ class TestMlsDiscriminatesFaces:
     """
 
     @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        reason="Slow: MLS computation over all face pairs exceeds 60s timeout",
         strict=False,
     )
     def test_mls_score_range_exceeds_threshold(self, face_data):

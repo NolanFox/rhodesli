@@ -117,16 +117,19 @@ class TestPhotoCarousel:
 class TestFaceClickBehavior:
     """Face clicks navigate to person/identify pages."""
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_person_cards_link_to_person_or_identify(self, client, real_photo_id):
         if not real_photo_id:
             pytest.skip("No embeddings available")
-        from app.main import app
+        import app.main as main
 
-        c = TestClient(app)
+        # Reset caches for xdist isolation
+        main._photo_cache = None
+        main._face_to_photo_cache = None
+        main._photo_id_aliases = None
+        main._face_data_cache = None
+        main._crop_files_cache = None
+
+        c = TestClient(main.app)
         html = c.get(f"/photo/{real_photo_id}").text
         card_links = re.findall(r'<a[^>]*href="(/person/[^"]+|/identify/[^"]+)"[^>]*class="no-underline', html)
         assert len(card_links) > 0

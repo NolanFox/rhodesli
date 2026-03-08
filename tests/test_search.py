@@ -12,10 +12,17 @@ from starlette.testclient import TestClient
 
 
 def _render_search_html(query: str) -> str:
-    """Render /api/search via TestClient (no caching for xdist safety)."""
-    from app.main import app
+    """Render /api/search via TestClient (reset caches for xdist safety)."""
+    import app.main as main
 
-    c = TestClient(app)
+    # Reset caches so data is loaded fresh (xdist isolation)
+    main._photo_cache = None
+    main._face_to_photo_cache = None
+    main._photo_id_aliases = None
+    main._face_data_cache = None
+    main._crop_files_cache = None
+
+    c = TestClient(main.app)
     return c.get(f"/api/search?q={query}").text
 
 
@@ -350,10 +357,6 @@ class TestSearchResultNavigation:
         # Should NOT link to Focus mode
         assert "section=" not in html, "Search results should not link to /?section= (Focus mode)"
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_search_result_identity_id_in_url(self, client):
         """Search result URLs contain the identity UUID."""
         import re

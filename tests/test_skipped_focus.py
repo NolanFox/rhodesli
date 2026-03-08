@@ -25,10 +25,18 @@ def client():
 
 
 def _render_path(path: str) -> str:
-    """Render a route via TestClient (no caching for xdist safety)."""
-    from app.main import app
+    """Render a route via TestClient (reset caches for xdist safety)."""
+    import app.main as main
 
-    c = TestClient(app)
+    # Reset caches so data is loaded fresh (xdist isolation)
+    main._photo_cache = None
+    main._face_to_photo_cache = None
+    main._photo_id_aliases = None
+    main._face_data_cache = None
+    main._crop_files_cache = None
+    main._skipped_neighbor_cache = None
+
+    c = TestClient(main.app)
     return c.get(path).text
 
 
@@ -50,19 +58,11 @@ class TestSkippedFocusModeRendering:
         html = _render_path("/?section=skipped&view=focus")
         assert 'id="skipped-focus-container"' in html
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_focus_mode_has_this_person_label(self, client):
         """Shows 'Who is this?' label above the face crop."""
         html = _render_path("/?section=skipped&view=focus")
         assert "Who is this?" in html
 
-    @pytest.mark.xfail(
-        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
-        strict=False,
-    )
     def test_focus_mode_has_best_match(self, client):
         """Shows 'Best Match' section (with or without suggestions)."""
         html = _render_path("/?section=skipped&view=focus")
