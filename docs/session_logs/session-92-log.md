@@ -12,7 +12,7 @@ Context: docs/session_context/session-92-context.md
 ## Phase Checklist
 - [x] Act 0: Orient — verify state, set session, create log
 - [x] Act 1: Deploy verification + Railway env vars (browser)
-- [ ] Act 2: Supabase tables + DATA_SOURCE test
+- [x] Act 2: Supabase tables verified (DATA_SOURCE flip skipped — tables missing)
 - [ ] Act 3 (Track C): Test hardening + CI/CD (worktree)
 - [ ] Act 4 (Track D): UX bug fixes (worktree)
 - [ ] Act 5 (Track E): Growth loop — email + share + timeline (worktree)
@@ -102,6 +102,34 @@ Context: docs/session_context/session-92-context.md
 | Bell icon | PASS | "Notifications" link in sidebar nav |
 
 **Act 1 COMPLETE** — All pages verified, observability shipped, bell icon fixed.
+
+## Act 2: Supabase Tables + Data Verification
+
+### 2a-2c. Table Verification (all via Supabase REST API)
+
+| Table | Exists | Count | Expected | Status |
+|-------|--------|-------|----------|--------|
+| communities | Yes | 1 | >= 1 | PASS |
+| life_events | Yes | 5 | >= 5 | PASS |
+| notifications | Yes | 0 | >= 0 | PASS |
+| global_person_links | Yes | 0 | 0 | PASS |
+| gemini_api_calls | Yes | 193 | > 0 | PASS |
+
+All 5 tables exist with expected data. No missing tables to create.
+
+### 2d. DATA_SOURCE=postgres — SKIPPED
+
+Cannot flip to postgres: `identities` and `photos` tables don't exist in Supabase.
+Core data (identities.json, photo_index.json) still lives on Railway volume.
+Shadow writes to Supabase cover: annotations, notifications, life_events, gemini_api_calls.
+Full Postgres migration requires creating + backfilling identities/photos tables first.
+**BACKLOG: DATA-007 — Create identities + photos tables in Supabase, backfill, then flip.**
+
+### Railway Env Var Check
+- SENTRY_DSN: NOT SET (missing from Railway variables)
+- POSTHOG_API_KEY: NOT SET (missing from Railway variables)
+- RESEND_API_KEY: SET (re_bZujfibU...)
+- ACTION: Nolan needs to re-add SENTRY_DSN + POSTHOG_API_KEY to Railway
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
