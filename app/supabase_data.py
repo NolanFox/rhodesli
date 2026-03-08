@@ -829,12 +829,16 @@ def sync_photo_location(photo_id: str, location_data: dict) -> None:
         row = {
             "photo_id": photo_id,
             "data": location_data,
-            "place": location_data.get("location_name", ""),
+            "location_name": location_data.get("location_name", ""),
+            "location_estimate": location_data.get("location_estimate", ""),
             "confidence": location_data.get("confidence"),
-            "latitude": location_data.get("lat"),
-            "longitude": location_data.get("lng"),
+            "lat": location_data.get("lat"),
+            "lng": location_data.get("lng"),
+            "region": location_data.get("region", ""),
+            "biographical_evidence": location_data.get("biographical_evidence"),
+            "gemini_raw_location": location_data.get("gemini_raw_location"),
         }
-        client.table("photo_locations").upsert(row).execute()
+        client.table("photo_locations").upsert(row, on_conflict="photo_id").execute()
         logger.debug(f"Synced photo location for {photo_id}")
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase photo location sync failed for {photo_id}: {e}")
@@ -853,10 +857,14 @@ def sync_photo_locations_batch(locations_dict: dict) -> int:
             {
                 "photo_id": photo_id,
                 "data": loc,
-                "place": loc.get("location_name", ""),
+                "location_name": loc.get("location_name", ""),
+                "location_estimate": loc.get("location_estimate", ""),
                 "confidence": loc.get("confidence"),
-                "latitude": loc.get("lat"),
-                "longitude": loc.get("lng"),
+                "lat": loc.get("lat"),
+                "lng": loc.get("lng"),
+                "region": loc.get("region", ""),
+                "biographical_evidence": loc.get("biographical_evidence"),
+                "gemini_raw_location": loc.get("gemini_raw_location"),
             }
         )
 
@@ -864,7 +872,7 @@ def sync_photo_locations_batch(locations_dict: dict) -> int:
     for i in range(0, len(rows), batch_size):
         batch = rows[i : i + batch_size]
         try:
-            client.table("photo_locations").upsert(batch).execute()
+            client.table("photo_locations").upsert(batch, on_conflict="photo_id").execute()
             written += len(batch)
         except _SUPABASE_ERRORS as e:
             logger.warning(f"Supabase photo locations batch sync failed: {e}")

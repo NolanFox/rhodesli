@@ -131,8 +131,8 @@ class TestSyncPhotoLocation:
         mock_sb_client.table.assert_called_with("photo_locations")
         row = mock_sb_client.table.return_value.upsert.call_args[0][0]
         assert row["photo_id"] == "photo123"
-        assert row["place"] == "NYC"
-        assert row["latitude"] == 40.7
+        assert row["location_name"] == "NYC"
+        assert row["lat"] == 40.7
 
     def test_no_client_safe(self):
         with patch("app.supabase_data.get_supabase_client", return_value=None):
