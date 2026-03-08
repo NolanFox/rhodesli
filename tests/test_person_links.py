@@ -16,8 +16,15 @@ def get_photo_with_identified_person():
     """Find a photo that contains an identified (CONFIRMED) person."""
     import app.main as main
 
+    # Reset ALL caches so we load fresh from disk (xdist/ordering safety)
     main._photo_cache = None
     main._face_to_photo_cache = None
+    main._photo_id_aliases = None
+    main._face_data_cache = None
+    main._crop_files_cache = None
+    main._skipped_neighbor_cache = None
+    main._photo_registry_cache = None
+    main._discovery_cache = None
     main._build_caches()
     photos = load_embeddings_for_photos()
     registry = load_registry()
@@ -49,13 +56,15 @@ def _render_photo_page_html(photo_id: str) -> str:
     """Render a photo page via TestClient (rebuild caches for isolation)."""
     import app.main as main
 
-    # Reset ALL caches to ensure data is fresh (xdist/ordering safety)
+    # Reset ALL caches to ensure data is loaded fresh from disk (xdist/ordering safety)
     main._photo_cache = None
     main._face_to_photo_cache = None
     main._photo_id_aliases = None
     main._face_data_cache = None
     main._crop_files_cache = None
     main._skipped_neighbor_cache = None
+    main._photo_registry_cache = None
+    main._discovery_cache = None
     c = TestClient(app)
     return c.get(f"/photo/{photo_id}").text
 

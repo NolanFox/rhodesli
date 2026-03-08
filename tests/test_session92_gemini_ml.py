@@ -532,6 +532,148 @@ class TestAddLabeledPair:
 # =========================================================================
 
 
+class TestSiblingGedcomContext:
+    """Test that sibling residence/occupation events are included in GEDCOM context (AD-210)."""
+
+    def test_sibling_residence_events_included(self):
+        """Victor's GEDCOM context should include sibling Leon's Asheville residence."""
+        from rhodesli_ml.gedcom_context import _build_family_context
+
+        # Victor is the person we're looking up
+        victor = _MockIndividual(
+            xref_id="@I1@",
+            given_name="Victor",
+            surname="Capeluto",
+            full_name="Victor Capeluto",
+            birth=_MockEvent(
+                event_type="birth",
+                raw_date="1904",
+                place="Rhodes, Greece",
+                date=_MockDate(year=1904),
+            ),
+            events=[],
+        )
+        # Leon is Victor's sibling with Asheville residence
+        leon = _MockIndividual(
+            xref_id="@I2@",
+            given_name="Leon",
+            surname="Capeluto",
+            full_name="Leon Capeluto",
+            birth=_MockEvent(
+                event_type="birth",
+                raw_date="1902",
+                place="Rhodes, Greece",
+                date=_MockDate(year=1902),
+            ),
+            events=[
+                _MockEvent(
+                    event_type="residence",
+                    raw_date="1928",
+                    place="Asheville, North Carolina",
+                    date=_MockDate(year=1928),
+                ),
+                _MockEvent(
+                    event_type="residence",
+                    raw_date="1940",
+                    place="Asheville, North Carolina",
+                    date=_MockDate(year=1940),
+                ),
+                _MockEvent(
+                    event_type="occupation",
+                    raw_date="1930",
+                    place="Asheville, NC",
+                    date=_MockDate(year=1930),
+                ),
+                _MockEvent(
+                    event_type="immigration",
+                    raw_date="1920",
+                    place="San Francisco, CA",
+                    date=_MockDate(year=1920),
+                ),
+            ],
+        )
+
+        parsed = _MockParsedGedcom(individuals={"@I1@": victor, "@I2@": leon})
+        # Override get_siblings to return Leon
+        parsed.get_siblings = lambda indi: [leon] if indi.xref_id == "@I1@" else []
+
+        lines = _build_family_context(victor, parsed)
+        context = "\n".join(lines)
+
+        # Leon's residence events should be included
+        assert "Sibling: Leon Capeluto" in context
+        assert "Asheville" in context
+        assert "Residence:" in context
+        assert "Occupation:" in context
+        # Immigration should have PORT OF ENTRY warning
+        assert "PORT OF ENTRY" in context
+
+    def test_sibling_birth_place_included(self):
+        """Sibling birth place should appear in context."""
+        from rhodesli_ml.gedcom_context import _build_family_context
+
+        person = _MockIndividual(
+            xref_id="@I1@",
+            given_name="A",
+            surname="B",
+            full_name="A B",
+            events=[],
+        )
+        sibling = _MockIndividual(
+            xref_id="@I2@",
+            given_name="C",
+            surname="B",
+            full_name="C B",
+            birth=_MockEvent(
+                event_type="birth",
+                raw_date="1900",
+                place="Rhodes, Greece",
+                date=_MockDate(year=1900),
+            ),
+            events=[],
+        )
+
+        parsed = _MockParsedGedcom(individuals={"@I1@": person, "@I2@": sibling})
+        parsed.get_siblings = lambda indi: [sibling] if indi.xref_id == "@I1@" else []
+
+        lines = _build_family_context(person, parsed)
+        context = "\n".join(lines)
+        assert "born in Rhodes" in context
+
+    def test_siblings_without_events_still_included(self):
+        """Siblings with no events should still appear (name + birth year)."""
+        from rhodesli_ml.gedcom_context import _build_family_context
+
+        person = _MockIndividual(
+            xref_id="@I1@",
+            given_name="A",
+            surname="B",
+            full_name="A B",
+            events=[],
+        )
+        sibling = _MockIndividual(
+            xref_id="@I2@",
+            given_name="D",
+            surname="B",
+            full_name="D B",
+            birth=_MockEvent(
+                event_type="birth",
+                raw_date="1905",
+                place="",
+                date=_MockDate(year=1905),
+            ),
+            events=[],
+        )
+
+        parsed = _MockParsedGedcom(individuals={"@I1@": person, "@I2@": sibling})
+        parsed.get_siblings = lambda indi: [sibling] if indi.xref_id == "@I1@" else []
+
+        lines = _build_family_context(person, parsed)
+        context = "\n".join(lines)
+        assert "Sibling: D B" in context
+        assert "(b.1905)" in context
+
+
 class TestVisibleTextExtraction:
     """Test that visible text is extracted from scene_description for
     business owner GEDCOM lookup when visible_text field is not set."""

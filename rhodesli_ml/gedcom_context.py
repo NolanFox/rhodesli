@@ -317,13 +317,24 @@ def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
                 c_str += f", born in {child.birth_place}"
             lines.append(c_str)
 
-    # Siblings
+    # Siblings (with residence and occupation events for location context)
     siblings = parsed_gedcom.get_siblings(indi)
     for sibling in siblings:
         sb_str = f"  Sibling: {sibling.full_name}"
         if sibling.birth and sibling.birth_year:
             sb_str += f" (b.{sibling.birth_year})"
+        if sibling.birth_place:
+            sb_str += f", born in {sibling.birth_place}"
         lines.append(sb_str)
+        # Include sibling events that help with location (AD-210)
+        for event in sibling.events:
+            if event.event_type in ("residence", "occupation", "immigration", "emigration"):
+                e_str = f"    {event.event_type.title()}: {event.raw_date or '?'}"
+                if event.place:
+                    e_str += f" in {event.place}"
+                if event.event_type in ("immigration", "emigration"):
+                    e_str += " [PORT OF ENTRY — transit point, NOT necessarily residence]"
+                lines.append(e_str)
 
     return lines
 

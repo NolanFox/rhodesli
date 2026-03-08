@@ -28,13 +28,15 @@ def _render_path(path: str) -> str:
     """Render a route via TestClient (reset caches for xdist safety)."""
     import app.main as main
 
-    # Reset caches so data is loaded fresh (xdist isolation)
+    # Reset ALL caches so data is loaded fresh from disk (xdist isolation)
     main._photo_cache = None
     main._face_to_photo_cache = None
     main._photo_id_aliases = None
     main._face_data_cache = None
     main._crop_files_cache = None
     main._skipped_neighbor_cache = None
+    main._photo_registry_cache = None
+    main._discovery_cache = None
 
     c = TestClient(main.app)
     return c.get(path).text

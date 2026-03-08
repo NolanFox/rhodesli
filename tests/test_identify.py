@@ -1,6 +1,7 @@
 """Tests for /identify pages — shareable identification crowdsourcing."""
 
 import json
+from contextlib import ExitStack
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -99,35 +100,29 @@ class TestIdentifyPage:
 
     def test_renders_for_unidentified_person(self, client):
         """GET /identify/{id} returns 200 for unidentified person."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1")
         assert resp.status_code == 200
         assert "Can you identify this person?" in resp.text
 
     def test_has_og_tags(self, client):
         """Page has Open Graph tags with face image."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1")
         assert "og:title" in resp.text
         assert "og:image" in resp.text
         assert "Can you identify this person?" in resp.text
 
     def test_has_response_form(self, client):
         """Page has a name/relationship/email form."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1")
         assert 'name="name"' in resp.text
         assert 'name="relationship"' in resp.text
         assert 'name="email"' in resp.text
@@ -135,34 +130,28 @@ class TestIdentifyPage:
 
     def test_redirects_for_identified_person(self, client):
         """GET /identify/{id} redirects to /person/{id} for confirmed identity."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/confirmed-1", follow_redirects=False)
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/confirmed-1", follow_redirects=False)
         assert resp.status_code == 303
         assert "/person/confirmed-1" in resp.headers["location"]
 
     def test_404_for_nonexistent(self, client):
         """GET /identify/{invalid} shows not found."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/nonexistent-id")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/nonexistent-id")
         assert resp.status_code == 404
         assert "not found" in resp.text.lower()
 
     def test_has_share_button(self, client):
         """Page has a share button for crowdsourcing."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1")
         assert "share-photo" in resp.text
         assert "Share to help identify" in resp.text
 
@@ -172,17 +161,15 @@ class TestIdentifyResponse:
     def test_submit_identification_creates_annotation(self, client):
         """POST response creates annotation for admin review (Session 83a fix)."""
         saved_annotations = {"schema_version": 1, "annotations": {}}
-        patches = _patch_data()
-        patches.append(patch("app.main._load_annotations", return_value=saved_annotations))
-        patches.append(patch("app.main._save_annotations"))
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/respond",
-            data={"name": "Sarah Capeluto", "relationship": "My grandmother", "email": "test@example.com"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main._load_annotations", return_value=saved_annotations))
+            stack.enter_context(patch("app.main._save_annotations"))
+            resp = client.post(
+                "/api/identify/unknown-1/respond",
+                data={"name": "Sarah Capeluto", "relationship": "My grandmother", "email": "test@example.com"},
+            )
         assert resp.status_code == 200
         assert "Thank you" in resp.text
         assert "Sarah Capeluto" in resp.text
@@ -197,17 +184,15 @@ class TestIdentifyResponse:
 
     def test_submit_identification_shows_thank_you(self, client):
         """POST response shows confirmation message."""
-        patches = _patch_data()
-        patches.append(patch("app.main._load_annotations", return_value={"schema_version": 1, "annotations": {}}))
-        patches.append(patch("app.main._save_annotations"))
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/respond",
-            data={"name": "Sarah Capeluto", "relationship": "My grandmother", "email": "test@example.com"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main._load_annotations", return_value={"schema_version": 1, "annotations": {}}))
+            stack.enter_context(patch("app.main._save_annotations"))
+            resp = client.post(
+                "/api/identify/unknown-1/respond",
+                data={"name": "Sarah Capeluto", "relationship": "My grandmother", "email": "test@example.com"},
+            )
         assert resp.status_code == 200
         assert "Thank you" in resp.text
         assert "submitted for review" in resp.text
@@ -218,19 +203,19 @@ class TestIdentifyResponse:
         admin_user = User(id="admin-1", email="admin@test.com", is_admin=True)
         mock_reg = MagicMock()
         mock_reg.get_identity = MagicMock()
-        patches = _patch_data()
-        patches.append(patch("app.main.is_auth_enabled", return_value=True))
-        patches.append(patch("app.main.get_current_user", return_value=admin_user))
-        patches.append(patch("app.main.load_registry", return_value=mock_reg))
-        patches.append(patch("app.main.save_registry"))
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/respond",
-            data={"name": "Isaac Cohen"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            # Start base patches first
+            for p in _patch_data():
+                stack.enter_context(p)
+            # Override load_registry with our MagicMock (replaces the one from _patch_data)
+            stack.enter_context(patch("app.main.is_auth_enabled", return_value=True))
+            stack.enter_context(patch("app.main.get_current_user", return_value=admin_user))
+            stack.enter_context(patch("app.main.load_registry", return_value=mock_reg))
+            stack.enter_context(patch("app.main.save_registry"))
+            resp = client.post(
+                "/api/identify/unknown-1/respond",
+                data={"name": "Isaac Cohen"},
+            )
         assert resp.status_code == 200
         assert "Name applied" in resp.text
         mock_reg.rename_identity.assert_called_once_with(
@@ -239,30 +224,26 @@ class TestIdentifyResponse:
 
     def test_reject_empty_name(self, client):
         """POST with empty name shows error."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/respond",
-            data={"name": "", "relationship": ""},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.post(
+                "/api/identify/unknown-1/respond",
+                data={"name": "", "relationship": ""},
+            )
         assert resp.status_code == 200
         assert "Please enter a name" in resp.text
 
     def test_annotation_failure_shows_error(self, client):
         """If annotation save fails, show error instead of false 'Thank you'."""
-        patches = _patch_data()
-        patches.append(patch("app.main._load_annotations", side_effect=Exception("disk full")))
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/respond",
-            data={"name": "Sarah Capeluto", "email": "test@test.com"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main._load_annotations", side_effect=Exception("disk full")))
+            resp = client.post(
+                "/api/identify/unknown-1/respond",
+                data={"name": "Sarah Capeluto", "email": "test@test.com"},
+            )
         assert resp.status_code == 200
         assert "Something went wrong" in resp.text
 
@@ -271,12 +252,10 @@ class TestMatchConfirmation:
 
     def test_renders_side_by_side(self, client):
         """MC-1/MC-2: GET /identify/{a}/match/{b} shows two faces side by side."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert resp.status_code == 200
         assert "Are these the same person?" in resp.text
         assert "Yes, Same Person" in resp.text
@@ -285,44 +264,36 @@ class TestMatchConfirmation:
 
     def test_shows_source_photos(self, client):
         """MC-3: Match page shows source photos section."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "Source Photos" in resp.text
 
     def test_shows_face_highlight_on_source_photo(self, client):
         """MC-3: Source photo has face bbox overlay for highlighting."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         # Bbox overlay should have percentage-based positioning
         assert "border-amber-400" in resp.text
 
     def test_shows_collection_metadata(self, client):
         """MC-3: Match page shows collection and date metadata."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "Test Collection" in resp.text
         assert "c. 1950s" in resp.text
 
     def test_has_og_tags(self, client):
         """MC-4: Match page has Open Graph tags with correct image URL."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "og:title" in resp.text
         assert "og:image" in resp.text
         assert "og:url" in resp.text
@@ -332,12 +303,10 @@ class TestMatchConfirmation:
 
     def test_has_responder_name_and_note_fields(self, client):
         """MC-5: Match page has optional name and note input fields."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert 'name="responder_name"' in resp.text
         assert 'name="responder_note"' in resp.text
         assert "Your name" in resp.text
@@ -345,15 +314,13 @@ class TestMatchConfirmation:
 
     def test_match_response_yes(self, client):
         """MC-5: POST yes response saves confirmation."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/match/unknown-2/respond",
-            data={"answer": "yes"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.post(
+                "/api/identify/unknown-1/match/unknown-2/respond",
+                data={"answer": "yes"},
+            )
         assert resp.status_code == 200
         assert "confirmed" in resp.text.lower() or "same person" in resp.text.lower()
 
@@ -364,22 +331,20 @@ class TestMatchConfirmation:
         def capture_save(data):
             saved_data.update(data)
 
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        # Override the save mock to capture data
-        with patch("app.main._save_identification_responses", side_effect=capture_save):
-            with patch("app.main._match_rate_limit", {}):
-                resp = client.post(
-                    "/api/identify/unknown-1/match/unknown-2/respond",
-                    data={
-                        "answer": "yes",
-                        "responder_name": "Cousin Sarah",
-                        "responder_note": "That's definitely Uncle Marco",
-                    },
-                )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            # Override the save mock to capture data
+            stack.enter_context(patch("app.main._save_identification_responses", side_effect=capture_save))
+            stack.enter_context(patch("app.main._match_rate_limit", {}))
+            resp = client.post(
+                "/api/identify/unknown-1/match/unknown-2/respond",
+                data={
+                    "answer": "yes",
+                    "responder_name": "Cousin Sarah",
+                    "responder_note": "That's definitely Uncle Marco",
+                },
+            )
         assert resp.status_code == 200
         # Check saved data has name and note
         last_response = saved_data["responses"][-1]
@@ -390,65 +355,55 @@ class TestMatchConfirmation:
 
     def test_match_response_no(self, client):
         """POST no response saves rejection."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/match/unknown-2/respond",
-            data={"answer": "no"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.post(
+                "/api/identify/unknown-1/match/unknown-2/respond",
+                data={"answer": "no"},
+            )
         assert resp.status_code == 200
         assert "different" in resp.text.lower()
 
     def test_match_response_unsure(self, client):
         """POST unsure response is accepted."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/match/unknown-2/respond",
-            data={"answer": "unsure"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.post(
+                "/api/identify/unknown-1/match/unknown-2/respond",
+                data={"answer": "unsure"},
+            )
         assert resp.status_code == 200
         assert "Thank you" in resp.text
 
     def test_match_invalid_response(self, client):
         """POST invalid answer shows error."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.post(
-            "/api/identify/unknown-1/match/unknown-2/respond",
-            data={"answer": "maybe"},
-        )
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.post(
+                "/api/identify/unknown-1/match/unknown-2/respond",
+                data={"answer": "maybe"},
+            )
         assert resp.status_code == 200
         assert "Invalid" in resp.text
 
     def test_match_nonexistent_person(self, client):
         """GET with nonexistent person shows not found."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/nonexistent")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/nonexistent")
         assert resp.status_code == 404
         assert "not found" in resp.text.lower()
 
     def test_match_share_button(self, client):
         """MC-7/MC-8: Match page has share button with correct URL."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "share-photo" in resp.text
         assert "Share This Match" in resp.text
         assert "/identify/unknown-1/match/unknown-2" in resp.text
@@ -463,12 +418,10 @@ class TestMatchConfirmation:
             {"type": "match_confirmation", "person_a": "unknown-1", "person_b": "unknown-2",
              "answer": "unsure", "timestamp": "2026-02-17T12:00:00", "status": "pending"},
         ]
-        patches = _patch_data(responses=existing_responses)
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data(responses=existing_responses):
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "3 people have weighed in" in resp.text
         assert "2 Yes" in resp.text
         assert "1 Not Sure" in resp.text
@@ -480,57 +433,48 @@ class TestMatchConfirmation:
             {"type": "match_confirmation", "person_a": "unknown-2", "person_b": "unknown-1",
              "answer": "no", "timestamp": "2026-02-17T10:00:00", "status": "pending"},
         ]
-        patches = _patch_data(responses=existing_responses)
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data(responses=existing_responses):
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "1 person has weighed in" in resp.text
 
     def test_rate_limiting(self, client):
         """MC-10: Rate limiting blocks excessive responses from same IP."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
 
-        # Reset rate limit state
-        with patch("app.main._match_rate_limit", {"testip_hash": []}):
-            from datetime import datetime
-            # Manually fill rate limit to simulate 10 responses
+            # Reset rate limit state
             import app.main as main_mod
             old_rl = main_mod._match_rate_limit
             main_mod._match_rate_limit = {}
-            # Submit 10 responses to fill rate limit
-            for i in range(10):
+            try:
+                # Submit 10 responses to fill rate limit
+                for i in range(10):
+                    resp = client.post(
+                        "/api/identify/unknown-1/match/unknown-2/respond",
+                        data={"answer": "yes"},
+                    )
+                    assert resp.status_code == 200
+
+                # 11th should be rate limited
                 resp = client.post(
                     "/api/identify/unknown-1/match/unknown-2/respond",
                     data={"answer": "yes"},
                 )
                 assert resp.status_code == 200
-
-            # 11th should be rate limited
-            resp = client.post(
-                "/api/identify/unknown-1/match/unknown-2/respond",
-                data={"answer": "yes"},
-            )
-            assert resp.status_code == 200
-            assert "try again later" in resp.text.lower()
-
-            # Restore
-            main_mod._match_rate_limit = old_rl
-
-        for p in patches:
-            p.stop()
+                assert "try again later" in resp.text.lower()
+            finally:
+                # Restore
+                main_mod._match_rate_limit = old_rl
 
     def test_explore_archive_link(self, client):
         """Match page has Explore the Archive section with multiple links."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "Explore the Archive" in resp.text
         assert "/people" in resp.text
         assert "/timeline" in resp.text
@@ -539,46 +483,38 @@ class TestMatchConfirmation:
 
     def test_face_crops_are_clickable_links(self, client):
         """Face crops must be wrapped in <a> tags linking to person/identify pages."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
-        # Both unidentified → links to /identify/
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
+        # Both unidentified -> links to /identify/
         assert 'href="/identify/unknown-1"' in resp.text
         assert 'href="/identify/unknown-2"' in resp.text
 
     def test_confirmed_face_links_to_person_page(self, client):
         """Confirmed identity face crop links to /person/ not /identify/."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/confirmed-1/match/unknown-1")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/confirmed-1/match/unknown-1")
         assert 'href="/person/confirmed-1"' in resp.text
 
     def test_has_lightbox(self, client):
         """Match page includes lightbox modal for zooming source photos."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert "match-lightbox" in resp.text
         assert "match-lightbox-img" in resp.text
         assert "open-lightbox" in resp.text
 
     def test_source_photos_are_clickable(self, client):
         """Source photo cards have data-action=open-lightbox for click handling."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         assert 'data-action="open-lightbox"' in resp.text
         assert "cursor-pointer" in resp.text
 
@@ -592,23 +528,19 @@ class TestMatchConfirmation:
                 {"face_id": "face-c1", "bbox": [300, 100, 400, 200]},
             ],
         }
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        with patch("app.main.get_photo_metadata", return_value=multi_face_photo):
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            stack.enter_context(patch("app.main.get_photo_metadata", return_value=multi_face_photo))
             resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
         assert "Also in this photo" in resp.text
 
     def test_displays_person_labels_not_unidentified(self, client):
         """Match page shows 'Person A/B' instead of 'Unidentified Person 42'."""
-        patches = _patch_data()
-        for p in patches:
-            p.start()
-        resp = client.get("/identify/unknown-1/match/unknown-2")
-        for p in patches:
-            p.stop()
+        with ExitStack() as stack:
+            for p in _patch_data():
+                stack.enter_context(p)
+            resp = client.get("/identify/unknown-1/match/unknown-2")
         # Should NOT show "Unidentified Person 42" — should show "Person A" or "Person B"
         assert "Unidentified Person 42" not in resp.text
         assert "Person A" in resp.text or "Person B" in resp.text
