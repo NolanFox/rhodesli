@@ -169,6 +169,27 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **UX-202: One-Click Bulk Tag Confirmation** — Confirm all faces in a high-confidence cluster at once. ~30-60 min. Risk: data writes. Source: 82a #30.
 - [ ] **UX-203: Relational Context Labels** — Show GEDCOM relationships ("mother of X") on face cards. Requires Supabase GEDCOM query per identity. ~45-60 min. Source: 82a #19.
 
+### Standalone Tool Suite (PRD-034) — Session 94
+Community-agnostic versions of Rhodesli's ML tools, serving as top-of-funnel and portfolio pieces. Master PRD: `docs/prds/034_standalone_tool_suite.md`.
+
+- [ ] **TOOLS-001: Date + Location Estimator Standalone** — Extract Gemini pipeline (`rhodesli_ml/gemini_config.py`, `rhodesli_ml/gemini_extraction.py`, `app/estimate_routes.py`) into standalone product. Engine ready, zero blockers. Includes evidence cards (AD-142) + Leaflet maps. Revenue model: free (3/month), Pro ($9.99/month), API ($0.10/photo). GEDCOM upload as premium upsell. 2-3 sessions. Source: PRD-033, PRD-034.
+- [ ] **TOOLS-002: Face Compare Real-Time (ONNX)** — Export InsightFace buffalo_l to ONNX for CPU inference on Railway. Wire into `/facecompare` upload flow with isotonic calibration (AD-149). Alternative: ML service extraction (`docs/architecture/ML_SERVICE.md`). Blocked by ONNX export validation. 2-3 sessions. Source: PRD-031, PRD-034, AD-110/117/131.
+- [ ] **TOOLS-003: NL Query + Chatbot** — Wire `parse_query_intent()` prototype to Supabase queries. Build conversational UI with progressive refinement (PRODUCT-006 vision from Session 81). 3-5 sessions. Source: PRD-032, PRD-034.
+- [ ] **TOOLS-004: Unified Product Identity** — Shared domain, design system (DD-001 archival aesthetic), Supabase auth, Stripe billing, PostHog analytics across all standalone tools. Enables cross-tool funnel analysis. Source: PRD-034.
+
+**Existing code & artifacts:**
+| Artifact | Location |
+|----------|----------|
+| Face Compare routes (shipped) | `app/match_facecompare_routes.py` |
+| Compare v2 stub | `app/compare_v2_routes.py` |
+| Face Compare tests (34+) | `tests/test_facecompare.py` |
+| Gemini engine | `rhodesli_ml/gemini_config.py`, `rhodesli_ml/gemini_extraction.py` |
+| Evidence card UI | `app/estimate_routes.py` |
+| NL query parser | `rhodesli_ml/nl_query/` |
+| ML service architecture | `docs/architecture/ML_SERVICE.md` |
+| Key decisions | AD-110, AD-117, AD-131, AD-132, AD-133, AD-139, AD-142, AD-149, AD-192, AD-201 |
+| Design principles | Lesson 81 (separate tools), Lesson 82 (community-agnostic), Lesson 84 (museum-quality) |
+
 ### Architecture
 - [ ] **ARCH-001: Rhodesli-specific hardcoding** — 171 references to "Rhodes/Jewish/Ladino/Sephardic" in app/main.py. Heavy refactoring needed for multi-community. See `docs/session_logs/session_60b_ux_review.md` Broader Scope section.
 

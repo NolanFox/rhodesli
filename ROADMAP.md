@@ -49,7 +49,14 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] 2026-03-08: Observability verified — Sentry, PostHog, Resend all confirmed (Session 93)
 - [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
 
-### Near-Term
+### Near-Term — Standalone Tool Suite (PRD-034)
+Community-agnostic versions of Rhodesli's ML tools. See `docs/prds/034_standalone_tool_suite.md`.
+
+- [ ] TOOLS-001: Date + Location Estimator Standalone — engine ready, zero blockers, 2-3 sessions
+- [ ] TOOLS-002: Face Compare Real-Time (ONNX) — blocked by InsightFace ONNX export, 2-3 sessions
+- [ ] TOOLS-003: NL Query + Chatbot — parser prototype exists, needs Supabase wiring, 3-5 sessions
+
+### Near-Term — Platform
 - [ ] PRODUCT-002: Face Compare Tier 2 — PRD written, stub deployed, blocked by GPU/ONNX (AD-117)
 - [ ] PRODUCT-003: NL Archive Query — PRD written, parser built, needs LangChain integration
 - [ ] Schema additions: previous_date_estimate, gedcom_token_count on gemini_api_calls (AD-211)
@@ -62,13 +69,15 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - **Status:** NOT YET TRIGGERED
 
 ### Future
-- [ ] PRODUCT-004: Historical Photo Date Estimator Standalone (PRD written)
-- [ ] PRODUCT-005: Face Compare Tier 3 — product grade
-- [ ] ML service extraction (architecture doc written)
+- [ ] PRODUCT-004: Historical Photo Date Estimator Standalone — consolidated into TOOLS-001 (PRD-034)
+- [ ] PRODUCT-005: Face Compare Tier 3 — product grade, consolidated into TOOLS-002 (PRD-034)
+- [ ] PRODUCT-006: Interactive Photo Chatbot — consolidated into TOOLS-003 (PRD-034)
+- [ ] ML service extraction (architecture doc written, `docs/architecture/ML_SERVICE.md`)
 - [ ] pgvector migration (evaluation doc written, DEFERRED until 5K+ embeddings)
 - [ ] GEN-001+: Multi-tenant architecture
 
 See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
+See [docs/prds/034_standalone_tool_suite.md](docs/prds/034_standalone_tool_suite.md) for standalone tools master plan.
 
 ## Planned Sessions
 
