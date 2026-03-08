@@ -99,15 +99,32 @@ from app.utils import (
 
 # --- Observability init (all gated on env vars) ---
 # Sentry error tracking — no-op when SENTRY_DSN is not set
-if os.environ.get("SENTRY_DSN"):
+_sentry_enabled = bool(os.environ.get("SENTRY_DSN"))
+if _sentry_enabled:
     import sentry_sdk
+    from sentry_sdk.integrations.logging import LoggingIntegration
+    from sentry_sdk.integrations.starlette import StarletteIntegration
 
     sentry_sdk.init(
         dsn=os.environ["SENTRY_DSN"],
         environment=os.environ.get("SENTRY_ENVIRONMENT", "production"),
         traces_sample_rate=0.1,
         send_default_pii=False,  # Heritage app — faces are PII
+        integrations=[
+            StarletteIntegration(transaction_style="endpoint"),
+            LoggingIntegration(level=logging.INFO, event_level=logging.ERROR),
+        ],
     )
+
+# PostHog server-side analytics — no-op when POSTHOG_API_KEY is not set
+_posthog_server = None
+_posthog_api_key = os.environ.get("POSTHOG_API_KEY", "")
+if _posthog_api_key:
+    import posthog as _posthog_mod
+
+    _posthog_mod.api_key = _posthog_api_key
+    _posthog_mod.host = "https://us.i.posthog.com"
+    _posthog_server = _posthog_mod
 
 # Structured logging — configures alongside stdlib logging
 import structlog
@@ -150,6 +167,13 @@ def _posthog_script():
             posthog.init('{key}', {{api_host: 'https://us.i.posthog.com', person_profiles: 'identified_only', respect_dnt: true}});
         """),
     )
+
+
+def posthog_capture(event: str, distinct_id: str = "server", properties: dict | None = None):
+    """Capture a server-side PostHog event. No-op when PostHog is not configured."""
+    if _posthog_server is None:
+        return
+    _posthog_server.capture(distinct_id, event, properties or {})
 
 
 app, rt = fast_app(
@@ -638,6 +662,9 @@ async def serve_photo(filename: str):
 from starlette.staticfiles import StaticFiles
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+# Note: Sentry ASGI integration is auto-detected by sentry_sdk.init() above.
+# No explicit middleware wrapping needed — it hooks into Starlette/ASGI automatically.
 
 
 def _reorder_routes_atomic():

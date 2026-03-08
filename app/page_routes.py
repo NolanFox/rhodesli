@@ -4156,6 +4156,11 @@ def post(person_id: str, name: str = "", relationship: str = "", email: str = ""
         logging.info(
             f"[identify] Submission for {person_id}: name='{name.strip()}', by={submitted_by}, ann_id={ann_id}"
         )
+        _main_mod.posthog_capture(
+            "help_identify_submitted",
+            distinct_id=submitted_by,
+            properties={"person_id": person_id, "is_admin": is_admin},
+        )
     except Exception as e:
         logging.error(f"[identify] Failed to save annotation for {person_id}: {e}")
         return Div(
@@ -8047,7 +8052,6 @@ async def post(request):
         if not photo:
             yield sse_event({"stage": "error", "message": "No photo uploaded."})
             return
-
 
         content = await photo.read()
         original_filename = photo.filename or "upload.jpg"

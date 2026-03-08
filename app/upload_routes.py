@@ -428,6 +428,18 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
     with open(metadata_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
+    # Track upload event
+    _main_mod.posthog_capture(
+        "photo_uploaded",
+        distinct_id=uploader_email or "anonymous",
+        properties={
+            "file_count": len(saved_files),
+            "source": source or "Unknown",
+            "collection": collection or "",
+            "is_admin": user_is_admin,
+        },
+    )
+
     # Non-admin flow: create pending upload record and notify admin
     if not user_is_admin:
         pending = _main_mod._load_pending_uploads()

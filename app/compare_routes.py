@@ -4,18 +4,16 @@ Compare routes extracted from app/main.py.
 All /compare/* and /api/compare/* routes plus compare-exclusive helpers.
 Shared helpers (caches, social graph, evidence sections) remain in app.main.
 """
+
 import json
 import logging
-import os
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import quote
 
 import numpy as np
 from fasthtml.common import *
 from starlette.datastructures import UploadFile
-from starlette.responses import RedirectResponse
 
 from core.registry import IdentityState
 from core.config import PROCESSING_ENABLED
@@ -106,12 +104,14 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             "hx_trigger": "load",
             "hx_target": "#compare-results-area",
             "hx_swap": "innerHTML",
-            "hx_vals": json.dumps({
-                "source_type": pre_source_type,
-                "source_id": pre_source_id,
-                "target_type": "person",
-                "target_ids": pre_target_id,
-            }),
+            "hx_vals": json.dumps(
+                {
+                    "source_type": pre_source_type,
+                    "source_id": pre_source_id,
+                    "target_type": "person",
+                    "target_ids": pre_target_id,
+                }
+            ),
         }
 
     page_style = Style("""
@@ -192,13 +192,20 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             "});"
         )
 
-    workspace_js = Script("""
+    workspace_js = Script(
+        """
     (function() {
         // State
         var state = {
-            sourceType: '""" + pre_source_type + """',
-            sourceId: '""" + pre_source_id + """',
-            sourceName: '""" + js_source_name + """',
+            sourceType: '"""
+        + pre_source_type
+        + """',
+            sourceId: '"""
+        + pre_source_id
+        + """',
+            sourceName: '"""
+        + js_source_name
+        + """',
             targets: [],
             allArchive: false
         };
@@ -207,7 +214,9 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         window.compareState = state;
 
         // Pre-populate target if URL param provided
-        """ + js_target_push + """
+        """
+        + js_target_push
+        + """
 
         // Tab switching for source slot
         document.addEventListener('click', function(e) {
@@ -420,20 +429,27 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         if (state.sourceType) updateSourceDisplay();
         if (state.targets.length > 0) updateTargetPills();
     })();
-    """)
+    """
+    )
 
     # Upload form for source slot
     upload_panel = Div(
         Form(
             Div(
                 Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" id="ws-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" id="ws-upload-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'
+                    ),
                     P("Drop a photo here", cls="text-slate-400 text-sm"),
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs mt-0.5"),
-                    Input(type="file", name="photo", accept="image/jpeg,image/png",
-                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                          data_testid="ws-upload-input",
-                          onchange="var f=this.files[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)||f.size>10*1024*1024)return;this.closest('form').requestSubmit()"),
+                    Input(
+                        type="file",
+                        name="photo",
+                        accept="image/jpeg,image/png",
+                        cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                        data_testid="ws-upload-input",
+                        onchange="var f=this.files[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)||f.size>10*1024*1024)return;this.closest('form').requestSubmit()",
+                    ),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-lg p-6 transition-colors cursor-pointer text-center",
                 ),
             ),
@@ -451,7 +467,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Div(
             Div(cls="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"),
             P("Processing...", cls="text-slate-400 text-xs mt-2"),
-            id="ws-upload-spinner", cls="htmx-indicator text-center py-4",
+            id="ws-upload-spinner",
+            cls="htmx-indicator text-center py-4",
         ),
         # Container for upload results (faces detected, state updates)
         Div(id="ws-upload-result", data_testid="ws-upload-result"),
@@ -462,7 +479,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     # Person search for source slot
     person_panel = Div(
         Input(
-            type="text", name="q",
+            type="text",
+            name="q",
             placeholder="Search by name...",
             hx_get="/api/compare/search-unified?types=person&slot=source",
             hx_trigger="keyup changed delay:300ms",
@@ -471,8 +489,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
             data_testid="source-person-search",
         ),
-        Div(id="source-person-results", cls="mt-2 max-h-48 overflow-y-auto",
-            data_testid="source-person-results"),
+        Div(id="source-person-results", cls="mt-2 max-h-48 overflow-y-auto", data_testid="source-person-results"),
         Div(id="source-selected-display", cls="mt-2"),
         data_source_panel="person",
         cls="hidden",
@@ -482,7 +499,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     # Photo search/browse for source slot
     photo_panel = Div(
         Input(
-            type="text", name="q",
+            type="text",
+            name="q",
             placeholder="Search photos by name or collection...",
             hx_get="/api/compare/search-unified?types=photo&slot=source",
             hx_trigger="keyup changed delay:300ms",
@@ -502,12 +520,21 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         H3("Source", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
         # Tabs
         Div(
-            Button("Upload", data_source_tab="upload",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors"),
-            Button("Person", data_source_tab="person",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
-            Button("Photo", data_source_tab="photo",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            Button(
+                "Upload",
+                data_source_tab="upload",
+                cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors",
+            ),
+            Button(
+                "Person",
+                data_source_tab="person",
+                cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors",
+            ),
+            Button(
+                "Photo",
+                data_source_tab="photo",
+                cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors",
+            ),
             cls="flex gap-2 mb-4",
             data_testid="source-tabs",
         ),
@@ -523,13 +550,19 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Form(
             Div(
                 Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'
+                    ),
                     P("Drop a photo here", cls="text-slate-400 text-sm"),
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs mt-0.5"),
-                    Input(type="file", name="photo", accept="image/jpeg,image/png",
-                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
-                          data_testid="ws-target-upload-input",
-                          onchange="var f=this.files[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)||f.size>10*1024*1024)return;this.closest('form').requestSubmit()"),
+                    Input(
+                        type="file",
+                        name="photo",
+                        accept="image/jpeg,image/png",
+                        cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                        data_testid="ws-target-upload-input",
+                        onchange="var f=this.files[0];if(!f)return;if(!['image/jpeg','image/png'].includes(f.type)||f.size>10*1024*1024)return;this.closest('form').requestSubmit()",
+                    ),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-lg p-6 transition-colors cursor-pointer text-center",
                 ),
             ),
@@ -548,7 +581,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         Div(
             Div(cls="inline-block w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"),
             P("Processing...", cls="text-slate-400 text-xs mt-2"),
-            id="ws-target-upload-spinner", cls="htmx-indicator text-center py-4",
+            id="ws-target-upload-spinner",
+            cls="htmx-indicator text-center py-4",
         ),
         Div(id="ws-target-upload-result", data_testid="ws-target-upload-result"),
         data_target_panel="upload",
@@ -558,7 +592,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     # Person search for target slot
     target_person_panel = Div(
         Input(
-            type="text", name="q",
+            type="text",
+            name="q",
             id="target-search-input",
             placeholder="Search by name...",
             hx_get="/api/compare/search-unified?types=person&slot=target",
@@ -568,8 +603,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
             data_testid="target-search-input",
         ),
-        Div(id="target-person-results", cls="mt-2 max-h-48 overflow-y-auto",
-            data_testid="target-person-results"),
+        Div(id="target-person-results", cls="mt-2 max-h-48 overflow-y-auto", data_testid="target-person-results"),
         data_target_panel="person",
         cls="hidden",
         data_testid="target-person-panel",
@@ -578,7 +612,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
     # Photo search for target slot
     target_photo_panel = Div(
         Input(
-            type="text", name="q",
+            type="text",
+            name="q",
             placeholder="Search photos by name or collection...",
             hx_get="/api/compare/search-unified?types=photo&slot=target",
             hx_trigger="keyup changed delay:300ms",
@@ -598,12 +633,21 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         H3("Compare With", cls="text-sm font-medium text-slate-400 mb-3 uppercase tracking-wide"),
         # Tabs (mirrors source slot)
         Div(
-            Button("Upload", data_target_tab="upload",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors"),
-            Button("Person", data_target_tab="person",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
-            Button("Photo", data_target_tab="photo",
-                   cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"),
+            Button(
+                "Upload",
+                data_target_tab="upload",
+                cls="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white transition-colors",
+            ),
+            Button(
+                "Person",
+                data_target_tab="person",
+                cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors",
+            ),
+            Button(
+                "Photo",
+                data_target_tab="photo",
+                cls="px-3 py-1.5 text-xs rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors",
+            ),
             cls="flex gap-2 mb-4",
             data_testid="target-tabs",
         ),
@@ -650,8 +694,7 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             Section(
                 Div(
                     H1("Compare Faces", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P("Find connections across the Rhodes Jewish heritage archive.",
-                      cls="text-slate-400 text-sm"),
+                    P("Find connections across the Rhodes Jewish heritage archive.", cls="text-slate-400 text-sm"),
                     cls="max-w-6xl mx-auto px-6 pt-6 pb-4",
                 ),
             ),
@@ -669,9 +712,12 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             Section(
                 Div(
                     Div(
-                        P("Select a source and one or more targets to begin comparing.",
-                          cls="text-slate-500 text-center py-8") if not (pre_source_type and pre_target_id) else
-                        P("Loading comparison...", cls="text-slate-300 text-sm animate-pulse text-center py-8"),
+                        P(
+                            "Select a source and one or more targets to begin comparing.",
+                            cls="text-slate-500 text-center py-8",
+                        )
+                        if not (pre_source_type and pre_target_id)
+                        else P("Loading comparison...", cls="text-slate-300 text-sm animate-pulse text-center py-8"),
                         id="compare-results-area",
                         data_testid="compare-results-area",
                         **auto_compare_attrs,
@@ -683,8 +729,10 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             Div(
                 Div(
                     P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
-                    P("Preserving the memory of the Jewish community of Rhodes",
-                      cls="text-[10px] text-slate-600 italic"),
+                    P(
+                        "Preserving the memory of the Jewish community of Rhodes",
+                        cls="text-[10px] text-slate-600 italic",
+                    ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
                 ),
                 cls="py-8 border-t border-slate-800",
@@ -693,6 +741,8 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
         ),
         workspace_js,
     )
+
+
 def _compare_result_card(result: dict, crop_files: set, index: int) -> object | None:
     """Build a single compare result card."""
     fid = result["face_id"]
@@ -738,7 +788,10 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
     # State badge
     state_badge = None
     if state == "CONFIRMED":
-        state_badge = Span("Identified", cls="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30")
+        state_badge = Span(
+            "Identified",
+            cls="text-[9px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30",
+        )
 
     # Person page link (for confirmed identities)
     person_link = None
@@ -779,12 +832,21 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
         Div(
             P(display_name, cls="text-sm text-white font-medium mt-2 truncate text-center"),
             Div(
-                Span(f"{confidence_pct}%", cls=f"text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded border {style['badge_cls']}"),
+                Span(
+                    f"{confidence_pct}%",
+                    cls=f"text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded border {style['badge_cls']}",
+                ),
                 state_badge,
                 cls="flex flex-wrap items-center justify-center gap-1 sm:gap-2 mt-1",
             ),
             P(conf_label, cls="text-[10px] text-slate-500 text-center mt-0.5", data_testid="confidence-label"),
-            A("View Photo", href=photo_link, cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2") if photo_id else None,
+            A(
+                "View Photo",
+                href=photo_link,
+                cls="text-[10px] text-indigo-400 hover:text-indigo-300 block text-center mt-2",
+            )
+            if photo_id
+            else None,
             person_link,
             timeline_link,
             cls="px-2",
@@ -793,6 +855,8 @@ def _compare_result_card(result: dict, crop_files: set, index: int) -> object | 
         data_testid="compare-result",
         data_tier=tier.lower().replace(" ", "-"),
     )
+
+
 def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -> object:
     """Build the tiered results grid for face comparison (AD-067/AD-068).
     If result_id is provided, includes a shareable permalink."""
@@ -860,8 +924,10 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
             Div(
                 Div(
                     H3(cfg["title"], cls=f"text-base font-serif {cfg['icon']}"),
-                    Span(f"{len(cards)} result{'s' if len(cards) != 1 else ''} — {cfg['subtitle']}",
-                         cls="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-0 sm:ml-2 line-clamp-2 sm:line-clamp-none"),
+                    Span(
+                        f"{len(cards)} result{'s' if len(cards) != 1 else ''} — {cfg['subtitle']}",
+                        cls="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-0 sm:ml-2 line-clamp-2 sm:line-clamp-none",
+                    ),
                     cls="flex flex-col sm:flex-row items-start sm:items-baseline sm:gap-1 mb-3",
                 ),
                 Div(*cards, cls="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4"),
@@ -873,11 +939,18 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
     # Action CTAs below results
     share_url = f"/compare/result/{result_id}" if result_id else "/compare"
     cta_section = Div(
-        _main_mod.share_button(url=share_url, style="button", label="Share Results",
-                     title="Face Comparison Results", text="Check out these face comparison results from the Rhodes archive"),
-        A("Try Another Photo",
-          href="/compare",
-          cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center"),
+        _main_mod.share_button(
+            url=share_url,
+            style="button",
+            label="Share Results",
+            title="Face Comparison Results",
+            text="Check out these face comparison results from the Rhodes archive",
+        ),
+        A(
+            "Try Another Photo",
+            href="/compare",
+            cls="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium rounded-lg transition-colors inline-flex items-center",
+        ),
         cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-800",
         data_testid="compare-ctas",
     )
@@ -891,8 +964,9 @@ def _compare_results_grid(results: list, crop_files: set, result_id: str = "") -
     )
 
 
-def _compare_summary_section(results_by_face: list, crop_files: set, user_is_admin: bool,
-                              registry, rid: str = "") -> object | None:
+def _compare_summary_section(
+    results_by_face: list, crop_files: set, user_is_admin: bool, registry, rid: str = ""
+) -> object | None:
     """Build a Best Matches summary section aggregating top matches across all faces.
 
     Collects matches where confidence >= 40%, sorts by confidence descending
@@ -918,19 +992,21 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
                     state = ident.get("state", "") if ident else ""
                 except (KeyError, Exception):
                     pass
-            summary_matches.append({
-                "source_crop": source_crop,
-                "source_face_id": source_face_id,
-                "target_name": tr.get("target_name", "Unknown"),
-                "target_id": tr.get("target_id", ""),
-                "target_type": tr.get("target_type", ""),
-                "target_crop_url": tr.get("target_crop_url", ""),
-                "matched_face_id": tr.get("matched_face_id", ""),
-                "confidence_pct": pct,
-                "tier": tr.get("tier", "WEAK"),
-                "distance": tr.get("distance", 99),
-                "state": state,
-            })
+            summary_matches.append(
+                {
+                    "source_crop": source_crop,
+                    "source_face_id": source_face_id,
+                    "target_name": tr.get("target_name", "Unknown"),
+                    "target_id": tr.get("target_id", ""),
+                    "target_type": tr.get("target_type", ""),
+                    "target_crop_url": tr.get("target_crop_url", ""),
+                    "matched_face_id": tr.get("matched_face_id", ""),
+                    "confidence_pct": pct,
+                    "tier": tr.get("tier", "WEAK"),
+                    "distance": tr.get("distance", 99),
+                    "state": state,
+                }
+            )
 
     if not summary_matches:
         return None
@@ -939,6 +1015,7 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
     def _sort_key(m):
         confirmed_priority = 0 if m["state"] == "CONFIRMED" else 1
         return (confirmed_priority, -m["confidence_pct"])
+
     summary_matches.sort(key=_sort_key)
 
     # Build summary cards
@@ -971,8 +1048,10 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
         # State badge
         state_badge = None
         if m["state"] == "CONFIRMED":
-            state_badge = Span("Identified",
-                               cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30")
+            state_badge = Span(
+                "Identified",
+                cls="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/50 text-emerald-400 border border-emerald-700/30",
+            )
 
         # Target link
         target_link = "#"
@@ -1002,30 +1081,45 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
             if face_iid and face_iid != m["target_id"]:
                 _face_name = face_identity.get("name", "") if face_identity else ""
                 _target_name = m.get("target_name", "")
-                _merge_confirm = f"Merge {_face_name} into {_target_name}? All faces will be combined." if _target_name and not _target_name.startswith("Unidentified") else "Merge these identities? This can be undone."
+                _merge_confirm = (
+                    f"Merge {_face_name} into {_target_name}? All faces will be combined."
+                    if _target_name and not _target_name.startswith("Unidentified")
+                    else "Merge these identities? This can be undone."
+                )
                 admin_actions.append(
-                    Button("Merge",
-                           hx_post=f"/api/identity/{m['target_id']}/merge/{face_iid}?source=compare",
-                           hx_target=f"#summary-card-{i}",
-                           hx_swap="outerHTML",
-                           hx_confirm=_merge_confirm,
-                           cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
-                           data_testid=f"summary-merge-{i}"))
+                    Button(
+                        "Merge",
+                        hx_post=f"/api/identity/{m['target_id']}/merge/{face_iid}?source=compare",
+                        hx_target=f"#summary-card-{i}",
+                        hx_swap="outerHTML",
+                        hx_confirm=_merge_confirm,
+                        cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                        data_testid=f"summary-merge-{i}",
+                    )
+                )
                 admin_actions.append(
-                    Button("Not Same",
-                           hx_post=f"/api/identity/{m['target_id']}/not-same/{face_iid}?source=compare",
-                           hx_target=f"#summary-card-{i}",
-                           hx_swap="outerHTML",
-                           cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
-                           data_testid=f"summary-not-same-{i}"))
+                    Button(
+                        "Not Same",
+                        hx_post=f"/api/identity/{m['target_id']}/not-same/{face_iid}?source=compare",
+                        hx_target=f"#summary-card-{i}",
+                        hx_swap="outerHTML",
+                        cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                        data_testid=f"summary-not-same-{i}",
+                    )
+                )
 
         card = Div(
             # Side-by-side face images
             Div(
                 # Source face
                 Div(
-                    Img(src=m["source_crop"], cls="w-[150px] h-[150px] rounded-lg object-cover border border-slate-600",
-                        alt="Source face") if m["source_crop"] else Div(cls="w-[150px] h-[150px] rounded-lg bg-slate-700"),
+                    Img(
+                        src=m["source_crop"],
+                        cls="w-[150px] h-[150px] rounded-lg object-cover border border-slate-600",
+                        alt="Source face",
+                    )
+                    if m["source_crop"]
+                    else Div(cls="w-[150px] h-[150px] rounded-lg bg-slate-700"),
                     P("Source", cls="text-[10px] text-slate-500 text-center mt-1"),
                     cls="text-center",
                 ),
@@ -1038,12 +1132,19 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
                 # Matched face
                 Div(
                     A(
-                        Img(src=m["target_crop_url"], cls="w-[150px] h-[150px] rounded-lg object-cover border border-slate-600",
-                            alt=display_name) if m["target_crop_url"] else Div(cls="w-[150px] h-[150px] rounded-lg bg-slate-700"),
+                        Img(
+                            src=m["target_crop_url"],
+                            cls="w-[150px] h-[150px] rounded-lg object-cover border border-slate-600",
+                            alt=display_name,
+                        )
+                        if m["target_crop_url"]
+                        else Div(cls="w-[150px] h-[150px] rounded-lg bg-slate-700"),
                         href=target_link,
                     ),
-                    P(A(display_name, href=target_link, cls="text-white hover:text-indigo-300 text-sm font-medium"),
-                      cls="text-center mt-1"),
+                    P(
+                        A(display_name, href=target_link, cls="text-white hover:text-indigo-300 text-sm font-medium"),
+                        cls="text-center mt-1",
+                    ),
                     state_badge if state_badge else None,
                     cls="text-center",
                 ),
@@ -1054,7 +1155,9 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
                 share_btn if share_btn else None,
                 *(admin_actions if admin_actions else []),
                 cls="flex items-center justify-center gap-2 mt-3",
-            ) if (share_btn or admin_actions) else None,
+            )
+            if (share_btn or admin_actions)
+            else None,
             cls=f"p-4 bg-slate-800/70 rounded-xl border {border_cls} compare-card compare-section-animate",
             id=f"summary-card-{i}",
             data_testid=f"summary-card-{i}",
@@ -1064,8 +1167,10 @@ def _compare_summary_section(results_by_face: list, crop_files: set, user_is_adm
 
     return Div(
         H3("Best Matches", cls="text-lg font-serif text-white mb-1"),
-        P(f"{len(summary_matches)} match{'es' if len(summary_matches) != 1 else ''} above 40% confidence",
-          cls="text-xs text-slate-400 mb-4"),
+        P(
+            f"{len(summary_matches)} match{'es' if len(summary_matches) != 1 else ''} above 40% confidence",
+            cls="text-xs text-slate-400 mb-4",
+        ),
         Div(*cards, cls="space-y-4"),
         cls="mb-6 pb-6 border-b border-slate-700/50",
         data_testid="compare-summary-section",
@@ -1083,29 +1188,44 @@ def get(face_id: str = "", limit: int = 20, sess=None):
         return Div(P("Face not found in archive.", cls="text-amber-500 text-center py-4"))
 
     from core.neighbors import find_similar_faces
+
     registry = _main_mod.load_registry()
     crop_files = _main_mod.get_crop_files()
     results = find_similar_faces(
-        face_data[face_id]["mu"], face_data, registry=registry,
-        limit=limit, exclude_face_ids={face_id},
+        face_data[face_id]["mu"],
+        face_data,
+        registry=registry,
+        limit=limit,
+        exclude_face_ids={face_id},
     )
     # Save shareable result
     ident = _main_mod.get_identity_for_face(registry, face_id)
     query_name = ensure_utf8_display(ident.get("name", "Unknown")) if ident else "Unknown"
     rid = _main_mod._generate_result_id()
-    _main_mod._save_comparison_result({
-        "result_id": rid,
-        "created_at": datetime.now().isoformat(),
-        "query_type": "archive",
-        "query_face_id": face_id,
-        "query_name": query_name,
-        "matches": [{"face_id": r["face_id"], "identity_id": r.get("identity_id", ""),
-                     "identity_name": r.get("identity_name", ""), "distance": r["distance"],
-                     "confidence_pct": r.get("confidence_pct", 0), "tier": r.get("tier", "WEAK")}
-                    for r in results[:10]],
-        "responses": [],
-    })
+    _main_mod._save_comparison_result(
+        {
+            "result_id": rid,
+            "created_at": datetime.now().isoformat(),
+            "query_type": "archive",
+            "query_face_id": face_id,
+            "query_name": query_name,
+            "matches": [
+                {
+                    "face_id": r["face_id"],
+                    "identity_id": r.get("identity_id", ""),
+                    "identity_name": r.get("identity_name", ""),
+                    "distance": r["distance"],
+                    "confidence_pct": r.get("confidence_pct", 0),
+                    "tier": r.get("tier", "WEAK"),
+                }
+                for r in results[:10]
+            ],
+            "responses": [],
+        }
+    )
     return _compare_results_grid(results, crop_files, result_id=rid)
+
+
 def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> object:
     """Build the interactive comparison results view after upload + ingest.
 
@@ -1148,19 +1268,24 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
         if not emb or "mu" not in emb:
             continue
         matches = find_similar_faces(
-            emb["mu"], face_data, registry=registry,
-            limit=5, exclude_face_ids=set(face_ids),
+            emb["mu"],
+            face_data,
+            registry=registry,
+            limit=5,
+            exclude_face_ids=set(face_ids),
         )
         # Get identity info for this face
         face_ident = _main_mod.get_identity_for_face(registry, fid)
         identity_id = face_ident.get("identity_id") if face_ident else None
         identity_name = face_ident.get("name", "Unknown") if face_ident else None
-        per_face_results.append({
-            "face_id": fid,
-            "identity_id": identity_id,
-            "identity_name": identity_name or "Unknown",
-            "matches": matches,
-        })
+        per_face_results.append(
+            {
+                "face_id": fid,
+                "identity_id": identity_id,
+                "identity_name": identity_name or "Unknown",
+                "matches": matches,
+            }
+        )
 
     parts = []
 
@@ -1168,10 +1293,11 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
     face_count = len(per_face_results)
     parts.append(
         Div(
-            H2(f"{face_count} face{'s' if face_count != 1 else ''} detected",
-               cls="text-xl font-serif text-white mb-1"),
-            P("Photo saved to archive. Select a face to see matches, or search for a specific person.",
-              cls="text-sm text-slate-400"),
+            H2(f"{face_count} face{'s' if face_count != 1 else ''} detected", cls="text-xl font-serif text-white mb-1"),
+            P(
+                "Photo saved to archive. Select a face to see matches, or search for a specific person.",
+                cls="text-sm text-slate-400",
+            ),
             cls="mb-6",
         )
     )
@@ -1184,14 +1310,19 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
         parts.append(
             Div(
                 A(
-                    Img(src=photo_url, cls="max-h-64 rounded-lg object-contain mx-auto",
-                        alt="Uploaded photo", data_testid="compare-uploaded-photo"),
+                    Img(
+                        src=photo_url,
+                        cls="max-h-64 rounded-lg object-contain mx-auto",
+                        alt="Uploaded photo",
+                        data_testid="compare-uploaded-photo",
+                    ),
                     href=photo_link,
                     cls="block",
                 ),
-                P(A("View photo page", href=photo_link,
-                    cls="text-indigo-400 hover:text-indigo-300 text-xs"),
-                  cls="text-center mt-2"),
+                P(
+                    A("View photo page", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                    cls="text-center mt-2",
+                ),
                 cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
                 data_testid="upload-preview",
             )
@@ -1202,14 +1333,15 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
         Div(
             P("Compare against a specific person", cls="text-sm text-slate-300 mb-2 font-medium"),
             Input(
-                type="text", name="q",
+                type="text",
+                name="q",
                 placeholder="Search by name (e.g., Isaac Cohen)...",
                 hx_get=f"/api/compare/search-person?job_id={job_id}",
                 hx_trigger="keyup changed delay:300ms",
                 hx_target="#compare-person-search-results",
                 hx_include="this",
                 cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
-                    "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
                 data_testid="compare-person-search",
             ),
             Div(id="compare-person-search-results", cls="mt-2"),
@@ -1257,11 +1389,15 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
             match_cards.append(
                 Div(
                     Div(
-                        Img(src=m_crop_url, cls="w-16 h-16 rounded-lg object-cover border border-slate-600",
-                            alt=m_name) if m_crop_url else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
+                        Img(src=m_crop_url, cls="w-16 h-16 rounded-lg object-cover border border-slate-600", alt=m_name)
+                        if m_crop_url
+                        else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                         Div(
-                            A(m_name, href=f"/person/{m_iid}" if m_iid else "#",
-                              cls="text-sm text-white hover:text-indigo-300 font-medium"),
+                            A(
+                                m_name,
+                                href=f"/person/{m_iid}" if m_iid else "#",
+                                cls="text-sm text-white hover:text-indigo-300 font-medium",
+                            ),
                             Div(
                                 Div(
                                     Div(cls=f"h-1.5 rounded-full {bar_color}", style=f"width: {m_pct}%"),
@@ -1284,20 +1420,21 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
             Div(
                 Div(
                     Div(
-                        Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-500",
-                            alt=iname) if crop_url else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
+                        Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-500", alt=iname)
+                        if crop_url
+                        else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
                         cls="flex-shrink-0",
                     ),
                     Div(
-                        A(iname, href=person_link,
-                          cls="text-white font-medium hover:text-indigo-300"),
-                        P(f"Face {i + 1} — Top archive matches",
-                          cls="text-xs text-slate-400 mt-0.5"),
+                        A(iname, href=person_link, cls="text-white font-medium hover:text-indigo-300"),
+                        P(f"Face {i + 1} — Top archive matches", cls="text-xs text-slate-400 mt-0.5"),
                         cls="min-w-0",
                     ),
                     cls="flex items-center gap-3 mb-3",
                 ),
-                Div(*match_cards, cls="space-y-2") if match_cards else P("No matches found", cls="text-slate-500 text-sm"),
+                Div(*match_cards, cls="space-y-2")
+                if match_cards
+                else P("No matches found", cls="text-slate-500 text-sm"),
                 cls="p-4 bg-slate-800/30 rounded-lg border border-slate-700/50 mb-4",
                 data_testid=f"face-result-{i}",
             )
@@ -1314,28 +1451,36 @@ def _build_compare_results_view(face_ids: list, job_id: str, sess=None) -> objec
     }
     for fr in per_face_results:
         for m in fr["matches"][:3]:
-            result_data["matches"].append({
-                "face_id": m.get("face_id", ""),
-                "identity_id": m.get("identity_id", ""),
-                "identity_name": m.get("identity_name", "Unknown"),
-                "distance": m.get("distance", 99),
-                "confidence_pct": m.get("confidence_pct", 0),
-                "tier": m.get("tier", "WEAK"),
-            })
+            result_data["matches"].append(
+                {
+                    "face_id": m.get("face_id", ""),
+                    "identity_id": m.get("identity_id", ""),
+                    "identity_name": m.get("identity_name", "Unknown"),
+                    "distance": m.get("distance", 99),
+                    "confidence_pct": m.get("confidence_pct", 0),
+                    "tier": m.get("tier", "WEAK"),
+                }
+            )
     result_id = _main_mod._save_comparison_result(result_data)
 
     # Share link
     share_url = f"{_main_mod.SITE_URL}/compare/result/{result_id}"
     parts.append(
         Div(
-            A("Share this comparison", href=share_url, target="_blank",
-              cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
+            A(
+                "Share this comparison",
+                href=share_url,
+                target="_blank",
+                cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block",
+            ),
             cls="text-center mt-4",
             data_testid="compare-share-link",
         )
     )
 
     return Div(*parts, id="compare-results", data_testid="compare-results-complete")
+
+
 def _resolve_crop_url(face_id: str, crop_files: set) -> str:
     """Resolve crop URL for a face_id, handling both legacy and inbox formats."""
     if not face_id:
@@ -1346,12 +1491,14 @@ def _resolve_crop_url(face_id: str, crop_files: set) -> str:
         return storage.get_crop_url_by_filename(fname)
     # Try identity-based crop
     return _main_mod.resolve_face_image_url(face_id, crop_files)
+
+
 def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str) -> object:
     """Build a face selector UI for multi-face uploads."""
     face_buttons = []
     for i, face in enumerate(faces):
         bbox = face.get("bbox", [0, 0, 0, 0])
-        if hasattr(bbox, 'tolist'):
+        if hasattr(bbox, "tolist"):
             bbox = bbox.tolist()
         x1, y1, x2, y2 = [int(v) for v in bbox[:4]]
         w = x2 - x1
@@ -1364,18 +1511,22 @@ def _build_face_selector_for_upload(upload_id: str, faces: list, image_path: str
                 hx_target="#compare-results",
                 hx_swap="innerHTML",
                 cls=f"px-3 py-1.5 text-sm rounded-lg border transition-colors "
-                    f"{'bg-amber-600 border-amber-500 text-white' if i == 0 else 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}",
+                f"{'bg-amber-600 border-amber-500 text-white' if i == 0 else 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}",
                 data_testid=f"face-select-{i}",
             )
         )
 
     return Div(
-        P(f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected. Select which face to compare:",
-          cls="text-sm text-slate-400 mb-3"),
+        P(
+            f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected. Select which face to compare:",
+            cls="text-sm text-slate-400 mb-3",
+        ),
         Div(*face_buttons, cls="flex flex-wrap gap-2 justify-center"),
         cls="text-center mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50",
         data_testid="face-selector-upload",
     )
+
+
 @rt("/api/compare/upload")
 async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess=None):
     """Upload a photo for face comparison via the unified upload pipeline.
@@ -1389,8 +1540,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
     ws=1: workspace mode — results go to #ws-upload-result instead of #compare-results.
     target_ws=1: target workspace mode — results go to #ws-target-upload-result.
     """
-    import uuid
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     # Workspace mode: determine correct result container
     if target_ws == "1":
@@ -1401,8 +1551,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         result_id = "compare-results"
 
     if not photo:
-        return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"),
-                   id=result_id)
+        return Div(P("No photo uploaded.", cls="text-amber-500 text-center py-4"), id=result_id)
 
     from pathlib import Path as _Path
 
@@ -1413,13 +1562,11 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
 
     # Server-side file type validation
     if suffix not in (".jpg", ".jpeg", ".png"):
-        return Div(P("Please upload a JPG or PNG image.", cls="text-red-400 text-center py-4"),
-                   id=result_id)
+        return Div(P("Please upload a JPG or PNG image.", cls="text-red-400 text-center py-4"), id=result_id)
 
     # Server-side file size validation (10 MB)
     if len(content) > 10 * 1024 * 1024:
-        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"),
-                   id=result_id)
+        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-center py-4"), id=result_id)
 
     # Determine user and admin status (Lesson 19: admin-only for data modification)
     user = _main_mod.get_current_user(sess or {}) if _main_mod.is_auth_enabled() else None
@@ -1438,6 +1585,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
 
     # Write metadata (same format as Upload page)
     import json as _json_compare
+
     uploader_email = user.email if user else "anonymous"
     metadata = {
         "job_id": job_id,
@@ -1452,6 +1600,13 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
     }
     with open(job_dir / "_metadata.json", "w") as f:
         _json_compare.dump(metadata, f, indent=2)
+
+    # Track compare upload event
+    _main_mod.posthog_capture(
+        "face_compare_requested",
+        distinct_id=uploader_email,
+        properties={"is_admin": user_is_admin},
+    )
 
     # Non-admin flow: queue for admin review (same as Upload page)
     if not user_is_admin:
@@ -1471,13 +1626,12 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         _main_mod._save_pending_uploads(pending)
 
         return Div(
-            Div(
-                Span("&#10003;", cls="text-3xl text-emerald-400"),
-                cls="flex justify-center mb-3"
-            ),
+            Div(Span("&#10003;", cls="text-3xl text-emerald-400"), cls="flex justify-center mb-3"),
             P("Photo Submitted", cls="text-lg font-semibold text-white text-center"),
-            P("Your photo has been submitted for review. An admin will process it shortly.",
-              cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto"),
+            P(
+                "Your photo has been submitted for review. An admin will process it shortly.",
+                cls="text-sm text-slate-400 text-center mt-2 max-w-md mx-auto",
+            ),
             P(f"Reference: {job_id}", cls="text-xs text-slate-500 text-center mt-3 font-mono"),
             cls="py-8 px-4",
             id=result_id,
@@ -1496,6 +1650,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
     # Admin + processing enabled: spawn background ingest thread (AD-161)
     # SAME pipeline as Upload page — uses shared hybrid models, no OOM.
     import threading
+
     inbox_dir = _main_mod.data_path / "inbox"
     inbox_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1515,6 +1670,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         Uses same process_directory as Upload page (AD-161, AD-165).
         """
         import logging as _bg_logging
+
         log_path = inbox_dir / f"{job_id}.log"
         try:
             file_handler = _bg_logging.FileHandler(str(log_path))
@@ -1522,6 +1678,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             _bg_logging.getLogger("core.ingest_inbox").addHandler(file_handler)
 
             from core.ingest_inbox import process_directory
+
             result = process_directory(
                 directory=job_dir,
                 job_id=job_id,
@@ -1533,9 +1690,11 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
 
             # Upload to R2 (same as Upload page — AD-165)
             from core.storage import can_write_r2, upload_bytes_to_r2
+
             if can_write_r2() and result.get("status") in ("success", "partial"):
                 try:
                     import mimetypes
+
                     r2_count = 0
                     for fpath in job_dir.iterdir():
                         if fpath.is_file() and fpath.suffix.lower() in (".jpg", ".jpeg", ".png"):
@@ -1547,7 +1706,9 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
                         for fid in result.get("face_ids", []):
                             crop_path = crops_dir / f"{fid}.jpg"
                             if crop_path.exists():
-                                upload_bytes_to_r2(f"crops/{crop_path.name}", crop_path.read_bytes(), content_type="image/jpeg")
+                                upload_bytes_to_r2(
+                                    f"crops/{crop_path.name}", crop_path.read_bytes(), content_type="image/jpeg"
+                                )
                                 r2_count += 1
                     # Update status with R2 info
                     status_path = inbox_dir / f"{job_id}.status.json"
@@ -1564,6 +1725,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
 
             # Invalidate caches so web app sees new data
             import app.main as _main_mod
+
             _main_mod._photo_cache = None
             _main_mod._face_to_photo_cache = None
             _main_mod._photo_id_aliases = None
@@ -1587,6 +1749,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             except Exception:
                 pass
             import traceback
+
             try:
                 with open(log_path, "a") as _lf:
                     traceback.print_exc(file=_lf)
@@ -1594,6 +1757,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
                 pass
         finally:
             import shutil as _shutil_cleanup
+
             try:
                 if job_dir.exists():
                     _shutil_cleanup.rmtree(job_dir, ignore_errors=True)
@@ -1616,8 +1780,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             Span("\u23f3", cls="animate-pulse"),
             cls="flex items-center gap-2",
         ),
-        P("Detecting faces and comparing against the archive",
-          cls="text-slate-400 text-xs mt-1"),
+        P("Detecting faces and comparing against the archive", cls="text-slate-400 text-xs mt-1"),
         hx_get=f"/api/compare/status/{job_id}{poll_suffix}",
         hx_trigger="every 2s",
         hx_swap="outerHTML",
@@ -1625,6 +1788,8 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
         cls="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg",
         data_testid="compare-processing",
     )
+
+
 def _build_workspace_upload_complete(face_ids: list, job_id: str, target_mode: bool = False) -> object:
     """Build workspace panel content after upload + ingest completes.
 
@@ -1639,10 +1804,13 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str, target_mode: b
         crop_url = _resolve_crop_url(fid, crop_files)
         face_thumbs.append(
             Div(
-                Img(src=crop_url, cls="w-12 h-12 rounded-lg object-cover border border-slate-600",
-                    alt=f"Face {i+1}") if crop_url else
-                Div(f"F{i+1}", cls="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400"),
-                Span(f"Face {i+1}", cls="text-[10px] text-slate-500 mt-0.5 block text-center"),
+                Img(src=crop_url, cls="w-12 h-12 rounded-lg object-cover border border-slate-600", alt=f"Face {i + 1}")
+                if crop_url
+                else Div(
+                    f"F{i + 1}",
+                    cls="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center text-xs text-slate-400",
+                ),
+                Span(f"Face {i + 1}", cls="text-[10px] text-slate-500 mt-0.5 block text-center"),
                 cls="compare-face-thumb",
                 style=f"animation-delay: {i * 50}ms",
             )
@@ -1682,8 +1850,7 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str, target_mode: b
     return Div(
         Div(
             Span("&#10003;", cls="text-emerald-400 text-lg"),
-            Span(f"{face_count} face{'s' if face_count != 1 else ''} detected",
-                 cls="text-sm text-white font-medium"),
+            Span(f"{face_count} face{'s' if face_count != 1 else ''} detected", cls="text-sm text-white font-medium"),
             cls="flex items-center gap-2 mb-3",
         ),
         Div(*face_thumbs, cls="flex flex-wrap gap-3 justify-center"),
@@ -1692,6 +1859,8 @@ def _build_workspace_upload_complete(face_ids: list, job_id: str, target_mode: b
         cls="p-3 bg-emerald-900/10 border border-emerald-500/20 rounded-lg",
         data_testid="ws-upload-complete",
     )
+
+
 @rt("/api/compare/status/{job_id}")
 def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
     """Poll compare upload status. On completion, show comparison results.
@@ -1757,14 +1926,17 @@ def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
         if elapsed > timeout:
             return Div(
                 P("Processing timed out.", cls="text-red-400 text-sm font-medium"),
-                P("Your photo was saved. An admin can process it later.",
-                  cls="text-slate-400 text-xs mt-1"),
+                P("Your photo was saved. An admin can process it later.", cls="text-slate-400 text-xs mt-1"),
                 id=result_id,
                 cls="p-4 bg-red-900/20 border border-red-500/30 rounded-lg",
             )
 
         faces_so_far = status.get("faces_extracted", 0)
-        progress_text = "Detecting faces..." if faces_so_far == 0 else f"{faces_so_far} face{'s' if faces_so_far != 1 else ''} found, comparing..."
+        progress_text = (
+            "Detecting faces..."
+            if faces_so_far == 0
+            else f"{faces_so_far} face{'s' if faces_so_far != 1 else ''} found, comparing..."
+        )
         return Div(
             Div(
                 P(progress_text, cls="text-slate-300 text-sm"),
@@ -1783,8 +1955,7 @@ def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
     if not face_ids:
         return Div(
             P("No faces detected in the uploaded photo.", cls="text-amber-500 text-center py-4"),
-            P("Try uploading a clearer photo with visible faces.",
-              cls="text-slate-500 text-center text-sm mt-2"),
+            P("Try uploading a clearer photo with visible faces.", cls="text-slate-500 text-center text-sm mt-2"),
             id=result_id,
         )
 
@@ -1795,6 +1966,8 @@ def get(job_id: str, ws: str = "", target_ws: str = "", sess=None):
         return _build_workspace_upload_complete(face_ids, job_id)
 
     return _build_compare_results_view(face_ids, job_id, sess)
+
+
 @rt("/api/compare/search-person")
 def get(q: str = "", job_id: str = "", sess=None):
     """Search for a person to compare against. Returns clickable results."""
@@ -1828,8 +2001,9 @@ def get(q: str = "", job_id: str = "", sess=None):
         cards.append(
             Button(
                 Div(
-                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600",
-                        alt=name) if crop_url else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600", alt=name)
+                    if crop_url
+                    else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
                     Div(
                         Span(name, cls="text-sm text-white font-medium"),
                         state_badge if state_badge else None,
@@ -1845,8 +2019,9 @@ def get(q: str = "", job_id: str = "", sess=None):
             )
         )
 
-    return Div(*cards, id="compare-person-search-results",
-               cls="space-y-1 max-h-64 overflow-y-auto")
+    return Div(*cards, id="compare-person-search-results", cls="space-y-1 max-h-64 overflow-y-auto")
+
+
 @rt("/api/compare/vs-person")
 def post(job_id: str = "", identity_id: str = "", sess=None):
     """Compare all faces from a compare upload against a specific person.
@@ -1907,13 +2082,19 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
         return Div(P(f"No embeddings found for {ref_name}.", cls="text-amber-500 text-sm"), id="compare-results")
 
     # Get reference person's existing top archive matches (Find Similar context)
-    from core.neighbors import find_similar_faces, find_nearest_neighbors
+    from core.neighbors import find_nearest_neighbors
+
     ref_neighbors = find_nearest_neighbors(
-        identity_id, registry, _main_mod.load_photo_registry(), face_data, limit=3,
+        identity_id,
+        registry,
+        _main_mod.load_photo_registry(),
+        face_data,
+        limit=3,
     )
 
     # Compute per-face distances against reference person
     import numpy as np
+
     per_face_scores = []
     for fid in face_ids:
         emb = face_data.get(fid)
@@ -1929,6 +2110,7 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
 
         # Unified confidence scoring (AD-200)
         from core.confidence import compute_face_confidence
+
         conf = compute_face_confidence(best_dist)
         confidence_pct = conf["confidence_pct"]
         tier = conf["tier"]
@@ -1938,14 +2120,16 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
         face_identity_id = face_identity.get("identity_id") if face_identity else None
         face_identity_name = face_identity.get("name", "Unknown") if face_identity else None
 
-        per_face_scores.append({
-            "face_id": fid,
-            "identity_id": face_identity_id,
-            "identity_name": face_identity_name or "Unknown",
-            "distance": best_dist,
-            "confidence_pct": confidence_pct,
-            "tier": tier,
-        })
+        per_face_scores.append(
+            {
+                "face_id": fid,
+                "identity_id": face_identity_id,
+                "identity_name": face_identity_name or "Unknown",
+                "distance": best_dist,
+                "confidence_pct": confidence_pct,
+                "tier": tier,
+            }
+        )
 
     # Sort by confidence (best first)
     per_face_scores.sort(key=lambda x: x["distance"])
@@ -1970,8 +2154,10 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
     parts.append(
         Div(
             H2(f"Comparing against {ref_name}", cls="text-xl font-serif text-white mb-1"),
-            P(f"{len(per_face_scores)} face{'s' if len(per_face_scores) != 1 else ''} scored",
-              cls="text-sm text-slate-400"),
+            P(
+                f"{len(per_face_scores)} face{'s' if len(per_face_scores) != 1 else ''} scored",
+                cls="text-sm text-slate-400",
+            ),
             cls="mb-4",
         )
     )
@@ -1984,24 +2170,35 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
             # Uploaded photo
             Div(
                 A(
-                    Img(src=photo_url, cls="max-h-48 rounded-lg object-contain",
-                        alt="Uploaded photo") if photo_url else Div("Photo", cls="w-32 h-32 bg-slate-700 rounded-lg flex items-center justify-center text-slate-500"),
+                    Img(src=photo_url, cls="max-h-48 rounded-lg object-contain", alt="Uploaded photo")
+                    if photo_url
+                    else Div(
+                        "Photo", cls="w-32 h-32 bg-slate-700 rounded-lg flex items-center justify-center text-slate-500"
+                    ),
                     href=photo_link,
                 ),
-                P(A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
-                  cls="text-center mt-1"),
+                P(
+                    A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                    cls="text-center mt-1",
+                ),
                 cls="flex-1 text-center",
             ),
             # Reference person
             Div(
                 A(
-                    Img(src=ref_crop_url, cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
-                        alt=ref_name) if ref_crop_url else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
+                    Img(
+                        src=ref_crop_url,
+                        cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
+                        alt=ref_name,
+                    )
+                    if ref_crop_url
+                    else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
                     href=ref_person_link,
                 ),
-                P(A(ref_name, href=ref_person_link,
-                    cls="text-white font-medium hover:text-indigo-300 text-sm"),
-                  cls="text-center mt-2"),
+                P(
+                    A(ref_name, href=ref_person_link, cls="text-white font-medium hover:text-indigo-300 text-sm"),
+                    cls="text-center mt-2",
+                ),
                 P("Reference person", cls="text-xs text-slate-500 text-center"),
                 cls="flex-1 text-center",
             ),
@@ -2044,7 +2241,11 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
         # Admin actions (merge/reject) — same as Find Similar
         action_buttons = []
         if user_is_admin and fiid:
-            _merge_confirm = f"Merge {fname} into {ref_name}? All faces will be combined." if ref_name and not ref_name.startswith("Unidentified") else "Merge these identities? This can be undone."
+            _merge_confirm = (
+                f"Merge {fname} into {ref_name}? All faces will be combined."
+                if ref_name and not ref_name.startswith("Unidentified")
+                else "Merge these identities? This can be undone."
+            )
             action_buttons.append(
                 Button(
                     "Merge",
@@ -2074,21 +2275,24 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
                 Div(
                     # Face crop
                     A(
-                        Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600",
-                            alt=fname) if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                        Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600", alt=fname)
+                        if crop_url
+                        else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
                         href=person_link,
                     ),
                     # Score info
                     Div(
-                        A(fname, href=person_link,
-                          cls="text-sm text-white hover:text-indigo-300 font-medium"),
+                        A(fname, href=person_link, cls="text-sm text-white hover:text-indigo-300 font-medium"),
                         # Confidence bar
                         Div(
                             Div(
                                 Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
                                 cls="flex-1 bg-slate-700 rounded-full h-2",
                             ),
-                            Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                            Span(
+                                f"{pct}%",
+                                cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold",
+                            ),
                             cls="flex items-center gap-2 mt-1",
                         ),
                         Span(f"{tier_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
@@ -2118,11 +2322,15 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
 
         parts.append(
             Div(
-                P(f"Context: {ref_name}'s closest existing archive matches:",
-                  cls="text-sm text-slate-300 font-medium mb-1"),
+                P(
+                    f"Context: {ref_name}'s closest existing archive matches:",
+                    cls="text-sm text-slate-300 font-medium mb-1",
+                ),
                 P(context_str, cls="text-xs text-slate-400 mb-2"),
-                P(f"Your best match ({best_uploaded_name}) scores distance {best_uploaded_dist:.2f}.",
-                  cls="text-xs text-slate-400"),
+                P(
+                    f"Your best match ({best_uploaded_name}) scores distance {best_uploaded_dist:.2f}.",
+                    cls="text-xs text-slate-400",
+                ),
                 cls="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700/30",
                 data_testid="compare-context",
             )
@@ -2157,24 +2365,32 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
     parts.append(
         Div(
             Div(
-                A("Share this comparison", href=share_url, target="_blank",
-                  cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
-                A("Find Similar for " + ref_name, href=f"/person/{identity_id}",
-                  cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block"),
+                A(
+                    "Share this comparison",
+                    href=share_url,
+                    target="_blank",
+                    cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block",
+                ),
+                A(
+                    "Find Similar for " + ref_name,
+                    href=f"/person/{identity_id}",
+                    cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block",
+                ),
                 cls="flex gap-3 justify-center flex-wrap",
             ),
             # Search for another person
             Div(
                 P("Compare against another person:", cls="text-sm text-slate-400 mt-4 mb-2"),
                 Input(
-                    type="text", name="q",
+                    type="text",
+                    name="q",
                     placeholder="Search by name...",
                     hx_get=f"/api/compare/search-person?job_id={job_id}",
                     hx_trigger="keyup changed delay:300ms",
                     hx_target="#compare-person-search-results-2",
                     hx_include="this",
                     cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
-                        "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                    "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
                 ),
                 Div(id="compare-person-search-results-2", cls="mt-2"),
             ),
@@ -2184,6 +2400,8 @@ def post(job_id: str = "", identity_id: str = "", sess=None):
     )
 
     return Div(*parts, id="compare-results", data_testid="compare-vs-person-results")
+
+
 @rt("/api/compare/from-photo")
 def get(photo_id: str = "", identity_id: str = "", sess=None):
     """Compare an existing archive photo's faces against a specific person.
@@ -2194,7 +2412,6 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     Reuses the same vs-person scoring engine (L2 distance + calibration).
     Saves result for sharing via /compare/result/{id}.
     """
-    import json as _json_fp
     import numpy as np
 
     if not photo_id:
@@ -2220,27 +2437,40 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     if not face_ids:
         return Div(P("No faces found in this photo.", cls="text-amber-500 text-sm"), id="compare-results")
 
-    photo_url = storage.get_photo_url(photo_meta.get("filename") or photo_meta.get("path", "")) if (photo_meta.get("filename") or photo_meta.get("path")) else None
+    photo_url = (
+        storage.get_photo_url(photo_meta.get("filename") or photo_meta.get("path", ""))
+        if (photo_meta.get("filename") or photo_meta.get("path"))
+        else None
+    )
 
     # If no identity_id, show the photo's faces + person search
     if not identity_id:
         parts = []
         parts.append(
             Div(
-                H2(f"{len(face_ids)} face{'s' if len(face_ids) != 1 else ''} in this photo",
-                   cls="text-xl font-serif text-white mb-1"),
-                P("Search for a person to compare against.",
-                  cls="text-sm text-slate-400"),
+                H2(
+                    f"{len(face_ids)} face{'s' if len(face_ids) != 1 else ''} in this photo",
+                    cls="text-xl font-serif text-white mb-1",
+                ),
+                P("Search for a person to compare against.", cls="text-sm text-slate-400"),
                 cls="mb-4",
             )
         )
         if photo_url:
             parts.append(
                 Div(
-                    A(Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto",
-                           alt="Archive photo"), href=f"/photo/{photo_id}"),
-                    P(A("View photo page", href=f"/photo/{photo_id}",
-                        cls="text-indigo-400 hover:text-indigo-300 text-xs"), cls="text-center mt-2"),
+                    A(
+                        Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto", alt="Archive photo"),
+                        href=f"/photo/{photo_id}",
+                    ),
+                    P(
+                        A(
+                            "View photo page",
+                            href=f"/photo/{photo_id}",
+                            cls="text-indigo-400 hover:text-indigo-300 text-xs",
+                        ),
+                        cls="text-center mt-2",
+                    ),
                     cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/50",
                 )
             )
@@ -2259,14 +2489,15 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
             Div(
                 P("Compare against a specific person", cls="text-sm text-slate-300 mb-2 font-medium"),
                 Input(
-                    type="text", name="q",
+                    type="text",
+                    name="q",
                     placeholder="Search by name (e.g., Isaac Cohen)...",
                     hx_get=f"/api/compare/search-person-photo?photo_id={photo_id}",
                     hx_trigger="keyup changed delay:300ms",
                     hx_target="#compare-person-search-results",
                     hx_include="this",
                     cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
-                        "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                    "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
                     data_testid="compare-person-search",
                 ),
                 Div(id="compare-person-search-results", cls="mt-2"),
@@ -2302,6 +2533,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
 
     # Reference person's existing top archive matches
     from core.neighbors import find_nearest_neighbors
+
     photo_reg = _main_mod.load_photo_registry()
     ref_neighbors = find_nearest_neighbors(identity_id, registry, photo_reg, face_data, limit=3)
 
@@ -2319,6 +2551,7 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
 
         # Unified confidence scoring (AD-200)
         from core.confidence import compute_face_confidence
+
         conf = compute_face_confidence(best_dist)
         confidence_pct = conf["confidence_pct"]
         tier = conf["tier"]
@@ -2327,14 +2560,16 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
         face_identity_id = face_identity.get("identity_id") if face_identity else None
         face_identity_name = face_identity.get("name", "Unknown") if face_identity else None
 
-        per_face_scores.append({
-            "face_id": fid,
-            "identity_id": face_identity_id,
-            "identity_name": face_identity_name or "Unknown",
-            "distance": best_dist,
-            "confidence_pct": confidence_pct,
-            "tier": tier,
-        })
+        per_face_scores.append(
+            {
+                "face_id": fid,
+                "identity_id": face_identity_id,
+                "identity_name": face_identity_name or "Unknown",
+                "distance": best_dist,
+                "confidence_pct": confidence_pct,
+                "tier": tier,
+            }
+        )
 
     per_face_scores.sort(key=lambda x: x["distance"])
 
@@ -2346,8 +2581,10 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     parts.append(
         Div(
             H2(f"Comparing against {ref_name}", cls="text-xl font-serif text-white mb-1"),
-            P(f"{len(per_face_scores)} face{'s' if len(per_face_scores) != 1 else ''} in photo scored",
-              cls="text-sm text-slate-400"),
+            P(
+                f"{len(per_face_scores)} face{'s' if len(per_face_scores) != 1 else ''} in photo scored",
+                cls="text-sm text-slate-400",
+            ),
             cls="mb-4",
         )
     )
@@ -2355,19 +2592,33 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     parts.append(
         Div(
             Div(
-                A(Img(src=photo_url, cls="max-h-48 rounded-lg object-contain",
-                       alt="Archive photo") if photo_url else Div("Photo", cls="w-32 h-32 bg-slate-700 rounded-lg"),
-                  href=photo_link),
-                P(A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
-                  cls="text-center mt-1"),
+                A(
+                    Img(src=photo_url, cls="max-h-48 rounded-lg object-contain", alt="Archive photo")
+                    if photo_url
+                    else Div("Photo", cls="w-32 h-32 bg-slate-700 rounded-lg"),
+                    href=photo_link,
+                ),
+                P(
+                    A("View photo", href=photo_link, cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                    cls="text-center mt-1",
+                ),
                 cls="flex-1 text-center",
             ),
             Div(
-                A(Img(src=ref_crop_url, cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
-                       alt=ref_name) if ref_crop_url else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
-                  href=ref_person_link),
-                P(A(ref_name, href=ref_person_link, cls="text-white font-medium hover:text-indigo-300 text-sm"),
-                  cls="text-center mt-2"),
+                A(
+                    Img(
+                        src=ref_crop_url,
+                        cls="w-24 h-24 rounded-full object-cover border-2 border-indigo-500 mx-auto",
+                        alt=ref_name,
+                    )
+                    if ref_crop_url
+                    else Div(cls="w-24 h-24 rounded-full bg-slate-700 mx-auto"),
+                    href=ref_person_link,
+                ),
+                P(
+                    A(ref_name, href=ref_person_link, cls="text-white font-medium hover:text-indigo-300 text-sm"),
+                    cls="text-center mt-2",
+                ),
                 P("Reference person", cls="text-xs text-slate-500 text-center"),
                 cls="flex-1 text-center",
             ),
@@ -2400,34 +2651,56 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
 
         action_buttons = []
         if user_is_admin and fiid:
-            _merge_confirm = f"Merge {fname} into {ref_name}? All faces will be combined." if ref_name and not ref_name.startswith("Unidentified") else "Merge these identities? This can be undone."
+            _merge_confirm = (
+                f"Merge {fname} into {ref_name}? All faces will be combined."
+                if ref_name and not ref_name.startswith("Unidentified")
+                else "Merge these identities? This can be undone."
+            )
             action_buttons.append(
-                Button("Merge",
-                       hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
-                       hx_target=f"#compare-face-{i}", hx_swap="outerHTML",
-                       hx_confirm=_merge_confirm,
-                       cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
-                       data_testid=f"merge-{i}"))
+                Button(
+                    "Merge",
+                    hx_post=f"/api/identity/{identity_id}/merge/{fiid}?source=compare",
+                    hx_target=f"#compare-face-{i}",
+                    hx_swap="outerHTML",
+                    hx_confirm=_merge_confirm,
+                    cls="px-2 py-1 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors",
+                    data_testid=f"merge-{i}",
+                )
+            )
             action_buttons.append(
-                Button("Not Same",
-                       hx_post=f"/api/identity/{identity_id}/not-same/{fiid}?source=compare",
-                       hx_target=f"#compare-face-{i}", hx_swap="outerHTML",
-                       cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
-                       data_testid=f"not-same-{i}"))
+                Button(
+                    "Not Same",
+                    hx_post=f"/api/identity/{identity_id}/not-same/{fiid}?source=compare",
+                    hx_target=f"#compare-face-{i}",
+                    hx_swap="outerHTML",
+                    cls="px-2 py-1 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded transition-colors",
+                    data_testid=f"not-same-{i}",
+                )
+            )
 
         person_link_face = f"/person/{fiid}" if fiid else "#"
         parts.append(
             Div(
                 Div(
-                    A(Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600",
-                           alt=fname) if crop_url else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
-                      href=person_link_face),
+                    A(
+                        Img(src=crop_url, cls="w-14 h-14 rounded-full object-cover border border-slate-600", alt=fname)
+                        if crop_url
+                        else Div(cls="w-14 h-14 rounded-full bg-slate-700"),
+                        href=person_link_face,
+                    ),
                     Div(
                         A(fname, href=person_link_face, cls="text-sm text-white hover:text-indigo-300 font-medium"),
-                        Div(Div(Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
-                                cls="flex-1 bg-slate-700 rounded-full h-2"),
-                            Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
-                            cls="flex items-center gap-2 mt-1"),
+                        Div(
+                            Div(
+                                Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
+                                cls="flex-1 bg-slate-700 rounded-full h-2",
+                            ),
+                            Span(
+                                f"{pct}%",
+                                cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold",
+                            ),
+                            cls="flex items-center gap-2 mt-1",
+                        ),
                         Span(f"{tier_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
                         cls="flex-1 min-w-0",
                     ),
@@ -2452,11 +2725,15 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
         best_uploaded_name = per_face_scores[0]["identity_name"] if per_face_scores else "Unknown"
         parts.append(
             Div(
-                P(f"Context: {ref_name}'s closest existing archive matches:",
-                  cls="text-sm text-slate-300 font-medium mb-1"),
+                P(
+                    f"Context: {ref_name}'s closest existing archive matches:",
+                    cls="text-sm text-slate-300 font-medium mb-1",
+                ),
                 P(context_str, cls="text-xs text-slate-400 mb-2"),
-                P(f"Best match in this photo ({best_uploaded_name}) scores distance {best_uploaded_dist:.2f}.",
-                  cls="text-xs text-slate-400"),
+                P(
+                    f"Best match in this photo ({best_uploaded_name}) scores distance {best_uploaded_dist:.2f}.",
+                    cls="text-xs text-slate-400",
+                ),
                 cls="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-700/30",
                 data_testid="compare-context",
             )
@@ -2473,9 +2750,14 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
         "face_ids": face_ids,
         "reference_person": {"identity_id": identity_id, "name": ref_name},
         "matches": [
-            {"face_id": s["face_id"], "identity_id": s.get("identity_id", ""),
-             "identity_name": s["identity_name"], "distance": s["distance"],
-             "confidence_pct": s["confidence_pct"], "tier": s["tier"]}
+            {
+                "face_id": s["face_id"],
+                "identity_id": s.get("identity_id", ""),
+                "identity_name": s["identity_name"],
+                "distance": s["distance"],
+                "confidence_pct": s["confidence_pct"],
+                "tier": s["tier"],
+            }
             for s in per_face_scores
         ],
         "responses": [],
@@ -2486,23 +2768,31 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     parts.append(
         Div(
             Div(
-                A("Share this comparison", href=share_url, target="_blank",
-                  cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
-                A(f"Find Similar for {ref_name}", href=f"/person/{identity_id}",
-                  cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block"),
+                A(
+                    "Share this comparison",
+                    href=share_url,
+                    target="_blank",
+                    cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block",
+                ),
+                A(
+                    f"Find Similar for {ref_name}",
+                    href=f"/person/{identity_id}",
+                    cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors inline-block",
+                ),
                 cls="flex gap-3 justify-center flex-wrap",
             ),
             Div(
                 P("Compare against another person:", cls="text-sm text-slate-400 mt-4 mb-2"),
                 Input(
-                    type="text", name="q",
+                    type="text",
+                    name="q",
                     placeholder="Search by name...",
                     hx_get=f"/api/compare/search-person-photo?photo_id={photo_id}",
                     hx_trigger="keyup changed delay:300ms",
                     hx_target="#compare-person-search-results-2",
                     hx_include="this",
                     cls="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg "
-                        "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
+                    "text-white text-sm placeholder-slate-500 focus:border-indigo-500 focus:outline-none",
                 ),
                 Div(id="compare-person-search-results-2", cls="mt-2"),
             ),
@@ -2512,6 +2802,8 @@ def get(photo_id: str = "", identity_id: str = "", sess=None):
     )
 
     return Div(*parts, id="compare-results", data_testid="compare-from-photo-results")
+
+
 @rt("/api/compare/search-person-photo")
 def get(q: str = "", photo_id: str = "", sess=None):
     """Search for a person to compare an archive photo against. Returns clickable results."""
@@ -2545,8 +2837,9 @@ def get(q: str = "", photo_id: str = "", sess=None):
         cards.append(
             A(
                 Div(
-                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600",
-                        alt=name) if crop_url else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                    Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600", alt=name)
+                    if crop_url
+                    else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
                     Div(
                         Span(name, cls="text-sm text-white font-medium"),
                         state_badge if state_badge else None,
@@ -2560,8 +2853,9 @@ def get(q: str = "", photo_id: str = "", sess=None):
             )
         )
 
-    return Div(*cards, id="compare-person-search-results",
-               cls="space-y-1 max-h-64 overflow-y-auto")
+    return Div(*cards, id="compare-person-search-results", cls="space-y-1 max-h-64 overflow-y-auto")
+
+
 @rt("/api/compare/upload-multiple")
 async def post(request, sess=None):
     """Upload 2-5 photos for cross-comparison and archive matching.
@@ -2571,22 +2865,21 @@ async def post(request, sess=None):
     All photos saved for pipeline processing. (PRD-021, Session 61)
     """
     import time as _time
+
     t0 = _time.time()
 
     form = await request.form()
     photos = form.getlist("photos")
 
     if not photos or len(photos) < 2:
-        return Div(P("Please upload at least 2 photos for cross-comparison.",
-                     cls="text-amber-500 text-center py-4"),
-                   P("For single photo comparison, use the form above.",
-                     cls="text-slate-500 text-center text-sm mt-2"),
-                   id="compare-results")
+        return Div(
+            P("Please upload at least 2 photos for cross-comparison.", cls="text-amber-500 text-center py-4"),
+            P("For single photo comparison, use the form above.", cls="text-slate-500 text-center text-sm mt-2"),
+            id="compare-results",
+        )
 
     if len(photos) > 5:
-        return Div(P("Maximum 5 photos per batch.",
-                     cls="text-red-400 text-center py-4"),
-                   id="compare-results")
+        return Div(P("Maximum 5 photos per batch.", cls="text-red-400 text-center py-4"), id="compare-results")
 
     from pathlib import Path as _Path
     import tempfile
@@ -2597,6 +2890,7 @@ async def post(request, sess=None):
         import cv2
         from insightface.app import FaceAnalysis  # noqa: F401
         from core.ingest_inbox import extract_faces_hybrid
+
         has_insightface = True
     except ImportError:
         pass
@@ -2604,22 +2898,28 @@ async def post(request, sess=None):
     if not has_insightface:
         # Save all photos to R2 for later processing
         from core.storage import can_write_r2
+
         if can_write_r2():
             upload_ids = []
             for photo_file in photos:
                 content = await photo_file.read()
                 filename = photo_file.filename or "upload.jpg"
-                uid = _main_mod._save_compare_upload(content, filename, faces=[], results=[], status="awaiting_analysis")
+                uid = _main_mod._save_compare_upload(
+                    content, filename, faces=[], results=[], status="awaiting_analysis"
+                )
                 upload_ids.append(uid)
             return Div(
                 P("Photos received!", cls="text-lg font-semibold text-white text-center"),
-                P(f"{len(upload_ids)} photos saved for offline analysis by the archive team.",
-                  cls="text-sm text-slate-400 text-center mt-2"),
-                cls="py-8 px-4", id="compare-results",
+                P(
+                    f"{len(upload_ids)} photos saved for offline analysis by the archive team.",
+                    cls="text-sm text-slate-400 text-center mt-2",
+                ),
+                cls="py-8 px-4",
+                id="compare-results",
             )
-        return Div(P("Multi-photo uploads not available yet.",
-                     cls="text-amber-500 text-center py-4"),
-                   id="compare-results")
+        return Div(
+            P("Multi-photo uploads not available yet.", cls="text-amber-500 text-center py-4"), id="compare-results"
+        )
 
     # Process each photo
     photo_results = []
@@ -2664,24 +2964,31 @@ async def post(request, sess=None):
                 face_data = _main_mod.get_face_data()
                 _registry = _main_mod.load_registry()
                 from core.neighbors import find_similar_faces
+
                 results_for_photo = find_similar_faces(
-                    faces[0]["mu"], face_data, registry=_registry, limit=10,
+                    faces[0]["mu"],
+                    face_data,
+                    registry=_registry,
+                    limit=10,
                 )
 
             for fi, face in enumerate(faces):
                 all_faces.append((pi, fi, face["mu"], face.get("bbox", [0, 0, 0, 0])))
 
-            photo_results.append({
-                "idx": pi,
-                "filename": filename,
-                "upload_id": upload_id,
-                "face_count": len(faces),
-                "archive_matches": results_for_photo,
-                "suffix": suffix,
-            })
+            photo_results.append(
+                {
+                    "idx": pi,
+                    "filename": filename,
+                    "upload_id": upload_id,
+                    "face_count": len(faces),
+                    "archive_matches": results_for_photo,
+                    "suffix": suffix,
+                }
+            )
 
         # Cross-compare faces between different photos
         import numpy as np
+
         cross_matches = []
         for i, (pi_a, fi_a, emb_a, _) in enumerate(all_faces):
             for j, (pi_b, fi_b, emb_b, _) in enumerate(all_faces):
@@ -2692,13 +2999,17 @@ async def post(request, sess=None):
                 # Cosine similarity
                 sim = float(np.dot(emb_a, emb_b) / (np.linalg.norm(emb_a) * np.linalg.norm(emb_b) + 1e-8))
                 if sim > 0.3:  # Only show meaningful matches
-                    cross_matches.append({
-                        "photo_a": pi_a, "face_a": fi_a,
-                        "photo_b": pi_b, "face_b": fi_b,
-                        "similarity": sim,
-                        "filename_a": photo_results[pi_a]["filename"],
-                        "filename_b": photo_results[pi_b]["filename"],
-                    })
+                    cross_matches.append(
+                        {
+                            "photo_a": pi_a,
+                            "face_a": fi_a,
+                            "photo_b": pi_b,
+                            "face_b": fi_b,
+                            "similarity": sim,
+                            "filename_a": photo_results[pi_a]["filename"],
+                            "filename_b": photo_results[pi_b]["filename"],
+                        }
+                    )
         cross_matches.sort(key=lambda x: x["similarity"], reverse=True)
 
         # Build response
@@ -2706,8 +3017,10 @@ async def post(request, sess=None):
         parts.append(
             Div(
                 H3(f"Compared {len(photos)} Photos", cls="text-lg font-serif text-white mb-2"),
-                P(f"Detected {sum(pr.get('face_count', 0) for pr in photo_results)} total faces",
-                  cls="text-sm text-slate-400"),
+                P(
+                    f"Detected {sum(pr.get('face_count', 0) for pr in photo_results)} total faces",
+                    cls="text-sm text-slate-400",
+                ),
                 cls="text-center mb-6",
             )
         )
@@ -2717,13 +3030,25 @@ async def post(request, sess=None):
             match_items = []
             for cm in cross_matches[:10]:
                 conf_pct = int(cm["similarity"] * 100)
-                tier = "Very likely" if conf_pct >= 85 else "Strong" if conf_pct >= 70 else "Possible" if conf_pct >= 50 else "Unlikely"
+                tier = (
+                    "Very likely"
+                    if conf_pct >= 85
+                    else "Strong"
+                    if conf_pct >= 70
+                    else "Possible"
+                    if conf_pct >= 50
+                    else "Unlikely"
+                )
                 match_items.append(
                     Div(
-                        P(f"Photo {cm['photo_a']+1} ↔ Photo {cm['photo_b']+1}",
-                          cls="text-sm font-medium text-white"),
-                        P(f"{tier} match ({conf_pct}%)",
-                          cls=f"text-xs {'text-green-400' if conf_pct >= 70 else 'text-amber-400' if conf_pct >= 50 else 'text-slate-400'}"),
+                        P(
+                            f"Photo {cm['photo_a'] + 1} ↔ Photo {cm['photo_b'] + 1}",
+                            cls="text-sm font-medium text-white",
+                        ),
+                        P(
+                            f"{tier} match ({conf_pct}%)",
+                            cls=f"text-xs {'text-green-400' if conf_pct >= 70 else 'text-amber-400' if conf_pct >= 50 else 'text-slate-400'}",
+                        ),
                         cls="p-3 bg-slate-800/50 rounded-lg border border-slate-700/50",
                     )
                 )
@@ -2740,26 +3065,28 @@ async def post(request, sess=None):
         crop_files = _main_mod.get_crop_files()
         for pr in photo_results:
             if "error" in pr:
-                parts.append(
-                    Div(P(f"Photo {pr['idx']+1}: {pr['error']}", cls="text-red-400 text-sm"),
-                        cls="mb-4")
-                )
+                parts.append(Div(P(f"Photo {pr['idx'] + 1}: {pr['error']}", cls="text-red-400 text-sm"), cls="mb-4"))
                 continue
 
             upload_url = storage.get_upload_url(f"uploads/compare/{pr['upload_id']}{pr.get('suffix', '.jpg')}")
             parts.append(
                 Div(
-                    H3(f"Photo {pr['idx']+1}: {pr['filename']}", cls="text-base font-medium text-white mb-2"),
+                    H3(f"Photo {pr['idx'] + 1}: {pr['filename']}", cls="text-base font-medium text-white mb-2"),
                     Div(
-                        Img(src=upload_url, cls="max-h-32 rounded-lg object-contain",
-                            alt=f"Uploaded photo {pr['idx']+1}"),
-                        P(f"{pr['face_count']} face{'s' if pr['face_count'] != 1 else ''} detected",
-                          cls="text-xs text-slate-400 mt-1"),
+                        Img(
+                            src=upload_url,
+                            cls="max-h-32 rounded-lg object-contain",
+                            alt=f"Uploaded photo {pr['idx'] + 1}",
+                        ),
+                        P(
+                            f"{pr['face_count']} face{'s' if pr['face_count'] != 1 else ''} detected",
+                            cls="text-xs text-slate-400 mt-1",
+                        ),
                         cls="flex flex-col items-center mb-3",
                     ),
                     _compare_results_grid(pr.get("archive_matches", []), crop_files)
-                        if pr.get("archive_matches") else
-                        P("No archive matches found.", cls="text-sm text-slate-500"),
+                    if pr.get("archive_matches")
+                    else P("No archive matches found.", cls="text-sm text-slate-500"),
                     cls="mb-8 p-4 bg-slate-800/20 rounded-lg border border-slate-700/30",
                     data_testid=f"photo-result-{pr['idx']}",
                 )
@@ -2771,12 +3098,12 @@ async def post(request, sess=None):
 
     except Exception as e:
         print(f"[compare-multi] Error: {e}")
-        return Div(P(f"Error processing photos: {str(e)}",
-                     cls="text-red-500 text-center py-4"),
-                   id="compare-results")
+        return Div(P(f"Error processing photos: {str(e)}", cls="text-red-500 text-center py-4"), id="compare-results")
     finally:
         for tf in tmp_files:
             tf.unlink(missing_ok=True)
+
+
 @rt("/api/compare/upload/select")
 def post(upload_id: str = "", face_idx: int = 0, sess=None):
     """Select a specific face from a multi-face upload for comparison."""
@@ -2807,8 +3134,11 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None):
     crop_files = _main_mod.get_crop_files()
 
     from core.neighbors import find_similar_faces
+
     results = find_similar_faces(
-        query_embedding, face_data, registry=registry,
+        query_embedding,
+        face_data,
+        registry=registry,
         limit=20,
     )
 
@@ -2826,14 +3156,13 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None):
                     hx_target="#compare-results",
                     hx_swap="innerHTML",
                     cls=f"px-3 py-1.5 text-sm rounded-lg border transition-colors "
-                        f"{'bg-amber-600 border-amber-500 text-white' if is_active else 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}",
+                    f"{'bg-amber-600 border-amber-500 text-white' if is_active else 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600'}",
                     data_testid=f"face-select-{i}",
                 )
             )
         parts.append(
             Div(
-                P(f"Comparing Face {face_idx + 1} of {len(face_save_data)}:",
-                  cls="text-sm text-slate-400 mb-3"),
+                P(f"Comparing Face {face_idx + 1} of {len(face_save_data)}:", cls="text-sm text-slate-400 mb-3"),
                 Div(*face_buttons, cls="flex flex-wrap gap-2 justify-center"),
                 cls="text-center mb-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50",
                 data_testid="face-selector-upload",
@@ -2842,6 +3171,8 @@ def post(upload_id: str = "", face_idx: int = 0, sess=None):
 
     parts.append(_compare_results_grid(results, crop_files))
     return Div(*parts, id="compare-results")
+
+
 @rt("/api/compare/contribute")
 def post(upload_id: str = "", sess=None):
     """Submit a compare upload to the admin moderation queue.
@@ -2903,6 +3234,8 @@ def post(upload_id: str = "", sess=None):
         id="contribute-cta-container",
         data_testid="contribute-submitted",
     )
+
+
 @rt("/compare/result/{result_id}")
 def get(result_id: str, sess=None):
     """
@@ -2917,12 +3250,16 @@ def get(result_id: str, sess=None):
         return Title("Not Found"), Main(
             Div(
                 H1("Comparison Not Found", cls="text-2xl font-serif text-white mb-4"),
-                P("This comparison result may have expired or been removed after a server restart.",
-                  cls="text-slate-400 mb-2"),
-                P("Please upload your photo again to get fresh results.",
-                  cls="text-slate-500 text-sm mb-6"),
-                A("Upload a Photo to Compare \u2192", href="/compare",
-                  cls="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors inline-block"),
+                P(
+                    "This comparison result may have expired or been removed after a server restart.",
+                    cls="text-slate-400 mb-2",
+                ),
+                P("Please upload your photo again to get fresh results.", cls="text-slate-500 text-sm mb-6"),
+                A(
+                    "Upload a Photo to Compare \u2192",
+                    href="/compare",
+                    cls="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors inline-block",
+                ),
                 cls="max-w-4xl mx-auto px-6 py-20 text-center",
             ),
             cls="min-h-screen bg-slate-900",
@@ -3040,8 +3377,11 @@ def get(result_id: str, sess=None):
         if hero_source_url:
             hero_parts.append(
                 Div(
-                    Img(src=hero_source_url, cls="w-[200px] h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
-                        alt="Source face"),
+                    Img(
+                        src=hero_source_url,
+                        cls="w-[200px] h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
+                        alt="Source face",
+                    ),
                     P("Source", cls="text-xs text-slate-500 text-center mt-2"),
                     cls="text-center",
                     data_testid="result-hero-source",
@@ -3057,21 +3397,28 @@ def get(result_id: str, sess=None):
             hero_parts.append(
                 Div(
                     A(
-                        Img(src=hero_match_url, cls="w-[200px] h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
-                            alt=hero_match_name or "Match"),
+                        Img(
+                            src=hero_match_url,
+                            cls="w-[200px] h-[200px] rounded-xl object-cover border-2 border-slate-600 mx-auto",
+                            alt=hero_match_name or "Match",
+                        ),
                         href=hero_match_link,
                     ),
-                    P(A(hero_match_name or "Unknown", href=hero_match_link,
-                        cls="text-white hover:text-indigo-300 text-sm font-medium"),
-                      cls="text-center mt-2"),
+                    P(
+                        A(
+                            hero_match_name or "Unknown",
+                            href=hero_match_link,
+                            cls="text-white hover:text-indigo-300 text-sm font-medium",
+                        ),
+                        cls="text-center mt-2",
+                    ),
                     cls="text-center",
                     data_testid="result-hero-match",
                 )
             )
 
         hero_section = Div(
-            H2(hero_question, cls="text-xl font-serif text-white text-center mb-4",
-               data_testid="result-hero-question"),
+            H2(hero_question, cls="text-xl font-serif text-white text-center mb-4", data_testid="result-hero-question"),
             Div(*hero_parts, cls="flex items-center justify-center gap-3 sm:gap-6"),
             cls="mb-8 p-6 bg-slate-800/40 rounded-2xl border border-slate-700/50",
             data_testid="result-hero",
@@ -3083,13 +3430,13 @@ def get(result_id: str, sess=None):
         source_photo_section = Div(
             P("From this photo:", cls="text-xs text-slate-500 mb-2"),
             A(
-                Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto",
-                    alt="Source photo"),
+                Img(src=photo_url, cls="max-h-48 rounded-lg object-contain mx-auto", alt="Source photo"),
                 href=f"/photo/{photo_id}",
             ),
-            P(A("View full photo", href=f"/photo/{photo_id}",
-                cls="text-indigo-400 hover:text-indigo-300 text-xs"),
-              cls="text-center mt-1"),
+            P(
+                A("View full photo", href=f"/photo/{photo_id}", cls="text-indigo-400 hover:text-indigo-300 text-xs"),
+                cls="text-center mt-1",
+            ),
             cls="mb-6 p-4 bg-slate-800/30 rounded-lg border border-slate-700/30 text-center",
             data_testid="result-source-photo",
         )
@@ -3099,17 +3446,21 @@ def get(result_id: str, sess=None):
     if ref_id and matches:
         try:
             from core.neighbors import find_nearest_neighbors
+
             face_data = _main_mod.get_face_data()
             ref_neighbors = find_nearest_neighbors(
-                ref_id, _main_mod.load_registry(), _main_mod.load_photo_registry(), face_data, limit=3,
+                ref_id,
+                _main_mod.load_registry(),
+                _main_mod.load_photo_registry(),
+                face_data,
+                limit=3,
             )
             if ref_neighbors:
                 context_names = [ensure_utf8_display(n.get("name", "Unknown")) for n in ref_neighbors[:3]]
                 context_str = ", ".join(context_names)
 
                 ref_context_section = Div(
-                    P(f"In the archive, {ref_name}'s closest matches are: {context_str}",
-                      cls="text-sm text-slate-300"),
+                    P(f"In the archive, {ref_name}'s closest matches are: {context_str}", cls="text-sm text-slate-300"),
                     cls="mb-6 p-4 bg-slate-900/50 rounded-lg border border-slate-700/30",
                     data_testid="result-reference-context",
                 )
@@ -3124,7 +3475,7 @@ def get(result_id: str, sess=None):
         if not match_url:
             match_url = _resolve_crop_url(fid, crop_files)
         pct = match.get("confidence_pct", 0)
-        name = ensure_utf8_display(match.get("identity_name", f"Face #{i+1}"))
+        name = ensure_utf8_display(match.get("identity_name", f"Face #{i + 1}"))
         m_identity_id = match.get("identity_id", "")
 
         # Positive/curious framing instead of "Unlikely match"
@@ -3145,7 +3496,11 @@ def get(result_id: str, sess=None):
             color = "text-slate-400"
             bar_color = "bg-slate-600"
 
-        person_link = A(name, href=f"/person/{m_identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium") if m_identity_id else Span(name, cls="text-sm text-white font-medium")
+        person_link = (
+            A(name, href=f"/person/{m_identity_id}", cls="text-indigo-400 hover:text-indigo-300 text-sm font-medium")
+            if m_identity_id
+            else Span(name, cls="text-sm text-white font-medium")
+        )
         # Admin-only distance info
         dist = match.get("distance", 99)
         dist_str = f" (dist: {dist:.2f})" if user_is_admin and dist < 99 else ""
@@ -3153,7 +3508,11 @@ def get(result_id: str, sess=None):
         # Admin merge/not-same actions (same pattern as vs-person endpoint)
         action_buttons = []
         if user_is_admin and m_identity_id and ref_id:
-            _merge_confirm = f"Merge {name} into {ref_name}? All faces will be combined." if ref_name and ref_name != "Unknown" else "Merge these identities? This can be undone."
+            _merge_confirm = (
+                f"Merge {name} into {ref_name}? All faces will be combined."
+                if ref_name and ref_name != "Unknown"
+                else "Merge these identities? This can be undone."
+            )
             action_buttons.append(
                 Button(
                     "Merge",
@@ -3176,40 +3535,44 @@ def get(result_id: str, sess=None):
                 )
             )
 
-        result_cards.append(Div(
+        result_cards.append(
             Div(
-                Img(src=match_url, cls="w-16 h-16 rounded-lg object-cover border border-slate-600") if match_url else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                 Div(
-                    person_link,
-                    # Confidence bar
+                    Img(src=match_url, cls="w-16 h-16 rounded-lg object-cover border border-slate-600")
+                    if match_url
+                    else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                     Div(
+                        person_link,
+                        # Confidence bar
                         Div(
-                            Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
-                            cls="flex-1 bg-slate-700 rounded-full h-2",
+                            Div(
+                                Div(cls=f"h-2 rounded-full {bar_color}", style=f"width: {pct}%"),
+                                cls="flex-1 bg-slate-700 rounded-full h-2",
+                            ),
+                            Span(
+                                f"{pct}%", cls=f"text-sm {color} ml-3 font-mono min-w-[3rem] text-right font-semibold"
+                            ),
+                            cls="flex items-center gap-2 mt-1",
                         ),
-                        Span(f"{pct}%", cls=f"text-sm {color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
-                        cls="flex items-center gap-2 mt-1",
+                        P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5"),
+                        cls="flex-1 min-w-0",
                     ),
-                    P(f"{label}{dist_str}", cls=f"text-xs {color} mt-0.5"),
-                    cls="flex-1 min-w-0",
+                    cls="flex items-center gap-4",
                 ),
-                cls="flex items-center gap-4",
-            ),
-            Div(*action_buttons, cls="flex gap-2 mt-2 justify-end") if action_buttons else None,
-            cls="p-3 bg-slate-800/70 rounded-lg",
-            id=f"result-face-{i}",
-            data_testid=f"result-card-{i}",
-        ))
+                Div(*action_buttons, cls="flex gap-2 mt-2 justify-end") if action_buttons else None,
+                cls="p-3 bg-slate-800/70 rounded-lg",
+                id=f"result-face-{i}",
+                data_testid=f"result-card-{i}",
+            )
+        )
 
     # Empty state with help CTA
     empty_state = None
     if not result_cards:
         empty_state = Div(
             H3("No strong matches yet", cls="text-lg font-serif text-white mb-2"),
-            P("We haven't found a strong match yet -- can you help?",
-              cls="text-slate-400 text-sm mb-4"),
-            P("If you recognize this person, let us know below.",
-              cls="text-slate-500 text-xs"),
+            P("We haven't found a strong match yet -- can you help?", cls="text-slate-400 text-sm mb-4"),
+            P("If you recognize this person, let us know below.", cls="text-slate-500 text-xs"),
             cls="text-center py-8",
             data_testid="result-empty-state",
         )
@@ -3218,19 +3581,28 @@ def get(result_id: str, sess=None):
     response_count = len(responses)
     response_form = Div(
         H3("Do you recognize anyone?", cls="text-base font-serif text-white mb-3"),
-        P(f"{response_count} response{'s' if response_count != 1 else ''} so far" if response_count else "Be the first to respond!", cls="text-xs text-slate-500 mb-3"),
+        P(
+            f"{response_count} response{'s' if response_count != 1 else ''} so far"
+            if response_count
+            else "Be the first to respond!",
+            cls="text-xs text-slate-500 mb-3",
+        ),
         Form(
             Div(
                 Textarea(
-                    name="note", placeholder="I think this is... / I recognize the person on the left...",
+                    name="note",
+                    placeholder="I think this is... / I recognize the person on the left...",
                     cls="w-full bg-slate-700 border border-slate-600 text-slate-200 text-sm rounded-lg px-3 py-2 resize-none",
                     rows="3",
                 ),
                 cls="mb-3",
             ),
             Input(type="hidden", name="result_id", value=result_id),
-            Button("Submit Response", type="submit",
-                   cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors"),
+            Button(
+                "Submit Response",
+                type="submit",
+                cls="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white text-sm font-medium rounded-lg transition-colors",
+            ),
             hx_post=f"/api/compare/result/{result_id}/respond",
             hx_target="#result-response-section",
             hx_swap="innerHTML",
@@ -3257,32 +3629,35 @@ def get(result_id: str, sess=None):
             Section(
                 Div(
                     # Hero section — large side-by-side face comparison
-                    hero_section if hero_section else H1("Face Comparison Result", cls="text-2xl font-serif font-bold text-white mb-6"),
-
+                    hero_section
+                    if hero_section
+                    else H1("Face Comparison Result", cls="text-2xl font-serif font-bold text-white mb-6"),
                     # Source photo (if available)
                     source_photo_section if source_photo_section else None,
-
                     # Reference person context (archive neighbors)
                     ref_context_section if ref_context_section else None,
-
                     # Match list or empty state
                     Div(*result_cards, cls="space-y-3") if result_cards else empty_state,
-
                     # Share
                     Div(
-                        _main_mod.share_button(url=f"/compare/result/{result_id}", style="prominent",
-                                     label="Share with someone who might know",
-                                     title=og_title, text=og_desc),
+                        _main_mod.share_button(
+                            url=f"/compare/result/{result_id}",
+                            style="prominent",
+                            label="Share with someone who might know",
+                            title=og_title,
+                            text=og_desc,
+                        ),
                         cls="mt-6 text-center",
                     ),
-
                     # Response form
                     response_form,
-
                     # Back link
                     Div(
-                        A("Try Another Comparison", href="/compare",
-                          cls="text-indigo-400 hover:text-indigo-300 text-sm"),
+                        A(
+                            "Try Another Comparison",
+                            href="/compare",
+                            cls="text-indigo-400 hover:text-indigo-300 text-sm",
+                        ),
                         cls="mt-6 text-center",
                     ),
                     cls="max-w-2xl mx-auto px-6 py-10",
@@ -3292,6 +3667,8 @@ def get(result_id: str, sess=None):
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
 @rt("/api/compare/result/{result_id}/respond")
 def post(result_id: str, note: str = "", sess=None):
     """Save a response to a comparison result. No login required."""
@@ -3313,10 +3690,14 @@ def post(result_id: str, note: str = "", sess=None):
 
     return Div(
         P("Thank you for your response!", cls="text-emerald-400 text-sm mb-2"),
-        P(f"{len(result['responses'])} response{'s' if len(result['responses']) != 1 else ''} total.",
-          cls="text-xs text-slate-500"),
+        P(
+            f"{len(result['responses'])} response{'s' if len(result['responses']) != 1 else ''} total.",
+            cls="text-xs text-slate-500",
+        ),
         id="result-response-section",
     )
+
+
 @rt("/compare/pair")
 def get(sess=None):
     """Two-photo face comparison — upload two photos, select a face in each,
@@ -3387,11 +3768,17 @@ def get(sess=None):
             H3(label, cls="text-sm font-medium text-slate-400 mb-3 text-center"),
             Form(
                 Div(
-                    NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'),
+                    NotStr(
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-500 mb-2 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>'
+                    ),
                     P("Drop a photo or click to upload", cls="text-slate-400 text-sm"),
                     P("JPG, PNG up to 10 MB", cls="text-slate-600 text-xs mt-1"),
-                    Input(type="file", name="photo", accept="image/jpeg,image/png,image/webp",
-                          cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer"),
+                    Input(
+                        type="file",
+                        name="photo",
+                        accept="image/jpeg,image/png,image/webp",
+                        cls="absolute inset-0 w-full h-full opacity-0 cursor-pointer",
+                    ),
                     Hidden(name="panel", value=panel_id),
                     cls="relative border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-xl p-6 text-center transition-colors cursor-pointer panel-upload",
                 ),
@@ -3427,11 +3814,18 @@ def get(sess=None):
             Section(
                 Div(
                     H1("Compare Two Photos", cls="text-3xl font-serif font-bold text-white mb-2"),
-                    P("Upload two photos, select a face in each, and see how similar they are.",
-                      cls="text-slate-400 text-sm"),
-                    P(A("\u2190 Back to Compare", href="/compare",
-                        cls="text-indigo-400 hover:text-indigo-300 text-sm"),
-                      cls="mt-2"),
+                    P(
+                        "Upload two photos, select a face in each, and see how similar they are.",
+                        cls="text-slate-400 text-sm",
+                    ),
+                    P(
+                        A(
+                            "\u2190 Back to Compare",
+                            href="/compare",
+                            cls="text-indigo-400 hover:text-indigo-300 text-sm",
+                        ),
+                        cls="mt-2",
+                    ),
                     cls="max-w-5xl mx-auto px-6 pt-6 pb-4",
                 ),
             ),
@@ -3440,7 +3834,9 @@ def get(sess=None):
                     Div(
                         _pair_panel("a", "Photo A"),
                         Div(
-                            NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>'),
+                            NotStr(
+                                '<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>'
+                            ),
                             cls="flex items-center justify-center px-2 py-8 sm:py-0",
                         ),
                         _pair_panel("b", "Photo B"),
@@ -3454,18 +3850,23 @@ def get(sess=None):
                         cls="mt-6 w-full px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl opacity-50 cursor-not-allowed transition-colors",
                         data_testid="pair-compare-btn",
                     ),
-                    P("Select one face in each photo, then click Compare.", cls="text-xs text-slate-500 text-center mt-2"),
+                    P(
+                        "Select one face in each photo, then click Compare.",
+                        cls="text-xs text-slate-500 text-center mt-2",
+                    ),
                     cls="max-w-5xl mx-auto px-6",
                 ),
             ),
             Section(
-                Div(id="pair-result", cls="max-w-5xl mx-auto px-6 py-4",
-                    data_testid="pair-result"),
+                Div(id="pair-result", cls="max-w-5xl mx-auto px-6 py-4", data_testid="pair-result"),
             ),
             Div(
                 Div(
                     P("Rhodesli Heritage Archive", cls="text-xs text-slate-500 mb-1 font-serif"),
-                    P("Preserving the memory of the Jewish community of Rhodes", cls="text-[10px] text-slate-600 italic"),
+                    P(
+                        "Preserving the memory of the Jewish community of Rhodes",
+                        cls="text-[10px] text-slate-600 italic",
+                    ),
                     cls="max-w-6xl mx-auto px-6 flex flex-col items-center",
                 ),
                 cls="py-8 border-t border-slate-800",
@@ -3473,6 +3874,8 @@ def get(sess=None):
             cls="min-h-screen bg-slate-900",
         ),
     )
+
+
 @rt("/api/compare/pair/upload")
 async def post(request):
     """Handle photo upload for two-photo pair comparison.
@@ -3480,7 +3883,6 @@ async def post(request):
     Detects faces in the uploaded photo and returns face thumbnails
     for user selection.
     """
-    import time as _time
     import tempfile
 
     form = await request.form()
@@ -3488,8 +3890,7 @@ async def post(request):
     panel = form.get("panel", "a")
 
     if not photo:
-        return Div(P("No photo uploaded.", cls="text-red-400 text-sm"),
-                   id=f"panel-{panel}")
+        return Div(P("No photo uploaded.", cls="text-red-400 text-sm"), id=f"panel-{panel}")
 
     content = await photo.read()
     original_filename = photo.filename or "upload.jpg"
@@ -3502,8 +3903,7 @@ async def post(request):
         )
 
     if len(content) > 10 * 1024 * 1024:
-        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-sm"),
-                   id=f"panel-{panel}")
+        return Div(P("File is too large (max 10 MB).", cls="text-red-400 text-sm"), id=f"panel-{panel}")
 
     # Check ML availability
     has_ml = False
@@ -3511,6 +3911,7 @@ async def post(request):
         import cv2
         from insightface.app import FaceAnalysis  # noqa: F401
         from core.ingest_inbox import extract_faces_hybrid
+
         has_ml = True
     except ImportError:
         pass
@@ -3555,6 +3956,7 @@ async def post(request):
 
         # Save the image for display
         from core.storage import can_write_r2, upload_bytes_to_r2
+
         img_key = f"uploads/compare/{upload_id}{suffix}"
         if can_write_r2():
             upload_bytes_to_r2(img_key, content)
@@ -3565,9 +3967,12 @@ async def post(request):
 
         # Save face embeddings
         import pickle
+
         face_save_data = [
-            {"mu": f["mu"].tolist(),
-             "bbox": f.get("bbox", [0, 0, 0, 0]) if not hasattr(f.get("bbox"), 'tolist') else f["bbox"].tolist()}
+            {
+                "mu": f["mu"].tolist(),
+                "bbox": f.get("bbox", [0, 0, 0, 0]) if not hasattr(f.get("bbox"), "tolist") else f["bbox"].tolist(),
+            }
             for f in faces
         ]
         faces_pkl = pickle.dumps(face_save_data)
@@ -3582,7 +3987,7 @@ async def post(request):
         face_thumbs = []
         for i, face in enumerate(faces):
             bbox = face.get("bbox", [0, 0, 0, 0])
-            if hasattr(bbox, 'tolist'):
+            if hasattr(bbox, "tolist"):
                 bbox = bbox.tolist()
             # Crop face from original image for thumbnail
             orig_img = cv2.imread(str(tmp_path))
@@ -3594,7 +3999,7 @@ async def post(request):
                 y2 = min(oh, int(bbox[3]))
                 if x2 > x1 and y2 > y1:
                     crop = orig_img[y1:y2, x1:x2]
-                    _, buf = cv2.imencode('.jpg', crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
+                    _, buf = cv2.imencode(".jpg", crop, [cv2.IMWRITE_JPEG_QUALITY, 85])
                     crop_key = f"uploads/compare/{upload_id}_face{i}.jpg"
                     if can_write_r2():
                         upload_bytes_to_r2(crop_key, buf.tobytes())
@@ -3603,6 +4008,7 @@ async def post(request):
 
         # Build face selector UI
         from core.storage import get_upload_url
+
         image_url = get_upload_url(img_key)
 
         face_elements = []
@@ -3624,8 +4030,10 @@ async def post(request):
                 Img(src=image_url, cls="max-h-40 rounded-lg mx-auto border border-slate-600"),
                 cls="mb-3",
             ),
-            P(f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected \u2014 select one:",
-              cls="text-xs text-slate-400 mb-2 text-center"),
+            P(
+                f"{len(faces)} face{'s' if len(faces) != 1 else ''} detected \u2014 select one:",
+                cls="text-xs text-slate-400 mb-2 text-center",
+            ),
             Div(*face_elements, cls="flex flex-wrap gap-2 justify-center"),
             id=f"panel-{panel}",
             cls="flex-1 min-w-[280px] bg-slate-800/50 rounded-xl p-4",
@@ -3640,6 +4048,8 @@ async def post(request):
         )
     finally:
         tmp_path.unlink(missing_ok=True)
+
+
 @rt("/api/compare/pair/match")
 def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 0):
     """Compute similarity between selected faces and summarize all cross matches."""
@@ -3677,6 +4087,7 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
     mu_b = np.array(faces_b[face_b]["mu"])
     distance = float(np.linalg.norm(mu_a - mu_b))
     from core.confidence import compute_face_confidence, compute_confidence_pct, distance_to_cosine_sim
+
     cosine_sim = distance_to_cosine_sim(distance)
 
     # Unified confidence scoring (AD-200)
@@ -3728,11 +4139,16 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 matches = find_similar_faces(face["mu"], face_data, registry=registry, limit=1)
                 if matches:
                     top = matches[0]
-                    hits.append(Div(
-                        Span(f"{label_prefix}{i + 1}", cls="text-xs text-slate-300"),
-                        Span(f"{top.get('identity_name', 'Unknown')} · {top.get('confidence_pct', 0)}%", cls="text-xs text-slate-400"),
-                        cls="flex items-center justify-between py-1 border-b border-slate-800/50 last:border-0",
-                    ))
+                    hits.append(
+                        Div(
+                            Span(f"{label_prefix}{i + 1}", cls="text-xs text-slate-300"),
+                            Span(
+                                f"{top.get('identity_name', 'Unknown')} · {top.get('confidence_pct', 0)}%",
+                                cls="text-xs text-slate-400",
+                            ),
+                            cls="flex items-center justify-between py-1 border-b border-slate-800/50 last:border-0",
+                        )
+                    )
             return hits
 
         archive_sections.append(
@@ -3773,8 +4189,16 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
                 Div(
                     H4("Archive best hit per detected face", cls="text-sm font-medium text-slate-300 mb-2"),
                     Div(
-                        Div(H5("Photo A", cls="text-xs text-slate-400 mb-1"), Div(*all_archive_summary_a), cls="flex-1 min-w-[220px]"),
-                        Div(H5("Photo B", cls="text-xs text-slate-400 mb-1"), Div(*all_archive_summary_b), cls="flex-1 min-w-[220px]"),
+                        Div(
+                            H5("Photo A", cls="text-xs text-slate-400 mb-1"),
+                            Div(*all_archive_summary_a),
+                            cls="flex-1 min-w-[220px]",
+                        ),
+                        Div(
+                            H5("Photo B", cls="text-xs text-slate-400 mb-1"),
+                            Div(*all_archive_summary_b),
+                            cls="flex-1 min-w-[220px]",
+                        ),
                         cls="flex flex-wrap gap-4",
                     ),
                     cls="mt-8",
@@ -3822,7 +4246,11 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
             ),
             Div(
                 A("Explore the full archive →", href="/photos", cls="text-xs text-indigo-400 hover:text-indigo-300"),
-                A("Know someone in this photo? Help identify them →", href="/compare", cls="text-xs text-indigo-400 hover:text-indigo-300 ml-4"),
+                A(
+                    "Know someone in this photo? Help identify them →",
+                    href="/compare",
+                    cls="text-xs text-indigo-400 hover:text-indigo-300 ml-4",
+                ),
                 cls="mt-4 flex flex-wrap gap-3 justify-center",
             ),
             cls="text-center",
@@ -3831,6 +4259,8 @@ def post(upload_a: str = "", face_a: int = 0, upload_b: str = "", face_b: int = 
         cls="bg-slate-800/50 rounded-2xl p-8 max-w-3xl mx-auto mt-4",
         data_testid="pair-comparison-result",
     )
+
+
 def _resolve_entity_faces(entity_type: str, entity_id: str, face_data: dict, registry=None) -> list:
     """Resolve face embeddings from any entity type.
 
@@ -3853,11 +4283,13 @@ def _resolve_entity_faces(entity_type: str, entity_id: str, face_data: dict, reg
             fid = entry if isinstance(entry, str) else entry.get("face_id", "")
             emb = face_data.get(fid)
             if emb and "mu" in emb:
-                faces.append({
-                    "face_id": fid,
-                    "embedding": emb["mu"],
-                    "crop_url": _resolve_crop_url(fid, crop_files),
-                })
+                faces.append(
+                    {
+                        "face_id": fid,
+                        "embedding": emb["mu"],
+                        "crop_url": _resolve_crop_url(fid, crop_files),
+                    }
+                )
 
     elif entity_type == "photo":
         photo_meta = _main_mod.get_photo_metadata(entity_id)
@@ -3869,14 +4301,17 @@ def _resolve_entity_faces(entity_type: str, entity_id: str, face_data: dict, reg
         for fid in face_ids:
             emb = face_data.get(fid)
             if emb and "mu" in emb:
-                faces.append({
-                    "face_id": fid,
-                    "embedding": emb["mu"],
-                    "crop_url": _resolve_crop_url(fid, crop_files),
-                })
+                faces.append(
+                    {
+                        "face_id": fid,
+                        "embedding": emb["mu"],
+                        "crop_url": _resolve_crop_url(fid, crop_files),
+                    }
+                )
 
     elif entity_type == "upload":
         import json as _json_resolve
+
         status_path = _main_mod.data_path / "inbox" / f"{entity_id}.status.json"
         if not status_path.exists():
             return []
@@ -3886,13 +4321,17 @@ def _resolve_entity_faces(entity_type: str, entity_id: str, face_data: dict, reg
         for fid in face_ids:
             emb = face_data.get(fid)
             if emb and "mu" in emb:
-                faces.append({
-                    "face_id": fid,
-                    "embedding": emb["mu"],
-                    "crop_url": _resolve_crop_url(fid, crop_files),
-                })
+                faces.append(
+                    {
+                        "face_id": fid,
+                        "embedding": emb["mu"],
+                        "crop_url": _resolve_crop_url(fid, crop_files),
+                    }
+                )
 
     return faces
+
+
 def _compute_comparison_score(source_emb, target_embs: list) -> dict:
     """Compute best match score between a source embedding and list of target embeddings.
 
@@ -3908,12 +4347,14 @@ def _compute_comparison_score(source_emb, target_embs: list) -> dict:
 
     # Unified confidence scoring (AD-200)
     from core.confidence import compute_face_confidence
+
     conf = compute_face_confidence(best_dist)
 
     return {"distance": best_dist, "confidence_pct": conf["confidence_pct"], "tier": conf["tier"]}
+
+
 @rt("/api/compare/execute")
-def post(source_type: str = "", source_id: str = "", target_type: str = "",
-         target_ids: str = "", sess=None):
+def post(source_type: str = "", source_id: str = "", target_type: str = "", target_ids: str = "", sess=None):
     """Unified comparison endpoint — any entity type against any other.
 
     Supports: person/photo/upload as source, person/photo/upload/archive as target.
@@ -3923,13 +4364,18 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     import numpy as np
 
     if not source_type or not source_id:
-        return Div(P("Select a source to compare.", cls="text-slate-400 text-sm text-center py-8"),
-                   id="compare-results-area", data_testid="compare-empty")
+        return Div(
+            P("Select a source to compare.", cls="text-slate-400 text-sm text-center py-8"),
+            id="compare-results-area",
+            data_testid="compare-empty",
+        )
 
     if not target_type and not target_ids:
-        return Div(P("Select one or more targets to compare against.",
-                     cls="text-slate-400 text-sm text-center py-8"),
-                   id="compare-results-area", data_testid="compare-empty")
+        return Div(
+            P("Select one or more targets to compare against.", cls="text-slate-400 text-sm text-center py-8"),
+            id="compare-results-area",
+            data_testid="compare-empty",
+        )
 
     _main_mod._build_caches()
     face_data = _main_mod.get_face_data()
@@ -3942,8 +4388,9 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     # Resolve source faces
     source_faces = _resolve_entity_faces(source_type, source_id, face_data, registry)
     if not source_faces:
-        return Div(P("No faces found in the source.", cls="text-amber-500 text-sm text-center py-8"),
-                   id="compare-results-area")
+        return Div(
+            P("No faces found in the source.", cls="text-amber-500 text-sm text-center py-8"), id="compare-results-area"
+        )
 
     # Resolve targets
     results_by_face = []  # [{face_id, crop_url, targets: [{name, id, type, distance, pct, tier}]}]
@@ -3951,31 +4398,41 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     if target_type == "archive":
         # Compare against entire archive — use find_similar_faces
         from core.neighbors import find_similar_faces
+
         for sf in source_faces:
             matches = find_similar_faces(
-                sf["embedding"], face_data, registry=registry,
-                limit=10, exclude_face_ids={sf["face_id"]},
+                sf["embedding"],
+                face_data,
+                registry=registry,
+                limit=10,
+                exclude_face_ids={sf["face_id"]},
             )
-            results_by_face.append({
-                "face_id": sf["face_id"],
-                "crop_url": sf["crop_url"],
-                "targets": [{
-                    "target_id": m.get("identity_id", ""),
-                    "target_type": "person",
-                    "target_name": m.get("identity_name", "Unknown"),
-                    "target_crop_url": _resolve_crop_url(m["face_id"], crop_files),
-                    "distance": m["distance"],
-                    "confidence_pct": m.get("confidence_pct", 0),
-                    "tier": m.get("tier", "WEAK"),
-                    "matched_face_id": m["face_id"],
-                } for m in matches],
-            })
+            results_by_face.append(
+                {
+                    "face_id": sf["face_id"],
+                    "crop_url": sf["crop_url"],
+                    "targets": [
+                        {
+                            "target_id": m.get("identity_id", ""),
+                            "target_type": "person",
+                            "target_name": m.get("identity_name", "Unknown"),
+                            "target_crop_url": _resolve_crop_url(m["face_id"], crop_files),
+                            "distance": m["distance"],
+                            "confidence_pct": m.get("confidence_pct", 0),
+                            "tier": m.get("tier", "WEAK"),
+                            "matched_face_id": m["face_id"],
+                        }
+                        for m in matches
+                    ],
+                }
+            )
     else:
         # Specific targets
         tid_list = [t.strip() for t in target_ids.split(",") if t.strip()][:5]
         if not tid_list:
-            return Div(P("No targets selected.", cls="text-slate-400 text-sm text-center py-8"),
-                       id="compare-results-area")
+            return Div(
+                P("No targets selected.", cls="text-slate-400 text-sm text-center py-8"), id="compare-results-area"
+            )
 
         # Build target info
         targets_info = []
@@ -3994,21 +4451,29 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                     # Get best crop
                     anchor_ids = ident.get("anchor_ids", [])
                     if anchor_ids:
-                        first_fid = anchor_ids[0] if isinstance(anchor_ids[0], str) else anchor_ids[0].get("face_id", "")
+                        first_fid = (
+                            anchor_ids[0] if isinstance(anchor_ids[0], str) else anchor_ids[0].get("face_id", "")
+                        )
                         target_crop = _resolve_crop_url(first_fid, crop_files)
             elif ttype == "photo":
                 pmeta = _main_mod.get_photo_metadata(tid)
                 if pmeta:
                     target_name = pmeta.get("filename", pmeta.get("path", "Photo"))
-                    target_crop = storage.get_photo_url(pmeta.get("filename") or pmeta.get("path", "")) if (pmeta.get("filename") or pmeta.get("path")) else ""
+                    target_crop = (
+                        storage.get_photo_url(pmeta.get("filename") or pmeta.get("path", ""))
+                        if (pmeta.get("filename") or pmeta.get("path"))
+                        else ""
+                    )
 
-            targets_info.append({
-                "id": tid,
-                "type": ttype,
-                "name": target_name,
-                "crop_url": target_crop,
-                "faces": target_faces,
-            })
+            targets_info.append(
+                {
+                    "id": tid,
+                    "type": ttype,
+                    "name": target_name,
+                    "crop_url": target_crop,
+                    "faces": target_faces,
+                }
+            )
 
         # Compute matrix: source face × target
         for sf in source_faces:
@@ -4024,22 +4489,26 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                     best_idx = int(np.argmin(dists))
                     best_face_id = ti["faces"][best_idx]["face_id"]
 
-                face_targets.append({
-                    "target_id": ti["id"],
-                    "target_type": ti["type"],
-                    "target_name": ti["name"],
-                    "target_crop_url": ti["crop_url"],
-                    "distance": score["distance"],
-                    "confidence_pct": score["confidence_pct"],
-                    "tier": score["tier"],
-                    "matched_face_id": best_face_id,
-                })
+                face_targets.append(
+                    {
+                        "target_id": ti["id"],
+                        "target_type": ti["type"],
+                        "target_name": ti["name"],
+                        "target_crop_url": ti["crop_url"],
+                        "distance": score["distance"],
+                        "confidence_pct": score["confidence_pct"],
+                        "tier": score["tier"],
+                        "matched_face_id": best_face_id,
+                    }
+                )
 
-            results_by_face.append({
-                "face_id": sf["face_id"],
-                "crop_url": sf["crop_url"],
-                "targets": face_targets,
-            })
+            results_by_face.append(
+                {
+                    "face_id": sf["face_id"],
+                    "crop_url": sf["crop_url"],
+                    "targets": face_targets,
+                }
+            )
 
     # Find best overall match
     best_pct = 0
@@ -4055,6 +4524,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     # Compute per-target context: best existing match + rank
     target_context = {}  # target_id -> {best_pct, best_name, matches_ranked}
     from core.neighbors import find_similar_faces
+
     for fr in results_by_face:
         for tr in fr["targets"]:
             tid = tr["target_id"]
@@ -4073,8 +4543,17 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                     t_emb = face_data.get(t_fid, {}).get("mu") if t_fid else None
                     if t_emb is not None:
                         t_matches = find_similar_faces(
-                            t_emb, face_data, registry=registry,
-                            limit=5, exclude_face_ids=set(t_fids if isinstance(t_fids[0], str) else [f.get("face_id", "") for f in t_fids] if t_fids else []),
+                            t_emb,
+                            face_data,
+                            registry=registry,
+                            limit=5,
+                            exclude_face_ids=set(
+                                t_fids
+                                if isinstance(t_fids[0], str)
+                                else [f.get("face_id", "") for f in t_fids]
+                                if t_fids
+                                else []
+                            ),
                         )
                         if t_matches:
                             target_context[tid] = {
@@ -4115,14 +4594,16 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     }
     for fr in results_by_face:
         for tr in fr["targets"]:
-            result_data["matches"].append({
-                "face_id": fr["face_id"],
-                "target_id": tr["target_id"],
-                "target_name": tr["target_name"],
-                "distance": tr["distance"],
-                "confidence_pct": tr["confidence_pct"],
-                "tier": tr["tier"],
-            })
+            result_data["matches"].append(
+                {
+                    "face_id": fr["face_id"],
+                    "target_id": tr["target_id"],
+                    "target_name": tr["target_name"],
+                    "distance": tr["distance"],
+                    "confidence_pct": tr["confidence_pct"],
+                    "tier": tr["tier"],
+                }
+            )
     rid = _main_mod._save_comparison_result(result_data)
 
     # --- Build results HTML ---
@@ -4132,8 +4613,10 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     target_label = "the archive" if target_type == "archive" else f"{n_targets} target{'s' if n_targets != 1 else ''}"
     parts.append(
         Div(
-            H3(f"Comparing {n_faces} face{'s' if n_faces != 1 else ''} against {target_label}",
-               cls="text-lg font-serif text-white"),
+            H3(
+                f"Comparing {n_faces} face{'s' if n_faces != 1 else ''} against {target_label}",
+                cls="text-lg font-serif text-white",
+            ),
             cls="mb-4",
             data_testid="compare-results-header",
         )
@@ -4141,7 +4624,11 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
 
     # Best Matches summary section (above per-face details)
     summary_section = _compare_summary_section(
-        results_by_face, crop_files, user_is_admin, registry, rid=rid,
+        results_by_face,
+        crop_files,
+        user_is_admin,
+        registry,
+        rid=rid,
     )
     has_summary = summary_section is not None
     if has_summary:
@@ -4159,7 +4646,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
         for ti, tr in enumerate(fr["targets"]):
             pct = tr["confidence_pct"]
             tier = tr["tier"]
-            is_best = (fi == best_face_idx and ti == best_target_idx)
+            is_best = fi == best_face_idx and ti == best_target_idx
 
             # Color based on tier (with glow classes for visual polish)
             if pct >= 85:
@@ -4198,7 +4685,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
             ctx_best_name = ctx.get("best_name", "")
             if ctx_best_pct > 0 and tr["target_type"] == "person":
                 if pct > ctx_best_pct:
-                    ctx_parts.append(f"Better than any existing match!")
+                    ctx_parts.append("Better than any existing match!")
                 elif ctx_best_name:
                     ctx_parts.append(f"{tr['target_name']}'s best is {ctx_best_pct}% ({ctx_best_name})")
             context_line = " · ".join(ctx_parts) if ctx_parts else ""
@@ -4217,16 +4704,30 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
             if user_is_admin and tr["target_type"] == "person" and tr["target_id"] and face_iid:
                 _face_name = face_identity.get("name", "") if face_identity else ""
                 _target_name = tr.get("target_name", "")
-                _merge_confirm = f"Merge {_face_name} into {_target_name}? All faces will be combined." if _target_name and not _target_name.startswith("Unidentified") else "Merge these identities? This can be undone."
+                _merge_confirm = (
+                    f"Merge {_face_name} into {_target_name}? All faces will be combined."
+                    if _target_name and not _target_name.startswith("Unidentified")
+                    else "Merge these identities? This can be undone."
+                )
                 action_btns.append(
-                    Button("Merge", hx_post=f"/api/identity/{tr['target_id']}/merge/{face_iid}?source=compare",
-                           hx_target=f"#compare-row-{fi}-{ti}", hx_swap="outerHTML",
-                           hx_confirm=_merge_confirm,
-                           cls="px-2 py-0.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded"))
+                    Button(
+                        "Merge",
+                        hx_post=f"/api/identity/{tr['target_id']}/merge/{face_iid}?source=compare",
+                        hx_target=f"#compare-row-{fi}-{ti}",
+                        hx_swap="outerHTML",
+                        hx_confirm=_merge_confirm,
+                        cls="px-2 py-0.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white rounded",
+                    )
+                )
                 action_btns.append(
-                    Button("Not Same", hx_post=f"/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
-                           hx_target=f"#compare-row-{fi}-{ti}", hx_swap="outerHTML",
-                           cls="px-2 py-0.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded"))
+                    Button(
+                        "Not Same",
+                        hx_post=f"/api/identity/{tr['target_id']}/not-same/{face_iid}?source=compare",
+                        hx_target=f"#compare-row-{fi}-{ti}",
+                        hx_swap="outerHTML",
+                        cls="px-2 py-0.5 text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 rounded",
+                    )
+                )
 
             highlight_cls = "best-match-glow bg-amber-950/10" if is_best else ""
 
@@ -4235,26 +4736,44 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                     Div(
                         # Target crop + name
                         Div(
-                            Img(src=tr["target_crop_url"], cls="w-16 h-16 rounded-lg object-cover border border-slate-600",
-                                alt=tr["target_name"]) if tr["target_crop_url"] else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
+                            Img(
+                                src=tr["target_crop_url"],
+                                cls="w-16 h-16 rounded-lg object-cover border border-slate-600",
+                                alt=tr["target_name"],
+                            )
+                            if tr["target_crop_url"]
+                            else Div(cls="w-16 h-16 rounded-lg bg-slate-700"),
                             cls="flex-shrink-0",
                         ),
                         Div(
-                            A(tr["target_name"], href=target_link,
-                              cls="text-sm text-white hover:text-indigo-300 font-medium truncate block"),
+                            A(
+                                tr["target_name"],
+                                href=target_link,
+                                cls="text-sm text-white hover:text-indigo-300 font-medium truncate block",
+                            ),
                             # Confidence bar with inner glow
                             Div(
                                 Div(
-                                    Div(cls=f"h-2.5 rounded-full {bar_color} {bar_glow} compare-bar-animate",
-                                        style=f"width: {pct}%"),
-                                    cls=f"flex-1 bg-slate-700/80 rounded-full h-2.5",
+                                    Div(
+                                        cls=f"h-2.5 rounded-full {bar_color} {bar_glow} compare-bar-animate",
+                                        style=f"width: {pct}%",
+                                    ),
+                                    cls="flex-1 bg-slate-700/80 rounded-full h-2.5",
                                 ),
-                                Span(f"{pct}%", cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold"),
+                                Span(
+                                    f"{pct}%",
+                                    cls=f"text-sm {label_color} ml-3 font-mono min-w-[3rem] text-right font-semibold",
+                                ),
                                 cls="flex items-center gap-2 mt-1",
                             ),
                             Span(f"{conf_label}{dist_str}", cls=f"text-xs {label_color} mt-0.5"),
-                            Span(context_line, cls="text-[11px] text-slate-500 mt-0.5 block",
-                                 data_testid=f"context-{fi}-{ti}") if context_line else None,
+                            Span(
+                                context_line,
+                                cls="text-[11px] text-slate-500 mt-0.5 block",
+                                data_testid=f"context-{fi}-{ti}",
+                            )
+                            if context_line
+                            else None,
                             cls="flex-1 min-w-0",
                         ),
                         cls="flex items-center gap-3",
@@ -4278,12 +4797,19 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                 header_text = f"Face {fi + 1} — no matches"
             face_section_parts.append(
                 Div(
-                    Img(src=crop_url, cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-600",
-                        alt=f"Face {fi+1}") if crop_url else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
+                    Img(
+                        src=crop_url,
+                        cls="w-20 h-20 rounded-lg object-cover border-2 border-slate-600",
+                        alt=f"Face {fi + 1}",
+                    )
+                    if crop_url
+                    else Div(cls="w-20 h-20 rounded-lg bg-slate-700"),
                     Span(header_text, cls="text-sm text-white font-medium ml-3"),
                     # Hide/show toggle
                     Button(
-                        NotStr('<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 face-collapse-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'),
+                        NotStr(
+                            '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 face-collapse-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'
+                        ),
                         cls="ml-auto text-slate-500 hover:text-white transition-colors p-1",
                         data_action="toggle-face-section",
                         data_face_idx=str(fi),
@@ -4299,7 +4825,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
         content_style = "max-height: 0" if has_summary else f"max-height: {len(target_rows) * 120}px"
         content_div = Div(
             *target_rows,
-            cls=f"face-section-content space-y-2",
+            cls="face-section-content space-y-2",
             style=content_style,
             data_testid=f"compare-face-content-{fi}",
         )
@@ -4320,8 +4846,10 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
         parts.append(
             Div(
                 P("No strong matches found.", cls="text-slate-300 text-sm font-medium"),
-                P("Try uploading a clearer photo or comparing against different people.",
-                  cls="text-slate-500 text-xs mt-1"),
+                P(
+                    "Try uploading a clearer photo or comparing against different people.",
+                    cls="text-slate-500 text-xs mt-1",
+                ),
                 cls="p-3 bg-slate-800/30 rounded-lg border border-slate-700/20 text-center compare-fade-in",
                 data_testid="compare-no-strong-matches",
             )
@@ -4335,8 +4863,7 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
                 names = " and ".join(ensure_utf8_display(t["target_name"]) for t in strong_targets[:3])
                 parts.append(
                     Div(
-                        P(f"Face {fi + 1} strongly matches both {names}.",
-                          cls="text-sm text-amber-300"),
+                        P(f"Face {fi + 1} strongly matches both {names}.", cls="text-sm text-amber-300"),
                         P("These people may be related.", cls="text-xs text-slate-500 mt-0.5"),
                         cls="p-3 bg-amber-950/20 border border-amber-500/20 rounded-lg compare-fade-in",
                         data_testid=f"cross-target-insight-{fi}",
@@ -4347,17 +4874,25 @@ def post(source_type: str = "", source_id: str = "", target_type: str = "",
     share_url = f"{_main_mod.SITE_URL}/compare/result/{rid}"
     parts.append(
         Div(
-            A("Share this comparison", href=share_url, target="_blank",
-              cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block"),
-            Button("Try another comparison", onclick="location.href='/compare'",
-                   cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors"),
+            A(
+                "Share this comparison",
+                href=share_url,
+                target="_blank",
+                cls="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors inline-block",
+            ),
+            Button(
+                "Try another comparison",
+                onclick="location.href='/compare'",
+                cls="px-4 py-2 bg-slate-700 text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors",
+            ),
             cls="flex gap-3 justify-center flex-wrap mt-6",
             data_testid="compare-results-actions",
         )
     )
 
-    return Div(*parts, id="compare-results-area", cls="space-y-4",
-               data_testid="compare-results-area")
+    return Div(*parts, id="compare-results-area", cls="space-y-4", data_testid="compare-results-area")
+
+
 @rt("/api/compare/search-unified")
 def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=None):
     """Unified search across people and photos for the comparison workspace.
@@ -4434,14 +4969,20 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
 
                 results_html.append(
                     Div(
-                        Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600",
-                            alt=name) if crop_url else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
+                        Img(src=crop_url, cls="w-10 h-10 rounded-full object-cover border border-slate-600", alt=name)
+                        if crop_url
+                        else Div(cls="w-10 h-10 rounded-full bg-slate-700"),
                         Div(
                             Span(ensure_utf8_display(name), cls="text-sm text-white font-medium truncate block"),
                             Div(
-                                Span("Person", cls="text-[10px] bg-indigo-900/50 text-indigo-400 px-1.5 py-0.5 rounded"),
+                                Span(
+                                    "Person", cls="text-[10px] bg-indigo-900/50 text-indigo-400 px-1.5 py-0.5 rounded"
+                                ),
                                 Span(state_label, cls=f"text-[10px] {state_badge_cls} px-1.5 py-0.5 rounded"),
-                                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"),
+                                Span(
+                                    f"{face_count} face{'s' if face_count != 1 else ''}",
+                                    cls="text-[10px] text-slate-500",
+                                ),
                                 cls="flex items-center gap-1.5 mt-0.5",
                             ),
                             cls="min-w-0 flex-1",
@@ -4478,14 +5019,21 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
 
                 results_html.append(
                     Div(
-                        Img(src=photo_url, cls="w-10 h-10 rounded object-cover border border-slate-600",
-                            alt=fname) if photo_url else Div(cls="w-10 h-10 rounded bg-slate-700"),
+                        Img(src=photo_url, cls="w-10 h-10 rounded object-cover border border-slate-600", alt=fname)
+                        if photo_url
+                        else Div(cls="w-10 h-10 rounded bg-slate-700"),
                         Div(
-                            Span(fname[:30] + ("..." if len(fname) > 30 else ""), cls="text-sm text-white font-medium truncate block"),
+                            Span(
+                                fname[:30] + ("..." if len(fname) > 30 else ""),
+                                cls="text-sm text-white font-medium truncate block",
+                            ),
                             Div(
                                 Span("Photo", cls="text-[10px] bg-purple-900/50 text-purple-400 px-1.5 py-0.5 rounded"),
                                 Span(f"Contains {person_name[:15]}", cls="text-[10px] text-slate-400 truncate"),
-                                Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"),
+                                Span(
+                                    f"{face_count} face{'s' if face_count != 1 else ''}",
+                                    cls="text-[10px] text-slate-500",
+                                ),
                                 cls="flex items-center gap-1.5 mt-0.5",
                             ),
                             cls="min-w-0 flex-1",
@@ -4517,14 +5065,23 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
 
             results_html.append(
                 Div(
-                    Img(src=photo_url, cls="w-10 h-10 rounded object-cover border border-slate-600",
-                        alt=fname) if photo_url else Div(cls="w-10 h-10 rounded bg-slate-700"),
+                    Img(src=photo_url, cls="w-10 h-10 rounded object-cover border border-slate-600", alt=fname)
+                    if photo_url
+                    else Div(cls="w-10 h-10 rounded bg-slate-700"),
                     Div(
-                        Span(fname[:30] + ("..." if len(fname) > 30 else ""), cls="text-sm text-white font-medium truncate block"),
+                        Span(
+                            fname[:30] + ("..." if len(fname) > 30 else ""),
+                            cls="text-sm text-white font-medium truncate block",
+                        ),
                         Div(
                             Span("Photo", cls="text-[10px] bg-purple-900/50 text-purple-400 px-1.5 py-0.5 rounded"),
-                            Span(collection[:20] if collection else "No collection", cls="text-[10px] text-slate-500 truncate"),
-                            Span(f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"),
+                            Span(
+                                collection[:20] if collection else "No collection",
+                                cls="text-[10px] text-slate-500 truncate",
+                            ),
+                            Span(
+                                f"{face_count} face{'s' if face_count != 1 else ''}", cls="text-[10px] text-slate-500"
+                            ),
                             cls="flex items-center gap-1.5 mt-0.5",
                         ),
                         cls="min-w-0 flex-1",
@@ -4540,12 +5097,12 @@ def get(q: str = "", types: str = "person,photo", slot: str = "target", sess=Non
             )
 
     if not results_html:
-        return Div(P("No results found.", cls="text-sm text-slate-500 py-2"),
-                   id=result_id)
+        return Div(P("No results found.", cls="text-sm text-slate-500 py-2"), id=result_id)
 
     # Limit to 10 results
-    return Div(*results_html[:10], id=result_id,
-               cls="space-y-1 max-h-64 overflow-y-auto")
+    return Div(*results_html[:10], id=result_id, cls="space-y-1 max-h-64 overflow-y-auto")
+
+
 @rt("/api/compare/find-similar-targets")
 def get(identity_id: str = "", face_id: str = "", sess=None):
     """Find visually similar people to auto-populate target pills.
@@ -4577,6 +5134,7 @@ def get(identity_id: str = "", face_id: str = "", sess=None):
         return Div(P("No embedding found.", cls="text-sm text-slate-500"), id="compare-similar-results")
 
     from core.neighbors import find_similar_faces
+
     results = find_similar_faces(query_emb, face_data, registry=registry, limit=5)
 
     pills = []
@@ -4613,7 +5171,11 @@ def get(identity_id: str = "", face_id: str = "", sess=None):
         id="compare-similar-results",
         data_testid="compare-similar-results",
     )
-def _compare_photo_with_overlays(photo_url_str: str, photo_id: str, highlight_face_id: str, registry, img_height_cls: str) -> Div:
+
+
+def _compare_photo_with_overlays(
+    photo_url_str: str, photo_id: str, highlight_face_id: str, registry, img_height_cls: str
+) -> Div:
     """Render a photo with face bounding box overlays for the compare modal.
 
     Shows all faces in the photo with state-based colors. The face being
@@ -4622,10 +5184,14 @@ def _compare_photo_with_overlays(photo_url_str: str, photo_id: str, highlight_fa
     photo = _main_mod.get_photo_metadata(photo_id) if photo_id else None
     if not photo or not photo_url_str:
         return Div(
-            Img(src=photo_url_str or "", cls=f"max-w-full {img_height_cls} object-contain rounded") if photo_url_str else Div(
+            Img(src=photo_url_str or "", cls=f"max-w-full {img_height_cls} object-contain rounded")
+            if photo_url_str
+            else Div(
                 Span("?", cls="text-6xl text-slate-500"),
-                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-            cls="flex justify-center bg-slate-700/50 rounded p-2")
+                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center",
+            ),
+            cls="flex justify-center bg-slate-700/50 rounded p-2",
+        )
 
     width, height = _main_mod.get_photo_dimensions(photo["filename"])
     has_dimensions = width > 0 and height > 0
@@ -4667,15 +5233,19 @@ def _compare_photo_with_overlays(photo_url_str: str, photo_id: str, highlight_fa
             # Click handler: navigate to identity card, closing the modal
             nav_section = _section_for_state(identity.get("state", "INBOX")) if identity else "to_review"
             click_script = (
-                f"on click halt the event's bubbling "
-                f"then add .hidden to #compare-modal "
-                f"then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
-            ) if identity_id else ""
+                (
+                    f"on click halt the event's bubbling "
+                    f"then add .hidden to #compare-modal "
+                    f"then go to url '/?section={nav_section}&view=browse#identity-{identity_id}'"
+                )
+                if identity_id
+                else ""
+            )
 
             overlay = Div(
                 Span(
                     display_name,
-                    cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10"
+                    cls="absolute -top-7 left-1/2 -translate-x-1/2 bg-stone-800 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10",
                 ),
                 cls=f"absolute cursor-pointer transition-all group {overlay_cls}",
                 style=f"left: {left_pct:.2f}%; top: {top_pct:.2f}%; width: {width_pct:.2f}%; height: {height_pct:.2f}%;",
@@ -4689,10 +5259,22 @@ def _compare_photo_with_overlays(photo_url_str: str, photo_id: str, highlight_fa
         Div(
             Img(src=photo_url_str, cls=f"max-w-full {img_height_cls} object-contain rounded"),
             *face_overlays,
-            cls="relative inline-block max-w-full"),
-        cls="flex justify-center bg-slate-700/50 rounded p-2")
+            cls="relative inline-block max-w-full",
+        ),
+        cls="flex justify-center bg-slate-700/50 rounded p-2",
+    )
+
+
 @rt("/api/identity/{target_id}/compare/{neighbor_id}")
-def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int = 0, view: str = "faces", filter: str = "", sess=None):
+def get(
+    target_id: str,
+    neighbor_id: str,
+    target_idx: int = 0,
+    neighbor_idx: int = 0,
+    view: str = "faces",
+    filter: str = "",
+    sess=None,
+):
     """Side-by-side comparison view for evaluating merge candidates."""
     try:
         registry = _main_mod.load_registry()
@@ -4744,51 +5326,111 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
             return None
         b = f"/api/identity/{target_id}/compare/{neighbor_id}"
         if side == "t":
-            pu = f"{b}?target_idx={cur-1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
-            nu = f"{b}?target_idx={cur+1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
+            pu = f"{b}?target_idx={cur - 1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
+            nu = f"{b}?target_idx={cur + 1}&neighbor_idx={oth}&view={view}{_filter_suffix}"
         else:
-            pu = f"{b}?target_idx={oth}&neighbor_idx={cur-1}&view={view}{_filter_suffix}"
-            nu = f"{b}?target_idx={oth}&neighbor_idx={cur+1}&view={view}{_filter_suffix}"
-        pb = Button("\u2190", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
-                    hx_get=pu, hx_target="#compare-modal-content", hx_swap="innerHTML",
-                    type="button") if cur > 0 else Button(
-                    "\u2190", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
-        nb = Button("\u2192", cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
-                    hx_get=nu, hx_target="#compare-modal-content", hx_swap="innerHTML",
-                    type="button") if cur < tot - 1 else Button(
-                    "\u2192", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button")
-        return Div(pb, Span(f"{cur+1} of {tot}", cls="text-xs text-slate-400 mx-2"), nb,
-                   cls="flex items-center justify-center gap-1 mt-2")
+            pu = f"{b}?target_idx={oth}&neighbor_idx={cur - 1}&view={view}{_filter_suffix}"
+            nu = f"{b}?target_idx={oth}&neighbor_idx={cur + 1}&view={view}{_filter_suffix}"
+        pb = (
+            Button(
+                "\u2190",
+                cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
+                hx_get=pu,
+                hx_target="#compare-modal-content",
+                hx_swap="innerHTML",
+                type="button",
+            )
+            if cur > 0
+            else Button(
+                "\u2190", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button"
+            )
+        )
+        nb = (
+            Button(
+                "\u2192",
+                cls="px-2 py-1 text-slate-400 hover:text-white hover:bg-slate-600 rounded text-sm",
+                hx_get=nu,
+                hx_target="#compare-modal-content",
+                hx_swap="innerHTML",
+                type="button",
+            )
+            if cur < tot - 1
+            else Button(
+                "\u2192", cls="px-2 py-1 text-slate-500 opacity-30 rounded text-sm", disabled=True, type="button"
+            )
+        )
+        return Div(
+            pb,
+            Span(f"{cur + 1} of {tot}", cls="text-xs text-slate-400 mx-2"),
+            nb,
+            cls="flex items-center justify-center gap-1 mt-2",
+        )
 
     # Face/Photo toggle
     base_url = f"/api/identity/{target_id}/compare/{neighbor_id}?target_idx={target_idx}&neighbor_idx={neighbor_idx}{_filter_suffix}"
     toggle = Div(
-        Button("Faces",
-               cls=f"px-3 py-1 text-xs font-medium rounded-l {'bg-amber-600 text-white' if view == 'faces' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
-               hx_get=f"{base_url}&view=faces", hx_target="#compare-modal-content", hx_swap="innerHTML", type="button"),
-        Button("Photos",
-               cls=f"px-3 py-1 text-xs font-medium rounded-r {'bg-amber-600 text-white' if view == 'photos' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
-               hx_get=f"{base_url}&view=photos", hx_target="#compare-modal-content", hx_swap="innerHTML", type="button"),
-        cls="flex justify-center mb-4"
+        Button(
+            "Faces",
+            cls=f"px-3 py-1 text-xs font-medium rounded-l {'bg-amber-600 text-white' if view == 'faces' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
+            hx_get=f"{base_url}&view=faces",
+            hx_target="#compare-modal-content",
+            hx_swap="innerHTML",
+            type="button",
+        ),
+        Button(
+            "Photos",
+            cls=f"px-3 py-1 text-xs font-medium rounded-r {'bg-amber-600 text-white' if view == 'photos' else 'bg-slate-700 text-slate-300 hover:bg-slate-600'}",
+            hx_get=f"{base_url}&view=photos",
+            hx_target="#compare-modal-content",
+            hx_swap="innerHTML",
+            type="button",
+        ),
+        cls="flex justify-center mb-4",
     )
 
     # Action buttons -- role-aware
     _role = _main_mod._get_user_role(sess)
     if _role == "contributor":
-        m_btn = Button("Suggest Merge", cls="px-4 py-2 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
-            hx_post=f"/api/identity/{target_id}/suggest-merge/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
-            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
+        m_btn = Button(
+            "Suggest Merge",
+            cls="px-4 py-2 text-sm font-bold bg-purple-600 text-white rounded hover:bg-purple-500",
+            hx_post=f"/api/identity/{target_id}/suggest-merge/{neighbor_id}",
+            hx_target=f"#neighbor-{neighbor_id}",
+            hx_swap="outerHTML",
+            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
+            type="button",
+        )
     else:
-        _merge_confirm = f"Merge {n_name} into {t_name}? All faces will be combined." if t_name and not t_name.startswith("Unidentified") and not t_name.startswith("Identity ") else "Merge these identities? This can be undone."
-        m_btn = Button("Merge", cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
-            hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}", hx_target=f"#identity-{target_id}", hx_swap="outerHTML",
+        _merge_confirm = (
+            f"Merge {n_name} into {t_name}? All faces will be combined."
+            if t_name and not t_name.startswith("Unidentified") and not t_name.startswith("Identity ")
+            else "Merge these identities? This can be undone."
+        )
+        m_btn = Button(
+            "Merge",
+            cls="px-4 py-2 text-sm font-bold bg-blue-600 text-white rounded hover:bg-blue-500",
+            hx_post=f"/api/identity/{target_id}/merge/{neighbor_id}",
+            hx_target=f"#identity-{target_id}",
+            hx_swap="outerHTML",
             hx_confirm=_merge_confirm,
-            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
-    ns_btn = Button("Not Same", cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
-        hx_post=f"/api/identity/{target_id}/reject/{neighbor_id}", hx_target=f"#neighbor-{neighbor_id}", hx_swap="outerHTML",
-        **{"_": "on htmx:afterRequest add .hidden to #compare-modal"}, type="button")
-    cl_btn = Button("Close", cls="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-600 rounded",
-        **{"_": "on click add .hidden to #compare-modal"}, type="button")
+            **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
+            type="button",
+        )
+    ns_btn = Button(
+        "Not Same",
+        cls="px-4 py-2 text-sm font-bold border border-red-400/50 text-red-400 rounded hover:bg-red-500/20",
+        hx_post=f"/api/identity/{target_id}/reject/{neighbor_id}",
+        hx_target=f"#neighbor-{neighbor_id}",
+        hx_swap="outerHTML",
+        **{"_": "on htmx:afterRequest add .hidden to #compare-modal"},
+        type="button",
+    )
+    cl_btn = Button(
+        "Close",
+        cls="px-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-600 rounded",
+        **{"_": "on click add .hidden to #compare-modal"},
+        type="button",
+    )
 
     img_h = "max-h-[60vh]" if view == "photos" else "max-h-[50vh]"
 
@@ -4809,67 +5451,103 @@ def get(target_id: str, neighbor_id: str, target_idx: int = 0, neighbor_idx: int
         t_photo_div = _compare_photo_with_overlays(t_photo_url, t_photo_id, t_fid, registry, img_h)
     else:
         t_photo_div = Div(
-            Img(src=t_display_url or "", alt=t_name,
+            Img(
+                src=t_display_url or "",
+                alt=t_name,
                 cls=f"max-w-full {img_h} object-contain rounded cursor-zoom-in transition-transform duration-200",
                 data_compare_zoom="true",
-                **{"_": _zoom_script}) if t_display_url else Div(
+                **{"_": _zoom_script},
+            )
+            if t_display_url
+            else Div(
                 Span("?", cls="text-6xl text-slate-500"),
-                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-            cls="flex justify-center bg-slate-700/50 rounded p-2 overflow-hidden")
+                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center",
+            ),
+            cls="flex justify-center bg-slate-700/50 rounded p-2 overflow-hidden",
+        )
 
     if view == "photos" and n_photo_url:
         n_photo_div = _compare_photo_with_overlays(n_photo_url, n_photo_id, n_fid, registry, img_h)
     else:
         n_photo_div = Div(
-            Img(src=n_display_url or "", alt=n_name,
+            Img(
+                src=n_display_url or "",
+                alt=n_name,
                 cls=f"max-w-full {img_h} object-contain rounded cursor-zoom-in transition-transform duration-200",
                 data_compare_zoom="true",
-                **{"_": _zoom_script}) if n_display_url else Div(
+                **{"_": _zoom_script},
+            )
+            if n_display_url
+            else Div(
                 Span("?", cls="text-6xl text-slate-500"),
-                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center"),
-            cls="flex justify-center bg-slate-700/50 rounded p-2 overflow-hidden")
+                cls="w-48 h-48 bg-slate-700 rounded flex items-center justify-center",
+            ),
+            cls="flex justify-center bg-slate-700/50 rounded p-2 overflow-hidden",
+        )
 
     # View Photo links — open the full photo lightbox from compare modal
     # Pass from_compare=1 so the photo view shows a "Back to Compare" button
-    t_view_photo = Button(
-        "View Photo \u2192",
-        cls="text-xs text-amber-400/70 hover:text-amber-400 mt-1",
-        hx_get=f"/photo/{t_photo_id}/partial?face={t_fid}&from_compare=1",
-        hx_target="#photo-modal-content",
-        hx_swap="innerHTML",
-        **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
-        type="button",
-    ) if t_photo_id else None
-    n_view_photo = Button(
-        "View Photo \u2192",
-        cls="text-xs text-indigo-400/70 hover:text-indigo-400 mt-1",
-        hx_get=f"/photo/{n_photo_id}/partial?face={n_fid}&from_compare=1",
-        hx_target="#photo-modal-content",
-        hx_swap="innerHTML",
-        **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
-        type="button",
-    ) if n_photo_id else None
+    t_view_photo = (
+        Button(
+            "View Photo \u2192",
+            cls="text-xs text-amber-400/70 hover:text-amber-400 mt-1",
+            hx_get=f"/photo/{t_photo_id}/partial?face={t_fid}&from_compare=1",
+            hx_target="#photo-modal-content",
+            hx_swap="innerHTML",
+            **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
+            type="button",
+        )
+        if t_photo_id
+        else None
+    )
+    n_view_photo = (
+        Button(
+            "View Photo \u2192",
+            cls="text-xs text-indigo-400/70 hover:text-indigo-400 mt-1",
+            hx_get=f"/photo/{n_photo_id}/partial?face={n_fid}&from_compare=1",
+            hx_target="#photo-modal-content",
+            hx_swap="innerHTML",
+            **{"_": "on click remove .hidden from #photo-modal then add .hidden to #compare-modal"},
+            type="button",
+        )
+        if n_photo_id
+        else None
+    )
 
     return Div(
         toggle,
         Div(
             Div(
-                A(t_name, href=f"/?section={t_section}&current={target_id}{_filter_suffix}",
-                  cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
-                  **{"_": "on click add .hidden to #compare-modal"}),
+                A(
+                    t_name,
+                    href=f"/?section={t_section}&current={target_id}{_filter_suffix}",
+                    cls="text-sm font-medium text-amber-400 mb-2 text-center truncate block hover:underline",
+                    **{"_": "on click add .hidden to #compare-modal"},
+                ),
                 t_photo_div,
                 t_view_photo,
                 _cn("t", target_idx, len(tf), neighbor_idx),
-                cls="flex-1 min-w-0"),
+                cls="flex-1 min-w-0",
+            ),
             Div(Span("vs", cls="text-slate-500 text-sm font-bold"), cls="flex items-center px-4"),
             Div(
-                A(n_name, href=f"/?section={n_section}&current={neighbor_id}{_filter_suffix}",
-                  cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
-                  **{"_": "on click add .hidden to #compare-modal"}),
+                A(
+                    n_name,
+                    href=f"/?section={n_section}&current={neighbor_id}{_filter_suffix}",
+                    cls="text-sm font-medium text-indigo-400 mb-2 text-center truncate block hover:underline",
+                    **{"_": "on click add .hidden to #compare-modal"},
+                ),
                 n_photo_div,
                 n_view_photo,
                 _cn("n", neighbor_idx, len(nf), target_idx),
-                cls="flex-1 min-w-0"),
-            cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start"),
-        Div(m_btn, ns_btn, cl_btn,
-            cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700"))
+                cls="flex-1 min-w-0",
+            ),
+            cls="flex flex-col sm:flex-row gap-4 items-center sm:items-start",
+        ),
+        Div(
+            m_btn,
+            ns_btn,
+            cl_btn,
+            cls="flex flex-wrap items-center justify-center gap-3 mt-6 pt-4 border-t border-slate-700",
+        ),
+    )

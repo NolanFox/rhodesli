@@ -67,6 +67,11 @@ def post(identity_id: str, from_focus: bool = False, filter: str = "", sess=None
                 "user_id": _user.id if _user else None,
             },
         )
+        _main_mod.posthog_capture(
+            "admin_identity_confirmed",
+            distinct_id=_user.email if _user else "admin",
+            properties={"identity_id": identity_id, "identity_name": identity.get("name", "Unknown")},
+        )
     except Exception as e:
         # Could be variance explosion or other error
         return Response(
