@@ -619,6 +619,9 @@ def _call_gemini_date_estimate(
                         "preset": "quick",
                     },
                     response_summary=response_summary,
+                    prompt_text=prompt_text,
+                    full_response=parsed if parsed else None,
+                    gedcom_context=gedcom_context,
                 )
             except Exception as log_err:
                 logger.warning(f"[estimate] Failed to log Gemini call: {log_err}")
@@ -1028,8 +1031,13 @@ def _load_photo_image_bytes(photo_id: str) -> tuple[bytes | None, str]:
         return None, ""
 
 
-def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
+def _build_gedcom_context_for_photo(photo_id: str, visible_text: str | None = None) -> str | None:
     """Build GEDCOM context string for identified faces in a photo.
+
+    Args:
+        photo_id: Photo ID to build context for.
+        visible_text: Text visible in photo (signage, storefronts) for
+            business owner GEDCOM lookup (AD-210).
 
     Returns context string or None if no GEDCOM data available.
     """
@@ -1099,6 +1107,17 @@ def _build_gedcom_context_for_photo(photo_id: str) -> str | None:
 
         identities_dict = registry._identities
         context = build_gedcom_context(photo_id, faces, identities_dict, gedcom_data)
+
+        # If visible_text provided, add business owner context (AD-210)
+        if visible_text and gedcom_data:
+            parsed_gedcom = gedcom_data.get("parsed_gedcom")
+            if parsed_gedcom:
+                from rhodesli_ml.gedcom_context import find_business_owner_context
+
+                owner_ctx = find_business_owner_context(visible_text, parsed_gedcom)
+                if owner_ctx:
+                    context = (context + "\n\n" + owner_ctx) if context else owner_ctx
+
         logger.info(
             f"GEDCOM context: build_gedcom_context returned {len(context)} chars"
             if context
@@ -1143,19 +1162,25 @@ async def post(photo_id: str, sess=None):
     old_location = old_locations.get(photo_id, {})
     old_location_name = old_location.get("location_name", "Unknown")
 
-    # Build GEDCOM context
-    gedcom_context = _build_gedcom_context_for_photo(photo_id)
-
     # Build photo metadata for collection/source context
     _main_mod._build_caches()
     photo_meta = _main_mod.get_photo_metadata(photo_id)
     p_metadata = None
+    visible_text = None
     if photo_meta:
         p_metadata = {
             "collection": photo_meta.get("collection", ""),
             "source": photo_meta.get("source", ""),
             "filename": photo_meta.get("filename", ""),
         }
+        # Extract visible text from previous analysis for business owner lookup (AD-210)
+        visible_text = photo_meta.get("visible_text")
+    # Also check previous date label for visible_text
+    if not visible_text and old_label:
+        visible_text = old_label.get("visible_text")
+
+    # Build GEDCOM context (with visible_text for business owner lookup)
+    gedcom_context = _build_gedcom_context_for_photo(photo_id, visible_text=visible_text)
 
     # Call Gemini with enriched prompt
     result = _call_gemini_date_estimate(

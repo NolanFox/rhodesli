@@ -2364,3 +2364,11 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 **Decision**: Collection name is WEAK provenance context (who had the photos), not location evidence. Visual evidence and GEDCOM residence data at the time are stronger signals.
 
 **Eval**: Leon's Restaurant must return Asheville. Tampa photos with Tampa evidence must still return Tampa.
+
+### AD-210: Business Name → Owner GEDCOM Lookup
+- **Date**: 2026-03-07 | **Session**: 92
+- **Context**: Leon's Restaurant photo (3192877a90a174e9) shows a business with "LEON'S" in the name. Leon Capeluto owned the restaurant and lived in Asheville, NC. However, build_photo_context() only includes GEDCOM data for people whose faces are identified in the photo. Leon isn't pictured, so his residential history (Asheville) was missing from the prompt.
+- **Decision**: Add `find_business_owner_context()` that searches GEDCOM individuals for name matches in visible text/signage. When text like "LEON'S RESTAURANT" is detected, find GEDCOM individuals named Leon and include their residential history in the prompt. This provides location signal from business ownership even when the owner isn't pictured.
+- **Alternatives considered**: Manual per-photo override (rejected: doesn't scale, requires admin to know the connection). Hard-coding known business-person mappings (rejected: brittle, not generalizable).
+- **Implementation**: `rhodesli_ml/gedcom_context.py` — `find_business_owner_context()`. Caller in `app/estimate_routes.py` passes `visible_text` from photo metadata. Also adds full API call logging (prompt_text, full_response, gedcom_context) to gemini_api_calls table.
+- **Risk**: False positive name matches (e.g., common names). Mitigated by requiring 3+ character matches and labeling as "candidate" rather than confirmed owner.

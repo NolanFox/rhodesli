@@ -535,7 +535,8 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
         call_type: 'alignment', 'enrichment', 'combined', 'date_estimation'
         **kwargs: Optional fields: prompt_tokens, completion_tokens, total_tokens,
                   cost_usd, latency_ms, status, error_message, rate_limit_type,
-                  response_summary, gemini_config, batch_id
+                  response_summary, gemini_config, batch_id,
+                  prompt_text, full_response, gedcom_context
 
     Returns True on success, False on failure.
     """
@@ -561,6 +562,9 @@ def log_gemini_call(photo_id, model_used, call_type, **kwargs):
         "response_summary",
         "gemini_config",
         "batch_id",
+        "prompt_text",
+        "full_response",
+        "gedcom_context",
     ]:
         if field in kwargs and kwargs[field] is not None:
             row[field] = kwargs[field]
