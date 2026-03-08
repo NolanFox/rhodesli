@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.96.0] — 2026-03-08 (Session 93: Close All Deferrals)
+
+### Added
+- **DATA-007 complete** — Core tables (identities, photos, photo_faces) created in Supabase, 894+295+981 rows backfilled, DATA_SOURCE=postgres flipped on Railway.
+- **Supplementary data migration** — date_labels (271), photo_locations (268), birth_year_estimates (32) migrated to Supabase.
+- **Batch GEDCOM reanalysis** — 67/72 photos reanalyzed with Gemini 3.1 Pro + GEDCOM enrichment. 91% high confidence, avg 4.5-year date ranges. Report: docs/ml/GEDCOM_REANALYSIS_REPORT.md.
+- **AD-211** — GEDCOM batch reanalysis value assessment and decision framework.
+- **Observability verified** — Sentry (5 issues found), PostHog (events flowing), Resend (email delivered).
+
+### Fixed
+- **Null name identity** — Identity 224495e8 (CONTESTED state) had name=null, defaulted to "Unknown (224495e8)".
+- **Column name mismatch** — Supplementary tables used `full_data` vs expected `data` column. Fixed via ALTER TABLE.
+
 ## [v0.95.0] — 2026-03-08 (Session 92: Ship Everything — Close All Gaps)
 
 ### Added

@@ -2372,3 +2372,12 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Alternatives considered**: Manual per-photo override (rejected: doesn't scale, requires admin to know the connection). Hard-coding known business-person mappings (rejected: brittle, not generalizable).
 - **Implementation**: `rhodesli_ml/gedcom_context.py` — `find_business_owner_context()`. Caller in `app/estimate_routes.py` passes `visible_text` from photo metadata. Also adds full API call logging (prompt_text, full_response, gedcom_context) to gemini_api_calls table.
 - **Risk**: False positive name matches (e.g., common names). Mitigated by requiring 3+ character matches and labeling as "candidate" rather than confirmed owner.
+
+### AD-211: GEDCOM Batch Reanalysis — Results and Value Assessment
+- **Date**: 2026-03-08 | **Session**: 93
+- **Context**: 72 GEDCOM-eligible photos batch-reanalyzed with Gemini 3.1 Pro using `first_order` enrichment variant. 67/72 succeeded. Full analysis in `docs/ml/GEDCOM_REANALYSIS_REPORT.md`.
+- **Key findings**: 91% high confidence, avg 4.5-year date ranges. 28% of entries explicitly cross-reference birth years in reasoning. GEDCOM depth directly correlates with precision — close relatives → 0-4 year ranges, distant branches → 10-20 year ranges.
+- **Decision**: GEDCOM enrichment is proven valuable. Future reanalyses should be triggered by: (1) new GEDCOM data linked to faces, (2) model version upgrades, (3) community GEDCOM uploads. Skip re-runs on photos already at high confidence with no new data.
+- **Schema gaps identified**: Need `previous_date_estimate` JSONB and `gedcom_token_count` columns on `gemini_api_calls` for longitudinal tracking. See report Section 8.
+- **Cost**: ~$2.66 total ($0.037/photo), 100x cheaper than manual genealogical dating.
+- **Future**: Multi-GEDCOM support is the highest-ROI investment for improving enrichment coverage on distant branches. Local model fine-tuning viable at 500+ labeled photos.

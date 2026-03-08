@@ -11998,7 +11998,7 @@
     },
     "62f611f3-060a-48a1-b4ab-752296f6d586": {
       "name": "Unidentified Person 494",
-      "state": "INBOX",
+      "state": "CONFIRMED",
       "metadata": {},
       "anchor_ids": [
         "inbox_413e03f922aa"
@@ -12011,8 +12011,8 @@
         "ingested_at": "2026-02-14T14:48:02.408079+00:00",
         "grouped_faces": 1
       },
-      "updated_at": "2026-03-05T04:16:47.005358+00:00",
-      "version_id": 2,
+      "updated_at": "2026-03-08T14:38:14.164860+00:00",
+      "version_id": 3,
       "identity_id": "62f611f3-060a-48a1-b4ab-752296f6d586",
       "negative_ids": [
         "identity:52966904-f1e5-4025-bcf3-b249ca673be3"
@@ -15640,7 +15640,9 @@
       "last_name": "Menashe",
       "anchor_ids": [
         "inbox_04a426269905",
-        "inbox_44254017d2da"
+        "inbox_44254017d2da",
+        "inbox_b13a0d1781cc",
+        "inbox_22a58175dbc2"
       ],
       "birth_year": 1898,
       "created_at": "2026-02-14T14:50:49.079764+00:00",
@@ -15653,8 +15655,8 @@
         "ingested_at": "2026-02-14T14:50:49.079729+00:00",
         "grouped_faces": 1
       },
-      "updated_at": "2026-03-04T18:53:38.694953+00:00",
-      "version_id": 6,
+      "updated_at": "2026-03-06T17:22:48.891433+00:00",
+      "version_id": 8,
       "identity_id": "64096284-ace8-4790-aebb-a82ff1f288a5",
       "negative_ids": [],
       "candidate_ids": [],
@@ -15691,6 +15693,72 @@
             "candidate_count": 0
           },
           "direction_auto_corrected": false
+        },
+        {
+          "merged_by": "web",
+          "source_id": "9e75ebe7-1896-4aac-a46a-a96d8973fe4b",
+          "timestamp": "2026-03-06T17:12:16.464145+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_b13a0d1781cc"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 878",
+          "source_state": "INBOX",
+          "merge_event_id": "012a80f3-126b-49dc-9f2d-fcd9dce03faa",
+          "source_snapshot": {
+            "name": "Unidentified Person 878",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_b13a0d1781cc"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Netanel Menashe",
+            "state": "CONFIRMED",
+            "anchor_count": 2,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": true
+        },
+        {
+          "merged_by": "web",
+          "source_id": "93f45f96-63f3-42d7-988a-6f9fd84540c7",
+          "timestamp": "2026-03-06T17:22:48.891433+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_22a58175dbc2"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 878",
+          "source_state": "INBOX",
+          "merge_event_id": "5ab60b96-efce-4a99-8842-aa91cf2a367e",
+          "source_snapshot": {
+            "name": "Unidentified Person 878",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_22a58175dbc2"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Netanel Menashe",
+            "state": "CONFIRMED",
+            "anchor_count": 3,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": true
         }
       ]
     },
@@ -19676,224 +19744,280 @@
       "candidate_ids": []
     },
     "9a69c74b-e154-414e-8404-d16f0edbf1ba": {
-      "identity_id": "9a69c74b-e154-414e-8404-d16f0edbf1ba",
-      "name": "Unidentified Person 853",
-      "state": "INBOX",
+      "name": "Sarah Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_10c102941239"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238462+00:00",
-      "updated_at": "2026-03-05T03:37:08.238462+00:00",
+      "first_name": "Sarah",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238402+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:26:12.898991+00:00",
+      "version_id": 3,
+      "identity_id": "9a69c74b-e154-414e-8404-d16f0edbf1ba",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "19b27503-3999-479d-8357-67b102ab427d": {
-      "identity_id": "19b27503-3999-479d-8357-67b102ab427d",
-      "name": "Unidentified Person 854",
-      "state": "INBOX",
+      "name": "Rivca Alhadeff Leon",
+      "state": "CONFIRMED",
+      "last_name": "Leon",
       "anchor_ids": [
         "inbox_550ea8022f92"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238510+00:00",
-      "updated_at": "2026-03-05T03:37:08.238510+00:00",
+      "first_name": "Rivca Alhadeff",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238503+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:27:41.150853+00:00",
+      "version_id": 3,
+      "identity_id": "19b27503-3999-479d-8357-67b102ab427d",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "58eefdb3-7408-479e-898a-41e6276a070d": {
-      "identity_id": "58eefdb3-7408-479e-898a-41e6276a070d",
-      "name": "Unidentified Person 855",
-      "state": "INBOX",
+      "name": "Hanula Franco Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_38943505c1fc"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238537+00:00",
-      "updated_at": "2026-03-05T03:37:08.238537+00:00",
+      "first_name": "Hanula Franco",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238532+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:27:02.548820+00:00",
+      "version_id": 3,
+      "identity_id": "58eefdb3-7408-479e-898a-41e6276a070d",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "167c0251-3941-4f9c-9c08-4c8a9cd5aaa6": {
-      "identity_id": "167c0251-3941-4f9c-9c08-4c8a9cd5aaa6",
-      "name": "Unidentified Person 856",
-      "state": "INBOX",
+      "name": "Jacob Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_805664720c8a"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238555+00:00",
-      "updated_at": "2026-03-05T03:37:08.238555+00:00",
+      "first_name": "Jacob",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238549+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:26:21.317108+00:00",
+      "version_id": 3,
+      "identity_id": "167c0251-3941-4f9c-9c08-4c8a9cd5aaa6",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "794b3f5c-cdac-4bc2-9bb1-54eb32aa2f33": {
-      "identity_id": "794b3f5c-cdac-4bc2-9bb1-54eb32aa2f33",
-      "name": "Unidentified Person 857",
-      "state": "INBOX",
+      "name": "Rizula Franco Alhadeff",
+      "state": "CONFIRMED",
+      "last_name": "Alhadeff",
       "anchor_ids": [
-        "inbox_4d14675987dd"
+        "inbox_4d14675987dd",
+        "inbox_0c9e2c0e03f2"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238570+00:00",
-      "updated_at": "2026-03-05T03:37:08.238570+00:00",
+      "first_name": "Rizula Franco",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238565+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:29:16.241275+00:00",
+      "version_id": 4,
+      "identity_id": "794b3f5c-cdac-4bc2-9bb1-54eb32aa2f33",
+      "negative_ids": [],
+      "candidate_ids": [],
+      "merge_history": [
+        {
+          "merged_by": "web",
+          "source_id": "98e8790f-9c6f-41f4-86e7-02de9eb08c45",
+          "timestamp": "2026-03-06T17:29:16.241275+00:00",
+          "faces_added": {
+            "anchors": [
+              "inbox_0c9e2c0e03f2"
+            ],
+            "negatives": [],
+            "candidates": []
+          },
+          "source_name": "Unidentified Person 865",
+          "source_state": "INBOX",
+          "merge_event_id": "7da63768-6b11-46e5-88b9-cf55f01bb2b6",
+          "source_snapshot": {
+            "name": "Unidentified Person 865",
+            "state": "INBOX",
+            "last_name": "",
+            "anchor_ids": [
+              "inbox_0c9e2c0e03f2"
+            ],
+            "first_name": "",
+            "negative_ids": [],
+            "candidate_ids": []
+          },
+          "target_snapshot_before": {
+            "name": "Rizula Franco Alhadeff",
+            "state": "CONFIRMED",
+            "anchor_count": 1,
+            "candidate_count": 0
+          },
+          "direction_auto_corrected": false
+        }
+      ]
     },
     "ca17e826-5286-484a-ad87-a92b190d5ee6": {
-      "identity_id": "ca17e826-5286-484a-ad87-a92b190d5ee6",
-      "name": "Unidentified Person 858",
-      "state": "INBOX",
+      "name": "Lea Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_93f5c5f852f6"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238584+00:00",
-      "updated_at": "2026-03-05T03:37:08.238584+00:00",
+      "first_name": "Lea",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238579+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:26:43.681418+00:00",
+      "version_id": 3,
+      "identity_id": "ca17e826-5286-484a-ad87-a92b190d5ee6",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "a13d0337-5e37-410b-83c8-df88cca1e159": {
-      "identity_id": "a13d0337-5e37-410b-83c8-df88cca1e159",
-      "name": "Unidentified Person 859",
-      "state": "INBOX",
+      "name": "Natan Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_4f288e7defdf"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238598+00:00",
-      "updated_at": "2026-03-05T03:37:08.238598+00:00",
+      "first_name": "Natan",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238593+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:24:35.286667+00:00",
+      "version_id": 3,
+      "identity_id": "a13d0337-5e37-410b-83c8-df88cca1e159",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "41531191-8970-454d-b436-134ddd638e48": {
-      "identity_id": "41531191-8970-454d-b436-134ddd638e48",
-      "name": "Unidentified Person 860",
-      "state": "INBOX",
+      "name": "Nissim Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_a7e8083ad389"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238616+00:00",
-      "updated_at": "2026-03-05T03:37:08.238616+00:00",
+      "first_name": "Nissim",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238609+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:26:36.514023+00:00",
+      "version_id": 3,
+      "identity_id": "41531191-8970-454d-b436-134ddd638e48",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "4369c2f0-5c5e-43ff-9e47-1b6806a46531": {
-      "identity_id": "4369c2f0-5c5e-43ff-9e47-1b6806a46531",
-      "name": "Unidentified Person 861",
-      "state": "INBOX",
+      "name": "Caden Franco Sadis",
+      "state": "CONFIRMED",
+      "last_name": "Sadis",
       "anchor_ids": [
         "inbox_a56c556100a9"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238633+00:00",
-      "updated_at": "2026-03-05T03:37:08.238633+00:00",
+      "first_name": "Caden Franco",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238628+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:27:48.613516+00:00",
+      "version_id": 3,
+      "identity_id": "4369c2f0-5c5e-43ff-9e47-1b6806a46531",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "928e5bb4-aafe-456f-991b-ba1856070bb1": {
-      "identity_id": "928e5bb4-aafe-456f-991b-ba1856070bb1",
-      "name": "Unidentified Person 862",
-      "state": "INBOX",
+      "name": "Rizula Franco Cohen",
+      "state": "CONFIRMED",
+      "last_name": "Cohen",
       "anchor_ids": [
         "inbox_3d3c1bbe9595"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238647+00:00",
-      "updated_at": "2026-03-05T03:37:08.238647+00:00",
+      "first_name": "Rizula Franco",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238642+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:27:13.130738+00:00",
+      "version_id": 3,
+      "identity_id": "928e5bb4-aafe-456f-991b-ba1856070bb1",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "7efabe31-3bbb-4788-a4bb-0e3c794ff8d5": {
-      "identity_id": "7efabe31-3bbb-4788-a4bb-0e3c794ff8d5",
       "name": "Unidentified Person 863",
-      "state": "INBOX",
+      "state": "CONTESTED",
       "anchor_ids": [
         "inbox_dc1b6b162ec3"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:37:08.238660+00:00",
-      "updated_at": "2026-03-05T03:37:08.238660+00:00",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "d8f35a8a",
+        "source": "inbox_ingest",
         "filename": "heather_jcrafton_holocaust_photo_646071524_2007644386497488_6622563486752279435_n.jpg",
         "ingested_at": "2026-03-05T03:37:08.238656+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:26:25.276452+00:00",
+      "version_id": 2,
+      "identity_id": "7efabe31-3bbb-4788-a4bb-0e3c794ff8d5",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "0c7d23bf-9763-4f7e-8080-90e7536beb38": {
       "identity_id": "0c7d23bf-9763-4f7e-8080-90e7536beb38",
@@ -19916,24 +20040,25 @@
       }
     },
     "98e8790f-9c6f-41f4-86e7-02de9eb08c45": {
-      "identity_id": "98e8790f-9c6f-41f4-86e7-02de9eb08c45",
       "name": "Unidentified Person 865",
       "state": "INBOX",
       "anchor_ids": [
         "inbox_0c9e2c0e03f2"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:43:21.915372+00:00",
-      "updated_at": "2026-03-05T03:43:21.915372+00:00",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "75e76434",
+        "source": "inbox_ingest",
         "filename": "david_franco_collection_family_pic_front_120015134_1084541148609556_3704013770439882984_n.jpg",
         "ingested_at": "2026-03-05T03:43:21.915367+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:29:16.241275+00:00",
+      "version_id": 1,
+      "identity_id": "98e8790f-9c6f-41f4-86e7-02de9eb08c45",
+      "merged_into": "794b3f5c-cdac-4bc2-9bb1-54eb32aa2f33",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "e2b541dd-ef69-4ee9-909c-c5d115a8d971": {
       "identity_id": "e2b541dd-ef69-4ee9-909c-c5d115a8d971",
@@ -19976,24 +20101,26 @@
       }
     },
     "8431131f-02aa-4fd2-be40-6a76e12a9bf3": {
-      "identity_id": "8431131f-02aa-4fd2-be40-6a76e12a9bf3",
-      "name": "Unidentified Person 868",
-      "state": "INBOX",
+      "name": "Rica Revah",
+      "state": "CONFIRMED",
+      "last_name": "Revah",
       "anchor_ids": [
         "inbox_7185f4b78dbb"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:43:21.915409+00:00",
-      "updated_at": "2026-03-05T03:43:21.915409+00:00",
+      "first_name": "Rica",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "75e76434",
+        "source": "inbox_ingest",
         "filename": "david_franco_collection_family_pic_front_120015134_1084541148609556_3704013770439882984_n.jpg",
         "ingested_at": "2026-03-05T03:43:21.915405+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T18:42:14.851938+00:00",
+      "version_id": 3,
+      "identity_id": "8431131f-02aa-4fd2-be40-6a76e12a9bf3",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "5aba877c-0ae6-4e19-98c4-6b17b0f13c16": {
       "identity_id": "5aba877c-0ae6-4e19-98c4-6b17b0f13c16",
@@ -20016,24 +20143,26 @@
       }
     },
     "7a568700-d483-4930-aea4-eafb21f94d82": {
-      "identity_id": "7a568700-d483-4930-aea4-eafb21f94d82",
-      "name": "Unidentified Person 870",
-      "state": "INBOX",
+      "name": "Rizula Rosa Alhadeff Franco",
+      "state": "CONFIRMED",
+      "last_name": "Franco",
       "anchor_ids": [
         "inbox_c7029544a1b1"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:43:21.915434+00:00",
-      "updated_at": "2026-03-05T03:43:21.915434+00:00",
+      "first_name": "Rizula Rosa Alhadeff",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "75e76434",
+        "source": "inbox_ingest",
         "filename": "david_franco_collection_family_pic_front_120015134_1084541148609556_3704013770439882984_n.jpg",
         "ingested_at": "2026-03-05T03:43:21.915429+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T17:37:49.146476+00:00",
+      "version_id": 3,
+      "identity_id": "7a568700-d483-4930-aea4-eafb21f94d82",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "6284faf9-51b4-4474-a259-541df9226e64": {
       "identity_id": "6284faf9-51b4-4474-a259-541df9226e64",
@@ -20056,24 +20185,26 @@
       }
     },
     "e88d6698-46af-478c-8106-45a1bd8cf747": {
-      "identity_id": "e88d6698-46af-478c-8106-45a1bd8cf747",
-      "name": "Unidentified Person 872",
-      "state": "INBOX",
+      "name": "Yaacov Jacob Franco",
+      "state": "CONFIRMED",
+      "last_name": "Franco",
       "anchor_ids": [
         "inbox_65f110834b6e"
       ],
-      "candidate_ids": [],
-      "negative_ids": [],
-      "version_id": 1,
       "created_at": "2026-03-05T03:43:21.915458+00:00",
-      "updated_at": "2026-03-05T03:43:21.915458+00:00",
+      "first_name": "Yaacov Jacob",
       "provenance": {
-        "source": "inbox_ingest",
         "job_id": "75e76434",
+        "source": "inbox_ingest",
         "filename": "david_franco_collection_family_pic_front_120015134_1084541148609556_3704013770439882984_n.jpg",
         "ingested_at": "2026-03-05T03:43:21.915453+00:00",
         "grouped_faces": 1
-      }
+      },
+      "updated_at": "2026-03-06T18:42:01.051325+00:00",
+      "version_id": 3,
+      "identity_id": "e88d6698-46af-478c-8106-45a1bd8cf747",
+      "negative_ids": [],
+      "candidate_ids": []
     },
     "b31b126b-876f-46d4-8ced-481dbab24c3f": {
       "identity_id": "b31b126b-876f-46d4-8ced-481dbab24c3f",
@@ -20174,6 +20305,70 @@
         "ingested_at": "2026-03-05T16:58:05.405924+00:00",
         "grouped_faces": 1
       }
+    },
+    "9e75ebe7-1896-4aac-a46a-a96d8973fe4b": {
+      "name": "Unidentified Person 878",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_b13a0d1781cc"
+      ],
+      "created_at": "2026-03-06T17:08:42.710900+00:00",
+      "provenance": {
+        "job_id": "bf4070ff",
+        "source": "inbox_ingest",
+        "filename": "claude_benatar_purim_followup_netanel_646766885_10174290294110346_1202245900151002440_n.jpg",
+        "ingested_at": "2026-03-06T17:08:42.710853+00:00",
+        "grouped_faces": 1
+      },
+      "updated_at": "2026-03-06T17:12:16.464145+00:00",
+      "version_id": 1,
+      "identity_id": "9e75ebe7-1896-4aac-a46a-a96d8973fe4b",
+      "merged_into": "64096284-ace8-4790-aebb-a82ff1f288a5",
+      "negative_ids": [],
+      "candidate_ids": []
+    },
+    "93f45f96-63f3-42d7-988a-6f9fd84540c7": {
+      "name": "Unidentified Person 878",
+      "state": "INBOX",
+      "anchor_ids": [
+        "inbox_22a58175dbc2"
+      ],
+      "created_at": "2026-03-06T17:22:19.424802+00:00",
+      "provenance": {
+        "job_id": "d8c2b383",
+        "source": "inbox_ingest",
+        "filename": "ancestry_Natanel_Menasce.png",
+        "ingested_at": "2026-03-06T17:22:19.424744+00:00",
+        "grouped_faces": 1
+      },
+      "updated_at": "2026-03-06T17:22:48.891433+00:00",
+      "version_id": 1,
+      "identity_id": "93f45f96-63f3-42d7-988a-6f9fd84540c7",
+      "merged_into": "64096284-ace8-4790-aebb-a82ff1f288a5",
+      "negative_ids": [],
+      "candidate_ids": []
+    },
+    "e9ee215c-75fc-4306-af6d-e40853dee45e": {
+      "name": "David Capeloto",
+      "state": "CONFIRMED",
+      "last_name": "Capeloto",
+      "anchor_ids": [
+        "inbox_aca56b9475f5"
+      ],
+      "created_at": "2026-03-07T04:08:23.616758+00:00",
+      "first_name": "David",
+      "provenance": {
+        "job_id": "658979c2",
+        "source": "inbox_ingest",
+        "filename": "family_search_david_capeloto_declaration_of_intent_image.jpg",
+        "ingested_at": "2026-03-07T04:08:23.616707+00:00",
+        "grouped_faces": 1
+      },
+      "updated_at": "2026-03-07T04:09:20.460860+00:00",
+      "version_id": 3,
+      "identity_id": "e9ee215c-75fc-4306-af6d-e40853dee45e",
+      "negative_ids": [],
+      "candidate_ids": []
     }
   },
   "history": [

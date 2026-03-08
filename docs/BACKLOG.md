@@ -149,7 +149,7 @@ Full tracker: [docs/ux_audit/UX_ISSUE_TRACKER.md](../docs/ux_audit/UX_ISSUE_TRAC
 - [ ] **DATA-004: Retry 144 rate-limited photos** — Run `python scripts/run_combined_pipeline.py --retry-failed results/batch_alignment_20260223_023456.json`. Requires GEMINI_API_KEY. Estimated cost: ~$4 at $0.028/photo. Source: Session 64.
 - [ ] **DATA-005: Nightly R2 backup for critical JSON/NPY files** — Upload identities.json, photo_index.json, embeddings.npy, date_labels.json, photo_locations.json to R2 nightly. Closes "total data loss" risk. ~0.5 session. Source: PRD-027.
 - [x] **DATA-006: Shadow writes for all identities + photo_index** — DONE (Session 90b). Tables created, backfill script exists, save_registry() and save_photo_registry() fire-and-forget to Supabase. Backfill on production pending.
-- [ ] **DATA-007: Full Postgres migration (triggered)** — Move all reads/writes to Supabase. Eliminate JSON as source of truth. Triggered when 3+ sync bugs in 4 weeks, or pgvector needed, or volume failure. ~4-6 sessions. Source: PRD-027.
+- [x] **DATA-007: Full Postgres migration (triggered)** — Core tables created (identities, photos, photo_faces), data backfilled, DATA_SOURCE=postgres flipped on Railway. Session 93. Supplementary tables also migrated (date_labels, photo_locations, birth_year_estimates). Source: PRD-027.
 
 ### PRD Backlog — Session 91
 - [-] **NOTIFY-001: PRD-028 Contributor Notifications P0** — In-app notification center, bell icon, identity confirmation trigger, auto-clustering match trigger. Origin: Claude Benatar feedback ("how does someone know if there's a match?"). PRD: `docs/prds/028_contributor_notifications.md`.

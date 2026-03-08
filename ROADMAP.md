@@ -44,14 +44,16 @@ For ML-specific roadmap, see [docs/roadmap/ML_ROADMAP.md](docs/roadmap/ML_ROADMA
 - [x] 2026-03-08: CI/CD foundation — .github/workflows/test.yml (Session 92)
 - [x] 2026-03-08: Multi-pass Gemini foundation (rhodesli_ml/multi_pass.py, Session 92)
 - [x] 2026-03-08: Active learning foundation (rhodesli_ml/active_learning.py, Session 92)
-- [ ] Test DATA_SOURCE=postgres on Railway (blocked: identities/photos tables don't exist)
+- [x] 2026-03-08: DATA-007 — Postgres migration complete (Session 93)
+- [x] 2026-03-08: Batch GEDCOM re-analyze — 67/72 photos, AD-211, report (Session 93)
+- [x] 2026-03-08: Observability verified — Sentry, PostHog, Resend all confirmed (Session 93)
 - [ ] PERF-001: Test speed <30s (currently ~47s, floor limited by app import time)
 
 ### Near-Term
 - [ ] PRODUCT-002: Face Compare Tier 2 — PRD written, stub deployed, blocked by GPU/ONNX (AD-117)
 - [ ] PRODUCT-003: NL Archive Query — PRD written, parser built, needs LangChain integration
-- [ ] DATA-007: Create identities + photos tables in Supabase, backfill, flip DATA_SOURCE
-- [ ] Leon's re-analyze in production — code shipped, needs trigger after deploy
+- [ ] Schema additions: previous_date_estimate, gedcom_token_count on gemini_api_calls (AD-211)
+- [ ] Multi-GEDCOM support — merge/dedup architecture for community GEDCOM uploads
 
 ### Future Evaluation: Frontend Framework Migration
 - **Trigger:** If 3+ JS embeds require shared state, or mobile UX audit scores below acceptable after Session 74

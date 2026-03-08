@@ -5362,5 +5362,675 @@
       "reanalyzed_at": "2026-03-08T08:00:00+00:00",
       "location_key": "asheville"
     }
+  },
+  "fb6a846971b30f4b": {
+    "photo_id": "fb6a846971b30f4b",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama",
+    "location_estimate": "Indoor event venue typical of mid-century American hotels or catering halls.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:37:51.695470+00:00"
+  },
+  "fde6b60713d00574": {
+    "photo_id": "fde6b60713d00574",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama, USA",
+    "location_estimate": "Indoor banquet hall setting typical of mid-century American event venues.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:39:08.420275+00:00"
+  },
+  "8f6a6a0108f019cf": {
+    "photo_id": "8f6a6a0108f019cf",
+    "lat": 34.0522,
+    "lng": -118.2437,
+    "location_name": "Los Angeles, California, USA",
+    "location_estimate": "American-style banquet hall or hotel event space. The pineapple-shaped cups suggest a venue with a Polynesian or tropical theme, which were highly popular in mid-century and 1970s California.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:40:16.969998+00:00"
+  },
+  "e3d7ca72d447c2f9": {
+    "photo_id": "e3d7ca72d447c2f9",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama, USA",
+    "location_estimate": "The outdoor setting with stucco architecture and a potted palm plant suggests a warm southern US climate.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:41:39.817694+00:00"
+  },
+  "746dd11e5b4d86a1": {
+    "photo_id": "746dd11e5b4d86a1",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "Asheville, North Carolina",
+    "location_estimate": "American residential architecture featuring a brick multi-family building and Craftsman-style bungalows. The rustic twig furniture is highly characteristic of Appalachian mountain regions like Asheville.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:42:44.240252+00:00"
+  },
+  "6a62687aec225e39": {
+    "photo_id": "6a62687aec225e39",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Subtropical vegetation including palm trees, flat grassy lawn, and white stucco residential architecture typical of South Florida.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:43:55.333382+00:00"
+  },
+  "1135ba51e1bf5a1a": {
+    "photo_id": "1135ba51e1bf5a1a",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Buenos Aires, Argentina",
+    "location_estimate": "The handwritten inscription explicitly states 'Bs. Aires' (Buenos Aires).",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T16:44:50.488296+00:00"
+  },
+  "2c611f120c15aa4a": {
+    "photo_id": "2c611f120c15aa4a",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Tropical/subtropical vegetation including a prominent Frangipani (Plumeria) tree, combined with a stucco building featuring jalousie windows, strongly indicates South Florida or the Caribbean.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:45:50.767644+00:00"
+  },
+  "7d0344045ba73cba": {
+    "photo_id": "7d0344045ba73cba",
+    "lat": 33.749,
+    "lng": -84.388,
+    "location_name": "Atlanta, Georgia, USA",
+    "location_estimate": "The brick house with a columned front porch and arched windows is characteristic of early 20th-century American residential architecture, consistent with Southern US neighborhoods.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:46:54.474467+00:00"
+  },
+  "ff241a7e44f7d3c3": {
+    "photo_id": "ff241a7e44f7d3c3",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "The building in the background features jalousie windows, which were ubiquitous in mid-century Florida architecture to allow for ventilation before central air conditioning was standard.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:47:58.847620+00:00"
+  },
+  "1ee4ffdef6743ff4": {
+    "photo_id": "1ee4ffdef6743ff4",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Subtropical vegetation including what appears to be a citrus tree and large broadleaf plants (like banana or bird of paradise) typical of South Florida residential yards.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:49:01.999582+00:00"
+  },
+  "ea94c703087befcf": {
+    "photo_id": "ea94c703087befcf",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, USA",
+    "location_estimate": "Upscale indoor setting with heavy drapes and wrought-iron furniture, typical of American mid-century event halls, synagogues, or hotel lobbies.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:50:07.156368+00:00"
+  },
+  "ba91ea699c0e600f": {
+    "photo_id": "ba91ea699c0e600f",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Dayton, Ohio",
+    "location_estimate": "Interior of a large religious building (likely a synagogue or church) with carved wooden pews and a pipe organ in the background, consistent with mid-century American congregations.",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T16:51:21.157374+00:00"
+  },
+  "3dcca43bad885e54": {
+    "photo_id": "3dcca43bad885e54",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, USA",
+    "location_estimate": "Indoor banquet hall or restaurant setting with formal, heavier attire (dark suits, long sleeves on some women) which is consistent with a Northern US climate rather than Florida.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:52:23.555545+00:00"
+  },
+  "d0c83b767f767210": {
+    "photo_id": "d0c83b767f767210",
+    "lat": 36.4341,
+    "lng": 28.2176,
+    "location_name": "Rhodes, Greece",
+    "location_estimate": "The elderly woman is wearing traditional Sephardic/Ottoman clothing specific to the region (such as the Rhodesli headpiece). The painted studio backdrop is characteristic of early 20th-century Mediterranean provincial photography studios.",
+    "confidence": "high",
+    "region": "Greece",
+    "reanalyzed_at": "2026-03-08T16:53:27.871802+00:00"
+  },
+  "45c6aea178e61779": {
+    "photo_id": "45c6aea178e61779",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama",
+    "location_estimate": "Mid-century American restaurant or lounge interior (tufted banquette, indoor planter).",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:54:39.993809+00:00"
+  },
+  "inbox_b5e8a89e_1_603569465.197279": {
+    "photo_id": "inbox_b5e8a89e_1_603569465.197279",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Tropical broadleaf vegetation, scalloped canvas awning, decorative wrought iron scrollwork, and patterned terrazzo patio flooring are highly characteristic of mid-century South Florida residential architecture.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:55:41.201264+00:00"
+  },
+  "inbox_b5e8a89e_2_603575561.310480": {
+    "photo_id": "inbox_b5e8a89e_2_603575561.310480",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Cape Town, Western Cape, South Africa",
+    "location_estimate": "The outdoor setting with terrazzo flooring, white pillars, and a potted palm indicates a warm, subtropical, or Mediterranean climate.",
+    "confidence": "medium",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T16:57:02.035452+00:00"
+  },
+  "inbox_b5e8a89e_3_603576015.208878": {
+    "photo_id": "inbox_b5e8a89e_3_603576015.208878",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Montgomery, Alabama or Miami, Florida, USA",
+    "location_estimate": "The use of white dinner jackets and palm frond decorations strongly suggests a warm Southern US climate.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:58:16.537598+00:00"
+  },
+  "inbox_b5e8a89e_11_603576167.481802": {
+    "photo_id": "inbox_b5e8a89e_11_603576167.481802",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Montgomery, Alabama or Miami, Florida, USA",
+    "location_estimate": "The men's white dinner jackets and the officiant's straw hat strongly indicate a warm-weather, Southern US climate for a formal event.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T16:59:21.453419+00:00"
+  },
+  "inbox_staged-20260210-182610_7_596771420.719238": {
+    "photo_id": "inbox_staged-20260210-182610_7_596771420.719238",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Clearwater, Florida, USA",
+    "location_estimate": "Casual, warm-weather clothing (short sleeves, sleeveless tops) worn indoors suggests a warm climate like Florida. The interior is a standard mid-century American home.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:00:33.358078+00:00"
+  },
+  "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n": {
+    "photo_id": "inbox_facebook-20260210_1_victoria_capuano_with_family_in_atl_474859814_1682834382578262_6508272290837940840_n",
+    "lat": 33.749,
+    "lng": -84.388,
+    "location_name": "Atlanta, Georgia",
+    "location_estimate": "Formal studio portrait setting, typical of early 20th-century American cities.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:01:49.927977+00:00"
+  },
+  "inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n": {
+    "photo_id": "inbox_community-batch-20260214_7_howie_franco_collection_517353407_10233831015770004_1755713746865657166_n",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York City, New York",
+    "location_estimate": "The handwritten text 'CENTRAL PLAZA' refers to a well-known catering and banquet hall located at 111 Second Avenue in the Lower East Side of Manhattan, a popular venue for Jewish community events. The presence of 'Kirsch' soda bottles (a Brooklyn-based beverage company) further confirms the New York area.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:02:49.670140+00:00"
+  },
+  "a3d2695fe0804844": {
+    "photo_id": "a3d2695fe0804844",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Interior of a formal event space (hotel banquet hall or catering hall) with ornate carpeting and paneled doors. The man's kippah indicates a Jewish celebration (likely a wedding or Bar Mitzvah).",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:04:01.369714+00:00"
+  },
+  "6f512d921837bc0c": {
+    "photo_id": "6f512d921837bc0c",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, United States",
+    "location_estimate": "Studio portrait setting; no specific geographic markers visible.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:04:49.227202+00:00"
+  },
+  "b9f591a56e25b71a": {
+    "photo_id": "b9f591a56e25b71a",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Flat grassy terrain, palm trees, and a modern mid-rise building in the background strongly suggest a developed subtropical area like South Florida.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:06:16.037830+00:00"
+  },
+  "a718d5fc861cef12": {
+    "photo_id": "a718d5fc861cef12",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "San Francisco, California, USA",
+    "location_estimate": "Interior or patio setting with tiled flooring and plastered walls, typical of mid-century California residential architecture.",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:07:21.083789+00:00"
+  },
+  "b9aa84ba4717fbc9": {
+    "photo_id": "b9aa84ba4717fbc9",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, USA",
+    "location_estimate": "The US military uniform and patriotic 'USA' mount clearly indicate the United States.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:08:25.022274+00:00"
+  },
+  "a3e9117c543a8600": {
+    "photo_id": "a3e9117c543a8600",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Montevideo, Uruguay",
+    "location_estimate": "Warm, sunny climate with stucco architecture and louvered window shutters (jalousies) typical of South American or Floridian residential areas.",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:09:26.051101+00:00"
+  },
+  "a8a1730722a4cdeb": {
+    "photo_id": "a8a1730722a4cdeb",
+    "lat": 34.0522,
+    "lng": -118.2437,
+    "location_name": "Los Angeles, California",
+    "location_estimate": "The studio setting provides no specific geographic markers, but the style is consistent with American commercial photography of the era.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:10:18.588646+00:00"
+  },
+  "3e53fd3c015350c8": {
+    "photo_id": "3e53fd3c015350c8",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York City, New York, USA",
+    "location_estimate": "The photographer's imprint clearly reads 'A. Smith 351 GRAND ST. - N.Y. -', placing the studio on Grand Street in the Lower East Side of Manhattan.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:11:26.045290+00:00"
+  },
+  "dcba1494381b12cb": {
+    "photo_id": "dcba1494381b12cb",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami Beach, Florida, USA",
+    "location_estimate": "The prominent banana plant leaves and lush foliage in the background strongly indicate a tropical or subtropical climate.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:12:39.288427+00:00"
+  },
+  "0b5246f5b77a9ccb": {
+    "photo_id": "0b5246f5b77a9ccb",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, USA",
+    "location_estimate": "Studio portrait backdrop provides no specific geographic clues, but the formal studio setting is consistent with an urban American wedding.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:13:43.537368+00:00"
+  },
+  "ca69d9decc37b0ec": {
+    "photo_id": "ca69d9decc37b0ec",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "Asheville, North Carolina",
+    "location_estimate": "The newspaper text explicitly mentions 'Asheville's restaurant circles', 'West Pack Square', and 'The Castle Asheville's finest night club'.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:14:45.053401+00:00"
+  },
+  "b77c7d6f977a6312": {
+    "photo_id": "b77c7d6f977a6312",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York",
+    "location_estimate": "Typical mid-century American banquet hall or catering venue interior.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:15:44.584800+00:00"
+  },
+  "8e71cc351398f5dd": {
+    "photo_id": "8e71cc351398f5dd",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "St. Petersburg, Florida, USA",
+    "location_estimate": "Standard 1970s American commercial studio portrait style (shag rug, mottled backdrop).",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:16:53.199207+00:00"
+  },
+  "ce622fde33ea3310": {
+    "photo_id": "ce622fde33ea3310",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "Asheville, North Carolina, USA",
+    "location_estimate": "Standard American-style studio portraiture with alphanumeric negative numbering (H - 7246) typical of US commercial studios of the era.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:18:06.267745+00:00"
+  },
+  "0532f22050f5effc": {
+    "photo_id": "0532f22050f5effc",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, United States",
+    "location_estimate": "Standard indoor studio portrait lacking specific geographic architectural or environmental markers.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:19:09.561566+00:00"
+  },
+  "ab0b7cce1a72f4e7": {
+    "photo_id": "ab0b7cce1a72f4e7",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama",
+    "location_estimate": "Generic indoor event space with textured walls; no distinct geographic features are visible.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:20:15.599583+00:00"
+  },
+  "6e0a7af357997e0e": {
+    "photo_id": "6e0a7af357997e0e",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "St. Petersburg, Florida",
+    "location_estimate": "The Tampa Bay Buccaneers shirt strongly indicates residence in or near the Tampa Bay area, as local sports merchandise is highly correlated with geographic location.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:21:24.867822+00:00"
+  },
+  "f06cfb58b8492b2f": {
+    "photo_id": "f06cfb58b8492b2f",
+    "lat": 34.0522,
+    "lng": -118.2437,
+    "location_name": "Los Angeles, California, USA",
+    "location_estimate": "Standard American studio portrait setting; no specific geographic markers visible in the backdrop or props.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:22:46.444001+00:00"
+  },
+  "f5a0ad7af7cd24f6": {
+    "photo_id": "f5a0ad7af7cd24f6",
+    "lat": 36.4341,
+    "lng": 28.2176,
+    "location_name": "Rhodes, Greece",
+    "location_estimate": "Generic interior studio setting with no distinct outdoor architectural or geographic markers.",
+    "confidence": "medium",
+    "region": "Greece",
+    "reanalyzed_at": "2026-03-08T17:23:50.250383+00:00"
+  },
+  "c6924c729a4325de": {
+    "photo_id": "c6924c729a4325de",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Pinellas County, Florida, USA",
+    "location_estimate": "Typical American suburban neighborhood with paved driveway, lawn, and single-story home.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:24:56.497939+00:00"
+  },
+  "c374d449d2c3999a": {
+    "photo_id": "c374d449d2c3999a",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Florida, United States",
+    "location_estimate": "Outdoor setting with bright sunlight, consistent with Florida.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:25:42.592690+00:00"
+  },
+  "baec1b6c4e9c7af1": {
+    "photo_id": "baec1b6c4e9c7af1",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "New York, New York or Asheville, North Carolina",
+    "location_estimate": "Studio portrait, no specific geographic markers visible.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:26:27.289048+00:00"
+  },
+  "1269abe515a4aa1a": {
+    "photo_id": "1269abe515a4aa1a",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "New York, New York or Asheville, North Carolina",
+    "location_estimate": "The highly contemporary, progressive 1920s Western fashion (short flapper wedding dress) strongly suggests an American studio setting rather than the more conservative environment of Rhodes.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:27:46.237587+00:00"
+  },
+  "inbox_b5e8a89e_0_603575867.895093": {
+    "photo_id": "inbox_b5e8a89e_0_603575867.895093",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Montgomery, Alabama or Miami, Florida, USA",
+    "location_estimate": "The men's white dinner jackets and the officiant's straw hat strongly indicate a warm-weather, Southern US climate for a formal event.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:28:57.530816+00:00"
+  },
+  "inbox_b5e8a89e_4_603569408.731013": {
+    "photo_id": "inbox_b5e8a89e_4_603569408.731013",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Havana, Cuba or Miami, Florida, USA",
+    "location_estimate": "Warm-weather casual clothing (sleeveless dresses, short sleeves) worn indoors suggests a tropical or subtropical climate. The interior furnishings are typical of middle-class North American or Caribbean homes of the era.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:30:19.468810+00:00"
+  },
+  "inbox_b5e8a89e_8_603575434.282777": {
+    "photo_id": "inbox_b5e8a89e_8_603575434.282777",
+    "lat": 23.1136,
+    "lng": -82.3666,
+    "location_name": "Havana, Cuba",
+    "location_estimate": "Tropical clothing indicates a warm climate. The ornate, neoclassical stone architecture with balustrades and columns visible through the window is highly characteristic of Havana's urban landscape.",
+    "confidence": "high",
+    "region": "Cuba",
+    "reanalyzed_at": "2026-03-08T17:31:21.199145+00:00"
+  },
+  "inbox_b5e8a89e_10_603575654.056133": {
+    "photo_id": "inbox_b5e8a89e_10_603575654.056133",
+    "lat": 25.7617,
+    "lng": -80.1918,
+    "location_name": "Miami, Florida, USA",
+    "location_estimate": "Tropical setting with a thatched 'tiki' roof, large Monstera plants, and palm trees, indicative of a South Florida restaurant or club.",
+    "confidence": "medium",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:32:22.236569+00:00"
+  },
+  "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido": {
+    "photo_id": "inbox_staged-20260210_0_Zeb_Capuano_says_Howdy_Boys_from_Lido",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "Asheville, North Carolina",
+    "location_estimate": "The advertisement explicitly mentions 'Asheville's Greatest Season Of Baseball' and provides the address '68 PATTON AVENUE'.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:33:25.223598+00:00"
+  },
+  "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens": {
+    "photo_id": "inbox_staged-20260210_1_zeb_capuano_New_Lido_Opens",
+    "lat": 35.5951,
+    "lng": -82.5515,
+    "location_name": "Asheville, North Carolina",
+    "location_estimate": "The newspaper masthead reads 'THE ASHEVILLE TIMES'. The article text explicitly mentions 'the restaurant business in Asheville' and provides the address '68 Patton avenue'.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:37:25.171325+00:00"
+  },
+  "inbox_staged-20260210-182610_12_Image_567": {
+    "photo_id": "inbox_staged-20260210-182610_12_Image_567",
+    "lat": 36.4341,
+    "lng": 28.2176,
+    "location_name": "Ottoman Empire (likely Turkey or Rhodes)",
+    "location_estimate": "The man is wearing a fez, which was standard headgear for male subjects in the Ottoman Empire until its collapse, strongly suggesting a location in Turkey or an Ottoman territory like Rhodes (pre-1912).",
+    "confidence": "medium",
+    "region": "Greece",
+    "reanalyzed_at": "2026-03-08T17:38:34.468264+00:00"
+  },
+  "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166": {
+    "photo_id": "inbox_findagrave-20260210_0_grave_isaac_capeluto_90588193_133774507166",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Brussels, Belgium",
+    "location_estimate": "The image is a photoceramic portrait embedded in a stone surface, which is a definitive marker of a cemetery headstone.",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:39:31.790164+00:00"
+  },
+  "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc": {
+    "photo_id": "inbox_ancestry-20260210_0_Mathilda_Capelouto_Capouano_from_Naturalization_Doc",
+    "lat": 36.4341,
+    "lng": 28.2176,
+    "location_name": "Rhodes, Greece",
+    "location_estimate": "Plain background typical of official ID photography; no geographic markers are visible in the frame.",
+    "confidence": "low",
+    "region": "Greece",
+    "reanalyzed_at": "2026-03-08T17:40:52.678661+00:00"
+  },
+  "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention": {
+    "photo_id": "inbox_ancestry-20260210_1_Esther_Diana__Taranto__Capouano_decl_of_intention",
+    "lat": 33.749,
+    "lng": -84.388,
+    "location_name": "Atlanta, Georgia",
+    "location_estimate": "The document header explicitly states 'THE UNITED STATES at ATLANTA, GA.'",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:42:14.614479+00:00"
+  },
+  "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo": {
+    "photo_id": "inbox_ancestry-20260210_2_Laura_Franco_immigration_document_photo",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Unknown (Official Consulate or Government Office)",
+    "location_estimate": "The photograph features an embossed dry seal (partially reading 'CON...') and attachment marks, indicating it was affixed to an official document such as a passport, visa, or identity card.",
+    "confidence": "low",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:43:16.018421+00:00"
+  },
+  "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card": {
+    "photo_id": "inbox_ancestry-20260210_3_Felicita__Russo__Capelluto_-_Brazilian_immigration_card",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Buenos Aires, Argentina",
+    "location_estimate": "The document is stamped 'Consulado Geral do Brasil em Bs. Aires' (Consulate General of Brazil in Buenos Aires). The residence is listed as 'Claridge Hotel nesta' (in this city).",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:44:17.935377+00:00"
+  },
+  "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card": {
+    "photo_id": "inbox_ancestry-20260210_4_Mose_Capelluto_-_Brazilian_immigration_card",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Buenos Aires, Argentina",
+    "location_estimate": "The document is stamped 'Consulado Geral do Brasil em Bs. Aires' (Consulate General of Brazil in Buenos Aires). The applicant lists his residence as 'Claridge hotel', which is a prominent historic hotel in Buenos Aires.",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:45:25.112557+00:00"
+  },
+  "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture": {
+    "photo_id": "inbox_ancestry-20260210_6_Rahamin_Capeluto_Declaration_Naturalization_w_Picture",
+    "lat": 40.7128,
+    "lng": -74.006,
+    "location_name": "New York, New York, USA",
+    "location_estimate": "The document is headed 'STATE OF NEW YORK, SOUTHERN DISTRICT OF NEW YORK' and states it was sworn in 'New York, N.Y.'. The applicant's address is given as '110 Forsyth St., New York, N.Y.'.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:46:46.271188+00:00"
+  },
+  "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card": {
+    "photo_id": "inbox_ancestry-20260210_7_Marcos_Capelluto_immigration_card",
+    "lat": 0.0,
+    "lng": 0.0,
+    "location_name": "Buenos Aires, Argentina",
+    "location_estimate": "The document explicitly states it was remitted to the Consulate General of Brazil in 'BUENOS AIRES'. The subject's residence is listed as 'MEDRANO 506 - Cap. Fed.' (Capital Federal, Buenos Aires). A stamp over the photo also reads 'BUENOS AIRES'.",
+    "confidence": "high",
+    "region": "Unknown",
+    "reanalyzed_at": "2026-03-08T17:47:53.862463+00:00"
+  },
+  "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir": {
+    "photo_id": "inbox_ancestry-20260210_9_Louis_Pizante___Rica_Mousafir",
+    "lat": 34.0522,
+    "lng": -118.2437,
+    "location_name": "Los Angeles, California, USA",
+    "location_estimate": "Generic indoor photography studio backdrop, consistent with American urban studios of the era.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:49:04.033902+00:00"
+  },
+  "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya": {
+    "photo_id": "inbox_ancestry-20260210_10_Wedding_of_David_Capouano_and_Selma_Capouya",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama",
+    "location_estimate": "The newspaper is titled 'THE MONTGOMERY ADVERTISER' and mentions 'Temple Etz Ahayem' and 'Montgomery Fair'.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:49:58.820099+00:00"
+  },
+  "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_": {
+    "photo_id": "inbox_ancestry-20260210_11_David_Raymond_Capouano_-_declaration_of_intention_",
+    "lat": 32.3792,
+    "lng": -86.3077,
+    "location_name": "Montgomery, Alabama",
+    "location_estimate": "The document explicitly states it was filed 'In the District Court of the United States at Montgomery, Ala.' and lists the subject's residence as '12 Arlington Rd, Montgomery, Montgomery, Alabama'.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:51:24.961872+00:00"
+  },
+  "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n": {
+    "photo_id": "inbox_facebook-20260210_0_rachel_capouya_capuano_518391136_10172400849010346_1801982505000708581_n",
+    "lat": 34.0522,
+    "lng": -118.2437,
+    "location_name": "Los Angeles, California",
+    "location_estimate": "The stark white background provides no geographic visual cues, as it is a standard official portrait format.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:52:29.368302+00:00"
+  },
+  "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n": {
+    "photo_id": "inbox_facebook-20260210_2_mary_capelouto_hasson_518026923_10172371266540346_664987428808444689_n",
+    "lat": 33.749,
+    "lng": -84.388,
+    "location_name": "Atlanta, Georgia, USA",
+    "location_estimate": "The document states it was filed in the District Court of the United States at Atlanta, Georgia, and lists the applicant's residence as 479 Capitol Ave., Atlanta, Fulton, Georgia.",
+    "confidence": "high",
+    "region": "United States",
+    "reanalyzed_at": "2026-03-08T17:53:37.671600+00:00"
+  },
+  "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n": {
+    "photo_id": "inbox_community-batch-20260214_91_sabrina_amato_collection_546239467_2332993283799119_18193661198698751_n",
+    "lat": 36.4341,
+    "lng": 28.2176,
+    "location_name": "Rhodes, Greece",
+    "location_estimate": "Louvered shutters in the background are common in Mediterranean architecture.",
+    "confidence": "high",
+    "region": "Greece",
+    "reanalyzed_at": "2026-03-08T17:54:34.545871+00:00"
   }
 }
