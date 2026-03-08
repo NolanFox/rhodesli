@@ -738,20 +738,34 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
 
 
 def sync_date_label(photo_id: str, label_data: dict) -> None:
-    """Upsert a single date label to Supabase. Fire-and-forget."""
+    """Upsert a single date label to Supabase. Fire-and-forget.
+
+    Table columns: id, photo_id, estimated_decade, best_year_estimate, confidence,
+    year_range_start, year_range_end, scene_description, tags, evidence, model,
+    prompt_version, reanalyzed_at, location_evidence, visible_text,
+    gemini_raw_location, full_data, created_at, updated_at, data
+    """
     try:
         client = get_supabase_client()
         if not client:
             return
+        prob_range = label_data.get("probable_range", [])
         row = {
             "photo_id": photo_id,
             "data": label_data,
-            "estimated_year": label_data.get("best_year_estimate"),
+            "estimated_decade": label_data.get("estimated_decade"),
+            "best_year_estimate": label_data.get("best_year_estimate"),
             "confidence": label_data.get("confidence"),
+            "year_range_start": prob_range[0] if len(prob_range) >= 2 else None,
+            "year_range_end": prob_range[1] if len(prob_range) >= 2 else None,
             "scene_description": label_data.get("scene_description"),
+            "model": label_data.get("model"),
+            "prompt_version": label_data.get("prompt_version"),
             "reanalyzed_at": label_data.get("reanalyzed_at"),
+            "location_evidence": label_data.get("location_estimate"),
+            "gemini_raw_location": label_data.get("gemini_raw_location"),
         }
-        client.table("date_labels").upsert(row).execute()
+        client.table("date_labels").upsert(row, on_conflict="photo_id").execute()
         logger.debug(f"Synced date label for {photo_id}")
     except _SUPABASE_ERRORS as e:
         logger.warning(f"Supabase date label sync failed for {photo_id}: {e}")
@@ -772,18 +786,26 @@ def sync_date_labels_batch(labels_list: list) -> int:
             photo_id = label.get("photo_id")
             if not photo_id:
                 continue
+            prob_range = label.get("probable_range", [])
             rows.append(
                 {
                     "photo_id": photo_id,
                     "data": label,
-                    "estimated_year": label.get("best_year_estimate"),
+                    "estimated_decade": label.get("estimated_decade"),
+                    "best_year_estimate": label.get("best_year_estimate"),
                     "confidence": label.get("confidence"),
+                    "year_range_start": prob_range[0] if len(prob_range) >= 2 else None,
+                    "year_range_end": prob_range[1] if len(prob_range) >= 2 else None,
                     "scene_description": label.get("scene_description"),
+                    "model": label.get("model"),
+                    "prompt_version": label.get("prompt_version"),
                     "reanalyzed_at": label.get("reanalyzed_at"),
+                    "location_evidence": label.get("location_estimate"),
+                    "gemini_raw_location": label.get("gemini_raw_location"),
                 }
             )
         try:
-            client.table("date_labels").upsert(rows).execute()
+            client.table("date_labels").upsert(rows, on_conflict="photo_id").execute()
             written += len(rows)
         except _SUPABASE_ERRORS as e:
             logger.warning(f"Supabase date labels batch sync failed: {e}")

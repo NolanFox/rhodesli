@@ -69,7 +69,7 @@ class TestSyncDateLabel:
         assert upsert_call.called
         row = upsert_call.call_args[0][0]
         assert row["photo_id"] == "photo123"
-        assert row["estimated_year"] == 1950
+        assert row["best_year_estimate"] == 1950
         assert row["confidence"] == "high"
 
     def test_no_client_returns_none(self):
