@@ -14,6 +14,15 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 
 ---
 
+## Session 93: Close All Deferrals (2026-03-08) — v0.96.0
+- DATA-007: Core tables created (identities, photos, photo_faces), 894+295+981 rows backfilled, DATA_SOURCE=postgres flipped on Railway
+- Supplementary migration: date_labels (271), photo_locations (268), birth_year_estimates (32)
+- Observability verified: Sentry (5 issues), PostHog (events flowing), Resend (1 email delivered)
+- Batch GEDCOM reanalysis: 67/72 photos with Gemini 3.1 Pro, ~$2.66, 91% high confidence, avg 4.5-year ranges
+- GEDCOM Reanalysis Report: docs/ml/GEDCOM_REANALYSIS_REPORT.md (10-section analysis)
+- AD-211: GEDCOM enrichment value assessment
+- 4283 tests (3717 app + 566 ML)
+
 ## Session 32: Compare Intelligence (2026-02-15)
 - Kinship calibration from 46 confirmed identities (959 same-person, 385 same-family, 605 different-person pairs)
 - Key finding: family resemblance (d=0.43) not reliably separable from different-person in embedding space
@@ -802,6 +811,7 @@ Complete log of all development sessions. For current priorities, see [ROADMAP.m
 | v0.75.0 | 2026-02-25 | 70 | 3133+538 |
 | v0.74.0 | 2026-02-25 | 69 | 3057+538 |
 | v0.73.1 | 2026-02-25 | 68 | 3064 |
+| v0.96.0 | 2026-03-08 | 93 | 3717+566 |
 | v0.72.0 | 2026-02-24 | 66 | 3040+538 |
 | v0.71.0 | 2026-02-24 | 65d | 3015+538 |
 | v0.70.0 | 2026-02-24 | 65c | 2937+538 |

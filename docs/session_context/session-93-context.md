@@ -42,4 +42,12 @@ Created: scripts/migrate_core_tables.py
 - **Batch re-analyze**: Low risk — script exists, cost-capped
 
 ## Deferred to Future Sessions
-(to be filled at session end)
+- Schema additions for longitudinal tracking: `previous_date_estimate`, `gedcom_token_count` on `gemini_api_calls` — See AD-211, GEDCOM_REANALYSIS_REPORT.md Section 7
+- Multi-GEDCOM architecture — See docs/session_context/session-93-user-feedback.md
+- 5 failed photos investigation (content safety blocks) — See GEDCOM_REANALYSIS_REPORT.md Section 6
+- Dockerfile missing `rhodesli_ml/recalibration_hooks.py` — pre-existing gap
+
+## Post-Session Planning
+- Next session should verify Railway DATA_SOURCE=postgres is still healthy
+- Schema additions are the highest-priority follow-up (enables future longitudinal analysis)
+- Multi-GEDCOM is the highest-ROI architectural investment per user feedback

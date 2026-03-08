@@ -93,6 +93,8 @@ the original session scope was completed, blocked, or required follow-up work.
 | 80 | Yes (cont) | Interactive | 80-cont=parallel track improvements (tree JS, face cards, GEDCOM) |
 | 81 | Yes (B,C,D) | Browser verification | 81B=fix real issues, 81C=data consistency, 81D=final verification |
 
+| 93 | 2026-03-08 | [log](session-93-log.md) | [assessment](../assessments/session-93-assessment.md) | [prompt](../prompts/session-93-prompt.md) | [ctx](../session_context/session-93-context.md) | Complete |
+
 ## Session Analytics
 - **Total sessions tracked:** 56 (47B through 81D)
 - **Complete** (has log): 28
