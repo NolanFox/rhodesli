@@ -1955,6 +1955,11 @@ def _log_audit(action: str, annotation_id: str, admin: str, details: str = ""):
 
     audit_path.write_text(json.dumps(audit, indent=2, ensure_ascii=False), encoding="utf-8")
 
+    # Dual-write to Supabase
+    from app.supabase_data import sync_audit_log_entry
+
+    sync_audit_log_entry(action, annotation_id, actor=admin, entry_data=audit["entries"][-1])
+
 
 # =============================================================================
 # ADMIN: ML BIRTH YEAR BULK REVIEW (Gatekeeper Pattern — AD-097)

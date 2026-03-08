@@ -456,6 +456,11 @@ async def post(files: list[UploadFile], source: str = "", collection: str = "", 
         }
         _main_mod._save_pending_uploads(pending)
 
+        # Dual-write to Supabase
+        from app.supabase_data import sync_pending_upload
+
+        sync_pending_upload(job_id, pending["uploads"][job_id])
+
         # Fire-and-forget email notification to admin
         try:
             await _main_mod._notify_admin_upload(uploader_email, job_id, len(saved_files), source)

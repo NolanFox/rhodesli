@@ -2608,6 +2608,11 @@ async def post(photo_id: str, correction_year: int = None, sess=None):
     log["corrections"].append(correction_entry)
     _main_mod._save_corrections_log(log)
 
+    # Dual-write to Supabase
+    from app.supabase_data import sync_corrections_log_entry
+
+    sync_corrections_log_entry(correction_entry)
+
     # Update the in-memory label cache
     label["estimated_decade"] = new_decade
     label["best_year_estimate"] = correction_year
@@ -8052,6 +8057,11 @@ def _queue_compare_upload_for_review(upload_id: str, meta: dict) -> None:
     }
     _main_mod._save_pending_uploads(pending)
 
+    # Dual-write to Supabase
+    from app.supabase_data import sync_pending_upload
+
+    sync_pending_upload(job_id, uploads[job_id])
+
 
 def _save_compare_upload(content: bytes, filename: str, faces: list, results: list, status: str = "uploaded") -> str:
     """Persist a compare upload to R2 (preferred) or local filesystem.
@@ -8373,6 +8383,12 @@ def _save_comparison_result(result_data: dict) -> str:
                 json.dump(data, f, indent=2, ensure_ascii=False)
     except OSError as e:
         logging.warning(f"Could not save comparison result to disk: {e}")
+
+    # Dual-write to Supabase
+    from app.supabase_data import sync_comparison_result
+
+    sync_comparison_result(result_id, result_data)
+
     return result_id
 
 

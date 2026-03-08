@@ -1294,6 +1294,10 @@ async def post(photo_id: str, sess=None):
             date_labels_path.write_text(_json.dumps(all_labels, indent=2, ensure_ascii=False))
             # Invalidate cache
             _main_mod._date_labels_cache = None
+            # Dual-write to Supabase
+            from app.supabase_data import sync_date_label
+
+            sync_date_label(photo_id, new_entry)
         except Exception as e:
             logger.warning(f"Failed to update date_labels.json: {e}")
 
@@ -1324,6 +1328,10 @@ async def post(photo_id: str, sess=None):
             locations_path.write_text(_json.dumps(all_locations, indent=2, ensure_ascii=False))
             # Invalidate cache
             _main_mod._photo_locations_cache = None
+            # Dual-write to Supabase
+            from app.supabase_data import sync_photo_location
+
+            sync_photo_location(photo_id, photos_dict[photo_id])
         except Exception as e:
             logger.warning(f"Failed to update photo_locations.json: {e}")
 

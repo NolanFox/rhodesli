@@ -1035,6 +1035,11 @@ def post(source_id: str, target_id: str, sess=None):
                 break
         _main_mod._update_discovery_log_entry(first_fid, target_id, "rejected")
 
+        # Dual-write to Supabase
+        from app.supabase_data import sync_discovery_log_entry
+
+        sync_discovery_log_entry(first_fid, target_id, "rejected")
+
         _main_mod._invalidate_discovery_cache()
         return Div(
             Div(
@@ -1082,6 +1087,12 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
 
         # Log confirmation to discovery_log
         _main_mod._update_discovery_log_entry(face_id, target_id, "confirmed")
+
+        # Dual-write to Supabase
+        from app.supabase_data import sync_discovery_log_entry
+
+        sync_discovery_log_entry(face_id, target_id, "confirmed")
+
         _main_mod._invalidate_discovery_cache()
 
         return Div(
@@ -1125,6 +1136,12 @@ def post(face_id: str, target_id: str, source_id: str = "", sess=None):
 
         # Log undo to discovery_log — critical ML signal (false positive)
         _main_mod._update_discovery_log_entry(face_id, target_id, "undone")
+
+        # Dual-write to Supabase
+        from app.supabase_data import sync_discovery_log_entry
+
+        sync_discovery_log_entry(face_id, target_id, "undone")
+
         _main_mod._invalidate_discovery_cache()
 
         return Div(

@@ -730,3 +730,361 @@ def shadow_write_identities_batch(identities_list: list[dict]) -> int:
         except Exception as e:
             logger.warning(f"Shadow write identities batch failed: {e}")
     return written
+
+
+# =========================================================================
+# DATE LABELS SYNC (JSON → Supabase)
+# =========================================================================
+
+
+def sync_date_label(photo_id: str, label_data: dict) -> None:
+    """Upsert a single date label to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "photo_id": photo_id,
+            "data": label_data,
+            "estimated_year": label_data.get("best_year_estimate"),
+            "confidence": label_data.get("confidence"),
+            "scene_description": label_data.get("scene_description"),
+            "reanalyzed_at": label_data.get("reanalyzed_at"),
+        }
+        client.table("date_labels").upsert(row).execute()
+        logger.debug(f"Synced date label for {photo_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase date label sync failed for {photo_id}: {e}")
+
+
+def sync_date_labels_batch(labels_list: list) -> int:
+    """Upsert a batch of date labels. Returns count written."""
+    client = get_supabase_client()
+    if not client:
+        return 0
+
+    written = 0
+    batch_size = 100
+    for i in range(0, len(labels_list), batch_size):
+        batch = labels_list[i : i + batch_size]
+        rows = []
+        for label in batch:
+            photo_id = label.get("photo_id")
+            if not photo_id:
+                continue
+            rows.append(
+                {
+                    "photo_id": photo_id,
+                    "data": label,
+                    "estimated_year": label.get("best_year_estimate"),
+                    "confidence": label.get("confidence"),
+                    "scene_description": label.get("scene_description"),
+                    "reanalyzed_at": label.get("reanalyzed_at"),
+                }
+            )
+        try:
+            client.table("date_labels").upsert(rows).execute()
+            written += len(rows)
+        except _SUPABASE_ERRORS as e:
+            logger.warning(f"Supabase date labels batch sync failed: {e}")
+    return written
+
+
+def load_date_labels_from_supabase() -> dict | None:
+    """Load all date labels from Supabase. Returns dict keyed by photo_id or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = sb.table("date_labels").select("photo_id, data").range(offset, offset + page_size - 1).execute()
+            if not result.data:
+                break
+            all_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        return {row["photo_id"]: row["data"] for row in all_rows if row.get("data")}
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase date labels load failed: {e}")
+        return None
+
+
+# =========================================================================
+# PHOTO LOCATIONS SYNC (JSON → Supabase)
+# =========================================================================
+
+
+def sync_photo_location(photo_id: str, location_data: dict) -> None:
+    """Upsert a single photo location to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "photo_id": photo_id,
+            "data": location_data,
+            "place": location_data.get("location_name", ""),
+            "confidence": location_data.get("confidence"),
+            "latitude": location_data.get("lat"),
+            "longitude": location_data.get("lng"),
+        }
+        client.table("photo_locations").upsert(row).execute()
+        logger.debug(f"Synced photo location for {photo_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase photo location sync failed for {photo_id}: {e}")
+
+
+def sync_photo_locations_batch(locations_dict: dict) -> int:
+    """Upsert a batch of photo locations. Returns count written."""
+    client = get_supabase_client()
+    if not client:
+        return 0
+
+    written = 0
+    rows = []
+    for photo_id, loc in locations_dict.items():
+        rows.append(
+            {
+                "photo_id": photo_id,
+                "data": loc,
+                "place": loc.get("location_name", ""),
+                "confidence": loc.get("confidence"),
+                "latitude": loc.get("lat"),
+                "longitude": loc.get("lng"),
+            }
+        )
+
+    batch_size = 100
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i : i + batch_size]
+        try:
+            client.table("photo_locations").upsert(batch).execute()
+            written += len(batch)
+        except _SUPABASE_ERRORS as e:
+            logger.warning(f"Supabase photo locations batch sync failed: {e}")
+    return written
+
+
+def load_photo_locations_from_supabase() -> dict | None:
+    """Load all photo locations from Supabase. Returns dict keyed by photo_id or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        all_rows = []
+        page_size = 1000
+        offset = 0
+        while True:
+            result = (
+                sb.table("photo_locations").select("photo_id, data").range(offset, offset + page_size - 1).execute()
+            )
+            if not result.data:
+                break
+            all_rows.extend(result.data)
+            if len(result.data) < page_size:
+                break
+            offset += page_size
+
+        return {row["photo_id"]: row["data"] for row in all_rows if row.get("data")}
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase photo locations load failed: {e}")
+        return None
+
+
+# =========================================================================
+# DISCOVERY LOG SYNC
+# =========================================================================
+
+
+def sync_discovery_log_entry(face_id: str, target_identity_id: str, decision: str, entry_data: dict = None) -> None:
+    """Insert a discovery log entry to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "face_id": face_id,
+            "target_identity_id": target_identity_id,
+            "decision": decision,
+            "decided_by": "admin",
+            "data": entry_data or {},
+        }
+        client.table("discovery_log").insert(row).execute()
+        logger.debug(f"Synced discovery log: {face_id} -> {target_identity_id} ({decision})")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase discovery log sync failed: {e}")
+
+
+# =========================================================================
+# AUDIT LOG SYNC
+# =========================================================================
+
+
+def sync_audit_log_entry(action: str, target_id: str, actor: str = "admin", entry_data: dict = None) -> None:
+    """Insert an audit log entry to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "action": action,
+            "target_id": target_id,
+            "target_type": "annotation",
+            "actor": actor,
+            "data": entry_data or {},
+        }
+        client.table("audit_log").insert(row).execute()
+        logger.debug(f"Synced audit log: {action} on {target_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase audit log sync failed: {e}")
+
+
+def load_audit_log_from_supabase(limit: int = 100) -> list | None:
+    """Load recent audit log entries from Supabase. Returns list or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        result = sb.table("audit_log").select("*").order("created_at", desc=True).limit(limit).execute()
+        return result.data or []
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase audit log load failed: {e}")
+        return None
+
+
+# =========================================================================
+# PENDING UPLOADS SYNC
+# =========================================================================
+
+
+def sync_pending_upload(job_id: str, upload_data: dict) -> None:
+    """Upsert a pending upload to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "job_id": job_id,
+            "user_id": upload_data.get("user_id") or upload_data.get("uploaded_by"),
+            "status": upload_data.get("status", "pending"),
+            "filename": upload_data.get("filename") or upload_data.get("original_filename"),
+            "data": upload_data,
+        }
+        client.table("pending_uploads").upsert(row).execute()
+        logger.debug(f"Synced pending upload {job_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase pending upload sync failed for {job_id}: {e}")
+
+
+# =========================================================================
+# COMPARISON RESULTS SYNC
+# =========================================================================
+
+
+def sync_comparison_result(result_id: str, result_data: dict) -> None:
+    """Upsert a comparison result to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "result_id": result_id,
+            "data": result_data,
+        }
+        client.table("comparison_results").upsert(row).execute()
+        logger.debug(f"Synced comparison result {result_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase comparison result sync failed for {result_id}: {e}")
+
+
+# =========================================================================
+# BIRTH YEAR ESTIMATES SYNC
+# =========================================================================
+
+
+def sync_birth_year_estimate(identity_id: str, estimate_data: dict) -> None:
+    """Upsert a birth year estimate to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "identity_id": identity_id,
+            "estimated_year": estimate_data.get("birth_year_estimate"),
+            "confidence": estimate_data.get("birth_year_confidence"),
+            "data": estimate_data,
+        }
+        client.table("birth_year_estimates").upsert(row).execute()
+        logger.debug(f"Synced birth year estimate for {identity_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase birth year estimate sync failed for {identity_id}: {e}")
+
+
+# =========================================================================
+# CORRECTIONS LOG SYNC
+# =========================================================================
+
+
+def sync_corrections_log_entry(correction_data: dict) -> None:
+    """Insert a corrections log entry to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "photo_id": correction_data.get("photo_id"),
+            "identity_id": correction_data.get("identity_id"),
+            "correction_type": correction_data.get("type") or correction_data.get("correction_type", "date"),
+            "data": correction_data,
+        }
+        client.table("corrections_log").insert(row).execute()
+        logger.debug("Synced corrections log entry")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase corrections log sync failed: {e}")
+
+
+# =========================================================================
+# PERSON COMMENTS SYNC
+# =========================================================================
+
+
+def sync_person_comment(identity_id: str, comment: str, author: str = "admin") -> None:
+    """Insert a person comment to Supabase. Fire-and-forget."""
+    try:
+        client = get_supabase_client()
+        if not client:
+            return
+        row = {
+            "identity_id": identity_id,
+            "comment": comment,
+            "author": author,
+        }
+        client.table("person_comments").insert(row).execute()
+        logger.debug(f"Synced person comment for {identity_id}")
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase person comment sync failed: {e}")
+
+
+def load_person_comments_from_supabase(identity_id: str = None) -> list | None:
+    """Load person comments from Supabase. Returns list or None."""
+    sb = get_supabase_client()
+    if not sb:
+        return None
+
+    try:
+        query = sb.table("person_comments").select("*").order("created_at", desc=True)
+        if identity_id:
+            query = query.eq("identity_id", identity_id)
+        result = query.limit(500).execute()
+        return result.data or []
+    except _SUPABASE_ERRORS as e:
+        logger.warning(f"Supabase person comments load failed: {e}")
+        return None
