@@ -30,6 +30,17 @@ See also: `docs/architecture/DATA_MODEL.md`, `.claude/rules/test-isolation.md`
 - **Rule**: All data-modifying route handlers MUST use the canonical save functions (`save_registry()`, `save_photo_registry()`, etc.), never call `.save()` directly on registry objects.
 - **Prevention**: Grep for `.save(` in route handlers. Any direct `.save(path)` call outside of canonical save functions is a bug.
 
+### Lesson 104: Batch script outputs must write to the SAME data structure the app reads
+- **Mistake**: Session 93's batch GEDCOM reanalysis script wrote 69 updated photo location entries to the *root level* of `data/photo_locations.json`. But the app's `_load_photo_locations()` reads only from `data.get("photos", {})`. The Supabase migration also only copied the `"photos"` section. Result: 69 photos showed old/wrong locations in production (e.g., Asheville photo showed Brooklyn). The correct data existed in the file but was invisible to all consumers.
+- **Rule**: When a batch/script writes to a structured data file, it MUST write to the EXACT key path that consumers read from. Before writing, grep the codebase for how the file is loaded. If the app does `data.get("photos", {})`, the script must write under `data["photos"]`, not at root level.
+- **Prevention**: (1) Batch scripts should load the existing file, modify in-place under the correct key, and save — not append at root level. (2) Add a structural validation test: `photo_locations.json` should have ONLY `version`, `description`, and `photos` at root level. Any other keys indicate orphaned data. (3) After any batch write, verify by loading the file with the SAME function the app uses and checking the affected entries.
+- **See also**: Lesson 78 (production-local data divergence), AD-212
+
+### Lesson 105: Supabase sync functions must match actual table schema — test with real upsert, not just mock
+- **Mistake**: `sync_photo_locations_batch()` used column names `latitude`, `longitude`, `place` that didn't exist in the actual Supabase `photo_locations` table (real columns: `lat`, `lng`, `location_name`). Also missing `on_conflict="photo_id"` for proper upserts. The function was only tested with mocks that don't validate column names, so the bug was invisible until the first real sync attempt.
+- **Rule**: When writing Supabase sync functions, verify column names against the actual table schema. Mock-only tests for database sync are insufficient — they can't catch column name mismatches.
+- **Prevention**: (1) Add a comment in each sync function listing the expected table columns. (2) Consider an integration test that does a real upsert to a test table. (3) When creating a new Supabase table, immediately write the sync function AND test it with a real connection before moving on.
+
 ### Lesson 55: Crop filename formats differ between legacy and inbox — don't assume quality is encoded
 - **Mistake**: `face_card()` parsed quality from crop filenames using pattern `_{quality}_{index}.jpg`. Inbox crops use format `inbox_{hash}.jpg` with no quality encoded. Result: "Quality: 0.00" for all inbox faces.
 - **Rule**: When a computed value (quality, score, etc.) is stored in different places for different face formats, the lookup must have a fallback chain: filename parse -> embeddings cache -> default.

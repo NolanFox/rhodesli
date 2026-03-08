@@ -2373,6 +2373,14 @@ Multi-photo validation (8 face pairs across 3 photos): mean 0.982, min 0.972, ma
 - **Implementation**: `rhodesli_ml/gedcom_context.py` — `find_business_owner_context()`. Caller in `app/estimate_routes.py` passes `visible_text` from photo metadata. Also adds full API call logging (prompt_text, full_response, gedcom_context) to gemini_api_calls table.
 - **Risk**: False positive name matches (e.g., common names). Mitigated by requiring 3+ character matches and labeling as "candidate" rather than confirmed owner.
 
+### AD-212: Photo Locations Regression — Orphaned Root-Level Entries
+- **Date**: 2026-03-08 | **Session**: 93-hotfix
+- **Context**: Session 93's batch GEDCOM reanalysis wrote 69 updated photo location entries to the root level of `data/photo_locations.json` instead of inside the `"photos"` key. The app, migration scripts, and Supabase sync all read only from `data.get("photos", {})`. The 69 reanalyzed entries were invisible — production showed old data (e.g., Asheville → Brooklyn).
+- **Root cause**: The batch script's JSON write logic appended entries at root level instead of updating the `"photos"` section. No structural validation existed to catch orphaned keys.
+- **Fix**: (1) Merged root-level entries into `"photos"` section. (2) Fixed `sync_photo_locations_batch()` column names (`latitude`→`lat`, `longitude`→`lng`, `place`→`location_name`) + added `on_conflict="photo_id"`. (3) Re-synced all 69 entries to Supabase.
+- **Prevention**: Lesson 104 (batch outputs must write to same structure app reads), Lesson 105 (sync functions must match schema). Future: add structural validation test for JSON data files.
+- **Impact**: 69 photos showed wrong locations in production for ~hours.
+
 ### AD-211: GEDCOM Batch Reanalysis — Results and Value Assessment
 - **Date**: 2026-03-08 | **Session**: 93
 - **Context**: 72 GEDCOM-eligible photos batch-reanalyzed with Gemini 3.1 Pro using `first_order` enrichment variant. 67/72 succeeded. Full analysis in `docs/ml/GEDCOM_REANALYSIS_REPORT.md`.

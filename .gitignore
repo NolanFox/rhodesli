@@ -65,7 +65,8 @@ data/*
 !data/.gitkeep
 !data/identities.json
 !data/photo_index.json
-!data/annotations.json
+# annotations.json: production-origin data, now in Supabase (AD-135, Lesson 69)
+# NOT tracked in git — sync_from_production.py pulls it, causing dirty working tree
 !data/file_hashes.json
 !data/golden_set.json
 !data/embeddings.npy

@@ -2,7 +2,7 @@
 
 **READ THIS FILE AT THE START OF EVERY SESSION.**
 
-103 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
+105 lessons across 6 topic files. Each lesson has a Mistake/Rule/Prevention structure.
 Detailed content is in `tasks/lessons/` — this file is the index.
 
 ---
@@ -110,6 +110,8 @@ Detailed content is in `tasks/lessons/` — this file is the index.
 | 44 | "Skipped" is a deferral, not a resolution — include in clustering |
 | 48 | Route handlers must use canonical save functions, not direct .save() |
 | 55 | Crop filename formats differ between legacy and inbox |
+| 104 | **Batch script outputs must write to the SAME data structure the app reads** |
+| 105 | **Supabase sync functions must match actual table schema — mock tests don't catch column mismatches** |
 
 ## ML & Algorithms — `tasks/lessons/ml-lessons.md`
 

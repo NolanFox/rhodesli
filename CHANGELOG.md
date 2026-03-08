@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v0.96.1] — 2026-03-08 (Session 93-hotfix: Photo Locations Regression)
+
+### Fixed
+- **69 photo locations restored** — Session 93 batch reanalysis wrote results to root level of `photo_locations.json` instead of inside `"photos"` key. All consumers only read from `"photos"`, so 69 photos showed old/wrong locations (e.g., Asheville photo showed Brooklyn). Merged orphaned entries and re-synced to Supabase.
+- **Supabase sync column names** — `sync_photo_location()` and `sync_photo_locations_batch()` used wrong column names (`latitude`→`lat`, `longitude`→`lng`, `place`→`location_name`). Also added `on_conflict="photo_id"` for proper upserts.
+- **AD-212**, Lessons 104-105.
+
 ## [v0.96.0] — 2026-03-08 (Session 93: Close All Deferrals)
 
 ### Added
