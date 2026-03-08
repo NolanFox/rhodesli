@@ -1183,6 +1183,44 @@ async def post(photo_id: str, sess=None):
     # Also check previous date label for visible_text
     if not visible_text and old_label:
         visible_text = old_label.get("visible_text")
+    # Fallback: extract visible text from previous scene_description (AD-210)
+    # Gemini often detects signage like "Leon's Restaurant" in scene analysis
+    # but doesn't store it as a separate visible_text field
+    if not visible_text and old_label:
+        scene = old_label.get("scene_description", "")
+        if scene:
+            import re
+
+            # Extract quoted text that looks like business names/signage
+            # Handle possessives like "Leon's Restaurant" where ' is part of the name
+            quoted = re.findall(r"'([A-Z][^']*(?:'s[^']*)?[^']*)'", scene)
+            if not quoted:
+                quoted = re.findall(r'"([A-Z][^"]{2,50})"', scene)
+            # Also look for "named X" or "called X" patterns
+            if not quoted:
+                named = re.findall(
+                    r"(?:named|called|titled|signed?)\s+['\"]?([A-Z][A-Za-z'\s]{2,50})['\"]?",
+                    scene,
+                )
+                if named:
+                    quoted = [named[0].strip().rstrip("'.\"")]
+            if quoted:
+                visible_text = quoted[0]
+    # Also try extracting from evidence.environment if available
+    if not visible_text and old_label:
+        evidence = old_label.get("evidence", {})
+        if isinstance(evidence, dict):
+            env = evidence.get("environment", {})
+            if isinstance(env, dict):
+                desc = env.get("description", "")
+                if desc:
+                    import re
+
+                    quoted = re.findall(r"'([A-Z][^']*(?:'s[^']*)?[^']*)'", desc)
+                    if not quoted:
+                        quoted = re.findall(r'"([A-Z][^"]{2,50})"', desc)
+                    if quoted:
+                        visible_text = quoted[0]
 
     # Build GEDCOM context (with visible_text for business owner lookup)
     gedcom_context = _build_gedcom_context_for_photo(photo_id, visible_text=visible_text)
@@ -1231,6 +1269,7 @@ async def post(photo_id: str, sess=None):
                 "confidence": new_confidence,
                 "probable_range": result.get("probable_range", []),
                 "reasoning_summary": result.get("reasoning_summary", ""),
+                "scene_description": result.get("scene_description", ""),
                 "evidence": result.get("evidence", {}),
                 "location_estimate": new_location,
                 "model": _reanalyze_model,
@@ -1239,6 +1278,9 @@ async def post(photo_id: str, sess=None):
                 "reanalyzed_with_gedcom": bool(gedcom_context),
                 "prompt_version": "v3_enriched" if gedcom_context else "v3_visual_only",
             }
+            # Store visible_text for future re-analyses (AD-210)
+            if visible_text:
+                new_entry["visible_text"] = visible_text
             # Replace existing entry or append
             replaced = False
             for i, lbl in enumerate(labels_list):

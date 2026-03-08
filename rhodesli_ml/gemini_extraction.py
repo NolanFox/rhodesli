@@ -149,6 +149,9 @@ Cross-reference visual observations with known biographical data:
 - Business name matches are the STRONGEST location evidence — stronger than any other signal.
 - If a business name matches a family member, the photo location is WHERE THAT PERSON LIVED
   AND WORKED, based on their RESIDENCE events (not immigration/transit records).
+- CRITICAL: When a business name match is found AND that person has RESIDENCE events,
+  you MUST use the specific city from their residence (e.g., "Asheville, North Carolina")
+  as the photo location. Do NOT return just "United States" — return the actual city.
 
 **Step 2c: Immigration & Transit Disambiguation**
 - GEDCOM events tagged with [PORT OF ENTRY] are TRANSIT POINTS, not residences

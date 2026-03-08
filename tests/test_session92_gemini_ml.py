@@ -525,3 +525,58 @@ class TestAddLabeledPair:
         result = add_labeled_pair(pairs, "face_z", "face_a", True)
         assert result[0]["face_id_a"] == "face_a"
         assert result[0]["face_id_b"] == "face_z"
+
+
+# =========================================================================
+# Visible text extraction from scene_description (AD-210 fix)
+# =========================================================================
+
+
+class TestVisibleTextExtraction:
+    """Test that visible text is extracted from scene_description for
+    business owner GEDCOM lookup when visible_text field is not set."""
+
+    def test_extract_quoted_business_name(self):
+        """Extract 'Leon's Restaurant' from scene description."""
+        import re
+
+        scene = "A young man and woman stand in front of a business named 'Leon's Restaurant'."
+        # Same regex as in estimate_routes.py
+        quoted = re.findall(r"'([A-Z][^']*(?:'s[^']*)?[^']*)'", scene)
+        if not quoted:
+            quoted = re.findall(r'"([A-Z][^"]{2,50})"', scene)
+        assert len(quoted) > 0
+        assert "Leon" in quoted[0]
+
+    def test_extract_double_quoted_name(self):
+        """Extract "Leon's Restaurant" from double-quoted scene."""
+        import re
+
+        scene = 'They stand before a shop called "LEON\'S RESTAURANT" on the corner.'
+        quoted = re.findall(r"'([A-Z][^']*(?:'s[^']*)?[^']*)'", scene)
+        if not quoted:
+            quoted = re.findall(r'"([A-Z][^"]{2,50})"', scene)
+        assert len(quoted) > 0
+
+    def test_extract_named_pattern(self):
+        """Extract business name via 'named X' pattern."""
+        import re
+
+        scene = "A storefront named Leon's Restaurant is visible in the background."
+        # Fallback regex for "named X" pattern
+        named = re.findall(
+            r"(?:named|called|titled|signed?)\s+['\"]?([A-Z][A-Za-z'\s]{2,50})['\"]?",
+            scene,
+        )
+        assert len(named) > 0
+        assert "Leon" in named[0]
+
+    def test_no_extraction_when_no_business(self):
+        """No visible text extracted when scene has no business names."""
+        import re
+
+        scene = "A family portrait taken in a garden setting."
+        quoted = re.findall(r"'([A-Z][^']*(?:'s[^']*)?[^']*)'", scene)
+        if not quoted:
+            quoted = re.findall(r'"([A-Z][^"]{2,50})"', scene)
+        assert len(quoted) == 0
