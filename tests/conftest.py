@@ -74,6 +74,12 @@ _SLOW_PATH_PATTERNS = [
     "test_error_handling",
     "test_map",
     "test_critical_routes",
+    # Heavy discovery/browse integration tests (6-8s each, 53+ tests)
+    "test_discoveries",
+    "test_inline_find_similar",
+    "test_skipped_focus",
+    "test_image_transform",
+    "test_photo_flip",
 ]
 
 

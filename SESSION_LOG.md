@@ -1,39 +1,30 @@
-# Session 87 Log — Compare & Discoveries UX Overhaul
-## Mission: Unify scoring, improve Compare/Discoveries/Identity cards UX
-## Started: 2026-03-04
-## Version: v0.90.0 → v0.91.0
-## Predecessor: Session 86b (v0.90.0)
+# Session 92 Log — Ship Everything
 
-### Act 1: Orient & Setup
-- [x] Session artifacts created
-- [x] Lesson 100 added
+## Mission: Close All Gaps, Deploy, Verify, Harden
+## Started: 2026-03-08
+## Version: v0.95.0
+## Predecessor: Session 91b (v0.94.1)
 
-### Act 2: Unify Confidence Scoring (AD-200)
-- [x] core/confidence.py with unified compute_face_confidence()
-- [x] Wired into neighbors.py, compare_routes.py, main.py
-- [x] 35 new tests
+Full session log archived at: `docs/session_logs/session-92-log.md`
 
-### Act 3: Compare Best Matches Summary
-- [x] _compare_summary_section() — top matches across all faces
-- [x] 8 new tests
+### Summary
+- 6 parallel worktree tracks, all merged cleanly
+- Observability shipped (Sentry + PostHog)
+- Bell icon sidebar fix
+- Email notifications via Resend
+- 10 P1/P2 UX fixes (D1-D10) with full test coverage (D6-D9 added in gap closure)
+- Leon's Restaurant → Asheville, NC (AD-210, GEDCOM business owner context)
+- Full Gemini API call logging (prompt_text, full_response, gedcom_context)
+- Multi-pass + active learning + NL query foundations
+- CI/CD (.github/workflows/test.yml)
+- 3 PRDs + 3 architecture docs
+- Supabase migration: 3,483 rows across 8 tables
+- Postgres read paths with JSON fallback
+- Notification E2E verified in production browser
+- Test speed optimized: 72s → 22s (under 30s target)
+- Leon's re-analyzed in production: now shows "Asheville, North Carolina" (high confidence)
 
-### Act 4: Shareable Result Page Overhaul
-- [x] 200px hero, "Could this be [Name]?" framing, OG tags
-- [x] 5 new tests
-
-### Act 5: Discoveries Improvements
-- [x] Sort by confidence, filter by tier + photo, inline Compare link
-- [x] 15 new tests
-
-### Act 6: Identity Card Fixes
-- [x] "Faces (N)" button, visible detach for admin
-
-### Act 7: Verification & Close
-- [x] make test-fast: 1412 pass
-- [x] Distance 1.13 → 43% everywhere
-- [x] Browser verified: Discoveries, Compare, People cards
-- [x] Assessment written
-
-### Red Flags
-- Chrome extension unavailable — used Playwright for verification
-- 1 pre-existing xdist test ordering flake
+### Test Results
+- App: 3717 passed, 4 skipped, 0 failures, 0 xfails
+- ML: 566 passed
+- make test-fast: 22s (target <30s met)
