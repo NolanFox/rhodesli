@@ -4190,6 +4190,25 @@ def sidebar(counts: dict, current_section: str = "to_review", user: "User | None
                 nav_item("/?section=to_review", "📥", "New Matches", counts["to_review"], "to_review", "amber"),
                 nav_item("/discoveries", "\u2728", "Discoveries", counts.get("discoveries", 0), "discoveries", "amber"),
                 nav_item("/?section=skipped", "❓", "Help Identify", counts["skipped"], "skipped", "amber"),
+                # Notifications bell with live unread count (PRD-028)
+                A(
+                    Span("🔔", cls="sidebar-icon text-base flex-shrink-0 w-5 text-center"),
+                    Span("Notifications", cls="sidebar-label ml-2 whitespace-nowrap"),
+                    Span(
+                        id="notification-badge-sidebar",
+                        cls="sidebar-label ml-auto",
+                    ),
+                    href="/notifications",
+                    title="Notifications",
+                    onclick="closeSidebar()",
+                    hx_get="/api/notifications/count?target=sidebar",
+                    hx_trigger="load, every 30s",
+                    hx_target="#notification-badge-sidebar",
+                    hx_swap="innerHTML",
+                    cls=f"sidebar-nav-item flex items-center px-3 py-2 rounded-lg text-sm font-medium min-h-[44px] {'bg-slate-700 text-white' if current_section == 'notifications' else 'text-slate-300 hover:bg-slate-700/50'}",
+                )
+                if user
+                else None,
                 cls="mb-3",
             ),
             # Library Section

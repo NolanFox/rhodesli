@@ -444,7 +444,7 @@ def post(sess):
 
 
 @rt("/api/notifications/count")
-def get(sess):
+def get(sess, target: str = ""):
     """GET /api/notifications/count — Returns unread count for bell icon polling."""
     denied = _check_login(sess)
     if denied:
@@ -453,7 +453,17 @@ def get(sess):
     user = get_current_user(sess or {})
     count = _get_unread_count(user.id)
 
-    # Return just the badge element for HTMX swap
+    # Sidebar variant: inline badge for sidebar nav item
+    if target == "sidebar":
+        if count > 0:
+            return Span(
+                str(count),
+                cls="px-2 py-0.5 text-xs font-bold rounded-full bg-red-500 text-white",
+                id="notification-badge-sidebar",
+            )
+        return Span(id="notification-badge-sidebar", cls="hidden")
+
+    # Default: absolute-positioned badge for top nav bell icon
     if count > 0:
         return Span(
             str(count),
