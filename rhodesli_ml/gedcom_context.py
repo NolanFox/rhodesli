@@ -22,6 +22,71 @@ logger = logging.getLogger(__name__)
 VARIANTS = ["none", "full", "curated", "first_order", "co_occurrence"]
 
 
+def find_business_owner_context(
+    visible_text: str,
+    parsed_gedcom,
+    photo_date_estimate: Optional[int] = None,
+) -> str:
+    """Search GEDCOM individuals for name matches in visible text (e.g. signage).
+
+    When a photo contains text like "LEON'S RESTAURANT", this function finds
+    GEDCOM individuals named "Leon" and returns their residential history.
+    This helps Gemini infer location from business owners who may not be
+    pictured in the photo. (AD-210)
+
+    Args:
+        visible_text: Text visible in the photo (e.g. signage, storefronts)
+        parsed_gedcom: ParsedGedcom object
+        photo_date_estimate: Estimated year of photo (for filtering events)
+
+    Returns:
+        Context string for business owner matches, or empty string if none found.
+    """
+    if not visible_text or not parsed_gedcom:
+        return ""
+
+    # Normalize visible text: uppercase, strip possessives and punctuation
+    import re
+
+    text_upper = visible_text.upper()
+    # Extract individual words (3+ chars to avoid noise)
+    words = set(re.findall(r"[A-Z]{3,}", text_upper))
+
+    if not words:
+        return ""
+
+    matches = []
+    for xref_id, indi in parsed_gedcom.individuals.items():
+        # Check if given name or surname appears in the visible text
+        given_upper = indi.given_name.upper() if indi.given_name else ""
+        surname_upper = indi.surname.upper() if indi.surname else ""
+
+        matched = False
+        if given_upper and len(given_upper) >= 3 and given_upper in words:
+            matched = True
+        if surname_upper and len(surname_upper) >= 3 and surname_upper in words:
+            matched = True
+
+        if matched:
+            matches.append(indi)
+
+    if not matches:
+        return ""
+
+    # Build context for matched individuals (residential history is most useful)
+    sections = []
+    for indi in matches:
+        section = _build_person_context(indi, parsed_gedcom, "full", photo_date_estimate)
+        if section:
+            sections.append(f"[Business owner candidate — name matches visible text]\n{section}")
+
+    if not sections:
+        return ""
+
+    header = "BUSINESS OWNER CONTEXT (names found in visible text/signage):"
+    return f"{header}\n\n" + "\n\n".join(sections)
+
+
 def build_photo_context(
     photo_id: str,
     identified_faces: list,
@@ -31,6 +96,7 @@ def build_photo_context(
     photo_index: dict = None,
     variant: str = "curated",
     photo_date_estimate: Optional[int] = None,
+    visible_text: Optional[str] = None,
 ) -> str:
     """Build GEDCOM context for all identified people in a photo.
 
@@ -43,6 +109,8 @@ def build_photo_context(
         photo_index: Photo index data (for co-occurrence variant)
         variant: One of "none", "full", "curated", "first_order", "co_occurrence"
         photo_date_estimate: Estimated year of photo (for curated variant)
+        visible_text: Text visible in the photo (signage, storefronts) for
+            business owner lookup (AD-210)
 
     Returns:
         Context string for Gemini prompt injection (empty for "none")
@@ -83,6 +151,12 @@ def build_photo_context(
             section = _build_person_context(indi, parsed_gedcom, "full", photo_date_estimate)
             if section:
                 sections.append(f"[Co-occurring person]\n{section}")
+
+    # Add business owner context if visible text provided (AD-210)
+    if visible_text and parsed_gedcom:
+        owner_context = find_business_owner_context(visible_text, parsed_gedcom, photo_date_estimate)
+        if owner_context:
+            sections.append(owner_context)
 
     if not sections:
         return ""
@@ -369,6 +443,7 @@ def build_all_variants(
     identities: dict,
     photo_index: dict = None,
     photo_date_estimate: Optional[int] = None,
+    visible_text: Optional[str] = None,
 ) -> dict:
     """Build context for all 5 variants. Returns dict of variant -> context string."""
     result = {}
@@ -382,6 +457,7 @@ def build_all_variants(
             photo_index=photo_index,
             variant=variant,
             photo_date_estimate=photo_date_estimate,
+            visible_text=visible_text,
         )
         result[variant] = context
         tokens = estimate_context_tokens(context)
