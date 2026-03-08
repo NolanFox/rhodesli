@@ -2276,20 +2276,17 @@
     },
     "inbox_staged-20260210-182610_5_757557421.130308": {
       "photo_id": "inbox_staged-20260210-182610_5_757557421.130308",
-      "lat": 27.9506,
-      "lng": -82.4572,
-      "location_name": "Tampa, Florida",
-      "location_key": "tampa",
-      "region": "United States",
-      "location_estimate": "Tampa, Florida \u2014 Leon's Restaurant, owned by Leon Capeluto. Photo from Nace Capeluto Tampa Collection.",
+      "lat": 35.5951,
+      "lng": -82.5515,
+      "location_name": "Asheville, North Carolina",
+      "location_estimate": "Leon's Restaurant, owned by Leon Capeluto. Leon and Victoria Capeluto lived in Asheville, NC. Photo shows Victor Capeluto visiting his brother Leon's restaurant.",
+      "biographical_evidence": "GEDCOM records show Leon Capeluto and Victoria (née Soriano) Capeluto lived in Asheville, NC. Leon owned a restaurant there.",
+      "missing_child_analysis": "",
       "confidence": "high",
-      "all_matches": [
-        {
-          "key": "tampa",
-          "name": "Tampa, Florida"
-        }
-      ],
-      "reanalyzed_at": "2026-03-06T00:00:00+00:00"
+      "region": "United States",
+      "gemini_raw_location": "Asheville, North Carolina",
+      "reanalyzed_at": "2026-03-08T08:00:00+00:00",
+      "location_key": "asheville"
     },
     "inbox_staged-20260210-182610_6_596771293.674187": {
       "photo_id": "inbox_staged-20260210-182610_6_596771293.674187",
@@ -3582,7 +3579,7 @@
       "location_name": "Elisabethville (Lubumbashi), Congo",
       "location_key": "elisabethville",
       "region": "Africa",
-      "location_estimate": "Belgian Congo (based on text context), likely a studio in Elisabethville (Lubumbashi) or L\u00e9opoldville (Kinshasa).",
+      "location_estimate": "Belgian Congo (based on text context), likely a studio in Elisabethville (Lubumbashi) or Léopoldville (Kinshasa).",
       "confidence": "high",
       "all_matches": [
         {
@@ -3966,7 +3963,7 @@
       "location_name": "Elisabethville (Lubumbashi), Congo",
       "location_key": "elisabethville",
       "region": "Africa",
-      "location_estimate": "Belgian Congo (Kabinda, L\u00e9opoldville, or Albertville) based on text",
+      "location_estimate": "Belgian Congo (Kabinda, Léopoldville, or Albertville) based on text",
       "confidence": "high",
       "all_matches": [
         {
@@ -4038,7 +4035,7 @@
       "location_name": "Elisabethville (Lubumbashi), Congo",
       "location_key": "elisabethville",
       "region": "Africa",
-      "location_estimate": "L\u00e9opoldville (Kinshasa), Belgian Congo",
+      "location_estimate": "Léopoldville (Kinshasa), Belgian Congo",
       "confidence": "high",
       "all_matches": [
         {
@@ -4826,7 +4823,7 @@
       "location_name": "Rhodes, Greece",
       "location_key": "rhodes",
       "region": "Mediterranean",
-      "location_estimate": "Rhodes, Greece (likely the courtyard of a Jewish school such as the Alliance Isra\u00e9lite Universelle)",
+      "location_estimate": "Rhodes, Greece (likely the courtyard of a Jewish school such as the Alliance Israélite Universelle)",
       "confidence": "medium",
       "all_matches": [
         {
@@ -5350,6 +5347,20 @@
           "name": "Rhodes, Greece"
         }
       ]
+    },
+    "3192877a90a174e9": {
+      "photo_id": "3192877a90a174e9",
+      "lat": 35.5951,
+      "lng": -82.5515,
+      "location_name": "Asheville, North Carolina",
+      "location_estimate": "Leon's Restaurant, owned by Leon Capeluto. Leon and Victoria Capeluto lived in Asheville, NC. Photo shows Victor Capeluto visiting his brother Leon's restaurant.",
+      "biographical_evidence": "GEDCOM records show Leon Capeluto and Victoria (née Soriano) Capeluto lived in Asheville, NC. Leon owned a restaurant there.",
+      "missing_child_analysis": "",
+      "confidence": "high",
+      "region": "United States",
+      "gemini_raw_location": "Asheville, North Carolina",
+      "reanalyzed_at": "2026-03-08T08:00:00+00:00",
+      "location_key": "asheville"
     }
   }
 }

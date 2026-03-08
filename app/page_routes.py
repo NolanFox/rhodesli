@@ -6524,15 +6524,19 @@ def _load_photo_locations() -> dict:
                 from core.photo_registry import PhotoRegistry
 
                 photo_registry = PhotoRegistry.load(_main_mod.data_path / "photo_index.json")
+                mapped = 0
                 for pid in list(_photo_locations_cache.keys()):
                     if pid.startswith("inbox_"):
                         path = photo_registry.get_photo_path(pid)
                         if path:
                             fname = Path(path).name
                             sha_id = _main_mod.hashlib.sha256(fname.encode("utf-8")).hexdigest()[:16]
-                            _photo_locations_cache[sha_id] = _photo_locations_cache[pid]
-            except Exception:
-                pass
+                            if sha_id not in _photo_locations_cache:
+                                _photo_locations_cache[sha_id] = _photo_locations_cache[pid]
+                                mapped += 1
+                logger.info(f"Photo locations: {len(_photo_locations_cache)} entries, {mapped} inbox->SHA256 mapped")
+            except Exception as e:
+                logger.warning(f"Photo locations dual-key mapping failed: {e}")
         except Exception:
             pass
     return _photo_locations_cache
