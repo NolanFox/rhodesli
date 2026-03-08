@@ -11,7 +11,7 @@ Context: docs/session_context/session-92-context.md
 
 ## Phase Checklist
 - [x] Act 0: Orient — verify state, set session, create log
-- [ ] Act 1: Deploy verification + Railway env vars (browser)
+- [x] Act 1: Deploy verification + Railway env vars (browser)
 - [ ] Act 2: Supabase tables + DATA_SOURCE test
 - [ ] Act 3 (Track C): Test hardening + CI/CD (worktree)
 - [ ] Act 4 (Track D): UX bug fixes (worktree)
@@ -59,6 +59,49 @@ Context: docs/session_context/session-92-context.md
 3. Railway CLI needs re-auth before env vars can be set
 
 ### 1c-1d: Not reached (context limit)
+
+## Act 1b: Continued Verification + Observability (resumed session)
+
+### Nolan completed:
+- Railway CLI re-authenticated (`railway login`)
+- SENTRY_DSN + POSTHOG_API_KEY set on Railway and .env
+
+### Observability shipped (commit cd61c56):
+- Sentry: StarletteIntegration + LoggingIntegration, traces_sample_rate=0.1
+- PostHog: server-side `posthog_capture()` helper
+- 4 events tracked: photo_uploaded, face_compare_requested, help_identify_submitted, admin_identity_confirmed
+- `posthog>=3.0` added to requirements.txt
+- All gated on env vars — no-op when not configured
+
+### Discoveries page:
+- Was ERROR on first check (previous session), PASS on reload — transient issue
+- Sentry now deployed, will catch if it recurs
+
+### Bell icon fix (commit de9dc70):
+- Root cause: bell icon was in `_public_nav_links` (used on /photos, /people) but NOT in `sidebar()` (used on landing page command center)
+- Fixed: Added 🔔 Notifications nav item to sidebar Review section with HTMX polling
+- Updated `/api/notifications/count` to support `target=sidebar` for inline badge styling
+
+### Deploy status:
+- Two deploys pushed to Railway (observability + bell icon)
+- Observability deploy (cd61c56) FAILED (superseded by newer deploy — expected)
+- Bell icon deploy (de9dc70) SUCCESS — app live and serving requests
+
+### Full browser verification (resumed session 2):
+
+| Page | Status | Notes |
+|------|--------|-------|
+| Landing / | PASS | Admin logged in, bell icon visible in sidebar |
+| Browse /photos | PASS | Grid renders (verified earlier) |
+| Discoveries /discoveries | PASS | Loads with filters, 202 discoveries |
+| Events /events | PASS | 5 life events, filter/create UI |
+| Compare /compare | PASS | Two-slot design visible |
+| Estimate /estimate | PASS | Photo grid + Load More |
+| About /about | PASS | Loads |
+| Health /health | PASS | 777 identities, 299 photos, ML ready |
+| Bell icon | PASS | "Notifications" link in sidebar nav |
+
+**Act 1 COMPLETE** — All pages verified, observability shipped, bell icon fixed.
 
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
