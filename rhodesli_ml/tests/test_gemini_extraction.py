@@ -210,9 +210,9 @@ class TestSignageCrossReference:
         assert "transit" in prompt.lower()
 
     def test_visual_evidence_preferred(self):
-        """Location section instructs to prefer visual evidence over transit records."""
+        """Location section instructs RESIDENCE overrides immigration/transit."""
         prompt = build_extraction_prompt(preset="quick")
-        assert "PREFER the visual evidence" in prompt
+        assert "RESIDENCE" in prompt and "overrides immigration" in prompt.lower()
 
 
 class TestGetActiveExtractions:

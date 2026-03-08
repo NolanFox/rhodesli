@@ -14,9 +14,7 @@ at the cost of more tokens. Designed for the 2×5 comparison matrix
 Session: 61C | AD-146
 """
 
-import json
 import logging
-from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -72,22 +70,17 @@ def build_photo_context(
         if not indi:
             continue
 
-        person_section = _build_person_context(
-            indi, parsed_gedcom, variant, photo_date_estimate
-        )
+        person_section = _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate)
         if person_section:
             sections.append(person_section)
 
     # Co-occurrence: add context for people sharing photos with identified people
     if variant == "co_occurrence" and photo_index:
         co_people = _get_co_occurring_people(
-            identified_faces, identities, photo_index,
-            gedcom_face_links, parsed_gedcom
+            identified_faces, identities, photo_index, gedcom_face_links, parsed_gedcom
         )
         for indi in co_people:
-            section = _build_person_context(
-                indi, parsed_gedcom, "full", photo_date_estimate
-            )
+            section = _build_person_context(indi, parsed_gedcom, "full", photo_date_estimate)
             if section:
                 sections.append(f"[Co-occurring person]\n{section}")
 
@@ -152,6 +145,9 @@ def _build_person_context(indi, parsed_gedcom, variant, photo_date_estimate=None
         event_str = f"  {event.event_type.title()}: {event.raw_date or '?'}"
         if event.place:
             event_str += f" in {event.place}"
+        # Tag immigration/emigration as transit (AD-209)
+        if event.event_type in ("immigration", "emigration"):
+            event_str += " [PORT OF ENTRY — transit point, NOT necessarily residence]"
         lines.append(event_str)
 
     # Marriages (from family records)
@@ -193,6 +189,9 @@ def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
             e_str = f"    {event.event_type.title()}: {event.raw_date or '?'}"
             if event.place:
                 e_str += f" in {event.place}"
+            # Tag immigration/emigration as transit (AD-209)
+            if event.event_type in ("immigration", "emigration"):
+                e_str += " [PORT OF ENTRY — transit point, NOT necessarily residence]"
             lines.append(e_str)
 
     # Spouses (with residence and occupation events for location context)
@@ -210,6 +209,9 @@ def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
                 e_str = f"    {event.event_type.title()}: {event.raw_date or '?'}"
                 if event.place:
                     e_str += f" in {event.place}"
+                # Tag immigration/emigration as transit (AD-209)
+                if event.event_type in ("immigration", "emigration"):
+                    e_str += " [PORT OF ENTRY — transit point, NOT necessarily residence]"
                 lines.append(e_str)
 
     # Children (with birth dates and places — critical for location + date inference)
@@ -221,9 +223,20 @@ def _build_family_context(indi, parsed_gedcom, photo_date_estimate=None):
             if child.birth and child.birth_year:
                 c_str += f" (b.{child.birth_year}"
                 if child.birth and child.birth.date and child.birth.date.month:
-                    month_names = {1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
-                                   5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
-                                   9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec"}
+                    month_names = {
+                        1: "Jan",
+                        2: "Feb",
+                        3: "Mar",
+                        4: "Apr",
+                        5: "May",
+                        6: "Jun",
+                        7: "Jul",
+                        8: "Aug",
+                        9: "Sep",
+                        10: "Oct",
+                        11: "Nov",
+                        12: "Dec",
+                    }
                     c_str += f" {month_names.get(child.birth.date.month, '')}"
                 c_str += ")"
             if child.birth_place:
@@ -272,8 +285,7 @@ def _find_identity_for_face(face_id, identities):
     return fallback
 
 
-def _get_co_occurring_people(identified_faces, identities, photo_index,
-                              gedcom_face_links, parsed_gedcom):
+def _get_co_occurring_people(identified_faces, identities, photo_index, gedcom_face_links, parsed_gedcom):
     """Get all GEDCOM individuals who share any photo with identified faces."""
     face_to_photo = photo_index.get("face_to_photo", {})
 
@@ -308,8 +320,7 @@ def _get_co_occurring_people(identified_faces, identities, photo_index,
                         co_individuals.add(indi.xref_id)
                         already_included.add(identity_id)
 
-    return [parsed_gedcom.individuals[xref] for xref in co_individuals
-            if xref in parsed_gedcom.individuals]
+    return [parsed_gedcom.individuals[xref] for xref in co_individuals if xref in parsed_gedcom.individuals]
 
 
 def estimate_context_tokens(context_string: str) -> int:
@@ -375,7 +386,5 @@ def build_all_variants(
         result[variant] = context
         tokens = estimate_context_tokens(context)
         if tokens > 15000:
-            logger.warning(
-                f"Photo {photo_id} variant '{variant}': {tokens} tokens (>15K threshold)"
-            )
+            logger.warning(f"Photo {photo_id} variant '{variant}': {tokens} tokens (>15K threshold)")
     return result

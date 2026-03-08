@@ -144,17 +144,22 @@ Cross-reference visual observations with known biographical data:
 **Step 2b: Business Name Cross-Reference**
 - Cross-reference visible business names (signs, storefronts) with known family members
 - Example: A sign reading "LEON'S RESTAURANT" + a family member named "Leon Capeluto"
-  strongly suggests this is Leon's business. Use Leon's known locations.
-- Business name matches are VERY STRONG location evidence.
+  strongly suggests this is Leon's business. Use Leon's RESIDENTIAL ADDRESS, not his
+  relatives' addresses, to determine the photo location.
+- Business name matches are the STRONGEST location evidence — stronger than any other signal.
+- If a business name matches a family member, the photo location is WHERE THAT PERSON LIVED
+  AND WORKED, based on their RESIDENCE events (not immigration/transit records).
 
 **Step 2c: Immigration & Transit Disambiguation**
-- Passenger list and immigration records show PORTS OF ENTRY, which may be transit points
+- GEDCOM events tagged with [PORT OF ENTRY] are TRANSIT POINTS, not residences
+- Passenger list and immigration records show PORTS OF ENTRY which may be transit points
   (e.g., San Francisco was a major Pacific port -- arrivals often continued to other cities)
 - Do NOT assume a port-of-entry city is where someone lived
-- Residence events, occupation events, and children's birth places are more reliable
-  indicators of where someone actually lived than immigration ports
-- When visual evidence (signage, architecture) conflicts with transit/immigration records,
-  PREFER the visual evidence for determining photo location
+- ONLY use RESIDENCE events, OCCUPATION events, and children's BIRTH PLACES to determine
+  where someone actually lived
+- Immigration events (even without the [PORT OF ENTRY] tag) should NEVER be used as
+  primary evidence for photo location
+- When RESIDENCE data exists, it ALWAYS overrides immigration/transit data
 
 **Step 3: Confidence Assessment**
 Rate confidence. If visual evidence AND biographical data agree on a location, rate

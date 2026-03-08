@@ -2017,6 +2017,8 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
             except (ValueError, TypeError):
                 pass
 
+        # Sanitize photo_id for use in CSS selectors (dots break HTMX targets)
+        safe_id = photo_id.replace(".", "_")
         reanalyze_btn = Div(
             last_analyzed_el,
             Button(
@@ -2025,16 +2027,16 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                 ),
                 "Re-analyze Photo",
                 hx_post=f"/api/photo/{photo_id}/reanalyze",
-                hx_target=f"#reanalyze-result-{photo_id}",
+                hx_target=f"#reanalyze-result-{safe_id}",
                 hx_swap="innerHTML",
-                hx_indicator=f"#reanalyze-spinner-{photo_id}",
+                hx_indicator=f"#reanalyze-spinner-{safe_id}",
                 cls="flex items-center text-[11px] text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 hover:border-indigo-400/50 rounded px-2 py-1 transition-colors cursor-pointer",
                 data_testid="reanalyze-button",
                 title="Date, location, and scene analysis",
             ),
             Span(
                 cls="htmx-indicator animate-spin inline-block w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full ml-2",
-                id=f"reanalyze-spinner-{photo_id}",
+                id=f"reanalyze-spinner-{safe_id}",
             ),
             cls="flex items-center",
         )
@@ -2051,7 +2053,7 @@ def _build_ai_analysis_section(photo_id: str, is_admin: bool = False):
                 cls="flex items-center justify-between mb-1",
             ),
             P("Estimated by AI \u2014 help us verify", cls="text-[11px] text-indigo-400/70 mb-4"),
-            Div(id=f"reanalyze-result-{photo_id}", cls="mb-3"),
+            Div(id=f"reanalyze-result-{photo_id.replace('.', '_')}", cls="mb-3"),
             Div(
                 *sections,
                 id=f"ai-analysis-sections-{photo_id}",
