@@ -694,6 +694,7 @@ def public_person_page(
         badge = Span(
             "Identified",
             cls="text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20",
+            title="This person has been identified by an admin",
         )
     else:
         badge = Span(
@@ -796,6 +797,7 @@ def public_person_page(
                             "Save",
                             type="submit",
                             cls="mt-2 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded",
+                            onclick="event.stopPropagation()",
                         ),
                         hx_post=f"/api/ml-review/birth-year/{person_id}/accept",
                         hx_target=f"#ml-suggestion-{person_id}",
@@ -853,9 +855,9 @@ def public_person_page(
     # Only show life details section if person is identified or under active review
     if is_confirmed or identity.get("state") in ("PROPOSED", "INBOX"):
         if not person_birth_year:
-            life_detail_items.append(_life_detail_row("Born", None, "Do you know?"))
+            life_detail_items.append(_life_detail_row("Born", None, "Can you help?"))
         if not death_year:
-            life_detail_items.append(_life_detail_row("Died", None, "Do you know?"))
+            life_detail_items.append(_life_detail_row("Died", None, "Can you help?"))
         if birth_place or not is_confirmed:
             life_detail_items.append(_life_detail_row("From", birth_place, "Can you help?"))
         elif not birth_place:
@@ -1041,6 +1043,7 @@ def public_person_page(
                                 "Save Metadata",
                                 type="submit",
                                 cls="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded",
+                                onclick="event.stopPropagation()",
                             ),
                             Div(id=f"metadata-status-{person_id}", cls="inline ml-2"),
                             hx_post=f"/api/identity/{person_id}/metadata",

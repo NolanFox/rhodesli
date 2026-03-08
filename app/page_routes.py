@@ -3747,6 +3747,19 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None):
     avatar_url = _main_mod.resolve_face_image_url(best_face_id, crop_files) if best_face_id and crop_files else None
 
     # Build face image
+    # Link to first source photo
+    _first_photo_id = photo_ids[0] if photo_ids else None
+    _source_photo_link = (
+        A(
+            "View source photo \u2192",
+            href=f"/photo/{_first_photo_id}",
+            cls="text-xs text-indigo-400 hover:text-indigo-300 mt-2 inline-block",
+            data_testid="view-source-photo-link",
+        )
+        if _first_photo_id
+        else None
+    )
+
     face_section = Div(
         Img(
             src=avatar_url,
@@ -3758,7 +3771,8 @@ def get(person_id: str, submitted: str = "", name: str = "", sess=None):
             Span("?", cls="text-6xl text-slate-500"),
             cls="w-48 h-48 rounded-2xl bg-slate-800 border-4 border-slate-700 flex items-center justify-center mx-auto",
         ),
-        cls="mb-8",
+        _source_photo_link,
+        cls="mb-8 text-center",
     )
 
     # Source photos
@@ -10394,9 +10408,9 @@ def public_photo_page(
                                     type="text",
                                     name="collection",
                                     value=photo.get("collection", ""),
-                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48",
+                                    placeholder="Select or type a collection",
+                                    cls="bg-slate-800 border border-slate-600 rounded px-2 py-0.5 text-xs text-white w-48 placeholder-slate-500",
                                     list="photo-collections",
-                                    onfocus="this.select()",
                                 ),
                                 Button(
                                     "Save",
