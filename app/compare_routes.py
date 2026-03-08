@@ -471,7 +471,11 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             cls="htmx-indicator text-center py-4",
         ),
         # Container for upload results (faces detected, state updates)
-        Div(id="ws-upload-result", data_testid="ws-upload-result"),
+        Div(
+            id="ws-upload-result",
+            data_testid="ws-upload-result",
+            **{"hx-on::after-settle": "if(this.children.length>0)this.scrollIntoView({behavior:'smooth'})"},
+        ),
         data_source_panel="upload",
         data_testid="source-upload-panel",
     )
@@ -584,7 +588,11 @@ def get(face_id: str = "", photo_id: str = "", person_id: str = "", sess=None):
             id="ws-target-upload-spinner",
             cls="htmx-indicator text-center py-4",
         ),
-        Div(id="ws-target-upload-result", data_testid="ws-target-upload-result"),
+        Div(
+            id="ws-target-upload-result",
+            data_testid="ws-target-upload-result",
+            **{"hx-on::after-settle": "if(this.children.length>0)this.scrollIntoView({behavior:'smooth'})"},
+        ),
         data_target_panel="upload",
         data_testid="target-upload-panel",
     )

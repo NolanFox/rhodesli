@@ -599,7 +599,6 @@ def get(
         Style("html, body { margin: 0; } body { background-color: #0f172a; }"),
         Main(
             _main_mod._public_page_nav(nav_links, active="events", user=user),
-            _main_mod._admin_bar(user),
             Section(
                 Div(
                     H1("Life Events", cls="text-2xl font-serif font-bold text-white mb-2"),
@@ -765,7 +764,6 @@ def get(event_id: str, sess=None):
         Style("html, body { margin: 0; } body { background-color: #0f172a; }"),
         Main(
             _main_mod._public_page_nav(nav_links, active="events", user=user),
-            _main_mod._admin_bar(user),
             Section(
                 Div(
                     # Back link

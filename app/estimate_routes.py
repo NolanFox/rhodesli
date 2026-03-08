@@ -345,7 +345,12 @@ def get(photo: str = "", sess=None):
                                 P("This may take a moment for group photos.", cls="text-slate-500 text-xs mt-1"),
                             ],
                         ),
-                        Div(id="estimate-upload-result"),
+                        Div(
+                            id="estimate-upload-result",
+                            **{
+                                "hx-on::after-settle": "if(this.children.length>0)this.scrollIntoView({behavior:'smooth'})"
+                            },
+                        ),
                         cls="bg-slate-800/50 rounded-2xl p-6 max-w-md mx-auto mb-8",
                         data_testid="estimate-upload-area",
                     )
