@@ -93,6 +93,37 @@ class TestGeocodeLocation:
         assert abs(lat - 35.5951) < 0.01
 
 
+class TestGeocodeDisplayName:
+    """Tests for _geocode_display_name helper — clean display names from vague Gemini text."""
+
+    def test_asheville_from_vague_text(self):
+        from app.estimate_routes import _geocode_display_name
+
+        # Gemini returns vague text but mentions Leon Capeluto's residence (Asheville)
+        result = _geocode_display_name("United States (Specific city tied to Leon Capeluto's residence in Asheville)")
+        assert result == "Asheville, North Carolina"
+
+    def test_clean_input_passes_through(self):
+        from app.estimate_routes import _geocode_display_name
+
+        assert _geocode_display_name("Tampa, Florida") == "Tampa, Florida"
+
+    def test_unknown_returns_original(self):
+        from app.estimate_routes import _geocode_display_name
+
+        assert _geocode_display_name("Unknown Place") == "Unknown Place"
+
+    def test_case_insensitive(self):
+        from app.estimate_routes import _geocode_display_name
+
+        assert _geocode_display_name("ASHEVILLE area") == "Asheville, North Carolina"
+
+    def test_rhodes(self):
+        from app.estimate_routes import _geocode_display_name
+
+        assert _geocode_display_name("Island of Rhodes") == "Rhodes, Greece"
+
+
 class TestGuessRegion:
     """Tests for _guess_region helper."""
 

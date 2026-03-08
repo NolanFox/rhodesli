@@ -1292,8 +1292,14 @@ async def post(photo_id: str, sess=None):
                 labels_list.append(new_entry)
             all_labels["labels"] = labels_list
             date_labels_path.write_text(_json.dumps(all_labels, indent=2, ensure_ascii=False))
-            # Invalidate cache
+            # Invalidate cache — MUST invalidate page_routes cache directly
             _main_mod._date_labels_cache = None
+            try:
+                from app import page_routes as _pr
+
+                _pr._date_labels_cache = None
+            except Exception:
+                pass
             # Dual-write to Supabase
             from app.supabase_data import sync_date_label
 
@@ -1313,21 +1319,30 @@ async def post(photo_id: str, sess=None):
             photos_dict = all_locations.setdefault("photos", {})
             # Try to geocode the new location
             new_lat, new_lng = _geocode_location(new_location)
+            # Use clean display name when available (e.g., "Asheville, NC" instead of vague Gemini text)
+            display_name = _geocode_display_name(new_location)
             photos_dict[photo_id] = {
                 "photo_id": photo_id,
                 "lat": new_lat,
                 "lng": new_lng,
-                "location_name": new_location,
+                "location_name": display_name,
                 "location_estimate": location_data.get("visual_evidence", ""),
                 "biographical_evidence": location_data.get("biographical_evidence", ""),
                 "missing_child_analysis": location_data.get("missing_child_analysis", ""),
                 "confidence": location_data.get("confidence", "medium"),
                 "region": _guess_region(new_location),
+                "gemini_raw_location": new_location,  # preserve Gemini's raw output
                 "reanalyzed_at": datetime.now(timezone.utc).isoformat(),
             }
             locations_path.write_text(_json.dumps(all_locations, indent=2, ensure_ascii=False))
-            # Invalidate cache
+            # Invalidate cache — MUST invalidate page_routes cache directly (not just main alias)
             _main_mod._photo_locations_cache = None
+            try:
+                from app import page_routes as _pr
+
+                _pr._photo_locations_cache = None
+            except Exception:
+                pass
             # Dual-write to Supabase
             from app.supabase_data import sync_photo_location
 
@@ -1382,6 +1397,25 @@ async def post(photo_id: str, sess=None):
     )
 
 
+LOCATION_GEOCODE = {
+    "asheville": {"coords": (35.5951, -82.5515), "display": "Asheville, North Carolina"},
+    "rhodes": {"coords": (36.4341, 28.2176), "display": "Rhodes, Greece"},
+    "brooklyn": {"coords": (40.6782, -73.9442), "display": "Brooklyn, New York"},
+    "new york": {"coords": (40.7128, -74.0060), "display": "New York, New York"},
+    "miami": {"coords": (25.7617, -80.1918), "display": "Miami, Florida"},
+    "tampa": {"coords": (27.9506, -82.4572), "display": "Tampa, Florida"},
+    "montgomery": {"coords": (32.3792, -86.3077), "display": "Montgomery, Alabama"},
+    "atlanta": {"coords": (33.7490, -84.3880), "display": "Atlanta, Georgia"},
+    "havana": {"coords": (23.1136, -82.3666), "display": "Havana, Cuba"},
+    "seattle": {"coords": (47.6062, -122.3321), "display": "Seattle, Washington"},
+    "los angeles": {"coords": (34.0522, -118.2437), "display": "Los Angeles, California"},
+    "congo": {"coords": (-4.3250, 15.3222), "display": "Congo"},
+    "jerusalem": {"coords": (31.7683, 35.2137), "display": "Jerusalem, Israel"},
+    "israel": {"coords": (31.0461, 34.8516), "display": "Israel"},
+    "greece": {"coords": (37.9838, 23.7275), "display": "Greece"},
+}
+
+
 def _geocode_location(location_text: str) -> tuple[float, float]:
     """Simple geocoding from location text to lat/lng.
 
@@ -1390,28 +1424,23 @@ def _geocode_location(location_text: str) -> tuple[float, float]:
     """
     text_lower = location_text.lower()
 
-    LOCATION_COORDS = {
-        "asheville": (35.5951, -82.5515),
-        "rhodes": (36.4341, 28.2176),
-        "brooklyn": (40.6782, -73.9442),
-        "new york": (40.7128, -74.0060),
-        "miami": (25.7617, -80.1918),
-        "tampa": (27.9506, -82.4572),
-        "montgomery": (32.3792, -86.3077),
-        "atlanta": (33.7490, -84.3880),
-        "havana": (23.1136, -82.3666),
-        "seattle": (47.6062, -122.3321),
-        "los angeles": (34.0522, -118.2437),
-        "congo": (-4.3250, 15.3222),
-        "jerusalem": (31.7683, 35.2137),
-        "israel": (31.0461, 34.8516),
-        "greece": (37.9838, 23.7275),
-    }
-
-    for key, coords in LOCATION_COORDS.items():
+    for key, data in LOCATION_GEOCODE.items():
         if key in text_lower:
-            return coords
+            return data["coords"]
     return (0.0, 0.0)
+
+
+def _geocode_display_name(location_text: str) -> str:
+    """Get clean display name for a location, or return original text.
+
+    When Gemini returns vague text like 'United States (Specific city tied to...)',
+    but we can match a known city, return the clean display name instead.
+    """
+    text_lower = location_text.lower()
+    for key, data in LOCATION_GEOCODE.items():
+        if key in text_lower:
+            return data["display"]
+    return location_text
 
 
 def _guess_region(location_text: str) -> str:
