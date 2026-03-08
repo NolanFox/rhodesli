@@ -13,7 +13,6 @@ from pathlib import Path
 from urllib.parse import quote
 
 
-
 # Test setup
 @pytest.fixture
 def test_client():
@@ -190,7 +189,8 @@ class TestMlsDiscriminatesFaces:
     """
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_mls_score_range_exceeds_threshold(self, face_data):
         """MLS scores span at least 2.0 points (enough for clustering)."""

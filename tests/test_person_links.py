@@ -61,7 +61,8 @@ class TestPersonLinksFromPhotoViewer:
     """Person cards on the photo viewer link to person pages."""
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_person_card_links_to_person_page(self, client, photo_with_person):
         """Identified person card has a link to /person/{id}."""
@@ -72,7 +73,8 @@ class TestPersonLinksFromPhotoViewer:
         assert "/person/" in html
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_see_all_photos_link(self, client, photo_with_person):
         """Identified person card has 'See all photos' link."""
@@ -104,7 +106,8 @@ class TestPersonLinksFromPhotoViewer:
         pytest.skip("All faces are identified")
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_person_name_links_to_person_page(self, client, photo_with_person):
         """The person's name in the card is a link to /person/{id}."""

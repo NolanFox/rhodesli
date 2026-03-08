@@ -118,7 +118,8 @@ class TestFaceClickBehavior:
     """Face clicks navigate to person/identify pages."""
 
     @pytest.mark.xfail(
-        reason="Order-dependent: route module loading order varies in full suite (BACKLOG-FLAKY-001)", strict=False
+        reason="Flaky under xdist: shared app state race condition (passes in isolation)",
+        strict=False,
     )
     def test_person_cards_link_to_person_or_identify(self, client, real_photo_id):
         if not real_photo_id:

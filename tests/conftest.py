@@ -37,6 +37,7 @@ _SLOW_PATH_PATTERNS = [
     "test_compare_intelligence",
     "test_photo_context",
     "test_photo_viewer",
+    "test_public_photo_viewer",
     "test_identity_display",
     "test_share_download",
     "test_data_integrity",
@@ -59,6 +60,20 @@ _SLOW_PATH_PATTERNS = [
     "test_ingest_execution",
     "test_pipeline_scripts",
     "test_process_uploads",
+    # Integration-heavy tests that render full pages via TestClient
+    "test_admin_dashboard",
+    "test_timeline",
+    "test_merged_identity_guard",
+    "test_bulk_photos",
+    "test_internal_photo_links",
+    "test_back_image",
+    "test_fuzzy_filter",
+    "test_photo_nav_persistence",
+    "test_estimate_gemini",
+    "test_lazy_loading",
+    "test_error_handling",
+    "test_map",
+    "test_critical_routes",
 ]
 
 
