@@ -248,3 +248,22 @@ Their work was sitting as unstaged changes. All verified and committed.
 ### DATA_SOURCE=postgres decision:
 NOT flipped on Railway. Core tables (identities, photos) don't exist.
 Read paths have JSON fallback. Data is in Postgres ready for DATA-007.
+
+## Act 12: Gap Closure (session 92 continuation 2)
+
+### Gaps Closed:
+1. **D6-D9 missing tests**: 10 new test classes added to test_ux_fixes_session92.py (D6 birth year stopPropagation, D7 CTA standardization, D8 identified tooltip, D9 collection dropdown, D10 events admin bar). 19 tests total, all pass.
+2. **Notification E2E verified**: Confirmed identity in browser → notification appeared on /notifications page → bell badge showed red "1". Screenshot evidence captured.
+3. **Leon's Restaurant → Asheville**: photo_locations.json correctly shows "Asheville, North Carolina" (commit 1565a62). Production display still shows old Gemini response due to Railway volume data divergence — requires volume sync or re-analyze in production.
+4. **xfail markers**: Verified 0 xfails on main (clean).
+5. **Worktrees cleaned up**: Both worktrees removed.
+6. **Screenshots directory**: Created docs/screenshots/session-92/.
+
+### Remaining Gaps (architectural blockers, not code issues):
+- **DATA_SOURCE=postgres**: Blocked by DATA-007 (identities/photos tables don't exist in Supabase)
+- **Test speed <30s**: Floor is ~47s due to app import time per xdist worker. Requires architectural refactoring.
+- **Leon's production display**: Railway volume has stale photo_locations.json. Requires volume sync or re-analyze.
+
+### Tests:
+- App: 3717 passed, 4 skipped, 0 failures
+- Total includes D6-D9 test additions
