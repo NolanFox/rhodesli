@@ -29,6 +29,37 @@ Context: docs/session_context/session-92-context.md
 - current_session.txt set to 92
 - Session log created
 
+## Act 1: Deploy Verification (PARTIAL — context limit hit)
+
+### 1a. Railway Env Vars
+- Railway CLI token expired — cannot set env vars programmatically
+- **ACTION NEEDED FROM NOLAN**: Run `railway login` to refresh token, then set:
+  - SENTRY_DSN (create Sentry project first)
+  - POSTHOG_API_KEY (create PostHog project first)
+  - RESEND_API_KEY (create Resend account, verify domain)
+
+### 1b. Browser Verify (Chrome)
+- Pushed 3 commits to origin/main (session 92 orient + prompt + assessment placeholder)
+- v0.94.1 confirmed live
+
+| Page | Status | Notes |
+|------|--------|-------|
+| Landing / | PASS | Loads, admin logged in, 85/771 identified, v0.94.1 |
+| Browse /photos | PASS | Grid renders, huge page (2183+ elements) |
+| Discoveries /discoveries | FAIL | Error page — needs investigation |
+| Notifications bell | NOT VISIBLE | No bell icon found in landing page nav |
+| Events /events | NOT TESTED | Context limit before testing |
+| Compare /compare | NOT TESTED | |
+| Estimate /estimate | NOT TESTED | |
+| About /about | NOT TESTED | |
+
+### Key Findings
+1. **DISCOVERIES PAGE IS BROKEN** — returns error page in production
+2. **BELL ICON NOT VISIBLE** — notification bell not found in nav sidebar
+3. Railway CLI needs re-auth before env vars can be set
+
+### 1c-1d: Not reached (context limit)
+
 ## Verification Gate
 - [ ] All phases re-checked against original prompt
 - [ ] Feature Reality Contract passed
