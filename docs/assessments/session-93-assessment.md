@@ -35,8 +35,16 @@ Close ALL deferred items from Session 92:
 - **LOW**: No previous date/location estimates existed in JSON files before this batch, so delta analysis is limited to Supabase data (not accessible locally). Future batches should store `previous_estimate` before overwriting.
 - **LOW**: 1 pre-existing e2e test failure (chromium discovery layer sort) — not related to this session's work.
 
+## Auto-Fix Summary (Session Review)
+- Issues found: 3
+- Auto-fixed: 3
+  - SESSION_LOG.md updated (was showing session 85c)
+  - ROADMAP version bumped v0.95.0 → v0.96.0, Session 93 added to Recently Completed
+  - Report trimmed 396 → 265 lines, detail moved to GEDCOM_REANALYSIS_DETAIL.md
+- Deferred: 2 (pre-existing: Dockerfile missing recalibration_hooks.py, BACKLOG IDs for schema gaps)
+
 ## Next Session Should Verify
 1. Railway health endpoint confirms DATA_SOURCE=postgres still working
 2. date_labels and photo_locations tables in Supabase have the 67 reanalyzed entries
-3. Schema additions from report Section 8.2 (previous_date_estimate, gedcom_token_count)
+3. Schema additions from report Section 7 (previous_date_estimate, gedcom_token_count)
 4. The 5 failed photos — check if content safety or image loading, consider retry

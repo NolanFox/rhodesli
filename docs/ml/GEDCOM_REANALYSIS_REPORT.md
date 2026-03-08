@@ -202,195 +202,64 @@ show the wedding location, the model can assign high-confidence locations.
 
 ## 6. Cost and Performance
 
-### 6.1 This Batch
-
 | Metric | Value |
 |--------|-------|
-| Photos attempted | 72 |
-| Photos succeeded | 67 (93%) |
-| Photos failed | 5 (7%) |
-| Total estimated cost | ~$2.66 |
-| Per-photo cost | $0.037 |
-| Effective per-success cost | $0.040 |
-| Total runtime | ~79 minutes |
-| Avg per-photo time | ~67 seconds |
+| Photos attempted / succeeded / failed | 72 / 67 (93%) / 5 (7%) |
+| Total estimated cost | ~$2.66 ($0.037/photo) |
+| Runtime | ~79 min (~67s/photo incl. rate limit) |
+| Cost per high-conf estimate | $0.041 |
+| Cost per narrow-range (≤4yr) | $0.063 |
 
-The 67-second average includes a 1-second rate-limiting sleep between calls.
+**Projections:** 500 photos → $4.44/2.2hrs; 1K → $9.25/4.6hrs; 5K → $46.25/23hrs.
+Manual dating costs $3.75-$15/photo — **100x more expensive** than Gemini batch.
 
-### 6.2 Cost Projections
-
-| Scale | GEDCOM-Eligible | Est. Cost | Runtime |
-|-------|----------------|-----------|---------|
-| Current (295 photos) | 72 | $2.66 | ~79 min |
-| 500 photos | ~120 | $4.44 | ~2.2 hrs |
-| 1,000 photos | ~250 | $9.25 | ~4.6 hrs |
-| 5,000 photos | ~1,250 | $46.25 | ~23 hrs |
-
-At current scale, batch reanalysis is trivially affordable. At 5,000 photos,
-it becomes an overnight job but remains under $50.
-
-### 6.3 Value-per-Dollar Assessment
-
-At $0.037/photo and 91% high-confidence results:
-- **Cost per high-confidence date estimate:** $0.041
-- **Cost per narrow-range estimate (≤4yr):** $0.063
-
-Compare to manual research: finding a photo's date through genealogical
-records typically takes 15-60 minutes of researcher time. At even $15/hour,
-manual dating costs $3.75-$15 per photo — **100x more expensive** than the
-Gemini batch approach.
+5 failures: ~3 content safety, ~2 image loading. Not actionable without API settings.
 
 ---
 
-## 7. Failure Analysis
+## 7. Schema Gaps for Longitudinal Analysis
 
-5 of 72 photos failed:
+> Detailed schema, SQL, cost projections, and ML future directions:
+> [GEDCOM_REANALYSIS_DETAIL.md](GEDCOM_REANALYSIS_DETAIL.md)
 
-| Failure Type | Count | Actionable? |
-|-------------|-------|-------------|
-| Content safety | ~3 | Only via API safety settings |
-| Image loading | ~2 | Check R2 URLs |
+| Gap | Severity | Recommendation |
+|-----|----------|----------------|
+| No previous estimate stored | HIGH | Add `previous_date_estimate` JSONB |
+| No GEDCOM version/hash | MEDIUM | Store per-call GEDCOM hash |
+| No `gedcom_token_count` | MEDIUM | Store token count for depth analysis |
+| No multi-GEDCOM source ID | LOW | Needed for community GEDCOMs |
 
-Content safety blocks are a Gemini limitation for historical photos that may
-contain imagery the safety filter flags. Not actionable without API-level
-safety setting adjustments.
-
----
-
-## 8. Schema Gap Analysis
-
-### 8.1 What We Currently Record
-
-**gemini_api_calls table** (Supabase):
-- `photo_id`, `model_used`, `call_type` (e.g., "re_analysis")
-- `prompt_tokens`, `completion_tokens`, `total_tokens`, `cost_usd`
-- `latency_ms`, `status`, `error_message`, `rate_limit_type`
-- `prompt_text` (full prompt text), `full_response` (JSONB)
-- `gedcom_context` (text — the GEDCOM context sent to the model)
-- `gemini_config` (JSONB — thinking_level, max_output_tokens, temperature)
-- `batch_id`, `created_at`
-
-**date_labels** (JSON + Supabase):
-- `estimated_decade`, `best_year_estimate`, `confidence`, `probable_range`
-- `reasoning_summary`, `evidence` (structured by category)
-- `location_estimate`, `reanalyzed_at`, `reanalyzed_with_gedcom`
-
-**photo_locations** (JSON + Supabase):
-- `photo_id`, `lat`, `lng`, `location_name`, `location_estimate`
-- `confidence`, `region`, `reanalyzed_at`
-
-### 8.2 Gaps for Longitudinal Analysis
-
-| Gap | Severity | Impact |
-|-----|----------|--------|
-| **No previous estimate stored** | HIGH | Cannot measure improvement without manual cross-referencing |
-| **No GEDCOM version/hash** | MEDIUM | Cannot re-run when GEDCOM updates without guessing what changed |
-| **No `gedcom_token_count`** | MEDIUM | Cannot correlate enrichment depth → result quality quantitatively |
-| **No `estimate_delta`** | MEDIUM | No automated before/after tracking |
-| **No multi-GEDCOM source ID** | LOW (future) | Needed when community GEDCOMs arrive |
-| **No model A/B tracking** | LOW (future) | Schema records `model_used` but no structured comparison |
-
-### 8.3 Recommended Schema Additions
-
-```sql
--- Store pre-reanalysis state for delta tracking
-ALTER TABLE gemini_api_calls ADD COLUMN IF NOT EXISTS previous_date_estimate JSONB;
-ALTER TABLE gemini_api_calls ADD COLUMN IF NOT EXISTS previous_location JSONB;
-
--- Enrichment depth metrics
-ALTER TABLE gemini_api_calls ADD COLUMN IF NOT EXISTS gedcom_token_count INTEGER;
-ALTER TABLE gemini_api_calls ADD COLUMN IF NOT EXISTS gedcom_coverage_pct NUMERIC(5,2);
-
--- Multi-GEDCOM future
-ALTER TABLE gemini_api_calls ADD COLUMN IF NOT EXISTS gedcom_version TEXT;
-
--- Value tracking
-ALTER TABLE gemini_api_calls ADD COLUMN IF NOT EXISTS enrichment_changed BOOLEAN;
-```
-
-### 8.4 Priority for Next Session
-
-1. **Add `previous_date_estimate` JSONB** — #1 gap. The reprocess script already
-   loads old data (lines 145-153), just doesn't persist it to the API call log.
-2. **Add `gedcom_token_count`** — trivial to add, high analytical value.
-3. **GEDCOM versioning** — hash the GEDCOM file at batch start, store per call.
+Priority: (1) `previous_date_estimate`, (2) `gedcom_token_count`, (3) GEDCOM versioning.
 
 ---
 
-## 9. Model Considerations
+## 8. Future Directions
 
-### 9.1 Model Tracking
+**Model tracking:** All 67 calls logged with `model_used` and `batch_id`.
+Re-running with a new Gemini version provides clean A/B comparison.
 
-This batch used `gemini-3.1-pro-preview`. All 67 calls are logged in
-`gemini_api_calls` with `model_used` and `batch_id` for traceability.
+**Local models:** Not viable at 67 labels. Need 500+ for fine-tuning.
+Second-tier ML work once corpus is 5-10x larger.
 
-When Gemini updates (3.2, 4.0, etc.), re-running the same 67 photos would
-provide a clean A/B comparison: same photos, same GEDCOM context, different
-model. The `batch_id` field enables this grouping.
-
-### 9.2 Local/Bespoke ML Models (Future Direction)
-
-At current corpus size (67 high-confidence date estimates), a fine-tuned local
-model is not yet viable. The path:
-
-1. **500+ labeled photos**: Minimum for fine-tuning a vision date estimator
-2. **Training data**: Use Gemini estimates as labels (teacher-student approach)
-3. **Cost reduction**: Local inference at ~$0 vs $0.037/photo
-4. **Risk**: Small corpus limits generalization; Gemini estimates have their own biases
-
-This is **second-tier ML work** — worth pursuing once the corpus is 5-10x larger.
-
-### 9.3 Value-Add Decision Framework (For Scaling)
-
-As the photo corpus grows, not every photo warrants an API call:
-
-| Photo Category | API Call Value | Recommendation |
-|---------------|---------------|----------------|
-| New GEDCOM data linked | HIGH | Always reanalyze |
-| Updated model available | MEDIUM | Batch reanalyze all |
-| No GEDCOM, never analyzed | MEDIUM | Analyze once |
-| Already high-conf, no new data | LOW | Skip |
-| Content safety blocked | NONE | Skip until API settings change |
+**Value-add framework:** Reanalyze when new GEDCOM data links or model updates.
+Skip already-high-confidence photos with no new data.
 
 ---
 
-## 10. Conclusions
+## 9. Conclusions
 
-1. **GEDCOM enrichment demonstrably improves date estimation.** Photos with deep
-   GEDCOM data (birth years, relationships) achieve 0-4 year ranges. The model's
-   ability to cross-reference visual age against known birth years is the primary
-   mechanism.
-
-2. **Enrichment value is proportional to GEDCOM depth.** Close relatives with
-   extensive records → narrow ranges. Distant branches → wide ranges. This maps
-   directly to the irregular depth of Nolan's family tree.
-
-3. **Multi-GEDCOM support is the key multiplier.** Community members' GEDCOMs would
-   fill gaps in distant branches, improving estimates for photos currently at medium
-   confidence. This is the highest-ROI architectural investment.
-
-4. **Batch reanalysis is economically viable.** At $2.66 for 67 photos (100x cheaper
-   than manual research), cost is not a constraint at current scale.
-
-5. **Schema needs `previous_estimate` storage.** This is the #1 gap for longitudinal
-   tracking. Without it, future reanalyses can't be compared to this baseline.
-
-6. **93% success rate is acceptable.** The 5 failures are content safety blocks,
-   not model failures. No action needed unless API safety settings change.
+1. **GEDCOM enrichment demonstrably improves results** — birth year cross-referencing
+   yields 0-4 year ranges vs 10-20 for visual-only analysis.
+2. **Value proportional to GEDCOM depth** — close relatives → narrow, distant → wide.
+3. **Multi-GEDCOM is the key multiplier** — community GEDCOMs fill distant-branch gaps.
+4. **Economically viable** — $2.66 for 67 photos, 100x cheaper than manual research.
+5. **Schema needs `previous_estimate`** — #1 gap for future longitudinal tracking.
 
 ---
 
 ## References
 
-- AD-139: Gemini 3.1 Pro model selection
-- AD-152: Gemini API call logging schema
-- AD-159: GEDCOM enrichment variant selection (`first_order`)
-- AD-163: GEDCOM temporal versioning
-- AD-192: GEDCOM-enriched location estimation
-- AD-201: Unified Gemini prompt with GEDCOM context
-- AD-202: Admin re-analyze button
-- AD-210: Leon's Restaurant GEDCOM fix
-- Session 89: `scripts/reprocess_with_gedcom.py` created
-- Session 92: Full API logging columns added
+- AD-139, AD-152, AD-159, AD-163, AD-192, AD-201, AD-202, AD-210, AD-211
+- Session 89: `scripts/reprocess_with_gedcom.py` | Session 92: API logging
 - Session 93: Batch execution + this report
 - User feedback: `docs/session_context/session-93-user-feedback.md`

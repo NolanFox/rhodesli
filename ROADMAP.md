@@ -1,7 +1,7 @@
 # Rhodesli Development Roadmap
 
 Heritage photo identification system. FastHTML + InsightFace + Supabase + Railway + R2.
-Current: v0.95.0 · ~4172 tests · 299 photos · 777 identities · 69 confirmed
+Current: v0.96.0 · ~4283 tests · 299 photos · 894 identities · 69 confirmed
 
 ## Progress Tracking Convention
 - `[ ]` = Todo | `[-]` = In Progress (add date) | `[x]` = Completed (add date)
@@ -80,14 +80,16 @@ See [docs/BACKLOG.md](docs/BACKLOG.md) for full details on each item.
 - 6 parallel worktree tracks, all merged. See Recently Completed.
 - Prompt: docs/prompts/session-92-prompt.md
 
-### Session 93: Production Hardening
-- Leon's re-analyze verification in production
-- DATA_SOURCE=postgres (requires identities/photos table creation)
-- Batch GEDCOM re-analysis of all photos
-- Test speed optimization (architectural changes)
+### Session 93: Close All Deferrals — COMPLETE
+- DATA-007 Postgres migration complete (tables, backfill, flip)
+- Observability verified (Sentry, PostHog, Resend)
+- Batch GEDCOM re-analyze (67/72 photos, AD-211)
+- GEDCOM Reanalysis Report (docs/ml/GEDCOM_REANALYSIS_REPORT.md)
+- Prompt: docs/prompts/session-93-prompt.md
 
 ## Recently Completed
 
+- [x] 2026-03-08: **v0.96.0 — Session 93**: Close All Deferrals. DATA-007 complete (identities/photos/photo_faces tables, 894+295+981 rows backfilled, DATA_SOURCE=postgres on Railway). Supplementary migration (date_labels 271, photo_locations 268, birth_year_estimates 32). Observability verified (Sentry 5 issues, PostHog events, Resend email). Batch GEDCOM reanalysis (67/72 photos, Gemini 3.1 Pro, ~$2.66, 91% high confidence, avg 4.5yr ranges). GEDCOM Reanalysis Report (10-section analysis). AD-211. 4283 tests pass.
 - [x] 2026-03-08: **v0.95.0 — Session 92**: Ship Everything — Close All Gaps. 6 parallel worktree tracks. Observability (Sentry + PostHog, 4 events). Bell icon sidebar fix. Email notifications (Resend). 10 P1/P2 UX fixes (source photo link, auto-scroll, 404 styling, birth year race, CTA standardization, tooltip, dropdown, double admin bar). Leon's GEDCOM fix (AD-210, business name → owner lookup). Full API logging (prompt_text, full_response, gedcom_context). Multi-pass + active learning foundations. NL query parser. Compare v2 stub. CI/CD (.github/workflows/test.yml). 3 PRDs + 3 architecture docs. Timeline life events. 4172 tests pass.
 - [x] 2026-03-07: **v0.94.1 — Session 91b**: Complete Everything — Refactor + Discoveries + Notifications + Collection Fix. main.py 26,100 → 9,383 lines (64% reduction, 17 route files). 5 new route files: identity_routes, page_routes, engagement_routes, relationship_routes, discoveries_routes. Supabase tables created (communities, life_events, notifications, global_person_links). Life events seeded (5 events). Notification triggers wired into 7 confirm routes. Discoveries extraction + UX overhaul (recency sort, confidence tier labels, navigation). AD-209: collection name is weak provenance. 5 parallel worktree tracks. 3518 tests pass.
 - [x] 2026-03-07: **v0.94.0 — Session 91**: PRD Backlog + Platform Foundation. 6 parallel worktree tracks. PRD-028 notifications (bell icon, /notifications, event triggers). PRD-027 Phase A R2 backup/restore. PRD-011 life events (CRUD, photo/person linking). PRD-029 photo backs completion (media group API, browse filter, badges). PRD-027 B/C Postgres read flip (DATA_SOURCE feature flag, load_from_postgres). GlobalPersonID schema (communities + global_person_links). Observability (Sentry, PostHog, structlog, all env-gated). PRD-030 + MULTI_TENANT.md. ~2265 lines new tests. 3502 tests pass.
