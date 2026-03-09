@@ -509,6 +509,78 @@ class CommunityMiddleware(BaseHTTPMiddleware):
 app.add_middleware(CommunityMiddleware)
 
 
+# --- COMMUNITY DATA SCOPING UTILITIES ---
+
+
+def community_url_prefix(slug: str | None) -> str:
+    """Return URL prefix for community-scoped links.
+
+    Returns "" for Rhodes/default (bare URLs), "/c/{slug}" for others.
+    """
+    if not slug or slug == "rhodes":
+        return ""
+    return f"/c/{slug}"
+
+
+# Cached community photo/identity ID sets (60s TTL)
+_community_photo_ids_cache: dict = {}  # community_id -> set[str]
+_community_identity_ids_cache: dict = {}  # community_id -> set[str]
+_community_ids_cache_ts: float = 0.0
+_COMMUNITY_IDS_CACHE_TTL: float = 60.0
+
+
+def _get_community_photo_ids(community: dict | None) -> set[str] | None:
+    """Return set of photo IDs for a community, or None for Rhodes/default (meaning all photos).
+
+    Results cached for 60s. Returns None when community is None or is the default Rhodes community.
+    """
+    if community is None or community.get("is_default") or community.get("slug") == "rhodes":
+        return None
+
+    global _community_photo_ids_cache, _community_ids_cache_ts
+    community_id = community.get("id")
+    if not community_id:
+        return set()
+
+    now = time.time()
+    if now - _community_ids_cache_ts < _COMMUNITY_IDS_CACHE_TTL and community_id in _community_photo_ids_cache:
+        return _community_photo_ids_cache[community_id]
+
+    from app.supabase_data import load_photos_for_community
+
+    photo_ids = load_photos_for_community(community_id)
+    result = set(photo_ids) if photo_ids else set()
+    _community_photo_ids_cache[community_id] = result
+    _community_ids_cache_ts = now
+    return result
+
+
+def _get_community_identity_ids(community: dict | None) -> set[str] | None:
+    """Return set of identity IDs for a community, or None for Rhodes/default (meaning all identities).
+
+    Results cached for 60s. Returns None when community is None or is the default Rhodes community.
+    """
+    if community is None or community.get("is_default") or community.get("slug") == "rhodes":
+        return None
+
+    global _community_identity_ids_cache, _community_ids_cache_ts
+    community_id = community.get("id")
+    if not community_id:
+        return set()
+
+    now = time.time()
+    if now - _community_ids_cache_ts < _COMMUNITY_IDS_CACHE_TTL and community_id in _community_identity_ids_cache:
+        return _community_identity_ids_cache[community_id]
+
+    from app.supabase_data import load_identities_for_community
+
+    identity_rows = load_identities_for_community(community_id)
+    result = set(r["identity_id"] for r in identity_rows) if identity_rows else set()
+    _community_identity_ids_cache[community_id] = result
+    _community_ids_cache_ts = now
+    return result
+
+
 # --- INSTRUMENTATION LIFECYCLE HOOKS ---
 @app.on_event("startup")
 async def startup_event():
@@ -2689,13 +2761,22 @@ def _safe_get_identity(registry, identity_id: str) -> dict:
         return {}
 
 
-def _compute_sidebar_counts(registry) -> dict:
+def _compute_sidebar_counts(registry, community=None) -> dict:
     """Compute sidebar navigation counts from a loaded registry.
 
     This is the SINGLE canonical source for sidebar counts.
     All pages with a sidebar MUST call this instead of computing counts inline.
+
+    Args:
+        registry: Loaded IdentityRegistry
+        community: Community dict (None = Rhodes/default, shows all data)
     """
     _build_caches()
+
+    # Get community filter sets (None = all data, set = filtered)
+    community_photo_ids = _get_community_photo_ids(community)
+    community_identity_ids = _get_community_identity_ids(community)
+
     inbox = registry.list_identities(state=IdentityState.INBOX)
     proposed = registry.list_identities(state=IdentityState.PROPOSED)
     confirmed_list = registry.list_identities(state=IdentityState.CONFIRMED)
@@ -2703,23 +2784,45 @@ def _compute_sidebar_counts(registry) -> dict:
     rejected = registry.list_identities(state=IdentityState.REJECTED)
     contested = registry.list_identities(state=IdentityState.CONTESTED)
 
+    # Filter by community identity IDs when scoped
+    if community_identity_ids is not None:
+        inbox = [i for i in inbox if i.get("identity_id") in community_identity_ids]
+        proposed = [i for i in proposed if i.get("identity_id") in community_identity_ids]
+        confirmed_list = [i for i in confirmed_list if i.get("identity_id") in community_identity_ids]
+        skipped_list = [i for i in skipped_list if i.get("identity_id") in community_identity_ids]
+        rejected = [i for i in rejected if i.get("identity_id") in community_identity_ids]
+        contested = [i for i in contested if i.get("identity_id") in community_identity_ids]
+
     to_review = inbox + proposed
     dismissed = rejected + contested
-    photo_count = len(_photo_cache) if _photo_cache else 0
-    proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, "list_proposed_matches") else 0
 
-    # Count pending user annotations (for admin approvals badge)
-    pending_annotations = 0
-    try:
-        annotations_data = _load_annotations()
-        for ann in annotations_data.get("annotations", []):
-            if ann.get("status") in ("pending", "pending_unverified"):
-                pending_annotations += 1
-    except Exception:
-        pass
+    # Photo count: filtered by community when scoped
+    if community_photo_ids is not None:
+        photo_count = len(community_photo_ids)
+    else:
+        photo_count = len(_photo_cache) if _photo_cache else 0
 
-    # Count discoveries (high-confidence matches to confirmed identities)
-    discovery_count = _count_discoveries(registry)
+    # ML features (proposals, discoveries, annotations) only shown for Rhodes/default
+    if community_identity_ids is not None:
+        # Non-default community: ML features not applicable
+        proposal_count = 0
+        pending_annotations = 0
+        discovery_count = 0
+    else:
+        proposal_count = len(registry.list_proposed_matches()) if hasattr(registry, "list_proposed_matches") else 0
+
+        # Count pending user annotations (for admin approvals badge)
+        pending_annotations = 0
+        try:
+            annotations_data = _load_annotations()
+            for ann in annotations_data.get("annotations", []):
+                if ann.get("status") in ("pending", "pending_unverified"):
+                    pending_annotations += 1
+        except Exception:
+            pass
+
+        # Count discoveries (high-confidence matches to confirmed identities)
+        discovery_count = _count_discoveries(registry)
 
     return {
         "to_review": len(to_review),
