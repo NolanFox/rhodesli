@@ -64,7 +64,7 @@ class TestDependencyGate:
                 failures.append(f"{module_name}: {e}")
 
         assert not failures, (
-            f"Missing dependencies (add to requirements.txt):\n"
+            "Missing dependencies (add to requirements.txt):\n"
             + "\n".join(failures)
         )
 
@@ -92,7 +92,7 @@ class TestDependencyGate:
                 failures.append(f"{module} (install: pip install {package})")
 
         assert not failures, (
-            f"Critical dependencies missing:\n" + "\n".join(failures)
+            "Critical dependencies missing:\n" + "\n".join(failures)
         )
 
     def test_opencv_headless_available(self):

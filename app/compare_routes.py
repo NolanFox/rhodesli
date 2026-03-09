@@ -1690,7 +1690,7 @@ async def post(photo: UploadFile = None, ws: str = "", target_ws: str = "", sess
             result = process_directory(
                 directory=job_dir,
                 job_id=job_id,
-                data_dir=_main_mod.data_path,
+                data_dir=_main_mod.data_path,  # noqa: F823
                 source="Compare Upload",
                 collection="",
                 prefer_hybrid=True,

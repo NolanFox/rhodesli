@@ -62,6 +62,7 @@ class EraEstimate:
         probabilities: P(era) for each bin, sums to 1.0
         confidence: max(probabilities) - second highest (higher = more certain)
     """
+
     era: str
     probabilities: dict[str, float]
     confidence: float
@@ -140,9 +141,7 @@ def _load_clip_model():
     import open_clip
 
     # Use ViT-B/32 for balance of speed and accuracy
-    model, _, preprocess = open_clip.create_model_and_transforms(
-        "ViT-B-32", pretrained="laion2b_s34b_b79k"
-    )
+    model, _, preprocess = open_clip.create_model_and_transforms("ViT-B-32", pretrained="laion2b_s34b_b79k")
     tokenizer = open_clip.get_tokenizer("ViT-B-32")
 
     model.eval()
@@ -156,7 +155,7 @@ def _load_clip_model():
     return model, preprocess, tokenizer
 
 
-def _prepare_image(image: np.ndarray) -> "torch.Tensor":
+def _prepare_image(image: np.ndarray) -> "torch.Tensor":  # noqa: F821
     """Convert numpy image to CLIP input tensor."""
     import torch
     from PIL import Image

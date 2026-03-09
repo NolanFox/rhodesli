@@ -77,7 +77,7 @@ class TestGedcomMatchConsistency:
 
         conflicts = {iid: xrefs for iid, xrefs in id_to_xrefs.items() if len(xrefs) > 1}
         assert not conflicts, (
-            f"Found identity IDs with conflicting GEDCOM xrefs: "
+            "Found identity IDs with conflicting GEDCOM xrefs: "
             + ", ".join(f"{iid}: {xrefs}" for iid, xrefs in conflicts.items())
         )
 
@@ -99,7 +99,7 @@ class TestGedcomMatchConsistency:
 
         conflicts = {xref: ids for xref, ids in xref_to_ids.items() if len(ids) > 1}
         assert not conflicts, (
-            f"Found GEDCOM xrefs linked to multiple identities: "
+            "Found GEDCOM xrefs linked to multiple identities: "
             + ", ".join(f"{xref}: {ids}" for xref, ids in conflicts.items())
         )
 
